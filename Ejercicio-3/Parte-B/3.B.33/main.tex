@@ -1,0 +1,1451 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+\usepackage{multirow}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{La OMC\\
+\large Antecedentes y Organización actual. El GATT y los Acuerdos sobre el comercio de mercancías. Situación actual}
+\author{Marcelo Ortega}
+\date{Marzo 2026}
+\newcommand{\TemaCode}{3B33}
+
+\oldtitle{
+    B.34. La OMC. Antecedentes y Organización actual. El GATT y los Acuerdos sobre el comercio de mercancías. Situación actual
+}
+\changerationale{
+    Sin cambios
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     Es más interesante centrarse en las cuestiones de conceptos básicos y cuestiones de actualidad, como el desencanto del multilateralismo, el bloquo de la OMC, etc. que entrar en el detalle de los Acuerdos, que puede reservarse para eventuales preguntas por el Tribunal.
+
+     Es importante hacer ver al Tribunal que este es el primer tema sobre la OMC y que se reservan ciertos Acuerdos para el próximo tema. La conclusión de ambos temas puede ser la misma en ambos temas
+    }
+\vspace{1cm}
+
+\modificaciones{
+    \textcolor{red}{\textbf{OJO -> }} Revisar este artículo: \href{https://www.policyarena.org/p/why-did-the-us-pass-china-pntr}{\textit{Why Did the US Pass China PNTR?} ATKINSON (2026)}
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+
+
+\clearpage
+\section{Wold Trade Organization (OMC): Antecedentes}
+\puntosclave{
+    Orígenes del GA TT
+    
+    Las Rondas de negociación del GATT
+    
+    La creación de la OMC
+}
+
+
+El fracaso de las políticas proteccionistas que acompañaron a la Gran Depresión y la refundación del orden económico mundial al término de la Segunda Guerra Mundial, dieron lugar al intento de crear una Organización Internacional de Comercio (OIC), que reuniría a 50 países. 
+
+\subsection{Organización Internacional del Comercio: La Habana (1947)}
+El Consejo Económico y Social de las Naciones Unidas, por resolución de 18 de febrero de 1946, decidió celebrar una Conferencia Internacional sobre Comercio y Empleo con el propósito de favorecer la expansión de la producción, intercambio y consumo de mercaderías. La Conferencia, que se abrió en La Habana el 21 de noviembre de 1947 y terminó el 24 de marzo de 1948, redactó la \href{https://www.wto.org/spanish/docs_s/legal_s/havana_s.pdf}{Carta de La Habana para una Organización Internacional de Comercio} que será sometida a los Gobiernos representados en ella.\footnote{Curiosamente (o no), España no participó en esta Conferencia de Naciones Unidas, pero la razón es bastante desconocida: España se adhirió oficialmente a las Naciones Unidas (ONU) el 14 de diciembre de 1955, pasando a ser miembro de pleno derecho tras la aprobación de su ingreso por parte de la Asamblea General junto a otros dieciocho países. El país no pudo ser miembro fundador de la organización en 1945 debido al régimen franquista y sus vínculos previos con las potencias del Eje durante la Segunda Guerra Mundial (problema al que se llamó: la \textit{Cuestión Española}). Tras el aislamiento internacional inicial, el cambio de contexto geopolítico provocado por la Guerra Fría facilitó el apoyo de los Estados Unidos y la eventual integración española
+}
+
+La Conferencia de las Naciones Unidas sobre Comercio y Empleo, celebrada en La Habana (Cuba) en 1947, adoptó la Carta de La Habana para la creación de la Organización Internacional de Comercio.\footnote{El proyecto inicial de OIC contenía no sólo disciplinas para el comercio mundial. sino también normas en materia de empleo. convenios sobre productos básicos, prácticas comerciales restrictivas, inversiones internacionales y servicios. Es decir. muchos de los temas que luego fueron desarrollados con el paso del tiempo ya estaban contemplados en la Carta de la Habana de 1947 por la que se creaba la OIC.
+}
+
+¿Qué objetivos perseguía esta Conferencia? Y, subsidiariamente, ¿qué objetivos perseguía la Organización Internacional del Comercio?
+
+\subsubsection{Objetivos: ¿Qué perseguía esta organización?}
+La Carta de la Habana se estructuró en ocho capítulos, de los cuales cinco están estríctamente relacionados con el comercio internacional y la Política Comercial. Nos centraremos, no obstante, en los objetivos generales de la Carta y de los objetivos específicos de la OIC.
+
+\paragraph{Objetivos generales: Carta de la Habana}
+Los objetivos generales que establece la Carta de la Habana parten del reconocimiento, por parte de los estados participantes, de que las Naciones Unidas están resueltas a crear las condiciones de estabilidad y de bienestar que son necesarias para mantener relaciones \textbf{pacíficas} y \textbf{amistosas} entre las naciones. Para este fin consideran imperativo comprometerse en asuntos de comercio y empleo, a cooperar entre sí y con las Naciones Unidas con el propósito de materializar los objetivos enunciados en la Carta de las Naciones Unidas, especialmente el logro de niveles de vida más elevados, trabajo permanente para todos y condiciones de progreso y desarrollo económico y social. 
+
+Como sabemos, en materia monetaria y financiera, los acuerdos ya se habían adoptado dos años antes por lo que faltaba el último pilar de la arquitectura económica internacional de Bretton Woods: \textbf{el comercio}. Por tanto, las partes se comprometen, individual y colectivamente, a promover medidas de carácter nacional e internacional destinadas a alcanzar los siguientes objetivos: 
+\begin{la}
+    \item \textbf{Crecimiento}. Asegurar un volumen considerable y cada vez mayor de ingreso real y demanda efectiva; aumentar la producción, el consumo y el intercambio de bienes y contribuir así al equilibrio y a la expansión de la economía mundial;
+    \item \textbf{Desarrollo industrial}. Fomentar y ayudar el desarrollo industrial y el económico en general, especialmente en aquellos países cuyo desarrollo industrial está aún en sus comienzos; y estimular la corriente internacional de capitales destinados a inversiones productivas;
+    \item \textbf{Acceso a mercados}. Ampliar para todos los países, en condiciones de igualdad, el acceso a los mercados, a los productos y a los medios de producción necesarios para su prosperidad y desarrollo económicos;
+    \item \textbf{No discriminación}. Promover, sobre una base de reciprocidad y de ventajas mutuas, la reducción de los aranceles aduaneros y demás barreras comerciales, así como la eliminación del tratamiento discriminatorio en el comercio internacional; 
+    \item \textbf{Flexibilidad}. Capacitar a los países, dándoles mayores oportunidades para su comercio y desarrollo económico, para que se abstengan de adoptar medidas susceptibles de dislocar el comercio mundial, reducir el empleo productivo o retardar el progreso económico;
+    \item \textbf{Diálogo}. Facilitar, mediante el estímulo de la comprensión mutua, de las consultas y de la cooperación, la solución de los problemas relativos al comercio internacional en lo concerniente al empleo, al desarrollo económico, a la política comercial, a las prácticas comerciales y a la política en materia de productos básicos. 
+\end{la}
+
+En consecuencia, y como resultado de esta enumeración de objetivos generales que, como vemos, están completamente alineados con los otros dos pilares de Bretton Woods, las partes establecen la \textbf{creación de la Organización Internacional del Comercio} por medio de la cual cooperarán, como miembros de ella, para lograr el propósito y los objetivos enunciados.
+
+\paragraph{Objetivos específicos: Liberalismo pragmático}
+Más allá de los principios generales, la OIC tenía un carácter verdaderamente ambicioso que la distinguía de cualquier organización comercial, anterior y futura: muchos la concebían como una \textbf{incipiente constitución mundial del comercio, el empleo y el desarrollo}.\footnote{Todos los países aceptaban que el desempleo debía abordarse a nivel interestatal; que el desempleo y la inseguridad ya no podían ser aceptados por los gobiernos como \textit{fenómenos naturales}; y que ningún país, por sí solo, podía resolver estos problemas sin abordar sus relaciones internacionales con los demás Estados. Por esta razón, la ITO puede entenderse como una ruptura decisiva con los acuerdos del período de entreguerras, en los que todos los gobiernos creían que la política monetaria internacional era el único \textbf{pegamento que mantiene unidas a las economías nacionales} (EICHENGREEN, 1996). VINER expresaba una opinión ampliamente compartida cuando desestimó las concepciones ya obsoletas del libre comercio en un influyente artículo publicado en Foreign Affairs en 1947: \textit{Hay tan pocos defensores del libre comercio en el mundo actual que nadie presta atención a sus opiniones y ninguna persona con autoridad, en ninguna parte, defiende el libre comercio.} (VINER, 1947)
+} En su núcleo, los países del mundo rechazaron la idea de que fuera posible mantener una separación estricta entre el comercio, el desarrollo, las normas de empleo y la política interna. Su rasgo más distintivo fue la integración de un ambicioso y exitoso programa de reducción de las barreras comerciales tradicionales con un acuerdo de amplio alcance que abordaba cuestiones relativas a la inversión, las normas laborales, el desarrollo, los monopolios empresariales y otros temas afines.
+
+De haber prosperado, habría establecido la seguridad internacional del empleo como un criterio fundamental para reformular los principios del comercio internacional. Probablemente habría consagrado la obligación del pleno empleo, junto con un compromiso con los mercados libres, como la piedra angular del multilateralismo (Ruggie, 1983). Como consecuencia directa, el fracaso de la OIC representó el cierre de la era del pleno empleo a escala internacional. En última instancia, su desaparición hizo posible el rápido retorno del canon del libre comercio, que progresivamente impondría su autoridad y su ideología sobre todas las organizaciones internacionales y sobre la práctica del multilateralismo.
+
+De hecho, \textbf{nada sugiere que su objetivo fuera eliminar todas las barreras no arancelarias al comercio}. Tal interpretación sería errónea, porque los países necesitan recurrir ocasionalmente a determinadas restricciones para hacer frente a una amplia gama de problemas, como los déficits de balanza de pagos, la promoción del desarrollo y otras dificultades económicas nacionales (MISKELL, 1994). Más bien, los redactores de la detallada Carta comercial se concentraron en eliminar aquellas prácticas que otorgaban a un competidor de un país una ventaja injusta frente a un competidor [de otro país] como consecuencia de medidas gubernamentales deliberadas: el \textbf{principio de no dicscriminación}.
+
+En esencia, la OIT consagraba el consenso surgido a raíd de las experiencias reciente, que habían enseñado a los responsables políticos que los países no abandonarían voluntariamente aquellas políticas incompatibles con los principios del comercio liberal. Por ello, el comercio multilateral no podía funcionar si se fundamentaba únicamente en permitir que la libre empresa y el sistema de precios desempeñaran el papel predominante. Para liberalizadores del comercio como Viner, la Carta cumplía los requisitos porque ofrecía respuestas prácticas a dos cuestiones fundamentales: la reducción efectiva de las restricciones cuantitativas y la consagración del principio de no discriminación comercial como uno de los pilares del multilateralismo.\footnote{En particular, la Carta incorporaba tres elementos institucionales singulares. Primero, el \textbf{vínculo entre comercio y pleno empleo}: el artículo primero  comprometía a los miembros, individual y colectivamente, con el objetivo del  pleno empleo productivo, subordinando la liberalización comercial a ese fin (DRACHE, 2000). Segundo, un \textbf{capítulo sobre estándares laborales} que reconocía el vínculo entre condiciones laborales y comercio, estableciendo mecanismos de cooperación con la OIT y permitiendo reclamaciones por competencia desleal basada en condiciones laborales injustas (DRACHE, 2020).  Tercero, un \textbf{sistema de resolución de controversias vinculante}, con  posibilidad de recurso ante el Tribunal Internacional de Justicia, cuyas recomendaciones serían de obligado cumplimiento (TROYE, 2002). 
+}
+
+Además, la ITO también impulsó la idea de que la voluntad política era más importante que los códigos jurídicos rígidos y estableció el principio de que, en el futuro, cualquier régimen comercial con posibilidades reales de perdurar tendría que incorporar cláusulas de salvaguardia y mecanismos de excepción. Organizativamente, la OIC se estructuraba en una Conferencia, una Junta Ejecutiva  y las comisiones necesarias, con un Director General y Secretaría propios.  Crucialmente, las decisiones se basarían en el principio de \textbf{igualdad soberana} (un voto por país) frente al sistema de voto ponderado del FMI o el Banco Mundial, lo que otorgaba a los países en desarrollo un peso sin precedentes en la gobernanza económica internacional.
+
+\subsubsection{Limitaciones: ¿Por qué fracasó?}
+El fracaso de la OIC no obedeció a un único factor, sino a la confluencia de tensiones estructurales en las negociaciones y a la posterior  parálisis política en Estados Unidos, siendo esta última su golpe mortal. No obstante, es común en la literatura la identificación de tres vectores explicativos que conviene desagregar.
+
+\paragraph{Trampa del multilateralismo: concesiones incompatibles}
+El propio éxito negociador de la Conferencia de La Habana contenía el germen del fracaso. Para obtener el acuerdo de 56 países, la delegación estadounidense tuvo que aceptar concesiones significativas a los países en desarrollo, principalmente en materia de restricciones cuantitativas para proteger industrias nacientes, que alienaron simultáneamente a dos grupos domésticos opuestos: los proteccionistas, que veían la Carta como una amenaza a la soberanía  estadounidense, y los puristas del libre comercio, que la consideraban excesivamente permisiva con las excepciones.
+
+Esta tensión quedó ilustrada por las propias palabras de WILCOX, negociador jefe adjunto de EEUU, en una presentación privada de 1948: la Carta imponía restricciones principalmente a lo que otros países ya hacían o querían hacer, no a lo que EEUU hacía o tenía intención de hacer. Un argumento potencialmente persuasivo en casa, pero imposible de hacer públicamente sin alienar a los socios que también debían ratificarla. La administración quedó así atrapada entre dos audiencias incompatibles.
+
+\paragraph{El aislamiento británico y la fractura angloamericana}
+La relación angloamericana fue, como en otras negociaciones, uno de los principales obstáculos. Gran Bretaña, segunda potencia comercial mundial, pero en un pronunciado declive, perseguía simultáneamente dos objetivos contradictorios: mantener el sistema de preferencias imperiales y obtener flexibilidad para aplicar restricciones discriminatorias mientras resolvía su crisis de balanza de pagos.
+
+EEUU respondió construyendo una coalición de 50 países, incluida la Commonwealth y Europa, que dejó a Londres completamente aislada. La paradoja, señala TOYE, es que EEUU utilizó el formato multilateral precisamente para  ampliar sus alianzas a expensas de su aliado más cercano. Sin embargo, las concesiones hechas a los países en desarrollo para lograr ese aislamiento británico resultaron ser el precio que los lobbies empresariales estadounidenses no estaban dispuestos a pagar (menor protección a la IED y mayor concesión de medidad proteccionistas).
+
+\paragraph{La desatención de Washington y el coste de la Guerra Fría}
+La narrativa que atribuye el fracaso de la OIC directamente a la Guerra Fría es, según Toye, una simplificación. El efecto real de la Guerra  Fría fue el contrario: no empujó a EEUU hacia el acuerdo, sino que \textit{distrajo}  a Washington de él. El propio Clayton reconoció en privado que le resultaba  enormemente difícil conseguir que las autoridades en Washington prestaran atención  sostenida a la Carta, absorbidas por el Plan Marshall (TOYE, 2003).
+
+Cuando la Carta llegó al Congreso, carecía de los defensores institucionales  que habían participado en su negociación (Clayton y Wilcox habían abandonado  la administración tras La Habana). El estallido de la Guerra de Corea en junio  de 1950 bloqueó definitivamente el calendario parlamentario, y en diciembre de  ese año la administración Truman retiró la Carta sin someterla a votación (TOYE, 2012; DRACHE, 2000). 
+
+El resultado fue una \textbf{oportunidad perdida} de consecuencias duraderas. La desaparición de la OIC dejó un vacío institucional en cinco áreas críticas: estándares laborales, resolución vinculante de disputas, estabilización de precios  de materias primas, regulación de prácticas restrictivas de empresas  transnacionales y rendición de cuentas de actores privados ante el derecho internacional (DRACHE, 2000).
+
+
+\subsection{GATT (1947): Solución provisional}
+El hecho de que la Organización Internacional del Comercio (ITO) estuviera a punto de convertirse en realidad es importante y debe analizarse cuidadosamente, pues entre sus numerosos logros se encuentran las normas del Acuerdo General sobre Aranceles Aduaneros y Comercio (GATT), que fueron negociadas como parte temporal y de vanguardia dentro del marco institucional de la ITO. 
+
+Tres semanas antes de la reunión de la reunión de la Habana, $19$ países firmaron el Acuerdo GATT (Acuerdo General de Aranceles y Comercio), que decidiros aplicar de forma provisional en tanto se ratificaba el acuerdo de OIC.\footnote{Más adelante, en 1950 el Congreso de EE.UU. rechazó la ratificación de la Carta de la Habana. Esto supuso la muerte del proyecto de OIC mientras que el GATT seguía aplicándose. A pesar de no tener carácter de institución internacional, el GA TT resultó clave para facilitar la apertura del comercio internacional en la segunda mitad del siglo XX.
+} La razón de esta impaciencia, aunque suele atribuirse a la voluntad de avanzar en la reducción arancelaria, es mucho más política que económica: la Reciprocal Trade Agreements Act (RTAA) de 1934 delegaba en el presidente la autoridad para reducir aranceles hasta un 50\%, pero esa delegación tenía fecha de caducidad y debía ser renovada periódicamente por el Congreso, y en 1947, esa autorización estaba próxima a expirar. Si las negociaciones arancelarias se posponían hasta que la OIC estuviera ratificada, esa ventana se cerraría. El Congreso podría no renovarla, o renovarla con condiciones más restrictivas. Muy conscientes de este riesgo, los negociadores estadounidenses necesitaban ejecutar las concesiones arancelarias antes de que expirara la autorización ejecutiva, independientemente del estado de las negociaciones institucionales de La Habana.\footnote{TOYE lo señala con precisión: los plazos fijados por la expiración de los poderes arancelarios presidenciales afectaron las posiciones negociadoras y los resultados sustantivos a lo largo de todo el proceso. 
+
+De hecho, esto se ve con claridad cuando se entiende el proceso de aprobiación del GATT en EEUU: nunca fue ratificado formalmente por el Congreso estadounidense, que lo rechazó, y fue el Presidente Truman quien lo implementó mediante orden ejecutiva. Esto hizo que el GATT adoleciera de una debilidad jurídica constitutiva, lo que condicionó permanentemente su autoridad y su capacidad de hacer cumplir sus propias normas (DRACHE, 2000). A diferencia de la OIC, que preveía el recurso al Tribunal Internacional de Justicia para disputas con efectos vinculantes, el sistema de resolución de controversias del GATT carecía de ese respaldo: los países condenados podían bloquear los paneles o ignorar sus conclusiones sin consecuencias automáticas.
+}
+
+Ahora bien, este andamaje temporal que se colocó mientras se construía el edificio, acabó siendo el único instrumento multilateral que preservarse y fomentase el libre comercio internacional durante casi cincuenta años. Veámos, por tanto, sus principales características.
+
+\subsubsection{Alcance: Libre comercio}
+La diferencia entre ambos instrumentos \textbf{no era de grado sino de naturaleza}. Mientras la Carta de La Habana integraba comercio, empleo, inversión, estándares laborales y desarrollo en un marco jurídico único, el GATT se circunscribía esencialmente a la reducción de aranceles sobre bienes industriales y a la eliminación de barreras comerciales. Esta estrechez temática tuvo consecuencias distributivas inmediatas: el GATT fue percibido progresivamente como un club de ricos, puesto que sus actividades principales (la negociación de reducciones arancelarias sobre manufacturas) tenían escasa relevancia para los países en desarrollo que aún no habían industrializado sus economías (TOYE, 2002).\footnote{
+Durante los primeros años de vida del GATT, las Rondas de negociación que se celebraron versaban únicamente sobre las reducciones arancelarias: Ginebra 47, Annecy 49, Torquay 51, Ginebra 56, Dillon 60-61. La disociación con los países en desarrollo llegó a ser tal que la propia Unión Soviética declaró abiertamente, en 1959, su intención de incorporarse a la Organización Internacional del Comercio si esta fuera ratificada por los Estados Unidos, en un intento de genar adeptos entre los países que se veían aislados/perjudicados por el marco multilateral de liberalización comercial.
+}
+
+DRACHE sintetiza las cinco ausencias estructurales del GATT respecto a la OIC: (i) \textbf{ninguna disposición sobre estándares laborales}, más allá de la excepción del  artículo XX(e) relativa al trabajo en prisiones; (ii) \textbf{ausencia de poder interpretativo vinculante}, lo que hacía que su mecanismo de resolución de controversias fuera voluntario y pudiera ser ignorado sin sanción efectiva; (iii) ningún marco para estabilizar los precios de productos básicos, especialmente relevante para los países exportadores de materias primas; (iv) exclusión expresa de las prácticas restrictivas de empresas privadas de sus procedimientos; y, (v) ninguna obligación sobre actores privados o multinacionales, quedando sujetos al derecho internacional únicamente los gobiernos.
+
+\subsubsection{Ampliaciones: Rondas de negociación}
+Ahora bien, esta debilidad fue progresivamente resuelta mediante lo que hoy se ha convertido en la piedra angular de la Política Comercial en el ámbito multilateral: las \textbf{Rondas de negociación}.
+
+Las carencias del GATT eran tan evidentes, que la necesidad de reformular frecuentemente su alcance se hizo cada vez más imperante. Por esta razón, con el paso del tiempo, las rondas fueron creciendo en amplitud de temas y número de miembros implicador. 
+
+\paragraph{Ronda Kennedy (1964-1967): Países en desarrollo}
+El cambio paradigmático en la orientación del GATT tuvo lugar a raíz de la propuesto de celebración de la Ronda Kennedy, con un aumento del $200\%$ en el número de países participantes (alcanzando los $60$ miembros y contando con países menos avanzados). Esto se consiguió, fundamentalmente por la nueva estrategia de negociación adoptada, centrada en dos pilares esenciales:
+\begin{la}
+    \item \textbf{Reducción lineal de barreras}. Por primera vez, las negociaciones que buscasen la reducción de aranceles no se llevarían a cabo producto por producto sino por grandes grupos de industrias;
+    \item \textbf{Mayor alcance}. Por otro lado, se incluían por primera vez en la negociación materias que excedían el estricto ámbito de las barreras arancelarias, adentrándose en los acuerdos anti dumping y prestas especial atención a la consideración \textbf{comercio y desarrollo}.
+\end{la}
+
+\paragraph{Ronda de Tokio (1972-1979): Sistema Generalizado de Preferencias}
+La Ronda de Tokio, celebrada entre 1972 y 1979, apuntaló el hito de la Ronda Kennedy, reuniendo por primera vez a más de $100$ países. 
+
+Esta ronde fue especialmente importante para los países en desarrollo puesto que, sobre la misma linea marcada en la Ronda anterior, los países acordaron por primera vez la excepción a la cláusula de Nación Más Favorecida (\textbf{principio de no discriminación}) en virtud de un Sistema de Preferencias pensado para potenciar el comercio desde países menos desarrollados hacia países desarrollados. 
+
+Además, se abordaron muchos temas relativos a las barreras no arancelarias, como las salvaguardas, las restricciones y cuotas, o las licencias, aprobándose entre otros los Códigos SPS y TBT, con carácter plurilateral, pues no todos los países quisieron aceptarlos. 
+
+\subsubsection{Ronda de Uruguay: El inicio de la Organización Mundial del Comercio}
+Como vemos, durante su periodo inicial el esquema básico de las rondas consistía en negociaciones bilaterales entre socios comerciales relevantes.\footnote{\textbf{Fórmula Suiza}: Al principio, las concesiones arancelarias se realizaban bajo petición, producto a producto, pero desde la Ronda Tokio se vio la necesidad de abordar todos los productos mediante una fórmula que fuera sencilla y además garantizara cierta progresividad en las reducciones arancelarias. Todos los aranceles se reducirían, pero los tipos altos (picos arancelarios) caerían porcentualmente más que los bajos. Fue así como la delegación suiza propuso la fórmula suiza: $t_t=\frac{A\cdot t_0}{(A+t_0)}$, donde $A$ es un coeficiente que se podía negociar y que determinaba el grado de reducción arancelaria. Elevados coeficientes dan lugar a menores reducciones. Por ejemplo, si el tipo inicial es $50\%$, y el coeficiente $A$ es $16$, entonces el tipo final será del $12.1\%$. En cambio, un tipo inicial del $3\%$ se quedaría en $2,5\%$ para ese mismo $A=16$.
+}
+
+Progresivamente, estas negociaciones pasaron a abarcar un número mayor de temas con el doble objetivo de \textbf{incorporar a los países en vías de desarrollo} y abordar los perjuicios generados por las \textbf{barreras no arancelarias}. Finalmente, con la Ronda Uruguay, celebrada entre 1986 (Punta del Este) y 1994 (Marrakech) se convino la formalización institucional de las negociaciones y compromisos adquiridos a lo largo de los años por los socios mediante la creación de la Organización Mundial del Comercio: \textbf{auténtica institución internacional, no un mero acuerdo}.\footnote{Además, como veremos en el [\authorfont{Ver Tema 3.B.34}], en la Ronda Uruguay se aprobaron nuevos acuerdos para regular áreas que hasta entonces no estaban reguladas como el comercio internacional de servicios (GATS), la propiedad intelectual en el comercio (TRIPs), las medidas comerciales sobre la inversión (TRIMs) o el Acuerdo sobre la Agricultura.
+}
+
+\clearpage
+\section{World Trade Organization (OMC): Marco institucional}
+\puntosclave{
+    La OMC como organización internacional 
+    
+    Miembros 
+    
+    Funcionamiento y regla del consenso 
+    
+    ¿3 pilares en crisis? 
+    
+    Las Conferencias Ministeriales 
+    
+    Órganos de la OMC 
+    
+    El bloqueo actual del OSD
+}
+
+La Organización Mundial de Comercio es una organización internacional con sede en Ginebra, que entró en funcionamiento el 1995.\footnote{La OMC es una organización independiente de las organizaciones del ámbito de Naciones Unidas, si bien mantiene con Naciones Unidas un intercambio periódico de información en el seno del ECOSOC y colabora asiduamente con organismos como la UNCT AD. la Organización Mundial de Aduanas o el Banco Mundial. especialmente en programas de ayuda al comercio.
+} En el momento de su creación contaba con 135 miembros y, en la actualidad, cuenta con $164$. Las ampliaciones más significativas se produjeron en 2001 (China) y en 2012 (Rusia). Las últimas incorporaciones son \textcolor{red}{Timor Leste y Comoras en 2026}.
+
+\imagenfit{Fig1.png}{Organización Mundial del Comercio: Miembros (verde) y Observadores (amarillo)}{\href{https://www.wto.org/english/thewto_e/whatis_e/tif_e/org6_e.htm}{WTO - Members and Observers}}
+
+Para poder solicitar la adhesión a la OMC basta con ser un territorio aduanero diferenciado: no es necesario ser un Estado reconocido internacionalmente.\footnote{Realmente, quedan muy pocos países por adherirse (Irán, Iraq, Guinea Ecuatorial, Libia, Argelia, Bielorrusia) y muchos de ellos son países exportadores de petróleo, con escasos incentivos a integrarse en la medida en que el petróleo no es gravado con aranceles en casi ningún país del mundo. No obstante, otros son objeto de bloqueo (Irán). La mayoría de ellos participan como observadores pero también hay algunos países que ni siquiera tienen esta condición (Corea del Norte, Eritrea) 
+
+La UE es miembro de la OMC y también todos los $27$ países miembros de la OMC. La UE habla en todas las reuniones de la OMC en representación de sus miembros, que son quienes contribuyen financieramente al presupuesto.
+} Los procesos de adhesión pueden prolongarse durante muchos años y requieren el consenso de todos los demás miembros. 
+
+
+La OMC se financia mediante cuotas anuales pagadas. El cálculo de la cuota tiene en cuenta la participación de cada miembro en el comercio internacional de bienes y servicios corregido por el nivel de desarrollo.\footnote{El presupuesto anual de la OMC asciende a unos $200\text{M CHF}$. A España le corresponden $3,5\text{M CHF}$, un $1.5\%$ del presupuesto total. A EE.UU: $11\%$, China $8\%$, Alemania $8\%$).
+}
+
+\subsection{¿Qué hace la OMC? Objetivo operativo}
+La OMC administra el sistema mundial de normas comerciales y ayuda a los países en desarrollo a mejorar su capacidad para comerciar. Asimismo, constituye un foro al que acuden sus Miembros para negociar acuerdos sobre comercio y resolver los problemas comerciales que tienen unos con otros. 
+
+El objetivo general de la OMC es \textbf{ayudar a sus Miembros a utilizar el comercio como medio para elevar los niveles de vida, crear empleo y mejorar la vida de las personas}. 
+
+\subsubsection{Objetivo general: Areas de acción}
+Con este objetivo en mente, la OMC articula su actividad en torno a cuatro areas.
+
+\paragraph{Negociaciones comerciales}
+Los Acuerdos de la OMC (que abarcan los bienes, los servicios y la propiedad intelectual) no son estáticos; se modifican de vez en cuando y pueden añadirse al conjunto nuevos acuerdos. Para cambiar las normas que rigen el comercio es necesario el acuerdo de los Miembros de la OMC, que deben llegar a un consenso mediante negociaciones. 
+
+La última Conferencia Ministerial, la duodécima (CM12), se celebró del 12 al 17 de junio de 2022 en la sede de la OMC en Ginebra. Asistieron a ella Ministros de todo el mundo para examinar el funcionamiento del sistema multilateral de comercio, formular declaraciones generales y adoptar medidas sobre la labor futura de la OMC. La Conferencia estuvo coorganizada por Kazajstán. Inicialmente se había previsto que Kazajstán acogiera la CM$12$ en junio de 2020, pero la Conferencia tuvo que aplazarse debido a la pandemia de COVID-$19$. La Conferencia concluyó con éxito el 17 de junio con la concertación de un conjunto de iniciativas comerciales clave.
+
+Entre los acuerdos más recientes figuran el Acuerdo sobre Facilitación del Comercio, que entró en vigor en 2017, y el Acuerdo sobre Subvenciones a la Pesca adoptado en la CM$12$.
+
+\paragraph{Aplicación y vigilancia}
+Los Acuerdos de la OMC obligan a los Gobiernos a asegurar la transparencia de sus políticas comerciales notificando a la OMC las leyes en vigor y las medidas adoptadas. 
+
+Por eso, una parte importante y esencial de la labor de los Miembros de la OMC consiste en vigilar la aplicación de los acuerdos que han negociado. La transparencia es fundamental. Esta es la labor de los distintos Consejos y Comités de la OMC, que velan por que se respeten esas prescripciones y se apliquen de manera adecuada los Acuerdos. Asimismo, todos los Miembros de la OMC deben someterse a exámenes periódicos de sus políticas y prácticas comerciales realizados por homólogos.  Los exámenes de las políticas comerciales comprenden informes de la Secretaría de la OMC y del país objeto de examen, así como observaciones de los demás Miembros participantes en la reunión.  Recientemente, la Secretaría de la OMC ha elaborado regularmente informes de vigilancia del comercio mundial en los que examina la forma en que los países utilizan las medidas comerciales  para responder a los cambios en la coyuntura económica.
+
+\paragraph{Solución de diferencias}
+Resolver desacuerdos comerciales en el marco del Entendimiento sobre Solución de Diferenciases es una de las actividades básicas de la OMC, vital para garantizar el cumplimiento de las normas y asegurar así la fluidez del comercio. 
+
+Se plantea una diferencia cuando un gobierno Miembro considera que otro gobierno Miembro está infringiendo un acuerdo o un compromiso que ha contraído en el marco de la OMC. Los países someten sus diferencias a la OMC y los dictámenes de los expertos independientes designados especialmente para el caso se basan en la interpretación de los Acuerdos y de los compromisos contraídos por cada uno de los países. Es (o era) uno de los mecanismos de solución de diferencias internacionales más activos del mundo: desde 1995 se han planteado $645$ diferencias ante la OMC, y se han publicado más de $350$ fallos, comparado con los $200$ casos abiertos hasta 1995 bajo el sistema previo de solución de diferencias del GATT.
+
+\paragraph{Creación de capacidad comercial}
+Por último, y tal y como su actual directora comentó en la apertura de la CM$12$, debemos tener en cuenta que la OMC es una \textit{institución de desarrollo}. En este sentido, los países en desarrollo tropiezan con dificultades especiales para beneficiarse como deberían del sistema multilateral de comercio. 
+
+Los Acuerdos de la OMC contienen disposiciones especiales para los países en desarrollo, que prevén en particular plazos más largos para aplicar los Acuerdos y los compromisos, medidas para incrementar sus oportunidades comerciales, y apoyo para ayudarlos a crear capacidad comercial, solucionar diferencias y aplicar normas técnicas. 
+
+Con esto en mente, la OMC organiza anualmente centenares de actividades de formación para los países en desarrollo.\footnote{En este área de trabajo desarrolla también numerosos programas dentro del \textbf{Marco Integrado Reforzado}, donde administra algunos fondos fiduciarios de terceros y, entre otras coas, ha movilizado recursos para mejorar las capacidades de las Administraciones Aduaneras de diversos países, con el fin de que puedan aplicar los compromisos del Acuerdo de Facilitación de Comercio. También contribuye a la financiación, junto con la UNCTAD, del Centro de Comercio Internacional, institución con sede en Ginebra y que realiza proyectos para la integración de PYMEs en las cadenas globales de valor, especialmente en países menos avanzados.
+
+
+\textbf{OJO}.- Desde la Ronda Kennedy, se incorporan numerosas disposiciones de trato especial y diferenciado en favor de los países en desarrollo pero en ninguna parte se define qué se entiende por país en desarrollo y por país desarrollado. En la práctica, esta distinción se basa en la autodesignación por parte de los propios miembros.
+
+Para clasificar a los países menos avanzados se acepta la clasificación de Naciones Unidas basada en criterios de renta, capital humano y vulnerabilidad económica y ambiental. No está recogida formalmente en ningún texto de la OMC pero todos los miembros la aceptan como válida cuando los textos de la OMC mencionan beneficios en favor de los PMAs. El resto de miembros decide voluntariamente si se acoge a las disposiciones en favor de los países en desarrollo o no. Esta autodesignación, plantea numerosas cuestiones acerca de cuál ha de ser el papel y las responsabilidades que han de asumir las economías a medida que van desarrollandose. Estados Unidos, y en cierto grado los demás países desarrollados, vienen criticando esta circunstancia y abogan por limitar la aplicación de clausulas de trato especial y diferenciado a los países que realmente estén en condiciones menos avanzadas.
+} Complementariamente a esta labor de asistencia particularizada, la OMC lleva a cabo numerosas actividades de asistencia técnica y generación de conocimiento.\footnote{El \href{https://www.wto.org/spanish/res_s/reser_s/wtr_s.htm}{Infonne anual del Comercio Mundial} es quizás el informe más destacado, aunque existen otros muchos específicos como el seguimiento de barreras al comercio (por encargo del G$20$) y las bases de datos online sobre aranceles, una fuente de información fundamental para conocer los aranceles a los que una exportación se enfrenta en cualquier miembro de la OMC.
+}
+
+\subsection{¿Cómo lo hace? Los Pilares de la OMC}
+¿Cómo lleva a cabo estas labores la OMC? Existen diferentes formas de explicar, nosotros nos adscribimos a la más frecuente en ámbitos académicos. Se dice que la OMC cuenta con tres pilares: el \textbf{pilar negociador}, el \textbf{pilar de la administración y vigilancia de los tratados} y el \textbf{pilar de solución de diferencias}.\footnote{Todos los miembros de la OMC se someten a un Examen de sus Políticas Comerciales. Los cuatro principales miembros por volumen de comercio (UE, EEUU, China, Japón) cada dos años, otros diecieseis intermedios, cada cinco años. El resto cada siete años.
+}
+
+\imagenfit{Fig2.png}{Estructura de la OMC}{\href{https://www.wto.org/spanish/thewto_s/whatis_s/tif_s/organigram_s.pdf}{Informe Anual -- Seción 4, pág. 188. OMC}}
+
+La Directora General es actualmente (2022) la nigeriana Dra. NGOZI, que sucedió en 2021 al brasileño Roberto Azevedo y ha renovado su mandato. No obstante, su labor es estríctamente administrativa y no tiene absolutamente ninguna relevancia en la dirección política de la entidad.
+
+
+\subsubsection{Pilar negociador: ¿Cómo se alcanzan los compromisos?}
+Lo primero que debemos tener en cuenta al hablar de la OMC y su funcionamiento es que se trata de una Organización dirigida por sus miembros, no por sus directivos (\textit{member-driven organisation}). Aunque no es una característica distintiva, respecto a las otras instituciones multilaterales, sí que es particularmente importante en esta institución. 
+
+Por ejemplo, la presidencia de los diferentes Comités recae sobre los propios miembros de la OMC. Por otro lado, la Directora General y el \textit{staff} actúan como meros catalizadores de la negociación, rara vez por iniciativa propia (a diferencia de otras instituciones como el FMI), y es muy infrecuente que de sus órganos administrativos emanen propuestas concretas (mucho menos sin antes consensuarla con los principales actores). 
+
+\paragraph{Adopción de compromisos: Consenso unánime}
+Además, dentro del pilar negociador lo que más destaca por ser particular de la OMC es la forma en la que se adoptan las decisiones: \textbf{por consenso}. La regla del consenso es diametralmente opuesta a la forma en la que se adoptan decisiones en el seno de otras instituciones (a excepción de la AGNU). Por ejemplo, recordemos que en tanto en el FMI como en el Banco Mundial el poder de voto varía en función del capital o relevancia del país en cuestión. 
+
+Sin duda esto tiene sus ventajas, en particular su alto grado de representatividad y legitimidad democrática, pero también resulta muy farragosa y tediosa en términos operativos ya que requiere poner de acuerdo a $164$ miembros con intereses divergentes en muchísimas materias. (Piésese que, teóricamente, cualquier miembro de la OMC tiene capacidad de veto).\footnote{Esta forma de decisiones puede considerarse como una de los elementos claves para entender el bloqueo negociador e institucional en el que se encuentra actualmente la OMC.
+}
+
+De hecho, resulta interesante teniendo en cuenta que el Acuerdo constitutivo contempla la posibilidad de adoptar compromisos vinculantes mediante mayorías simples para determinadas cuestiones especificas. Sin embargo, en ningún caso se ha hecho uso de esto por parte de ninguna delegación ante el miedo a generar un precedente que pudiera perjudicarle a futuro.  
+
+
+\paragraph{¿Negociación equidistante? Los \textbf{Grupos} dentro de la OMC}
+Ahora bien, si esta es la arquitectura formal de negociación, la arquitectura informal es casi tan relevante o más. 
+
+Prácticamente en todas las negociaciones de la OMC los miembros se articulan en torno a grupos que persiguen un mismo interés. Esto ha jugado un papel fundamental en la mayoría de rondas de negociación que se han llevado a cabo desde la mismísima promulgación del GATT. 
+
+Podemos hablar de las siguientes configuraciones, no siempre bien delimitadas: G90: países en desarrollo. a menudo liderados por India. Engloba los países africanos, los países ACP y los PMAs PMAs: países menos avanzados. Esta es la única categoría comúnmente aceptada por todos y para la que se acepta la lista que elabora Naciones Unidas. ACPs: países de África, Caribe y Pacífico. Países africanos 
+
+Grupo de Cairns: una veintena de países exportadores de bienes agrícolas defensores de la liberalización agrícola (Australia. Brasil. Argentina Canadá. Indonesia. Nueva Zelanda, ... ) Economías Pequeñas y Vulnerables. 
+
+Países de Reciente Adhesión: Rusia. China. Kazajstán, ... Cotton-4: cuatro países africanos exportadores de algodón. G-5: los cinco miembros más relevantes decisivos para adoptar los acuerdos (China. UE. USA. Brasil e India). 
+
+A menudo el Director General les suele convocar fonnal o infomialmente para ver si existe margen para avanzar en las negociaciones. Este grupo ha perdido importancia con los dos últimos DG de la OMC que evitan reuniones de este grupo y prefieren reuniones inclusivas.
+
+\textcolor{red}{\textbf{METER TODO LO DE LOS CAIRNS, BLACK-RROMS, ETC?}}
+
+\subsubsection{Pilar administrativo: ¿Quién \textit{gobierna} la OMC?}
+Así pues, si la OMC pertenece a sus Miembros y estos determinan sus metas, objetivos y la propia viabilidad de la institución en torno al pilar negociador, la ejecución de estas se lleva a cabo por los dos órganos máximos de gestión que forman las vértebras del pilar administrativo y de vigilancia de los acuerdos.
+
+\paragraph{Conferencia Ministerial}
+En pimer lugar tendríamos la Conferencia Ministerial, que se reúne al menos cada dos años, es el órgano de adopción de decisiones más importante de la OMC. En ella están representados todos los Miembros, los cuales son o países o uniones aduaneras. La Conferencia Ministerial puede adoptar decisiones sobre todos los asuntos comprendidos en el ámbito de cualquiera de los Acuerdos Comerciales Multilaterales.
+
+Desde la creación de la institución se han celebrado \textcolor{red}{14} Conferencias Ministeriales (CM), siendo la última en 2016 en Cameroon. Algunos de los acontecimientos más recientes sucedidos en el ámbito de las CMs son:\footnote{Dentro de las confierencias más antiguas, destacan únicamente:
+\begin{lnum}
+    \item \textbf{Singapur -- 1996}. Se proponen nuevos temas a los programas de Ayuda Oficial al Desarrollo (ODA, \textit{Official Development Assistante}), entre los que destacan la competencia, la inversión, la contratación pública y la facilitación del comercio;
+    \item \textbf{Doha -- 2001}. Se lanza la Ronda Doha de liberalización comercial. Se trata de la ronda de mayor ambición hasta la fecha y a la que se adhiere China por primera vez China;
+    \item \textbf{Cancún -- 2003}. Se retiran de las negociaciones de la ODA los temas de Singapur, salvo la facilitación del comercio;
+    \item \textbf{Paquete -- Julio 2008}. No se trata de una Conferencia Ministerial, ni siquiera de un Consejo General, pero en julio de 2008 casi se cierra la Ronda Doha. Sin embargo, desavenencias de última hora entre India y Estados Unidos sobre la salvaguarda agrícola lo impidieron. En esta \textit{reunión} se elaboraron borradores muy detallados sobre modalidades para liberalización de bienes agrícolas y para los bienes industriales;
+    \item \textbf{Ginebra -- 2011}. Se adhiere Rusia y no se logra avanzar en las negociaciones de la Ronda de Doha;
+    \item \textbf{Bali -- 2013}. Se aprueba el Acuerdo de Facilitación de Comercio, el primero desde la entrada en vigor de la institución. India obtiene una solución temporal a su reivindicación sobre programas de existencias públicas agrícolas;
+    \item \textbf{Nairobi -- 2015}. La Ronda de Doha parece herida de muerte, resulta imposible llegar a un acuerdo que permita su finalización cerca de $15$ años después de las primeras negociaciones. Se aprueba un acuerdo para limitar el apoyo a la exportación agrícola;
+    \item \textbf{Buenos Aires -- 2017}. Se lanzan tres iniciativas plurilaterales de calado limitado: comercio electrónico, facilitación de la inversión y reglamentación nacional de licencias de establecimiento. Con esta iniciativa se intenta vencer el estancamiento del marco multilateral de la Ronda Doha.
+\end{lnum}
+}
+\textbf{Ginebra -- 2022} (tras la suspensión de la Conferencia prevista para 2020, durante la pandemia). Marcada por la pandemia, no logró avanzar en la reforma de la OMC ni la solución del bloqueo del Órgano de Apelación, discusiones que se emplazan para el 2023, 2024, sin gran fe de avances. Se alcanza un acuerdo parcial en el Acuerdo de Subvenciones a la Pesca.\footnote{Acuerdo sobre Subvenciones a la Pesca. Es el primer acuerdo en la OMC que regula directamente cuestiones de sostenibilidad. No es un acuerdo que regule el comercio sino las subvenciones a una actividad económica con el fin de evitar el agotamiento de la pesca. En 2022. se acuerdan disciplinas para prohibir ayudas públicas que puedan favorecer la pesca ilegal y las ayudas a pesca en aguas sobrcexplotadas. Sin embargo. se dejaron fueron numerosas disciplinas diticiles de asumir que se han de seguir negociando. Se establece una cláusula que deja sin efecto el acuerdo. si una vez entre en vigor, no se completan las negociaciones en un plazo de 4 años.
+}, se aclaran las condiciones para acogerse a las "licencias obligatorias para medicamentos" y se sigue avanzando en las iniciativas plurilaterales lanzadas en Buenos Aires.\footnote{Exención en el Acuerdo TRJPs: se aclara mínimamente en qué condiciones se puede hacer uso de las licenciasobligatorias de medicamentos. Estas licencias permiten fabricar sin licencia un medicamento patentado en casos de necesidad. La nueva decisión aclara las condiciones para hacer uso de las licencias obligatorias sin interferir en terceros mercados distintos al del país que hace uso de esta licencia.
+}\textsuperscript{,}\footnote{En diciembre de 2021. se terminaron las negociaciones de la Iniciativa plurilateral de regulación doméstica de servicios, que se •había lanzado en Buenos Aires. Consiste en un conjunto de buenas práctkas asumidas por 70 miembros sobre cómo regular actividades de servicios (comprometidas en el GATS) para las que se requieran licencias de establecimiento o requisitos de funcionamiento. Estas buenas prácticas normativas no amplían los compromisos de apertura contenidas en los anexos del GATS)
+} Adicionalmente, se adopta una decisión para que los envíos de ayuda alimentaria del Programa de Alimentos de Naciones Unidas no pueda ser bloqueada.
+
+\textbf{Abu Dhabi -- 2024}. Antes de que comenzaran las negociaciones sobre algunos de los asuntos más complejos, se lograron avances relativamente sencillos mediante la aprobación de las condiciones de adhesión de dos países menos adelantados (PMA): Comoras y Timor-Leste. Se trata de los primeros países en incorporarse a la OMC desde que Liberia y Afganistán ingresaron en julio de 2016. Por otro lado, el comercio de servicios recibió un impulso, al igual que la facilitación de las inversiones con: el anuncio de la entrada en vigor de una iniciativa sobre regulación nacional de los servicios y la adopción del texto definitivo del Acuerdo sobre Facilitación de las Inversiones para el Desarrollo (Investment Facilitation for Development Agreement, IFDA). Sin embargo, los miembros no consiguieron incorporar formalmente este acuerdo al marco jurídico de la OMC, dejando abierta la incertidumbre sobre sus pasos futuros. Otro de los resultados más importantes fue el acuerdo para facilitar la transición de aquellos países que dejan de ser considerados países menos adelantados (PMA), con un período de hasta tres años de transición suavizada en el Sistema de Preferencias Generalizadad, la extensión de determinadas disposiciones del Entendimiento sobre Solución de Diferencias de la OMC y el mantenimiento de la elegibilidad para recibir asistencia técnica y fortalecimiento de capacidades específicamente destinados a los PMA. En muchos otros ámbitos, los ministros no lograron consenso suficiente para incorporarlos al texto final, entre los que destacan: la política industrial y las distorsiones comerciales que puede generar y la relación, cada vez más compleja, entre el comercio internacional y la protección del medio ambiente.
+
+\textbf{Yaundé -- 2026}. El resultado fue desigual respecto de las ambiciones planteadas inicialmente. La MC14 concluyó sin una Declaración Ministerial general y sin acuerdos sobre sus prioridades centrales. Paradójicamente, el resultado más trascendental fue un fracaso: la moratoria multilateral sobre la imposición de derechos aduaneros a las transmisiones electrónicas expiró el 30 de marzo de 2026, por primera vez desde su introducción en 1998.\footnote{Como respuesta, 66 miembros de la OMC, que representan aproximadamente el $70\%$ del comercio mundial, acordaron avanzar mediante la aplicación provisional de un Acuerdo Plurilateral sobre Comercio Electrónico (\textit{E-Commerce Agreement}, ECA), que regula aspectos como la facilitación del comercio digital, la protección del consumidor, los pagos electrónicos, la protección de datos y el compromiso entre sus participantes de no imponer aranceles a las transmisiones electrónicas. El acuerdo entrará en vigor una vez que $45$ miembros lo hayan ratificado.
+
+    Para las empresas, las implicaciones son inmediatas. La expiración de la moratoria elimina un marco de referencia que durante décadas favoreció el crecimiento del comercio digital. Incluso aunque no se produzcan aumentos inmediatos de aranceles, las empresas afrontarán una mayor incertidumbre y mayores costes de cumplimiento normativo. El acuerdo provisional proporciona continuidad entre sus participantes, pero también refleja una creciente fragmentación regulatoria. 
+    } Por otro lado, tampoco se alcanzo la reforma de la OMC, presentada como una prioridad existencial, ni sobre una Declaración Ministerial ni sobre un programa de trabajo. La capacidad de la OMC para adaptarse a las realidades del comercio del siglo XXI depende de su capacidad de renovación institucional. Esa capacidad no quedó demostrada en Yaundé. Los trabajos continuarán en Ginebra, pero sin el mandato político que habría proporcionado una Declaración Ministerial. Sí hubo, no obstante, avances graduales en el sistema de solución de diferencias. Sí se puso en funcionamiento el Acuerdo sobre Facilitación de las Inversiones para el Desarrollo (Investment Facilitation for Development Agreement, IFDA) y otros resultados de ámbito limitada, entre ellos: (i) el compromiso de continuar las negociaciones sobre subvenciones a la pesca con vistas a la MC15; (ii) decisiones para favorecer la integración de las pequeñas economías; y, (iii) la puesta en funcionamiento de disposiciones sobre trato especial y diferenciado en los acuerdos sobre Medidas Sanitarias y Fitosanitarias (SPS) y Obstáculos Técnicos al Comercio (TBT). Estos resultados tienen relevancia para la agenda de desarrollo, especialmente para los países menos adelantados, aunque representan avances incrementales más que transformaciones profundas. El denominado Paquete de Yaundé permanece sobre la mesa de negociaciones en Ginebra. Su eventual adopción en la próxima reunión del Consejo General de la OMC constituirá una primera prueba de si existe la voluntad política necesaria para transformar acuerdos preliminares en compromisos jurídicamente vinculantes. En buena medida, la credibilidad futura de la OMC dependerá de la respuesta a esa cuestión.
+
+\paragraph{Consejo General}
+Por otro lado, tendríamos el Consejo General, que es el órgano decisorio de más alto nivel de la OMC en Ginebra, y se reúne con regularidad para desempeñar las funciones de la OMC. Tiene representantes (habitualmente embajadores o personas de rango equivalente) de todos los Gobiernos de los Miembros y está facultado para actuar en nombre de la Conferencia Ministerial por lo que, en realidad, tiene la misma capacidad de decisión que la Conferencia Ministerial. 
+
+Del Consejo General dependen, fundamentalmente, tres Consejos espcializados por materia:\footnote{Para las negociaciones comerciales de la Ronda Doha se constituyó el Comité de Negociaciones Comerciales, que centraliza las negociaciones de las diferentes áreas temáticas y que reporta igualmente al Consejo General. Existen otros muchos Comités que reportan al Consejo General, sin pasar por estos tres Consejos (medidas de balanza de pagos, comités para la adhesión de nuevos miembros, etc.).
+}
+\begin{la}
+    \item \textbf{Consejo de Comercio de Mercancías}. El Consejo del Comercio de Mercancías (CCM) es uno de los principales órganos subsidiarios de la OMC e informa directamente al Consejo General. En virtud de lo dispuesto en el tratado constitutivo, se encarga de supervisar la aplicación de todos los acuerdos relativos al comercio de mercancías, incluido el GATT de 1994. Dependen de este órgano un gran número de Comités que versan sobre áreas específicas, entre los que están: agricultura, acceso a mercado, medidas SPS, medidas TBT, reglas de origen, licencias de importación, salvaguardias o antidumping;
+    \item \textbf{Consejo del Comercio de Servicios}. El Consejo del Comercio de Servicios (CCS) es el foro en el que los Miembros debaten las cuestiones relacionadas con la aplicación del GATS. Se encarga de facilitar del funcionamiento del GATS, la consecución de sus objetivos y puede establecer los órganos subsidiarios que sean necesarios. Existen actualmente cuatro: servicios financieros, reglas GATS, reglamentación nacional y compromisos específicos; y,
+    \item \textbf{Consejo TRIPS}. El Consejo de los Aspectos de los Derechos de Propiedad Intelectual relacionados con el Comercio (Consejo de los ADPIC) es el foro en el que los Miembros de la OMC examinan las cuestiones relacionadas con el funcionamiento y la aplicación del Acuerdo sobre los ADPIC, y donde celebran consultas sobre cuestiones referentes a la propiedad intelectual y el comercio.
+\end{la}
+
+El Consejo General supervisa también el trabajo del Órgano de Examen de Políticas Comerciales y, en consecuencia, puede reunirse bajo dos modalidades específicas (sin cambiar su composición): como Órgano de Examen de las Políticas Comerciales y como Órgano de Solución de Diferencias.\footnote{El Órgano de Examen de Políticas Comerciales es el encargado de efectuar la revisión periódica de las políticas comerciales de todos los miembros de la OMC. Cada 2 años, a propuesta de un informe elaborado por la Secretaría de la OMC se revisa a los cuatro miembros más grandes (UE, USA, China y Japón), el resto como hemos comentado antes. El informe elaborado no tiene implicaciones formales pero constituye un mecanismo de transparencia que obliga a los miembros a dar explicaciones sobre las cuestiones planteadas por el resto de miembros.
+} 
+
+\subsubsection{Pilar jurisdiccional: ¿Cómo se hacen efectivos los compromisos?}
+Por último, y probablemente más importante por su complicadísima situación actual, estaría el pilar jurisdiccional encarnado en el \textbf{Óragano de Solución de Diferencias}. 
+
+Cuando un miembro de la OMC considera que otro miembro ha infringido las normas comerciales, se recurre al sistema multilateral de solución de diferencias, en vez de adoptar medidas unilaterales. La solución de diferencias comerciales es una de las principales actividades de la organización. Según la OMC, desde 1995 se han planteado 594 diferencias y se han publicado más de 350 fallos. El procedimiento de solución de diferencias es la piedra angular del sistema multilateral de comercio y se considera la «joya de la corona» de la OMC: hace hincapié en el imperio dela ley y da seguridad y previsibilidad al sistema comercial global.
+
+La solución de diferencias es competencia del Órgano de Solución de Diferencias (OSD), integrado por todos los miembros. Estos crean «grupos especiales » de expertos para analizar las diferencias y alcanzar conclusiones que han de ser aceptadas o rechazadas por el OSD. La resolución del grupo de expertos solo puede ser rechazada por consenso.Contra la resolución se puede apelar. De la apelación se encarga el Órgano Permanente de Apelación (OA) que está integrado por siete miembros de reconocida competencia en derecho y comercio internacional no vinculados a ningún Gobierno que son nombrados por períodos de cuatro años. Cada apelación la juzgan o valoran tres miembros. La apelación puede llevar a confirmar, modificar o revocar las conclusiones del «grupo especial». El OSD puede aceptar o rechazar el informe de apelación, pero únicamente puede rechazarlo por consenso.
+
+El órgano está regulado en el Entendimiento de Solución de Diferencias (uno de los Anexos al Tratado de la OMC) y constituye una pieza fundamental del sistema multilateral de comercio.\footnote{El GATT ya contaba con un sistema de resolución de disputas basado en la negociación. No obstante, este mecanismo se basaba en el consenso negativo y no en el consenso negativo, como lo hace el actual. Es decir, ninguna resolución del Órgano podía adoptarse si había algún miembro que discrepase. Siendo todos los miembros parte de este órgano, es fácil ver por qué funcionaba tan mal (o bien, argumentarían algunos) en la práctica: ningún miembro mentendría silencio contra una sanción dirigida hacia sí mismo.
+
+El actual, mucho más reglado, se aplica a una larga lista de acuerdos de la OMC y es una institución clave del multilateralismo comercial. Muchas otras organizaciones internacionales (Organización Internacional del Trabajo, Organización Mundial de la Propiedad Intelectual) suelen contar con mecanismos de consultas o mediación, pero no contemplan la adopción de medidas de retorsión. 
+} Como vemos, su funcionamiento es sencillo puesto (similar al de un tribunal internacional cualquiera) con un marco normativo positiva y una competencia tanto teritorial como funcional muy bien definida (Miembros y materias). No obstante, sus procedimientos están enfocados a contener los conflictos comerciales, evitar las represalias y forzar a las partes a llegar a una solución negociada por lo que se intenta, sobre todo, valorar todo tipo de soluciones antes de adoptar medidas de retorsión. 
+
+
+\clearpage
+\section{World Trade Organization (OMC): Acuerdos de mercancías}
+\puntosclave{
+    Acuerdos multilaterales, plurilaterales, bilaterales
+    
+    Materias no reguladas por la OMC
+
+    Estructura y cobertura del GATT del 47. 
+    
+    Principios básicos del GATT: CN+F; Consolidación aranceles; Trato nacional; Libre tránsito; Valoración en aduana; Prohibición restricciones; Excepciones; y, Las uniones aduaneras
+
+    Acuerdos sobre materias aduaneras: Reglas de origen; Licencias importación; y, AFC
+    
+    Acuerdos sobre obstáculos no aduaneros: SPS; TBT; Acuerdos sobre defensa comercial; Código Antidumping; Código Antisubvención; y, Acuerdo salvaguardas
+    
+    Otros: TRIMS; y, Acuerdo Agricultura: acceso a mercado, ayuda interna, competencia de las exportaciones.
+
+    Oportunidades y dificultades de los acuerdos plurilaterales. Ejemplos de acuerdos negociados o fracasados.
+}
+
+Antes de analizar el contenido de los diversos acuerdos administrados por la OMC, conviene distinguir entre diferentes categorías de acuerdos comerciales, según se trate de acuerdos multilaterales (afectan a los $164$ miembros de la OMC), plurilaterales (sólo son negociados por unos cuentos miembros de la OMC) o bilaterales (negociados por dos miembros), y según traten sobre materias reguladas por la OMC o no.\footnote{Los acuerdos plurilaterales deben respetar las normas de los Acuerdo de la OMC, especialmente la cláusula de nación más favorecida. cuando así se prevea. Existe cierto debate sobre hasta qué punto deben ponerse medios humanos ytécnicos de la OMC para dar apoyo a las reuniones de este tipo de iniciativas, si bien en la práctica, ninguna delegación  se ha opuesto a que se empleen las salas de la OMC para hablar de lo que los miembros quieran hablar.
+}
+
+Los acuerdos bilaterales no se negocian en Ginebra, sino entre países o regiones, pero siguiendo detenninadas condiciones que dictan las normas de la OMC, como luego veremos. 
+
+El cuadro I recoge la tipología de los diferentes acuerdos de la OMC: Conviene señalar que existen numerosas cuestiones comerciales que no están reguladas por la OMC o que están expresamente excluidas:
+
+o La concesión de visados, incluso cuando éstos son absolutamente necesarios para poder prestar detenninados servicios internacionales. Esta competencia sigue siendo puramente nacional, incluso dentro de la UE.
+
+o La regulación laboral o medioambiental, incluso cuando éstas tienen implicaciones comerciales evidentes. El Acuerdo de Subvenciones Pesqueras, cuyas primeras disciplinas se cerraron se cerraron en 2022, sí puede considerarse como un acuerdo con finalidad medioambiental, que se articula mediante limitaciones a las ayudas a la pesca, aplicables independientemente de la existencia o no de flujos comerciales
+
+o La regulación sobre la protección de las inversiones internacionales. A mediados de los años 90 se pretendió iniciar las negociaciones de un AMI (Acuerdo Multilateral de Inversiones) pero sin éxito.
+
+o La regulación de disciplinas sobre el apoyo público al crédito a la exportación, cuestión ésta que sí se aborda en la OCDE, dentro del conocido como Consenso OCDE. Ahora bien, desde la Conferencia de Nairobi, sí existen nonnas en la OMC sobre limitación al apoyo a la exportación agrícola, incluido el crédito a la exportación.
+
+
+\begin{center}
+\scriptsize
+\begin{tabular}{|p{0.15\linewidth}|p{0.17\linewidth}|p{0.23\linewidth}|p{0.30\linewidth}|}
+\hline
+\multirow{4}{*}{\textbf{EN LA OMC}} 
+& \textbf{Multilaterales} 
+& \multicolumn{2}{p{0.53\linewidth}|}{{\tiny Tratados de la OMC y sus acuerdos anexos: ESD, GATT, GATS, AG, TRIPS, TRIMS, AS, AD, Salvaguardas, Licencias de Importación, Reglas de Origen (RoO), AFC, etc.\par Acuerdo sobre subvenciones a la pesca.}} \\
+\cline{2-4}
+& \multirow{3}{*}{\textbf{Plurilaterales}} 
+& \multirow{2}{=}{Sobre ámbitos regulados en GATT o GATS} 
+& {\tiny Amplia cobertura sectorial:
+\begin{itemize}
+    \item TiSA: servicios; negociación interrumpida en 2019.
+\end{itemize}} \\
+\cline{4-4}
+& & 
+& {\tiny Reducida cobertura sectorial:
+\begin{itemize}
+    \item ITA-1 e ITA-2.
+    \item EGA: negociación interrumpida en 2019.
+    \item Desarrollo del GATS para la negociación de regulación doméstica.
+\end{itemize} }\\
+\cline{3-4}
+& & Sobre ámbitos no regulados en GATT o GATS & {\tiny GPA\par Iniciativas plurilaterales de Buenos Aires sobre comercio electrónico y facilitación de las inversiones.}\\
+\hline
+\multirow{3}{*}{\textbf{FUERA DE LA OMC}} 
+& \textbf{Unilaterales sobre ámbitos de la OMC} 
+& \multicolumn{2}{p{0.53\linewidth}|}{SPG de la UE.} \\
+\cline{2-4}
+& \textbf{Bilaterales sobre ámbitos de la OMC} & \multicolumn{2}{p{0.53\linewidth}|}{{\tiny Negociados fuera de la OMC, pero con condiciones fijadas en el GATT o el GATS: ALC.}} \\
+\cline{2-4}
+& \textbf{Otros sobre ámbitos no regulados por la OMC} & \multicolumn{2}{p{0.53\linewidth}|}{{\tiny Consenso OCDE\par BIT.}} \\
+\hline
+\end{tabular}
+\end{center}
+
+
+
+La defensa de la competencia en el comercio internacional. Esta es una gran excepción, en comparación con las normas nacionales o europeas. La OPEP, por ejemplo, no es un cartel ilegal en términos OMC, en la medida en que no existen normas multilaterales que limiten la fijación de precios o el reparto de la producción.
+
+Por último, la OMC apenas cuenta con normas expresamente pensadas para la era digital. Hay algunas excepciones como la denominada moratoria digital (que impide fijar tasas sobre la transmisiones electrónicas internacionales) o la Iniciativa Conjunta sobre el Comercio Electrónico, lanzada en 2017 y que sigue negociándose plurilateralmente, por 87 miembros. Esta es una carencia muy notable. Pensemos en la regulación por ejemplo de las obligaciones de ubicación de servidores de datos, o en cómo se otorgan los dominios web, entre otras muchas cuestiones fundamentales para el comercio internacional en la actualidad.
+
+
+\subsection{Multilaterales: }
+
+
+\subsubsection{GATT: Acuerdo General de Comercio y Aranceles}
+
+El Acuerdo General sobre Aranceles y Comercio, negociado inicialmente en 1947, rige el comercio internacional de mercancías para todos los miembros de la OMC. 
+
+El GA TI consta de cuatro partes y se completa con varios entendimientos para la aplicación de determinados artículos.
+• La Parte I del GA TI sólo contiene dos artículos centrada en el trato de nación más favorecida (Art. 1) y en su aplicación a la reducción de aranceles.
+• La parte II contiene muchos otros principios generales del comercio de mercancías.
+• En la parte III se regula la formación de uniones aduaneras, entre otras cuestiones.
+• Por último, la parte IV está destinada al comercio y desarrollo (fue introducida en la Ronda Kennedy)
+
+El GA TI se aplica sobre todos los bienes, incluidos los agrícolas, si bien, la reducción arancelaria de productos agrícolas sólo se inició desde el Acuerdo de Agricultura de la Ronda Uruguay.
+
+Estas son las reglas básicas del GA TI que rigen el comercio de mercancías
+
+• La cláusula de nación más favorecida (artículo I del GA TI) es el elemento fundamental del multilateralismo. Significa que cualquier preferencia concedida a cualquier miembro del Acuerdo, ha de ser automáticamente extendida erga omnes al resto de miembros. Así, en aplicación de la Cláusula de Nación más Favorecida, si un miembro ofrece una reducción arancelaria a otro, entonces esta reducción ha de aplicarse a todos. El arancel NMF hace referencia, por tanto, al arancel que un país aplica a todos los demás miembros de la OMC.
+
+
+• Consolidación de aranceles. Según se establece en el artículo 1 1, el arancel negociado en el GA TI es un arancel máximo, que se denomina arancel consolidado. El arancel puede situarse libremente en cualquier nivel por debajo del consolidado. Si se superara el consolidado, entonces los demás miembros de la OMC tienen derecho a solicitar compensaciones y, en su caso, a retirar preferencias equivalentes otorgadas en el GA TI. Las listas de aranceles consolidados se negocian en el GA TI con un nivel de desglose de 6 dígitos, común para toda la OMC, conocido como Sistema Armonizado.
+
+• Principio de trato nacional: una vez que un producto supera la aduana. debe ser tratado a todos los efectos como si fuera nacional. Esto supone. por ejemplo, que no se pueden fijar impuestos discriminatorios o reglas técnicas discriminatorias por el hecho de tratarse de un bien importado.
+
+• Libertad de tránsito. Se ha de permitir el libre tránsito de mercancías que atraviesan fisicamente un territorio aduanero. sin posibilidad de que se realice sobre dichas mercancías ninguna comprobación de tipo comercial. (descripción de la mercancía. aplicación de normas técnicas. pago de aranceles .... ) Este principio es tan potente, que incluso. en ocasiones, mercancías falsificadas podrían transitar por un territorio sin poder ser incautadas durante el tránsito y sólo en destino, en caso de contar allí con protección. Se trata de un principio de gran importancia para los países que no cuentan con litoral y dependen del tránsito a través de sus países vecinos.• Valoración en aduana: el GA TT dispone que el valor en aduana sobre el que aplica el arancel, es el precio en factura valorado en tém1inos CIF, es decir, una vez añadidos los costes de seguro y flete hasta la frontera, incluso si éstos no figuran en factura. Obsérvese que el valor CIF es mayor que el FOB, lo que implica una mayor recaudación arancelaria, motivo histórico por el que se fijó como referencia para la valoración. El Código de Valoración en Aduana anexo al GA TT incluye criterios para determinar el valor en frontera cuando no esté disponible el precio en factura, tomando datos de mercancías idénticas o similares en el mismo país, precios de reventa de mercancías importadas o, incluso, el valor reconstruido a partir de los costes.
+
+• El GA TT prohíbe la fijación de restricciones cuantitativas a la importación/exportación de bienes. Las cuotas o limitaciones a la cantidad a exportar/importar están, por lo tanto, prohibidas, como principio general. Los aranceles pueden ser tan elevados como los quiera negociar un país en su lista de compromisos, pero lo que no puede es prohibirse el comercio de un bien. Conviene precisar que los contingentes arancelarios (TRQs, tariffrate quotas) no son cuotas fisicas, sino aranceles escalonados en tramos crecientes y por lo tanto no están prohibidos, siendo muy habituales para la protección de productos agrícolas. Más allá de esta prohibición general, el GA TT original no fijó ninguna limitación expresa a las tasas a la exportación, lo que ha llevado muchos países a fijar tasas a la exportación de materias primas como forma de fomentar la elaboración industrial interna. (Ejemplo. Exportar aceite de soja en lugar de soja. exportar chips en lugar de tierras raras ... ) Para salvar este escollo, en las adhesiones más recientes (China. Rusia ... ) se fijaron prohibiciones a las tasas a la exportación de determinados productos.
+
+El GATT contempla algunas excepciones a estos principios. Por ejemplo:
+
+• El GA TT reconoce la posibilidad de que los países afectados por crisis de balanza de pagos puedan imponer restricciones sobre las importaciones, siempre y cuando se trate de medidas con carácter horizontal (no discriminatorias), tengan carácter temporal, se adopten medidas correctivas y las medidas no vayan más allá de las estrictamente necesarias. Las medidasadoptadas no necesitan la aprobación expresa del resto miembros, pero sí existe la obligación de notificación y de discusión en el seno del Comité de Balanza de Pagos. El FMI interviene en la valoración de la situación de balanza de pagos. que se presenta a este Comité, pero no fija condiciones.
+
+• El GA TT también permite, bajo determinados requisitos, la posibilidad de limitar el comercio en situaciones de crisis alimentarias o situaciones de carestía, como excepción a la prohibición general de fijación restricciones cuantitativas
+
+• El GA TT contempla también la posibilidad de fijación de restricciones comerciales en situaciones de conflicto, como por ejemplo las sanciones comerciales entre países en guerra.
+
+En la Ronda Kennedy se introdujo en la parte I V del GA TT, disposiciones a favor de países en desarrollo, como complemento a otras disposiciones ya existentes en el GA TT del 47. El GA TT habilita para que los países desarrollados puedan otorgar preferencias a países en desarrollo que no sean extendidas erga omnes, siempre y cuando estas preferencias se basen en criterios objetivos y sean autorizadas por el resto de países. Esta autorización se conoce como waiver, puesto que es una autorización temporal para no aplicar la Cláusula de Nación más Favorecida. El Sistema de Preferencias Generalizadas de la UE, por ejemplo, es un sistema de preferencias autónomas, a favor sólo de detenninados países en desarrollo, que se aplica en virtud de un waiver concedido a la UE. El GA TT también recoge excepciones bajo el argumento de la industria naciente en favor de países en desarrollo.
+
+Para permitir la integración comercial con carácter bilateral de aquellos miembros que deseen avanzar más rápidamente que la liberalización multilateral, el artículo X X I V del GA TT fija las condiciones para la formación de Uniones Aduaneras y, por extensión, de acuerdos comerciales bilaterales. Hay que tener en cuenta que un acuerdo comercial es, en realidad, una excepción a la Cláusula de Nación más Favorecida, en la medida en que  las concesiones comerciales se _limitan a las partes del acuerdo y no se extienden erga omnes. Para que las preferencias arancelarias no se extiendan a terceros, el GATT fija las siguientes condiciones:
+
+La Unión Aduanera o, en su caso, el acuerdo comercial ha de cubrir sustancialmente todo el comercio entre las partes. En la práctica, se viene entendiendo que el término "sustancialmente" significa más del 90% del comercio bilateral. No es necesario que se alcance la eliminación total de aranceles; bastaría con que la reducción de aranceles afectara al 90% del comercio bilateral. Todos los acuerdos comerciales al uso, que tiene. la UE abarcan la práctica totalidad del comercio bilateral. Si el acuerdo tuviera carácter sectorial reducido. entonces la reducción arancelaria pasa a beneficiar a todo el mundo, no solo a las partes del Acuerdo.
+
+La unión Aduanera ha de fijar, en promedio, un arancel inferior al inicial, si bien en algunos productos pudiera resultar superior.
+
+Si algún otro miembro del GA TT se viera perjudicado por la elevación de algún arancel en algún producto concreto como resultado de la formación de una Unión Aduanera, entonces tiene derecho a ser compensado.\footnote{Así. por ejemplo, cuando Croacia se adhiere a la UE. que es una Unión Aduanera. hubo de asumir el arancel común de la UE. que en algunos productos era superior al inicial. China solicitó compensaciones en un producto de interés particular para él. el ajo. y la UE se vio obligada a abrir un contingente arancelario para algunos productos agrícolas, en particular el ajo.
+}
+
+\subsubsection{Otros acuerdos}
+Además del GATT, el Acuerdo de la OMC incluye entre sus anexos diversos acuerdos relativos al comercio de mercancías. Por seguir un orden estructurado, que no cronológico, trataremos los siguientes acuerdos: 
+• Primero, los acuerdos que tienen que ver con detenninados procedimientos aduaneros (reglas de origen, licencias de importación y el Acuerdo de Facilitación de Comercio) 
+• Luego, los acuerdos que se centran en evitar la aparición de barreras no arancelarias en la regulación (SPS, TBT), 
+• A continuación, los que regulan los instrumentos de defensa comercial (Antidumping, Antisubvención y Salvaguardias) 
+• Finalmente, el TRIMS y el Acuerdo de Agricultura
+
+\subsubsection{Normas de Origen}
+Las normas de origen son criterios técnicos que permiten detenninar cuándo una mercancía es producida en un territorio o en otro, a efectos de la aplicación de un régimen comercial u otro. (Así por ejemplo, en productos textiles, EE.UU. exige tres transformaciones en un mismo país (hilo, tejido, confección) para que una prenda sea considerada originaria de dicho país.)
+
+El Acuerdo tiene por objetivo último la armonización internacional de las normas de origen; pero lo cierto es que, fuera de la OMC, un mismo país aplica a menudo reglas de origen diferentes en los diferentes ALCs que tiene suscritos. Estas discrepancias en las normas de origen hacen que las empresas, en especial las PYMES. soporten un elevado coste cumplimiento para certificar el origen de las mercancías y así poder acogerse a los beneficios de los diversos acuerdos comerciales.
+
+Vl.11. El Acuerdo de licencias de importación 
+
+Las licencias a la importación están permitidas por el GA TI. Ahora bien, han de ser no discriminatorias. de aplicación igual para todos los miembros de la OMC. Este Acuerdo. anexo al GATT, regula los plazos máximos (60 días) para la concesión y establece pautas para mejorar la información y transparencia para los operadores.
+
+VI.111. El Acuerdo de facilitación del comercio
+
+El AFC se aprobó en la Conferencia Ministerial de Bali de 201 3 y es el único acuerdo incorporado como a la OMC desde la entrada en vigor de la OMC el 1 de enero de 1 995. Actualmente se encuentra en fase de ratificación. Su entrada en vigor se producirá cuando dos tercios de losmiembros de la OMC lo hayan ratificado.
+
+El objetivo del Acuerdo de Facilitación de Comercio es simplificar los trámites en aduanas. La OCDE estima que una aplicación completa de las cláusulas contenidas en el Acuerdo del Faci I itación de Comercio podría reducir los costes asociados al comercio entre un 1 3 y un 1 5%. Es decir, los beneficios potenciales del Acuerdo de Facilitación de Comercio son superiores a los que se derivarían de las reducciones arancelarias que se están negociando en la Ronda Doha.
+
+Entre sus principales logros, cabe destacar:
+- La limitación de tasas de gestión aduanera al coste administrativo del servicio prestado.
+- La obligación de aceptar los documentos con carácter previo al despacho aduanero, con el fin de agilizar el mismo.
+- La simplificación de algunos trámites para los envíos por courier o servicios de mensajería.
+- La obligación de permitir la actuación de los llamados operadores económicos autorizados.
+
+Se trata de operadores comerciales, importadores o exportadores, que operan en grandes volúmenes y de forma habitual. Su condición de AOE les permite una simplificación de los trámites a realizar a cambio de mayores obligaciones de infonnación.
+
+Una característica destacada del AFC es que numerosas cláusulas han sido redactadas como  compromisos no vinculantes (cláusulas de best-endevour). Así, no fue posible establecer la obligación de que todas las aduanas de la OMC establecieran ventanillas únicas o procedimientos telemáticos. 
+
+Además, los países en desarrollo, en especial los PMAs, disponen de amplios periodos transitorios, que ellos mismos definen, para aplicar el acuerdo. 
+
+El Acuerdo de Facilitación de Comercio ha sido considerado por muchos como un acuerdo que puede servir de modelo para futuras negociaciones en la OMC, en especial porque pennite la combinación de cláusulas vinculantes con cláusulas de best-endevour y habilita periodos transitorios muy amplios, a escoger por los propios países en desarrollo, además de contar con mecanismos de asistencia financiera para la puesta en práctica por parte de los PEDs, en especial los Países Menos Avanzados.
+
+VI.IV. El Acuerdo SPS
+
+El Acuerdo sobre la Aplicación de Medidas Sanitarias y Fitosanitarias permite a los miembros de la OMC establecer normas sobre seguridad de los alimentos, la salud de animales y l a preservación d e los vegetales, pero a l a vez fija que éstas han de estar fundadas en principios científicos y no ser discriminatorias o arbitrarias.
+
+VI.V. El Acuerdo TBT
+
+Aprobado, al igual que el SPS, en la Ronda Tokio fue desarrollado en la Ronda Uruguay. También es conocido como Código de Normalización.
+
+Muy similar al acuerdo SPS en cuanto a su funcionamiento. Pretende que las normas técnicas no han de crear obstáculos innecesarios al comercio internacional. Se acepta obviamente que se puedan imponer requisitos técnicos para la defensa de la calidad de las exportaciones, la protección de la salud y vida de personas y animales y la protección del medio ��mbiente.
+
+VI.VI. El Acuerdo Antidum ping
+
+El artículo 6 del GA TT-47 estable una cláusula antidumping que resultó inicialmente inoperante porque, al estar en la Primera Parte del Acuerdo, sólo era aplicable en la medida en que fuera compatible con la legislación anterior (lo que se conoce como cláusula del abuelo, grandfather 's clause). En la Ronda Kennedy se evitó esta restricción con la elaboración de un Código Antidumping que fue posteriormente revisado en la Ronda Tokio.
+
+En términos del GA TI el dumping se define como la exportación de un determinado bien por debajo de su valor normal, que genere o amenace con crear un perjuicio a la industria nacional, la del país importador.
+
+El valor normal se calcula, por regla general, co1,:io el precio al que se vende el mismo bien al mercado doméstico del país de exportación. Ahora bien, si no es posible conocer cuál es este precio, entonces es necesario calcular el valor normal a partir de precios aplicados en otros mercados o incluso mediante una reconstrucción de los costes más un margen razonable de beneficio.
+
+Si se demuestra la existencia de perjuicio, a la diferencia entre el precio de venta y el valor normal, se le conoce como margen de dumping. Si el margen de dumping superara el 2%, se pennite la imposición de derechos antidumping que, en ningún caso pueden superar el margen de dumping. Los derechos antidumping vencen de forma automática, como muy tarde, a los 5 años (sunset clause) Para poder estimar la existencia de daño a la industria nacional. en cualquier caso, es necesario que el volumen mínimo de importaciones supere el 1 % del mercado interno o bien que las importaciones objeto de dumping supongan ;?:: 3% del volumen total de importaciones del producto en cuestión.
+
+El procedimiento antidumping lo inicia la industria afectada, mediante la aportación de pruebas y ha de ser notificado al país exportador. Es posible establecer derechos antidumping con carácter provisional (para evitar perjuicios mientras se aprueban los derechos definitivos). Además se reconoce la posibilidad de llegar a acuerdos de precios con los expo11adores como vía de solución del conflicto. En último ténnino. se fijan los derechos antidumping definitivos.
+
+VI.Vil. El Acuerdo a ntisu bvención y de med idas compensatorias
+
+En este acuerdo, conocido como Código Antisubvención, se definen tres tipos de subvenciones:
+
+• Prohibidas: las que están vinculadas a objetivos concretos de exportación, o al uso de productos nacionales. Estas subvenciones pueden ser invocadas frente al Órgano de Solución de Diferencias.
+
+• Recurribles: aquellas que producen perjuicio grave a la producción de otros miembros de la OMC. También son invocables frente al Órgano de Solución de Diferencias y en su caso, habilitar, para que el miembro afectado pueda imponer medidas compensatorias (que funcionan como aranceles)
+
+• No recurribles: las que estén ligadas a la 1+D, regiones más desfavorecidas, requisitos medioambientales. No pueden ser invocadas ante el OSO, aunque sí pueden emitirse recomendaciones en caso de que causen perjuicio.
+
+Todas las subvenciones, sean prohibidas o no, han de ser notificadas periódicamente a l a OMC cuando tienen carácter específico, es decir, cuando están orientadas a una rama o sector concreto.
+
+El Acuerdo de Subvenciones y Medidas Compensatorias pennite la imposición de derechos compensatorios frente a las subvenciones de otros, cuando éstas generen un perjuicio grave. Los  procedimientos para la imposición de derechos compensatorios son parecidos a los que se establecen para fijar derechos antidumping. Pero conviene tener en cuenta que mientras que el dumping lo comete una empresa, en el caso de las subvenciones el causante es el sector público.
+
+El Acuerdo de Subvenciones es considerado insuficiente por muchos miembros de la OMC (en particular, EEUU) para hacer frente de manera eficaz a las proliferación de ayudas del sector público que distorsionan la competencia internacional (recapitalización de empresas, ayudas encubiertas, facilidades al crédito a la exportación.)
+
+VI.V I I I. El Acuerdo de salvaguardias
+
+El artículo XIX del GATT-47 pennite '"emprender una acción de salvaguardia para proteger una determinada industria nacional cuando se esté importando un producto en unas cantidades o bajo unas condiciones tales que causen o puedan causar un perjuicio grave a la industria nacional".
+
+Hasta la Ronda Uruguay existían numerosos problemas en la aplicación de las medidas de salvaguardia:
+- Dificultad para probar la relación causal entre las importaciones y el daño a la industria nacional.
+- Falta de proporcionalidad entre medidas de salvaguardia adoptadas y el daño causado.
+- Extensión abusiva de las medidas de salvaguardia a todas las importaciones de un determinado producto, independientemente del país de origen.
+
+- Proliferación de las llamadas medidas de "zona_ gris", como las denominadas "restricciones voluntarias de exportacion" (semiconductores japoneses exportados a EE.UU. en los 80s, exportaciones japonesas de coches a EE.UU. en los 80s) así como de los acuerdos de ordenación de mercados
+
+El Acuerdo de Salvaguardias de la Ronda Uruguay fija criterios para evaluar la gravedad del perjuicio y establece un nuevo procedimiento para la aplicación de medidas de salvaguardia. Las medidas de salvaguardia se han de aprobar dentro del Comité de Salvaguardias que, además, se encarga de vigilar el cumplimiento del Código. La investigación es transparente con posibilidad de que las partes interesadas puedan presentar pruebas. Excepcionalmente, y si existe perjuicio grave. se pueden imponer medidas de salvaguardia provisional por una duración máxima de 200 días.
+
+El Códig�� no detalla cuáles son las medidas de salvaguardia permitidas. En la práctica, suelen consistir en la obligación de notificación previa a la importación y la imposición de contingentes. En cualquier caso, el acuerdo sí obliga a que estas medidas se limiten a prevenir o reparar el perjuicio grave. Las medidas adoptadas expiran automáticamente al cabo de 4 años, prorrogables por otros 4 años. Por último, una vez impuestas las medidas de salvaguardia, éstas han de ir reduciéndose progresivamente. 
+
+El Acuerdo de Salvaguardias fijó un calendario para la eliminación de medidas de salvaguardia existentes en aquel momento, de las restricciones voluntarias a la exportación (VERs) y otros acuerdos de ordenación de mercados (AOMs). Todos ellos tuvieron que eliminarse antes de 1999.
+
+VI.IX. El Acuerdo sobre medidas en materia de i nversiones relacionadas con
+el comercio (TRIMs)
+
+El TRJMS (Trade raelated investment measures) aprobado en la Ronda Uruguay, prohíbe que los países miembros de la OMC establezcan objetivos mínimos de exportación sobre las inversiones extranjeras así como porcentajes mínimos de suministro local a las empresas inversoras extranjeras.
+
+Este acuerdo no regula la protección de la inversión (como los BITs o los APPRis) sino los requisitos comerciales que se pueden imponer a las inversiones. de ahí que lo mencionemos en este tema.
+
+VI.X. E l Acuerdo de Agricultura
+.c:x
+Se negoció durante la Ronda Uruguay. Aunque los bienes agrícolas están sujetos al GA TT, nunca antes habían sido incluidos en las negociaciones de desarme arancelario. Los bienes regulados por el AG comprenden productos de la agricultura y la ganadería. vinos y bebidas. pero no los productos de la pesca.\footnote{Incluye también algodón y fibras naturales, así como pieles para cueros. algunos bienes agrícolas transformados (azúcar. chocolate). pero no muchos otros (galletas. preparados alimenticios) conocidos como PATs ( Productos Agrícolas Transfomrndos) que se negocian en el GA TT dentro de la categoría industrial. conocida como NAMA (non-agricultura! market access ).
+}
+
+El AG contiene tres pilares:
+
+• El acceso a mercado: el AG obligó a transformar en aranceles todas las medidas de protección agrícola no arancelarias. Una vez arancel izadas todas las medidas de efecto equivalente, se estableció a una reducción media de aranceles del 36% en 6 años para los PDs y del 24% para los PEDs. Desde el AG no se han producido más avances en este pilar de la agricultura.
+
+• La ayuda interna a la agricultura: así como los aranceles agrícolas pueden negociarse en la OMC o en ALCs bilaterales, la ayuda interna sólo tiene sentido ser negociada en un foro multilateral, como la OMC.
+
+El Acuerdo de Agricultura limita la cantidad de ayuda interna que puede recibir el sector agrícola con el fin de limitar la distorsión de los mercados internacionales. Se distinguen tres categorías de ayudas:
+
+Ayudas ámbar: se trata de ayudas que generan distorsión en el comercio internacional. Los miembros de la OMC calcularon el importe de estas medidas que cada uno aplicaba (Medida Global de Ayuda) y se comprometieron a reducirla en un 20% entre 1995 y 200 1 . (Los PEDs asumieron un compromiso de reducción del 1 3%).
+
+Las ayudas de caja verde son aquellas que se supone tienen efectos mínimos en el comercio, por lo que se pueden aplicar libremente: se trata de medidas para fomentar la investigación, los pagos directos a los agricultores desvinculados de la producción, la asistencia a los agricultores para ayudar a la reestructuración de la agricultura y los programas medioambientales o regionales.
+
+Medidas de caja azul. El AG pennite bajo esta categoría ciertos pagos directos a los agricultores en casos en que se les exija limitar la producción. En esta categoría de caja azul se permiten adicionalmente determinadas ayudas (que aunque potencialmente pudieran considerarse como distorsionantes) no superan el umbral "de minimis" fijado en el 5% del valor total del producto o de los productos que reciben la ayuda. ( 10% en
+los PEDs)
+
+• Las medidas de apoyo a la exportación: el AG prohibió el establecimiento de nuevas subvenciones a la exportación. Sobre las existentes, que habían de ser primeramente notificadas a la OMC, se estableció un porcentaje de reducción de los subsidios a la exportación, del mismo importe que los porcentajes de reducción acordados para los aranceles agrícolas (36% y 24%). Sin embargo, no se reguló nada acerca de otras form,JS de apoyo a la exportación como son el crédito a la exportación, la actividad a través de empresas públicas o el uso de la ayuda alimentaria como fonna de colocación de excedentes. Estas tres fonnas de apoyo fueron limitadas en la Conferencia Ministerial de Nairobi de 2016. (Lo cierto es que la U E ha ido reduciendo progresivamente sus subvenciones a la exportación y desde 20 1 3 ya no aplica ninguna. Con el Acuerdo de 201 6 no podrá aplicar ninguna).
+
+Otras discusiones actuales en torno a la agricultura se centran en los siguientes aspectos: 
+
+India planteó en la Conferencia de Bali de 20 13 la cuestión conocida como "solución de seguridad alimentaria". Solicitaba que se ajustara los límites de ayuda ámbar para que pudieran constituir fondos de existencias públicas de alimentos por motivos de seguridad alimentaria. La petición se refería sólo a determinados productos básicos. De hecho, todo parece indicar que India y otros países emergentes que han ido desarrollando programas agrícolas que están superando de facto los límites permitidos por la OMC. Los países de la OMC se comprometieron, como solucióntemporal, a no denunciar a la India y otros PEDs ante el órgano de solución de diferencias. La India sigue insistiendo en una "solución definitiva" que pasa por la modificación de las cantidades máximas autorizadas.
+
+Algodón: el grupo Cotton 4 (Benin, Burkina Faso, Chad y Mal) vienen exigiendo desde hace mucho tiempo la eliminación de aranceles sobre el algodón y la reducción de medidas de apoyo interno adicionales para estos productos (EE.UU. es el país que más subvenciona el algodón). En la Conferencia Ministerial de Nairobi, los Países Desarrollados aceptaron eliminar todo tipo de aranceles y cuotas al algodónprocedente de los PMAs. Los PEDs no asumieron un compromiso obligatorio, sino tan solo de "mejor esfuerzo". (Esta iniciativa afectaría especialmente a Grecia y Espaf'la, principales productores de algodón en la UE)
+
+\subsection{Plurilaterales: }
+A diferencia de los acuerdos multilaterales que hemos visto hasta ahora, los acuerdos plurilaterales no son finn ados por la totalidad de m¡'embros de la OMC sino por un número limitado.
+
+El cuadro 2, recoge los principales acuerdos plurilaterales acordados en la OMC, así como otros acuerdos que se negociaron y no se llegaron a concluir.
+
+\begin{center}
+\begin{tabular}{|p{0.15\linewidth}|p{0.15\linewidth}|p{0.15\linewidth}|p{0.25\linewidth}|p{0.20\linewidth}|}
+\hline
+\textbf{ACUERDO} &\textbf{ORIGEN}  & \textbf{MIEMBROS} & \textbf{PRODUCTOS} & \textbf{DISPOSICIONES} \\
+\hline
+\multicolumn{5}{c}{\textbf{En vigor}} \\
+\hline
+\textbf{Aeronaves Civiles} & Ronda de Tokio & $28$ & { Aeronaves civiles y sus componentes} & Eliminación de aranceles \\
+\hline
+\textbf{Productos Químicos} &  & $>30$ & { Capítulos $28$ y $29$ de aranceles HS} & Consolidación del arancel al tipo $6,5\%$, $5\%$ o $0\%$ según productos\\
+\hline
+\textbf{Productos farmacéuticos} & Ronda de Uruguay & $22$ & { Medicamentos de uso humano y animal, así como sus principios activos} & Eliminación de aranceles \\
+\hline
+\textbf{ITA} & $1996$ (ITA-1) y ampliación en 2014 (ITA-2) & $29$ & { Ordenadores, impresoras, teléfonos, escáneres, etc. \par En 2014 se amplía el ITA para incluir nuevos productos, como maquinaria con elevado componente informático }& Eliminación de aranceles \\
+\hline
+\multicolumn{5}{c}{\textbf{Acuerdos que no se llegaron a concluir}} \\
+\hline
+\textbf{EGA} & Negociaciones entre 2014 y 2020 &  & { Paneles fotovoltáicos, molinos eólicos y muchos productos con tecología para la reducción de emisiones y control de la contaminación} & Se pretendía la eliminación de aranceles \\
+\hline
+\end{tabular}
+\end{center}
+
+
+Todas las ventajas arancelarias concedidas en el acuerdo plurilateral, han de reflejarse en las listas GATT de cada miembro que asume un compromiso. De esta manera, todos los países de la OMC acaban beneficiándose del acuerdo, incluso si no han participado en el mismo.
+
+La explicación es que, a diferencia de los acuerdos bilaterales, todos estos acuerdos plurilateralestienen una cobertura sectorial específica, ("no cubren sustancialmente todo el comercio") lo que significa que no pueden ser considerados como Uniones Aduaneras en el sentido del artículo XXIV del GA TI y, por ello, no escapan a la aplicación de la cláusula de nación más favorecida del GATT.\footnote{Por ejemplo, el Acuerdo ITA, para la eliminación de aranceles de productos de tecnologías de la infonnación, es un  acuerdo plurilateral al que pertenecen unos 45 miembros de la OMC. Al tratarse de un acuerdo con cobertura sectorial limitada (a los productos ITA son una parte reducida del comercio entre las partes. claramente inferior al del $90\%$ del comercio entre las partes), entonces la eliminación de aranceles del ITA ha de extenderse erga omnes. en aplicación de la Cláusula de Nación más Favorecida. De esta fonna, Brasil, que no es miembro del ITA. se beneficia del acuerdo; Sus exportaciones de bienes ITA a países ITA no son grabadas. mientras que mantiene su arancel NMF en sus importaciones
+}
+
+Los acuerdos plurilaterales son una fórmula imaginativa para avanzar en la apertura de mercados, pero presentan dos dificultades:
+
+La delimitación de los productos a liberalizar. Dentro de un mismo código arancelario, pueden existir bienes incluidos que haya que incluir en el acuerdo y otros que no. El ITA y el EGA contienen una definición de productos muy concreta que exige crear categorías diferenciadas de productos dentro de una misma partida arancelaria (lo que se conoce como ex outs o simplemente ex). La identificación de un ex out es un procedimiento complejo que recae sobre la administración de aduanas, autoridad competente en materia de clasificación arancelaria.\footnote{La existencia de ex outs dificiles de verificar abre también la puerta a prácticas fraudulentas por parte de los operadores así como a los propios miembros del acuerdo. que a menudo consideran como excluidos bienes que, en principio. debían estar in cluidos.
+}
+
+La existencia de free riders. Algunos países como Brasil, Argentina, México no participan de ningún acuerdo plurilateral, aun beneficiándose de los mismos. Es decir, existen numerosos países intermedios que actúan como free-riders sistemáticos. Cada nuevo acuerdo plurilateral reduce los incentivos de estos países para negociar la liberalización de esos productos en la Ronda Doha. De ahí que para que tenga sentido negociar acuerdos plurilaterales sea necesario conformar una masa crítica de países participantes suficientemente importante como para que los beneficios del acuerdo superen el regalo (concesión unilateral) que se hace a terceros países.
+
+Existen numerosas iniciativas actualmente para negociar o ampliar acuerdos existentes, con diferentes
+
+
+
+
+
+
+\clearpage
+\section{World Trade Organization: ¿La crisis del multilateralismo?}
+
+
+Los tres pilares de la OMC están actualmente en un contexto de profunda crisis. 
+
+Para comprender el alcance de los conflictos que sufre el sistema comercial internacional conviene tener presente que la OMC se construyó sobre los cimientos de una economía liberal en la que se aspiraba a que conforme avanzase la liberalización comercial multilateral, el mercado asignase los recursos de  manera eficiente a escala mundial. Sin embargo, en la OMC conviven una gran heterogeneidad de países: ricos y pobres; economías avanzadas, emergentes y muy atrasadas; economías de mercado y otras en las que el Estado interfiere significativamente en la asignación de recursos buscando objetivos políticos y no de eficiencia productiva; países que se guían por los principios liberales y aquellos declaradamente iliberales y autocráticos.
+
+La incorporación de China a la OMC en 2001 alteró profundamente el orden comercial internacional por dos motivos. En primer lugar, China se ha convertido paulatinamente en el principal actor en el comercio mundial de bienes. En segundo lugar, China no está dispuesta a: i) aceptar la economía de mercado como mecanismo de asignación de recursos; ii) renunciar a su intervencionismo a través de las subvenciones y las empresas públicas; y iii) desistir en su exigencia a las empresas extranjeras de una transferencia forzada de tecnología a empresas nacionales. La pertenencia de China a la OMC es, en sí misma, un reto al funcionamiento de la OMC por la especial naturaleza de su sistema económico, que ellos definen como una economía de mercado socialista y que la mayoría la consideran como un capitalismo de Estado (Mavroidis y Sapir, 2019). Su particular naturaleza y su gran tamaño explican gran parte del conflicto comercial internacional. China mantiene un sistema económico que no se rige por las reglas del mercado, que desarrolla grandesempresas públicas, que condicionan con frecuencia el comportamiento de las empresas privadas, y que exige a las empresas extranjeras una transferencia forzada de tecnología a empresas nacionales (Chiang, 2017). Esta organización de la actividad productiva lleva inevitablemente a un conflicto económico internacional.
+
+Precisamente por las características del sistema económico chino, en el que se mezcla lo público y loprivado con generosas subvenciones tanto económicas como financieras, al ingresar China en la OMC no se le consideró que fuese una economía de mercado, y sigue sin considerársela como tal. Esto permite al resto de los países miembros aplicar las cláusulas antidumping o compensatorias de subvenciones a las empresas chinas con gran facilidad en el caso de avalancha de productos en sus mercados (Feás y Steinberg, 2019).
+
+
+
+
+En el pilar negociador, desde el lanzamiento de la Ronda Doha, solo se ha cerrado dos acuerdos mínimamente significativos (El Acuerdo de Facilitación de Comercio (Bali) y el acuerdo sobre limitaciones al crédito a la exportación agrícola (Nairobi) a pesar de los permanentes e imaginativos intentos para desbloquear la situación.\footnote{El pilar de administración de los acuerdos sigue funcionando de manera correcta y aparentemente es el que menos ha sufrido: pero la falta de nuevos acuerdos. la evidente obsolescencia de numerosas normas comerciales y. sobre tocio. la incapacidad de resolver disputas están convirtiendo este pilaren un foro de debate. más dialéctico que práctico. similar a otras instituciones del ámbito de Naciones Unidas. donde los problemas e incumplimientos se abordan de forma reiterada sin avance alguno.
+}
+
+
+\subsection{Crisis interna: ¿Por qué genera descontenta entre sus miembros?}
+Las organizaciones internacionales utilizan, para la mayoría de las decisiones no judiciales, uno de tres tipos de reglas de adopción de decisiones: (i) la regla mayoritaria, las decisiones se adoptan por mayoría de votos de los Estados miembros y cada miembro dispone de un voto; (ii) el voto ponderado, las decisiones se adoptan por mayoría o mayoría cualificada, y a cada Estado se le asigna un número de votos u otras prerrogativas procedimentales en proporción a su población, su contribución financiera a la organización u otros factores; o, (iii) la igualdad soberana. 
+
+La igualdad soberana exige, en principio, negar formalmente cualquier diferencia de estatus, y otorgar \textbf{igual representación e igual poder de voto a los Estados} en las organizaciones internacionales, adoptando sus decisiones por consenso o unanimidad de los miembros. Como sabemos, el proceso de adopción de decisiones por consenso del GATT/OMC y los procedimientos asociados, se fundamenta sobre este principio. Sin embargo, este hecho plantea tres cuestiones interrelacionadas sobre la relación entre la autoridad estatal y el derecho internacional, siendo la primera de ellas la más interesante: ¿por qué potencias como Estados Unidos y la Comunidad Europea (CE) aceptarían una norma de adopción de decisiones por consenso en una organización como el GATT/OMC, cuyas normas son jurídicamente vinculantes?
+
+\subsubsection{Desarrollo: ¿Son verdaderamente iguales todas las Naciones?}
+Contestar a esta pregunta nos conduce directamente a uno de los dos conflictos internos más importantes que ha concluido en \textit{la crisis del multilateralismo}. 
+
+La realidad es que, aunque las rondas comerciales se han iniciado formalmente mediante negociaciones basadas en normas jurídicas, la evidencia empírica demuestra que, dado que el hard law solo se crea cuando una ronda concluye, estas han terminado resolviéndose mediante negociaciones basadas en relaciones de poder. En consecuencia, la adopción de decisiones por consenso en el GATT/OMC constituye una duplicidad organizada: \textbf{permite mantener la apariencia de adhesión al ideal de la igualdad soberana de los Estados, al mismo tiempo que acomoda la realidad instrumental de un sistema caracterizado por una distribución asimétrica del poder, realidad sobre la que, paradójicamente, se afirma que descansa el propio mecanismo de consenso}. En esencia, las rondas comerciales pueden analizarse en tres fases parcialmente superpuestas: el lanzamiento de la ronda, la formulación informal de la agenda y el cierre de la negociación. Y, en términos generales, a medida que las rondas avanzan desde su inicio hasta su conclusión, \textbf{el poder se emplea de forma cada vez más explícita}.
+
+Entonces, ¿cómo han conseguido la Unión Europea y Estados Unidos controlar los resultados del GATT/OMC frente a una norma que exige la adopción de decisiones por consenso? ¿Y por qué se han esforzado en mantener normas basadas en la igualdad soberana de los Estados, incluida la regla del consenso, si en la práctica esos gobiernos poderosos dominan la toma de decisiones dentro del GATT/OMC?
+
+El poder emana de tres fuentes principales: (i) el poder de mercado; (ii) las redes de inteligencia; (iii) las coaliciones; y, (iv) las intituciones locales.\footnote{Se considera que las fuentes de poder en una negociación comercial emanan de cuatro fuentes principales (DRAHOS, 2002):
+\begin{la}
+    \item \textbf{Poder de mercado}. La primera y más importante es el poder de mercado del Estado. El control de un amplio mercado interno proporciona a un Estado una poderosa herramienta negociadora. Un país que dispone de un gran mercado interno al que otros desean acceder, o del que ya dependen comercialmente, está en condiciones de formular amenazas creíbles, así como promesas creíbles de asistencia financiera o técnica. Durante la Ronda Uruguay, varios países en desarrollo disfrutaban de acceso preferencial y libre de aranceles al mercado estadounidense mediante el Sistema Generalizado de Preferencias (SGP). No obstante, en 1984, Estados Unidos modificó su Trade Act de 1974, condicionando el mantenimiento de estos beneficios a la adopción y aplicación de niveles adecuados de protección de la propiedad intelectual (ABBOTT, 1989): numerosos países en desarrollo fueron amenazados con la suspensión de los beneficios del SGP por no establecer estándares suficientes de protección de la propiedad intelectual y, en algunos casos, dichas sanciones llegaron efectivamente a imponerse (SELL, 1995);
+    \item \textbf{Redes de inteligencia}. La segunda fuente del poder negociador reside en lo que podría denominarse las redes de inteligencia comercial de un Estado: recopilar, distribuir y analizar información relativa al comercio, la economía y el desempeño empresarial tanto del propio Estado como de otros países. Cuanto mayor sea el grado de integración de la red en el intercambio y análisis de información, mayor será previsiblemente su eficacia en una negociación comercial. Fue precisamente de este entorno empresarial de donde surgió, durante la década de 1980, la estrategia fundamental que impulsó un enfoque comercial de la protección internacional de la propiedad intelectual (DRAHOS, 1995). Fue la ACTN quien desarrolló una ambiciosa agenda de comercio e inversión que incluía la elaboración, dentro del GATT, de un amplio código sobre propiedad intelectual;
+    \item \textbf{Coaliciones}. La tercera fuente del poder negociador consiste en la capacidad del Estado para incorporar a otros actores (estatales y no estatales) a una coalición; y,
+    \item \textbf{Instituciones: atar de manos}. La cuarta fuente reside en las instituciones internas del Estado. Las reglas nacionales de toma de decisiones y las normas relativas a la delegación de autoridad negociadora influyen directamente sobre el poder de negociación del Estado. Un Estado que limita el margen de actuación de sus negociadores puede, en determinados contextos, incrementar su fortaleza negociadora. Al igual que Ulises, cuyos brazos fueron atados para resistir el canto de las sirenas, unos negociadores que carecen de capacidad para realizar concesiones pueden obtener un resultado más favorable que aquellos cuyas manos permanecen libres.
+\end{la}
+} Dicho esto, debemos entender que es una afirmación falsa y vacía considerar que una negociación comercial multilateral reduce la capacidad de un Estado poderoso para forzar la balanza. De hecho, puede incluso reforzarla, porque los Estados débiles, una vez obtenidas determinadas concesiones, pueden sentirse especialmente interesados en que la negociación llegue a buen término y, por ello, mostrarse más sensibles a amenazas como la posibilidad de que una gran potencia abandone las conversaciones. Por otro lado, una negociación multilateral obliga a los Estados más débiles a realizar complejos cálculos sobre compensaciones entre múltiples materias negociadas, sometiendo a mayor presión sus recursos analíticos y organizativos que una negociación bilateral limitada a un único asunto, como podría ser la inversión extranjera. Además, conviene señalar que una negociación comercial multilateral puede ser multilateral solo de nombre (como en el caso del GATS).
+
+Ahora bien, desde una perspectiva histórica, aunque las distintas rondas del Acuerdo General sobre Aranceles Aduaneros y Comercio (GATT) no siempre han satisfecho las expectativas de los países en desarrollo, sí les han proporcionado algunos beneficios. Todo esto cambió radicalmente en la Ronda de Uruguay. La razón es muy sencilla: durante el contexto de la Guerra Fría, la influencia del Departamento de Estado estadounidense lograba vincular la política comercial con la política de seguridad, limitando el uso de la coerción al finalizar la Ronda de Tokio. Esa restricción ya no existía cuando concluyó la Ronda Uruguay.
+
+El ejemplo más emblemático de este pdoer de coerción lo encontramos en la formación de círculas informales de negociación y la adopción del \textit{single undertaking}. Para superar la resistencia al consenso se recurrió con frecuencia a reuniones informales. Así, los líderes de los países desarrollados constituyeron, entre otros círculos, la \textbf{Green Room}, a la que eran invitados diversos líderes de países en desarrollo, participando en el denominado proceso de la \textbf{Green Room} (Sala Verde) con el objetivo de incorporarlos al grupo favorable al consenso. En las negociaciones del Acuerdo sobre los ADPIC (TRIPS), la presión ejercida durante estas reuniones llegó a ser tan intensa que algunos delegados de países en desarrollo comenzaron a referirse a ellas como las consultas de la \textbf{Black Room} (Sala Negra).\footnote{En los años setenta del siglo XX, con la emergecia de la Comunidad Europea (CE), se creó la Green Room como un mecanismo de negociación: EE UU y la CE negociaban los borradores de los acuerdos que luego los demás aceptaban sin derecho a enmiendas. Desde 1999, tras las protestas en Seattle, el secretariado de la OMC identificó la necesidad de una mayor apertura y transparencia en el proceso de formular las reglas para  legitimar a la OMC. Se fue aumentando el número de miembros en las reuniones de la Green Room: Canadá, Australia, Japón e India. China entró en 2005. (YUJIA, 2019).
+
+El Acuerdo sobre los Aspectos de los Derechos de Propiedad Intelectual relacionados con el Comercio (ADPIC o TRIPS), surgido de la Ronda Uruguay constituye un claro ejemplo porque su principal efecto ha consistido en transferir rentas desde los países en desarrollo hacia un reducido número de Estados ya ricos (MASKUS, 2000: 503; Banco Mundial, 2002: 133).
+}
+
+Una vez que este estilo informal de construcción del consenso mediante un círculo interno de Estados poderosos lograba efectivamente un consenso, los Estados más débiles sabían que los costes de oponerse a la unidad de las grandes potencias sobre una determinada cuestión serían elevados. Dado que, bajo la norma de consenso permanecer en silencio y permitir que la maquinaria del consenso siguiera avanzando era la opción preferida.\footnote{Los grupos que operan dentro de la OMC pueden clasificarse en tres grandes categorías: (i) grupos cuya cooperación deriva de acuerdos o agrupaciones regionales existentes al margen de la OMC (grupos regionales, ASEAN); (ii) surge como respuesta a cuestiones específicas, tales como el comercio de servicios, las indicaciones geográficas o el acceso a los medicamentos (simples alianzas de conveniencia), el Grupo Cairns; y, (iii) grupos cuya identidad deriva directamente del funcionamiento de un régimen internacional, por ejemplo los países menos adelantados (PMA) y a otros como países en desarrollo. Además del mencionado, los más importantes que surgieron en la Ronda de Uruguay son:
+\begin{la}
+    \item \textbf{Grupo Quad} (no confudir con: \href{https://en.wikipedia.org/wiki/Quadrilateral_Security_Dialogue}{\textit{Quadrilateral Security Dialogue}}, 2007). Formado por Estados Unidos, la Unión Europea, Japón y Canadá fue, sin duda, la coalición más poderosa que surgió. Durante las fases preparatorias de la Ronda Uruguay, fijó la agenda general y posteriormente impulsó su desarrollo. El Quad representaba la coalición de bloqueo más poderosa de toda la ronda y sin el consenso del Quad, ninguna negociación podía avanzar (BRAITHWAITE y DRAHOS, 2000: 199);
+    \item \textbf{Grupo de los $77$ y derivados: Contra TRIMPS}. Un grupo de diez países en desarrollo liderado por India y Brasil (Argentina, Cuba, Egipto, Nicaragua, Nigeria, Perú, Tanzania y Yugoslavia) continuó sosteniendo que no era posible negociar un código integral sobre propiedad intelectual dentro del GATT (Bradley, 1987), pese a que el bloque de países en desarrollo representado por el Grupo de los $77$ (G-$77$) comenzaba lentamente a fragmentarse dentro del GATT. Finalmente, fue incapaz de impedir la negociación del Acuerdo sobre los ADPIC (TRIPS); y,
+    \item \textbf{Grupo de Cairns}. El ejemplo más destacado de una coalición exitosa integrada principalmente por PEDs fue el Grupo Cairns, países exportadores de productos agrícolas. En su análisis sobre el desempeño, HIGGOTT y COOPER destacan como motivos de su éxito: (i) el liderazgo de Australia y su capacidad para generar confianza; (ii) sólido respaldo técnico y de importantes capacidades analíticas; (iii) política internacional sólida desde la perspectiva de la teoría del libre comercio; (iv) esfuerzo australiano por mantener la cohesión del grupo; (v) cada país se concentraba en aquellos asuntos en los que tenía una mayor implicación, para los que estaba mejor preparado o que resultaban menos sensibles desde el punto de vista de la política interna (HIGGOTT y COOPER, 1990: 615); y, (vi) compartían un interés claro mientras limitaban su actuación exclusiva y deliberadamente a cuestiones relacionadas con la agricultura. 
+\end{la}
+Este último punto es crucial, hasta el punto que HIGGOTT y COOPER son cuidadosos al no exagerar el papel desempeñado por el Grupo Cairns. El apoyo de Australia a la posición de Estados Unidos en materia de propiedad intelectual, en un momento en que la mayoría de los miembros en desarrollo del grupo se oponían a la iniciativa estadounidense, no llegó a poner en peligro la cohesión de la coalición, pero favoreció alcanzar sus objetivos. Además, la agricultura era un sector en el que los dos principales integrantes del Quad (Estados Unidos y la Comunidad Europea) mantenían posiciones enfrentadas, mientras que un tercer miembro del Quad, Canadá, pertenecía simultáneamente al Grupo Cairns. Todo estocreó el espacio político necesario para que un tercer actor, como el Grupo Cairns, pudiera desempeñar el papel de emprendedor de políticas públicas (policy entrepreneur) y de intermediario o mediador (broker).
+}
+
+Sin entrar a valorar las implicaciones económicas que tiene este proceso de negociación, la desaceleración en el crecimiento de los países desarrollados junto con el auge de determinadas potencias en desarrollo ha acabado provocando la apertura de esta caja de pandora tan contenida hasta la fecha, algo que es evidente teniendo en cuenta que desde el cierre de la Ronda de Uruguay no se ha cerrado ninguna otra.\footnote{En términos generales, la cuestión del poder negociador resulta relevante por dos razones:
+\begin{la}
+    \item \textbf{Eficiencia económica}. La primera tiene que ver con la eficiencia económica. Cuando dos partes celebran voluntariamente un acuerdo económico, la teoría económica considera normalmente que dicho acuerdo constituye una mejora de Pareto. El carácter voluntario del acuerdo se interpreta como un indicador fiable de las valoraciones individuales de utilidad que sustentan el concepto de óptimo de Pareto. Sin embargo, cuando las diferencias de poder negociador son tan pronunciadas que proyectan una sombra de dominación, resulta mucho más difícil sostener que el acuerdo alcanzado constituye realmente una mejora de Pareto; y,
+    \item \textbf{Legitimidad}. La segunda razón está relacionada con la legitimidad política y los bienes públicos. Las normas que integran la OMC funcionan como un bien público internacional. Sucesivas generaciones de negociadores han utilizado las reglas del GATT y posteriormente de la OMC para negociar cuestiones que, en ausencia de dichas normas, probablemente no habrían podido abordarse debido a los elevados costes de negociación. En la medida en que la desigualdad en el poder negociador alimenta las críticas sobre el déficit democrático y de legitimidad de la OMC, también contribuye a desestabilizar una institución que desempeña funciones propias de un bien público internacional.
+\end{la}
+}
+
+\paragraph{Legitimidad vs. Equidad: La paradójica linea roja}
+Entonces, ¿cuáles son las peticiones que motivan la crisis del multilateralismo desde la óptica del desarrollo? FRANCK (1995) diferencia entre dos nociones de justicia: la legitimidad y la equidad. Como sabemos, el GATT/OMC, siguiendo procesos de toma de decisiones y de negociación por consenso (de cara a la galería), favoreció el predominio de una concepción de justicia entendida como legitimidad. 
+
+Sin embargo, los países en desarrollo buscan incorporar una noción de justicia basada en la equidad al discurso comercial, posición que ha producido resultados extremadamente limitados.\footnote{El miso autor se pregunta (NARLIKAR, 2006): ¿Hasta qué punto podría sostenerse que el discurso sobre la justicia no es más que un discurso sobre los intereses? Sin duda es cierto que las dos posiciones extremas (países desarrollados y los países en desarrollo) reflejan diferencias evidentes entre la defensa del statu quo y su revisión, entre los fuertes y los débiles. Sin embargo, la evolución no parece estar determinada únicamente por las relaciones de poder, sino también por procesos de adaptación institucional y aprendizaje. Encontramos pruebas de que algunos PEDs respaldaron reivindicaciones de redistribución y equidad que tenían para ellos un valor económico reducido o incluso negativo. Es posible que estos cambios hayan sido impulsados por transformaciones en los intereses internos. La desaceleración económica de los años ochenta dejó a la mayoría de estos países en una situación de gran vulnerabilidad frente a las presiones externas, al tiempo que provocó un profundo cuestionamiento de los modelos económicos predominantes durante las décadas precedentes: no resulta sorprendente que esta etapa de revisión ideológica y de transformación interna viniera acompañada de un desplazamiento hacia concepciones de la justicia basadas en la legitimidad, más que en la equidad o la justicia distributiva. No obstante, este tipo de explicación presenta un problema importante: obliga a asumir que un conjunto amplio experimentó procesos internos suficientemente similares como para generar demandas internacionales prácticamente idénticas. La existencia de excepciones relevantes pone seriamente en duda esta hipótesis. Por ejemplo, India nunca abrazó la liberalización económica con la misma intensidad que Brasil, ni sufrió las crisis económicas con la gravedad experimentada por muchos países latinoamericanos. Sin embargo, India ha estado a la vanguardia en la creación de nuevas coaliciones de países en desarrollo que vuelven a reclamar un sistema comercial internacional más justo y equitativo, así como modificaciones en las normas y procedimientos de la OMC destinadas a facilitar ese objetivo. Si a ello se añade la considerable autonomía de la que gozan algunas delegaciones de países en desarrollo en Ginebra, los vínculos entre la política interna y la actuación internacional resultan, en determinadas etapas y para numerosos países, cuando menos débiles o poco concluyentes.
+} La evidencia histórica parece confirmar que los procedimientos de toma de decisiones del GATT, y posteriormente de la OMC, condujeron efectivamente a la marginación de la agenda de justicia basada en la equidad que los países en desarrollo habían defendido inicialmente (más propia de la UNCTAD), al menos durante las etapas tempranas de su adhesión (hasta Uruguay, Fase I). Ahora bien, mientras que esta experiencia muestra que las demandas que contradicen la norma de justicia dominante tienen pocas probabilidades de prosperar, de ello no se desprende automáticamente que las demandas compatibles con la norma dominante tengan mayores posibilidades de éxito: la conformidad con la norma institucional puede constituir una condición necesaria para influir en la agenda y en los resultados de las negociaciones, pero no una condición suficiente.
+
+En los últimos años, los países en desarrollo han demostrado un éxito considerable al aprovechar estos espacios de actuación, el éxito más significativo de lo cual es, como dijimos, el propio nombre de la última ronda de negociaciones: la Agenda de Desarrollo de Doha (Doha Development Agenda, DDA). Si bien es cierto que las negociaciones emprendidas resultaron infructuosas, su fracaso puede atribuirse en cierto modo al éxito de esta nueva dirección que se le exige a la organización, incapaz de hacer converger estas concepciones yuxtapuestas: la imposibilidad de cerrar el debate sobre la justicia y proyectar una evolución gradual de las normas como respuesta a las demandas de equidad formuladas por los países en desarrollo.
+
+En definitiva, la superioridad numérica de los países en desarrollo no se traduce en una coalición vencedora bajo la norma de consenso negativo, sino que sigue siendo el poder de negociación la clave de las victorias en la construcción del consenso. Sin embargo, estas normas de decisión basadas en el principio de igualdad soberana de los Estados, que constituyen una forma de hipocresía organizada, se han convertido en el arma blandida por los países en desarrollo para moldear y adecuar los objetivos de la Organización, o bloquear cualquier avance. 
+
+Paradójicamente, la arquitectura económica internacional bajo Bretton Woods acabó fabricando su propia horca al introducir la única disposición de trato igualitario entre naciones soberanas, bajo la suposición de que la gran mayoría de países serían, esencialmente, eso: sumisos, pacientes y extremedamente dóciles. 
+
+
+\subsubsection{Injerencias: ¿Traspasa la WTO su cometido?}
+Tan importante es comprender la crisis desde la óptica del desarrollo, como desde la óptica de los países desarrollados. 
+
+Evidentemente, el objeto central de sus reivindicaciones no será mantener este poder de coerción en la sombra, pues la opacidad de este es la única razón por la que la legitimidad de los acuerdos puede ser sostenida. Todo lo contrario, el objeto central de sus reivindicaciones versará sobre una materia diferente: los límites jurisdiccionales de la institución y su injerecia nacional. 
+
+Como sabemos, cuando un miembro de la OMC considera que otro miembro ha infringido las normas comerciales, se recurre al sistema multilateral de solución de diferencias, competencia del Órgano de Solución de Diferencias (OSD), en vez de adoptar medidas unilaterales. El procedimiento es la \textbf{joya de la corona} de la OMC: \textbf{hace hincapié en el imperio de la ley y da seguridad y previsibilidad al sistema comercial global}. 
+
+El Órgano de Solución de Diferencias (OSD) está integrado por todos los miembros. Estos crean «grupos especiales » de expertos para analizar las diferencias y alcanzar conclusiones que han de ser aceptadas o rechazadas por el OSD. La resolución del grupo de expertos \textbf{solo puede ser rechazada por consenso}. Pues bien, desde 2019, el mecanismo ni está, ni se le espera. 
+
+Las principales economías occidentales discrepan de las resoluciones del Órgano Permanente de Apelación (OA), pero es EE UU quien lleva años denunciando con mayor energía que el OA interpreta erróneamente las normas que se aprobaron en la OMC y exige una aclaración o reforma de los derechos y obligaciones de sus miembros. En particular, se critica que el OA crea nuevas reglas que infringen la soberanía nacional. 
+
+EE UU mantiene que el Órgano Permanente de Apelación no atiende al marco de referencia que lo creó (Entendimiento sobre Solución de Diferencias), sino que a veces actúa como si se le hubiese otorgado la capacidad de modificar las propias normas que regulan su actuación. 
+
+Por ello, después de muchos años de negociaciones fracasadas sobre la reforma de las normas que deben regir la solución de diferencias, EE UU optó (la administración Obama) por bloquear el nombramiento de los miembros del Órgano Permanente de Apelación para forzar a todos los países a negociar nuevas reglas que corrijan el alcance de lo que EE UU, y otros países, considera una \textbf{extralimitación judicial} en los conflictos (SCHOTT y JUNG, 2019). 
+
+Tras continuos bloqueos en el nombramiento de los miembros del OA conforme vencían sus mandatos, desde el 11 de diciembre de 2019 solo ha quedado un miembro y la institución ha dejado de funcionar. Si no se resuelve esta crisis se corre el riesgo de volver a un sistema que facilite actuar unilateralmente. A pesar de que existe un fuerte apoyo a las características básicas y al diseño del sistema de solución de diferencias, también hay notables divergencias sobre la actuación del OA. Y aunque ningún otro miembro apoya el punto de vista de EE UU de bloquear los nombramientos del OA, una encuesta realizada en el seno de la OMC muestra que muchos otros miembros comparten la opinión de que el OA ha ido más allá de su mandato en sus resoluciones (FIORINI et al., 2019). La mayoría de los miembros de la OMC continúan confiando en el mecanismo de solución de diferencias incluso aunque no exista el OA, pues el resto del aparato institucional permanece activo. Sin embargo, el principal temor es que, sin el OA, el sistema de solución de diferencias pierda mucha de su predictibilidad y que eventualmente colapse. 
+
+\paragraph{Origen: Estados Unidos vs. China (2017)}
+El origen del conflicto se remonta a 2001 cuando China accede a la OMC. La incorporación de China a la OMC redujo drásticamente la incertidumbre sobre la política comercial que podían aplicar el resto de los miembros. En el caso de EE UU, HANDLEY y LIMÃO (2017) señalan que al obtener el estatus de Nación Más Favorecida, se creó una certidumbre sobre la política comercial norteamericana que impulsó extraordinariamente las importaciones procedentes de China.\footnote{Algunos autores argumentan que la incorporación de China provocó una \textit{reestructuración} de las CGV de las empresas de los países desarrollados que ha transformado el sistema productivo y comercial mundial (CROWLEY, 2019). Sin embargo, esta opinión no es del todo compartida puesto que, como sabemos, muchos autores dudan si quiera de la existencia de las llamadas Cadenas Globales de Valor
+} Como sabemos, la economía china no asigna recursos según las reglas del mercado, sino mediante una estrecha intervención del Estado en la economía, en la que subvenciones y empresas públicas condicionan la estructura de la producción. 
+
+El problema con las subvenciones chinas a empresas públicas alcanzó mayor gravedad a partir de 2017, al comenzar EE UU a aplicar derechos compensatorios a las importaciones procedentes de China que habían recibido subvenciones o inputs materiales de empresas públicas. China negaba que esas importaciones estuviesen sujetas a la definición de subvención de la OMC y, por tanto,  defendía que eran legales. 
+
+El \textbf{Órgano de Apelación le dio la razón a China al considerar que las empresas públicas no ejercen funciones gubernamentales, como exige la definición de subvención, por lo que no pueden ser objeto de represalias mediante derechos compensatorios}. Con esta resolución se abrió una grieta en el seno de la OMC, que ha dado paso a la guerra comercial y a la crisis que hoy vive el sistema comercial internacional.
+
+
+\paragraph{MPIA: ¿Solución provisional?}
+Ante la situación creada, $16$ países han firmado un documento, de entre los cuales destacan China y la Unión Europea, han firmado el Acuerdo de Arbitraje de Apelación Provisional Multipartidista (MPIA), un nuevo sistema que permite superar la parálisis del Órgano de Apelación de la OMC y resolver las disputas comerciales que surgen. El acuerdo se propueso como solución temporal y se basa en el Artículo 25 del Entendimiento sobre Solución de Diferencias (ESD) de la OMC, manteniendo, por tanto, las principales características del sistema de apelación de la OMC.
+
+Permite a los miembros beneficiarse de una resolución vinculante de disputas comerciales y mantener el derecho a una revisión de apelación independiente e imparcial de los informes de los paneles, como es el caso en el sistema de la OMC. Está abierto a la adhesión de cualquier miembro de la OMC y entró en vigor en 2020.\footnote{Australia: Benin: Brasil: Canadá: China: Chile: Colombia: Costa Rica: Ecuador: Unión Europea: Guatemala: Hong Kong, China: Islandia: Macao. China: Mexico; Montenegro: Nueva Zelanda: Nicaragua: Noruega: Pakistán: Perú; Singapur: Suiza: Ucrania y Uruguay.
+} Doce casos están siendo tramitados bajo este acuerdo. EEUU se siente cómodo con la situación actual, similar a la de la era del GATT, en la que la negociación bilateral tenía mucho más importancia en la resolución de las disputas.
+
+\subsubsection{Geopolítica: ¿comercio y posicionamiento geoestratégico?}
+Cabe hacer una mención especial a la situación cada vez más comprometida que existe entre el posicionamiento geoestratégico y la exportación de determinados servicios.\footnote{Por motivos obvios no hemos mencionado esto en el apartado relativo a mercancias, pues siempre ha sido en cierta manera así. Sin embargo, podríamos mencionar la importancia de las tierras raras, las vetas de determinados materiales estratégicos y su paralelismo con el posicionamiento mediante exportación de servicios.
+}
+
+En primer lugar, a lo largo de los últimos veinte años el comercio de servicios de construcción ha mostrado un crecimiento medio anual del $7\%$. Aunuque su participación sobre el comercio total sea prácticamente irrelevante, sus implicaciones son muy profundas desde un punto de vista estratégico: \textbf{el último decenio ha sido testigo del surgimiento de China como exportador mundial de servicios de construcción, gracias a su participación en grandes proyectos de infraestructuras}, representando más de la tercera parte de las exportaciones mundiales de servicios de construcción. Esto está completamente alineado con uno de los proyectos más ambiciosas del Gobierno Chino: \href{https://www.cidob.org/publicaciones/nueva-ruta-seda-corredor-euroasiatico-iniciativa-global-politica-exterior-china}{\textbf{la Nueva Ruta de la Seda}}. Este ambicioso proyecto global, iniciado en 2013, de construcción de puentes, puertos, carreteras y/o ferrocarriles en en diversas areas regionales, vertebra una ambiciosa iniciativa de Política Exterior china que pretende posicionarse como un verdadero actor global. De hecho, sus ambiciones llegan hasta el mismísimo \href{https://www.portdebarcelona.cat/es/comunicacion/noticias/el-corredor-verde-entre-los-puertos-de-barcelona-y-shanghai-protagonista-de-la-mision-institucional-del-ayuntamiento-de-barcelona-china}{Puerto de Barcelona}.\footnote{Nótese que los principales exportadores de servicios de construcción son China, la Unión Europea, Japón, Corea, la Federación Rusa, Reino Unido y los Estados Unidos. Todos estos actores buscan influencia global, por lo que no se debe perder de vista los driving factors del comercio internacional de servicios de construcción y todas sus ramificaciones. Por ejemplo: \href{https://www.defensa.gob.es/ceseden/-/la_importancia_de_los_corredores_terrestres_el_corredor_de_lobito_contra_la_linea_de_tazara}{\textit{La importancia de los corredores terrestres (V): el Corredor de Lobito contra la Línea de Tazara}. TORRES (2024). Publicaciones CESEDEN}
+}
+
+Por otro lado, y motivo de gran controversia reciente, encontraríamos la exportación de servicios de servicios de tecnología de la información y las comunicaciones, que ha experimentado una tasa media anual de crecimiento del $11\%$ en el último decenio, por una demanda sostenida de nuevos programas informáticos y una creciente preocupación por la ciberseguridad. Tras la entrada en vigor de la nueva Ley de Ciberseguridad europea (CSA2), determinados proveedores de servicios y equipos de telecomunicaciones chinos han sido vetados y exclusidos del mercado europeo.\footnote{
+Para profundizar en el tema: \href{https://www.mobileworldlive.com/spanish/las-operadoras-y-bruselas-chocan-por-el-coste-de-retirar-tecnologia-china-de-las-redes/}{\textit{Las operadoras y Bruselas chocan por el coste de retirar tecnología china de las redes}. Mobile World Live}; \href{https://efe.com/euro-efe/2026-04-20/ue-china-5/}{\textit{China adoptará contramedidas si la UE no enmienda su ley de ciberseguridad}. EFE}; \href{https://es.china-embassy.gov.cn/esp/wjyw/202605/t20260512_11909281.htm}{\textit{Declaración de la Cámara de Comercio e Inversiones de China en España sobre la propuesta de la Comisión Europea a la revisión de la Ley de Ciberseguridad}. Embaja de la República Popular China en el Reino de España}.
+}
+
+
+
+
+\subsection{Crisis externa: ¿Por qué genera descontento social?}
+Esta historia resumida plantea varias preguntas. ¿Por qué la globalización, en sus múltiples formas, genera conflicto político? ¿Cómo varía la intensidad del conflicto a lo largo del tiempo, según la fase de globalización, el estado del ciclo económico y otros factores? A la luz de la conflictiva historia de la primera era de la globalización, ¿qué hizo posible el florecimiento posterior a la Segunda Guerra Mundial? ¿Y en qué medida es similar —o distinta— la actual reacción populista?
+
+El famoso teorema de Stolper y Samuelson (1941) produce un resultado particular y especialmente contundente dentro de un modelo altamente estilizado. Muestra que el comercio genera pérdidas absolutas para un segmento de la sociedad, y no solo pérdidas relativas.
+
+Esto conduce a la conclusión de que habrá al menos un factor de producción cuyos salarios caerán más que el precio del bien que registre la mayor caída de precio. Así, incluso si los trabajadores menos cualificados tienden a consumir intensamente bienes importables, seguirán estando peor cuando dichos bienes sean intensivos en el uso de trabajo menos cualificado.
+
+Estos resultados teóricos son importantes porque contradicen muchos de los argumentos presentes en el debate público: que el comercio beneficia a la mayoría o a todas las personas, que aunque el comercio genere algunos perdedores estos representan meros «costes de ajuste» transitorios, o que los efectos sobre los precios al consumidor compensan las pérdidas. En esencia, es teóricamente inconsistente defender ganancias significativas derivadas del comercio sin aceptar que habrá consecuencias distributivas marcadas. ¡Sin dolor no hay ganancia!
+
+Otra implicación importante, aunque menos reconocida, de la teoría del comercio es que las ganancias derivadas de eliminar barreras comerciales se vuelven menores en relación con la redistribución inducida a medida que dichas barreras se reducen. En otras palabras, el componente redistributivo del comercio adquiere mayor importancia relativa frente a las ganancias totales a medida que avanza la globalización.
+
+Este resultado se deriva directamente de la teoría económica estándar. Los costes de eficiencia de un impuesto al comercio, como ocurre con todos los impuestos, aumentan con el cuadrado del impuesto. Reducir un arancel que tiene la mitad de tamaño genera una ganancia marginal que es solo una cuarta parte de grande. Mientras tanto, los efectos distributivos son aproximadamente lineales respecto de los cambios en precios relativos y no dependen de la magnitud del impuesto —ni del punto en que nos encontremos dentro del proceso de globalización—.
+
+Para apreciar la importancia práctica de esto, considérese la siguiente pregunta: ¿cuántos dólares de renta se redistribuyen entre distintos grupos de ingresos por cada dólar de ganancia derivada del comercio? La respuesta a esta pregunta viene dada por lo que he denominado la relación coste-beneficio político (political cost–benefit ratio, PCBR) de la liberalización comercial (Rodrik, 1994).
+
+El comercio induce redistribución de la renta, pero no necesariamente agrava la desigualdad si los beneficiarios son los sectores menos favorecidos de la sociedad. Sin embargo, tanto la teoría como la evidencia empírica sugieren que, en las economías avanzadas, la redistribución se produjo en la dirección equivocada. Los perdedores fueron los trabajadores más pobres y con menor nivel educativo, así como regiones que ya se encontraban afectadas por la desindustrialización y la consiguiente pérdida de empleos. Las pérdidas de ingresos se vieron además amplificadas por el aumento de las tasas de mortalidad y otros costes sociales (Case y Deaton, 2020).
+
+Hasta aquí he considerado los argumentos económicos que explican por qué la compensación puede ser problemática y, en el mejor de los casos, incompleta. El supuesto es que existe una función de bienestar social que incorpora la distribución del ingreso y que las autoridades políticas desean maximizarla. Pero también existen razones políticas que pueden obstaculizar la compensación. Si los beneficiarios de la globalización son lo suficientemente poderosos como para obtener los acuerdos comerciales que desean, también pueden ser lo suficientemente poderosos como para bloquear políticas redistributivas.
+
+Una versión particular de este argumento se basa en la inconsistencia temporal de la promesa de compensar a los perdedores. Supongamos que la firma de un acuerdo comercial requiere que al menos algunos de los potenciales perdedores estén de acuerdo. En los países avanzados, estos grupos probablemente representen a trabajadores de regiones industriales en declive. Para obtener su apoyo, el gobierno querrá prometer compensación. En el contexto estadounidense, esto adopta la forma de una ampliación del programa Trade Adjustment Assistance (TAA). Sin embargo, una vez firmado el acuerdo, y siempre que este no pueda revertirse fácilmente, habrá pocos incentivos para garantizar que la compensación se lleve efectivamente a cabo. En suma, el hecho de que los perdedores de la globalización hayan recibido poca compensación en la práctica no resulta sorprendente ni desde el punto de vista económico ni desde el político.
+
+Pero ¿por qué deberían los gobiernos intentar deshacer, en primer lugar, los efectos redistributivos del comercio y la globalización? Las economías de mercado experimentan cambios continuos, muchos de los cuales tienen implicaciones para los precios relativos y la distribución del ingreso. Cambios en las condiciones de demanda, nuevas tecnologías y una variedad de perturbaciones idiosincráticas afectan a las economías sin que necesariamente generen preocupación por la desigualdad o demandas de compensación.
+
+Además, no está claro que el comercio sea el factor más importante detrás de los problemas distributivos de las sociedades avanzadas en las últimas décadas; considérese, por ejemplo, el aumento de la desigualdad salarial, la desindustrialización, el declive regional, la presión sobre la clase media, el incremento de los ingresos más altos y la caída de la participación del trabajo en la renta. Existe un amplio consenso dentro de la profesión económica en que la tecnología y los cambios institucionales generales —como el declive de la sindicalización o del poder laboral— han desempeñado un papel mayor. Sin embargo, de algún modo, los efectos adversos del comercio y la globalización se han vuelto políticamente salientes de una manera que muchos otros determinantes no lo han hecho. Una amplia literatura empírica muestra que los shocks de globalización han desempeñado un papel causal y significativo en el auge de los movimientos populistas de derecha (Rodrik, 2021).
+
+Angus Deaton, entre otros, ha sostenido que las reacciones públicas frente a las tendencias económicas están determinadas menos por la desigualdad en sí misma que por las percepciones de injusticia. Como escribe Deaton (2017), «la desigualdad no es lo mismo que la injusticia… es esta última la que ha provocado tanta agitación política en el mundo rico actual. Algunos de los procesos que generan desigualdad son ampliamente percibidos como justos. Pero otros son profunda y evidentemente injustos, y se han convertido en una fuente legítima de ira y desafección».
+
+El comercio internacional es particularmente vulnerable a acusaciones de injusticia porque implica transacciones económicas entre entidades que operan bajo distintos conjuntos de reglas y regulaciones.
+
+Considérese la diferencia entre un intercambio de mercado doméstico y uno que cruza fronteras nacionales. En el primer caso, todas las empresas que operan en una industria determinada están sujetas a reglas y regulaciones idénticas —establecidas por el gobierno nacional— y existe la expectativa de que el Estado no favorezca a unas sobre otras. En otras palabras, hay igualdad de condiciones competitivas. En el segundo caso, las circunstancias que enfrentan distintas empresas pueden ser muy diferentes. Una empresa del país A puede estar subvencionada —explícita o implícitamente— por su gobierno, puede enfrentar estándares ambientales y laborales mucho más débiles que los vigentes en el país B y, aunque las regulaciones formales sean similares, puede tener permitido evadirlas.
+
+Desde un punto de vista económico formal, las variaciones resultantes en los costes comparativos entre países no son distintas de aquellas que surgen de diferencias en dotaciones relativas de factores o productividad y, por tanto, pueden incluso constituir una fuente adicional de ganancias derivadas del comercio. Pero las oportunidades comerciales que surgen de esta desigualdad en las condiciones competitivas tienen una apariencia muy distinta y parecen injustas.
+
+Los economistas se han resistido tradicionalmente a incorporar estas preocupaciones de justicia en las discusiones sobre política comercial. Si los estándares laborales son débiles o inexistentes en los países de bajos ingresos, ¿por qué no deberían considerarse simplemente otra fuente de ventaja comparativa?
+
+Además, ¿no estarían peor los trabajadores desplazados de talleres de explotación si se restringiera este tipo de comercio y desaparecieran esas oportunidades comerciales? ¿No tiene sentido económico trasladar las actividades intensivas en contaminación a jurisdicciones donde la demanda de aire limpio es menor y, por tanto, las regulaciones ambientales son más débiles?
+
+Pero consideremos estas preocupaciones desde el punto de vista de los grupos afectados, especialmente el trabajo, en el país importador. Tras largas luchas políticas, los trabajadores de la mayoría de los países avanzados han logrado una expansión significativa de los derechos sociales, incluidos estándares laborales como la libertad de negociación colectiva y la prohibición del trabajo forzoso e infantil. Un rasgo clave de estos estándares laborales es que hacen ilegal —e ilegítimo— que las empresas compitan sobre la base de ventajas de coste derivadas de su violación. Una empresa no puede superar a otra empleando trabajadores dispuestos a quedar exentos de las regulaciones laborales nacionales, incluso si esos trabajadores aceptaran hacerlo voluntariamente.
+
+Pero el comercio internacional convierte lo que es ilegal —e ilegítimo— en el plano nacional en algo repentinamente legal y, a ojos de muchos economistas y tecnócratas, plenamente legítimo. Una empresa no puede importar niños trabajadores y ponerlos a trabajar dentro del país; pero puede hacerlo perfectamente cuando emplea a esos niños en el extranjero, directamente o mediante un subcontratista. Un economista observa esto y ve ganancias derivadas del comercio. Para el defensor de los trabajadores y el reformador social, sin embargo, lo que ocurre es un debilitamiento de los estándares laborales nacionales.
+
+Las diferencias regulatorias entre países no tienen por qué ser siempre problemáticas. Pueden basarse en diferencias de circunstancias o preferencias y no necesariamente reflejan violaciones claras de derechos sociales. Por ejemplo, un país exportador puede tener un salario mínimo comparativamente bajo como reflejo de un bajo nivel de productividad laboral. Claramente, esto no constituiría una fuente de arbitraje descendente sobre las condiciones laborales en los países importadores y no debería suscitar preocupaciones sobre comercio injusto, aunque en la práctica a menudo lo hace.
+
+En otros casos, los países pueden optar por protecciones sociales y laborales más débiles debido a supuestas disyuntivas con otros objetivos sociales, como mayores niveles de empleo. En ese caso, las consideraciones de arbitraje seguirán estando presentes, aunque no existan violaciones de derechos en el país de estándares más bajos. Esta fue una de las consideraciones que pesaron fuertemente en la Unión Europea (UE) al negociar los términos del Brexit con el Reino Unido.
+
+Las consideraciones de justicia en el comercio no exigen uniformidad en las reglas laborales o sociales. La diversidad regulatoria es un valor en sí mismo. Pero, en general, cuanto más completa y profunda sea la integración, mayor será la demanda de armonización regulatoria. Dentro de la UE, la divergencia en las normas laborales entre algunos países de la periferia —por ejemplo, Polonia— y las naciones más avanzadas —por ejemplo, Francia— ha generado tensiones con frecuencia. En el acuerdo del Brexit, la UE obtuvo garantías del Reino Unido de que sus industrias no serían socavadas por normas laborales y ambientales más débiles en este último, y se reservó el derecho a restringir el comercio si cambios en las políticas laborales, sociales o ambientales británicas producían «efectos materiales sobre el comercio o la inversión entre las partes».
+
+Pero esto no es simplemente una cuestión de percepciones. La reacción política contra la integración profunda tiene fundamentos económicos razonables. Los acuerdos internacionales que restringen la autonomía regulatoria doméstica generan beneficios económicos agregados mucho más ambiguos que los derivados de reducir las barreras tradicionales en frontera. Pueden reducir los costes comerciales e incrementar el volumen de comercio y de inversión transfronteriza. Pero sus efectos sobre el bienestar y la eficiencia son fundamentalmente inciertos. Analizo estas cuestiones con mayor detalle en Rodrik (2018b); véase también Maggi y Ossa (2021).
+
+Considérese el caso de los estándares regulatorios diseñados para promover la seguridad de los consumidores, el medio ambiente o la salud. La armonización de estos estándares regulatorios ocupa un lugar central en los acuerdos comerciales contemporáneos. La justificación es que reducir las diferencias regulatorias entre países disminuye los costes de transacción asociados con hacer negocios a través de las fronteras. Los estándares regulatorios exigentes que pueden obstaculizar el acceso al mercado de los productores extranjeros son a veces calificados como «barreras no arancelarias». Y no cabe duda de que los gobiernos a veces utilizan regulaciones para favorecer a los productores nacionales frente a los extranjeros.
+
+Pero, como señalé antes, estas diferencias suelen reflejar preferencias divergentes de los consumidores o estilos regulatorios distintos. Las prohibiciones europeas sobre los organismos genéticamente modificados (OGM) y la carne de vacuno tratada con hormonas, por ejemplo, no tienen su origen en motivaciones proteccionistas —las mismas prohibiciones se aplican también a los productores nacionales—, sino en presiones de grupos de consumidores internos. El gobierno de Estados Unidos considera estas medidas barreras proteccionistas, y los paneles de solución de diferencias de la OMC a menudo han coincidido con esa interpretación (Rodrik, 2018b).
+
+El problema es que, a diferencia de lo que ocurre con los aranceles y las cuotas, no existe un punto de referencia natural que nos permita juzgar si un estándar regulatorio es excesivo o proteccionista.
+
+
+Del mismo modo, la campaña en favor del acceso a los medicamentos, impulsada por una coalición integrada por organizaciones no gubernamentales (ONG) y países en desarrollo en el período previo a la Conferencia Ministerial de Doha de la OMC, presentó un análisis técnico cuidadosamente elaborado que redujo considerablemente la eficacia de la posición favorable a una fuerte protección de las patentes defendida por la gran industria farmacéutica (SELL, 2002: 515).
+
+
+
+Posteriormente, tras las crisis económicas de la década de 1990 que afectaron a Asia Oriental y América Latina, también era previsible un retorno parcial a las posiciones anteriores. Los grupos sociales nacionales perjudicados por dichas crisis ejercieron presión sobre sus gobiernos para que reclamaran nuevamente trato preferencial y excepciones dentro del sistema comercial internacional.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\href{https://www.revistasice.com/index.php/ICE/article/view/6991/6999}{\textit{La Crisis del Multilateralismo}. SERRANO (2020), Revista ICE nº 913}
+
+\href{}{\textit{When the Weak Bargain with the Strong: Negotiations in the World Trade Organization}. DRAHOS, 2003}
+
+\href{}{\textit{Exchanging development for market access? Deep integration and industrial policy under multilateral and regional-bilateral trade agreements}. SHADLEN, 2005}
+
+\href{}{\textit{Fairness in International Trade Negotiations: Developing Countries in the GATT and WTO}. NARLIKAR, 2006}
+
+\href{}{\textit{Shadow of Law or Power: Consensus-Based Bargaining and Outcomes in the GATT/WTO}. NAIR, 2022}
+
+\href{}{\textit{The Short but Significant Life of the International Trade Organization: Lessons for Our Time}. DRACHE, 2000}
+
+\href{}{\textit{The International Trade Organization}. TROYE, 2012}
+
+\href{}{\textit{Developing Multilateralism - The Havana Charter and the Fight for the International Trade Organization}. TROYE, 2003}
+
+\href{}{\textit{The World Trade Organization and the Future of Multilateralism}. BALDWIN, 2016}
+
+\href{}{\textit{A primer on trade and inequality}. RODRIK (2023)}
+
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+\end{document}
