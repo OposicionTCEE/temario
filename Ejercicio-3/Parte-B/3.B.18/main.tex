@@ -1,0 +1,1582 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Nueva globalización económica y financiera\\
+\large Determinantes y efectos de los movimientos internacionales de factores productivos: movilidad de trabajadores, inversión en cartera, e inversión directa internacional, con especial referencia a las cadenas globales de valor}
+\author{Marcelo Ortega}
+\date{Marzo 2026}
+\newcommand{\TemaCode}{3B18}
+
+\oldtitle{
+    B.19. La liberalización del sector exterior y sus implicaciones sobre la estabilidad macroeconómica. Opciones de política económica
+    
+    B.11. Determinantes y efectos de los movimientos internacionales de factores productivos. Especial referencia a la inversión directa
+}
+\changerationale{
+    Se combinan dos temas con notables solapamientos y se actualiza el contenido.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     
+    }
+\vspace{1cm}
+
+\modificaciones{
+    \textcolor{red}{\textbf{OJO} ->} Revisar el anexo e incluir las conclusiones del paper. También se ha trabajado sobre este paper en el Tema 3.B.10 (Comercio y crecimiento)
+
+    \textcolor{red}{OJO ->} He añadido una parte copiada del Tema 3.B.32 sobre Cadenas Globales de Valor al Anexo corresopndiente. Se trata de una actualización de cifras de 2022 por lo que debería tenerse en cuentaa la hora de introducir el apartado correspondiente (¡\textbf{que no está hecho}!)
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+Resulta sorprendente la rapidez a la que los individuos se lanzan a identificar cambios de paradigma, hitos históricos y sucesos de extrema importancia futura a lo largo de su corta vida. Sin duda esto es más característico de la cultura indo europea que a otros culturas que coexisten en el mundo, de manera más o menos problemática. Existen varias razones, probablemente la más general tenga que ver con la intrascendencia de uno mismo y el culto al individualismo ensalzado por nuestrasraíces históricas. 
+
+Un ejemplo claro se puede encontrar en la obra de FUKUYAMA, \textit{El fin de la historia y el último hombre} (1992), donde defiende la tesis del triunfo de la democracia liberal frente a su antagonista, en ese momento, la Unión Soviética. Desde su perspectiva, la caída de la Unión Soviética constituye un hito histórico que marca el inicio de un nuevo y último amanecer: el sistema liberal (u occidental) como informador y garate del Nuevo Orden Internacional. No obstante, desde su publicación el resto de obras de FUKUYAMA pueden entenderse como una sucesión de disculpas y aclaraciones respecto a su \textit{magnus opus}. ¿Por qué? Porque el mundo, simple y llanamente, es muy diverso. Y no debemos entender esto como una anomalía. ¿Cuántas veces hemos escuchado que es el fin de la Nación Estado; que el mundo está tan interconectado que podemos entrever la formación de una identidad común de todos los pueblos; que las relaciones comerciales entre los países, dado el grado de interrelación alcanzado, actúan como arante \textit{per se} de la paz internacional?
+
+La globalización es sin duda un fenómeno interesante y digno de estudio. Pero debemos guardar mucha cautela al abordarlo. 
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+Por ello, estructuraremos nuestra exposición en tres partes:
+\begin{lnum}
+    \item En primer lugar, presentaremos el marco teórico en el que nos movemos al hablar de este fenómeno e incidiremos, especialmente, en la importancia de adoptar una visión holística que nos permite abordar los dos siguientes puntos de la exposición;
+    \item Por un lado, los determinantes y efectos de los flujos internacionales de trabajadores; 
+    \item Y, por otro lado, los determinantes y efectos de los flujos internacionales de capital, prestando especial interés en los flujos de inversión productiva (inversión extranjera directa) y algunos conceptos mal comprendidos al respecto.
+\end{lnum}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+
+
+
+\clearpage
+\section{Marco conceptual: Globalización}
+\puntosclave{
+    Se dice, frecuentemente, que una característica fundamental de la economía mundial actual es que está muy \textit{globalizada}. ¿Es esto cierto? Para contestar es necesario entender que entendemos por globalización. Las economías nacionales están muy integradas entre sí a través de flujos internacionales de comercio, tecnología e información pero, ¿en lo demás?
+    
+    Algunas tendencias que carecterizan la evolución reciente de la globalización son: el papel de las empresas multinacionales y el aumento de los markups empresariales, el creciente peso internacional de las economías emergentes, un aumento del protagonismo del comercio de servicios, la importancia de la doble transición verde y digital, el aumento de la desigualdad interna de los países y un mayor rechazo político y social a la globalización.
+}
+
+Lo primero que debemos tener en cuenta al abordar este fenómeno es la necesidad de proporcionar una definción que delimite el objeto de la materia: ¿qué es la \textit{globalización}?. Aquí encontramos el primer problema. Aunque parezca una cuestión baladí, la noción de globalización dista mucho de tener una definición ampliamente consensuada y la razón es muy sencilla: cualquier definición carga con la ideología del que la proporciona. Una de las definiciones más amplias y, a mi parecer, precisas, de lo que debe entenderse por globalización fue proporcionada por DREHER (2006) (basado en CLARK, 2000; y NORRIS, 2000):
+
+\textit{La globalización describe el proceso de creación de redes de conexiones entre actores situados a distancias intra- o multicontinentales, mediadas a través de una variedad de flujos que incluyen personas, información e ideas, capital y bienes. La globalización es un proceso que erosiona las fronteras nacionales, integra economías nacionales, culturas, tecnologías y sistemas de gobernanza, y produce complejas relaciones de interdependencia mutua.}
+
+\textbf{PLANTEAR UN EJEMPLO RELATIVO A LA GLOBALIZACIÓN: }
+
+\subsection{¿Qué es la globalización? Tres perspectivas}
+Por esta razón conviene conocer cuáles son las posibles interpretaciones de este ambiguo concepto. Distinguimos esencialmente tres perspectivas sobre las que abordarlo.
+
+\subsubsection{Perspectiva económica: Movilidad sin restricciones}
+La primera y, probablemente, más común en las conversaciones formales/informales sobre el tema es la perspectiva económica. La globalización económica caracteriza los flujos de larga distancia de bienes, capital y servicios, así como la información y las percepciones que acompañan a los intercambios de mercado.
+
+La globalización desde una perspectiva económica consiste en observar, analizar y evaluar las relaciones económicas existentes entre las diferentes naciones. En particular, los flujos internacionales de bienes y servicios y los flujos internacionales de factores productivos. Teniendo en cuenta esto, el alcance de la globalización actual desde una perspectiva histórica proporciona un resultado ambiguo.\footnote{El Índice de Globalización de Maastricht (MGI) incorporó la dimensión medioambiental, representada por la huella ecológica de las exportaciones e importaciones como proporción de la biocapacidad (Figge y Martens, 2014). El Nuevo Índice de Globalización (NGI) introdujo ponderaciones por distancia en algunas variables para distinguir mejor entre globalización y regionalización (Vujakovic, 2010). El DHL Connectedness Index, que mide conectividad más que globalización, distinguió entre profundidad y amplitud de integración a lo largo de las distintas dimensiones de la globalización (Ghemawat y Altman, 2016).
+}
+
+\paragraph{Flujos internacionales: Comerciales}
+Si restringimos nuestro análisis a los flujos comerciales, el mundo ha aumentado su grado de interrelación progresivamente desde mediados de la década de los 90's, alcanzando a día de hoy niveles nunca antes observados:
+
+\imagenfit{Globalizacion_comercial.png}{Apertura comercial: 1870-2021}{\href{https://www.imf.org/-/media/files/publications/sdn/2023/english/sdnea2023001.pdf}{\textit{Geoeconomic
+Fragmentation and the Future of Multilateralism}. IMF -- AIYAR, ILYINA et al. 2023}}
+
+El componente más importante de los intercambioi internacionales es el comercio de bienes o merc ancías. Es el principal componente desde un punto de vista cuantitativo y el más ·tradicional. Además, este es el ámbito don de existen estadísticas más completas y fi ables. Por ello, el principal indicador de referencia en este caso, tanto para valorar el grado de integración internacional de una economía será el volumen del comercio en relación al PIB de la economía. Aplicado a la economía mundial, nos permite ver la intensidad de la globalización comercial a lo largo del tiempo (gráfico I desde hace 150 años y gráfico 2 centrado en las última tres décadas). A corto plazo, este indicador se ve afectado por las fluctuaciones económicas. Así, por ejemplo, en el gráfico 2 se aprecia el impacto de la crisis financiera global (2009) y de la pandemia (2020). En momentos de crisis, es frecuente que el comercio internacional caiga más rápido que el PIB, disminuyendo su ratio. Este indicador, también se ve afectado por la evolución de los precios, en particular de los más volátiles, como los productos energéticos y otras materias primas. Este es precisamente uno de los motivos del fuerte repunte del peso del comercio exterior respecto al PIB en 2022. Diversas instituciones internacionales ofrecen estadísticas similares que nos permiten seguir el comercio internacional y el PIB, tanto globales como de cada economía. Las principales fuentes internacionales para los datos de comercio son la OMC, Naciones Unidas (Comtrade, Unctad) o el ITC y para el PIB puede ser el FMI o Banco Mundial. A nivel de país, estas cifras son proporcionadas por la contabilidad nacional (a nivel agregado) y la balanza de pagos y para realizar comparaciones europeas, la fuente será Eurostat.
+
+La medición del comercio de servicios es, por su naturaleza, más dificil que la del comercio de mercancías. En primer lugar, el comercio de servicios es más dificil de definir y su comercio no implica el ·paso de un paquete por la frontera aduanera, con su correspondiente declaración, describiendo el contenido, valor, cantidad, origen y destino, etc. La recopilación de infonnación depende de otros proveedores de datos como sistemas de contabilidad y registro empresariales o de particulares y de diversas fuentes de datos, que incluyen fuentes administrativas, estudios y técnicas de estimación (UCLM, 2021 )1 . De acuerdo con el GATS, la prestación internacional de servicios puede realizarse de cuatro' modos: servicios transfronterizos (Modo 1 ), consumo en el extranjero (Modo 2), presencia comercial (Modo 3) y presencia de personas fisicas (Modo.4). Las distinciones entre esos modos dependen de que el proveedor del servicio y su consumidor estén en el mismo país o en países diferentes cuando se realiza la transacción. Las estadísticas internacionales existentes recogen fundamentalmente los modos I y 2. Las principales fuentes de estadísticas internacionales son similares a las del comercio de bienes: OMC, Naciones Unidas (Unctad) o el ITC. Es conveniente seflalar que las estadísticas habituales de comercio reflejan los flujos comerciales brutos, es decir, sin descontar las importaciones de bienes y servicios intennedios que han sido necesarias para producir los bienes y servicios que se exportan. Sin embargo, con la proliferación de cadenas globales de valor, es frecuente que algunos productos crucen las fronteras en varias ocasiones antes de obtener el producto final.
+
+La publicación de tablas input-output globales ha servido de base para la elaboración de estadísticas de comercio en valor añadido, que permiten evitar las duplicidades en la valoración de las importaciones intermedias que se producen en las estadísticas de comercio tradicionales cuando los inputs intermedios cruzan sucesivas fronteras. Estas estadísticas de comercio en valor añadido permiten también conocer cómo se reparte el valor añadido incorporado (de bienes y de servicios), directa o indirectamente, en las exportaciones entre países, así como su composición por ramas de actividad. La fuente más utilizada para analizar el comercio en valor añadido es la base de datos TiVA (Trade in Value Added, elaborada por la OCDE en colaboración con la OMC)2 . La TiV A recopila indicadores de comercio en valor añadido para las principales economías mundiales, elaborados a partir de las tablas input-output internacionales de la OCDE Inter Country lnput-Output Tables, ICIO).
+
+\paragraph{Flujos internacionales: Factores productivos}
+Por otro lado, si amplíamos nuestro objeto incluyendo los flujos internacionales de factores productivos, el resultado es un tanto diferente. 
+
+Por lo que respecta a los flujos de capital, desde la fragmentación del Sistema de Bretton-Woods y, en particular, desde la década triunfante del fundamentalismo de mercado, el volumen de flujos de capital ha alcanzado niveles nunca antes observados. 
+
+\imagenfit{Globalizacion_Capital.png}{Flujos globales de bienes, servicies y capital. (\$ billones, salvo indicado)}{\href{https://www.imf.org/-/media/files/publications/sdn/2023/english/sdnea2023001.pdf}{\textit{Geoeconomic
+Fragmentation and the Future of Multilateralism}. IMF -- AIYAR, ILYINA et al. 2023}}
+
+No obstante, los flujos migratorios son, con diferencia, muy inferiores a los observados en otros periodos de globalización. En especial,  el periodo de la primera fase de la globalización (inicios del s. XIX-1914), fue una época caracterizada por grandes movimientos de población entre continentes, en la que europeos de clase obrera emigraron en masa a América y a otros territorios de reciente colonización. Desde este punto de vista, la economía mundial no ha superado los niveles de globalización de 1913 en términos de volumen de emigración.
+
+\subsection{Perspectiva política: Instituciones internacionales}
+Otra forma de entender la globalización es la estrechez de los lazos de la comunidad política internacional. Esta es, probablemente, la noción más antigua, pues consiste en analizar la globalización desde una perspectiva política: las relaciones políticas internacionales. En este contexto cabe preguntarnos: ¿existen objetivos políticos internacionales? ¿cómo se pesiguen dichos objetivos? ¿qué nivel de compromiso hemos alcanzado? ¿cuánta relación política existe entre las diferentes naciones? Estas preguntas ayudan a aclarar la noción de globalización desde una perspectiva política.\footnote{Por ejemplo, uno de los objetivos políticos internacionales declarados más importantes y aclamados es el mantenimiento de la seguridad internacional: la paz entre naciones/pueblos. Por lo tanto, una manera sencilla de evaluar la globalización desde una perspectiva política sería preguntarnos cuán fácil/verosímil resulta el cumplimiento de este objetivo por el nivel de integración política internacional alcanzado. 
+}
+
+La globalización política caracteriza la difusión de políticas gubernamentales.\footnote{Scholte (2008) y Caselli (2012) proponen que la globalización difiere de conceptos similares como internacionalización, liberalización, universalización u occidentalización. Según estos autores, la globalización consiste en la expansión de conexiones transplanetarias o supraterritoriales entre las personas. La internacionalización se refiere a un aumento de las transacciones e interdependencias entre países. La liberalización denota el proceso de eliminación de restricciones oficialmente impuestas sobre los movimientos de recursos entre países. La universalización describe el proceso de difusión de diversos objetos y experiencias a las personas en todas las regiones habitadas del planeta. La occidentalización se interpreta como un tipo particular de universalización, en el que las estructuras sociales de las sociedades occidentales se expanden por todo el mundo.
+
+Todos estos conceptos son próximos entre sí y, en ocasiones, se utilizan indistintamente. Una distinción clara sería útil, pero resulta difícil de alcanzar. Por ello, coincidimos con Figge y Martens (2014), quienes sostienen que no es necesario distinguir estrictamente entre todos estos conceptos cuando se emplea una definición pluralista y multiescalar de la globalización.
+}
+
+De manera más general, si la globalización económica consistía en identificar los flujos económicos internacionales, su intensidad y los hitos alcanzados, la globalización política requiere identificar los objetivos políticos de la comunidad internacinonal, su importancia y (de ello) los hitos alcanzados. Sin ánimo de listar toda la variedad de objetivos políticos globales declarados o deseados, una forma sencilla de valorar el grado alcanzado de globalización política es mediante la comparación entre el sistema multilateral actual y un imaginario \textbf{cuerpo político global}. La persecución de objetivos políticos comunes exige la existencia de normas comunes, una comunidad política transnacional y nuevos mecanismos de responsabilidad adecuados al escenario global. Muchos economistas, sociólogos, politólogos, investigadores jurídicos y filósofos han emprendido la búsqueda de nuevas formas de gobierno que dejen atrás la nación Estado y algunas soluciones se apoyan en nuevas concepciones de la comunidad política, representación y responsabilidad. 
+
+No obstante, la situación actual dista mucho del benchmark de referencia y la razón es sencilla: el talón de Aquiles de la gobernanza global es la falta de relaciones de responsabilidad claras. En una nación, el pueblo es la máxima fuente de autoridad política y, ya sea mediante elecciones o revoluciones, la responsabilidad se atribuye y exige a los gobernantes nacionales: si no responden a las expectativas y aspiraciones, tarde o temprano acabrás cayendo. Una responsabilidad electoral global de este tipo es una idea muy poco creíble. Principalmente por una cuestión: ¿existe una noción de \textit{pueblo} global?
+
+\subsection{Perspectiva social: Identidad e ideología}
+Esto nos conduce a la última perspectiva a través de la cuál abordar el tema: la globalización social (o, dicho otra forma, la formación de una identidad global). Mediante la política se gestionan las preferencias, circunstancias y capacidades de una sociedad. De esta forma, una gobernanza global requiere una precondición esencial: relativa homogeneidad en todos estos términos. 
+
+¿Está el mundo globalizado en este sentido? La respuesta no es sencilla, puesto que la globalización social/cultural es la noción más difícil de captar.\footnote{SAICH (2000) y ROSENDORF (2000) la definieron como la difusión internacional de valores occidentales y, en particular, estadounidenses. Esta visión fue duramente criticada por centrarse excesivamente en las particularidades culturales occidentales y en su expansión global (Raab et al., 2008; Dreher et al., 2010; y Martens et al., 2015).
+} RAAB et al. (2008), que adoptan una de las versiones más refinadas hasta la fecha, la definen como: \textbf{la expansión mundial de valores y estándares de racionalismo}.\footnote{KLUVER y FU (2004) señalan que la transmisión de valores culturales está estrechamente relacionada con el intercambio transfronterizo de bienes y servicios culturales, como películas, series de televisión, música y otras obras artísticas. DISDIER et al. (2010) utilizan el comercio bilateral de bienes culturales como aproximación a la proximidad cultural entre países. HELLMANZIK y SCHMITZ (2015) utilizan el comercio de servicios audiovisuales, así como los hipervínculos bilaterales y las visitas bilaterales a sitios web, como indicadores de proximidad cultural.
+
+Otras aproximaciones se centran en: (i) llamadas personales se miden a través del tráfico internacional de voz en minutos per cápita utilizando telefonía fija o móvil; (ii) contacto personal con ciudadanos extranjeros; migración, medida como el stock de personas nacidas en el extranjero residentes en un país; (iii) turismo y estudiantes extranjeros (contabilizados tanto en entradas como en salidas) pueden considerarse formas de migración temporal; (iv) transferencias internacionales pagadas y recibidas siempre implican algún tipo de interacción personal; y/o, (v) variables informacionales, como flujo efectivo de ideas, conocimiento e imágenes.
+}
+
+En aras de la brevedad no entraremos en reflexiones relativas al progresivo/posible surgimiento (o no) de una identidad global pues existen inumerables estudios sobre el tema. Sin embargo, si cabe resaltar que al enjuiciar dicha posibilidad es imperativo delimitar claramente la identidad/moral que nos define y que consideramos inalienable pues si no lo hacemos, podemos ser víctimas de un razonamiento que acabe induciendo a error. HUNTTINGTON escribía, en su célebre obra \textit{El choque de civilizaciones y la reconfiguración del orden mundial}, que ...
+
+\subsection{El trilema inexorable: RODRICK (2011)}
+Estas perspectivas nos ayudan a comprender que la globalización es un fenómeno que va más allá de las relaciones económicas entre países y que, indicadores individuales a menudo utilizados para reflejar la intensidad de ésta, como la apertura económica (como el comercio en porcentaje del PIB), pueden inducir a error puesto que omiten otros factores muy relevantes que deben siempre tenerse en cuenta. La globalización es un concepto multifacético que abarca mucho más que la apertura al comercio y a los flujos de capital. Incluye la comunicación entre ciudadanos de distintos países y el intercambio de ideas e información, así como la cooperación entre gobiernos para afrontar problemas políticos de alcance global.
+
+Más aún, analizando las sutilizas que presenta cada perspectiva nos vemos abocados a una conclusión un tanto agridulce. La globalización, en sentido amplio, es un fenómeno del que emergen fuerzas de carácter opuesto: (i) si perseguimos una globalización económica enfrentaremos un trade off entre la consecución de objetivos políticos individuales y la preservación de los lazos sociales que forman la identidad de cada uno de los pueblos; (ii) si perseguimos la consecución de objetivos políticos compartidos/globales, enfrentamos un trade off entre la intensificación de los lazos económicos y la preservación de los lazos sociales que forman la identidad de los pueblos; y, (iii) si perseguimos la formación de una identidad global común, necesariamente debemos renunciar a la consecución de objetivos políticos individuales (de cada colectivo) o la intensificación de los lazos económicos entre estos. Esta estructura de elementos contrapuestos es lo que se conoce como el Trilema Político de la Globalización o Trilema de RODRIK. 
+
+\textbf{INSERTAR TRILEMA: ECONÓMICA, POLÍTICA, SOCIAL}
+
+Veámoslo con un sencillo ejemplo. Imaginemos que la fabricación de un(os) producto(s), hasta hace poco fabricado y consumido en nuestro país, se deslocaliza a otro país cualquiera con unos exigencias laborales más laxas. Por ejemplo, imaginemos que se utiliza mano de obra infantil (menores de 16 años) para la fabricación de dicho(s) producto(s). ¿Cómo debemos enfrentar este reto? ¿Debemos, tan si quiera, enfrentar esto como un \textit{reto}?
+
+Desde una perspectiva económica, la globalización a permitido reducir los costes de producción. En consecuencia, es probable que el precio haya disminuido. Pero, ¿es el mismo producto? ¿mejora la eficiencia económica? ¿aumenta el bienestar? ¿es el precio un buen indicador? Fácilmente podríamos caer en la trampa de que, simplemente por el abaratamiento de los costes de producción y una \textit{mejor} asignación de los factores de producción, el bienestar \textit{debe} aumentar; pero esto no es lo que dice, en puridad, la Teoría Económica. En un mercado competitivo, el precio emerge de la interacción entre la valoración marginal de los consumidores del mercado y los costes marginales de los productores. En consecuencia, si bien es cierto que el coste marginal de los productores ha disminuido, debemos también atender a la valoración marginal de los consumidores para evaluar verdaderamente su impacto. Y aquí hay un problema. 
+
+El producto \textbf{no es igual desde un punto de vista del consumidor}. Si el precio antes reflejaba el coste marginal de los productores dadas las preferencias de la comunidad política relativa a los estándares laborales exigibles, sortear dichas exigencias implica que el producto no es \textbf{sustitutivo perfecto} del previamente ofertado. Para adquirir esta sustitutividad perfecta y que verdaderamente el precio refleje las preferencias colectivas de ese mercado debemos garantizar al menos una de las siguientes opciones:
+\begin{lnum}
+    \item \textbf{Solución de mercado: información}. Que no existan asimetrías informativas entre productores y consumidores respecto a los estándares de producción del producto, permitiendo a los consumidores hacer un juicio valorativo suficientemente informado;
+    \item \textbf{Solución política (interna): exigencias nacionales}. Servirse de la Política Comercial para remediar esta asimetría informativa y restablecer el precio en el equilibrio inicial, pudiendo compensar los perjuicios generados desde una perspectiva nacional a los trabajadores empleados en el extranjero (principio redistributivo) y permitiendo que los productores que se sometan a estándares nacionales puedan seguir operando; o,
+    \item \textbf{Solución social: estándares globales}. Establecer estándares globales que permitan al mercado \textbf{global} operar bajo estándares \textbf{globales}, homogeneizando bajo un mismo marco las diferentes preferencias relativas a los estándares laborales. 
+\end{lnum}
+
+Estas soluciones diferentes responden a cada una de las perspecivas diferentes sobre las que abordar la globalización. Más aún, en ellas subyace el trilema al que nos enfrentamos cuando queremos un mundo más interconectado y la imperativa necesidad de adoptar una visión holística cuando pretendemos abordar cualquier asunto que implique a dos o más comunidades políticas o naciones diferentes, teniendo siempre presente que el mundo es demasiado diverso para forzarlo con calzador en una sola comunidad política.
+
+A lo largo de los siguientes dos apartados hablaremos sobre los determinantes y efectos de uno de los objetivos clave de la globalización desde una perspectiva económica: la movilidad de factores productivos. Por razón de la materia, el enfoque que adoptamos se basará en la Teoría Económica. Sin embargo, y habida cuenta de lo expuesto, presentaremos algunos argumentos, a favor y en contra, desde las otras dos perspectivas, pues resulta necesario para entender verdaderamente \textit{what is at stake}.
+
+
+\clearpage
+\section{Movilidad de trabajadores: Determinantes y efectos}
+\puntosclave{
+    Los flujos migratorios se explican principalmente por las diferencias en niveles de renta, la distinta evolución demográfica y los costes asociados a la emigración.
+    
+    Los flujos migratorios tienen un impacto económico global positivo al permitir que los trabajadores desempeñen aquellas tareas donde son más productivos. En concreto, tiene un efecto macroeconómico positivo sobre el país de destino. Este efecto es más incierto en el país de origen.
+    
+    La inmigración tiene un impacto muy escaso o nulo sobre el salario medio de los nativos en el país receptor, pero tiene efectos distributivos y puede tener un impacto negativo en términos de menor salario o desempleo para algunos grupos muy concretos.
+    
+    Las ganancias tienden a ser menores y los efectos negativos mayores cuando el mercado laboral presenta importantes rigideces y desempleo.
+}
+
+Hablamos primero de la movilidad de trabajadores, sus determinantes y efectos. Como hemos mencionado, el stock de inmigrantes a nivel global ha crecido de forma continuada durante los últimos 50 años. Sin embargo, el mundo dista muchísimo de estar tan globalizado en este aspecto como lo estuvo durante el primer periodo de globalización (s.XIX-1914) y, además, el peso sobre la población mundial ha aumentado muy lentamente comparado con otros flujos, siendo aún muy modesto. 
+
+Sin embargo, sí ha crecido significativamente el flujo desde las economías en desarrollo hacia economías desarrolladas. Como la población de las economías en desarrollo ha crecido y se espera que siga creciendo mucho más rápido que el de las economías avanzadas (Japón o la UE, en conjunto, llevan años con tasas de crecimiento natural negativas), es de esperar que continúe creciendo el peso de los inmigrantes en relación a la población nativa en las economías desarrolladas.
+
+
+\textbf{¿Qué queremos decir?} 
+
+
+\subsection{¿Por qué emigrar? Determinantes}
+¿Por qué las personas deciden emigrar a otro país? ¿Qué tienen en cuenta las personas a la hora de tomar dicha decisión? ¿Qué límites encuentran? Estas son preguntas difíciles de contestar. Sin duda, existen muchísimos factores, no solo económicos, que motivan a las personas a emigrar a otro país. No obstante, también esta decisión esta sujeta a un análisis coste-beneficio que merce ser estudiado con atención puesto que, aunque los incentivos económicos puedan ser los principales determinantes, otros factores como el clima, la inestabilidad o el coste son tenidos en cuenta. 
+
+Para abordar los determinantes existen diversas metodologías. No obstante, lo más común es recurrir a: (i) un enfoque cuantitativo, mediante el análisis de los flujos de inmigración agregados, partiendo de una seria de hipótesis y un método predefinido (Modelo de gravedad); o, (ii) un enfoque cualitativo, mediante la elaboración de encuestas que permita profundizar en el razonamiento que conduce a las personas a adoptar tales decisiones (DHS). 
+
+Presentaremos las conclusiones de uno de los estudios cuantitativos más exhautivos al respecto, publicado por el FMI (2020).\footnote{En el, se emplea un modelo de gravedad para estimar la importancia de los principales determinantes de los flujos migratorios. La idea de este enfoque es que los potenciales emigrantes comparan los beneficios esperados de emigrar (principalmente lograr un salario más alto, pero también puede ser escapar de un conflicto o acceder a una sanidad y educación de mayor calidad) con el coste de emigrar (coste del traslado, barreras culturales y lingüísticas, restricciones a la inmigración). 
+} En el se identifican tanto determinantes positivos como negativos que moldean y condicionan las decisiones de los agentes. 
+
+\subsubsection{Incentivos: Determinantes positivos}
+Entre los determinantes positivos, los más importantes son:
+\begin{lnum}
+    \item \textbf{Incentivo económico}. El incentivo económico. Probeblamente el determinante más importante, los emigrantes persiguen una mejora en sus niveles de renta, atendiendo a la brecha económica entre los países de origen y destino;
+    \item \textbf{Cercanía geográfica}. Además, el estudio de los flujos bilaterales permite ver que la cercanía cultural/geográfica juega un papel muy importante, puesto que compartir una frontera común y haber tenido una relación colonial en el pasado son importantes determinantes de los flujos migratorios; 
+    \item \textbf{Demografía en origen}. La demografía en el país de origen, quizás por como influye en la formación de las expectativas de los agentes, juega también un papel importante. Cuanto mayor sea la población, mayor el número de emigrantes. No obstante, no se encuentra relación entre el grado de juventud de una sociedad y su propensión a emigrar;
+    \item \textbf{Redes de apoyo}. Además, no se aprecia una relación lineal en el tiempo, puesto que la evolución temporal del stock de migrantes desde un mismo país de origen genera retroalimentación en el flujo a futuro. Una manera de explicarlo es por la existencia de redes sociales y familiares (redes de apoyo), que atraen, apoyan y financian la inmigración de ese mismo origen; y,
+    \item \textbf{Conflictividad en origen}. La existencia de conflictos es otro factor que impulsa la emigración, principalmente entre países en desarrollo, aunque este efecto es temporal. Los flujos de refugiados tienen mucho más peso en los flujos entre economías en desarrollo;
+\end{lnum}
+
+Además de estos determinantes, otros factores, como por ejemplo factores climáticos y la recurrencia de desastres naturales en los países de origen también incentivan la emigración. Es muy posible que estos determinantes jueguen un papel más importante en el futuro.
+
+\subsubsection{Distorsiones: Determinantes negativos}
+Por otro lado, son variados los factores que actúan como distorsiones o determinantes negativos a la hora de tomar la decisión de emigrar a otro país. Entre otros:
+\begin{lnum}
+    \item \textbf{Coste: económico y cultural}. Más de la mitad de las diferencias entre los flujos migratorios bilaterales responden al efecto de las barreras geográficas y culturales; y,
+    \item \textbf{Trampa de la pobreza: la riqueza absoluta}. Por otro lado, aunque es muy importante la diferencia entre la renta per cápita en el origen y en el destino, también lo es el nivel absoluto de renta en origen. En concreto bajo el umbral de los 7.000 dólares de renta per cápita resulta muy dificil emigrar a economías desarrolladas. Esto puede ser perfectamente coherente con la existencia de otra \textbf{trampa de la pobreza}, de forma que, para niveles inferiores de renta no se tienen los recursos necesarios para emigrar. Sin embargo, destaca el hecho de que sí se observa emigración a otros países en desarrollo para niveles de renta per cápita en origen inferiores a ese umbral;\footnote{De esta forma, un aumento de la renta en los países más pobres alimenta una mayor emigración hacia economías ricas, porque hay más población capaz de asumir el coste de emigrar. Si sigue aumentando esa renta per cápita, se alcanza un punto a partir del cual cae la emigración, porque se reduce el diferencial de rentas y salarios con los países de destino
+    }
+    \item \textbf{Redes de apoyo en destino}. Políticas migratorias bilaterales más restrictivas y menores medidas de apoyo a la integración en destino reducen los flujos migratorios. No obstante, la importancia de esta barrera debe entenderse teniendo en cuenta que no se encuentra evidencia de que un mayor gasto público en destino (como proxy de un Estado de bienestar más generoso) atraiga más inmigrantes.
+\end{lnum}
+
+Todos estos serían los principales determinantes de los flujos migratorios habituales. No obstante, cuando se producen fenómenos migratorios repentinos y masivos (pej. el éxodo del Mariel en Cuba en 1980 o más recientemente por las guerras de Siria y Ucrania) los factores determinantes que hemos visto pueden no ser muy relevantes.
+
+\subsection{¿Qué impacto tiene? En origen y destino}
+En las últimas décadas se han producido cambios profundos en el mercado de trabajo manifestados, principalmente, en los patrones de empleo y salarios, con un fuerte impacto distributivo. Algunos de estos cambios traen por causa los flujos migratorios hacia economías desarrolladas.\footnote{No obstante, sus efectos pueden considerarse residuales al verse eclipasados por otros causas, como un fuerte aumento en el comercio internacional y el progreso tecnológico.
+}
+
+No debe extrañarnos, por tanto, el papel cada vez más importante que éstos han adquirido en el debate político (y, en mayor medida, el económico) con frecuencia culpando a la immigración de los problemas del mercado de trabajo local (bajos salarios, desempleo) y, desde una perspectiva más amplía, sobre los inconvenientes y/o beneficios de la globalización. Independientemente de su intensidad, ¿qué impacto tienen realmente estos flujos?
+
+Para analizar esta cuestión, partimos del siguiente benchmark de referencia: un mundo homogeneo desde una perspectiva política y social, donde existen dos regiones únicamente diferenciadas por sus dotaciones de factores productivos y su tecnología de producción. La economía mundial se compone de trabajo y capital homogenea, funciona de manera perfectamente competitiva, los mercados se vacían, no existen imperfecciones (de ningún tipo), los agentes son completamente racionales y optimizadores, no hay costes que distorsionen los flujos migratorios y la dotación de capital es inamovible. En esencia, un mundo completamente irreal.
+
+Bajo estas condiciones, podemos representar, gráficamente, los efectos de la inmigración de la siguiente manera:
+
+\imagenfit{EGC_Efectos_MovL.png}{Efectos en el mercado laboral de la libre inmigración: corto plazo}{BORJAS, 2015}
+
+Considerando que la oferta de trabajo es perfectamente inelástica (las personas están siempre dispuestos a trabajar) y una demanda de trabajo decreciente (puesto que la productividad marginal del trabajo es decreciente en el número de empleados), obtenemos el equilibrio de la libre movilidad del factor trabajo. En este, la libre movilidad del trabajo tendrá, salvo en un caso muy particular, un efecto mayor o igual que cero. La razón es sencilla, el excedente global de la migración ($A$) refleja: (i) la relativa abundancia de trabajo en el sur y relativa escasez en el norte, que hace que los trabajadores pasen de un segmento más bajo de la curva de demanda en el sur a uno más alto en el norte; pero, además, (ii) la curva de demanda de trabajo en el norte es más elevada que en el sur para una misma cantidad de empleo gracias a su mejor infraestructura, es decir, los trabajadores emigrados al norte son ahora más productivos porque la oferta de trabajadores en el norte es más escasa y porque el norte tiene una mejor infraestructura. El beneficio global se puede descomponer, desde una perspectiva nacional, en el beneficio generado en el norte menos la pérdida generada en el sur. De esta forma, podemos ver que los efectos en el sur serán opuestos a los del norte pero en una cuantía diferente, pues dependerá de:
+\begin{la}
+    \item \textbf{Brecha salarial}. Cuanto mayor sea la brecha salarial, más perderá el sur y ganará el norte, desde una perspectiva local, pero mayor será el beneficio global;
+    \item \textbf{Brecha deproductividad}. Cuanto mayor sea la brecha deproductividad, más perderá el sur y ganará el norte desde una perspectiva local, pero mayor será el beneficio global.
+\end{la}
+
+Estas conclusiones se desprenden de un único efecto: el efecto competencia o sustitución de los inmigrantes sobre los trabajadores nativos. La llegada de trabajadores extranjeros con características similares a las de los nativos genera este efecto competencia, provocando una caída en los salarios, o desplazamiento de los trabajadores nativos. Esto genera grandes impactos distributivos tanto desde una perspectiva local como global, pero opuestos, en ambos países: (i) en el norte, el capital sale más beneficiado; en el sur, el trabajo sale más beneficiado; (ii) en el norte, los beneficios generados por los trabajadores inmigrantes son también rentabilizados por los trabajadores nativos debido al aumento de la eficiencia, mientras que en el Sur las pérdidas para los propietarios del capital se ven compensadas por las ganancias agregadas de los trabajadores nativos y los trabajadores inmigrantes en el extranjero.
+
+Todo esto suena muy bien. Sin embargo, es evidente que dista mucho de lo que verdaderamente se experimenta. Aunque los efectos positivos parecen compensar los efectos negativos, esta sencilla imagen nos nubla los efectos más importantes (tanto positivos como negativos) que verdaderamente experimentamos. Imaginemos que la región del Norte es España y la región del Sur es Bangladesh. La brecha salarial entre estos dos países es enorme. Supongamos, por un momento que ningún supuesto cambia a excepción de una única cosa: en España existe Salario Mínimo Interprofesional y este constituye el equilibrio incial del mercado de trabajo. ¿Qué sucedería tras la liberalización? ¿Permitirían los trabajadores españoles una disminución de su salario en aras de una mayor eficiencia económica? Si no, ¿estaríamos dispuestos o sería permisible la segementación del mercado de trabajo entre nacionales e inmigrantes?
+
+\textbf{GRÁFICO BORJAS CON SEGMENTACIÓN DEL MERCADO LABORAL}
+
+Como es evidente que el modelo presentado no proporciona ninguna utilidad para contestar estas cuestiones, veamos otras aportaciones y posibles extensiones.
+
+\subsubsection{Efectos: Perspectiva económica}
+Desde una perspectiva económica, es razonable suponer que el beneficio potencial de la movilidad internacional de trabajadores es claramente superior al de una mayor reducción en las barreras al comercio y la inversión. Esto es así porque, en virtud del principio de la ventaja comparativa y el grado de globalización alcanzado en el ámbito comercial (seguido directamente por flujos de capital), los efectos positivos sobre la eficiencia/bienestar agregado son significativamente superiores a los costes distributivos que puediese generar. 
+
+Por tanto, independientemente de nuestros sesgos e ideas personales debemos tener siempre presente lo siguiente: siendo puristas, en virtud de los postulados clásicos de la Econonmía Internacional, \textbf{si defendemos y creemos en las ganancias de eficiencia que pudiera generar la globalización, debemos defender la libre movilidad de factores con más intensidad de la que abogaríamos por una reducción a otras restricciones nacionales (comerciales o de capital)}.
+
+Dicho esto los canales a través de los cuáles se podría generar este impacto; teniendo en cuenta que estos difieren enormemente entre el país receptor y el emisor. 
+
+\paragraph{País de destino: efectos positivos y negativos}
+En el país receptor, país de destino, podemos identificar los siguientes efectos.
+
+\textbf{Efecto sustitución: dismunición salarial}. Tal y como avanza el sencillo modelo planteado, existe un efecto sustitución que podría disminuir los salarios de la población nativa. Sin embargo, el análisis empírico no parece contrastar tajantamente dichas conclusiones. PERI (2014) hace una revisión de 27 estudios empíricos realizados entre 1982 y 2013, en distintos países y con diversas metodologías, y encuentra que la práctica totalidad estiman un impacto muy pequeño o nulo de la inmigración sobre los salarios de los nativos.\footnote{Dos tercios de los estudios encuentran que un aumento del 1\% en la participación de los inmigrantes sobre el número total de trabajadores en un mercado tiene un efecto sobre el salario medio nativo que varía entre $-0,1<\partial w<0,1$, puntos porcentuales. 
+} No obstante, la inmigración puede tener un impacto negativo en términos de menor salario o desempleo para algunos grupos muy concretos. Por ejemplo, cuando los trabajadores inmigrantes tienden a estar poco cualificados, pueden tener un efecto negativo sobre los nativos con una cualificación similar. En particular, se ha identificado un impacto negativo sobre algunos grupos de inmigrantes llegados con anterioridad. Además, este efecto parece acentuarse si el mercado laboral presenta importantes rigideces que dificultan el ajuste. 
+
+\textbf{Occupational upgrading}. Por otro lado, también se observa (PERI, 2014) que los nativos que experimentan la competencia de los inmigrantes tienden a especializarse en ocupaciones más complejas y productivas, fenómeno que se conoce como occupational upgrading. En concreto, suelen dedicarse menos a labores manuales y más a aquellas que requieren capacidad comunicativa. De esta forma, el impacto negativo anterior podría verse contrarrestado por la progresiva adaptación locale: los trabajadores serán cada vez menos homogeneos y los inimgrates desempeñarán labores complementarias a las de los nativos.\footnote{Borjas (2015) introduce en su modelo niveles distintos de cualificación y concluye que, si los inmigrantes presentan unas capacidades iguales a las de los nativos, la inmigración no será beneficiosa Las ganancias de la inmigración para el país receptor serán mayores. cuanto más diferentes sean nativos e inmigrantes. Desde esta perspectiva seria deseable que el nivel de cualificación de los inmigrantes fuera extremo, bien muy alto, o bien muy bajo, para ser más complementarios de los trabajadores nativos.
+} No obstante, es posible que si dicha adaptación progresiva (occupational upgrading) no sucede, los nativos decidan abandonar el mercado laboral local y se trasladen a otra lugar donde haya menos competencia (la oferta de trabajo dejaría de ser rígida). 
+
+\textbf{Mercado de trabajo: aumento de la oferta de trabajo}. A este efecto observado se suma otro efecto positivo estrechamente relacionado: la especialización de inmigrantes en servicios de cuidados ha facilitado la incorporación de más mujeres al mercado de trabajo, permitiendo aumentar la oferta de trabajo.\footnote{En particular: Conde, García y Navarro, 2008 para España y Cortés y Tessada, 2011, para EEUU.
+} 
+
+\textbf{Tamaño de mercado: consumo}. Al margen de su impacto sobre el mercado laboral, los inmigrantes contribuyen a la demanda de consumo e inversión en el norte (efecto demanda o escala), pues aumentan el tamaño del mercado local. De esta forma, genera también un desplazamiento de la demanda de trabajo hacia la derecha.
+
+\textbf{Productividad laboral: inversión}. Por último, las empresas podrían reaccionar ante estos dos últimos efectos aumentando su inversión en las zonas dónde llegan inmigrantes, bien sea para atender la mayor demanda de consumo o para aprovechar la mayor cantidad de mano de obra disponible (relajamos el supuesto de capital constante). Este aumento de la dotación de capital, incrementará la productividad del trabajo, haciendo también que la demanda de trabajo se desplace hacia la derecha. Además, no hay que olvidar que la inmigración (tamaño de la población) puede generar externalidades positivas, como acelerar la generación de conocimiento, innovación y emprendimiento. Por ejemplo, en Estados Unidos más del 25\% de los emprendedores son inmigrantes y la cuarta parte de las empresas tecnológicas tienen al menos un cofundador inmigrante. 
+
+El impacto a la baja sobre los salarios por la competencia de los trabajadores inmigrantes se ve compensado por el efecto positivo debido a la complementariedad entre nativos e inmigrantes, el aumento de la inversión empresarial y el aumento de la productividad a largo plazo: más especialización, más innovación y, en general, mayor dinamismo económico. Otros autores (BORJAS, 2015) cuestiona los análisis tan optimistas sobre los efectos de la migración en los países receptores. 
+
+\paragraph{País de origen: Efectos positivos y negativos}
+Aunque los estudios se han centrado en analizar los efectos sobre los países receptores (fundamentalmente desde la perspectiva de las economías desarrolladas que reciben inmigrantes de países en desarrollo) también es importante estudiar su impacto sobre los países de origen. Desde esta perspectiva identificamos los siguientes efectos:
+
+\textbf{Remesas}. Los emigrantes envían cantidades importantes de dinero a sus países de origen. De hecho, si excluimos a China, las remesas son la \textbf{principal fuente de financiación exterior} para este grupo de países. Este resultado es abrumador (ca. 20215 -): las remesas son superiores a cualquiera de los otros flujos que reciben (inversión directa, inversión de cartera o ayuda al desarrollo). Esto hace que el impacto de la población residente en el extranjero pueda constituir una de las fuerzas más importantes que impulsan el crecimiento económico en algunos países, hasta un punto tal que muchos se preguntan si sería posible inducir el crecimiento mediante la \textbf{exportación de personas}.\footnote{Para más información: \href{https://www.economist.com/finance-and-economics/2026/04/30/can-countries-grow-richer-by-exporting-people-not-goods}{\textit{Can countries grow richer by exporting people, not goods?}. The Economist (2026)}.
+
+\textit{[...] Gulf oil money has transformed Kerala (INDIA). K.P. KANNAN and K.S. HARI of the Centre for Development Studies, an Indian think-tank, calculate that by the mid-2010s remittances from the region were equivalent to about a quarter of the state’s output, and more than both its value added in manufacturing and its public spending. This has lifted living standards. Consumption per person is nearly three-quarters above the Indian average. Multidimensional poverty, an Indian measure of destitution, afflicts around one in ten Indians but is virtually absent in Kerala.}
+} Aún resulta difícil responder a esta cuestión y, en consecuencia, no existe un consenco unánime al respecto. Sin embargo, en muchos países en desarrollo, sobretodo en economías pequeñas, los flujos de remesas pueden superar el 20\% del PIB. 
+
+\textbf{Fuga de cerebros.} No obstante, en bastantes ocasiones los emigrantes tienen una cualificación superior al promedio de su país de origen. Esto reduce inevitablemente el capital humano de los países emisores y empeora sus perspectivas de desarrollo (GROGGER y HANSON, 2011). Ahora bien, este efecto podría verse compensado por los incentivos que genera la la posibilidad de emigrar: adquirir una mayor educación en personas que finalmente no terminan emigrando. Además algunos inmigrantes retornan con el tiempo a su país de origen, pudiendo limitar el impacto de este efecto.
+
+Al haber menos estudios centrados en el impacto sobre los países emisores, debemos conformarnos con contrastar estos dos efectos. A este respecto, son muchos los que coinciden en que las remesas compensan el efecto negativo por la fuga de cerebros (KOCZAN et al., 2021).
+
+\subsubsection{Efectos: Perspectiva política}
+Como vemos, la libre movilidad de trabajadores es una posición fácilmente defendible desde una perspectiva económica. No obstante, sabemos por lo expuesto que cualquier proceso de liberalización genera ganadores y perdedores. Este impacto distributivo, sumado a las imperfecciones de mercado existente, adquiere una dimensión especialmente importante cuando se analiza desde la óptica de la Economía del Bienestar, exigiéndonos valorar dicho impacto teniendo en cuenta la proyección práctica que adquiere el Segunda Teorema de la Economía del Bienestar y las aportaciones relativas a la intervención.
+
+Recordemos que el impacto distributivo de la globalización conduce a un Óptimo de PARETO (en \textit{benchmark}) y, como tal, resulta difílmente cuestionable. Ahora bien, este óptimo alcanzado no es el único posible. Una alternativa sería la \textbf{asignación deseable}, pero requiere llevar a cabo juicios valorativos y, en consecuencia, adentrarnos en los efectos de la inmigración desde una perspectiva política. ¿Cuál es la asignación deseable y qué efectos sobre esta tiene la movilidad de trabajadores?
+
+\paragraph{Objetivos locales: Estado del Bienestar}
+Desde una perspectiva local, la consecuación de los objetivos políticos internos resulta un tema fácilmente abordable. El desarrollo político histórico de muchas naciones desarrolladas ha desembocado en la construcción de sistemas de bienestar políticos. Este modelo de organización obliga al Estado a intervenir activamente para garantizar servicios básicos, promover la igualdad de oportunidades y asegurar un nivel de vida digno a todos los ciudadanos. Es decir, se ha decidido por la comunidad económica abordar las desigualdades sociales mediante programas redistributivos que permitan alcanzar una asignación eficiente y deseable de los recursos de la economía. 
+
+Ahora bien, muchas de estas prestaciones son de carácter universal y, en consecuencia, no se ostenta la potestad ni capacidad para establecer criterios adicionales de acceso más allá del presencial/residencial. En este contexto, preocupa el impacto fiscal de la inimgración ya que se teme que los inmigrantes supongan una carga para las finanzas públicas al ser usuarios de los servicios públicos (sanidad, educación, etc.) y beneficiarios de prestaciones (desempleo, prestaciones asistenciales, etc.). ¿Qué podemos decir al respecto?
+
+Se estima que, a corto plazo, la llegada de inmigrantes pueda representar un impacto neto negativo para las cuentas públicas. Aunque sus causas son variadas, se debe fundamentalmente a la capacidad de ser perceptores de prestaciones públicas antes de encontrar un empleo estable y variará en función del perfil de persona y de la generosidad del país receptor. Ahora bien, a largo plazo se considera que, en la medida en que predominen los inmigrantes jóvenes en edad de trabajar, es razonable suponer que tenga un impacto neto positiva en cuanto se integren en el mercado laboral formal (ver KOCZAN et al., 2021): por razones de la edad, los costes sanitarios y del sistema de pensiones serán desproporcionadamente inferiores a los de otros grupos de edad y el Estado no ha tenido que cubrir el coste de su educación. De hecho, en los casos en que se detecta un impacto fiscal negativo suele ser porque los inmigrantes contribuyen menos al pago de impuestos (economía informal), no porque reciban mayores prestaciones sociales. Por otro lado, en la medida en que estos sean más jóvenes y presenten una tasa de fecundidad superior, pueden tener un impacto demográfico positivo en las economías receptoras, contribuyendo a posponer los problemas presupuestarios asociados al envejecimiento (pensiones,sanidad, etc.). 
+
+Este análisis del impacto fiscal se refiere a los emigrantes por motivos económicos, que son la mayoría en las economías desarrolladas. Los refugiados suelen tener un impacto fiscal negativo, pero se concentran en gran medida en economías en desarrollo y emergentes.
+
+\paragraph{Objetivos globales: País emisor}
+Borjas, plantea el ejemplo de Puerto Rico: la mayoría de su población elige pennanecer en la isla, aunque podría emigrar a EEUU, donde los salarios son considerablemente más altos. Si no lo hacen es porque emigrar supone un coste importante. Para emigrar hay que superar importantes barreras geográficas, culturales y lingüísticas. Si se suprimieran todas las restricciones a la migración, los flujos serían muy grandes y esto afectaría a la infraestructura del norte. Según Borjas, la entrada masiva de inmigrantes haría que las instituciones del norte cambiaran para parecerse más a las instituciones más ineficientes del sur. De acuerdo con este planteamiento, la inmigración masiva provocaría una caída de la productividad en el norte. No obstante, no parece que haya evidencia de este efecto en la realidad.
+
+
+\subsubsection{Efectos: Perspectiva social}
+De lo expuesto hasta ahora concluimos que la libre movilidad de trabajadores resulta un fenómeno potencialmente beneficioso desde un punto de vista económico y posible/deseable (a priori) desde un punto de vista político: los objetivos políticos, tanto internos como globales, pueden alcanzarse con la libre movilidad de trabajadores, aunque con dificultades que deben abordarse con rigor. De hecho, tal es la situación y fundamentación que resulta irónico encontrar tanta animadversión. 
+
+¿Qué otros efectos estamos omitiendo que puedan explicar este fenómeno? Adentrándonos en el objeto del discurso, existe una tendencia persistente a atribuir la fricción social a de diferencias en religión, idioma o costumbres visibles. Esta lectura resulta cómoda, pero superficial. Reduce un fenómeno complejo a una disputa identitaria y permite, por un lado, reducir al mínimo los beneficios potenciales presentados hasta ahora y, por otro lado, evitar el análisis sobre las dinámicas estructurales que realmente generan tensión.
+
+El conflicto rara vez nace de la mera diferencia simbólica. No es la alteridad en sí misma lo que produce fricción, sino la interacción entre grupos con configuraciones materiales, demográficas e institucionales profundamente distintas. La migración no enfrenta culturas, enfrenta estructuras.\footnote{La historia reciente ofrece un buen ejemplo. Las grandes migraciones del campo a la ciudad dentro de una misma nación provocaron reacciones de rechazo, estigmatización e incluso violencia, pese a que migrantes y receptores compartían lengua, religión y pertenencia nacional. Lo que generaba fricción no era la identidad, sino el impacto repentino de una población inestable sobre un ecosistema urbano con recursos, normas y equilibrios previamente consolidados. El patrón se repite hoy a escala internacional. Cuando un grupo numeroso, con hábitos y estructuras demográficas específicas, se inserta con rapidez en una sociedad altamente institucionalizada, el resultado no depende tanto del folklore como de la compatibilidad funcional entre ambos sistemas. La tensión emerge cuando la velocidad de absorción supera la capacidad adaptativa del entorno receptor.
+} Para comprender por qué, es necesario abandonar la idea de cultura como folklore y entenderla como un mecanismo de adaptación al entorno: \textbf{las normas sociales/instituciones no son adornos simbólicos, son soluciones históricas a problemas recurrentes} (cómo gestionar el conflicto, cómo regular la competencia por el estatus, cómo usar el espacio público sin que derive en violencia).\footnote{Uno de los errores más frecuentes al analizar la migración es juzgar las prácticas del \textit{otro} como bárbaras sin comprender que toda conducta social cumple una función en el ecosistema donde surge. Las normas culturales no aparecen arbitrariamente: estabilizan relaciones, canalizan tensiones y producen cohesión.
+} De esta forma, la fricción aparece cuando un grupo traslada prácticas funcionales para un entorno específico se trasplanta a otro donde pierde su función original y conserva únicamente sus externalidades. Al fin y al cabo, cada maestrillo tiene su librillo. 
+
+Entender esta actitud, anticipar y evitar las fricciones, y, en último término, potenciar los efectos positivos presentados exige conocer la compatibilidad entre estructuras y lineas de conflicto que deben ser flexibilizadas para garantizar la inclusión.\footnote{Tomemos como ejemplo las Fallas de Valencia. Durante varios días, la ciudad se convierte en un espacio de ruido constante, calles cortadas y ocupación intensiva del espacio público. Para un observador externo, la detonación continua de petardos o la interrupción del tránsito pueden parecer conductas irracionales o antisociales. Sin embargo, dentro del contexto valenciano, este caos cumple funciones sociales claras: refuerza identidad, produce catarsis colectiva y genera cohesión intergeneracional. Las externalidades son toleradas porque el rito devuelve beneficios simbólicos al conjunto de la comunidad. El desorden es funcional. Imaginemos ahora que un grupo significativo de valencianos emigrara y replicara exactamente ese patrón en ciudades como Zúrich o Tokio. El mismo comportamiento (ruido explosivo, ocupación prolongada de calles, alteración del tránsito) no sería percibido como tradición integradora, sino como perturbación del orden público. La conducta no cambia; cambia el entorno que le daba sentido. Lo que en su contexto original generaba cohesión, en otro puede generar fricción porque el ecosistema receptor no obtiene los beneficios simbólicos que compensan las externalidades. Esta dinámica permite entender el conflicto migratorio desde una perspectiva menos moralista. La incivilidad atribuida a ciertos grupos no siempre es producto de malicia o desprecio, sino de la descontextualización de prácticas que pierden su función adaptativa al cambiar de nicho institucional. El rechazo no se dirige necesariamente contra la identidad del migrante, sino contra la importación de conductas cuyo equilibrio interno no es compartido por la sociedad receptora.
+} ¿Cómo podemos dar sentido a esto? 
+
+
+\paragraph{País receptor: Estructuras adaptativas}
+Desde la perspectiva del receptor, el ecosistema tiene que tener margen real de adaptación. Integrar no es solo acoger; es permitir que el entorno se transforme parcialmente para absorber nuevas dinámicas demográficas y económicas. ¿Es esto posible? La historia proporciona muy buenos ejemplos de que sí. Aunque requiere voluntad, constancia y transparencia, la adaptabilidad no debe ni puede verse como imposible, sino como una consecuencia natural del conflicto.
+
+La Unión Europea es un ejemplo paradigmático. El mercado único, que trajo consigo la libre movilidad de personas (real) no fue un proceso inmediato ni espontaneo, fue un proceso meditado, planificado y progresivo que permitió la adaptación/moldeación de las instituciones nacionales para ser capaces de enfrentar este movimiento sin generar fricciones sociales. Es evidente que la Unión Europea no está tan integrada como lo puede ser cada uno de los Estados que la conforman, sin embargo, pocos serían capaces de sostener que la libre movilidad de personas a nivel europeo genera fricciones y tensiones entre la población local. Más aún, uno de los grandes hitos en la formación del proyecto europeo fue el establecimiento del Programa ERASMUS, uno de los mejor recibidos por parte de la población.
+
+Sin embargo, también proporciona un buen ejemplo de fricciones generadas por flujos migratorios. Como venimos diciendo, muchas partes del conflicto migratorio responden a la falta de plasticidad institucional: el traslado de prácticas de un entorno de bajo orden o alta informalidad hacia otro caracterizado por normas rígidas, alta regulación y sofisticación institucional. Por tanto, un sistema altamente reglamentado y normativamente denso tiene, entre otras cosas, menor capacidad de absorber cambios rápidos sin generar tensiones.\footnote{Sin duda, hasta tiempos recientes, la sociedad americana había percibido la inmigración desde una óptica diámetralmente opuesta a la de sus homológos europeos. Esto es así por la sencilla razón de que, cualquier sociedad desarrolla a lo largo de su historia protocolos estables y previsibles para reducir la incertidumbre y las externalidades negativas generadas por la convivencia.
+} Cuando la velocidad de absorción excede la adaptabilidad institucional, aparecen fricciones que son síntomas de un desajuste sistémico. La pregunta no es si una cultura es mejor que otra, sino si el marco institucional está diseñado para metabolizar el cambio que decide permitir: \textbf{sin adaptación estructural, la tensión no es una anomalía sino una consecuencia previsible}.
+
+En definitiva, desde la perspectiva del receptor debemos entender que el conflicto no surge, a priori, porque las culturas sean incompatibles, sino porque estructuras distintas interactúan a una velocidad que supera su capacidad de ajuste. La migración es un fenómeno normal en la historia humana; lo excepcional es pretender que puede ocurrir sin modificar el entorno receptor.
+
+\paragraph{País emisor: Segregación espacial}
+Si este es el caso, emerge otra característica de los flujos migratorios desde la perspectiva del emisor: \textbf{la segregación, tanto espacial como laboral}. 
+
+\textbf{Vivienda}. Las sociedades europeas operan con normativas urbanísticas estrictas, límites de ocupación y estándares constructivos elevados. Sin embargo, los recién llegados suelen necesitar soluciones habitacionales más flexibles y transitorias: mayor densidad por vivienda, ampliaciones informales, construcción rápida de bajo costo. Cuando el marco regulatorio impide esa adaptación, la presión se traduce en hacinamiento ilegal, tensión vecinal y encarecimiento general del mercado.
+
+\textbf{Acceso a mercados: especialmente el laboral}. Muchos inmigrantes dependen inicialmente de actividades de entrada rápida: servicios domésticos, comercio ambulante, restauración informal. En entornos altamente regulados, donde licencias, requisitos sanitarios y obligaciones fiscales son complejos, estas vías se cierran o se empujan hacia la informalidad. El resultado no es integración productiva, sino fricción económica. Este caso es especialmente importante si nos centramos en el acceso al mercado laboral y el caso de España resulta muy ejemplificador. La regularización extraordinaria de inmigrantes inicidada en 2026 es un remedio paliativo a una enfermedad crónica mucho más grave: la regulación de extranjería. El Código de Extranjeria actual carece de la plasticidad necesaria para adaptarse a los nuevos flujos migratorios. Tomando como instrumento vertebrador la Ley Órganica de Extranjería del año 2000, persigue sus objetivos mediante instrumentos rígidos e imposibles de adecuarse al contexto actual. 
+
+
+
+\clearpage
+\section{Movilidad de capital: Determinantes y efectos}
+
+Como vemos, analizar los flujos internacional de migración requiere adoptar una perspectiva holística que nos permite entender tanto sus determinantes como sus efectos de manera más apropiada y certera. cabría pensar en analizar de forma similar los flujos de capitales. No obstante, hay diferencias importantes entre ambos flujos. La migración sí implica el desplazamiento físico de los trabajadores. Sin embargo, los flujos de capital sonflujos financieros que. con frecuencia, no tienen flujos físicos asociados. Se puede realizar unainversión en otro país sin necesidad de hacer un envío transfronterizo de maquinaria u otros bienes. Con frecuencia se trata de un préstamo o de la adquisición del capital social de una empresa en el país de destino, que no suponen automáticamente un aumento del stock de capital físico en destino ni una reducción de ese stock en el país de origen. Este aumento del stock de capital físico ocurrirá con las inversiones directas greenfield o de nueva planta, pero en principio, no ocurrirá con otros flujos de capital. Los efectos de la inversión directa greenfield sí podrían analizarse, en buena medida, de la misma forma que la inmigración, utilizando el modelo de MacDougal-Kemp o un modelo de factores específicos a corto plazo y de Heckscher-Ohlin a largo plazo. Sin embargo, para analizar los movimientos de capital en general, es más apropiado interpretarlo como comercio intertemporal: cuando un inversor español realiza un préstamo a un residente de otro país, le está permitiendo gastar más hoy, a cambio de un compromiso de devolver esa deuda en el futuro.
+
+
+\subsection{¿Qué se busca al invertir en otros mercados? Determinantes}
+Hemos visto en un modelo neoclásico simple, que los flujos de capital se guían por las diferencias en los tipos de interés y en la productividad del capital. En el mundo real, con incertidumbre, el riesgo será es otro factor importante a tener en cuenta al realizar una inversión. A continuación, veremos más en detalle los diversos factores que, de acuerdo con varios estudios empíricos de referencia (ver por ejemplo KOEPKE 2015 o HANNAN 2017 y 2018) determinan los flujos trasfronterizos de capitales en la práctica. En línea con lo visto en el apartado anterior, este análisis se ha centrado tradicionalmente en los flujos desde las economías desarrolladas hacia los países emergentes y en desarrollo. La literatura empírica sobre los determinantes de los flujos de capitales suele distinguir entre factores que empujan hacia la inversión (factores del lado de la oferta o pushfactors) y factores que atraen la inversión (factores del lado de la demanda o pull facturs). CALVO et al (1993) y FERNÁNDEZ-ARIAS ( 1996) fueron los pioneros en este enfoque, que se ha convertido en referente desde entonces.
+
+
+\subsubsection{Incentivos}
+La idea subyacente es la del enfoque de equilibrio de cartera, según el cual, son los rendimientos esperados, el riesgo y las prefere ncias sobre el riesgo son los que determ inan los flujos de capital (el modelo de referencia en cuanto a la diversificación internacional de las carteras es el de Grubel, 1968). Los fa ctores que empujan a invertir en el extranjero son condiciones externas para el país receptor. 
+
+Estos factores contribuyen a la liquidez global e incentivan a los inversores a aumentar su exposición a otros países. De acuerdo con el enfoque tradicional (como el modelo de consumo intertemporal) el capital fluirá hacia las economías que ofrezcan una mayor rentabilidad. Habitualmente se incluyen entre los factores de empuje variables como la liquidez global, la aversión global al riesgo, los precios de las materias primas y las tasas de crecimiento y tipos de interés en las principales economías emisoras de inversión (típicamente las economías desarrolladas). Algunos estudios incluyen también otras variables relativas a la rentabilidad en los países emisores (típicamente el difere ncial entre los bonos a corto y a largo plazo en EEUU ( US yield gap) y la prima de riesgo de los bonos corporativos de alta rentabi I idad ( US corporate spread)). Por su parte, los factores de atracc ión se refieren a las características propias de los países de destino que afectan a la rentab ilidad y riesgo de los inversores y que dependen de los fundamentos macroeconómicos de cada país, las distorsiones que afectan a sus mercados y las poi íticas públicas que aplican. Estos factores de atracción se pueden dividir entre aquellos de carácter coyuntural, como el crecimiento económico y los tipos de interés del país de destino, y los de naturaleza estructural, como el grado de apertura exterior de la economía, el volumen de reservas de divisas, el régimen cambiario, el nivel de renta per cápita, el grado de desarrollo financiero y la calidad institucional. Determ inar cuáles de estos factores son más relevantes en la práctica es una cuestión empírica. Hannan (20 17) analiza los determinantes de los flujos de capitales en un grupo de 34 países en el periodo posterior a la Crisis Financiera Global (entre 2009 y 2015). En primer lugar, este estudio concluye que la debilidad de los flujos de capitales desde 2009 responde a dos factores: las menores. perspectivas de crecimiento en los países receptores y una mayor aversión al riesgo a nivel global. En cuanto a los tres grupos de factores que analiza (vet tabla 14) sus principales resultados son estos: Los factores típicamente coyunturales, como los diferenciales en tasas de crecimiento y tipos de interés (que son a la vez factores de empuje y atracción, al definirse en térm inos de diferencial entre el país emisor y el receptor de la inversión) son determ inantes relevantes de los flujos de inversión. Según su estudio, un aumento de un punto porcentual en el diferencial de crecimiento favorable a la economía receptora (respecto al crecimiento del PIB en EEUU) lleva asociado un incremento de los flujos de capitales de 0,25 puntos porc entuales. Un aumento de un punto porcentual en el diferencial de interés con EEUU elevaría la entrada de capitales en medio punto del PIB. Estos dos diferenciales son detenn inantes relevantes para los flujos de cartera y otras inversiones, pero no lo son para la inversión directa. Los factores estructurales también son determinantes importantes de los flujos de capitales. En particular, a mayor apertura comercial y mayor grado de desarrollo fm anciero, mayor será la atrac ción de inversión neta, tanto directa, como de cartera. Sin embargo, este estudio no encuentra resultados claros sobre el efecto de la liberalización de la cuenta financiera de la balanza de pagos.
+
+Factores de empuje: estos factores también son determinantes de varios componentes de los flujos de capitales. En concreto, la aversión global al riesgo es un determinante clave para los flujos de capitales en términos netos. No parece, sin embargo, determinar los flujo s netos de inversión directa (aunque sí afecta a sus flujos bruto��: cuanto mayor es la aversión al riesgo, mayores son los fl uj os brutos de IED, tanto de entrada como de salida). En conjunto, para el periodo analizado, los dos factores que han tenido una contribución cuantitativamente más importante a la caída de los flujos de capital hacia las economías emergentes y en desarrollo han sido el aumento de la aversión .global al riesgo, que ha contribuido a la caída de estos flujos, y el difere11cial de tipos de interés (más elevados en las economías emergentes y en desarrollo). La contribución del diferencial de crecimiento ha sido menor, porque se desaceleraron las tasas de crecimiento de las economías emergentes y en desarrollo. En la práctica, es importante conocer la importancia relativa de cada uno de estos factores para poder orientar a la política económica. 
+
+\subsubsection{Distorsiones: Contagio}
+Algunos autores han criticado este enfoque de empuje y atracción, porque deja fuera algunos determinantes importantes del comportamiento que no encajan bien en ese esquema, porque son resultado de la interacción de factores externos y domésticos. Un caso típico es el del efecto contagio, donde interactuación factores claramente globales, que se combinan con la presencia de debilidades en las economías domésticas, para dar lugar a una salida de capitales a gran escala. También hay algunas críticas al uso de los diferenciales de tipos de interés y crecimiento como determinantes de los flujos de capitales. Existen dudas sobre si tiene el mismo efecto, por ejemplo, un aumento de la tasa de crecimiento en EEUU, que una desaceleración del crecimiento de igual magnitud en las economías emergentes. En los dos casos se reduce el diferencial de crecimiento, pero es posible que para los inversores ambos escenarios no sean equivalentes. Por último, otro elemento que condiciona los flujos de capitales es la existencia de controles de capital. Durante las décadas de 1980 y 1990 muchos países redujeron o suprimieron los controles de capital, lo que contrib uyó al incremento en los flujos financieros transfron terizos. Ya hemos visto los beneficios asociados a los flujos de capitales, pero estos también pueden tener algunos costes significativos asociados. En particular, los flujos de capitales volátiles pueden dificultar mucho la gestión macroeconómica, representando un riesgo para la estabilidad fi nanciera. Un motivo de preocupación para las economías emergentes y en desarrollo es la exposición a shocks monetarios exteriores. En especial, preocupa que un endurecimiento de la política monetaria en las economías avanzadas (EEUU sobre todo) pueda obligar a una economía emergente a seguir la política monetaria de EEUU, aunque no sea la más adecuada para su coyuntura. Muchas de las economías emergentes y en desarrollo con una cuenta financiera abierta han sufrido algún episodio de sudden stop, en el que, tras un periodo de intensas entradas de capitales, algún shock externo (típicamente una subida importante de tipos de interés en EEUU) provoca una súbita salida de capitales a gran escala, que tiene un impacto muy negativo sobre la economía afectada. En este contexto, la opinión predominante es que los controles de capitales pueden tener utilidad, siempre que se acompañen de una política económica adecuada. Bhargava et al. (2023) estudian la eficacia de los controles de capital durante periodos de crisis, concluyendo que estos controles pueden dar mayor resiliencia a una economía si se implantan antes de que surja una crisis. Sin embargo, los controles impuestos una vez que comienza la crisis no parece que ayuden a frenar la salida ��e capitales.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+\href{https://juandemariana.org/el-problema-no-cultural-de-la-inmigracion/}{\textit{El problema no cultural de la inmigración.} Instituto Juan de Mariana (2026)}
+
+\href{https://www.migrationpolicy.org/article/its-population-ages-japan-quietly-turns-immigration}{\textit{As its population ages, Japan quitly turns to immigration}. Migration Policy Institue (2016)}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+\clearpage
+\anexo{Cadenas Globales de Valor -- Aproximación empírica}\ref{anx:GVC_empirico}
+
+La internacionalización de la producción ha dado lugar a complejos flujos transfronterizos de bienes, conocimiento, inversión, servicios y personas que a menudo se interpretan como potenciadores del crecimiento y profundamente transformadores (LAMY 2010). 
+
+El comercio en cadenas de suministro ha sido relevante entre países ricos durante décadas. Por ejemplo, Estados Unidos y Canadá firmaron en 1965 el Auto Pact para sustentar este tipo de comercio. Sin embargo, las redes productivas Norte-Norte no fueron revolucionarias. La verdadera transformación comenzó cuando el comercio en cadenas de suministro ganó importancia entre países tecnológicamente avanzados y países de bajos salarios entre 1985 y 1995. Cambios han sido ampliamente documentados y se puede visualizar fácilmente mediante dos indicadores: un índice de especialización vertical y medidas de comercio intraindustrial por socio.\footnote{El índice de AMADOR y CABRAL (2009) utiliza datos detallados de comercio para identificar situaciones en las que un país presenta una alta participación tanto en exportaciones como en importaciones de bienes intermedios relacionados (identificados mediante una tabla input-output detallada) en relación con el mundo. Esta combinación de información input-output y datos comerciales permite una cobertura temporal más amplia y un mayor número de países que las medidas relacionadas de HUMMELS et al. (2001).
+}\textsuperscript{,}\footnote{La ruptura estructural de mediados de los años ochenta ha sido evidenciada por numerosos trabajos (Dallas Fed 2002, Feenstra y Hanson 1996, Ando y Kimura 2005, y Fukao, Ishito e Ito 2003), así como los cambios en el comercio por otros autores (Hummels, Ishii y Yi 2001, Yi 2003, Bems, Johnson y Yi 2010, Koopman, Powers, Wang y Wei 2011, y Johnson y Noguera 2012a,b).
+}
+
+\imagenfit{Fig1.png}{Indirect measures of supply-chain trade from 1960s.}{(Izq.) AMADOR and CABRAL (2009) proxy for supply-chain trade as share of global manufacturing imports; (Dcha.) Brülhart (2009) bilateral IIT index.}
+
+Las transformaciones son aún más evidentes al observar tendencias agregadas. Hasta finales de los años ochenta, la globalización se asociaba con un aumento de la participación del G7 en el comercio y la renta mundial. Posteriormente, la dinámica cambió sustancialmente:
+
+\imagenfit{Fig2.png}{G7 share of world income, trade and manufacturing}{WTO, World Bank and Maddison, UNstats}
+
+En primer lugar, cuando se expandió la fragmentación productiva Norte-Sur, la participación del G7 en el ingreso y las exportaciones mundiales cayó de forma pronunciada. En apenas una década, su participación en el comercio mundial volvió al nivel de 1948 y, para 2010, representaba la mitad de la observada en la posguerra mientras que su participación en el ingreso mundial había regresado a su nivel de 1900. Claramente, la globalización opera de manera distinta desde la expansión de la producción compartida Norte-Sur. 
+
+Paralelamente, también cambió la política comercial ya que los países en desarrollo, que durante décadas evitaron la liberalización comercial, adoptaron de forma repentina políticas de apertura que facilitaron la producción internacional fragmentada.
+
+\imagenfit{Fig3.png}{Take-off in BITs, FDI, unilateralism, and deep RTAs}{Tariffs from World databank, deep RTA provisions from WTO, BITs from ICSID}
+
+Estos países redujeron aranceles de forma unilateral (especialmente sobre bienes intermedios), firmaron tratados bilaterales de inversión (BITs, en su mayoría concesiones unilaterales a empresas de países desarrollados) y acuerdos comerciales regionales (RTAs) con disposiciones profundas favorables a las cadenas de suministro (por ejemplo, protección de la propiedad intelectual, movilidad de capitales, política de competencia, etc.).
+
+Al mismo tiempo, la manufactura global experimentó una transformación profunda. En 1970, la producción manufacturera mundial estaba dominada por los países industrializados:\footnote{Especialmente el G7: Estados Unidos, Alemania y Japón representaban por sí solos el 52\% del valor añadido manufacturero global.
+} 
+
+\imagenfit{Fig4.png}{Seven risers and seven losers: Manufacturing reversal of fortunes. (Izq.) Share of world manufacturing GDP, seven risers are China, Korea, India, Turkey, Indonesia, Thailand and Poland; seven losers are G7; (Medio) Manufacturinf GDP in 2005 USDs; (Dcha.) Manufacturing GDP of G\&+China (2005 USDs).}{UNSTAT.org }
+
+Como se observa, los países del G7 perdieron 24 puntos porcentuales de participación mundial entre 1970 y 2010, pasando del 71\% al 46\%, de los cuales 18 puntos se perdieron desde 1990. Como se puede ver, el principal beneficiario fue China, cuya participación aumentó 18 puntos porcentuales entre 1970 y 2010, con 16 puntos desde 1990. No obstante, otros seis países en desarrollo (Corea, India, Indonesia, Tailandia, Turquía y Polonia) aumentaron su participación en más de medio punto porcentual cada uno; en conjunto, estos seis emergentes ganaron 7 puntos porcentuales, de los cuales 5 se produjeron desde 1990.\footnote{El resto del mundo mostró pocos cambios, sin que ningún país ganara o perdiera más de medio punto porcentual.
+}
+
+Por otro lado, la geografía de ganadores y perdedores es notable:\footnote{Aunque los datos de la ONU incluyen más de 150 países, muchos tienen poblaciones reducidas. Si se consideran únicamente países con más de 10 millones de habitantes y con un nivel de industrialización al menos comparable al de Kenia en 2010, se observa un patrón claro.
+}
+
+\imagenfit{Fig5.png}{Geographic clustering of manufactures growth.}{Data for all nations with 1) population over 10 million, 2) manufacturing GDP share at least as large and Kenya’s in 2010. Growth of national manufacturing GDP minus world growth, 1995 to 2007. Source: Authors’ calculations on UN data.}
+
+Algunos países experimentaron un crecimiento manufacturero superior al promedio mundial, mientras que otros retrocedieron. Resulta notable que los ganadores tenideran a agruparse geográficamente: (i) alrededor de Alemania, Estados Unidos y Japón; (ii) India parece situarse en el centro de otro grupo que incluye Bangladesh, Pakistán y Sri Lanka. En conjunto, la revolución manufacturera presenta una marcada dimensión geográfica.
+
+$$\text{\textbf{¿Qué cambió?} La segunda desagregación de la globalización y los flujos tecnológicos}$$
+
+Todos estos cambios son coherentes con el impacto esperado de lo que se ha denominado la segunda desagregación de la globalización, es decir, la fragmentación productiva Norte-Sur. Cuando Toyota fabrica piezas de automóviles en Tailandia, no depende del conocimiento local; introduce su propia tecnología, gestión, logística y cualquier otro tipo de know-how necesario, ya que las piezas producidas deben integrarse sin fricciones en su red productiva. Como resultado, esta segunda desagregación no solo implica un mayor flujo de bienes a través de fronteras, sino también una mayor movilidad internacional del conocimiento productivo y de gestión.
+
+En un conjunto reducido de países cercanos a Estados Unidos, Alemania o Japón, esto eliminó muchos de los cuellos de botella que anteriormente obstaculizaban la industrialización. Estos países pudieron industrializarse integrándose en cadenas de suministro en lugar de construirlas desde cero (BALDWIN, 2012). La industrialización resultante ocurrió a un ritmo sin precedentes en algunos mercados emergentes. Este auge industrial impulsó las exportaciones y los términos de intercambio de los países exportadores de materias primas, generando una nueva categoría de economías emergentes dependientes de estos productos. Como se mostró anteriormente, esto transformó el patrón global de comercio, ingresos y manufactura.
+
+Se plantea la hipótesis de que la concentración geográfica de estos cambios está relacionada con la restricción de interacción cara a cara, es decir, la necesidad de que técnicos y directivos clave se desplacen ocasionalmente entre etapas productivas, lo cual es más viable cuando dichas etapas se encuentran a una distancia equivalente a, por ejemplo, un día de viaje desde la economía sede.
+
+
+Dada la naturaleza transformadora de estos desarrollos y su aparente relación con la fragmentación productiva, el patrón global del comercio en cadenas de suministro sigue siendo sorprendentemente poco comprendido por economistas y responsables de política. 
+
+$$\text{\textbf{CONCEPTOS BÁSICOS Y HECHOS CONDICIONANTES}}$$
+
+La importancia del comercio de bienes intermedios ha sido reconocida desde hace tiempo tanto en trabajos empíricos como teóricos (por ejemplo, Grubel y Lloyd 1975; Batra y Casas 1973; Woodland 1977). Sin embargo, su relevancia ha sido redescubierta periódicamente, con nuevas terminologías en cada década: en los años 80, 90, 2000 y 2010.
+
+El principal problema empírico es distinguir si un bien se destina a uso final o intermedio. Esto explica por qué el patrón global del comercio en cadenas de suministro no es fácilmente observable: los datos no están directamente disponibles. Existen tres enfoques principales para abordar este problema:
+\begin{la}
+    \item Antes de 2011, muchos estudios utilizaban clasificaciones aduaneras (por ejemplo, códigos HS que incluyen términos como partes o componentes). Sin embargo, este método es imperfecto: algunos bienes pueden ser tanto intermedios como finales, y muchos intermedios no se identifican claramente;\footnote{Esto es especialmente problemático en electrónica, ya que el Acuerdo sobre Tecnología de la Información de 1997 eliminó aranceles sobre el 90\% del comercio mundial, reduciendo el incentivo de las autoridades aduaneras para clasificar con precisión estos bienes.
+    }
+    \item Un segundo enfoque utiliza tablas input-output, que permiten identificar explícitamente el uso de los bienes, aunque con menor desagregación. Este método ha sido ampliamente adoptado en la literatura reciente; y,
+    \item Un tercer enfoque se basa en regímenes aduaneros especiales para el comercio de procesamiento, en los que los aranceles sobre insumos importados se suspenden si estos se utilizan para producir bienes destinados a la exportación. En estos casos, las aduanas registran directamente el uso intermedio de las importaciones.
+\end{la}
+
+
+Por ello, aunque la terminología es variada, debemos distinguir tres conceptos fundamentales:
+\begin{la}
+    \item \textbf{I2P – Importar para producir}. La visión más amplia es importar para producir (I2P). Cualquier producción que utilice insumos extranjeros forma parte de una red internacional de producción, incluso si no está formalmente organizada. Esto implica que la producción (incluso en sectores no transables como la construcción) depende de factores y tecnología extranjeros incorporados en los insumos, lo que invalida la visión clásica de que cada país produce únicamente con sus propios factores.\footnote{En un marco de equilibrio general, el uso de insumos importados en sectores no transables libera factores domésticos para su uso en sectores transables. Véase Baldwin y Robert-Nicoud (2010).
+    } El I2P incluye todos los insumos intermedios importados, así como materias primas y servicios. También deberían incluirse los bienes de capital importados, ya que incorporan tecnología extranjera.\footnote{La base de datos WIOD identifica los insumos intermedios importados y los bienes de capital importados, pero en este trabajo estos últimos no se consideran; constituyen una línea futura de investigación.
+    }
+    \item \textbf{I2E – Importar para exportar}. Un subconjunto relevante es importar para exportar (I2E), que se aproxima más al concepto de cadenas globales de valor. Aquí, el país importador actúa como nodo dentro de una red internacional más amplia, utilizando insumos extranjeros para producir bienes o servicios que posteriormente exporta. Una forma específica de I2E es la \textbf{reimportación}, que refleja la deslocalización de etapas productivas: un país exporta insumos intermedios que posteriormente reimporta incorporados en bienes procesados. Un ejemplo es el comercio entre Estados Unidos y Canadá. La reexportación es el concepto complementario.\footnote{No obstante, este fenómeno puede ser más complejo. Por ejemplo, empresas japonesas de cámaras pueden importar componentes simples desde China, transformarlos en componentes avanzados en Japón y luego enviarlos de vuelta a China para el ensamblaje final. Desde la perspectiva de reimportación/reexportación, este patrón sería indistinguible del caso inverso.
+    }
+\end{la}
+
+\imagenfit{FigNull1.png}{Esquema visual para identificar: I2E e I2P}{\href{}{\textit{}. . NBER}}
+
+Ahora bien, el concepto de I2E implica recursividad, lo que genera doble contabilización: los insumos importados pueden contener insumos de terceros países o incluso del propio país. Cuando se descompone completamente el origen del valor añadido, se obtiene la tercera clasificación (más importante): el comercio en contenido factorial, actualmente denominado \textbf{comercio en valor añadido}. Para entender este concepto, son clave dos identidades contables:
+\begin{lnum}
+    \item El valor de venta de un producto es igual al coste de los insumos intermedios (domésticos e importados) más el valor añadido directo doméstico; y,
+    \item También es igual a la suma del valor añadido generado en todos los países y sectores involucrados en su producción.
+\end{lnum}
+Un ejemplo ilustra esto: un automóvil exportado desde México a Estados Unidos por valor de 10 millones de dólares puede incluir insumos importados (por ejemplo, acero) por valor de 3 millones, insumos domésticos por 2,5 millones y 4,5 millones de valor añadido en México. Este último incluye salarios, rentas del capital y beneficios empresariales. Sin embargo, los insumos también contienen valor añadido previo. Mediante técnicas de álgebra matricial aplicadas a tablas input-output armonizadas, puede descomponerse completamente el origen del valor añadido, identificando qué parte se generó en cada país y sector.\footnote{En el ejemplo, los insumos de hierro y acero incorporados en el automóvil mexicano exportado a Estados Unidos provienen de los sectores de hierro y acero de Australia, México y el propio Estados Unidos (1 dólar cada uno, en este caso). Existe valor añadido mexicano en el hierro y acero importado porque, en el ejemplo, la industria siderúrgica estadounidense utiliza insumos mexicanos en sus exportaciones hacia México (1 dólar de valor añadido mexicano, concretamente). El valor añadido en los insumos de caucho y plásticos procede de México y de Estados Unidos, ya que el sector mexicano correspondiente importa parte de sus insumos desde Estados Unidos. La única parte que no requiere cálculos adicionales es el valor añadido mexicano en el sector automotriz.
+}
+
+\imagenfit{Fig7.png}{Value added trade example: A \$10 Mexican car export to the US}{\href{}{\textit{}. . NBER}}
+
+Una vez que se dispone de la descomposición completa del valor añadido de la exportación mexicana hacia Estados Unidos, existen dos formas principales de organizar la información:
+\begin{la}
+    \item \textbf{Descomposición explícita}. EN primer lugar, los flujos comerciales observados pueden descomponerse explícitamente e identificar el valor añadido del flujo. Por ejemplo, importaciones mexicanas de hierro y acero, y exportaciones mexicanas de automóviles hacia Estados Unidos, lo que permite a las autoridades mexicanas estimar cuántos empleos (o, más generalmente, \textbf{cuánto valor añadido}) están vinculados a esa exportación. Esto es relevante desde el punto de vista de Política Económica, ya que muchos países en desarrollo buscan \textbf{ascender en la cadena de valor}, es decir, sustituir valor añadido extranjero por valor añadido doméstico en los insumos de sus exportaciones;\footnote{Además, es el enfoque utilizado en la aplicación de reglas de origen basadas en valor añadido. La mayoría de los países utilizan reglas de origen basadas en valor añadido, pero Estados Unidos emplea principalmente una regla administrativa basada en si los insumos pertenecen a una partida arancelaria distinta del bien exportado (el denominado criterio de cambio de partida arancelaria).
+    } y,
+    \item \textbf{Descomposición implícita}. Por otro lado, se pueden construir flujos implícitos en lugar de basarse en los flujos comerciales observados, a partir de la imputación de los flujos comerciales en valor añadido a sectores y paises. Por ejemplo, se identificarían exportaciones implícitas de hierro y acero desde Australia hacia Estados Unidos, aunque en realidad ese acero llega incorporado en un automóvil mexicano. Del mismo modo, aparecería una exportación mexicana de hierro y acero hacia Estados Unidos. En contraste, las exportaciones estadounidenses de hierro y acero, así como de caucho y plásticos hacia México, desaparecerían en esta contabilidad por constituir doble contabilización desde la perspectiva del valor añadido.
+\end{la}
+
+\imagenfit{Fig8.png}{Observed and notional trade flows: Imputed value-added trade versus I2E.}{\href{}{}}
+
+Aunque los datos de valor añadido son fundamentales para analizar las redes internacionales de producción, difieren en gran medida de las dos métricas anteriores (I2P e I2E), pues están más alejados de los flujos comerciales observables. Esto se debe a que el cálculo requiere manipular simultáneamente las tablas Input-Output de todos los países y errores en cualquiera de ellas se transmiten al conjunto de los flujos en valor añadido.
+
+$$\text{Presentación detallada de los conceptos de cadenas de suministro}$$
+
+Descompongámos con mayor precisión los distintos componentes.
+
+\imagenfit{Fig9.png}{Schematic diagram of I2E and I2P trade}{\href{}{}}
+
+En el esquema podemos ver los flujos de importación y exportación, centrados en un país (Home), tal como los registran las aduanas:
+\begin{la}
+    \item La primera distinción clave es entre \textbf{bienes finales e intermedios}. Los bienes finales se destinan al consumo privado, consumo público o inversión, mientras que los intermedios se utilizan como insumos productivos;\footnote{Esta distinción no puede identificarse directamente en los datos comerciales tradicionales, ya que el uso final no se especifica en los formularios aduaneros.
+    }
+    \item La segunda distinción es entre \textbf{valor añadido (factores productivos) e insumos intermedios}. Por definición, el valor de la producción es la suma del valor añadido doméstico y de los insumos intermedios, tanto nacionales como importados;
+    \item La tercera distinción es entre \textbf{ventas locales y exportaciones}. Combinada con el uso final, se obtienen cuatro categorías: bienes finales vendidos localmente o exportados, y bienes intermedios vendidos localmente o exportados;
+    \item La cuarta distinción se refiere al \textbf{origen y destino de los insumos intermedios}. Por el lado de la demanda, corresponde a las importaciones de intermedios; por el lado de la oferta, a las exportaciones de intermedios. En muchos países, estos patrones difieren significativamente.\footnote{Rusia, por ejemplo, exporta recursos naturales a cadenas de suministro internacionales mientras importa insumos manufacturados del exterior.
+    }
+\end{la}
+
+Para analizar el movimiento internacional de las exportaciones, el diagrama distingue entre bienes finales e intermedios en la cesta exportadora, así como entre valor añadido doméstico, insumos nacionales e insumos importados. De forma análoga, la cesta importadora distingue entre valor añadido extranjero, insumos producidos en el país socio e insumos provenientes del resto del mundo. El comercio de tipo I2P e I2E se representa mediante flechas específicas en el esquema.\footnote{El I2P difiere de las importaciones estándar por diversas razones. Por ejemplo, la demanda no depende del gasto nacional, sino de la producción bruta (función de costes), lo que tiene implicaciones para las estimaciones de tipo gravedad; véase Baldwin y Taglioni (2011).
+}
+
+\begin{specialblock}{Hechos estilizados}
+    Antes de analizar el patrón global del comercio en cadenas de suministro, se presentan algunos hechos estilizados clave.\footnote{Estos se basan en dos fuentes principales:
+    \begin{lnum}
+        \item La World Input-Output Database (WIOD), desarrollada por un consorcio de 11 instituciones liderado por la Universidad de Groningen y financiado por la Comisión Europea (Timmer et al. 2012), que detalla el origen de los insumos y el destino de la producción por sector y país; y,
+        \item La base de datos OECD-WTO TiVA, introducida en 2012, que proporciona información sobre comercio en valor añadido.
+    \end{lnum}
+    }
+    
+    $$\text{Producción mundial para uso final e intermedio}$$
+    
+    La mitad de todos los bienes y servicios producidos en el mundo se venden para uso final, consumo público y privado e inversión. Sin embargo, la proporción destinada a ventas finales varía entre el 30\% en Luxemburgo y casi el 70\% en Grecia. China se sitúa en el extremo inferior, lo que sugiere que su producción está más orientada a bienes intermedios que el promedio mundial. En cambio, en sus exportaciones ocurre lo contrario: cerca de la mitad de las exportaciones chinas corresponden a bienes finales, mientras que el promedio mundial ronda un tercio.
+
+    \imagenfit{Fig10.1.png}{Final goods as share of total production \& exports, by nation 20}{}
+    
+    Por el contrario, si consideramos la proporción de las exportaciones nacionales que está compuesta por bienes y servicios finales, solo el 34\% de las exportaciones mundiales corresponde a bienes finales, lo que evidencia el predominio ampliamente documentado de los bienes intermedios en el comercio internacional.
+
+    \imagenfit{Fig10.2.png}{Final goods as share of total production \& exports, by nation 20}{}
+    
+    Considerando las participaciones de la producción final por sectores podemos ver cómo la importancia de las ventas finales en cada sector muestra la gran heterogeneidad que cabría esperar:\footnote{Los datos están a escala mundial. Es decir, agregando por sectores y países. 
+    
+    Las participaciones de bienes intermedios corresponden a la diferencia hasta el 100\%. Es decir, 100\% menos lo observado en el gráfico nos proporcionaría la importacia de la proucción de cada sector en la producción de bienes intermedios.
+    }
+
+    \imagenfit{Fig11.png}{Final-good production and world export shares by sector}{}
+    
+    Como vemos, alimentos, calzado y servicios, concentran casi dos tercios de la producción en consumo final; mientras que en el sector minero y metales no metálicos, la participación destinada a consumo final es insignificante. Con el gráfico derecho podemos ver como los grandes flujos de comercio, en cadena de suministro, se concentran en sectores intermedios (como equipo de transporte, equipo eléctrico y óptico, y productos químicos).\footnote{El panel derecho muestra las participaciones sectoriales en las exportaciones globales, sumando bienes finales e intermedios.
+    }
+    
+    Con estos gráficos podemos también llegar a un conclusión sutil. La participación de bienes finales retrocedió en todos los sectores entre 1995 y 2009. ¿Qué significa esto? Esto es eviencia de que \textbf{las cadenas de suministro se han fragmentado de manera generalizada}: si todas las etapas de producción se realizan en una sola fábrica, la participación en consumo final sería del 100\%; a medida que el proceso productivo se desagrega, la participación en consumo final disminuye, independientemente de que las etapas desagregadas se deslocalicen o no.
+    
+    $$\text{\textbf{I2P}: Hechos Estilizados}$$
+    
+    Las cifras de importar para producir (I2P) trabajan con el comercio tal como lo miden las autoridades aduaneras; mientras que el comercio en valor añadido se calcula utilizando la matriz input-output global para rastrear todo el valor añadido hasta su origen.
+    
+    No obstante, en la práctica, las diferencias entre ambos enfoques no son enormes para muchos países (KOOPMAN, WEI y ZHANG 2012).\footnote{Una de las diferencias más importantes y políticamente sensibles se da en la relación bilateral Estados Unidos-China, ya que muchos países exportan a Estados Unidos indirectamente a través de China, dada la ventaja comparativa china en el ensamblaje de bienes finales.
+    } Existe una razón sencilla: la producción mundial no está altamente globalizada. Por definición, la producción total es la suma de insumos (intermedios domésticos e importados) y el valor añadido doméstico directo. 
+    
+    \imagenfit{Table1.png}{Input decomposition of global GDP and manufacturing, 2009.}{Raw data from www.WIOD.org (this table shows I2P flows).}
+    
+    Como podemos ver, la participación de insumos intermedios importados en la producción manufacturera total es solo del 16\%; mientras que para el conjunto de la producción es del 8\%. Aunque el 16\% no es una cifra menor, no encaja con la retórica de un mundo plano.\footnote{En un mundo à la HELPMAN-KRUGMAN, cada país usaría insumos propios en proporción a su participación en el PIB mundial. Incluso para el país más grande, Estados Unidos, ello implicaría una participación de insumos importados cercana al 75\%.
+    }
+
+    La gran diferencia entre la participación de insumos importados en manufacturas, que son sistemáticamente más comerciables, y en la producción total es una razón importante para distinguir entre I2P e I2E. También indica que la composición de la producción nacional difiere considerablemente de la composición de sus exportaciones. Evidentemente, los servicios no transables son importantes, pero la inversión y la construcción también generan discrepancias relevantes, especialmente en economías de rápido crecimiento como China.
+    
+    Buena parte del carácter relativamente cerrado de la manufactura se debe a que la mayor parte de la producción manufacturera se realiza en grandes economías, que tienden a ser más cerradas y autosuficientes en insumos intermedios. Actualmente, cerca del 60\% del PIB manufacturero mundial se produce en Estados Unidos, China, Japón, Alemania e India.
+
+    \imagenfit{Table2.png}{Sales destination of manufactured goods, 2009.}{Raw data from www.WIOD.org}
+    
+    El mundo está más globalizado en bienes finales manufacturados que en intermedios manufacturados. El 44\% de los bienes finales manufacturados se exporta, frente a solo el 27\% de los bienes intermedios. Pese a ello, los intermedios son más importantes que los bienes finales dentro de las exportaciones: casi el 60\% de las exportaciones manufactureras corresponde a bienes intermedios. El predominio es aún mayor en las ventas domésticas.
+    
+    Las importaciones de materias primas constituyen un fenómeno económico bastante distinto. Para contextualizarlo, se observan los hechos agregados desagregados entre bienes industriales, servicios y recursos naturales:
+
+    \imagenfit{Table3.png}{Supply-chain trade (I2P): Goods, services and natural resources.}{Current prices; source: WIOD.org}
+    
+    En 1995, más del 60\% de todo el comercio de intermedios correspondía a bienes industriales; esa cifra cayó a poco más del 50\% en 2009. La diferencia fue absorbida en gran medida por recursos naturales, cuya participación aumentó del 15\% al 20\%, aunque los servicios intermedios también ganaron importancia, pasando del 24\% al 28\%. 
+    
+    Por lo que respecta a los servicios, al nivel y la variación de la autosuficiencia en insumos:
+    
+    \imagenfit{Table4.png}{Share of intermediates sourced domestically, 1995 and 2009, goods, services
+and natural resources.}{Current prices; source: WIOD.org}
+    
+    Sin duda, parte del aumento en recursos naturales refleja los cambios en términos de intercambio favorables a este sector desde finales de los años noventa, pero las cifras en su conjunto implican que:
+    \begin{lnum}
+        \item Entre 1995 y 2009, la internacionalización de las cadenas de suministro fue más importante en servicios y recursos naturales que en bienes industriales;
+        \item El comercio en cadenas de suministro representa, en promedio, solo una pequeña parte de la producción global; los bienes están más globalizados que los recursos naturales, y estos más que los servicios;
+        \item 
+    \end{lnum}
+    
+    Como era de esperar, todas las participaciones de autoabastecimiento disminuyeron, pero incluso en 2009 la cifra correspondiente al autoabastecimiento de servicios intermedios rondaba el 90\%. Esto muestra cuánto falta para que el comercio de servicios alcance un grado de globalización comparable al del comercio de bienes, y cuestiona la idea, popularizada por BLINDER (2006), de que la deslocalización de servicios esté a punto de transformar el panorama laboral en los países de altos salarios.
+    
+    $$\text{\textbf{Valor añadido:} Hechos Estilizados}$$
+    
+    A nivel nacional la producción no está muy globalizada. 
+
+    \imagenfit{Fig12.png}{Foreign value added in nations’ total exports, 2009.}{TiVA database.}
+    
+    Para el mundo en su conjunto, solo el 20\% de las exportaciones contiene valor añadido generado en otro país. Aunque no es una cifra pequeña, está muy lejos de lo que se observaría si los países estuvieran integrados como regiones dentro de economías industriales avanzadas. Además:
+    \begin{lnum}
+        \item La cifra es menor en los países grandes, especialmente en los gigantes manufactureros, aunque Alemania está internacionalmente dos veces más integrada que Estados Unidos; y,
+        \item Las cifras alcanzan niveles muy altos en países pequeños como Irlanda y Grecia.
+    \end{lnum}
+    
+    También es destacable que Corea presente un contenido extranjero notablemente elevado para un país de su tamaño y nivel de industrialización. Australia sobresale por su bajo valor, lo que seguramente refleja su dependencia de exportaciones primarias, naturalmente intensivas en contenido local. Una línea de investigación fértil consistiría en identificar las covariables que explican las diferencias nacionales en autosuficiencia.
+    
+\end{specialblock}
+
+$$\text{\textbf{EL PATRÓN MUNDIAL DEL COMERCIO DE IMPORTAR PARA PRODUCIR (I2P)}}$$
+
+Esta sección destaca los principales hechos relativos a las importaciones de bienes intermedios utilizados en la producción de todos los bienes y servicios, es decir, el comercio I2P.
+
+Para ilustrar el patrón global, se emplea una matriz que muestra el flujo de comercio en cadenas de suministro entre los países para los que WIOD dispone de tablas input-output armonizadas (2009). Cada elemento de la matriz muestra las importaciones de intermedios del país-columna procedentes del país-fila.\footnote{Para centrarnos en la visión general, se eliminan los flujos bilaterales inferiores a tres décimas del 1\% de todo el comercio entre los países listados. También se ocultan las filas y columnas de varios países pequeños de la muestra, como Chipre, Malta, Lituania, Estonia, etc.
+} Las filas y columnas se ordenan por regiones: Europa en la parte superior, América del Norte en la inferior, y Asia y otros países entre ambas.
+
+\imagenfit{Fig13.png}{The global I2P trade matrix, 2009}{}
+
+Sus rasgos más destacados son:
+\begin{lnum}
+    \item \textbf{Poca significancia de los flujos bilaterales}. La matriz es muy dispersa: pocos flujos bilaterales son significativos a escala global. En particular, vemos que:
+    \begin{la}
+        \item Por lo que respecta a la procedencia de los insumos, los únicos países que suministran una cantidad globalmente significativa de intermedios a un gran número de socios son Estados Unidos, China, Alemania y Japón. Dominan, por tanto, el comercio global en cadenas de suministro;\footnote{Alemania es, con diferencia, el país más relevante en términos de número de socios con flujos globalmente significativos. Sin embargo, esto probablemente refleja el sesgo de WIOD hacia países europeos. Otras fuentes muestran que el comercio en cadenas de suministro entre Japón, Corea, China y otras grandes economías de Asia oriental (Filipinas, Malasia, Tailandia, Singapur, Vietnam y Taiwán) es muy importante (véase Figura 32). Entre los demás países del G7, Reino Unido tiene cuatro entradas, y Canadá y Francia una cada uno. Italia no tiene ninguna. 
+        
+        Nótese que las exportaciones no europeas hacia Alemania suelen registrarse como importaciones en los puertos de entrada en Bélgica y los Países Bajos (Amberes y Róterdam). Para evitar el fraude del IVA dentro de la UE, los productos de terceros países destinados a Alemania suelen entrar en circulación en el puerto de entrada (BALDWIN 2006c).
+        }
+        \item En la misma linea, los cuatro gigantes manufactureros son también los únicos países con un gran número de flujos de importación relevantes. Japón, no obstante, constituye una excepción: se abastece solo de China y Estados Unidos, y su abastecimiento total es reducido en comparación con los otros tres gigantes.
+    \end{la}
+    \item \textbf{Bloques regionales}. El comercio en cadenas de suministro no es global, sino regional. Rasgo bien conocido entre especialistas, la red productiva global está marcada por bloques regionales: Fábrica Asia, Fábrica América del Norte y Fábrica Europa. De hecho, incluso dentro de las regiones, la distancia y la contigüidad parecen importar enormemente.\footnote{GVC es una expresión atractiva, pero agregadamente inexacta (Johnson y Noguera 2012b). Las excepciones extrabloque involucran siempre a uno de los cuatro gigantes como comprador o vendedor, salvo el estrecho vínculo entre Reino Unido e Irlanda
+    }\textsuperscript{,}\footnote{
+    En cuanto a estas fábricas regionales, podemos destacar los siguientes hechos particulares:
+    \begin{lnum}
+        \item \textbf{Fábrica America del Norte}. Las relaciones más intensas de comercio en cadenas de suministro se encuentran en América del Norte. El comercio I2P de Estados Unidos con México y Canadá supera en ambos casos el 1\% del total mundial. Las importaciones estadounidenses desde China y Canadá son los dos mayores flujos I2P del mundo, con un 2\% cada uno;
+        \item \textbf{Fábrica Asia}. El comercio I2P en Asia nororiental es casi tan intenso como el de América del Norte. La noción de una región Asia-Pacífico también emerge de la matriz. El comercio entre Estados Unidos y Japón y China supera con facilidad el umbral del 0,3\%
+    \end{lnum}
+    Por la información de las filas sabemos que los mayores proveedores de intermedios son China y Estados Unidos, cada uno con cerca del 11\% de las exportaciones mundiales de intermedios; Alemania ocupa el tercer lugar con el 8\%; la participación de Japón es sorprendentemente modesta, con un 5\%.
+    Por otro lado, la información prevista en las columnas nos indica que China es el mayor comprador de intermedios, con un 13\%; Estados Unidos ocupa el segundo lugar, con un 11\%, y Alemania el tercero, con un 6\%; nuevamente, Japón es mucho menos importante como comprador, con solo un 2\%.
+    }
+    \item \textbf{Patrón Centro-radios}. El comercio I2P presenta un patrón centro-radios alrededor de los cuatro gigantes manufactureros; rasgo también muy conocico entre especialistas (Johnson y Noguera 2012a). Esto se observa con mayor claridad en América del Norte, donde los flujos de ventas y abastecimiento con Estados Unidos son grandes, mientras que los flujos entre México y Canadá son pequeños.\footnote{Lo mismo ocurre con Alemania, cuya fila y columna están bastante llenas, especialmente en Europa. Japón vuelve a ser una excepción: vende grandes cantidades de intermedios solo a China, Corea y Estados Unidos y, como se señaló antes, se abastece en gran magnitud solo de China y Estados Unidos.
+    }
+    \item \textbf{Economías sede y Economías base}. Una distinción clave, menos reconocida (y a la que se vuelve repetidamente más adelante), es la asimetría tecnológica en la red internacional de producción, por la cual existen economías sede y economías fábrica. Simplificando, puede decirse que las empresas de las economías sede (principalmente Estados Unidos, Japón y Alemania) organizan las redes de producción; las economías fábrica aportan la mano de obra.
+    \item Los países no incluidos en la muestra (resto del mundo) son importantes en conjunto:
+    \begin{la}
+        \item Por el lado de las ventas, destacan los productores mundiales de energía y alimentos (países de la OPEP, Argentina, etc.); y,
+        \item Por el lado del abastecimiento, las omisiones relevantes incluyen las grandes economías de ASEAN (Malasia, Tailandia y Filipinas). Estas representan el 25\% de los flujos globales I2P por el lado del abastecimiento, es decir, como compradores, y el 21\% por el lado de las ventas, es decir, como proveedores.
+    \end{la}
+\end{lnum}
+
+$$\text{\textbf{Interdependencia en cadenas de suministro}}$$
+
+Las matrices anteriores adoptan una perspectiva global, observando únicamente los flujos significativos a escala mundial. Aquí se adopta una perspectiva nacional, centrada en dónde obtiene cada país sus insumos intermedios. En cierto sentido, esto revela la dependencia de cada país respecto de las redes internacionales de suministro.
+
+\imagenfit{Fig14.png}{I2P sourcing: National dependency on imported intermediates, 2009 (\%)}{}
+
+Cada columna suma 100\% y muestra, por tanto, el patrón de compras del país correspondiente. Para reducir el ruido visual, los valores inferiores al 2\% se igualan a cero. Algunos hechos sobresalen de la matriz:\footnote{Como observación adicional, la cobertura de WIOD dista de ser completa, ya que la fila correspondiente al resto del mundo contiene numerosas entradas superiores al 2\%. Esto refleja casi con seguridad la ausencia de grandes exportadores de recursos naturales en los datos.
+}
+\begin{lnum}
+    \item La mayoría de los países son en gran medida autosuficientes en insumos intermedios. Las cifras de abastecimiento local (en la diagonal) superan siempre la mitad y muchas rondan el 70\%;\footnote{Como cabría esperar, existe una correlación aproximada entre tamaño y autosuficiencia: tres de los cuatro gigantes manufactureros alcanzan tasas de abastecimiento local cercanas al 90\%. Alemania es la excepción, pues depende de sí misma para solo alrededor del 80\% de los insumos adquiridos.
+    }
+    \item Los países europeos dependen en gran medida de los intermedios alemanes. Todos los países europeos, excepto España, Italia y Rusia, dependen de Alemania para al menos el 2\% de sus compras nacionales de intermedios; y,
+    \item Estados Unidos y China desempeñan roles igualmente centrales, aunque con menor concentración regional; Estados Unidos es un proveedor importante en todas las regiones, mientras que China está más orientada hacia Asia.
+\end{lnum}
+
+$$\text{\textbf{Comercio I2P por sector:} bienes industriales, servicios y recursos naturales}$$
+
+Para observar el patrón global del comercio I2P en insumos industriales. Aquí, bienes industriales significa bienes distintos de agricultura, minería, alimentos y combustibles.\footnote{Los datos que se proporcionan en la Tabla representan una matriz construida de manera similar a la de suministros globales pero solo para insumos industriales. 
+
+Formalmente, los bienes excluidos son, según las etiquetas sectoriales de WIOD: agricultura, caza, silvicultura y pesca; minería y canteras; alimentos, bebidas y tabaco; y coque, petróleo refinado y combustible nuclear. 
+} 
+
+\imagenfit{Fig15.png}{The global I2P trade in industrial goods, 2009.}{}
+
+Como se puede ver, el comercio I2P de bienes industriales es similar al comercio I2P total, pero el patrón centro-radios es más fuerte y el predominio de los cuatro gigantes manufactureros es aún mayor. Un cambio es que China domina más en el lado de las ventas, lo cual no sorprende dada la percepción habitual de que sus exportaciones están compuestas principalmente por manufacturas.\footnote{Diez socios comerciales de China incluidos en los datos importan desde ella una cantidad globalmente significativa de intermedios.
+}
+
+\imagenfit{Fig16.png}{The global I2P trade in services, 2009}{}
+
+Al pasar a los servicios, se observan diferencias mucho mayores:
+\begin{lnum}
+    \item China y Japón no son actores importantes en el comercio de servicios de cadenas de suministro, ni por el lado de las ventas ni por el del abastecimiento;
+    \item Estados Unidos es un actor mucho más dominante en el comercio I2P de servicios que en el de bienes, tanto por el lado de las ventas como por el del abastecimiento;
+    \item El comercio de servicios en cadenas de suministro está mucho menos regionalizado que el comercio de bienes.
+    \item Gran parte del comercio de servicios en cadenas de suministro es transatlántico; las compras y ventas de Estados Unidos con países de la UE son todas grandes en comparación con el comercio global de servicios intermedios. 
+    \item Además:
+    \begin{lnum}
+        \item El comercio de servicios intermedios dentro de Fábrica Asia es muy limitado;
+        \item El comercio de servicios intermedios dentro de Fábrica Europa es al menos tan importante como el comercio de bienes intermedios, pero el papel de Alemania se reduce mucho;
+        \item Algunos países europeos pequeños son proveedores importantes de servicios intermedios tanto dentro de Europa como hacia Estados Unidos.
+    \end{lnum}
+\end{lnum}
+
+El panorama de los recursos naturales es mucho más simple. Pocos países de la muestra son grandes exportadores de recursos naturales:\footnote{Al menos en parte debido al sesgo de cobertura de países de la muestra WIOD.
+}
+
+\imagenfit{Fig17.png}{The global I2P trade in natural resources, 2009}{}
+
+Rusia, Indonesia, Estados Unidos, Canadá y México son los únicos países de la muestra WIOD que son importantes por el lado de las ventas de insumos de recursos naturales. Los países importantes por el lado del abastecimiento son los mayores de la muestra: los países del G7 (excepto Reino Unido), China y Corea. En esta matriz, el resto del mundo es especialmente importante, ya que incluye a todos los exportadores de la OPEP y a grandes proveedores de minerales y alimentos. Casi el 28\% de las exportaciones totales de recursos naturales es absorbido por China, Estados Unidos, Japón y Corea.
+
+Los hechos sectoriales sugieren una profunda transformación de las estructuras productivas globales, en cierto modo comparable a la ocurrida durante la primera ola de globalización —aproximadamente entre 1850 y 1910; véase Baldwin y Martin 1999—:
+\begin{lnum}
+    \item La manufactura se ha desplazado desde el G7 hacia un conjunto reducido de países en desarrollo situados a una distancia de viaje cómoda de esos tres antiguos gigantes. Especialmente desde los tres antiguos gigantes (Estados Unidos, Alemania y Japón) a China, que es con diferencia el caso más espectacular;
+    \item El rápido crecimiento de la renta impulsado por la industrialización en las economías emergentes manufactureras generó un auge exportador en los países abundantes en recursos naturales.
+    \item Esto, a su vez, impulsó un rápido crecimiento de la renta en los países en desarrollo ricos en recursos. 
+\end{lnum}
+
+De este modo, el éxito manufacturero de un grupo reducido de economías emergentes (China, Corea, etc.) está vinculado al éxito de economías emergentes basadas en recursos (Rusia, Brasil, etc.). Frente a este cambio, los países del G7 recurren cada vez más a la exportación de servicios intermedios, especialmente aquellos vinculados a la manufactura.
+
+$$\text{{Cambios desde 1995, todos los sectores}}$$
+
+Para comparar el patrón actual con el vigente cuando la segunda desagregación apenas comenzaba a desplegarse, podemos comparar la desagregación por suministros con una similar para 1995, expresada en diferencias en puntos porcentuales para cada elemento:
+
+\imagenfit{Fig18.png}{Change in global I2P trade from 1995 to 2009 (percentage points).}{}
+
+Como se puede ver, las diferencias no son enormes a este nivel de resolución, pero algunas cosas han cambiado:
+\begin{lnum}
+    \item El comercio en cadenas de suministro se ha desplazado fuertemente hacia Fábrica Asia;
+    \item El papel de Fábrica América del Norte y Fábrica Europa disminuyó en 2009 respecto de 1995;
+    \item China es la única gran ganadora por el lado de las ventas.
+\end{lnum}
+
+La regionalización del I2P puede observarse claramente comparando lado a lado las matrices globales de I2P de 1995 y 2009:
+
+\imagefit{Fig19.png}{Global I2E matrices, 1995 and 2009, side by side.}{}
+
+Esto se aprecia en el menor número de flujos fuera de la diagonal que son globalmente significativos. Dado que estas matrices muestran flujos bilaterales relativos al flujo global, el fuerte aumento del comercio de intermedios en Asia tiende a hacer que el comercio de intermedios en la UE parezca menos importante.
+
+Alemania, Japón y Estados Unidos perdieron participación por el lado de las ventas, excepto en sus ventas a China. No obstante, dentro de Europa, el predominio de Alemania se redujo entre 1995 y 2009 tanto por el lado de las ventas como por el del abastecimiento.
+
+Por lo que respecta a los cambios de dependencia, el hecho más llamativo es la reducción casi universal del abastecimiento local; los elementos de la diagonal son mayoritariamente negativos.
+
+\imagenfit{Fig20.png}{I2P sourcing: Changes between 1995 and 2009 (\%)}{}
+
+Esto no es sino una enumeración de la segunda desagregación: más etapas de producción se separan de la fábrica o distrito industrial doméstico y se trasladan al exterior.\footnote{Las excepciones son Rusia, Canadá, Indonesia y algunos países muy pequeños, muchos de ellos antiguas economías comunistas.
+} Además:
+\begin{lnum}
+    \item El ascenso de China como proveedor global de intermedios se observa en los numerosos valores positivos de su fila; esto no ha ido acompañado de un aumento como comprador, ya que hay pocos valores positivos en su columna;
+    \item El declive de Rusia como proveedor de intermedios es casi tan notable como el ascenso de China, dado el gran número de valores negativos en la fila de Rusia;\footnote{Esto casi con seguridad se revertiría utilizando datos de valor añadido, ya que gran parte del crecimiento del I2P implica flujos complejos de cadenas de suministro que inflan el crecimiento mediante doble contabilización: las partes se contabilizan como intermedios y también como parte del valor de la exportación posterior. En el caso de Rusia, dada su dependencia de materias primas, la mayoría de sus exportaciones contiene poco valor añadido extranjero.
+    } y,
+    \item Alemania ha visto disminuir en general su papel, mientras que la experiencia de Estados Unidos es más mixta, con cifras que caen en América del Norte pero aumentan en Asia.
+\end{lnum}
+
+Nótese también que el resto del mundo (fila inferior) presenta predominantemente valores positivos. Esto refleja seguramente el aumento de las exportaciones de materias primas desde países omitidos; también puede reflejar exportaciones industriales de países asiáticos omitidos, como Tailandia y Filipinas.
+
+$$\text{\textbf{COMERCIO DE IMPORTAR PARA EXPORTAR (I2E)}}$$
+
+Esta sección pasa a un concepto más restringido de comercio en cadenas de suministro: importar para exportar (I2E).\footnote{Es importante señalar que los datos I2E e I2P difieren en su distancia respecto de las observaciones reales. Los datos I2P se basan en tablas input-output calibradas y, por tanto, están un paso alejados de los datos observados; los datos I2E están dos pasos alejados, ya que deben utilizarse los parámetros de la tabla input-output para separar la porción del comercio I2P vinculada exclusivamente a las exportaciones. En concreto, la tabla input-output de un país indica las compras intermedias asociadas a un dólar de producción en un sector determinado. Para identificar las compras intermedias vinculadas al vector exportador del país, se premultiplica la tabla input-output por el vector de exportaciones del país, tras agregar el comercio en sectores comparables a los de la tabla. El resultado es un vector de insumos intermedios importados incorporados en las exportaciones.
+} Se comienza examinando el patrón global de I2E en 2009:\footnote{Cada elemento muestra las compras I2E del país-columna procedentes del país-fila correspondiente, como porcentaje del comercio I2E mundial. Como de costumbre, los valores pequeños se igualan a cero (menos del 0,3\% del comercio I2E mundial).
+}
+
+\imagenfit{Fig21.png}{The global I2E total trade matrices, 2009}{}
+
+Algunos puntos son destacables:
+\begin{lnum}
+    \item El comercio I2E (Figura 21) está significativamente menos regionalizado que el comercio I2P (Figura 13). De hecho, el patrón I2E se asemeja al patrón I2P de bienes industriales (Figura 15). Esto es esperable, ya que las grandes diferencias entre I2E e I2P derivan de la diferencia entre los vectores de producción nacional y los vectores de exportación nacional. Esa diferencia, a su vez, se debe en gran medida a los servicios no transables. Sin embargo, existen algunas diferencias entre el I2P de bienes industriales y el I2E total;
+    \item Empiezan a observarse elementos de suministro global en la matriz I2E, con Europa abasteciéndose de partes y componentes desde China y Estados Unidos;\footnote{Nótese que los grandes fabricantes europeos adquieren cantidades globalmente importantes desde Estados Unidos y China. Las grandes importaciones de los Países Bajos pueden reflejar su papel como puerto de entrada para las importaciones alemanas procedentes de Asia por vía marítima.
+    
+    Por razones fiscales, algunas importaciones alemanas procedentes de países de ultramar entran en circulación en los Países Bajos, aunque su destino final sea Alemania.
+    }
+    \item El comercio interregional europeo en cadenas de suministro es asimétrico; Europa importa intermedios desde Estados Unidos y China, pero las ventas I2E alemanas a China son el único flujo interregional de importancia global.\footnote{Un hecho notable es la similitud entre los patrones de I2E e I2P en Fábrica América del Norte y Fábrica Asia, especialmente al comparar I2E e I2P en bienes industriales. Esto refleja, casi con seguridad, el predominio de los bienes industriales en esta actividad de cadenas de suministro.
+    }
+\end{lnum}
+
+
+Las diferencias entre las matrices I2E de 2009 y 1995 también son muy reveladoras:
+
+
+\imagenfit{Fig22.png}{The global I2E total trade matrices, 1995}{}
+
+En 1995, el comercio I2E en Fábrica Europa era mucho más importante a escala global. La cantidad de flujos globalmente significativos en Europa supera a los del resto del mundo, aunque el vínculo más grande se da entre Estados Unidos y Canadá. Sin embargo, en 2009 el papel de Europa se reduce considerablemente tras verse desplazado por la intensificación de la actividad en Fábrica Asia y América del Norte.
+
+Además, destaca el ascenso de China y la caída de Japón como proveedor de intermedios. En 1995, Japón tenía ventas globalmente significativas a siete socios, mientras que China no tenía ninguna. En 2009, China tiene nueve y Japón tres. Como se verá más adelante, al menos parte de la explicación es el uso de China por parte de empresas japonesas como plataforma de exportación. Incluso aquí se observa cierta evidencia de ello: los envíos japoneses I2E a China pasaron de aproximadamente el 1\% del total mundial al 2\%. En 2009, China se abastece de insumos desde Taipéi, Japón y Corea, pero no vende una cantidad significativa de insumos a ningún destino. Para 2009, China es un proveedor de intermedios para Estados Unidos tan dominante como Japón lo había sido anteriormente, mientras que las ventas I2E de Japón a Estados Unidos caen por debajo del umbral de exclusión.
+
+Como ocurre con el comercio I2P, la perspectiva global oculta rasgos importantes para países concretos. Aquí se analizan los mismos datos bilaterales de I2E, pero normalizados por las compras totales de intermedios I2E del país-columna. Las compras del país a sí mismo se muestran en la diagonal. Los puntos clave son:
+\begin{lnum}
+    \item La mayoría de los países participan intensamente en redes internacionales de producción, en la medida en que sus exportaciones dependen fuertemente de intermedios importados;
+    \item Sin embargo, la participación varía considerablemente: (i) Rusia es casi autosuficiente en intermedios, al abastecerse domésticamente del 95\% de ellos;\footnote{Dado que otros países manufactureros obtienen sus intermedios de los proveedores más competitivos a escala global, esta autosuficiencia puede contribuir a la falta de competitividad de las exportaciones industriales no militares rusas.
+    } y, (ii) los países pequeños, como Taiwán (49\%), Irlanda (54\%) y la República Checa (56\%), dependen fuertemente de las redes internacionales de producción. 
+    \item Los principales proveedores de intermedios esenciales para exportar son, como cabría esperar, los cuatro gigantes manufactureros: Estados Unidos, China, Japón y Alemania. La distinción entre economías sede y economías fábrica aparece con gran claridad en los datos bilaterales I2E presentados de este modo.
+\end{lnum}
+
+Por regiones: (i) la mayoría de los países europeos dependen en gran medida de intermedios alemanes; (ii) el papel de China es notable pues domina globalmente como proveedor de insumos industriales, el patrón de exportaciones intermedias de China es el más globalizado de los cuatro gigantes manufactureros; (iii) Alemania y Estados Unidos son casi tan dominantes como China, pero sus patrones de ventas son más regionales; y, (iii) Japón es un proveedor clave de intermedios usados en exportaciones, pero solo para otros países asiáticos cercanos.
+
+Los cambios desde 1995 reflejan que la mayoría de los países dependía menos del I2E en 1995 que en 2009, otra señal del impacto de la segunda desagregación sobre los flujos globales, especialmente el rápido crecimiento del comercio I2E Norte-Sur mostrado en los gráficos del índice de comercio intraindustrial.
+
+En 1995, antes del esfuerzo decidido de China por integrarse en cadenas de suministro como medio para construir las propias, solo Corea obtenía más del 2\% de sus insumos para exportación desde China; Japón y Estados Unidos eran los principales proveedores de intermedios en Asia. En los 14 años siguientes, el extraordinario crecimiento manufacturero chino convirtió al país en un proveedor importante de insumos industriales para la mayoría de los países del mundo. Por el lado de sus compras, en 2009 obtiene cantidades significativas desde Japón, Corea y Estados Unidos. En cierto sentido, China se ha convertido en la Arabia Saudí de los insumos industriales.
+
+En 1995, pocas entradas fuera de los bloques regionales eran significativas, y casi todas involucraban a Estados Unidos. El ascenso del I2E transpacífico es uno de los mayores cambios globales en I2E desde 1995.\footnote{En 1995, los únicos flujos de importancia global a través del Pacífico correspondían a intermedios japoneses suministrados a Estados Unidos y Canadá —principalmente piezas de automóviles—. En 2009, los tres países norteamericanos se abastecen intensamente desde China, Japón y Corea.
+}
+
+
+$$\text{{Economías fábrica típicas}}$$
+
+La distinción entre economías fábrica y economías sede aparece con claridad al comparar el mismo tipo de diagrama para países estrechamente vinculados a la industria de una economía sede:
+
+\imagenfit{Fig29.png}{Evolution of reimports and reexports, US and Mexico, 1995}{}
+
+El rasgo más claro de los gráficos de Canadá y México es su extrema dependencia de Estados Unidos tanto en ventas como en abastecimiento: en el caso de México, la orientación hacia Estados Unidos ha aumentado en términos de ventas, pero ha caído considerablemente en términos de abastecimiento, donde China ha adquirido un papel cada vez más importante. Un patrón similar se observa en Canadá.
+
+$$\text{\textbf{REEXPORTACIÓN / REIMPORTACIÓN}}$$
+
+Para profundizar en el patrón global, se analiza ahora una variante del comercio en cadenas de suministro medida en términos de flujos brutos de intermedios. Esta variante es un subconjunto del I2E y permite captar relaciones simples de deslocalización. Por ejemplo, las relaciones bilaterales de cadenas de suministro entre Estados Unidos y México:
+\begin{la}
+    \item Las empresas estadounidenses exportan intermedios a México y México exporta intermedios a Estados Unidos. 
+    \item La reimportación capta el hecho de que una cierta fracción del valor de las exportaciones mexicanas a Estados Unidos está compuesta por intermedios estadounidenses. 
+\end{la}
+
+En otras palabras, los intermedios estadounidenses realizan un viaje de ida y vuelta a México. Se normaliza el flujo bilateral por las importaciones bilaterales para obtener la participación de reimportación.
+
+$$\text{{Fábrica América del Norte}}$$
+
+El patrón norteamericano de reimportación/reexportación muestra las fuertes asimetrías que constituyen el arquetipo de la clasificación entre economías sede y economías fábrica:
+
+\imagenfit{Fig28.png}{Factory North America: US, Canada and Mexico (reimports and reexports)}{}
+
+El patrón de reexportación muestra clara evidencia de una red centro-radios basada en Estados Unidos como centro:
+\begin{la}
+    \item Los envíos estadounidenses de intermedios a su vecino cercano de bajos salarios, México, son reimportados, pero Estados Unidos reexporta muy poco; es decir, la reimportación estadounidense desde México es elevada, mientras que su reexportación hacia México es reducida. Esto indica una relación simple de deslocalización, en la que las empresas estadounidenses combinan su conocimiento productivo con mano de obra mexicana de bajo coste para realizar alguna etapa intermedia de producción. Luego, el producto se reimporta a Estados Unidos para procesamiento adicional o venta final. En concreto, el panel izquierdo muestra que el 18\% de las exportaciones estadounidenses a México en 2009 estaba compuesto por bienes intermedios que posteriormente fueron reimportados por Estados Unidos. La imagen especular aparece en el gráfico de México;
+    \item Canadá presenta un patrón similar, aunque más atenuado: el 11\% de las exportaciones estadounidenses a Canadá se reimporta, mientras que solo el 2\% de las exportaciones canadienses a Estados Unidos se reimporta; y,
+    \item El procesamiento canadiense para la industria mexicana (reexportaciones canadienses) y el procesamiento mexicano para la industria canadiense (reimportaciones canadienses) representan solo el 1\% y el 2\% del comercio bilateral.
+\end{la}
+
+Como se indicó antes, el comercio Norte-Norte en cadenas de suministro era común desde los años sesenta, por lo que poco cambió para Canadá entre 1995 y 2009 (el gran impulso de la deslocalización provino del Acuerdo Automotriz Estados Unidos Canadá). El cambio radical llegó con la deslocalización Norte-Sur y el comercio de reimportación/reexportación que generó. 
+
+\imagenfit{Fig30.png}{Evolution of reimports and reexports, US and Mexico, 1995.}{}
+
+En 1995, Estados Unidos realizaba la mayor parte de su deslocalización hacia Canadá y México (25\% y 24\%, respectivamente, medido por las cifras de reimportación estadounidense). Sin embargo, para 2009 la participación de México y Canadá disminuye en favor de otros destinos. Estados Unidos también comenzó a reimportar sus propios intermedios desde una gama más amplia de socios, incluidos China, Alemania, Japón y el resto del mundo. Los cambios para México son marcados. En 1995, México reexportaba solo a Estados Unidos. Para 2009, México se había integrado en las cadenas de suministro de China, Corea, Alemania y Japón.
+
+$$\text{{Fábrica Europa}}$$
+
+Un patrón similar puede observarse alrededor de Alemania, aunque es más complejo debido a la geografía política y económica europea. Al igual que Estados Unidos, realiza una gran cantidad de comercio en cadenas de suministro con sus vecinos de bajos salarios. 
+
+\imagenfit{Fig31.png}{Factory Europe: Germany and low-wage factory economies, 2009}{}
+
+Conviene destacar algunas diferencias respecto de Fábrica América del Norte:
+\begin{lnum}
+    \item A diferencia de Estados Unidos, Alemania participa en comercio de cadenas de suministro con otros países de altos salarios (Austria, Países Bajos y Francia); se conjetura que la proximidad importa, ya que cada uno de estos países comparte frontera con Alemania;
+    \item El patrón de reimportación de Alemania desde países cercanos de bajos salarios es más diverso que el de Estados Unidos. Aproximadamente el 15\% de las exportaciones alemanas a la República Checa se reimporta tras procesamiento;
+    \item Los socios de Alemania como economías fábrica, tales como Polonia, comparten una dependencia común del procesamiento para la industria alemana. En la mayoría de los casos, entre el 8\% y el 12\% del comercio bilateral con Alemania consiste en bienes importados desde Alemania, procesados y luego reexportados a Alemania;
+    \item Una diferencia notable entre Fábrica América del Norte y Fábrica Europa es la existencia de reexportaciones y reimportaciones sustanciales entre los radios del sistema alemán de deslocalización centro-radios.
+\end{lnum}
+
+Además de Alemania, Europa cuenta con otros tres países de alta tecnología y grandes sectores manufactureros: Reino Unido, Francia e Italia. 
+
+\imagenfit{Fig32.png}{Reexporting/reimporting flows for UK, France and Italy, 2009}{}
+
+Se observa de inmediato que estos tres países presentan patrones de reimportación y reexportación que los ubican claramente en la categoría de economías sede (es decir, mucha más reimportación que reexportación), aunque Italia es un caso limítrofe. Sus patrones de reimportación no son tan diversos como los de Alemania. Además, la importancia global de estos flujos con al menos un socio es menor en magnitud. También cabe subrayar que estos tres países realizan algo de procesamiento para Alemania, pero muy poco entre sí. Esto sugiere la existencia de una estructura centro-radios en Europa alrededor de Alemania, que incluye tanto a otras economías sede como a economías fábrica. El desarrollo de Fábrica Europa entre 1995 y 2009 fue mucho más moderado que el de Fábrica América del Norte.
+
+$$\text{{Fábrica Asia}}$$
+
+La situación en Asia es mucho más difícil de rastrear. Fábrica América del Norte es un sistema centro-radios simple; el I2E es mayoritariamente bilateral. Fábrica Europa es similar, aunque complicada por la proximidad de otros tres países de alta tecnología cercanos al país centro. Sin embargo, Fábrica Asia se asemeja mucho más a una red y mucho menos a un patrón centro-radios. 
+
+El procesamiento suele implicar etapas en múltiples países. El ejemplo más famoso es el denominado comercio triangular, en el que Japón exporta componentes sofisticados a China para su ensamblaje en productos electrónicos de consumo y posterior venta a Estados Unidos. Los vínculos bilaterales destacados por las medidas de reimportación/reexportación no revelan este fenómeno.
+
+\imagenfit{Fig33.png}{Japan, Korea and China: reimports and reexports by partner, 2009}{}
+
+En esencia, podemos ver que:
+\begin{lnum}
+    \item El diagrama de reimportación de Japón corresponde al de una economía sede clásica, como Alemania y Estados Unidos. En particular, Japón realiza mucha reimportación pero muy poca reexportación. 
+    \item El nivel de reimportación y reexportación de estos tres países es mucho menor que en América del Norte y, en el caso de Japón, mucho menor que en Estados Unidos o Alemania. Esto puede parecer sorprendente dada la visión de Asia como la región con la red productiva más extensamente internacionalizada. De hecho, estas cifras muestran que, aunque la reimportación es una buena forma de captar una relación simple de deslocalización de ida y vuelta, no registra redes productivas más complejas en las que las partes procesadas no regresan inmediatamente a la economía sede;
+    \item A juzgar por la experiencia europea, Corea parece un híbrido entre economía sede y economía fábrica. Mantiene relaciones importantes de reimportación y reexportación con Japón, China, Estados Unidos y varios países abundantes en recursos naturales; y,
+    \item Nuevamente, a juzgar por la experiencia europea, China se parece tanto a una economía sede como, por ejemplo, Italia.
+\end{lnum}
+
+No obstante, el aspecto más interesante es lo que no se encuentra. Existe una percepción extendida de que China es el ensamblador del mundo, siendo el célebre caso del iPod un ejemplo destacado. Si esta percepción fuera correcta, el patrón de China se parecería al de México: estaría dominado por relaciones de reexportación con economías avanzadas y tendría muy poca reimportación. En cambio, se observa que la mayoría de las relaciones bilaterales están marcadas por relaciones de reimportación. Desde la perspectiva europea y norteamericana, esto sugiere que China está deslocalizando etapas intermedias hacia Corea y Japón.
+
+¿Cómo podemos integrar estos hechos con la percepción común de China como destino de deslocalización por excelencia? Una explicación plausible es que China sea la fuente de muchos bienes intermedios de baja tecnología utilizados en Corea, Estados Unidos y Japón. Estos se incorporan en componentes de alta tecnología que luego se envían de vuelta a China para el ensamblaje final. Esto implicaría que las empresas de tecnología avanzada deslocalizan etapas aguas arriba intensivas en trabajo (por ejemplo, piezas de plástico, caucho y acero) que posteriormente se utilizan en productos finales estadounidenses, japoneses y coreanos, incluidos bienes de capital.
+
+$$\text{\textbf{COMERCIO EN VALOR AÑADIDO}}$$
+
+El estudio de los flujos I2P e I2E tiene ventajas importantes. Están disponibles para más de 40 países entre 1995 y 2009 y se basan estrechamente en flujos comerciales observados, por lo que reflejan los flujos sobre los que realmente opera la política comercial. Su principal limitación es que no muestran realmente dónde se añadió el valor a lo largo de una cadena de suministro.\footnote{La llamada base de datos TiVA, elaborada conjuntamente por la OMC y la OCDE, muestra el valor añadido contenido en los flujos brutos. Los datos públicamente disponibles están bastante agregados, pero al nivel del comercio total permiten reproducir los gráficos de patrón global elaborados para I2P e I2E, aunque se pierden algunos países. Los resultados se muestran en la Figura 35.
+}
+
+\imagenfit{Fig35.png}{The global pattern of foreign value added trade in exports, 2009}{}
+
+Los puntos más destacados son:
+\begin{lnum}
+    \item Los flujos agregados de comercio en valor añadido son notablemente similares a los flujos agregados I2E. La razón de esta similitud es clara. Las grandes diferencias entre I2E y comercio en valor añadido aparecen cuando un país vende intermedios a los que ha añadido poco valor. Dado que la producción todavía no está muy globalizada, estas diferencias son relativamente modestas. Además, los cuatro gigantes manufactureros son bastante autosuficientes en intermedios, por lo que las diferencias entre I2E y valor añadido son reducidas para los países responsables de los mayores flujos;\footnote{Dado que las relaciones de reimportación/reexportación son moderadas para la mayoría de pares de países, las diferencias entre el patrón I2E y el patrón de valor añadido probablemente se deben sobre todo a la eliminación de la doble contabilización de los flujos de intermedios, un cambio que reduce todos los denominadores más que los numeradores en el comercio intermedio con alto contenido de valor añadido propio. 
+    }
+    \item El abastecimiento estadounidense desde Europa es mucho más significativo en términos de valor añadido que en términos de I2E. Esto probablemente se relaciona con el patrón de servicios identificado en la Figura 16. Al igual que ocurre con las exportaciones rusas de materias primas, las exportaciones europeas de servicios intermedios tienden a tener un contenido muy alto de valor añadido propio y, por tanto, ganan prominencia cuando desaparece la doble contabilización. De hecho, con los datos de comercio en valor añadido, Estados Unidos se convierte en el principal importador mundial de insumos extranjeros, mientras que esa posición correspondía a Alemania al observar los flujos I2E;
+    \item Alemania domina menos en Fábrica Europa cuando se utilizan medidas de comercio en valor añadido en lugar de medidas I2E, lo que refleja la interdependencia de Fábrica Europa destacada antes;
+    \item También se observan cambios importantes para China, dado que participa intensamente en reimportación y/o reexportación, lo que aumenta la doble contabilización. La importancia global del abastecimiento chino de intermedios disminuye cuando se usan cifras de valor añadido.
+\end{lnum}
+
+La columna de China contiene cuatro entradas que se redondean al 2\% de los flujos mundiales y dos que se redondean al 1\%. Esto sugiere que los intermedios que China compra a Japón, Corea, Taiwán y Estados Unidos contienen mucho valor añadido procedente de lugares distintos del país listado. En las filas de China (ventas), la mayoría de los valores se redondean a cero y solo uno se redondea al 1\%. Esto, a su vez, sugiere que la mayor parte de las ventas de intermedios chinos captadas por la matriz I2E contiene una proporción elevada de valor añadido extranjero. Se conjetura que esto se debe principalmente a cambios en los numeradores. Dicho de otro modo, los datos de comercio en valor añadido eliminan la doble contabilización del comercio triangular y, por tanto, reducen la importancia de China tanto por el lado de las ventas como por el del abastecimiento en el patrón global. En trabajos futuros se examinará con más detalle el patrón global de flujos de valor añadido.
+
+$$\text{{ENFOQUE EN CHINA}}$$
+
+Dado el ascenso espectacular de China en las clasificaciones manufactureras, su profunda participación en el comercio global de cadenas de suministro y su encaje peculiar en la distinción entre economía sede y economía fábrica, resulta útil estudiar su experiencia con mayor detalle.
+
+\imagenfit{Fig36.png}{Development of China’s reexporting and reimporting, 1995 v 2000}{}
+
+Los hechos muestran que:
+\begin{lnum}
+    \item En 1995, China procesaba bienes para Japón y Corea, y realizaba algo de reimportación desde Japón, pero todo ello en niveles muy bajos;
+    \item En 2009, China estaba inmersa en el comercio de cadenas de suministro con una amplia gama de socios y, simultáneamente, había ampliado sus relaciones de reexportación con Corea, Japón, Alemania y Estados Unidos.
+\end{lnum}
+
+El panel derecho muestra un patrón muy similar al de Estados Unidos y Alemania. Esto resulta extraño dada la importancia documentada del comercio de procesamiento, lo que sugeriría que el patrón chino de reimportación/reexportación debería parecerse al de México. La sección siguiente investiga este enigma considerando la composición del comercio intermedio chino.
+
+¿Está China ascendiendo en la cadena de valor? Se afirma ampliamente que China está \textit{ascendiendo en la cadena de valor}. Hay varias formas de interpretar esto. La primera se centra en cambios intersectoriales; la segunda, en cambios intrasectoriales relativos a bienes intermedios y finales.
+
+A nivel sectorial, ascender en la cadena de valor significa desplazar la producción desde sectores de baja tecnología hacia sectores de alta tecnología. La actividad en sectores como equipo de transporte y equipo eléctrico y óptico debería expandirse; la actividad en textiles debería contraerse, al menos en términos relativos. China ascendió claramente en la cadena de valor en términos de producción bruta, pero:
+\begin{lnum}
+    \item El cambio en valor añadido es mucho más ambiguo;
+    \item El crecimiento de la producción bruta fue especialmente marcado en sectores de alta tecnología, como equipo eléctrico y óptico, equipo de transporte y productos químicos;
+    \item Sectores como agricultura y productos relacionados, minerales no metálicos, cuero y calzado, textiles, etc., registraron un crecimiento de la producción bruta inferior al promedio;\footnote{Esto es lo que cabría esperar de un proceso de “ascenso” en términos de producción, pero existe un problema en términos de valor añadido. Las barras rojas —las medidas de valor añadido— cuentan una historia distinta.
+    }
+    \item El crecimiento del valor añadido fue más rápido en alimentos y productos relacionados, metales básicos, madera y productos relacionados, y minería y canteras;
+    \item Los sectores con crecimiento por debajo del promedio fueron agricultura, papel, equipo de transporte y maquinaria n.c.p.
+\end{lnum}
+
+Claramente, la brecha entre producción de alta tecnología y valor añadido de alta tecnología refleja la posición de China en las cadenas de suministro regionales: China está aumentando sus importaciones de intermedios en sectores de alta tecnología más rápido que su contribución de valor añadido a esos sectores.\footnote{Como es habitual, estas cifras se refieren a flujos brutos, es decir, sin incluir el valor añadido reimportado.
+} Por eso, el crecimiento de su valor añadido en sectores de alta tecnología es inferior al crecimiento de su producción bruta en esos sectores.
+
+¿Qué cifras cuentan mejor la historia sobre el ascenso o descenso de China en la cadena de valor? Las cifras de producción bruta muestran lo que hacen las fábricas chinas; las cifras de valor añadido muestran lo que hacen los trabajadores chinos y otros insumos primarios, como el capital. El análisis económico tradicional se centra en el valor añadido, porque muestra la asignación de recursos escasos, pero si la industrialización ocurre por etapas y la primera consiste en atraer producción dentro de las fronteras, las cifras de producción bruta también son importantes.
+
+
+\textbf{Ventaja revelada en producción de intermedios (RIPA)}. Aunque las tasas de crecimiento sectorial son informativas, no controlan por el cambio masivo en la externalización a escala global, tendencia que ha afectado mucho más a algunos sectores que a otros. Una forma de evitar este problema es observar los patrones de producción de intermedios en China y compararlos con los del mundo.\footnote{La lógica es similar a la del índice de ventaja comparativa revelada, que compara la composición de las exportaciones de un país con la composición mundial. Sin embargo, aquí el foco no está en las exportaciones, sino en la producción de intermedios.
+} Examinando los datos se puede apreciar que:
+\begin{lnum}
+    \item El rasgo dominante en 1995 es la enorme subproducción de servicios en China en comparación con el patrón mundial, reflejada en el RIPA negativo del sector;\footnote{El RIPA de China para la mayoría de los sectores de bienes es positivo, aunque varía en magnitud. Los sectores de bienes están ordenados aproximadamente según su sofisticación, desde equipo eléctrico y óptico —incluida la electrónica— hasta materias primas como coque, petróleo y combustible nuclear.
+    }
+    \item La brecha de China en servicios intermedios desaparece. En 1995, solo el 27\% de los intermedios chinos correspondía a servicios, mientras que la cifra mundial era del 52\%; en 2009, la cifra china era del 63\% y la mundial del 64\%. Es imposible determinar si esto refleja la realidad o cambios en las prácticas estadísticas chinas.\footnote{Los planificadores comunistas tendían a subestimar la producción del sector servicios. En la URSS, por ejemplo, los productos se valoraban rutinariamente según su peso, ya que los precios no reflejaban necesariamente el valor. En tales procedimientos, los servicios quedaban infraponderados.
+    }
+\end{lnum}
+
+En síntesis:
+\begin{la}
+    \item China presenta una desventaja revelada en producción de intermedios —RIPA negativo— en sectores de alta tecnología;
+    \item China presenta una ventaja revelada en producción de intermedios —RIPA positivo— en sectores de baja tecnología.
+\end{la}
+
+El crecimiento de China en la producción de intermedios en sectores de alta tecnología no ha seguido el ritmo del crecimiento mundial. 
+
+\imagenfit{Fig38-39.png}{RIPA China: 1995 $\to$ 2009}{}
+
+Por ejemplo, las cifras de equipo de transporte y equipo eléctrico y óptico son negativas, mientras que son positivas para agricultura y productos relacionados, cuero y productos relacionados, y manufacturas no clasificadas en otra parte. La interpretación de estas cifras, sin embargo, no es directa, ya que un sector de baja tecnología como la agricultura puede utilizar intermedios de alta tecnología, y algunos intermedios en sectores de alta tecnología pueden ser en sí mismos de muy baja tecnología. No obstante, este resultado cuestiona la idea de que China esté desplazando su producción de intermedios de manera que aumente su autosuficiencia en sectores de alta tecnología. Por supuesto, el nivel de agregación puede estar ocultando desarrollos importantes, pero el RIPA no ofrece evidencia clara de un desplazamiento ascendente en la cadena de valor china.
+
+Para investigar el abastecimiento local frente al extranjero de intermedios, se puede analizar el ratio de intermedios importados de China. Los hechos destacables son:
+\begin{lnum}
+    \item China registró un gran desplazamiento hacia el abastecimiento extranjero en servicios y sectores de recursos naturales —minería y canteras—:
+    \item Los grandes desplazamientos desde el abastecimiento extranjero hacia el local se producen en “manufacturas ligeras” —textiles y confección, cuero y calzado, y madera y productos relacionados—;
+    \item La dependencia china de intermedios importados no disminuyó en sectores de mayor tecnología, como equipo eléctrico y óptico, equipo de transporte o productos químicos.
+\end{lnum}
+
+Esto constituye evidencia de que China está ascendiendo, pero no en sectores de alta tecnología. Hubo sustituciones significativas hacia intermedios locales —evidencia favorable a la hipótesis—, pero se produjeron con mayor intensidad en sectores manufactureros de baja tecnología —cuero, textiles, madera, etc.—.
+
+$$\text{\textbf{RESUMEN E HIPÓTESIS CONTRASTABLES}}$$
+
+Se destacan algunos elementos que parecen insuficientemente reconocidos y se señalan varias hipótesis contrastables:
+\begin{lnum}
+    \item La naturaleza y el impacto de la globalización cambiaron radicalmente en algún momento entre 1985 y 1995; la internacionalización de la producción es una causa probable. Esta es una hipótesis contrastable que no se ha probado con una base de datos global, aunque los cambios sintomáticos en los patrones comerciales sí se han documentado para varios países.
+    \item Se conjetura que el vector del cambio no es el comercio de bienes en sí mismo, sino el movimiento internacional Norte-Sur de conocimiento gerencial, técnico y comercial requerido por la producción internacional. Para asegurar que los bienes procesados en países de bajos salarios encajaran perfectamente en los sistemas de producción, venta y posventa de las economías avanzadas, las empresas de países de tecnología avanzada prestaron su tecnología a empresas de países de bajos salarios. Esto no es transferencia de conocimiento en el sentido de los años sesenta (de hecho, las empresas tratan intensamente de evitar la transferencia), pero al proporcionar las piezas faltantes, este movimiento internacional de know-how permitió que los países de bajos salarios se industrializaran a un ritmo completamente desproporcionado respecto de experiencias históricas anteriores.\footnote{China pasó de producir el 3\% de la manufactura mundial al 19\% en dos décadas mediante un proceso que tuvo muy poco que ver con la forma en que se industrializaron Estados Unidos, Alemania, Japón o Corea. La industrialización china ocurrió combinando trabajo chino con know-how de empresas de países avanzados. Esta conjetura apunta a la necesidad de estudiar el nexo de flujos transfronterizos de bienes, servicios, inversión, conocimiento y personas; lamentablemente, los datos globales no están disponibles. Como segunda mejor opción, el análisis se centra en el flujo de bienes intermedios, que constituye un síntoma clave del fenómeno subyacente.
+    }
+    \item Una lección importante es que conviene adoptar una visión más amplia de la producción internacional que la sugerida por los ejemplos evocadores más discutidos (el iPod, las muñecas Barbie, etc.). Para ello, se distingue entre:
+    \begin{la}
+        \item Importar para producir (I2P), es decir, el uso de intermedios extranjeros (bienes y servicios) en la producción nacional de bienes y servicios. El I2P incluye importaciones intermedias utilizadas en todos los sectores, incluidos sectores no transables como la construcción; y,
+        \item Importar para exportar (I2E), es decir, el uso de insumos importados en bienes y servicios exportados. 
+    \end{la}
+    Estas medidas de comercio en cadenas de suministro se basan en flujos comerciales observados (comercio bruto):
+    \item Una hipótesis que debería contrastarse es si el patrón del comercio en valor añadido se ajusta mejor que los flujos comerciales observados a las predicciones de H-O-S. La teoría sugiere que sí; 
+    \item Para I2P, I2E y valor añadido, una distinción importante es entre: (i) \textbf{ventas}, es decir, vender a cadenas internacionales de suministro; y, (ii) \textbf{abastecimiento}, es decir, comprar a cadenas internacionales de suministro;\footnote{Como muestra López-González (2012), la proporción de las exportaciones nacionales vendidas a redes internacionales de producción (participación de intermedios en las exportaciones) presenta forma de U invertida respecto de la renta per cápita. Del mismo modo, la dependencia de los países respecto de intermedios importados en sus exportaciones también presenta forma de U invertida respecto de la renta per cápita. 
+    
+    Parece existir, por tanto, un mecanismo interesante y poco explorado que vincula el comercio en cadenas de suministro con las etapas del desarrollo. Estas dos hipótesis no han sido contrastadas empíricamente, aunque los datos están disponibles para hacerlo.
+    }
+    \item Aproximadamente la mitad de la producción mundial de bienes y servicios se vende como insumos intermedios. Un malentendido importante, alimentado por algunos ejemplos de producción verdaderamente globalizada, se refiere a la apertura relativa de los mercados finales e intermedios;
+    \item El mundo sigue estando más globalizado en bienes finales que en intermedios; la división ventas domésticas-exportaciones es aproximadamente 60-40 para manufacturas finales, mientras que para intermedios es alrededor de 70-30 (es decir, 70\% vendido localmente y 30\% exportado);
+    \item En conjunto, la producción mundial todavía no está muy internacionalizada: la participación de intermedios importados en la manufactura mundial total es solo del 16\%; para la producción de todos los bienes y servicios, apenas del 8\%. En otras palabras, el mundo no es plano y la distancia no ha muerto, especialmente cuando se trata de redes internacionales de producción. Al nivel de agregación disponible actualmente, la mayoría de los países son en gran medida autosuficientes en insumos intermedios;\footnote{De hecho, puede intuirse que el grado de autosuficiencia en insumos industriales aumenta con el tamaño económico y con la distancia respecto de las tres grandes redes de suministro: Fábrica Asia, Fábrica América del Norte y Fábrica Europa. Esta hipótesis debe ser contrastada.
+    }
+    \item Un hecho ampliamente subestimado es la importancia del comercio de servicios. Los servicios intermedios representan, en conjunto, el 28\% de los flujos mundiales de comercio en cadenas de suministro (es decir, de todos los intermedios) medidos mediante I2P;
+    \item Cuatro países (los cuatro gigantes manufactureros) representan alrededor del 60\% del PIB manufacturero mundial: Estados Unidos, China, Alemania y Japón. Esto es plenamente coherente con la hipótesis del mercado interno (KRUGMAN 1980), pero para los fines de este trabajo el punto crucial es que implica que los cuatro gigantes dominan de forma natural el comercio en cadenas de suministro tanto por el lado de las ventas como por el del abastecimiento;
+    \item En cuanto al patrón del comercio en cadenas de suministro, existe una percepción extendida de que las cadenas de suministro son globales; el término cadenas globales de valor ha condicionado la forma de pensar sobre el tema. Esto es incorrecto. Las cadenas internacionales de suministro son principalmente regionales, no globales;\footnote{La mayor parte del comercio en cadenas de suministro ocurre dentro de lo que se ha denominado Fábrica Asia, Fábrica Europa y Fábrica América del Norte. Además, existen estructuras claras dentro de las regiones: Estados Unidos, Alemania y China son los centros de sus respectivas regiones; el patrón de comercio de suministro de Japón está mucho más regionalizado que los de Estados Unidos, Alemania y China, pero Japón no es un centro en Fábrica Asia.
+    }
+    \item A escala mundial, China lidera tanto la exportación como la importación de intermedios cuando los flujos se miden mediante I2P e I2E. Es el mayor comprador y vendedor de intermedios medidos como exportaciones brutas, es decir, tal como las registran las aduanas e incluyendo, por tanto, problemas de doble contabilización;
+    \item Existen diferencias importantes en los patrones globales de bienes industriales intermedios, materias primas y servicios: (i) el patrón global de los bienes industriales intermedios está más regionalizado que el patrón de los servicios intermedios; y, (ii) el patrón global de materias primas está aún menos regionalizado;
+    \item Al observar la evolución de los patrones entre 1995 y 2009, se aprecia que: (i) el comercio en cadenas de suministro se ha desplazado intensamente hacia Fábrica Asia y se ha alejado de Fábrica América del Norte y Fábrica Europa; (ii) el papel de China aumentó enormemente tanto por el lado de las ventas como por el del abastecimiento; y, (iii) dentro de Europa, el predominio de Alemania se redujo entre 1995 y 2009 tanto por el lado de las ventas como por el del abastecimiento, mientras que la centralidad de China en Asia aumentó; y,
+    \item Una distinción útil para interpretar los datos es la existente entre economías sede y economías fábrica: 
+    \begin{la}
+        \item Las economías sede tienden a presentar diversidad de socios tanto por el lado del abastecimiento como por el de las ventas;
+        \item Las economías fábrica tienden a depender fuertemente del gigante manufacturero de alta tecnología más cercano: Estados Unidos, Alemania o Japón.
+    \end{la}
+    Aunque Estados Unidos y Alemania son claramente economías sede, el patrón es más matizado en China, Corea y Japón.
+\end{lnum}
+
+En definitiva, el auge del comercio en cadenas de suministro coincidió con algunos de los cambios más radicales que ha experimentado la economía mundial. El trabajo se centra en representar el panorama global del aspecto más visible de las redes internacionales de producción: los flujos transfronterizos de bienes y servicios intermedios. 
+
+
+
+\textcolor{red}{Para evaluar la contribución del comercio a la actividad económica de un país es preciso calcular el comercio en valor añadido. Se trata de una aproximación estadística que estima el origen (por país y por industria) del valor que se añade a la producción de los bienes y servicios que son exportados.
+
+Esto permite: (i) identificar las fuentes de la competitividad internacional y las ventajas comparativas y reflejar mejor la contribución efectiva de los diversos sectores al proceso de producción de las mercancías y servicios exportados, (ii) evitar el problema de la doble contabilización de las estadísticas tradicionales, (iii) proporcionar otra perspectiva para el análisis de las balanzas comerciales bilaterales, (iv) analizar mejor los efectos de los instrumentos de política comercial, que pueden acabar por minorar la competitividad internacional de un país, y (v) conocer y calibrar mejor el impacto y los mecanismos de transmisión de los shocks externos. 
+
+A partir de las tablas input-output globales se calculan varios indicadores. Quizás los más conocidos son los que miden la participación de cada país en las CGV, hacia adelante y hacia atrás. La participación hacia atrás o backward refleja el valor añadido extranjero en el valor bruto de las exportaciones de un país y aproxima el contenido importador de aquéllas. El segundo indicador, la participación hacia adelante o forward, se corresponde con el valor añadido nacional de los bienes o servicios que, tras ser exportados, serán posteriormente reexportados a un tercer país.
+
+La suma de ambas participaciones, backward y forward, sobre el total de las exportaciones brutas aproxima la participación global de una economía en las CGV. Un valor elevado de este indicador refleja una mayor integración del país en los flujos de comercio internacional, ya sea porque sus exportaciones requieren de la participación de bienes intermedios importados de otros países, o porque sus exportaciones son un bien intermedio que se utilizará como factor de producción en las exportaciones en otros países. La diferencia entre la participación forward y la participación backward se utiliza para caracterizar la posición de una economía en las CGV. Concretamente, un valor bajo de dicha diferencia señala que las exportaciones de la economía se encuentran cercanas al consumidor final. Por el contrario, un valor alto indica que la economía está especializada en la provisión de factores de producción que serán reexportados, situándose por tanto más alejada del consumidor final.
+
+Cada vez más una parte importante del valor añadido aportado por el sector manufacturero no proviene de las industrias pertenecientes a dicho sector sino de otros, en particular del sector servicios.
+
+Las dos fuentes estadísticas más utilizadas son la WIOD y la TiVA.\footnote{La World Input-Output database ofrece una serie anual armonizada de tablas input-output globales para el período 1995-2014 (la actualización de 2018 tiene datos hasta 2014). Esta base de datos es muy rica en cuanto al número de países incluidos (43) y el grado de desagregación por ramas de actividad (56). A su vez, estos datos son consistentes con los datos de contabilidad nacional y con los datos de comercio de cada uno de los países que forman la muestra. La base de datos estima el origen (por país e industria) del valor agregado en las exportaciones de bienes y servicios y, el origen de valor agregado en la demanda final de bienes y servicios.
+} La edición de 2022 de la TiVA, publicada por la OCDE, presenta datos para el período 1995-2018, para 76 economías y 17 regiones o grupos de países y para para 45 industrias y 25 agregados industriales como el total de manufacturas y el total de servicios. Asimismo, incluye una incorporación de CO2 en el comercio (producción vs consumo de emisiones CO2).\footnote{
+Se puede consultar: \href{https://www.oecd.org/sti/ind/measuring-trade-in-value-added.htm}{Trade in Value Added. OCDE Data}; \href{https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://stats.oecd.org/wbos/fileview2.aspx%3FIDFile%3D2143f34e-6feb-41a9-abaf-cb52132608c4&ved=2ahUKEwidsYT6x6CVAxUo1wIHHbUkM4UQFnoECBsQAQ&usg=AOvVaw3dEO-gY0lFn9t9m8Fxz4yG}{\textit{Guide to OECD's Trade in Value Added (TiVA) Indicators}. OCDE, Notas técnicas}
+}
+
+Los indicadores de la TiVA pueden clasificarse en cuatro grupos según los requisitos de datos. Se proporcionan en dólares o en porcentaje. Los más utilizados son:
+
+• Los indicadores estructurales: producción, valor añadido, exportaciones brutas de bienes finales y de bienes intermedios e importaciones brutas de bienes finales y de bienes intermedios. Se miden a precios básicos. Para la OCDE en conjunto, en 2018 el 35\% del producto bruto del sector manufacturero era valor añadido generado en la producción. Países como Alemania, Reino Unido o Estados Unidos tienen porcentajes entre el 37\% y el 39\%. China y los países del Sudeste Asiático tienen el 24\% y el 27\%, respectivamente. 
+
+• Los indicadores basados en el origen del valor añadido contenido en las exportaciones e importaciones brutas. • Los indicadores basados en el origen del valor añadido en la demanda final. 
+
+• Los indicadores detallados que permiten ver el origen del valor añadido en las exportaciones brutas, las importaciones brutas y la demanda final por países y por industrias. Presentan, por tanto, más dimensiones que los indicadores anteriores.
+
+La edición de 2022 nos indica que (i) en la mayoría de las economías exportadoras, el valor añadido extranjero en el comercio se incrementó entre 2016 y 2018 (refutando la tesis de que se había producido un retroceso en el grado de globalización) y (ii) en términos de valor añadido, los servicios son más comercializados que los bienes. Esta edición confirma que el valor añadido de los servicios supone un peso cada vez mayor en el comercio de las economías de la OCDE y de media supera el $50\%$.
+
+China: Si bien, como hemos visto anteriormente, los principales socios comerciales de China son los Estados Unidos, la Unión Europea y Japón, en términos brutos y de valor añadido, la intensidad de la integración de China con algunos de sus socios regionales como Camboya o Vietnam se ha incrementado sustancialmente durante la última década.
+
+En 2018, el 14,4\% del valor añadido nacional fue generado por la demanda final del resto del mundo, inferior al 23,7\% de 2008, a la vez que el porcentaje de bienes intermedios importados incluidos en las exportaciones cayo del 37,7\% al 26,2\%, sugiriendo un cambio desde una producción dirigida a satisfacer la demanda extranjera hacia el consumo doméstico.
+
+El valor añadido chino en la demanda final del resto del mundo es especialmente relevante en los sectores de TIC y electrónica (48,6\%), textiles y confección y otras manufacturas (ambas con un 40\%). El menor porcentaje está en hospedaje y servicios de alimentación (8,8\%). En todos los sectores, el porcentaje es inferior al que había en 2008.
+
+El valor añadido extranjero en las exportaciones brutas chinas pasó del 21,9\% en 2008 a 17,9\%, inferior a la media de la OCDE del 27,9\%. Destaca el sector de TIC y electrónica, el más relevante en las exportaciones chinas, que ha pasado del 34,9\% al 27,1\%, lo que podría mostrar un giro hacia suministradores nacionales de inputs intermedios.
+
+Los servicios fueron el 37,8\% de la exportaciones brutas chinas en 2018, inferior a la media de la OCDE del 55,7\%. El contenido en servicios de las exportaciones brutas se ha incrementado desde el 34,3\% en 2008 al 37,8\% en 2018. Cada vez son más importantes para la competitividad de las manufacturas chinas, ya que su contenido en valor añadido de servicios fue del 29,4\%, siendo las participaciones más altas en textiles y confección (33,3\%), TIC y electronica (33,3\%) y vehículos de motor (30,5\%).
+
+Estados Unidos:35 el contenido de valor añadido extranjero en sus exportaciones ha disminuido desde el 13,2\% en 2008 al 9,5\% en 2018, lo que refleja el creciente peso de las exportaciones de servicios que tienen un mayor contenido de valor añadido nacional. Sin embargo, también cayó el contenido de valor añadido extranjero en las exportaciones de varios sectores de manufacturas, con las mayores caídas en coque y productos refinados del petróleo y en TIC y electrónica. Mientras que la Unión Europea, Canadá y Méjico fueron sus mayores mercados de exportaciones en términos brutos, China fue el segundo destino en términos de valor añadido debido a que llega a China indirectamente, a través de exportaciones a terceros países.
+
+La integración de Méjico y Canadá en las cadenas de producción de los Estados unidos se observa en los elevados porcentajes de valor añadido nacional en las importaciones de los Estados Unidos de manufacturas procedentes de Méjico y Canadá.
+
+El 62,5\% de las exportaciones brutas en 2018 fueron servicios, superior a la media de la OCDE (55,7\%). El sector servicios es clave para la competitividad de sus manufacturas ya que supuso el 31.4\% del valor añadido de las exportaciones brutas de servicios.
+
+Unión Europea:36 considerada como una única economía (el valor añadido del comercio intra UE es considerado valor añadido nacional), el contenido de valor añadido extranjero ha permanecido estable entre 2008 y 2018, de 15,7\% a 15,8\%. Ello sugiere que la integración europea no ha generado efectos de desviación de comercio y no ha reducido la contribución de terceros países a las cadenas de valor europeas. 
+
+Las industrias más orientadas al exterior (es decir, aquellas que tienen el mayor porcentaje de valor añadido para satisfacer la demanda final del resto del mundo) están en el sector manufacturero: químicas y farmacéuticas (47,7\%), otro equipo de transporte (47,2\%) y TIC y
+electrónica (46,3\%).
+
+Los mayores socios comerciales en 2018 fueron los Estados Unidos, Reino Unido y China, tanto a en términos brutos como en términos de valor añadido. Los servicios suponen un porcentaje elevado de las exportaciones brutas de la UE (57,4\%) y son esenciales para la competitividad externa de sus manufacturas, ya que suponen el 35,8\% del valor añadido en las exportaciones brutas de manufacturas en 2018.}
+
+
+\end{document}
