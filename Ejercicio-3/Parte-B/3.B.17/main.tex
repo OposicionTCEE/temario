@@ -1,0 +1,1085 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Teorías explicativas de las crisis de balanza de pagos\\
+\large }
+\author{Marcelo Ortega}
+\date{Marzo 2026}
+\newcommand{\TemaCode}{3B17}
+
+\oldtitle{
+    B.18. Teorías explicativas de las crisis monetarias y financieras internacionales
+}
+\changerationale{
+    Se aclara el título, ante la relativa frecuencia con que algunos opositores introducían, sin ser pertinente, cuestiones de Macroeconomía financiera en economía cerrada.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     
+    }
+\vspace{1cm}
+
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+\clearpage
+\section{Primera Generación: Inconsistencia del \textit{policy-mix}}
+Los modelos de primera generación tratan de explicar el colapso de los sistemas de tipo de cambio fijo que tuvo lugar en los años 70 y 80 del siglo XX en varios países en desarrollo. Sus bases tienen su origen en SALANT y HENDERSON (1978), y posteriormente fueron desarrollados por KRUGMAN (1979) y FLOOD y GARBER (1984). 
+
+La causa de estas crisis de primera generación radica en un deterioro de los fundamentos económicos debido a la incompatibilidad de los objetivos de política interna y externa. Si las autoridades optan por instrumentar una política monetaria para alcanzar fines internos que son prioritarios sobre el objetivo externo de mantenimiento de un sistema de tipo de cambio fijo, la crisis cambiaria será inevitable. Por tanto, este modelo puede entenderse tanto como una demostración de un policy-mix inconsistente o como una aplicación de la regla de TINBERGEN, según la cual es imposible que un solo instrumento (la política monetaria) logre dos objetivos de política económica (la defensa del ancla cambiaria y la financiación del déficit público). 
+
+En estos modelos, las políticas internas prioritarias conducen a incurrir en déficit público que se financia vía monetización. Esta política monetaria expansiva genera tensiones depreciatorias que hacen necesario que las autoridades compren moneda nacional a cambio de reservas internacionales para mantener la paridad cambiaría. Los agentes privados anticipan que en último término las reservas internacionales, que son finitas, se agotarán y el abandono de la paridad cambiaría será inevitable. En este contexto, el ataque especulativo será la respuesta racional ante una evolución insostenible. Los agentes, al anticipar correctamente que el tipo de cambio finalmente tendrá que ser alterado, precipitan la crisis inexorable con su actuación. L
+
+\subsection{Marco analítico: FLOOD y GARBER (1984)}
+FLOOD y GARBER (1984) desarrollan un modelo para una economía pequeña y abierta
+sin imperfecciones.
+
+Sobre esta base, los agentes económicos son capaces de hacer previsiones perfectas y pueden invertir en tres activos financieros: (i) el dinero nacional; (ii) los bonos nacionales; y, (iii) los bonos extranjeros.\footnote{Los agentes no desean mantener dinero extranjero en su cartera porque es un activo dominado fuertemente por los otros tres, ya que no proporciona rendimiento nominal ni servicios monetarios a los agentes.
+} (Siendo los bonos nacionales y extranjeros sustitutivos perfectos). El déficit público es exógeno y el banco central posee un stock de divisa extranjera para intervenir con el fin de mantener el tipo de cambio fijo, pero también se le exige monetizar parte del déficit público. 
+
+A partir de estos supuestos, el modelo se construye sobre cuatro ecuaciones principales: 
+
+\eqblock{
+\begin{aligned}
+    &\text{Estáticas}:
+    &&\left\{\begin{aligned}
+        &(1)\quad\text{Mercado Monetario}: && \frac{M(t)}{p(t)}=Y(t)-k\cdot i(t)\,\,>0\\[1em]
+        &(2)\quad\text{Condición PPA}: &&P(t)=P^*(t)\cdot s(t)
+    \end{aligned}\right.\quad\text{\scriptsize$\text{donde,}
+    \quad
+    \left\{\begin{aligned}
+        &\underset{\text{\scriptsize reservas internacionales $+$ crédito interno}}{M(t)=R(t)+D(t)}\\[0.5em]
+        &s(t)\equiv \text{Tipo de Cambio spot}
+    \end{aligned}\right.$}\\[1em]
+    &\text{Dinámicas}:
+    &&\left\{\begin{aligned}
+        &(3)\quad\underset{\text{\scriptsize señoreaje: crecimiento exógeno}}{\text{Crecimiento déficit}:}&& \dot D(t)=\mu\\[1em]
+        &(4)\quad\text{Condición de PNCI}: &&i(t)=i^*(t)+\left[\frac{\dot s(t)}{s(t)}\right]
+    \end{aligned}\right.
+\end{aligned}
+}{Ecuaciones funcionales: Modelo FLOOD y GARBER (1984). Primera generación: Inconsistencia del policy-mix}
+
+En esencia, manteniendo siempre el equilibrio en el mercado de dinero, se cumple la paridad de poder adquisitivo mediante la fijación del tipo de cambio spot, que fluctuará de manera que una unidad monetaria tenga la misma capacidad adquisitiva vía arbitraje de bienes, con independencia de su moneda de denominación. Las ecuaciones dinámicas inciden en ambos lados de la oferta monetaria pues expresan (3) la tasa de crecimiento de la oferta monetaria (inducida por la necesidad de generar ingresos por señoreaje) y (4) el tipo de interés nacional en base a la paridad no cubierta de intereses: el mercado cambiario estará en equilibrio cuando los depósitos de todas las divisas ofezcan idéntica tasa de rentabilidad. 
+
+Con estas ecuaciones de partida, sustituimos las ecuaciones (3) y (4) en el equilibrio del mercado monetario:
+
+\eqblock{
+\begin{aligned}
+    &(3)+(4)\Rightarrow(1):&&\frac{M(t)}{P^*(t)+s(t)}=Y(t)-k\cdot \left(i^*(t)+\frac{\dot s(t)}{s(t)}\right)\\[1em]
+    &\underset{\text{\scriptsize (operando y despejando)}}{\Longrightarrow}&&M(t)=(\underbrace{Y(t)\, P^*(t)-k\, P^*(t)\,i^*(t)}_{\equiv\,\beta})\cdot s(t)-\underbrace{k\,P^*(t)}_{\equiv\,\alpha}\,\dot s(t)\\[1em]
+    &\underset{\text{\scriptsize (sustituyendo)}}{\Longrightarrow}&&\boxed{M(t)=\beta\,s(t)-\alpha\,\dot s(t)}\quad\underset{\substack{\text{\scriptsize como TC fijo,}\\\dot s(t=0)}}{\Longrightarrow}\quad\boxed{M(t)=\beta\,s(t)}
+\end{aligned}
+}{Oferta Montearia: Fluctuaciones del Tipo de Cambio spot. Primera generación: FLOOD y GARBER (1984)}
+
+Dado que $P^*(t)$ e $i^*(t)$ pueden suponerse dados para un país pequeño, $\beta$ y $\alpha$ serán constantes, siendo $\beta$ positivo por definición (1). Por último, como el tipo de cambio es fijo, $\dot s(t)=0$, luego $M(t) = \beta\cdot s(t)$. Utilizando la definición de la oferta nominal de dinero como sume de las reservas internacionales y la cantidad de crédito interno en posesión del banco central, obtenemos:
+
+\eqblock{
+\begin{aligned}
+    &M(t)=R(t)+D(t)&&\Longrightarrow\quad R(t)=\underset{\text{\scriptsize cte.}}{\beta\,s(t)}-D(t)\\[1em]
+    &\dot R(t)=-\dot D(t)&&\Longrightarrow\quad\boxed{\dot R(t)=-\mu}
+\end{aligned}
+}
+
+Para mantener el tipo de cambio constante a la vez que se monetiza el déficit público, es necesario que los activos externos en el balance del Banco Central se reduzcan a la misma tasa a la que aumentan los activos públicos, de forma que la oferta monetaria no varíe. Con una tasa de crecimiento ($\mu$) exógena y constante y unas reservas internacionales finitas, el sistema de tipo de cambio fijo no podrá sobrevivir indefinidamente: cualquier stock de reservas internacionales mantenido para garantizar el sistema cambiario fijo acabará agotándose.\footnote{Suponemos que el límite inferior de reservas internacionales es cero, pero los resultados serían similares si se supusiese que ese límite inferior viene dado por cualquier otro valor positivo o negativo.
+} 
+
+\subsubsection{Crisis cambiaria: Ataque especulativo}
+Los agentes privados, que son capaces de prever de forma perfecta que las políticas del gobierno conducirán inexorablemente al agotamiento de las reservas internacionales, acometerán de forma racional un ataque especulativo mediante la compra masiva de bonos extranjeros a cambio de moneda nacional antes de que las reservas internacionales se agoten para evitar pérdidas por sus tenencias en moneda nacional,\footnote{El ataque se producirá antes de que se agoten las reservas internacionales, ya que en caso contrario habría un salto discreto y perfectamente anticipado en el tipo de cambio que supondría una tasa de ganancia instantáneamente infinita.
+} que precipita la crisis del sistema cambiario. 
+
+Pero, ¿cuándo cabe esperar este tipo de comportamiento por parte de los agentes? ¿podemos anticipar la crisis cambiaria? Este es el principal objetivo del modelo. 
+
+\paragraph{Anticipación de la crisis cambiaria: Tipo de cambio sombra}
+Para esto se define el \textbf{tipo de cambio sombra} como el tipo de cambio que prevalecería si se pasase a un régimen de tipo de cambio flexible. Podemos visualizarlo gráficamente de la siguiente forma:
+
+\imagenfit{1era_Gen.png}{}{Tema 3.B.17. Apuntes ICEX-CECO.}
+
+El modelo anticipa que el stock de reservas se agotará progresivamente en el tiempo ($t$, Time) por la necesidad de financiar el déficit. Si el tipo de cambio fuese flexible, paralelamente se experimentaría una depreciación del tipo de cambio (un aumento es una depreciación) inducida por esta disminución. Es decir, proporcional a la expansión del crédito doméstico ($\dot R(t)=-\mu$). Al suponer una tasa de monetización constante, el tipo de cambio sombra se representa como una recta de pendiente igual a $\mu$ en función del tiempo.
+
+¿Cuándo se produciríra dicho ataque? Existen diversas formas de aproximarlo. Siguiendo a FLOOD y GARBER, podemos considerar que dicho ataque se puede aproximar por la \textbf{condición de no arbitraje}. Con ayuda del gráfico, podemos ver como:
+\begin{la}
+    \item \textbf{Región estable: $\tilde e <\bar e$}. Si el regimen fijo colapsara en este momento, el mercado llevaría el tipo de cambio a un nivel menor que el tipo fijo actual: se apreciaría la moneda nacional y no existen incentivos económicos para el ataque especulativo. ¿Por qué? Supongamos que $\bar e=10$ y $\tilde e=8$. El Banco Central vende una unidad de divisa por diez unidades de moneda nacional. Si compramos divisa extranjera (reservas) a ese precio, tras el colapso la paridad se fijará en $\tilde e=8$. Esto implica que ahora obtendremos dos unidades monetarias nacionales menos por cada unidad de divisa que tengamos, ergo genereraremos un pérdida por la transacción. Esta generación de pérdidas por parte de los inversores elimina los incentivos de iniciar un ataque especulativo y, en consecuencia, nos sitúa en la región estable del gráfico;
+    \item \textbf{Región \textit{ficticia}: $\tilde e>\bar e$}. Si nos encontramos en esta región del gráficos y ocurre el colapso del sistema cambiario, el tipo fijo saltaría a un nivel más alto: se depreciaría la moneda nacional y existirían incentivos económicos para el ataque especulativo. ¿Por qué? Suponiendo que el tipo está en $\bar e=10$ y el tipo sombra en $\tilde e=15$, comprando divisa por moneda nacional generaríamos una ganancia tras el colapso de la paridad. Por cada unidad de divisa obtendríamos cinco unidades adicionales de moneda nacional de la que pagamos por obtener la divisa en primer lugar, ergo la moneda se ha depreciado. Esta oportunidad de arbitraje genera un incentivo constante para el ataque especulativo. Sin embargo, la imposibilidad de que existan dichas oportunidades hace que esta situación sea virtualmente imposible;
+    \item \textbf{Equilibrio especulativo: $\tilde e=\bar e$}. Lo que nos conduce a la única situación en la que se genera un incentivo para el ataque compatible con los supuestos del modelo. ¿Qué pasaría si ambos tipos de cambio fuesen iguales? Este es el momento en el que se produce el ataque especulativo en equilibrio. La razón es de teoría de arbitraje bajo previsión perfecta: si los especuladores esperaran un poco más allá de $T$ existirían beneficios positivos, pero entonces cada especulador tendría incentivo a adelantarse ligeramente a los demás para capturar primero las reservas del banco central. Esa competencia hace imposible que el sistema sobreviva cuando ya existen beneficios esperados y, en consecuencia, el ataque ocurre exactamente cuando el beneficio esperado pasa de negativo (primera situación, $\tilde e<\bar e$) a cero ($\tilde e=\bar e$).
+\end{la}
+
+¿Cómo podemos conocer el momento exacto $T$? Analíticamente, dado que tras el ataque se agotan las reservas internacionales:
+
+\eqblock{
+\begin{aligned}
+    &M(t)=\beta\,s(t)-\alpha \,\dot s(t)\qquad \text{donde,}\,\,\,s(t)=\lambda_0+\lambda_1\,D(t)\\[1em]
+    &\left\{\begin{aligned}
+        &\lambda_0=\frac{\alpha\,\beta}{\beta^2}\\[0.5em]
+        &\lambda_1=\frac{1}{\beta}
+    \end{aligned}\right\}\Longrightarrow\quad s(t)=\frac{\alpha\,\beta}{\beta^2}+\frac{D(t)}{\beta}\\[1em]
+    &\left(\substack{\text{\scriptsize sustituyendo}\\[0.5em]\\M(t)=D(t)=D(0)+\mu\,t}\right)\Longrightarrow s(t)=\frac{\alpha\,\beta}{\beta^2}+\frac{D(0)+\mu\,t}{\beta}\\[1em]
+    &\text{Colapso}:\qquad {\bar s=\frac{\alpha\,\beta}{\beta^2}+\frac{D(0)+\mu\,t}{\beta}}\quad\Longrightarrow\quad{T=\frac{\bar s\,\beta-D(0)}{\mu}-\frac{\alpha}{\beta}}\\[1em]
+    &\quad\underset{R(0)\equiv\beta\,\bar s-D(0)}{\Longrightarrow}\quad\boxed{T=\frac{R(0)}{\mu}-\frac{\alpha}{\beta}}
+\end{aligned}
+}{Anticipación: Equilibrio en el ataque especulativo (FLOOD y GRABER, 1984). Primera generación: Inconsistencia de policy-mix}
+
+Como vemos, el colapso se producirá en el momento en el que el tipo de cambio fijo se iguale con el tipo de cambio sombra ya que, en ausencia de ataque especulativo las reservas se agotarían en el momento $R(0)/\mu$ y $\alpha/\beta$ es el plazo de tiempo en el que se adelanta el colapso por la actuación de los agentes racionales. En esencia, el ataque especulativo se dilatará más o menos en el tiempo en función de: (i) el nivel inicial de reservas internacionales; (ii) cuanto más depreciado se encuentre el tipo de cambio fijo de la moneda doméstica que se esté defendiendo; y, (iii) cuanto menor sea la tasa de crecimiento del crédito doméstico.
+
+\subsection{Implicaciones de Política Económica}
+Los modelos de primera generación muestran cómo la mera fijación del tipo de cambio no basta para proporcionar disciplina monetaria y fiscal, sino que las políticas internas tienen que ser consistentes con el objetivo de mantenimiento de la paridad cambiaría: es imprescindible mantener una autoridad monetaria independiente y con dominancia sobre la Política Fiscal.
+
+Como señala KRUGMAN (1999): \textbf{el punto es que no se puede tener todo, un país debe elegir dos de cada tres}: (i) puede fijar su tipo de cambio sin debilitar a su banco central, pero sólo mediante el mantenimiento de controles sobre los flujos de capilal (China); (ii) puede permitir la libre movilidad de capitales manleniendo la autonomía monetaria, pero sólo a expensas de dejar que el tipo de cambio fluctúe (Gran Bretaña o Canada); o, (iii) puede optar por permitir el libre movimiento de capitales y estabilizar la moneda, pero sólo optando por el abandono de cualquier posibilidad de ajustar las tasas de interés para combatir la inflación o la recesión (UE o, como caso paradigmático, la Argentina de Menem-CAVALLO) .
+
+
+
+
+
+
+\clearpage
+\section{Segunda Generación: Expectativas}
+Los modelos de primera generación explican las crisis monetarias a través del deterioro de los fundamentos económicos, lo que permitió explicar las sucesivas crisis cambiarias/soberanas de la década pérdida sudamericana: no fueron señal de un mal funcionamiento de los mercados sino de la inconsistencia de objetivos en sus políticas, la consecución de sus planes internos y el mantenimiento del objetivo cambiario anunciado. 
+
+Sin embargo, ni la evidencia empírica ni los supuestos de partida favorecieron su consolidación posterior. El modelo no considera otras alternativas de financiación (como la deuda, las políticas de austeridad, la devaluación anticipada, etc.) y, mientras que los agentes privados son capaces de utilizar toda la información, las autoridades se perfilan como un agente estático con un comportamiento lineal. Estos y otros factores, junto con la evidencia de crisis posteriores sin que se observasen deterioros progresivos de los fundamentos (SME, 1992), justifica la aparición de los modelos de segunda generación.\footnote{El SME era un sistema de zonas objetivo en el que se establecían unas bandas de fluctuación de las divisas de los Estados miembros en torno a la paridad de referencia con el ECU, unidad de cuenta del sistema. Lo que se ha dado a conocer coloquialmente como la \textbf{serpiente europea}. El origen de la crisis del SME (1992) puede remontarse al proceso de reunificación alemán (1989), que produjo una coyuntura interna difícil de sortear: una elevada disparidad territorial y un objetivo declarado de convergencia nacional. Para perseguir este objetivo, el país optó por combinar una política fiscal expansiva con una política monetaria contractiva (para controlar la inflación). 
+
+Como el SME estaba dominado, en la práctica, por el marco alemán, dicho polícy mix se proyectó más allá de las fronteras alemanas y generó desequilibrios en el sistema, obligando a los países a optar entre sus objetivos internos o sus objetivos externos. La estabilidad del SME pasaba por sortear las dificultades que presentaba la asimetría en los ciclos entre los integrantes del sistema. Especialmente, entre una alemania unificada y el resto del SME, parte de estos en etapa recesiva (especialmente UK). El mantenimiento de la paridad cambiaría obligaba una política monetaria contractiva (simetría con DEU), con un alto coste en términos de desempleo. La pregunta era entonces sencilla: ¿cuán comprometidos estaban, en realidad, los países? Las expectativas de los agentes del abandono del sistema cambiario generaron fuertes ataques especulativos en el mercado que condujeron a la crisis del SME de 1992. Lo importante, para nuestro objeto del Tema, es que esta crisis no vino provocada por un paulatino agotamiento de las reservas que condujese inexorablemente al abandono del tipo de cambio fijo, sino por la progresiva pérdida de credibilidad de dicho compromiso cuando está generando altos costes internos.
+}
+
+\textbf{¿Qué queremos decir?} Esta rama pretende explicar cómo la imposibilidad de mantener un compromiso cuando está generando profundos costes internos puede conducir a una crisis del sistema cambiario. En este contexto, los ataques se producen incluso cuando las políticas macroeconómicas son consistentes con el mantenimiento del tipo de cambio fijo: basta que los especuladores perciban que el mantenimiento del tipo de cambio es dificil de compatibilizar con la consecución de otros objetivos alternativos para que se produzca el ataque. No obstante, vamos a ver cómo esta construcción sobre expectativas hace que la causalidad no sea unidireccional: las expectativas de los agentes sobre la credibilidad del gobierno pueden alterar a su vez los incentivos de las autoridades a la hora de evaluar la idoneidad del objetivo anunciado. De esta forma emergen equilibrios múltiples ya que en un mismo contexto macroeconómico podrá o no darse o ser un ataque en función de las diferentes percepciones sobre una misma situación.\footnote{Al existir varios equilibrios hacia los que la economía puede encaminarse, cualquier nueva información o una variable superflua podrían alterar las expectativas de los agentes en un sentido u otro y, por tanto, predominan los conceptos de corte keynesiano como efectos rebaño, expectativas autocumplidas, etc.
+} 
+
+Las principales aportaciones de esta nueva rama de modelos corresponden a OBSTFELD (1994), CALVO (1995), COLE y KEHOE (1996), DRAZEN (1998) y JEANNE (2000).\footnote{El modelo de zonas objetivo de KRUGMAN (1991), que plantea una ecuación de determinación del tipo de cambio que depende de los fundamentos y de la tasa de depreciación esperada. podría englobarse en esta generación de modelos. La credibilidad del compromiso de la autoridad monetaria con el mantenimiento del tipo de cambi o resultará crucial para la supervivencia del sistema cambiario cuando el tipo de cambio se acerque a los límites de las bandas objetivo.
+}
+
+Cuando aumentan las expectativas de devaluación de los agentes del mercado, su comportamiento conduce a que aumenten los costes de mantener un tipo de cambio fijo.
+
+\subsection{Marco analítico: JEANNE (2000)}
+En aras de la brevedad, desarrollaremos únicamente una versión simplificada del marco propuesto por JEANNE (2000), por ser el más reciente. Supondremos, igual que antes, que nos encontramos en ua economía pequeña, abierta, con un objetivo cambiario fijo declarado y que se cumple la condición de Paridad de Poder Adquisitivo. 
+
+Centrándonos en un escenario biperiodo en el que incialmente las autoridades mantienen la paridad cambiaria y, posteriormente, pueden decidir si devaluar la moneda; introducimos la principal diferencia con los modelos de primera generación: su compromiso cambiario es ahora estado dependiente (pueden ejercer una \textbf{cláusula de escape}), evaluando de forma continua la idoneidad de mantenerlo, por medio de un análisis coste beneficio.
+
+\subsubsection{Gobierno: Función objetivo}
+Consideraremos que esta decisión se tomará en función, únicamente, de sus efectos sobre el desempleo (el objetivo interno contrapuesto). Por tanto, este objetivo puede representarse mediante la minimización de una función de pérdidas con la siguiente forma:\footnote{Las variables que la componen la función son sencillas de interpretar: $u_1$ y $u_2$ es el desempleo del periodo (o desviaciones respecto a la tasa natural); $\pi$ la inflación; y, $\mathbb E_2[\pi]$ la inflación esperada.
+
+Nótese que $u_2$ es la tasa de desempleo en el segundo periodo y viene determinada por una curva de Phillips aumentada por las expectativas. Esta relación puede justificarse por la existencia de cierta rigidez salarial que implique que los salario nominales del segundo periodo se determinen en el primer periodo, de forma que aumentos no esperados de la inflación puedan permitir situar la tasa de desempleo por debajo de su nivel natural en el corto plazo por medio de una reducción de los salarios reales y por tanto un aumento del empleo.
+}
+
+\eqblock{
+\begin{aligned}
+    &\text{Objetivo}:&&\min \,\,L=(u_2)^2+\delta C\\[1em]
+    &\text{donde},&&u_2=\underset{\text{\scriptsize (persistencia)}}{\rho\,u_1}-\underset{\text{\scriptsize (rigidez salarial)}}{\alpha(\pi-\mathbb E_2[\pi])}\\[2em]
+    &\text{\scriptsize$\underset{\text{\tiny por condición PPA}}{\text{Atención:}}$}&& \text{\scriptsize$\underset{\text{\tiny si se produce devaluación, la inflación es igual a su cuantía, y viceversa}}{\{\delta=1\iff \pi=d\,\,|\,\,\delta =0\iff \pi=0\}}$}
+\end{aligned}
+}{}
+
+Nótese que: (i) $\delta=\{0,1\}$ es una variable ficticia que recoge la decisión de las autoridades de devaluar o no; (ii) $C$ es el coste de abandonar el tipo de cambio fijo; y, (iii) por la condición de PPA, la tasa de inflación será igual a la cuantía de la devaluación si ésta se produce ($\pi = d$), o nula ($\pi=0$) si las autoridades optan por mantener la paridad.
+
+\subsubsection{Equilibrio: Reacción óptima del Gobierno}
+No es necesario especificar el comportamiento de los agentes para establecer las condiciones de equilibrio (o regiones estables) del modelo. La razón es sencilla: es razonable suponer que los agentes actúen primero tomando sus decisiones en función del nivel de inflación esperado, atribuyendo una $\mathrm P(d)=\{0,1\}$ al compromiso del Gobierno. En este escenario, las autoridades simplemente reaccionaran óptimamente a las decisiones de los agentes, es decir, los niveles de inflación esperada. El equilibrio se alcanza entones iterando hacia atrás:
+
+\eqblock{
+\begin{aligned}
+    &L=(u_t)^2+\delta C\quad\Longrightarrow\quad \boxed{\min_{\pi_t} L=[\rho\,u_{t-1}-\alpha(\pi_t-\mathbb E_{t-1}[\pi_t])]^2+\delta C}\\[2em]
+    &\left\{\begin{aligned}
+        &\text{E}1:\mathrm P(d)=0\,\Longrightarrow \mathbb E_t[\pi]=0\quad\Longrightarrow\quad&&
+        \begin{aligned}
+            &\underset{\text{\scriptsize Devaluación: $[\pi_t=d\iff\delta=1]$}}{L^d=(\rho\,u_{t-1}-\alpha\,\pi_t)^2+C}&&\text{¿}\gtrless\text{?}&& \underset{\text{\scriptsize Mantenimiento: $[\pi_t=0\iff \delta=0]$}}{(\rho\,u_{t-1})^2=L^f}
+        \end{aligned}\\[1em]
+        &\text{E}2:\mathrm P(d)=1\,\Longrightarrow \mathbb E_t[\pi]=d\quad\Longrightarrow\quad&&
+        \begin{aligned}
+            &\underset{\text{\scriptsize Devaluación: $[\delta=1]$}}{L^d=(\rho\,u_{t-1})^2+C}&&\text{¿}\gtrless\text{?}&&\underset{\text{\scriptsize Mantenimiento: $[\pi_t=0\iff \delta=0]$}}{(\rho\,u_{t-1}+\alpha\pi_t)^2=L^f}
+        \end{aligned}
+    \end{aligned}\right.
+\end{aligned}
+}{}
+
+¿Cuál será entonces la reacción óptima de las autoridades? Como vemos, dependerá de las expectativas de los agentes, el coste de la devaluación y, crucialmente, de la sorpresa inflacionaria. Esto es, siempre y cuando los agentes crean firmemente en el compromiso cambiario, habrá incentivos para la devaluación siempre y cuando los costes sean lo suficientemente bajos ($(\rho\,u_{t-1})^2>C$). Por el contrario, si lo agentes no confían en el compromiso cambiario la devaluación deviene la única opción posible: (i) si la autoridad devalúa, acarrea el coste de la devaluación ($C$); pero, (ii) si la autoridad mantiene el objetivo cambiario, se produce una sorpresa desinflacionaria ($\pi_t-\mathbb E_{t-1}[\pi_t]=-d$) que eleva el desempleo/pérdida, por tanto deviene muy costoso mantener la paridad.
+
+En definitiva, vemos como tomar la decisión de abandonar o no el objetivo cambiario depende de si los costes de abandonarlo son inferiores o no a los de mantenerlo:
+\begin{la}
+    \item \textbf{Costes de mantenerlo}. Algunos costes de mantener el tipo de cambio fijo son: (i) si el mantenimiento de la paridad requiere incrementar los tipos de interés, el coste de la deuda pública podría aumentar; (ii) si existe libre movilidad de capitales, mantener un tipo de cambio fijo implica renunciar a la política monetaria para objetivos internos; o, (iii) se renuncia a los efectos positivos de una depreciación sobre la balanza de pagos vía ganancias de competitividad precio; y,
+    \item \textbf{Costes de abandonarlo}. Por otro lado, los costes de abandonarlo incluyen: (i) pérdida de credibilidad anti inflacionista, ya que, generalmente, el tipo de cambio se fija frente a la moneda de un país con baja inflación, de manera que permite importar credibilidad antiinflacionista; o, (ii) posibles costes políticos del abandono del tipo de cambio fijo.
+\end{la}
+
+Además, si desarrollamos y simplificamos las desigualdades, podemos encontrar las regiones estables e inestable del objetivo cambiario:\footnote{
+El desarrollo es simple, partiendo de las desigualdades formuladas, para evitar lios debemos mantener siempre la misma estructura, bien sea una desigualdad positiva a la izquierda o a la derecha. Utilizando la desigualdad positiva hacia la izquierda, el sistema de desigualdades queda como sigue:
+$$\begin{aligned}
+    &(1)\quad \overset{\text{\scriptsize (pérdida mantenimiento)}}{(\rho u_{t-1})^2}>\overset{\text{\scriptsize (pérdida devaluación)}}{(\rho u_{t-1}-\alpha\pi_t)^2+C}&&\Longrightarrow&& \overset{\text{\scriptsize (pérdida mantenimiento)}}{2\rho u_{t-1}+\alpha\pi_{t}}>\overset{\text{\scriptsize (pérdida devaluación)}}{\frac{C}{\alpha\pi_t}}\\[1em]
+    &(2)\quad \overset{\text{\scriptsize (pérdida mantenimiento)}}{(\rho u_{t-1}+\alpha \pi_t)^2}>\overset{\text{\scriptsize (pérdida devaluación)}}{(\rho u_{t-1})^2+C}&&\Longrightarrow&& \overset{\text{\scriptsize (pérdida mantenimiento)}}{2\rho u_{t-1}}>\overset{\text{\scriptsize (pérdida devaluación)}}{\alpha\pi_t+\frac{C}{\alpha\pi_t}}
+\end{aligned}$$
+
+A partir de aquí, definimos $x\equiv 2\rho u_{t-1}$ y $p\equiv \alpha\pi_t$. Podemos ver como la segunda desigualdad domina a la primera, ya que:
+$$\begin{aligned}
+    (1)\quad x+p>\frac{C}{p}\sim x>\frac{C}{p}-p\qquad \Longrightarrow\quad (2)\quad x>\frac{C}{p}+p>\frac{C}{p}-p
+\end{aligned}$$
+Por tanto, si se cumple la segunda siempre se cumple la primera. Por tanto, la región en la que ambas desigualdades se define simplemente como la región en la que la segunda desigualdad se cumple estríctamente. 
+}
+
+\eqblock{
+\begin{aligned}
+    &\text{Devaluación}:&&u_{t-1}>\frac{1}{2\rho}\left(\frac{C}{\alpha\pi_t}+\alpha\pi_t\right)\\[1em]
+    &\text{Mantenimiento}: && u_{t-1}<\frac{1}{2\rho}\left(\frac{C}{\alpha\pi_t}-\alpha\pi_t\right)\\[1em]
+    &\underset{\text{\scriptsize siempre existe si: $\alpha, \pi_t>0$}}{\text{Región inestable}:}&&\boxed{\underset{\text{\scriptsize mantenimiento}}{\frac{1}{2\rho}\left(\frac{C}{\alpha\pi_t}-\alpha\pi_t\right)}<u_{t-1}\leq \underset{\text{\scriptsize devaluación}}{\frac{1}{2\rho}\left(\frac{C}{\alpha\pi_t}+\alpha\pi_t\right)}}
+\end{aligned}
+}{}
+
+Hay dos interpretaciones a este respecto. En primer lugar, tenemos la interpretacion literal que obtenemos del estudio de las desiguldades: existen tres regiones bien diferenciadas que corresponden a dos conductas firmes y coherentes de la autoridad monetaria (devaluación/mantenimiento) y otra región inestable en la que la autoridad monetaria quedará sometida al vigor de cualquier ataque especultivo lo suficientemente grande (región inestable). Sin embargo, la otra interpretación, más sutil, permite apreciar la potencia del modelo. Como vemos, todas las condiciones se han expresado en función de la tasa de desempleo (un fundamento importante de la economía). Esto tiene una razón de ser. 
+
+\paragraph{Exposición: Regiones e interpretación económica}
+Si los fundamentos de la economía están muy deteriorados, una devaluación será imperante (ganaremos en competitividad, aumentará la demanda externa y diminuirá el desempleo). Además, como el umbral se reduce, cuánto mayor es la persistencia del desempleo (fricciones presentes en el mercado de trabajo que difiulten el ajuste), puesto que más tentador resultará usar la devaluación como mecanismo de escape. La primera región estable, por tanto, expresa la imposibilidad de mantener la paridad por la gravedad interna y la intensidad de los incentivos de la autoridad monetaria para recurrir a la devaluación para garantizar el ajuste interno. Esto se puede apreciar perfectamente analizando como afecta la intesidad esperada de la devaluación ($\pi_t$) sobre el umbral de la devaluación:
+\begin{la}
+    \item \textbf{Deflactor de escape}. Por un lado, $\frac{C}{\alpha\pi_t}$ refleja que, cuánto mayor es la devaluación esperada ($\uparrow d$), menor es el coste fijo relativo de validar la devaluación. Es decir, el umbral se reducirá (aumentará) haciendo más fácil (dñificil) el recurso a la cláusula de escape; y,
+    \item \textbf{Perturbación nominal}. Por otro lado, una devaluación de mayor magnitud también implica una perturbación nominal más elevada, de modo que el umbral de devaluación no cae, necesariamente, de forma monótona ($\pm \alpha\pi_t$).\footnote{
+    La condición relevante depende de si $\alpha\pi_t$ es mayor o menor que $\sqrt{C}$. Es decir, para devaluaciones esperadas moderadas (en intensidad) un aumento de$\pi_t$ hace más probable (acorta el umbral) la devaluación, y viceversa. Se puede apreciar pensando: $u_{t-1}>\frac{1}{2\rho}\left(\frac{C}{\alpha\pi_t}+\alpha\pi_t\right)\Longrightarrow u_{D}(\pi_t)=\frac{1}{2\rho}\left(\frac{C}{\alpha\pi_t}+\alpha\pi_t\right)$. Si obtenemos la derivada, vemos como $\frac{\partial u_{D}}{\partial \pi_t}=\frac{1}{2\rho}\left(-\frac{C}{(\alpha\pi_t)^2}+\alpha\right)$. Por tanto, el umbral se acortará ($\frac{\partial u_{D}}{\partial \pi_t}<0$ si y solo si $(\alpha\pi_t)^2<C$, y se ensenchará ($\frac{\partial u_{D}}{\partial \pi_t}>0$ si y solo si $(\alpha\pi_t)^2>C$.
+    }.
+\end{la}
+
+Lo anterior es también aplicable, a la inversa, cuando nos encontramos en la otra región estable: el mantenimiento. No obstante, llevada al extremo es más fácil apreciar la estabilidad de dicha situación. Si los fundamentos económicos son muy robusto (cercano al pleno empleo), el compromiso será plenamente creíble y no pueden generarse incentivos a desviarse. La razón es sencilla, la parte derecha de la desigualdad siempre será mayor que cero, por lo que ante una situación de pleno empleo, el equilibrio es siempre estable. 
+
+La situación interesante se da en la región inestable. Lo primero que debemos notar es que esta región expresa un deterioro \textbf{moderado} de los fundamentos económicos: no estamos tan mal. Ahora bien, un ataque especulativo podría forzar la devaluación de la moneda. Esto es así porque nos econtramos en la región de equilibrios múltiples: podríamos acabar en cualquiera de las dos regiones siguiendo únicamente el curso de la economía. Por tanto, ¿de qué depende que sucedan o no dichos ataques? Depende crucialmente del parámetro $\pi_t$. ¿Cómo podemos ver esta relación de manera más intuitiva? La manera más sencilla es analizar la amplitud de dicho intervalo:
+
+\eqblock{
+\begin{aligned}
+    &\underset{\text{\scriptsize (límite superior menos límite inferior)}}{\text{Operando}:}&&\frac{1}{2\rho}\left[\left(\frac{C}{\alpha\pi_t}+\alpha\pi_t\right)-\left(\frac{C}{\alpha\pi_t}-\alpha\pi_t\right)\right]=\frac{\alpha\pi_t}{\rho}\\[1em]
+    &\Longrightarrow\quad \frac{\partial }{\partial \pi_t}\left(\frac{\partial \pi_t}{\partial\rho}\right)=\frac{\alpha}{\rho}>0
+\end{aligned}
+}{}
+
+Como vemos, la intensidad esperada de la devaluación actúa como amplificador de la región de fragilidad. Este es el insight importante: aunque una devaluación esperada muy alta no siempre reduce el umbral de devaluación (como hemos visto en el razonamiento de la primera región estable), sí aumenta de forma inequívoca el rango de fundamentos en el que la economía queda expuesta a equilibrios múltiples o ataques autocumplidos. Este es precisamente el mecanismo de los modelos de segunda generación o \textbf{escape clause}: los fundamentos importan, pero las expectativas pueden desplazar a la economía hacia una crisis incluso sin que los fundamentos sean tan malos. Además, es interesante la información que nos proporciona la tasa de crecimiento de esta fragilidad: (i) $\alpha$ mide la eficacia de la sorpresa inflacionaria/devaluatoria sobre el objetivo interno, cuánto mayor es $\alpha$, más poderosa es la devaluación como instrumento de estabilización, pero también mayor es el daño de no validar una devaluación esperada (amplía la zona de equilibrios múltiples); y, por otro lado, (ii) $\rho$ mide la severidad/persistencia del desempleo interno, cuánto mayor es $\rho$, más sensible será la autoridad monetaria al desempleo pasado y más se reducirán los umbrales de acción, por ello comprime la zona de fragilidad en términos de desempleo heredado, puesto que será una cuestión ya internalizada por la autoridad monetaria.
+
+\subsection{Implicaciones de Política Económica}
+Recapitulando. Los modelos de segunda generación permiten explicar como las expectativas de los agentes pueden conducir a una crisis cambiaria incluso cuando los fundamentos económicos no son tan negativos y prevalece la disciplina macroeconómica.
+
+Esto sucede porque los fundamentos económicos, no siendo irrelevantes, son suficientemente malos como para que la autoridad pueda tener incentivos a devaluar si los mercados coordinan expectativas contra la paridad, pero no tan malos como para que la devaluación sea inevitable. Ese es el núcleo del modelo: entre la zona de credibilidad plena y la zona de colapso inevitable existe una zona intermedia en la que las expectativas son capaces de seleccionar el equilibrio. La intensidad esperada de la devaluación, $\pi_t$, es crucial porque amplía inequívocamente esa zona de fragilidad: aunque $\pi_t$ tiene un efecto no monótono sobre el umbral de devaluación, sí tiene un efecto monótono sobre la amplitud del intervalo inestable. Cuanto mayor es la devaluación esperada, mayor es el rango de fundamentos para el cual la economía queda expuesta a ataques autocumplidos. 
+
+Las razones que originan estas expectativas son muy diversas. Los ataques especulativos pueden estimular su aparición, pero también otras variables pueden contribuir a esta fragilidad. Por ejemplo, el uso frecuente y oportunista de la devaluación para restablecer la solución interna o incluso el volumen de las reservas. También puede ser determinante la presión política que se ejerza por parte de otros gobiernos o los compromisos que se adquieran en virtud de acuerdos internacionales.
+
+
+\clearpage
+\section{Tercera Generación: El temor de un hombre sabio}
+En definitiva, los modelos de segunda generación pueden verse como una manifestación cambiaria de los problemas de inconsistencia dinámica: para que una serie de objetivos e instrumentos de Política Económica pueda catalogarse como dinámicamente consistente, su adecuada valoración debe incluir la posible reacción de los agentes en su diseño. 
+
+No obstante, debido a la naturaleza misma de esta aproximación metodológica, ante o después algún acontecimiento se presentará imposible de explicar a partir de la paleta de modelos disponibles. Es precisamente lo que sucedió con la crisis acontecida a finales de los años 90's, iniciada en las economías asiáticas (en particuar, Tailando y Corea) y que se acabaría trasladando a Brasil, Rusia y en último término a Argentina. ¿Qué sucedió en este caso? Si bien es cierto que había serias inconsistencias en los fundamentos y sendas de déficit en algunas de estas economías, algunos países, y en particular aquellos donde surgió el \textbf{brote}, presentaban unas cuentas públicas saneadas, políticas monetarias prudentes, abundantes niveles de reservas ni, sobretodo, problemas de desempeño macroeconómico (estancamiento del PIB, desempleo o inflación).
+
+La verdad es que, aún hoy en día, no hay consenso al respecto. Muchos autores argumentan que esta aparente solidez escondía ciertas debilidades del sector financiero acumuladas tras un proceso de liberalización brusca y descontrolada de los movimientos internacionales de capitales no precedido del establecimiento de sistemas de supervisión y regulación financiera adecuados.\footnote{Esto dio lugar a fuertes entradas de capital traducidas en un endeudamiento excesivo, generalmente denominado en moneda extranjera y a corto plazo. Cuando estalló la crisis en Japón, se produjo un cambio radical de las expectativas sobre estas economías que se tradujo en ataques especulativos contra el bath tailandés y posterior contagio a toda la región, que acabó desembocando en una grave crisis financiera. Japón era la principal fuente de Inversión Directa y préstamos bancarios internacionales de los países emergentes asiáticos, pero la crisis bancaria que se produjo en el país durante los años 1995-96 condujo a la repatriación de buena parte de esta Inversión y a la reducción de los préstamos por parte de los bancos japoneses.
+} Otros, por el contrario, argumentan que este proceso de liberalización de los movimientos de capital fue el verdadero detonante de la crisis experimentada y lo justifican por la inestabilidad y comportampiento irracional que caracteriza los mercados financieros.\footnote{Personalmente me decanto más por la segunda opción por una sencilla razón. Existe un ejemplo claro de como la teoría que sustenta la primera aproximación puede encontrar su talón de Aquiles en la segunda linea argumentativa: el caso de Long-Term Capital Management (LTCM). Este fondo de inversión constituye el benchmark de lo que podría considerarse el \textbf{inversor racional}, fundado por dos prestigiosos economistas que habían recientemente recibido el Nobel: . LTCM, aunque muy apalancado, poseía una cartera altamente diversificada, centrada en bonos y activos de bajo riesgo. No obstante, su trayectoria empresarial no tuvo muy largo recorrido: acabó declarando la bancarrota en 199X tras sufrir unos meses de pérdidas consecutivos díficilmente (muy difilmente) justificable. Recuerda este caso a una famosa frase (atribuida a KEYNES): \textit{Los mercados pueden mantenerse irracionales mucho más tiempo del que tú puedes mantenerte solvente}.
+}
+
+\textbf{¿Qué queremos decir?} Aqui nos centraremos en presentar brevemente el primer enfoque, que dió origen a lo que se conoce como \textbf{modelos de tercera generación}. Estos, enfatizan las interrelaciones que existen entre el mercado financiero y el mercado cambiario, por lo que, en situaciones de crisis, estas deben de abordarse conjuntamente en modelos de \textbf{crisis gemelas}.\footnote{Los vínculos de causalidad entre ambas crisis no son unidireccionales: 
+\begin{lnum}
+    \item \textbf{Crisis financiera} $\to$ \textbf{Crisis cambiaria}. La existencia de problemas en el sector financiero podría dar lugar al colapso de la moneda y por tanto a una crisis cambiaría Por ejemplo, si el Banco Central, en cuanto prestamista de última instancia, se vea obligado a emitir dinero para financiar el rescate de las instituciones financieras domésticas con problemas;
+    \item \textbf{Crisis cambiarias} $\to$ \textbf{Crisis financieras}. Por otro lado, una crisis cambiaría podría ser la causa de una crisis financiera cuando una devaluación o depreciación suponga un crecimiento explosivo de la deuda denominada en divisas. 
+    \item \textbf{Fundamentos} $\to$ \textbf{Crisis cambiarias $+$ Crisis financieras}. Las crisis monetaria y financiera podrían tener origen en causas comunes, como un proceso de liberalización financiera desordenado combinado con la existencia de un sistema de garantía de depósitos implícito. La posibilidad para las entidades financieras de financiarse en el exterior podría provocar un aumento del crédito bancario que genere el colapso de los sistemas cambiario y bancario si por cualquier razón se produce una reversión de los flujos de capital.
+\end{lnum}
+} Vamos a ver, por tanto, la forma en la que podemos abordar este problema a través de un marco analítico completo. 
+
+Sin embargo, hay que tener en cuenta que esta literatura no cuenta con un único modelo representativo. Por el contrario, se trata de un conjunto aportaciones que ponen el énfasis en aspectos diferentes pero relacionados entre sí, difiriendo principalmente en las causas que explicarían la situación. Distinguimos tres: 
+\begin{la}
+    \item \textbf{Riesgo moral} $\to$ \textbf{Modelos de crisis gemelas fundamentales o predecibles} (DOOLEY, 1997). Estos modelos ponen el énfasis en el papel del Banco Central de prestamista de última instancia. La existencia de esta garantía conduce a las instituciones financieras a endeudarse a bajo coste y llevar a cabo inversiones sin evaluar debidamente los riesgos, apareciendo problemas de apalancamiento y riesgo excesiv. Esta frágil situación puede acabar abocando a la crisis cuando los agentes perciban que las reservas del Banco Central no puedan cubrir los pasivos. En esta situación, es razonable suponer que se produzca una fuga masiva de capitales, colapsando las reservas y provocando la quiebra del sistema bancario. La ausencia de reservas impedirá defender el ojetivo cambiario. En definitiva, se trata de crisis impulsadas por el agotamiento de las reservas, nexo entre el balance exterior (cuenta corriente) y la estabilidad cambiaria (objetivo): si los créditos crecen a mayor ritmo que las reservas, estamos ante una situación de crisis predecible;
+    \item \textbf{Asimetrías en los plazos de vencimiento} $\to$ \textbf{Modelos de crisis gemelas autocumplidas o impredecibles} (CHANG y VELASCO, 1998). Estos modelos se separan del papel prestamista de última instancia del Banco Central y ponen el énfasis en cómo y por qué la asimetría entre el vencimiento de activos y pasivos de las propias entidades financieras intermedias puede generar la crisis. La asimetría en los plazos de vencimiento constituye un fenómeno de riesgo. Por tanto, es razonable suponer que este aumento del riesgo pueda conducir a pánicos bancarios: si los agentes dejan de confiar en el sistema, se producirán retiradas masivas de fondos y, por tanto, crisis financieras y cambiaría. Se trata de modelos de equilibrios múltiples en los que el paso de una situación de equilibrio estable a otra de crisis se produce por retiradas aleatorias provocadas por manchas solares que hagan dudar de la solvencia de los bancos y comportamientos de tipo rebaño, aunque los fundamentos económicos deben ser frágiles; \textcolor{red}{\textbf{OJO!} -- Aquí no se explica como un pánico bancario (crisis financiera) conduce a una crisis cambiaria -> Hay que buscarlo}
+    \item \textbf{Depreciación TC real} $\to$ \textbf{Modelos de balance} (KRUGMAN, 1999). A diferencia de los anteriores, en este modelo ni Banco Central ni instituciones intermedias de crédito tienen un papel central. por el contrario, la crisis se explica a través de los problemas de balance en las propias empresas. El razonamiento es sencillo: una reversión de los flujos de capital extranjero por cualquier motivo que genere una pérdida de confianza por parte de los agentes provocará una depreciación del tipo de cambio real y por tanto un aumento del valor de las deudas denominadas en moneda extranjera y una reducción del valor de los activos nacionales, con lo que podría desequilibrar el balance de las empresas. ¿Cómo impacta esto en la economía real? Estos problemas de balance dificultan el acceso al crédito de empresas y particulares, lo que lastra la inversión (y el consumo) y generando disminuciones adicionales de las entradas de capital. De esta forma, las complicaciones financieras se transmiten a la economía real y este círculo de retroalimentación negativa puede conducir, sucesivamente, hasta la crisis. Por tanto, se trata de modelos de equilibrios múltiples en los que una pérdida de confianza puede generar un colapso financiero y por tanto fenómenos de expectativas auto-cumplidas. 
+\end{la}
+
+Por razones de tiempo, nos centraremos en desarrollar el modelo de balance porpuesto por KRUGMAN (1999), por ser el más reciente.
+
+\subsection{Modelo de Balance: KRUGMAN (1999)}
+Para ello, partimos de una hipótesis básice: la capacidad de endeudamiento de los empresarios depende de su propia riqueza, que es función a su vez del nivel de endeudamiento de la economía, dado que el volumen de entradas de capital tiene efectos sobre la relación de intercambio y por tanto sobre la valoración de la deuda en moneda extranjera. 
+
+De esta forma, una disminución de las entradas de capital extranjero puede tener efectos negativos sobre el balance de las empresas, reduciendo su capacidad de endeudamiento y en consecuencia disminuyendo a su vez las entradas de capitales. 
+
+\subsubsection{Supuestos: Distribución y consumo}
+Partimos de una economía pequeña y abierta que produce un único bien homogéneo en cada periodo a partir de dos factores de producción: capital y trabajo. Supondremos que el capital dura únicamente un periodo, de forma que el stock de capital en el periodo $t$ es igual a la inversión acometida en el periodo $t-1$.
+
+Los agentes se dividen entre: (i) trabajadores, sin acceso al mercado de capitales; (ii) empresarios, que ahorran y/o invierten toda su renta.\footnote{Por simplicidad, supondremos que la función de producción es COBB-DOUGLAS ($F(K,L)=K^\alpha L^{1-\alpha}$), de manera que la renta de los trabajadores sea igual a $(1-\alpha)Y_t$.
+} Por otro lado, los bienes domésticos y extranjeros no son sustitutivos perfectos, y supondremos una elasticidad de sustitución entre ambos unitaria, $\sigma=1$. En consecuencia, se dedicará:
+\begin{la}
+    \item \textbf{Consumo nacional}. Una fracción constante del consumo y la inversión a los bienes importados, $\mu$; y,
+    \item \textbf{Consumo extranjero}. Una fracción constante del consumo y la inversión a los bienes domésticos, ($1-\mu$).
+\end{la} 
+
+Dado que se trata de un país pequeño, no tendrá influencia sobre la fijación del precio mundial (su cantidad de exportaciones, en todos los mercados, no es lo suficientemente grande como para contribuir a su formación). De esta manera, la relación real de intercambio viene dada de forma exógena.
+
+\textbf{NOTA:} Se menciona a menudo el término \textbf{real}. Si se considera confuso, puede omitirse sin problemas. Como vemos, el modelo no especifica un tipo de cambio nominal y un tipo de cambio real. Esto es, no existe inflación y todo se expresa en términos reales.
+
+\subsubsection{Equilibrio}
+Con esta especificación, podemos representar el equilibrio como la igualación entre la oferta del bien doméstico y su oferta, esto es: 
+
+\eqblock{
+\begin{aligned}
+    &\text{Equilibrio}:&& y_t=(1-\mu)c_t+(1-\mu)i_t^o+p_tX_t&& \text{donde,}\quad p_t\equiv\underset{\text{\scriptsize relación real de intercambio}}{\text{\scriptsize Tipo de cambio real}}\\[1em]
+    &\underset{\text{\scriptsize reescribiendo}}{\Longrightarrow}&&\boxed{y_t=(1-\mu)(1-\alpha)y_t+(1-\mu)i_t^o+p_tX_t}\\[2em]
+    &\underset{\text{\scriptsize despejando}}{\Longrightarrow}&& \boxed{p_t=\frac{y_t-(1-\mu)(1-\alpha)y_t-(1-\mu)i_t^o}{X_t}}&&:\quad  \downarrow i_t^o\,\,\Longrightarrow\,\,\underset{\text{\scriptsize (depreciación)}}{p_t\uparrow}
+\end{aligned}
+}{}
+
+Como vemos, expresar el equilibrio en términos de igualación entre la demanda y oferta doméstica nos permite despejar el tipo de cambio real (relación real de intercambio); y esto ver cómo, si se produce una revisión de las expectativas a la baja por cualquier motivo (una disminución de la inversión), el tipo de cambio real también se verá menoscabado (disminuirá la relación real de intercambio). 
+
+\paragraph{Riqueza privada: Problemas de balance}
+Ahora, debemos presentar la última pieza del modelo: ¿de dónde surgen los problemas de balance? Para ello, definimos la riqueza de los empresarios como:\footnote{Como el capital solamente dura un periodo, el valor del capital es la porción de la renta que se destina al capital en el periodo en curso.
+}
+
+\eqblock{
+\begin{aligned}
+    &\text{Riqueza productores}:&&\boxed{w_t=\alpha y_t-b_t-p_t\,b^f_t}\\[2em]
+    &\text{Donde,}&&
+    \left\{\begin{aligned}
+        &\alpha y_t\equiv\hspace{2em}\text{Capital (Fondos propios)}\\[0.5em]
+        &\left.\begin{aligned}
+            &b^d_t\equiv&&\text{Deuda neta (moneda)}\\[0.5em]
+            &p_t\,b_t^f\equiv&&\text{Deuda neta (divisa)}
+        \end{aligned}\right\}\quad \left(\substack{\text{\scriptsize expresadas en}\\\text{\scriptsize moneda nacional}}\right)
+    \end{aligned}\right.
+\end{aligned}
+}{}
+
+Obsérvese que, de acuerdo con esta expresión, la depreciación de la moneda nacional provocará una disminución de la riqueza nacional. ¿Se enfrenta a algún límite la capacidad de endeudamiento? Es razonable suponer que sí. De hecho, podemos considerar que los empresarios no podrán endeudarse por un valor superior a $(1+\theta)$ veces su riqueza, $w_t$. Por tanto, $b_t^d+p_t\,b_t^f\leq(1+\theta) y_t$. Utilizando esta expresión, podemos definir el nivel de inversión financiable con deuda como aquel que tendría lugar si se \textbf{saturase la restricción de apalancamiento}: 
+
+\eqblock{
+\begin{aligned}
+    &\text{Inversión financiable}:&&i_t^o=(1+\theta)w_t\quad\Longrightarrow\quad i_t^o=(1+\theta)(\alpha y_t-b_t^d-p_t\,b_t^f)\\[1em]
+    &\text{Si existe deuda externa}: &&\boxed{\frac{\partial i_t^o}{\partial p_t}=-(1+\theta)b_t^f<0}
+\end{aligned}
+}{}
+
+Esta ecuación es precisamente la que describe el efecto balance: una depreciación real ($\uparrow p_t$) aumenta el valor de la deuda extranjera y reduce la riqueza neta, retringiendo la capacidad de apalancarse/endeudarse y afectando negativamente a la inversión. Haciendo un último paso podemos cuantificar el impacto de la depreciación sobre la inversión. Para ello debemos obtener el \textbf{multiplicador financiero}:
+
+\eqblock{
+\begin{aligned}
+    &\begin{aligned}
+        &(1)\,\text{Equilibrio}:&&p_t=\frac{y_t-(1-\mu)(1-\alpha)y_t-(1-\mu)i_t^o}{X_t}\quad\underset{\text{\scriptsize c/p: $\bar y_t$ y $\bar X_t$}}{\Longrightarrow}&&\boxed{\frac{\partial p_t}{\partial i_t^o}=-\frac{1-\mu}{\bar X_t}<0}\\[1em]
+        &(2)\,\text{Riqueza}:&&w_t=\alpha y_t-b_t^d-p_t\,b_t^f\quad \underset{\text{\scriptsize si $b_t^f>0$}}{\Longrightarrow}&&\boxed{\frac{\partial w_t}{\partial p_t}=-b_t^f<0}\\[1em]
+        &(3)\,\text{Inversión financiable}:&&i_t^f=(1+\theta)w_t\quad\underset{\text{\scriptsize si $\theta>0$}}{\Longrightarrow}&&\boxed{\frac{\partial i_t^f}{\partial w_t}=1+\theta}
+    \end{aligned}\\[2em]
+    &(1)+(2)+(3)\quad \Longrightarrow\hspace{4em}\frac{\partial i_t^f}{\partial i_t^o}=\frac{\partial i_t^f}{\partial w_t}\frac{\partial w_t}{\partial p_t}\frac{\partial p_t}{\partial i_t^o}=\boxed{\frac{(1+\theta)(1-\mu)b_t^f}{\bar X_t}\equiv\lambda>0}\\[1em]
+    &\text{Retroalimentación}: \quad \downarrow i_t^o \Rightarrow \uparrow p_t \Rightarrow \downarrow w_t \Rightarrow \downarrow i_t^r \Rightarrow \downarrow i_t^o\quad \underset{\text{\scriptsize ¿cómo?}}{\Longrightarrow}\quad \boxed{\Delta i_t^f=\lambda\Delta i_t^o}
+\end{aligned}
+}{}
+
+Esta ecuación, definida como el multiplicador financiero, nos permite conocer qué y cómo acabaremos o no en una situación de crisis por razones del deterioro de las expectativas y su impacto sobre el balance de las empresas:
+\begin{la}
+    \item \textbf{Multiplicador amortigua: $\lambda<1$}. Si el multiplicador es inferior a la unidad, el deterioro de las expectativas producirá una salida de capitales que empeorará las condiciones de financiación por el deterioro del balance. Sin embargo, el círculo de retroalimentación se irá amortiguando con el tiempo y no cabe esperar una crisis;
+    \item \textbf{Multiplicador acelerador: $\lambda>1$} (Equilibrios múltiples). Por el contrario, si el multiplicador es superior a la unidad, el deterioro de las expectativas producirá una salida de capitales que empeorará las condiciones de financiación por el deterioro del balance en mayor medida que la intesidad de salida. ¿Qué sucede entonces? El proceso continua agravandose, potenciandose y adquiere una senda explosiva que necesariamente conduce a la crisis financiera y cambiaria.
+\end{la}
+
+¿Cuáles son los factores que influyen en este multiplicador? Cómo cabría esperar: (i) el grado de apalancamiento ($\theta$); (ii) un desequilibrio en el sector exterior ($b_t^f/X_t$, proporción desmesurada de la cuenta corriente); y, (iii) baja propensión marginal a importar ($\mu$), para destinar los recursos a otros usos.\footnote{Todas las economías afectadas por la crisis asiática presentaban un alto nivel de apalancamiento durante las décadas anteriores a la crisis. Además, en los años 90, con el proceso de apertura de la cuen ta financiera empezaron también a endeudarse en moneda extranjera.
+} Esta si tuación puede ilustrarse por medio de un gráfico:
+
+\imagenfit{3era_Gen.png}{}{Apuntes ICEX-CECO. Tema 3.B.17}
+
+Como vemos, la curva que representa la relación entre nivel de inversión esperado y real presenta tres tramos: (i) para niveles reducidos de inversión esperada, las empresas quebrarán y no podrán acometer decisiones de inversión; (ii) para niveles elevados de inversión esperada, la restricción crediticia no operará y el nivel de inversión vendrá determinado por su rendimiento; y, (iii) entre ambos, la restricción crediticia es operante y la inversión efectiva se ve limitada, siendo la pendiente mayor que la bisectriz.
+
+Estas tres regiones generan tres puntos de equilibrio del modelo, en los que la inversión real se iguala a la esperada. Dos puntos extremos ($L$ y $H$) que son equilibrios estables, mientras que el punto intermedio ($U$) inestable:
+\begin{la}
+    \item \textbf{Equilibrio estable superior, $H$}. En el equilibrio con nivel elevado de inversión se invierte hasta el punto en el que se igualen el retorno de la inversión doméstica y extranjera;
+    \item \textbf{Equilibrio estable inferior, $L$}. En el equilibro de bajo nivel los prestamistas no ofrecen financiación porque creen que los empresarios no disponen de colateral. Esto provoca una depreciación del tipo de cambio real que a su vez genera la quiebra de los empresarios; y,
+    \item \textbf{Equilibrio inestable, $U$}. En el punto intermedio, si la inversión esperada por cualquier motivo se desplazase ligeramente hacia la derecha o hacia la izquierda, la inversión real se modificaría hasta alcanzar el punto $H$ o $L$ respectivamente. 
+\end{la}
+
+Nótese que los puntos de equilibrio estables son únicamente locales. Desde el equilibrio superior, si la inversión esperada se desplazase hasta un punto a inferior, la dinámica del modelo conduciría a un nuevo equilibrio en $L$, y viceversa. De esta forma, si cualquier motivo conduce al pesimismo a los prestamistas podría producirse el colapso de la economía. La razón no es que la inversión anterior fuese poco sólida, sino la fragilidad financiera. 
+
+\subsection{Implicaciones de Política Económica}
+En definitiva, hemos visto como las crisis enmarcadas en estos modelos se caracterizan por ser mucho menos predecibles que las anteriores. Además, como se puede intuir, los efectos derivados de crisis gemelas son de mayor magnitud que los de crisis segmentadas/separadas. Por tanto, ¿qué podemos hacer para evitar esta secuencia destructiva?
+
+\subsubsection{Anticipación: Prudencia macroeconómica}
+Lo primero y, evidentemente, más importante, sería identificar el riesgo del sistema: ¿dónde se está generando? Hemos visto que el multiplicador financiero tiene en cuenta muchas variables, por tanto puede ser un buen lugar por donde empezar. Para preserva, en la medida de lo posible, la estabilidad del sistema, podemos encontrar óptimos que minimicen el valor de este multiplicador. Por ejemplo, podemos empezar reduciendo el tamaño relativo de la cuenta corriente, disminuyendo el tipo de interés o aumentando la demanda externa (abriendo otros mercados). También podríamos complementarlo mediante incentivos a la importación, buscando usos alternativos del excedente por cuenta corriente. Por último, mejorar los canales de supervisión y control bancaria, de manera que el grado de apalancamiento se mantenga siempre en niveles \textit{medianamente} aceptables. 
+
+\subsubsection{Reacción: ¿qué hacer?}
+Ahora bien, imaginemos que nos damos cuenta de esta situación de fragilidad anticipando un colapso inminente. ¿Cómo deberíamos reaccionar ante un empeoramiento de las expectativas de inversión que produzca una leve (pero peligrosa) salida de capitales?
+
+La solución tradicionalmente propuesta por el FMI consistía en defender el tipo de cambio a través de un aumento de los tipos de interés, evitando también el incremento del valor de activos denominados en divisa como consecuencia de la depreciación. Sin embargo, tal y como expone KRUGMAN (1999), el aumento de los tipos de interés cerrará un canal de la propagación de la crisis pero abrirá uno nuevo vía disminución de la inversión, y por tanto de la producción y de la riqueza de los capitalistas. Por esta razón, otros autores como STIGLITZ (2000) también critican la estrategia del FMI. KRUGMAN propone en su lugar otras medidas como poner a disposición de los países afectados \textbf{grandes líneas de crédito de emergencia} o bien la imposición de \textbf{restricciones temporales a la salida de capitales}. En definitiva: si te ves en estas... lo siento compañero. 
+
+
+
+
+
+
+\clearpage
+\section{Contagio: }
+
+Desde una perspectiva empírica, los modelos de tercera generación son capaces de explicar (parcialmente) algunas de las últimas crisis financieras en los países emergentes, caracterizadas por grandes entradas de capital en el periodo inmediatamente anterior, complejas interacciones entre agentes, impredictibilidad y una importante ralentización del crecimiento económico en el periodo posterior. No obstante, como todo, presenta grandes limitaciones para explicar las \textbf{crisis financieras} y las \textbf{crisis cambiarias}. Por ejemplo, aunque la crisis financiera (2007) podría presentar algunos  rasgos que caracterizan este tipo de modelos (elevado endeudamiento, riesgo moral, deterioro de balance, salidas de capitales, etc.), las relaciones observadas, así como sus efectos, son mucho más complejas e imposibles de explicar a través de este marco.
+
+No obstante, la literatur reciente se ha centrado en el estudio/análisis de un fenómeno cada vez más recurrente, posiblemente más sencillo de modelar y con fuertes repercusiones desde un punto de vista internacional: muchos de los episodios de crisis monetarias y financieras recientes se han transmitido rápidamente entre países. ¿Por qué? Para responder a este pregunta, la literatura académica se ha centrado en el estudio del fenómeno de contagio.\footnote{EICHENGREEN, et. al (1996) definen el contagio como la situación en la que la crisis de un país incrementa la probabilidad de ocurrencia de crisis en otros países. De acuerdo con esta definición, hablaremos de contagio cuando la crisis de un país ponga en marcha una serie de mecanismos de transmisión que hagan que aumente por sí misma la probabilidad de crisis en otro país. Esto significa que no basta con la simultaneidad de las crisis, que podría venir dada por pura coincidencia o por la existencia de una causa común, sino que es necesario que exista un vínculo de causalidad entre ellas. Un ejemplo de causa común sería un cambio en la política monetaria de EEUU o en los precios internacionales de las materias primas que afecte a varios países de forma simultánea.
+
+Esta delimitación no es generalizada, ya que algunos autores como MASSON (1999) incluyen también la aparición de crisis simultáneas en varios países por una causa común en el concepto de contagio.
+}
+
+\textbf{¿Qué queremos decir?} ¿Cómo se transmite esta adversidad y cómo podemos reducir nuestra exposición? REINHART y KAMINSKY (2000) distinguen dos tipos de contagio: (i) basado en fundamentos, cuando el país en crisis tiene vínculos comerciales o financieros con otros; y, (ii) puro, cuando no existen interconexiones entre los países sino que el contagio se produce por la aparición de efectos de tipo rebaño entre los inversores ante el estallido de la crisis en uno o varios países. Veamos qué sabemos de cada uno de ellos. 
+
+\subsection{Fundamentos: ¿Qué lazos unen nuestras economías?}
+Al hablar de contagio basado en fundamentos, podemos y debemos concretar el tipo de lazo que nos une lo suficiente con otra u otras economías como para que un shock adverso en alguna de estas acabe contagiandose vía ese lazo al nuestro. 
+
+\subsubsection{Lazos comerciales: Competitividad}
+El primer lazo/relación que nos une con otros países es el comercial. La manera en la que un shock adverso en una economía distinta puede contagiarse a la nuestra presenta causas y efectos diferentes en función del origen del que traiga causa. No obstante, el canal de transmisión será (grosso modo) siempre el mismo: la competitividad. (Por ello, el margen entre \textbf{política forzosa} y \textbf{política oportunista/deliberada} no está nada claro en este tipo de situaciones: políticas de empobrecimiento del vecino).
+
+Imaginemos que una economía se ve forzada a devaluar su moneda, independientemente de la razón. ¿Cómo afectaría esto a nuestra economía? 
+
+\paragraph{Lazos bilateral: Relación de intercambio}
+Si este país mantiene una relación comercial muy importante con nosotros, la devaluación de su moneda afectará negativamente a nuestro sector exportador por el dterioraramiento de su relación real de intercambio. Es decir, el encarecimiento relativo de las importaciones a ese país disminuirá su demanda (y, en función de laduración, podría aumentar la intensidad de exportación hacia nosotros), por lo que podría forzar a su vez la devaluación de nuestra moneda. 
+
+Una situación similar se produjo durante la crisis del SME. Los ataques especulativos a Reino Unido y la consiguiente devaluación de la libra esterlina precipitaron la devaluación de la libra irlandesa. De la misma forma, los ataques a la peseta española en 1992 y su posterior devaluación afectaron a Portugal por los estrechos lazos comerciales, provocando la devaluación del escudo. Poco después, la devaluación del peso argentino en 2002 seguida de una fuerte contracción económica, tuvo repercusiones económicas en el resto de países del bloque Mercosur (Uruguay, Brasil y Paraguay) ese mismo año. 
+
+\paragraph{Lazos indirectos: Competencia}
+Pero también puede contagiarse por otras vías. Imaginemos que nuestro sector exportados nacional compite con el sector exportador de ese país en un país tercero. La devaluación de su moneda podría tener efectos perjudiciales sobre nuestro comercio vía pérdida de competitividad. Lo que, en último término, podría forzarnos a acometer una devaluación. 
+
+Sucesos similares se produjeron durante la crisis de la deuda latinoamericana de los años 80, compitiendo estos países por el mercado estadounidense. También durante la crisis de 1997 por la competencia de Japón, Hong Kong o Singapur por el mismo mercado. 
+
+\subsubsection{Lazos financieros: }
+Además de los lazos comerciales, los lazos financieros pueden ser causa de fenómenos de contagio. De hecho, en la Unión Europea parece claro que el elevado grado de integración financiera ha amplificado enormemente estos efectos de contagio entre Estados miembro.
+
+Aunque también presente, los efectos contagio generados por lazos financieros de carácter bilateral son poco interesantes. Un ejemplo de contagio por vínculos bilaterales se produjo en la crisis argentina de 2002. Los argentinos retiraron precipitadamente sus depósitos en dólares mantenidos en Uruguay. Ante esta retirada, los bancos se vieron forzados a retirar reservas mantenidas en el Banco Central, disminuyendo a la mitad el valor de las reservas internacionales en su posesión. Además, tuvo un impacto muy importante en la economía real.\footnote{Para más información: \href{https://www.lanacion.com.ar/politica/uruguay-fue-el-pais-mas-afectado-por-la-crisis-argentina-nid402468/}{\textit{Uruguay fue el país más afectado por la crisis argentina}. La Nación (2002)}}
+
+\paragraph{Lazos indirectos: Efecto prestamista común}
+Sin duda, el efecto contagio por lazos financieros más presente y que más problemas genera proviene de los vínculos financieros indirectos por inversores comunes. Este se produce cuando existen inversores que, como diversifican internacionalmente sus carteras, cuando se encuentren expuestos a países en crisis, podrían cortar la financiación o reevaluar el riesgo del resto de sus activos. Esto, en situación extrema, podría provocar la huida de países que se perciban con características similares con el fin de garantizar la calidad de sus carteras de activos, pudiendo generar una crisis en esos países.
+
+Este contagio se conoce coloquialmente como \textbf{efecto prestamista común}. VAN RIJCKEGHEM y WEDER (1999) demuestran que fue relevante en la transmisión de las crisis mexicana (en la que el prestamista común eran los bancos de EEUU), tailandesa (Japón) y rusa (Alemania). No obstante, otros autores, como SCHINASI y SMITH (2001), consideran este efecto como una decisión óptima de reajuste de cartera por parte de los agentes en respuesta a la crisis financiera en un país. Muestran cómo un shock adverso en la distribución del rendimiento de un activo podría conducir a la reducción óptima de la exposición en activos en otros países si la regla de gestión de la cartera así lo determina.
+
+\subsection{Contagio puro}  
+Esto no es un caso anómalo. De hecho, algunos autores consideran que la propagación de shocks a través de cualquiera de los fundamentos que lo canalice es el resultado de una respuesta óptima ante un shock externo y, como tal, no debería incluirse en el concepto de contagio sino solamente el denominado \textbf{contagio puro}. ¿Qué es el contagio puro?
+
+En primer lugar, fijémonos que el contagio por fundamentos no permite explicar la transmisión de crisis entre países con vínculos económicos poco claros ni la magnitud de algunos fenómenos de contagio. Es decir, resulta razonable suponer que la intesidad del vínculo tiene que ser muy fuerte para que se produzca tal fenómono. Sin embargo, muchas veces no es así. 
+
+El \textbf{contagio puro} pretende justificar como cambios en las expectativas no vinculados a cambios en los fundamentos, independientemente del origen e intensidad del lazo, puede generar comportamientos de tipo rebaño entre agentes a escala global, generando inestabilidad, múltiples equilibrios y relaciones ad hoc y espóradicas entre Estados. Como vemos, el fenómeno es muy abstracto. Por ello, podemos analizar la diversidad de justificaciones teóricas mediante la distinción entre contagio generado por la \textbf{existencia de imperfecciones informativas} y contagio por \textbf{reacciones en cascada derivadas de conexiones financieras} entre países:
+
+\subsubsection{Imperfecciones informativas: }
+Las imperfecciones infonnativas dificultan la valoración de los fundamentos económicos, por lo que ante el estallido de la crisis en un país los agentes del mercado podrían reevaluar los fundamentos en otros y tomar decisiones de venta de activos o reversión de préstamos, aunque estos fundamentos se hayan mantenido inalterados. 
+
+Esto puede producirse por toda una serie de causas no exluyentes entre sí:
+\begin{lnum}
+    \item \textbf{Extracción de señales}. Cuando los agentes del mercado desconocen el impacto que la crisis en un país puede generar en otro. Si asumen de forma errónea que existe una interdependencia fuerte entre ambos, o que países con rasgos similares se enfrentan a problemas similares, el shock sobre un país podría transmitirse al otro por una evaluación incorrecta de sus fundamentos e interrelaciones;
+    \item \textbf{Wake-up call}. La crisis en un país podría conducir a los agentes a revisar la situación de países con rasgos similares y detectar problemas existentes que no habían identificado anteriormente. Por tanto, se trataría de una corrección eficiente de la evaluación de los riesgos;
+    \item \textbf{Riesgo moral}. La existencia de un sistema de garantías explícitas o implícitas conduce a los inversores a esperar que se produzca un rescate en caso de crisis, con lo que en sus decisiones ignorarán la debilidad de la economía del país mientras consideren que las reservas disponibles y la ayuda internacional potencial son capaces de cubrir las posibles pérdidas. Cuando la crisis en otro lugar conduzca a los inversores a revisar sus expectativas de asistencia, éstos podrían reajustar sus expectativas y contagiar (iniciar) la crisis;
+\end{lnum} 
+
+Por último, es posible que el contagio se inicia a conciencia y por voluntad de los Gobiernos. Por ejemplo, entre países que mantengan un objetivo cambiario mututo. Si un país rompe este acuerdo, el resto de países percibirán un menor coste. Así, la devaluación por parte de uno de los miembros podría tener un efecto de contagio sobre el resto.
+
+Un ejemplo de esto podríamos encontrarlo en la crisis de deuda soberana que se experimentó dentro de la Unión Europea. La crisis de deuda griega que estalló en 2009 cuando el nuevo gobierno revisó al alza los datos de déficit público, disparó la preocupación de los mercados por la sostenibilidad de la deuda en otros países. De esta forma se experimentó un contagio a otros países periféricos, provocando elevados diferenciales de tipos por emisión.
+
+\subsubsection{Movimientos de capital: Efecto dominó/cascada}
+Por otro lado, el contagio puro también puede justificarse recurriendo a la propagación potencial que ofrecen los mercados financieros. Este fenómeno puede traer causa en:
+\begin{lnum}
+    \item \textbf{Incumplimiento de contraparte: morosidad concentrada}. Una elevada exposición a deudores morosos podría provocar transmisiones transfronterizas si las pérdidas para los acreedores son suficientemente elevadas. Este efecto es especialmente fuerte en el caso de los acreedores bancarios debido a que operan con una ratio de capital sobre activos relativamente reducida. Durante la crisis de deuda de latinoamérica (1982), los préstamos morosos estaban ampliamente concentrados en un reducido número de entidades bancarias, factor que contribuyó a motivar la concesión de ayuda internacional con el fin de frenar el contagio por esta vía;
+    \item \textbf{Reestructuración de carteras: deshacer posiciones}. Una forma común pero más sutil, a través de la cual se puede observar un efecto dominó es observando el comportamiento de inversores multinacionales. Si estos se enfrentan al deterioramiento del valor de los activos en posesión en un mercado en crisis, pueden verse obligados a deshacer sus posiciones en otros mercados (muchas veces rentables) para compensar sus péridas. Por ejemplo, el caso de LTCM es un buen ejemplo. Esto puede producirse perfectamente en masa si el deterioro de las expectativas se origina en un país \textbf{prodigio}, cuya cuenta corriente hubiese presentado un superávit potente en los años precedentes.  de los mercados en los que invierte.
+\end{lnum}
+
+Un ejemplo de ambos canales se puede observar en la crisis de las hipotecas subprime. Los bancos europeos, a través de sus fondos de inversión, habían comprado deuda hipotecaria de EEUU, lo que contagio dicha exposición a estas entidades. Esta exposición estuvo muy concentrada en un reducido número de entidades de gran importancia. La falta de diligencia y transparencia en su actuación y declaración de este deterioro, provocó una pérdida de confianza de los inversores, que no se fiaban de la exposición que declaraban.\footnote{El desencadenante de esta pérdida de confianza fue que la entidad BNP Paribas afirmó que no tenía apenas exposición, pero una semana más tarde congeló tres fondos que invertían en títulos subprime.
+} Por tanto, tenemos dos efectos: (i) por un lado, el deterioramiento de los activos y la elevada concentración que restringen el crédito; y, (ii) la necesidad de reestructurar carteras, ejecutando activos \textbf{buenos} con el fin de sanear el balance. Sumado, esto provocó un colapso bursátil (deterioro patrimonial), un colapso del mercado interbancario (falta de credibilidad) y una consecuente crisis de liquidez. De esta forma, los problemas en el sector financiero estadounidense traspasaron las fronteras y tuvieron un impacto fuerte en la economía real. 
+
+\subsection{Implicaciones de Política Económica}
+Además de esta aproximación teórica, la literatura empírica ha tratado de contrastar la existencia de estos episodios debido sus relevantes implicaciones de Política Económica. En particular, podría justificar el rescate por parte de instituciones multilaterales a países en apuros para prevenir el contagio a otros países con fundamentos sanos. De este modo se podría sortear las dificultades de ajuste que plantean los modelos de tercera generación. 
+
+No obstante, resulta complicado distinguir entre contagio basado en vínculos comerciales o basado en vínculos financieros ya que los países con relaciones comerciales entre sí suelen tener también vínculos financieros. Uno de los primeros (EICHENGREEN, ROSE y WYPLOSZ, 1996), encontró que éste se propaga en mayor medida entre países con vínculos comerciales. Otros estudios posteriores otorgan un papel limitado al contagio, argumentando que los shocks simétricos y comunes parecen explicar con mejor ajuste la ocurrencia simultánea de crisis financieras. Esta distinción es también relevante por las recomendaciones/implicaciones de Política Económica, que podrían diferir en función del canal.\footnote{Así, la provisión de liquidez podría ser recomendable únicamente para algunos casos de contagio puro. En caso contrario, la provisión de liquidez podría únicamente retrasar el necesario ajuste. Por otro lado, los shocks comunes y las interdependencias entre países deberían abordarse con políticas que busquen mejorar los fundamentos de la economía. 
+
+De acuerdo con este razonamiento, las cuantiosas inyecciones de liquidez con las que se ha tratado de solucionar la crisis financiera estarían justificadas.
+}
+
+En general, sí se acepta que las imperfecciones informativas jueguen un papel fundamental en los episodios de contagio. Por tanto, es muy recomendable mantener políticas transparentes que contribuyan a evitar estos fenómenos: estableciendo objetivos claros. Esto podría reducir la vulnerabilidad de los mercados. Por último, la cooperación y coordinación internacional, fijar normas y estándares de supervisión comunes o acometer intervenciones simultáneas en los mercados, podría reducir también el riesgo sistémico de crisis y fenómenos de contagio.
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+\end{document}
