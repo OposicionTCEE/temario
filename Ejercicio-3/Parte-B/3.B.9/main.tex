@@ -1,0 +1,869 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Comercio internacional y crecimiento económico\\
+\large Especial referencia a los efectos del comercio sobre el crecimiento.}
+\author{Marcelo Ortega}
+\date{Marzo 2026}
+\newcommand{\TemaCode}{3B9}
+
+\oldtitle{
+    B.9. Comercio internacional y crecimiento económico. Especial referencia a los efectos del comercio sobre el crecimiento.
+}
+\changerationale{
+    Sin cambios.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     
+    }
+\vspace{1cm}
+
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+
+
+
+
+\clearpage
+\section{Crecimiento: efectos sobre el comercio internacional}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Comercio internacional: efectos sobre el crecimiento económico}
+\puntosclave{
+    
+}
+
+La otra cara de la moneda que nos toca ahora exponer es el efecto del comercio internacional sobre el crecimiento económico. Hay dos puntos que cabe tener presente en todo momento para entender la importancia de este punto: (i) analizar los efectos del comercio internacional sobre el crecimiento es analizar económicamente los efectos a corto y largo plazo de la (hiper)globalización, por lo que su importancia real es desmesuradamente mayor que el punto que hemos visto antes; y, por otro lado, (ii) se trata de un rama de la Economía Internacional en la que las creencias y la evidencia condicionan de manera determinante los resultados de cualquier análisis. Podríamos decir que existen muy pocas ramas en la literatura económica en el que el consenso esté más diseminado que en esta.
+
+\textbf{¿Qué queremos decir?} Desde una perspectiva formal/analítica, los efectos tanto a corto como a largo plazo del comercio internacional son claramente identificables (y, a menudo, cuantificables). Vamos a ver como la apertura comercial, o reducción de las barreras al comercio internacional (independientemente del origen del que traen causa), genera efectos positivos tanto del lado de la demanda como de la oferta: (i) mejora la eficiencia, permite disponer de más recursos y destinarlos a labores más productivas (aumentando la productividad agregada de la economía); (ii) genera efectos positivos en el poder adquisitivo de los agentes (bien sea vía canal precio o canal salarial), lo que permite aumentar la tasa de ahorro (y la asignación de consumo), aumentando la inversión y, en consecuencia, las tasas de crecimiento económico; y, (iii) genera spill-overs positivos en términos de conocimiento (know-how) y, en consecuencia, tecnología, lo que podría inducir aumentos indirectos en el Estado Estacionario de la Economía a largo plazo. Sin embargo, lo expuesto se circunsribe únicamente al marco formal. La evidencia empírica dista mucho de validar estas conclusiones (en sus supuestos más extremos) y esto no solo a puesto en entre dicho las conclusiones teóricas de los efectos del comercio internacional sino la esencia misma de los supuestos que subyacen en dichos modelos. 
+
+\subsection{Enfoque analítico: las virtudes del comercio internacional}
+Empecemos introduciendo el marco formal para identificar los canales a través de los cuales el comercio internacional tiene efectos sobre el crecimiento económico, tanto a corto como a largo plazo. 
+
+Por su propia naturaleza, resulta imposible estudiar los efectos de la Política Comercial (y, el Comercio Internacional) bajo un mismo marco. Por ello, presentaremos brevemente los efectos que tiene sobre dos puntos objetos de estudio: (i) la estructura competitiva de los mercados bajo un marco de Equilibrio Parcial (siguiendo el Modelo propuesto por MELITZ-OTTAVIANO); y, (ii) el Bienestar Agregado y la relación económica con el exterior que tiene un país cualquiera (siguiendo la el Marco reducido propuesto por ARA y la herramienta gráfica de DEMIDOVA-RODRIGUEZ).
+
+\subsubsection{Efectos sobre el mercado: eficiencia y tamaño}
+
+
+
+\subsubsection{Efectos sobre el bienestar agregado: renta, competitividad e interdependencia}
+
+
+\subsubsection{Implicaciones de Política Económica}
+El libre comercio no es el orden natural de las cosas. Solamente tenemos libre comercio —⁠o algo que se le aproxima⁠— cuando las estrellas están en la alineación exacta y los intereses que hay detrás del libre comercio prevalecen tanto política como intelectualmente. Pero ¿por qué es así? ¿Es que el libre comercio no hace que nos vayan mejor las cosas… a largo plazo? Si tan difícil es lograr el libre comercio, ¿es a causa de la mezquindad de intereses, el oscurantismo, el fracaso político o de una combinación de todo esto? Sería muy fácil asociar siempre el libre comercio con el progreso económico y político, y el proteccionismo con el atraso y la decadencia. También sería falso, como hemos visto en el capítulo anterior. El verdadero argumento a favor del libre comercio es sutil y, por tanto, depende en gran medida del contexto. Necesitamos entender no solo la economía del libre comercio, sino también sus consecuencias sobre la justicia distributiva y las normas sociales.
+
+
+\paragraph{El comercio puede ser un motor de crecimiento económico}
+A la luz de los modelos de crecimiento económico endógeno planteados anterionnente podemos llegar a esta primera conclusión. Por ejemplo, como veíamos, tanto el modelo de externalidades del capital ampliado con comercio internacional como los modelos del de  GROSSMAN y HELPMAN apoyan dicha tesis.\footnote{O mediante el modelo de I+D de Rivera-Baliz y Romer. con dos sectores en el que la inversión en l+D determina el crecimiento. Estos autores identifican. a su vez, 3 dectos positivos del comercio internacional sobre el l+D: (i) efecto asignación: La apenura al comercio internacional permite que los recursos se asignen de acuerdo al principio de ventaja comparativa: (ii) efecto integración: El aumento del mercado pennite un mejor aprowchamiento de las economías de escala: y (iii) efrcto redundancia: El comercio 111tcrnacional permite evitar duplicidades de costes
+}
+
+ Hay o tra s erie de factores que j uegan un papel muy importante, co mo hemo s pod ido ver con la experienc ia d e los paí s es d el Sud est e asiático. R especto a l a evid encia empírica, alguno s trabajo s evidencian la relac ión que existe entre el mayor nivel d e renta per cápita y el grado d e apertura al ext erior, Sachs y Wam er ( 1995 ) y Brück ner y Led erman (2 012 ), (ver Gráfico 1 9 ). Sin embargo, como se puede observar en el gráfico 19, aumentos en la apertura comercial de bienes no siempre están correlacionados positivamente con el crecimiento económico. La evidencia empírica entre países indic a que esta correlación en realidad s e vu elve negativa en alto s nivel es d e ingreso per c ápita (alrededor de \$22,000 en PPP). L ar azón principal es que lo s países d esarrollado s s uel en tener grandes mercado s interno s y acostumbran a modific ar su estruct ura exportadora hac ia el comercio de s ervic ios a medid a qu e crec es uP IB. Todo esto significa que su comercio d e bienes como porcent aje d el PIB (apert ura d el comercio d e mercancías ) podría l legar a d isminuir co n el crecimiento eco nómico, como apu ntan Rodrí guez y Rodrik ( 1999).
+
+En general, una métrica adecuada y la identificación de efectos causales son problemas de primer orden en la evaluación de políticas comerciales. La literatura reciente ha progresado en ambos sentidos. Los estudios empíricos de los efectos actuales de las políticas comerciales se han ido centrando en mayor medida en la naturaleza de los cambios de política y los marcos institucionales en los que la política comercial tiene lugar. Este nuevo foco, combinado con una mayor disponibilidad de micro-datos detallados de flujos de comercio, empresas y trabajadores, ha permitido a los economistas identificar algunos mecanismos a través de los cuales el comercio afecta al desempei'io económico. A su vez, la evidencia empírica ha influido en el desarrollo de modelos teóricos más completos que incorporan características que parecen resultar importantes a nivel empírico (es decir, fricciones en el mercado laboral, heterogeneidad de empresas, y efectos traslación a precios incompletos). En conclusión, la evidencia empírica apoya mayoritariamente la existencia de una relación positiva entre comercio internacional y crecimiento económico, aunque los resultados no sean ciertamente robustos. Lo que _ apunta a que el comercio internacional es una condición necesaria pero no suficiente para el crecimiento y la complementariedad con otras políticas resulta fundamental.
+
+
+\subsection{Enfocar la globalización: una aproximación más pragmática}
+Como hemos dicho, se han escrito ríos de tinta para intentar demostrar la validez de estos resultados, tanto a través de estudios empíricos como a través de Modelog de EGC, introduciendo parámetros estríctamente relacionados con la apertura internacional de un país. Sin embargo, los resultados distan mucho de ser concluyentes y, francamente, cualquier exposición de estos resultados que valide o refute los efectos positivos del comercio sobre el crecimiento sería una selección de artículos probablemente adheridos a una ideología determinada. Es necesario adoptar un enfoque diferente para evaluar los efectos del Comercio Internacional sobre el cremiento. 
+
+Empecemos con una verdad: el mundo es sin duda un lugar mucho más integrado que hace, por ejemplo, 100 años. Sin embargo, el crecimiento económico de muchos países parece estancado y las desigualdades tanto a nivel nacional como internacional se han agravado desde hace, como mínimo, 30 años. Esto, evidentemente, puede traer muchísimos factores por causa, pero demuestra una cosa: el comercio puede ser una condición necesaria, pero no es una condición suficiente para garantizar un mayor crecimiento económico. ¿Por qué? La realidad es mucho más tozuda y rara vez está dispuesta a ceder y dar concesiones a la validez de modelos que simplifican e idealizan el comportamiento de la economía y sus participantes. 
+
+\subsubsection{¿Cómo intregrar nuestra Economía para fomentar el crecimiento económico?}
+Empecemos revisando brevemente la evolución histórica de las teorías encaminadas a demostrar cómo y qué comercio promueve el crecimiento. 
+
+\paragraph{Industrilización por Sustitución de Importaciones: el gran estigma}
+A medida que un número creciente de países obtuvo su independencia de las potencias coloniales en el período inmediatamente posterior al final de la Segunda Guerra Mundial, se desarrolló entre economistas y responsables de política económica la opinión generalizada de que la mejor manera de que estos países se desarrollaran más rápidamente era estimular la industrialización mediante la adopción de políticas de sustitución de importaciones. Para estos, la industrialización parecía ofrecer la posibilidad de lograr un crecimiento más rápido, mayores niveles de renta per cápita y el poder económico y militar necesario para la seguridad nacional. Una forma económicamente sensata de lograr la industrialización parecía ser restringir las importaciones de bienes manufacturados para los cuales ya existía demanda interna, con el fin tanto de desplazar dicha demanda hacia los productores nacionales como de permitir el uso de los ingresos por exportaciones de productos primarios del país para importar los bienes de capital necesarios para la industrialización.\footnote{También parecía haber varios ejemplos en los que altos niveles de protección a las importaciones en los siglos XIX y XX habían contribuido positivamente a la industrialización. Aunque Gran Bretaña había adoptado una política de libre comercio durante su período de rápido crecimiento en el siglo XIX, Estados Unidos parecía haberse industrializado y prosperado imponiendo elevados aranceles a las manufacturas durante gran parte de la segunda mitad del siglo XIX. Alemania y Francia también adoptaron políticas proteccionistas durante este período, al igual que Japón después de 1900. El notable grado de industrialización alcanzado por Unión Soviética en las décadas de 1920 y 1930 y por China después de 1949 mediante la adopción de políticas orientadas hacia el interior fueron ejemplos históricos adicionales que impresionaron a los líderes de las naciones recién independientes.
+}
+
+Este modelo llegó a ser el dominante en Latinoamérica, Oriente Próximo, África y partes de Asia, en especial la India desde los años 1930 y su posterior independencia. El objetivo industrializador se conseguiría a través de un conjunto de intervenciones gubernamentales en forma de protección frente a las importaciones, subsidios crediticios, incentivos fiscales e inversión pública. Las políticas del ISI funcionaron bastante bien inicialmente. Brasil, México, Turquía y otros muchos países en vías de desarrollo de Latinoamérica, Oriente Próximo y África, experimentaron tasas de crecimiento económico más rápido que en cualquier otro momento de su historia económica. Latinoamérica creció a una tasa media anual superior al 2,5\% per cápita entre 1945 y los primeros años de la década de 1980 ⁠(que excede con mucho la registrada por esta región desde 1990; 1,9\%). Después de la independencia, en el África subsahariana dos docenas de países también crecieron con bastante rapidez hasta mediados-finales de la década de 1970. Además, los países de la ISI experimentaron un rápido crecimiento de su productividad a medida que sus economías se diversificaban alejándose de la agricultura tradicional e iniciaban actividades fabriles.\footnote{Aunque pueda resultar sorprendente, nuestros mejores estudios indican que durante los años 1960 y 1970, la productividad, desde el punto de vista de la economía en su totalidad, creció más rápidamente en la Latinoamérica de sustitución de importaciones que en el Asia oriental orientada hacia la exportación.
+} 
+
+\paragraph{Industralización orientada a la exportación: HPAE}
+Paralelamente, hubo algunos países que tomaron una vía sustancialmente diferente: un enfoque orientado hacia el exterior.
+
+Corea del Sur, por ejemplo, que había mantenido un proceso de industrialización orientado hacia el interior, experimentó un proceso de liberalización en 1964 y 1965 de mucho éxito.\footnote{Corea del Sur se caracterizó por amplios controles cuantitativos sobre el comercio y los pagos internacionales desde el momento en que se separó de Corea del Norte en 1945 hasta el final de la Guerra de Corea en 1953, que tuvieron que hacer frente a múltiples problemas de déficit comercial y tipo de cambio sobrevaluado. En 1961 se produjo una importante devaluación de la moneda junto con esfuerzos por liberalizar el sistema de comercio y pagos, este intento de liberalización terminó en 1963 debido a que una rápida inflación fue alimentada por políticas fiscales excesivamente expansivas y una mala cosecha.
+} El país se volvió cada vez más orientado hacia el exterior a medida que el gobierno adoptó otras políticas que fomentaban las exportaciones de bienes manufacturados. De la misma forma, otras cinco economías del este y el sureste de Asia habían crecido muy rápidamente desde los primeros años de la década de 1960: Taiwán, Hong Kong, Singapur, Malasia, Tailandia e Indonesia⁠. Motivados por diversos factores, tanto económicos como (geo)estratégicos, los gobiernos de estas economías comprendieron que lograr sus objetivos requería también un rápido crecimiento económico. Con una paleta muy heterogena de instrumentos, optaron por el desarrollo de la capacidad industrial y de una base fuerte de exportaciones de productos manufacturados.
+
+De forma crucial, un elemento común de esta estrategia requería eliminar los obstáculos a la inversión privada que ahogaban a muchos otros países pobres: impuestos excesivos, corrupción burocrática, infraestructura inadecuada, inflación alta; mejoras de lo que llamaríamos clima inversor. No obstante, igual de importantes eran las políticas intervencionistas: incentivos políticos diseñados para estimular inversiones en manufacturas modernas⁠.\footnote{Los más evidentes fueron Corea del Sur y Taiwán. En Corea del Sur, estos tomaron casi siempre la forma de préstamos subsidiados administrados a través del sector bancario. En Taiwán, adoptaron la forma de incentivos fiscales para inversiones en sectores determinados. En ambos países, los funcionarios del Estado desempeñaban a menudo el papel de comadrona de las nuevas industrias: coordinaban las inversiones de las empresas privadas, suministraban el dinero, y apretaban las tuercas o daban dulces según fuera necesario. A pesar de que eliminaron algunas de sus más enormes restricciones a las importaciones, ningún país expuso a sus nacientes industrias a mucha competencia de las importaciones hasta bien entrada la década de 1980. Se protegió al mercado local para permitir que las industrias «recién nacidas» consiguieran suficientes beneficios. Corea del Sur también ponía trabas a las compañías multinacionales que querían instalarse en el país, dejando así el máximo de espacio para que las empresas locales se comprometieran con el aprendizaje tecnológico. Mientras estas industrias recién nacidas disfrutaban de protección frente a la competencia internacional, se las empujaba a exportar desde el primer día. Esto se lograba con una combinación de subsidios específicos a la exportación y la intensa presión del Estado para asegurarse de que se cumplían los objetivos de exportación.
+}
+
+En efecto, a las empresas privadas se les ofrecía un quid pro quo: serían las beneficiarias de la generosidad estatal, pero siempre y cuando exportaran y lo hicieran en cantidades cada vez mayores. Si para conseguir una presencia en los mercados internacionales había que poner al principio precios por debajo de los costes, las consiguientes pérdidas podían recuperarse con los subsidios y los beneficios en el mercado nacional. Pero, y es relevante, estas políticas suponían para las empresas privadas un fuerte incentivo para mejorar su productividad y mantenerse por símismas frente a los competidores establecidos en el extranjero.
+
+\paragraph{El revisionismo: la construcción del relato actual}
+Estas dos vías de integración orientadas al crecimiento fueron a juicio en la década de 1980. Las consecuencia de la ruptura del marco BRETTON-WOODS en 1973 tardaron en llegar, pero se hicieron inevitablemente evidentes para algunas economías en desarrollo.
+
+La crisis de deuda Latinoamericana en 1982 propició multitud de estudios comparativos en los que se analizaban las posibles causas y, en última instancia, soluciones a la situación experimentada. A partir de entonces, las dos vías expuestos pasaron a concebirse como la \textit{buena} o \textit{mala} política, bajo un relato reducido en el que muchas de las razones, tanto del éxito como del fracaso, fueron coscientemente dejados al margen.  
+
+Los revisionistas veían la crisis como una consecuencia de la ISI: un Estado sobredimensionado había dado lugar a grandes desequilibrios fiscales y de balanza de pagos, mientras que la incapacidad de generar ingresos de las exportaciones había hecho mucho más difícil el ajuste a la súbita parada de entrada de capitales. De esta forma el Estado pasó de ser el promotor del crecimiento económico a ser el principal obstáculo que lo bloqueaba. 
+
+El fundamentalismo resultaba atractivo a muchos porque la evidencia de la posguerra parecía confirmarlo en apariencia. El fenomenal crecimiento de Corea del Sur, Taiwán y otras naciones del sur y el este de Asia en los mercados internacionales había enterrado la idea, común en las décadas de 1950 y 1960, de que las empresas de los sectores industriales nacientes, en los países pobres, no responderían a los incentivos comerciales o seguirían siendo demasiado débiles para prosperar en los mercados globales. No obstante, los revisionistas fueron mucho más allá: interpretaron que la experiencia de Asia oriental era un triunfo de los mercados sobre los gobiernos y del libre comercio sobre el comercio regulado. Se ignoraban las numerosas intervenciones de los gobiernos o se buscaban complicadas explicaciones para demostrar que estas se anulaban unas a otras, dando lugar a resultados a los que habrían llegado los mercados dejados a su suerte.\footnote{Como último argumento, los revisionistas argumentaban que las economías de Asia oriental hubieran crecido incluso más rápidamente sin las intervenciones de los gobiernos.
+} Lo que dió paso a la última étapa de la literatura económica a este respecto que merce revisión: la defensa de la libre movilidad de capitales como último eslabón del crecimiento inducido por la integración internacional (o comercio internacional). De esta forma, durante las décadas de los 80's y 90's, la literatura se centró en demostrar las fuertes relaciones negativas existentes entre crecimiento y Política Comercial y las virtudes de la liberalización de los flujos fiancieros que acabrían generalizándose a final de la década de los 90's.\footnote{
+Icluir aquí alguno de los estudios más relevantes de la época. 
+} Además, diversas aproximaciones teóricas pretendieron validar estos \textit{hechos}, como los modelos de crecimiento endógeno inducidos por la apertura comercial y los efectos perversos que podía generar la intervención estatal a través de la Política Comercial. La idea era clara: el crecimiento económico requiere la liberalización de los flujos comerciales y, en la medida de lo posible, la liberalización de los flujos de factores productivos. 
+
+Como suele suceder, las críticas no tardaron en llegar. Una revisión profunda publicada por RODRÍGUEZ y RODRIK a inicios del milenio evidenciaba las dificultades a las que se enfrentaba cualquier intento de demostrar una fuerte relación negativa entre crecimiento y políticas comerciales, y la profunda dependencia que estos resultados mantenían con los supuestos de partida.\footnote{Por ejemplo, las medidas directas habituales de política comercial, a saber, el nivel medio de aranceles y subsidios a la exportación y los niveles o la cobertura por productos de las medidas no arancelarias tradicionales, generalmente no están relacionadas con el crecimiento de la producción o de la productividad de los factores de manera estadísticamente significativa.
+} Desde un punto de vista analítico, esto no debería considerarse un resultado sorprendente: sabemos tanto por la teoría clásica y neoclásica del comercio como por la teoría moderna del crecimiento que la protección a las importaciones, por ejemplo, puede promover o frenar el crecimiento dependiendo de las circunstancias económicas. 
+
+No obstante, la renuencia a aceptar que la ausencia de una relación estadística entre medidas arancelarias y no arancelarias indicase que las políticas económicas internacionales tienen un efecto insignificante sobre el crecimiento (o incluso positivo) y la ausencia de consenso teórico que caracteriza a la disciplina acabó centrando los esfuerzos de la literatura más reciente en otros aspectos de la integración comercial, frecuentemente mal comprendidos y otras consideraciones que merece la pena destacar por sus implicaciones de Política Económica.\footnote{Entre algunos de los más destacados: (i) las graves brechas generadas durante estos últimos 40 años (incluido el FMI); (ii) los pobres resultados en términos de crecimiento en comparación con la época precdente; y, (iii) los grandes desequilibrios financieros acontecidos permanecen aún en la memoria colectiva. 
+}
+
+\subsubsection{¿Por qué importa lo que exportamos? El espacio de producto}
+En primer lugar, ¿importa nuestra cesta de productos exportados en el crecimiento y desarrollo económico? ¿cualquier integración a la red de comercio global es per se positiva? ¿Si, no? ¿Por qué no? Los fundadores de la economía del desarrollo sostenían que sí, sugiriendo que la industrialización genera externalidades que impulsan el crecimiento subsiguiente (HIRSCHMAN, ROSENSTEIN-RODAN, MATSUYAMA):\footnote{Sin embargo, al carecer de modelos formales, la teoría económica dominante no ha logrado incorporar estas ideas. En su lugar, se han utilizado dos enfoques para explicar el patrón de especialización de un país. El primero se centra en la proporción relativa de factores productivos (esto es, capital físico, trabajo, tierra, habilidades o capital humano, infraestructura e instituciones). Así, los países pobres se especializan en bienes intensivos en trabajo no cualificado y tierra, mientras que los países más ricos se especializan en bienes que requieren infraestructura, instituciones y capital humano y físico. El segundo enfoque enfatiza las diferencias tecnológicas y debe complementarse con una teoría sobre su origen. Los modelos de variedades y de \textit{escaleras de calidad} suponen que siempre existe un producto ligeramente más avanzado, o simplemente distinto, al que los países pueden desplazarse, ignorando las similitudes entre productos al analizar la transformación estructural y el crecimiento.
+} las economías crecen al mejorar los productos que producen y exportan. 
+
+Pensemos en un producto como un árbol y en el conjunto de todos los productos como un bosque. Un país está compuesto por una colección de empresas, es decir, de monos que viven en distintos árboles y explotan esos productos. El proceso de crecimiento implica desplazarse desde una parte pobre del bosque, donde los árboles tienen poco fruto, hacia zonas mejores. Esto implica que los monos deben dar saltos, es decir, reasignar capital (humano, físico e institucional) hacia bienes distintos de los actualmente producidos. La teoría tradicional del crecimiento asume que siempre hay un árbol al alcance; por tanto, la estructura del bosque no es relevante. Sin embargo, si este bosque es heterogéneo, con zonas densas y otras más desiertas, y si los monos solo pueden saltar distancias limitadas, entonces pueden no ser capaces de desplazarse por el bosque.\footnote{En teoría, múltiples \textbf{factores pueden generar proximidad} entre productos —es decir, cercanía entre árboles—, como la intensidad en el uso de trabajo, tierra y capital, el nivel de sofisticación tecnológica, los insumos y productos en la cadena de valor (por ejemplo, algodón, hilo, tela y prendas), o las instituciones requeridas. Todas estas son nociones a priori sobre qué dimensiones de similitud son más relevantes y suponen que los factores productivos, la sofisticación tecnológica o la calidad institucional presentan baja especificidad. En cambio, aquí se adopta un enfoque agnóstico basado en resultados: si dos bienes están relacionados porque requieren instituciones, infraestructura, factores físicos o tecnología similares (o alguna combinación de estos), tenderán a producirse conjuntamente, mientras que los bienes disímiles rara vez se producirán juntos. A esta medida se le llama \textbf{proximidad}, que formaliza la idea intuitiva de que la capacidad de un país para producir un bien depende de su capacidad para producir otros. Por ejemplo, un país capaz de exportar manzanas probablemente dispone de las condiciones necesarias para exportar peras: suelo, clima, tecnologías de empaquetado y transporte refrigerado. También contará con agrónomos cualificados, normativa fitosanitaria y acuerdos comerciales reutilizables. En cambio, si consideramos productos como cables de cobre o electrodomésticos, esas capacidades resultan en gran medida irrelevantes.
+}
+
+Empíricamente, los países se desplazan por el espacio de productos desarrollando bienes cercanos a los que ya producen.\footnote{
+El concepto de proximidad se define formalmente como el mínimo de las probabilidades condicionales de exportar un bien dado que se exporta otro. La ventaja comparativa revelada (RCA) mide si un país exporta más de un bien, como proporción de sus exportaciones totales, que el país promedio (RCA > 1). Utilizando datos de comercio internacional armonizados y desagregados a nivel SITC-4, se construyó una matriz de proximidad entre todos los pares de productos. Los resultados muestran que el espacio de productos no es homogéneo, sino modular: algunos bienes están altamente conectados mientras que otros permanecen aislados. En conjunto, la red es dispersa, con muchas conexiones débiles o inexistentes. La representación en red revela una estructura núcleo-periferia: el núcleo está formado por maquinaria, productos metálicos y químicos; la periferia incluye agricultura, textiles, confecciones, minería y productos forestales. Esta estructura se relaciona parcialmente con clasificaciones basadas en intensidades factoriales, aunque introduce mayor detalle. Por ejemplo, la maquinaria se divide en dos grupos: uno de vehículos y maquinaria pesada y otro de electrónica.
+} La mayoría de los países solo puede alcanzar el núcleo atravesando distancias que, en la práctica, son poco frecuentes, lo que puede ayudar a explicar por qué los países pobres tienen dificultades para desarrollar exportaciones más competitivas y no logran converger hacia los niveles de ingreso de los países ricos.
+
+\imagenfit{ProductSpace_HH.png}{Localización de la estructura productiva para distintas regiones del mundo. Los productos para los cuales la región presenta una ventaja comparativa revelada ($RCA > 1$) se indican con cuadrados negros.}{\href{http://www.sciencemag.org/cgi/content/full/317/5837/482}{\textit{The Product Space conditions the Development of Nations}. HIDALGO y HAUSMANN (2007)}}
+
+Como vemos, el mapa permite también analizar la evolución de la estructura productiva de los países. Los países industrializados ocupan el núcleo, mientras que regiones como América Latina o África subsahariana se sitúan en la periferia, especializadas en agricultura, minería o productos de bajo valor añadido. Asia oriental ha desarrollado ventajas en textiles, confecciones y electrónica. La evidencia empírica muestra, por tanto, que los países desarrollan ventajas comparativas en productos cercanos a los que ya producen, siguiendo un proceso de difusión. Los productos que experimentan transición hacia ventaja comparativa presentan mayor densidad que aquellos que permanecen subdesarrollados.\footnote{La medida de densidad captura cuán rodeado está un producto potencial por otros ya desarrollados.
+} Esta densidad, o probabilidad, de desarrollar ventaja comparativa en un producto aumenta con su proximidad a los productos existentes: es casi nula cuando la proximidad es baja y significativa cuando es alta. De esta forma, estando el espacio fragmentado, los países pueden quedar atrapados sin acceso a actividades más avanzadas. 
+
+\paragraph{Implicaciones de Política Económica}
+En definitiva, la persistencia de desigualdades internacionales y, en consecuencia, la falta de convergencia se ha explicado tanto por factores geográficos como institucionales. Aquí vemos también otro mecanismo adicional: \textbf{la dificultad de moverse dentro del espacio de productos}. 
+
+Los países pobres tienden a ubicarse en la periferia, donde las oportunidades de diversificación son limitadas. Incluso entre países con niveles similares de desarrollo, existen diferencias sustanciales en las oportunidades de transformación estructural derivadas de su posición en el espacio productivo. Estos resultados tienen implicaciones relevantes para la política económica. Promover la transformación estructural es más sencillo cuando existen oportunidades cercanas, pero mucho más difícil cuando un país se encuentra en un callejón sin salida. Sin embargo, son precisamente los saltos hacia productos lejanos los que permiten la transformación estructural, la convergencia y el crecimiento.
+
+\subsubsection{Cadenas Globales de Valor: un cuento para niños}
+Ahora bien, tampoco podemos limitarnos al estudio de los flujos comerciales de un país para determinar tanto su posición en el espacio de producto como su nivel de desarrollo tecnlógico y aptitudes para ampliar su cesta de exportaciones. Los flujos comerciales observados deben ser tratados para analizar la verdadera contribución de un país en lo que se conoce como la cadena de valor de un producto. Preguntémonos, ¿tiene el mismo valor económico ensamblar un producto dados todos sus insumos intermedios que producir los insumos intermedios y dejar el ensamblaje a otro? ¿qué tiene más valor económico? ¿preferimos producir maquinaría industrial de la marca SIEMENS o llevar a cabo el proyecto de diseño y desarrollo de producto y software operativo? Estas preguntas no son fáciles de contestar y, como puede intuirse, tiene implicaciones profundas en el crecimiento inducido por la apertura comercial. 
+
+La integración en las Cadenas Globales de Valor se concibe como un potenciador del crecimiento puesto que permite a cada país aprovecharse de su ventaja comparativa en alguno de los eslabones de producción del producto. Gracias al abaratamiento de los costes de transporte y la progresiva reducción de las barreras comerciales promovidas por los orgaismos multilaterales y la proliferación de los tratados de libre comercio (bilateral y multilateral) la narrativa es clara: en un mundo cada vez más plano y sin fricciones, el libre comercio resulta ventajoso para todas las partes implicadas. Pero... ¿es esto cierto? La creciente disponibilidad de datos permite nos permite descomponer los flujos comerciales de maneras mucho más informativas que antes. Por convención, las cadenas globales de valor pueden estudiarse a partir de tres tipos de flujos:
+\begin{la}
+    \item \textbf{Importar para producir} (I2P). Cualquier producción que utilice insumos extranjeros forma parte de una red internacional de producción, incluso si no está formalmente organizada;
+    \item \textbf{Importar para exportar} (I2E). Un subconjunto relevante de las importaciones para producir son las importaciones para exportar (I2E), que se aproxima más al concepto de cadenas globales de valor: el país importador actúa como nodo dentro de una red internacional más amplia, utilizando insumos extranjeros para producir bienes o servicios que posteriormente exporta; y,
+    \item \textbf{Comercio en valor añadido}. Cuando se descompone completamente el origen del valor añadido, se obtiene la tercera clasificación (más importante): el comercio en contenido factorial, actualmente denominado \textbf{comercio en valor añadido}. Para entender este concepto, son clave dos identidades contables:
+    \begin{lnum}
+        \item El valor de venta de un producto es igual al coste de los insumos intermedios (domésticos e importados) más el valor añadido directo doméstico; y,
+        \item También es igual a la suma del valor añadido generado en todos los países y sectores involucrados en su producción.
+    \end{lnum}
+\end{la}
+
+Teniendo en cuenta la importancia del lugar qe ocupamos en el espacio de producto, ¿qué otra información podemos obtener del análisis de esta descomposición?
+
+\paragraph{Implicaciones de Política Económica}
+En términos de Política Económica, la aproximación Input-Output ha arrojado luz sobre algunos conceptos muy mal comprendidos, tanto alentadores como desoladores. 
+
+En primer lugar, las cadenas globales de valor dista mucho del idealizado \textit{mundo plano}. Estas son fundamentalmente Cadenas Regionales de Valor en las, hoy en día, podemos indetificar tres grandes regiones: Fábrica América del Norte, Fábrica Europa y Fábrica Asia. Además, en cada uno se identifica un claro patrón centro-periferia, con un centro bien definido (Estados Unidos, Alemania y China) y una serie de países más o menos dependientes en la periferia. Si bien es cierto que existen ciertas diferencias según tratemos con productos finales o productos intermedios, las conclusiones son muy parecidas. 
+
+La proporción media de las exportaciones nacionales que está compuesta por bienes y servicios finales es solo del 34\%, lo que evidencia el predominio de los bienes intermedios en el comercio internacional. La autosuficiencia en la cadena suministros (productos intermedios) es cercana al 80\%, comerciándose únicamente el 20\% de los bienes intermedios. En los bienes finales, el patrón se reduce a un 70\% de autosuficiencia productiva y un 30\% comerciado. Además, muchos autores observan un patrón claro paralelo a la estructura Centro-Periferia: Headquartes-Fábicas. Este patrón nos permite intuir que la diseminación del conocimiento y la generación de spillovers tecnológicos dista mucha de la realidad, donde parecen existir profundas asimetrías tecnológicas y una fragmentación de la producción, no comercio en sentido estricto. De esta forma, los flujos comerciales no parecen capturar el valor de la distribución real de ingresos, que queda concentrada en las economías centro. 
+
+Por tanto, hay dos conclusiones importantes en términos de Política Económica:
+\begin{lnum}
+    \item Estos patrones parecen exaltar el valor de los procesos de integración regional (por ejemplo, Alemania es el país cuya cadena de suministros es más \textit{regional}) como el caso de la Unión Europea; y,
+    \item La ventaja comparativa no parece ser un principio suficiente como para explicar los determinantes del comercio internacional. 
+\end{lnum}
+
+Es cierto que un gobierno comprometido con la diversificación económica y capaz de dinamizar a su sector privado puede impulsar tasas de crecimiento que habrían sido impensables en un mundo que no gozara de la globalización, pero creer que esta transición no necesita que le echen una mano más que para garantizar que los mercados puedan hacer su trabajo es demasiado reduccionista. Aprender nuevas tecnologías e invertir en productos nuevos es un proceso difícil que tropieza con muchos obstáculos y, sorteándolos, tampoco garantiza la promoción de una industria orientada a la exportación que pueda integrarse unilateralmente en el comercio en virtud de la ventaja que ostentaría en un determinado espacio.
+
+¿Por qué los ejemplos de Asia oriental no han sido seguidos por más países? ¿Cuáles han sido las dificultades de emular sus estrategias? ¿Por qué decenas de países de África y otros lugares siguen atascados en la pobreza, incapaces de hacer la transición a unas industrias y servicios modernos? Sin duda, muchos de estos países tienen gobiernos con escaso interés real por el desarrollo e impulsen los cambios económicos que amenazarían su mantenimiento en el poder. Pero la política no es más que una parte de la respuesta a estas preguntas. 
+
+\subsubsection{¿Cómo queremos hacerlo?: El trilema inexorable}
+En definitiva, los efectos del comercio internacional sobre el crecimiento ofrece algo para todos. En efecto, actúa como un estanque que refleja los prejuicios del observador. Si piensa que liberar los mercados es la mejor forma de impulsar el desarrollo económico, encontrará abundantes pruebas de ello. Si piensa que los mercados necesitan la mano firme y autoritaria del gobierno, bueno, hay abundantes pruebas de ello también. ¿La globalización como motor del crecimiento? La historia de (casi) toda economía es un claro ejemplo. ¿Hay que domar la globalización? Lo mismo. 
+
+Sin embargo, si se dejan de lado estos argumentos rancios y se escucha el mensaje real que emana de toda historia de éxito, se descubre que lo que funciona es una combinación de Estado y mercados. La globalización es una fuerza tremendamente positiva, pero solo si se es capaz de domesticarla para que trabaje para uno y no en contra de uno.
+
+Por tanto, ¿qué debemos hacer? ¿cómo podemos enfocar el futuro del comercio como motor del crecimiento?
+
+\paragraph{Ganancias marginales: liberalización comercial}
+Muchos autores coinciden que hablar de \textit{mayor} comercio internacional carece de sentido. Las ganancias estimadas de la liberalización comercial son muy inferiores a los efectos distributivos que se estima generarían, en una proporción aproximada de $50:1$ en muchas economías avanzadas. Es decir, el tamaño de la redistribución desborda la ganancia neta de la liberalización. 
+
+Esta es una consecuencia general de la política comercial en circunstancias realistas: los aranceles son muy bajos en las economías actuales. Por tanto, debemos centrarnos en analizar y debatir sobre las formas de planificar un \textit{mejor} comercio internacional. 
+
+\paragraph{Costes de transacción: la paradoja de la Globalización}
+Esta tarea no es fácil. Como hemos visto, tanto las aproximaciones teóricas como los estudios empíricos arrojan resultados diferentes y son especialmente sensibles a los supuestos de partida o los parámetros de calibración. Por eso, vale la pena identificar los elementos en conflicto que subyacen en toda aproximación y centrar el debate sobre estos:
+\begin{la}
+    \item \textbf{Ventaja comparativa}. La fuente última de los efectos positivos de cualquier proceso de integración económica internacional es la potenciación del principio de la ventaja comparativa. El comercio internacional puede concebirse como una tipo de \textit{progreso tecnológico}. De esta forma, es fácil ver cómo y por qué generará ganadores y perdedores; pero también como potencia el crecimiento económico tanto a corto como a largo plazo; y,
+    \item \textbf{Costes de transacción}. Si la ventaja comparativa es la fuerza que impulsa la integración económica internacional, la fuerza que actuaría en sentido contrario serían los costes de transacción. Integrarse requiere, necesariamente, reducir las barreras que lo impiden. Pensémos en cualquier estado soberano, ¿cuán integrado está y por qué lo está? Hace siete siglos España estaba formado por una multitud de comunidades interdependientes e independientes cuyo nivel de integración distaba mucho de ser el que podemos ver ahora. ¿Qué ha pasado?
+\end{la}
+
+Al margen de las evidentes barreras convencionales utilizadas para medir las distorsiones inducidas directamente por los Estados, existen una multitud de barreras adicionales que serían poco cuestionables desde un punto de vista económico: el idioma, la moneda, el ordenamiento jurídico, la cultura, la estructura y jerarquía social, el nivel educativo, las redes de seguridad, etc. son barreras tácitas cuya causa está en el ejercició, por parte del Estado, de la confianza que los ciudadanos (más o menos) han depositado en él. 
+
+Por tanto, potenciar los efectos positivos de la globalización y la consecuente minimización de los costes de transacción exige establecer un orden de preferencias que guíe nuestra integración:
+
+\imagenfit{TrilemaRodrick.png}{El trilema Político de la Economía Internacional}{\textit{La paradoja de la globalización}. DANI RODRIK}
+
+Cuando hablamos sobre comercio internacional, crecimiento, y sus relaciones bilaterales los elementos en conflicto son la soberanía nacional, las exigencias sociales y la integración económica. ¿A qué estamos dispuestos a renunciar en aras de potenciar el crecimiento económico inducido por la globalización?
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+\href{https://dash.harvard.edu/server/api/core/bitstreams/539cdde0-4b25-44ac-97d6-42a80fd68c4f/content}{Hidalgo, César A., and Ricardo Hausmann. \textit{The Building Blocks of Economic Complexity}. CID Working Paper Series 2009.186, Harvard University, Cambridge, MA, September 2009.}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+\end{document}
