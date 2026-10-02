@@ -1,0 +1,1366 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{El origen del euro\\
+\large Funcionamiento y evolución del Sistema Monetario Europeo. Los criterios de convergencia nominal. El Sistema Europeo de Bancos Centrales: objetivos e instrumentos. La política monetaria en la Eurozona desde 2009}
+\author{Marcelo Ortega}
+\date{Julio 2026}
+\newcommand{\TemaCode}{3B43}
+
+\oldtitle{
+    B.45. Funcionamiento y evolución del Sistema Monetario Europeo. El euro: origen y evolución
+    
+    B.46. El Sistema Europeo de Bancos Centrales y la política monetaria de la Eurozona: objetivos e instrumentos. La gobernanza económica del euro. La Unión Bancaria y otros desarrollos
+}
+\changerationale{
+    El anterior tema B.46 estaba estructurado en tres bloques claramente diferenciados, todos ellos con un elevado volumen de contenido de gran importancia para todo TCEE. Por ello, se desdobla dicho tema en tres temas: el nuevo B.43 versa sobre la política monetaria en la UE. El anterior tema B.45 era un tema de Historia económica reciente, cuyo contenido se incorpora a este nuevo tema, a modo de antecedente.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     
+    }
+\vspace{1cm}
+
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+\clearpage
+\section{Política Monetaria de la Unión: \textit{la batalla de las ideas}}
+\puntosclave{
+    La integración económica europea ha suscitado desde sus inicios la necesidad de cooperar en materia monetaria, con el objetivo de reforzar la propia integración económica. Desde la adaptación europea de los Acuerdos del Smithsonian, a través de la Serpiente Monetaria Europea, hasta la creación de un verdadero Sistema Monetario Europeo, el mantenimiento de los tipos de cambio fijos en Europa experimentó la problemática que tradicionalmente han mantenido estos regímenes cambiarios.   
+    
+    Fue la adopción del máximo nivel de cooperación monetaria posible, esto es, la unión monetaria, lo que permitió dotar de credibilidad y de estabilidad a las relaciones monetarias europeas. La creación del euro fue concebida a lo largo de un periodo de fuertes debates políticos y económicos, dadas las fuertes implicaciones de la moneda única sobre aspectos relacionados con la convergencia nominal y la soberanía de los países. 
+    
+    A pesar de unos primeros años de fuerte estabilidad y crecimiento, la crisis financiera global, evolucionada en una crisis de deuda europea, puso de manifiesto los errores que aún estaban presentes en el diseño del euro. La volatilidad cambiaria se había trasladado a la volatilidad en los tipos de interés soberanos. La política monetaria única necesitaba de una unión monetaria completa, que constase con distintos mecanismos de ajuste ante shocks asimétricos. En este sentido, la labor del BCE tras el \textit{whatever it takes} de DRAGHI, y los proyectos de Unión Bancaria y del Mercado de Capitales junto a, tras la crisis del Covid, la mayor integración fiscal, son hitos muy relevantes en el camino de construcción de un área monetaria óptima en el sentido de MUNDELL.
+}
+
+\textit{Una moneda continental con una base doble, metálica y fiduciaria, basada en Europa como capital e impulsada por la actividad de $200$ millones de personas: esta moneda remplazaría y terminaría con la absurda variedad de monedas que existe actualmente, con sus efigies de príncipes, esos símbolos de miseria}. Victor Hugo. Actos y Palabras (1855). 
+
+La idea de una moneda única en Europa es una iniciativa que ha rondado los pensamientos de los líderes europeos durante décadas. En 1865, Francia impulsó la creación de la Unión Monetaria Latina, que buscaba facilitar el libre movimiento de divisas entre los Estados miembros y reforzar los lazos económicos y comerciales en el continente. Para ello, países como Francia, Bélgica, Italia, Suiza (y muchos más que se unieron más adelante) se comprometieron a emitir monedas perfectamente intercambiables (en términos de pureza y peso del metal). Hasta principios del siglo XX, el valor de las monedas era totalmente intrínseco, por lo que emitir monedas con las mismas características implicaba de facto compartir una misma moneda. Reducir la incertidumbre sobre el contenido de metal precioso en las monedas supuso un espaldarazo para el comercio europeo. \textcolor{red}{Sin embargo, la Unión Monetaria Latina fue finalmente disuelta en 1927, a raíz de la Primera Guerra Mundial (1914-1918), y debido a la falta de coordinación entre los Estados participantes, la inflación y la volatilidad en los mercados de metales preciosos. No es hasta los años 1970 cuando la idea de una moneda única aglutina el respaldo político suficiente para empezar a tomar forma.} 
+
+MUNDELL, conocido por algunos como el \textit{padre del euro}, apadrinó la teoría de las áreas monetarias óptimas, que trata de definir, desde el punto de vista de la eficiencia económica, si es óptimo adoptar una moneda común en una determinada zona geográfica. El año de introducción del euro, 1999, coincidiría con el año en que MUNDELL recibiría el Premio Nobel de Economía por sus trabajos monetarios. 
+
+Si bien el concepto de área monetaria óptima es esencialmente de teoría económica, la moneda única europea es un proyecto eminentemente político. El proyecto europeo, a pesar de sus episodios de inestabilidad, es un proyecto enormemente exitoso que ha motivado un periodo de setenta años de paz y prosperidad en el continente. La creación del euro es un reflejo de dicho proceso integrador, con implicaciones en el día a día de los ciudadanos de la Unión, y supone una cesión de soberanía sin precedentes, ya que los Estados participantes renuncian a sus monedas nacionales, así como a su Política Monetaria. En estos aspectos nos centraremos en la presente exposición. 
+
+En primer lugar, se estudia el Sistema Monetario Europeo, sus virtudes y sus defectos, ya que todos ellos estuvieron presentes en el diseño de la posterior Unión Económica y Monetaria. Como veremos, la configuración inicial de dicha Unión distó de ser perfecta, y las diversas crisis que ha sufrido la economía de la zona del euro han provocado mejoras en su arquitectura, avanzando hacia la optimalidad de MUNDELL. En una segunda parte, realizaremos una descripción desde un punto de vista jurídico, institucional y económico, del funcionamiento de la política monetaria única: sus órganos de actuación, sus objetivos y los principales instrumentos con los que cuenta.
+
+\subsection{Sistema Monetario Europeo: Post Bretton-Woods}
+A raíz de la adopción de los acuerdos de Bretton Woods, la academia defendió las bondades de sistemas de tipos de cambio fijos o semifijos. La estabilidad y la certidumbre derivadas de la eliminación del riesgo cambiario ayudarían a fomentar los intercambios internacionales, no solo de bienes y servicios sino también de inversiones. Los países miembros de la CE buscaron dar un paso más allá, lo que se plasmó en iniciativas como el \href{https://es.wikipedia.org/wiki/Plan_Barre}{Plan BARRE} (1969) y el \href{https://www.uv.es/vjaime/Eca%20UE/Temas%20clases/Tema%205%20Eca%20UE%20Union%20monetaria%202010.pdf}{Informe WERNER} (1970).
+
+En 1972 los Estados miembros acuerdan la creación de la Serpiente Monetaria, que suponía reducir drásticamente las bandas de fluctuación de las monedas de dichos países respecto del sistema de Bretton Woods (de $\pm\,4-5\%\to\pm\,2,25\%$). Sin embargo, dicho sistema no corregía las debilidades del sistema existente. Por ello, la falta de coordinación de políticas económicas entre países, la asimetría del proceso de ajuste (a favor del país con superávit externo) y las tensiones crecientes que desembocaron en numerosas revaluaciones y devaluaciones, supusieron el abandono del sistema de la serpiente europea. Al final quedó como un Área Marco alemán, no vinculante, en la que únicamente participaban Alemania, Holanda, Bélgica y Dinamarca.
+
+A finales de la década de 1970, el francés Giscard d"Estaing y el alemán Schmidt comenzaron a impulsar un nuevo mecanismo que corrigiese las deficiencias de la Serpiente Europea. Así. el Consejo Europeo de diciembre de 1978 alcanzó el acuerdo sobre las características básicas del Sistema Monetario Europeo (SME). En 1979, se aprobó el acuerdo intergubernamental, ratificado por los bancos centrales nacionales, por el que se creó el SME. Sus tres objetivos fundacionales eran: (i) la \textbf{estabilidad externa}, reduciendo la volatilidad cambiaría en la CEE, que actúa como desincentivo al comercio internacional; (ii) la \textbf{estabilidad interna}, sobretodo control de la inflación y fortalecimiento y estimulo del crecimiento, favoreciendo la convergencia entre las economías; y, (iii) avanzar hacia la constitución de la UEM.
+
+\subsubsection{Funcionamiento: ¿Cómo funcionaba el SME?} 
+El Sistema Monetario Europeo era un sistema de tipos de cambio fijos pero ajustables. Los países participantes en el mismo determinaban un tipo de cambio oficial (tipo central) para todas las monedas y unas bandas alrededor de los tipos centrales dentro de las cuales las monedas podían flotar libremente. El SME se caracterizaba por tres elementos.
+
+El Sistema Monetario Europeo era un sistema de tipos de cambio estables pero ajustables. Los países participantes en el mismo determinaban un tipo de cambio oficial (tipo central) para todas las monedas y unas bandas alrededor de los tipos centrales dentro de las cuales las monedas podían flotar libremente. El SME se caracterizaba por tres elementos: una moneda de referencia (el llamado ECU - \textit{European Currency Unit}), unas reglas de intervención y unos mecanismos de financiación de los países con déficit de balanza de pagos.
+
+\paragraph{European Currency Unit (ECU)}
+Una moneda de referencia (el llamado ECU - \textit{European Currency Unit}), que no se trataba de una moneda nueva, sino en una cesta de monedas de los países miembros del SME cuyo peso dependía de una serie de variables relacionadas con: el peso de su Producto Nacional Bruto, el peso del país en el comercio intracomunitario y la cuota del país en el FECOM.\footnote{El Fondo Europeo de Coordinación Monetaria (FECOM), que se crea en 1973 para reducir progresivamente los margenes de fluctuación de las divisas comunitarias entre sí a base de coordinar las políticas y la acción de los Bancos Centrales. También recurría a la intervención de los mercados de cambio, en caso de ser necesario.
+} (Como se puede ver, seguúa un razonamiento similar al de los DEGs del FMI). Con base en estos factores, se establecía la media ponderada del valor de las distintas monedas para componer la cesta. Por tanto, las monedas con mayor peso tenían un valor más estable respecto el ECU y más efecto arrastre sobre el resto (ventaja para los países grandes, al tener una menor necesidad de realineamiento). Tenía las mismas funciones básicas que cualquier moneda (unidad, valor, intercambio) pero no era considerada de curso legal, pudiéndose únicamente emplear como medio de \textit{clearance} entre los Bancos Centrales (tipo Bancor).\footnote{De hecho, el uso privado del ECU no estaba previsto en los textos legales pero los bancos comerciales y operadores privados lo emplearon como moneda de pago, debido a su estabilidad cambiaría y el apoyo deliberado de las instituciones comunitarias y de las autoridades de los Estados miembros.
+}
+
+En definitiva, actuaba como moneda de referencia del sistema, jugando un papel equivalente al del dólar en el sistema de Bretton Woods, sin tener que hacer frenta a la Paradoja de TRIFFIN que puso en jaque al Sistema de Bretton-Woods, pues carecía de los problemas de liquidez.\footnote{La moneda única finalmente adoptada (el euro) cambió su nombre respecto el ECU porque algunos países no quisieron que la moneda única tuviera el mismo nombre que la antigua divisa francesa (los escudos - écus).
+} De hecho, al emplearse como unidad de cuenta del SME a todos los efectos, permitió a este sistema independizarse respecto el dólar (ésta es una de las grandes diferencias respecto a la Serpiente Europea, que se basaba en las fluctuaciones de valor respecto el dólar).
+
+\paragraph{Reglas de intervención}
+Con la \textit{moneda} del sistema en marcha y circulando, el funcionamiento dependía tres elementos: la parrilla de paridades y las bandas de actuación, las medidas marginales de intervención (obligatorias) y la intervención intramarginal voluntaria. 
+
+Cada moneda participante tenía definido un tipo de cambio central con el ECU, denominado tipo central o de pivote, que radicaba en la \textbf{parrilla de paridades}. El cruce de este tipo para dos monedas participantes en el SME era conocido como cambio central bilateral. Todos los cambios centrales bilaterales constituían la parrilla de paridades, y sobre cada uno se establecía una banda de fluctuación, como porcentaje determinado según el país.\footnote{
+En general, $\pm\,2,25\%$ hasta el 2 de agosto de 1993 ($\pm\,6\%$ para algunos países como España, Italia y el Reino Unido), $\pm\,1,5\%$ después
+} Las bandas establecían los límites dentro de los cuales debía fluctuar la cotización de mercado de un par y debían ser suficiente para evitar los realineamientos abruptos. 
+
+El \textbf{Mecanismo de Cambios e Intervención} (MCI) se basaba en dos clases de intervención por parte de los bancos centrales: la intervención obligatoria y la voluntaria. A diferencia de lo que sucedía con la participación en la composición del ECU. no todos los países de la Comunidad Económica Europea formaban parte del mecanismo de can1bios e intervención (MCI). Por ejemplo. el Reino Unido no participó en el MCI hasta 1990 y salió en 1992 a raíz de la crisis del SME.
+
+La primera de estas era necesaria para mantener la estabilidad del sistema: cuando un par se aproximaba al límite máximo de fluctuación (o de intervención), los Bancos Centrales estaban obligados a intervenir en el mercado. ¿Cuándo se daba esta situación y cómo intervenían? Muy sencillo. En un sistema bilateral ambas monedas tenían que situar su tipo de cambio en el límite opuesto y, una vez se producía esta circunstancia, el banco emisor de la moneda fuerte compraba la moneda débil en su mercado, mientras el banco emisor de la débil vendía la fuerte en su propio mercado. Era, por tanto, un sistema simétrico que forzaba la intervención de ambos bancos (a diferencia del sistema de Bretton Woods, donde todo el ajuste recaía sobre el país de la moneda débil, y nada sobre el dólar).\footnote{\textbf{NOTA.-} Como luego veremos, esta intervención era ilimitada ya que el Banco Central de la moneda débil podía, a través del FECOM, obtener las cantidades de moneda fuerte que fueran necesarias.
+}
+
+Por otro lado, la intervención intramarginal voluntaria era un instrumento de prevención, que intentaba reducir el número de veces que se llegaba a la intervención obligatoria. La base de la intervención voluntaria era el llamado \textbf{indicador de divergencia}, que permitía situar la evolución del tipo de cambio en relación con la media comunitaria, por lo que servía de instrumento de alerta o aviso, señalando que la cotización de una moneda divergía respecto el resto del sistema:
+
+\eqblock{
+\begin{aligned}
+    &\textbf{Indicador de divergencia}=\frac{\text{Separación de Divergencia}}{\text{Separación máxima de divergencia}_j}\cdot 100\\[1em]
+    &\text{donde,}\qquad 
+    \left\{\begin{aligned}
+        &\text{Separación de Divergencia}=\frac{\text{ECU}_{\text{mercado}}-\text{ECU}_{\text{central}}}{\text{ECU}_{\text{central}}}\\[0,5em]
+        &\text{Separación máxima de divergencia}_j=\text{Banda máxima}\cdot(1-\text{peso}_j)
+    \end{aligned}\right.
+\end{aligned}
+}{Funcionamiento del Mecanismo de Intervención (voluntario). Origen del Euro: Sistema Monetario Europeo.}
+
+Cuando este indicador alcanzaba una discrepancia mínima, denominada umbral de convergencia (cuando $\text{ID}_j=75\%$), era cuando el país afectado entraba en una presunción de acción. Así, las autoridades nacionales tenían que tomar las medidas necesarias para corregir el rumbo del valor de su moneda, evitando que aumentaran las tensiones en el sistema y pudiera producirse un contagio a otras monedas participantes en el mismo. Dichas medidas podían consistir en medidas de política monetaria interna, modificación de su cambio central, compraventa de monedas en los mercados cambiarios o cualquier otra medida de política económica tendente a solucionar tal divergencia.
+
+Así, se pretendía intervenir para evitar que se llegara a las bandas máximas. El banco central nacional en cuestión se adelantaba si observaba que una moneda evolucionaba de manera distinta al resto.
+
+\paragraph{Mecanismos de financiación}
+El mecanismos de financiación de los países con déficit de balanza de pagos se solventaba mediando el Fondo Europeo de Cooperación Monetaria (FECOM), la institución básica del sistema.
+
+La Resolución del Consejo Europeo de diciembre de 1978 le otorga un papel clave en la supervisión del correcto funcionamiento del SME, otorgándole la funciones de:
+\begin{la}
+    \item \textbf{Contabilización y liquidación de operaciones}. Contabilizar y liquidar las operaciones realizadas por los bancos centrales en los mercados de divisas, en cumplimiento de los acuerdos del SME;
+    \item \textbf{Monopolio legal de ECUs}. Se le otorga la potestad de definir y emitir ECUs en función de las reservas recibidas desde los bancos centrales nacionales, obligados a depositar el $20\%$ de sus tenencias de oro y dólares en el FECOM, a cambio de las cuales reciben ECUs para operaciones de cambio;
+    \item \textbf{Gestión de las facilidades crediticias asociadas al SME} (tanto a corto plazo para financiar los desequilibrios de balanza de pagos). Dichas facilidades son las siguientes: o El mecanismo de financiación a muy corto plazo: facilidades crediticias que se conceden mutuamente los bancos centrales participantes en el MCI para atender a su obligación de intervenir en los mercados cambiarios. o El apoyo monetario a corto plazo: busca ayudar a los países miembros a financiar déficits importantes de balanza de pagos. o La asistencia financiera a medio plazo: créditos concedidos por el Consejo a un Estado para ayudarle a hacer frente a dificultades prolongadas de balanza de pagos. o El apoyo a las economías más débiles: bonificación de intereses de un $3\%$ en los préstamos puestos a disposición de los países menos desarrollados de la CEE por parte del Banco Europeo de Inversiones, dedicados esencialmente a la realización de obras de infraestructura. o El mecanismo de movilización de ECUs: consistía en autorizar a los Estados miembros a obtener dólares u otras divisas contra sus tenencias de ECUs, para intervenir en los mercados de cambios. 
+\end{la}
+
+El FECOM tenninará por ser sustituido por el Instituto Monetario Europeo al crearse éste en 1994 en el proceso de creación de la Unión Económica y Monetaria (1994).
+
+El SME nacía con dos problemas inherentes que impidieron su correcto funcionamiento: 
+• La asimetría: aunque el diseño del MCI buscaba asegurar una cierta simetría en el ajuste, en la práctica, el Bundesbank mantuvo una posición hegemónica. De esta manera, la política monetaria alemana actuó como guía dentro del sistema, condicionando la política monetaria de los demás Estados participantes. Alemania fue generalmente reacia a intervenir en los mercados cambiarios vendiendo su moneda nacional (moneda fuerte), por temor a la potencial inflación derivada del aumento de la masa monetaria. Ello provocó desajustes en el funcionamiento del MCI.
+• La credibilidad: la falta de coordinación de las políticas monetarias nacionales, unida a los  diferenciales de inflación (al tratar con economías muy distintas y divergentes), provocó numerosos realineamientos de los valores de· las monedas y fuertes movimientos especulativos en los mercados cambiarios. Todo ello dificultó sobremanera el mantenimiento del sistema.
+
+\subsubsection{Evolución: ¿Cómo se desarrolló el SME?}
+El SME pasó por distintas etapas desde su creación, en función de la coyuntura económica y del compromiso de los países participantes con el mismo. Las etapas son las siguientes:
+
+\paragraph{Primera etapa (1979-1983): Falta de coordinación de las políticas económicas} 
+Esta etapa se enmarca dentro del segundo shock del petróleo y una profunda recesión en Europa. Se produjeron numerosos realineamientos de las monedas y fuertes intervenciones por parte de los bancos centrales nacionales. La falta de coordinación impidió el correcto funcionamiento del sistema, muy inestable.
+
+\paragraph{Segunda etapa (1983-1987): Política del franco fuerte}
+Francia abandonó la política monetaria expansiva que venía practicando y se centró en la estabilización tanto interna como externa de su economía. Ello permitió reducir el número de realineamientos, ganando en credibilidad y estabilidad.
+
+\paragraph{Tercera etapa (1987-1992): Acuerdos de Basilea-Nyborg}
+Estos acuerdos liberalizaron el acceso a las líneas de financiación para apoyar a las monedas débiles. 
+
+El realineamiento pasa a ser la opción de último recurso (solo la emplea Italia) y se produce una mayor coordinación económica entre Alemania y Francia. Espafia, Portugal y el Reino Unido entran en el MCI. 
+
+En este contexto, empieza el proyecto de construcción de la UEM. 
+
+\paragraph{Cuarta etapa (1992-1999): La tormenta monetaria}
+La crisis del SME se produce por la confluencia de una serie de factores:
+
+Como ya se ha dicho, prácticamente no se produjo ningún realineamiento en cinco años, por lo que se fueron acumulando diferencias importantes de tipo de cambio real entre los países.
+
+La reunificación alemana implicó un aumento de los tipos de interés para controlar la inflación interna derivada de la política fiscal expansionista inicial. Ello provocó fuertes tensiones de política monetaria, ya que el resto del continente estaba sufriendo una crisis económica. 
+
+La liberalización de los movimientos de capitales, unida a las dudas relativas al futuro de la UEM (no al TUE en Dinamarca por referéndum en junio de 1992 y aprobación del TUE por muy escaso margen en Francia en septiembre de 1992), alimentó la aparición de fuertes movimientos especulativos desestabilizadores.
+
+Los factores explicados muestran la debilidad estructural del SME. El dilema de política económica era el siguiente: Alemania quería subir tipos para luchar contra la inflación, lo que obligaba a los demás países a subir tipos. Sin embargo, dada la recesión económica, las autoridades nacionales eran reacias. Los especuladores eran conscientes de este dilema y se aprovecharon de ello. En septiembre de 1992. la libra esterlina fue atacada por los especuladores. George Soros, un afamado inversor de origen húngaro, llevó a cabo una estrategia basada en pedir prestado en libras y venderlas en los mercados cambiarios a cambio de marcos alemanes. De esta manera, aumentó la presión depreciatoria de la libra y la presión apreciatoria del marco. Soros apostó por que el Banco de Inglaterra no aguantaría la presión y no seguiría subiendo los tipos de interés (algo especialmente costoso para una economía muy endeudada a tipos variables como la británica). Llegó a ponerse corto en libras por valor de $10.000\text{M}\$$, y ganó una enorme cantidad de dinero cuando el 16 de septiembre de 1992 -las autoridades británicas sacaron la libra del MCI (con la consiguiente depreciación de la libra, lo que benefició a Soros a la hora de devolver el préstamo en libras).\footnote{Este episodio de crisis cambiaria es un claro ejemplo de lo que se conoce en la literatura como modelos de segunda generación o de expectativas autocumplidas.
+} 
+
+Al día siguiente, el 17 de septiembre, la lira italiana salió del MCI. Finalmente, en agosto de 1993, las bandas de fluctuación pasaron de $\pm\,2,25\%\to\pm\,15\%$, y las monedas periféricas fueron devaluadas en numerosas ocasiones. 
+
+Una vez con una banda de fluctuación del +/- 15\%, el SME se convirtió en un sistema de tipos de cambio fijos pero ajustables y tuvo un periodo de estabilidad. 
+
+El SME debe ser entendido como un primer paso hacia la construcción de la UEM. Es cierto que presentaba ciertas lagunas estructurales, tales como su asimetría y falta de credibilidad. Sin embargo, también favoreció una cierta estabilidad cambiaría, la convergencia nominal y la reducción de la inflación. Además, sirvió para reforzar la cultura de cooperación y coordinación entre las autoridades monetarias de los Estados miembros, tan necesaria en el contexto de las negociaciones de la UEM.
+
+\subsection{Plan DELORS: Construcción de la UEM}
+Aunque en numerosas ocasiones se ha buscado defender o criticar la UEM desde el punto de vista de la teoría económica pura, hay que tener en mente que la razón última de la existencia de la moneda única es la voluntad política (ver Anexo 5). Los líderes europeos buscaron en la irreversibilidad de una eventual moneda única solidificar el proyecto europeo.
+
+\subsubsection{Primera Fase: Informe DELORS}
+La creciente consolidación del SME, así como el dinamismo suscitado por la entrada en vigor del Mercado Interior, condujeron a que, en 1988, el Consejo Europeo de Hannover reafirmara el objetivo de establecer una verdadera UEM. Para ello se decidió la formación de un comité de gobernadores (de los BC) y tres expertos independientes, bajo la dirección del presidente de la Comisión (DELORS), cuyo objetivo fue definir lo que podría ser el camino hacia la Unión Monetaria. 
+
+El \textit{Informe sobre la Unión Económica y Monetaria en la Comunidad Europea}, más conocido como Informe DELORS, se hizo público en abril de 1989, reiterándose la determinación de realizar progresivamente la Unión Monetaria. El lnfonne Delors sentó las bases de la agenda de discusión sobre la UEM, al diseñar las tres etapas hacia la UEM. No obstante, no se especificaba un calendario concreto para el paso de una etapa a otra, salvo para el inicio del proceso, que debía producirse el I de julio de 1990: 
+• Etapa 1: En esta etapa, se busca la liberalización de los movimientos de capitales. Ello se acompaña del reforzamiento de la cooperación entre los bancos centrales nacionales. 
+• Etapa 2: Entrada en vigor de los cambios al Tratado e introducción de las nuevas instituciones de la UEM. Así mismo, se evalúa el cumplimiento de los criterios de convergencia económica por los países.\footnote{Según los expertos. la debilidad demostrada por la zona del euro durante la crisis de la deuda soberana (2009-2013) se debe en gran medida a los errores que se produjeron durante la concepción de la misma. especialmente en el conocido como Tratado de Maastricht (Tratado de la Unión Europea de 1 992). Dicho documento asumió. de manera simplista, que la estabilidad de precios era suficiente para asegurar la estabilidad financiera y subestimó la importancia de la política fiscal en una unión monetaria tanto para la estabilidad de precios como para la financiera.
+} 
+• Etapa 3: Fijación irrevocable de los tipos de cambio y nacimiento de la moneda única (el euro). Establecimiento del Banco Central Europeo y entrada en vigor del  euro.
+
+En la reunión de los Jefes de Estado y de Gobierno de Madrid en junio de 1989, se acordó adoptar el Informe Delors como base de trabajo, comenzar la Etapa I del Plan Delors en julio de 1990 y convocar una conferencia intergubernamental para considerar los cambios al Tratado de Roma, cuyo resultado se plasmó en el Tratado de la Unión Europea (TUE). El TUE abre la puerta a las fases 2 y 3 de la UEM.
+
+b) El Tratado de la Unión Europea 
+Según el TUE, el proceso de la UEM era irreversible y debía seguir los siguientes pasos, basados en el Plan Delors:\footnote{El Tratado de la UE fue adoptado en la cumbre de 1991 celebrada en la ciudad holandesa de Maastrichl y linnado el 7 de íebrero de 1992 en esa misma ciudad. Entró en vigor el I de noviembre de 1 993 e incorporó, en su Título VI. la realización de una UEM que agrupara a todos los países que. habiendo cumplido unos criterios de convergencia exigidos. garantizasen una adecuada gestión financiera y colaboren en la estabilidad de precios y de la nueva moneda.
+}
+• Fase I Uulio de 1 990): o Liberalización de los mov1m1entos de capitales con periodos transitorios para algunos países (se consagró en el art. 63 TFUE y en la Directiva 88/36 1/CEE). o Mercado Único Europeo en funcionamiento. o Comienzo de medidas para la convergencia nominal: los Programas de Convergencia.
+
+• Fase 2 (enero de 1 994): o Política Fiscal: no financiación privilegiada del sector público, no monetización de los déficits públicos, cláusula de no bail-out. o Política Monetaria: independencia de los BCN, creación del IME. o Evaluación por el Consejo Europeo del cumplimiento de los criterios de convergencia nominal para que los países puedan pasar a la tercera fase. o Introducción de las nuevas instituciones de la UEM, incluido el Banco Central Europeo (meses antes de la fase tres).
+
+• Fase 3 (enero de 1 999 como tarde): o Fijación irrevocable de los tipos de cambio y nacimiento de la moneda única. o La política monetaria correrá a cargo del Eurosistema. o Puesta en circulación del euro. En la conferencia intergubemamental, el Reino U nido y Dinamarca negociaron la introducción en el TUE de una cláusula de exclusión, también llamada "opting-out'', que les pennitiera quedar al margen de la moneda única si así lo decidieran. configurándose así la VEM como un mecanismo de cooperación reforzada.
+
+
+c) La cláusula de "No Bail-Out" y el Pacto de Estabilidad y Crecimiento
+El primer ministro británico, John Major, propuso incorporar al Tratado de Maastricht una cláusula de "no rescate" ("no bail-out"), que afinnaba que cada Estado soberano sólo contaría con sus propios recursos para hacer frente a sus deudas.\footnote{Actualmente incorporada en el artículo 125.1 del TFUE.
+} No obstante, dada la falta de credibilidad de dicha cláusula, los alemanes presionaron para la aprobación del Pacto de Estabilidad y Crecimiento y su regla de limitar el déficit público al 3\% del PIB.\footnote{La fijación del límite de déficit en el 3\% viene por la política aplicada por Jacques Delors cuando fue ministro de finanzas en Francia durante el Sistema Monetario Europeo en el periodo del --franco fuerte·•.
+}
+
+
+\subsubsection{Segunda Fase: Convergencia Nominal}
+El TUE establece que la segunda fase debía iniciarse el 1 de enero de 1994, y debía centrarse en tres aspectos fundamentales:
+
+a) La creación del Instituto Monetario Europeo 
+
+El Instituto Monetario Europeo (IME) se creó el 1 de enero de 1994 sustituyendo al Comité de Gobernadores de los BCN y al FECOM. Se constituyó como foro de cooperación monetaria entre los bancos centrales de la UE. La sede de fijó en Frankfurt y formaron parte de él los bancos centrales de todos los países de la UE. Entre sus funciones estaban las siguientes: 
+• Fortalecer la cooperación entre los BCN y la coordinación de las políticas monetarias • Vigilar el funcionamiento del SME • Facilitar el uso del ECU y supervisar su desarrollo • Efectuar un seguimiento sobre la estabilidad de las entidades y mercados financieros • Ser consultado por entes comunitarios o nacionales sobre proyectos legislativos • Efectuar el seguimiento sobre el grado de cumplimiento de los criterios de convergencia. 
+
+Su objetivo fundamental fue preparar todo lo necesario en el ámbito monetario para el paso a la tercera fase de la UEM. Para ello, el IME especificó el marco normativo, de organización y logístico necesario para que el Sistema Europeo de Bancos Centrales (SEBC) desempeñara sus funciones. El I de junio de 1998 fue liquidado al constituirse el BCE y el SEBC.
+
+b) La independencia de los bancos centrales nacionales
+El Tratado de Maastricht establece que. a más tardar en la fecha de constitución del SEBC, los Estados miembros habrán modificado su normativa nacional para asegurar que los BCN fueran independientes del poder político.\footnote{La Ley 13/1994. de Autonomía del Banco de España. modificaba el régimen general del banco para adaptarlo a los requerimientos de la segunda fase de la UEM. Dicha ley establece que el objetivo prioritario de la política monetaria será la estabilidad de precios y que éste tendrá plena capacidad e independencia para su definición y ejecución.
+} El razonamiento teórico detrás de esta exigencia era evitar la supeditación de la política monetaria a la fiscal (uso de la monetización y financiación no ortodoxa de las cuentas públicas). Por tanto, los países debían asegurar la independencia institucional, financiera, política y operativa de sus respectivos bancos centrales nacionales.
+
+c) Los criterios de convergencia nominal de Maastricht 
+En el TUE se fijaron las condiciones necesarias para que un país pudiera acceder a la UEM. Por un lado, las políticas económicas de los Estados debían respetar el principio de una economía de mercado abierta y de libre competencia. Por otro lado, éstos debían respetar los denominados criterios de convergencia. No obstante, la negociación del Tratado fue costosa, dadas las distintas filosofias reinantes entre los Estados miembros (ver Anexo 5). 
+
+La consecuencia fue que, desde entonces, la convergencia nominal se convirtió en uno de los objetivos fundamentales de la política económica de los Estados miembros que pretendían acceder a la tercera fase de la UEM. Dichos criterios se agrupan en los siguientes grandes epígrafes: • Estabilidad de precios: la tasa de inflación de un Estado no puede exceder en más de 1,5 puntos porcentuales la rpedia de la inflación de los tres Estados con menor inflación  observada durante un periodo de un año antes del examen de la situación del I Orun. 
+
+• Tipos de interés: los tipos de interés nominales a largo plazo de un Estado no pueden exceder en más de 2 puntos porcentuales la media de los tipos de interés nominales a largo plazo de los tres Estados con menor inflación observada durante un periodo de un af'lo antes del examen de la situación del país. 
+
+• Estabilidad cambiaría: la moneda del Estado miembro debe respetar, durante dos af'los como mínimo, los márgenes normales de fluctuación que establece el mecanismo de tipos de cambio del SME, sin que se haya producido devaluación frente a la moneda de algún otro país.
+
+• Finanzas públicas: o Déficit público: al final del ejercicio presupuestario anterior, la ratio de déficit público entre el PIB debe ser inferior al 3\%. Si no es el caso, la relación debe haber disminuido a un ritmo satisfactorio y haber alcanzado un nivel cercano al 3\%. Alternativamente, puede mantenerse cerca del 3\% si la rebasa de manera excepcional y temporal.o Deuda pública: la ratio deuda pública/PIB debe ser inferior al 60\% al final del anterior ejercicio presupuestario. Si no es el caso, la relación debe haber disminuido a un ritmo satisfactorio y aproximarse al 60\%. El establecimiento de estos criterios de convergencia ha sido objeto de un intenso debate. Entre los aspectos positivos a señalar, destaca que aportaron una mayor credibilidad al proceso de la UEM (al forzar la consolidación presupuestaria y reducir los diferenciales de inflación entre los países). Otro elemento positivo fue que permitió adaptarse a los Estados menos preparados de forma que sus economías no sufrieran un shock repentino con la introducción del euro. mientras que salvaguardó el historial anti-inflacionista de aquellas economías con mayor credibilidad deprecios. 
+
+Sin embargo, dichos criterios no están exentos de críticas: 
+• En primer lugar, existía un posible riesgo de retorno, es decir. de abandonar el proyecto en una fase intermedia (lo que por ejemplo no podría pasar con Alemania del Este, que fue integrada en la Alemania Federal a través de una terapia de choque sin estas salvaguardas y periodos transitorios). 
+• El cumplimiento de los criterios de convergencia tuvo un coste en ténninos de empleo en los países tradicionalmente más inflacionistas ( para reforzar su credibilidad anti inflacionista estos países tuvieron que aplicar políticas restrictivas). 
+• Finalmente, existió un debate sobre por qué los criterios de convergencia fijados en el Tratado de Maastricht hacían referencia únicamente a variables nominales y no a variables reales (que recogieran la convergencia real, como el desempleo y el crecimiento). En su momento, se estimó que la convergencia real se produciría precisamente ·como consecuencia de la UEM y, por tanto, era adecuado limitarse al seguimiento de la convergencia nominal. 
+
+En noviembre de 1996, el IME publicó un informe titulado "Progreso hacia la Convergencia", un análisis de la situación de las economías de los Estados miembros en su marcha hacia la moneda única. En el mismo, se explicaba que la mayor parte de los países no cumplían las condiciones  necesarias para la entrada en la zona del euro. En consecuencia, se hablaba de una Europa a dos velocidades, de ·manera que la moneda única fuera adoptaba inicialmente solo por un grupo reducido de países y el resto accedería más adelante. Sin embargo, gracias a la voluntad política y la mejora del ciclo económico, la mayor parte de los países logró mejorar sus datos en los años 1 996 y 1 997. 
+
+Los informes de convergencia de 1 998 de la Comisión y el I M E (ver anexo 3) mostraron que once países (Alemania, Austria, Bélgica, España, Finlandia, Francia, Irlanda, Italia, Países Bajos, Luxemburgo y Portugal) estaban preparados para la UEM. El 2 de mayo de 1998, el Parlamento Europeo respaldó la creación de la UEM por una amplia mayoría. Así, cuatro Estados quedaron inicialmente fuera de la UEM.
+• ,Reino Unido y Dinamarca por sus cláusulas opt-out,
+• Suecia no entró (la corona sueca no participaba en el mecanismo del SME y la normativa sueca no cumplía con la exigencia de independencia del banco central nacional).
+• Grecia quiso entrar pero quedó inicialmente fuera por no cumplir con los criterios de convergencia nominal.
+
+\subsubsection{Tercera Fase: Unión Económica y Monetaria}
+La segunda fase concluyó con la creación del Banco Central Europeo y el Sistema Europeo de Bancos Centrales el 1 de junio de 1998.\footnote{Se produjo un enfrentamiento entre Francia y Alemania sobre quién debía ser el primer presidente del BCE. Los miembros del Comité Ejecutivo del BCE debían nombrarse por común acuerdo entre los Estados, pero Francia se negó a aceptar el candidato propuesto por Alemania. el holandés Win Duisemberg (gobernador del banco central holandés). Finalmente, para levantar el veto francés. se acordó que Duisemberg seria elegido. pero no agotaría su mandato de ocho años (al final, lo fue cinco años, hasta 2003) y su sucesor sería el francés Jcan Claude Trichet (presidente del BCE entre 2003 y 20 1 1 ).
+} Finalmente, en 200 I, se decide que Grecia entrará también en la UEM al mejorar sus datos de convergencia nominal.\footnote{Sin embargo, como veremos más adelante. parte de dichos datos habían sido manipulados. por lo que Grecia nunca cumplió los criterios para fonnar parte de la zona del euro.
+} Así, 12 Estados miembrosconfiguraron en un primer momento la UEM. Dentro de esta tercera fase, es conveniente distinguir entre tres etapas:
+
+• Del 1 de enero de 1999 al 31 de diciembre de 2001:  
+o Fijación de los tipos de cambio irrevocables entre las distintas monedas nacionales y el euro(ver anexo 4).\footnote{En el caso de la peseta española. el tipo de cambio finalmente fijado fue de 166,386 pesetas por euro.
+} o Se empieza a aplicar la política monetaria única a través del BCE y el SEBC. o Creación del euro como moneda de pleno derecho, en paridad 1: 1 con el ECU (por ejemplo, para denominar operaciones financieras y mercantiles, pero aún no para cobros y pagos físicos). o Preparación para la entrada en circulación del euro (campañas de información).
+
+• Del I de enero de 2002 al 30 de junio de 2002 (como fecha límite):\footnote{Coincide con la presidencia española del Consejo de enero a junio de 2002.
+} o Introducción de las monedas y billetes de euro, que comienzan a circular en paralelo con las monedas nacionales, cuya desaparición es progresiva (la gran mayoría de los Estados eliminaron la moneda nacional el 28 de febrero, pero el límite legal para ello era el 30 de junio).  
+• A partir del I de julio de 2002 (como muy tarde): o La UEM queda completada y las economías de los países participantes funcionan en su totalidad exclusivamente en euros (que se convierten en única moneda de curso legal para los países participantes en la UEM).\footnote{En España, las pesetas se han podido cambiar por euros en el Banco de España hasta el 31 de diciembre de 2020.
+}
+
+\subsection{Primeros años del euro: Crisis de la Eurozona}
+Durante los primeros años tras la entrada en vigor del euro, se produjo un fuerte crecimiento económico en los países con una renta per cápita relativamente más baja. Así, las economías irlandesa, española y griega crecieron con gran fuerza, mientras que Italia y Alemania estaban más estancadas. Se produjo así una progresiva convergencia de los niveles de renta per cápita, y todo ello con bajas tasa de inflación y de tipos de interés. Al mismo tiempo que sus economías crecían, Irlanda y España redujeron sus ratios de deuda pública sobre el PIB a niveles históricamente bajos (23.9\% Irlanda y 35,6% España en 2007). Por tanto, el euro parecía un éxito
+para estos países.
+El comercio dentro de la zona del euro creció con fuerza, se produjeron múltiples inversiones
+entre países y el crecimiento medio de la zona del euro era elevado.
+
+De hecho. el principal problema residía en los tradicionales motores de la UE: Alemania y Francia. La primera estaba aún digiriendo el coste de la reunificación y elevados déficits aumentaron su ratio de deuda pública hasta el 67\% del PIB en 2005. La segunda no lograba mejor su competitividad y el elevado peso de su sector público hizo que su deuda subiera hasta el 67\% en 2005. Dada la debilidad de estos países, se reformó el Pacto de Estabilidad y Crecimiento, lo que permitió que Alemania y F.rancia acumularan déficits públicos superiores al 3\% del PIB en años sucesivos sin que fueran sancionados por ello. 
+
+Cabe destacar que, a diferencia de lo que preveían los teóricos alemanes sobre el mecanismo de incentivos de mercado establecido en el TUE a través de la regla de 13runch 13t, los tipos de interés de la deuda pública en los países convergió hasta eliminar prácticamente las primas de riesgo de la deuda pública de los Estados periféricos respecto la alemana. De hecho, la prima de riesgo española llegó a ser negativa (-5,9 puntos básicos el 25 de noviembre de 2004). Todo ello en un círculo virtuoso que permitió crecimiento económico, convergencia y baja inflación.
+
+Sin embargo, la bonanza económica y el equilibrio medido de acuerdo con los criterios de Maastricht escondían otra realidad que era el elevado endeudamiento y desequilibrio exterior y privado en algunos países. Mientras Alemania acumulaba fuertes superávits exteriores, países como Irlanda, España, Portugal y Grecia se endeudaban enormemente gracias al dinero barato que venía del centro de Europa.\footnote{El déficit por cuenta corriente español rozó el $10\%$ del PIB en 2007 y su posición de inversión internacional neta ha estado varios años muy cerca del -100% del PIB.
+} La falta de supervisión macroeconómica y macroprudencial permitió la acumulación de fuertes desequilibrios exteriores. El fuerte endeudamiento externo, unido a la burbuja inmobiliaria en algunos países (Irlanda y España) y la política fiscal irresponsable en tiempos de bonanza (Italia, Grecia y Portugal) provocó que algunos países fuesen especialmente vulnerables ante shocks financieros como el que tuvo lugar a partir del año 2008. Dicho shock llevó a la crisis de 2009-2013 que ha puesto en peligro de subsistencia misma del euro, al especularse con la reversibilidad de la UEM (especialmente en el caso de Grecia) en el peor momento de la crisis.
+
+
+\subsubsection{Crisis de la Eurozona: 2009-2013}
+Las fuertes tasas de crecimiento económico en países como España, Irlanda y Grecia se debían en parte al fácil acceso a crédito barato (crédito interbancario de bancos alemanes a bancos periféricos) y, por tanto, las fuertes tasas de crecimiento no eran sostenibles .. Por ejemplo, en Grecia, durante los años previos a la crisis, el PIB creció artificialmente rápido debido a lacontribución del gasto público, que experimentó una fortísima expansión. Ello llevó a que, entre 2005 y 2007, años de boom económico, Grecia presentara cada año niveles de déficit público superiores al 6\% del PIB, lo que elevó la deuda pública griega por encima del 100\% del PIB  durante los años de expansión económica. Con la caída de los ingresos por la crisis, entre 2008 y 2011, el déficit público griego aumentó todavía más, hasta niveles superiores al 10\% del PIB anual, alcanzado así la deuda pública el 172,1\% del PIB en 2011 . 
+
+En otros países como España e Irlanda, el impacto del crédito barato fue muy distinto a Grecia. En estos países, el problema no radicaba en las finanzas públicas (ambos acumularon años de superávit público y sus datos de deuda pública sobre PIB bajaron por debajo del 40\%), sino en el endeudamiento bancario. Así, el fácil acceso a la liquidez impulsó sectores de baja productividad y valor añadido, especialmente el sector inmobiliario y de la construcción, lo que fortaleció el crecimiento económico, enmascarando bajos niveles de productividad. El crédito barato (que provenía del superávit exterior acumulado en países europeos como Alemania) permitió disimular carencias estructurales en estas economías, acumular grandes desequilibrios, posponer reformas estructurales y la inadecuada asignación de factores productivos (capital y trabajo) en sectores de baja productividad. 
+
+La zona del euro permitió temporalmente camuflar dichas ineficiencias, pero la crisis financiera y el brusco parón en los mercados de crédito sacaron a la luz los desequilibrios y fragilidades acumulados durante los años de prosperidad.\footnote{Así, se ha hecho referencia a la metáfora del bañista desnudo (naked swimmer) empicada por Warren BufTct, de acuerdo con la cual al bajar la marea (al secarse el mercado de crédito) se ve qué bañistas (países) están desnudos y cuáles no.
+} Una vez el crédito se paralizó, se pudo ver en qué países los fundamentales del crecimiento económico eran sólidos y en cuáles se había producido un boom inflado o artificial. En definitiva, el fácil acceso al crédito infló los datos de PIB en algunos países, los cuales no eran sostenibles.
+
+En primer lugar, los efectos se sintieron en el mercado interbancario. Los bancos españoles tenían un activo a largo plazo y un pasivo a corto plazo.\footnote{Esto es normal en todos los bancos. El problema está en que también en que los bancos pasaron de un modelo tradicional, basado en la captación de depósitos y su transformación en créditos con plazo más largo. a un modelo más agresivo en el que los fondos se captaban en el mercado mayorista interbancario, más volátil en cuanto a precio y volumen.
+} Cuando los bancos alemanes se negaron a refinanciar la deuda de los bancos españoles, el mercado interbancario se paralizó y, por tanto, el tipo de interés interbancario (EONIA) se disparó. Los bancos alemanes dudaban de la solvencia de los bancos españoles y pasaron a depositar sus fondos tn el Bundesbank. Como consecuencia, los bancos españoles no tuvieron otro remedio que acudir al Banco de España usando sus activos como colateral. Así, el Eurosistema dio un paso al frente actuando como prestamista de última instancia, concediendo préstamos a los bancos españoles y ofreciendo a los bancos alemanes un  lugar seguro donde depositar su liquidez. El reflejo de estos flujos aparece parcialmente en los desequilibrios del sistema TARGET2 dentro del Eurosistema.\footnote{La interpretación de los saldos TARGET debe hacerse con precaución. En resumen, puede afim,arse que los saldos TARGET representan las consecuencias de una unión monetaria descentralizada. más que una dinámicajlight to safety. Factores como la liquidación de pagos entre consumidores de dos países o la existencia de centros financieros relevantes (por ejemplo. en Frankfurt). explican gran parte de dichos saldos. Una referencia para entender esta problemática se encuentra en Eisenschmidt et al. (2022). Euro areu monewry policy and TARGET balances: a trilogv. ECB Working Paper Series.
+}Una vez se produjo la crisis financiera y los mercados de crédito se paralizaron, se produjo una fuerte segmentación y renacionalización de los mercados de crédito. Todo ello provoco un mal funcionamiento del canal de crédito como canal de transmisión de la política monetaria del BCE y, por tanto, un fuerte credit cr11nch en los países periféricos. A ello se sumó la subida de tipos de interés realizada en 2011 por el entonces presidente del BCE Jean Claude Trichet, que agudizó más aún si cabe la crisis.\footnote{Trichet se confundió porque pensaba que la economía se recuperaba, pero en realidad la crisis fue en forma de W.
+}
+
+
+b) La crisis de la deuda soberana de la zona del euro 
+Sin lugar a dudas, hablar de la crisis de deuda en la zona del euro es hablar de Grecia. Fue el primer país en entrar en crisis y, recibió tres programas de asistencia financiera hasta 2018. Sin embargo, otros países también han sido protagonistas de esta crisis: Portugal. Irlanda y Chipre también recibieron un rescate soberano, España fue beneficiario de un programa de asistencia financiera para la recapitalización de su sistema bancario, e Italia siempre ha bailado en el alambre como potencial mayor amenaza a la propia supervivencia del euro. Por el contrario, por su condición de activos refugio, la deuda de países como Alemania, Finlandia, Países Bajos y Austria se ha beneficiado de tipos de interés históricamente bajos (y negativos en numerosos tramos de la estructura temporal de tipos de interés). 
+
+Como ya se ha mencionado anteriormente, uno de los efectos no anticipados de la UEM fue la convergencia de los tipos de interés de la deuda pública en el seno de la zona del euro. Los mercados no consideraron realista la cláusula de no bail-out fijada en el TUE y la diferenciación entre soberanos fue mínima durante los años de bonanza. La regulación micro-prudencial tampoco incentivaba la diferenciación entre soberanos por parte de los bancos, ya que los requisitos de capital de Basilea no exigían dotar capital alguno por la tenencia en el balance de la deuda pública de ningún país de la zona del euro (la ponderación por riesgo de estos activos es cero).\footnote{Con Basilea III, la ponderación por riesgo sigue siendo cero, pero sin embargo se ha introducido un coeficiente de apalancamiento que en la práctica restringe la acumulación de deuda pública en el balance (aunque sin diferenciar entre países). El comité de Basilea se encuentra todavía negociando una posible revisión del tratamiento de las exposiciones soberanas.
+} Otro ejemplo en este sentido era que el BCE trataba la deuda pública de todos los Estados miembros de la zona del euro de igual manera: todos podían emplearse como garantía sin diferencias en cuanto al recorte (haircut) de su valor. Como consecuencia, no debe sorprender que las primas de riesgo de los bonos soberanos de los distintos países respecto el bund alemán prácticamente desaparecieran. La crisis de deuda pública reveritíra esa tendencia.
+
+Una cuestión fundamental que aumentó la vulnerabilidad de los soberanos periféricos fue la emisión de deuda en una moneda no nacional (en el sentido de que no es una moneda emitida por el banco central nacional, sino emitida por el BCE y, por tanto, fuera del alcance de las autoridadesnacionales). El emitir deuda en una moneda sobre la que no se tiene control condiciona aún más la libertad monetaria del país, especialmente en un entorno de tipos de cambio flexibles y libre movilidad del capital. De hecho, cuando se compara los tipos de la deuda pagada por el Reino Unido, Estados Unidos o Japón con los tipos que pagaban los soberanos periféricos europeos en 2010-2012, se consideraba que éste era el coste de pertenecer a una unión monetaria y no tener control sobre la propia moneda (porque la diferencia de percepción de riesgo entre los primeros y los segundos no podía justificarse por los fundamentales de las economías, sino más bien por aspectos monetarios derivados de endeudarse en una moneda cuya emisión no es controlable, lo que se conoce como el pecado original). 
+
+Los tres momentos más destacables de la crisis de la zona del euro son los siguientes:
+
+• La cumbre de Deauville (octubre de 2010): en dicha ciudad, Merkel y Sarkozy acordaron que, por iniciativa de Merkel, los acreedores privados tendrían que asumir parte de la responsabilidad y, por tanto, participar en la solución a la crisis de deuda soberana. Dicho en otras palabras, se estableció para Grecia lo conocido como "participación del sector privado". Así, en 2012, finalmente se logró un acuerdo con bonistas privados por el cual éstos asumieron una reducción del 53,5\% del nominal de la deuda griega en sus manos (197.000 millones), lo que permitió que la deuda griega cayera en 107.000 millones de euros. En principio, el acuerdo era beneficioso para todo el mundo: a los políticos les gustaba porque los banqueros pagarían por sus errores, a los países acreedores les gustaba porque tendrían que aportar menos dinero para futuros rescates y aumentaba la disciplina de mercado, y a los países deudores les gustaba porque reducía su volumen de deuda. El problema de esta iniciativa fue que supuso hacer explícito y materializar el riesgo de crédito de los soberanos europeos y, por tanto, abrió la puerta al contagio. De hecho, una vez se hizo público el acuerdo de Deauville en 201 O, el coste de la deuda de los países periféricos se disparó y la crisis se expandió a otros países. A partir de ese momento, la Comisión perdió gran poder de influencia sobre la gestión de la crisis, espacio que ocupó el Consejo a través del Eurogrupo (reunión informal de los ministros de finanzas de la zona del euro).
+
+• El discurso \textit{whatever it takes} de DRAGHI (26 de julio de 20 1 2): "El BCE hará todo lo necesario para salvaguardar el euro. Y, créanme, eso será suficiente. Estas palabras del presidente del BCE en Londres, anunciando el programa OMT ( Outright Moneta,y Transactions), fueron un antes y un después en la crisis de deuda, a pesar de que este instrumento nunca ha llegado a ser utilizado, lo que demuestra la importancia de la credibilidad de las autoridades monetarias. A raíz de dicho discurso, desapareció el miedo a la ruptura del euro y la redenominación de la deuda soberana de los países periféricos. Así, el capital regresó a las economías soberanas y las primas de riesgo cayeron con fuerza. Draghi era consciente de que muchos fondos especularon contra los países periféricos adoptando posiciones cortas sobre ellos, pero, a raíz de sus palabras, estos fondos empezaron a acumular pérdidas hasta que finalmente abandonaron estas posiciones, normalizando la situación financiera de países como España e Italia (el principal objetivo de los especuladores).\footnote{Se trató de un ejemplo de manual de la gestión de expectativas. La crisis de los soberanos español e italiano. dados sus fundamentales (que no eran ni demasiado sólidos -cielo-. ni demasiado débiles -infierno-. sino que eran relativamente vulnerables -purgatorio-)". podía desembocar o bíen en un rescate y. probablemente. el fin de la zona del euro (se hablaba de un rescate de mínimo 500.000 millones para Espana), o bien en una solución y recuperación progresiva. Eran las expectativas de los agentes las que acabarían provocando una situación o la otra (expectativas autocumplidas). La intervención de Oraghi cambió las expectativas del mercado y permitió la progresiva recuperación de los países peri fericos y alejó el fantasma del rescate de Espana e Italia.
+}
+
+• El bail-in en el programa de Chipre (20 13): El tamaño del sistema bancario chipriota era desproporcionado teniendo en cuenta el tamaño del país. Cuando las autoridades de la  isla solicitaron el rescate para recapitalizar sus bancos, la opinión pública en Alemania denunció que se usara dinero público europeo para rescatar a los oligarcas rusos, muy presentes en los pasivos de los bancos chipriotas. A ello se sumó que los países más duros denunciaron que, si Chipre era sistémico, entonces todo era sistémico. Por otro lado, varios Estados denunciaron que penalizar los depósitos chipriotas podría llevar a una fuga de depósitos y pánico bancario en otros países de la zona del euro. Finalmente, se hizo una quita parcial en los depósitos no asegurados por encima de los 100.000 euros.\footnote{Hasta entonces, el régimen que se había seguido era el de bail-0111 {rescate con fondos públicos). pero entonces se buscó proteger el dinero de los contribuyentes y usar el bail-in (quitas de los pasivos propiedad del sector privado. aumentando la corrcsponsabilidad en el origen y gestión de la crisis). Aunque el presidente del Eurogrupo. el ministro de finanzas holandés Jeroen Dijsselblocm defendió que el bai/-i11 sería el nuevo patrón. ello no fue así. El coste político del bail-in era muy alto y su uso no se generalizó (como puede observarse en la gestión de la crisis de los bancos itali¡¡nos en 2015-2017).
+} 
+
+Durante la primera fase de la crisis, con unas expectativas de inflación bien ancladas, la política monetaria del Eurosistema buscó reparar los mecanismos de transmisión de la política monetaria única ("rotos" a raíz de la ruptura del vínculo entre los tipos de interés oficiales del BCE y los costes de financiación de la economía real, consecuencia del clima de desconfianza en el sistema bancario). Así mismo, se puso de manifiesto que el marco operativo estándar del BCE en "tiempos normales" era insuficiente para cumplir el mandato de 1:nantenimiento de la estabilidad de precios. En este contexto, a la par que se fueron reduciendo los tipos oficiales. se implementaron instrumentos no convencionales - que analizaremos posteriormente - como programas de compras de activos (el Securities Market Programme de 2009, y los Covered Bond Purchase Programme 1 y 2 en 2009 y 20 1 1) y operaciones de mercado abierto a más largo plazo ( Very Longer-Term Rejinancing Operations).
+
+La recuperación económica iniciada en 2013 no se aceleró como inicialmente estaba previsto, con una inflación muy moderada (por debajo del 2\% desde enero de 2013) y una continuación en la tendencia de contracción del crédito, aunque menos pronunciada. En este contexto, el BCE volvió a reducir tipos e inició una serie de medidas con vistas a lograr un repunte de la inflación, en un marco en el que los tipos de interés se encontraban en su límite inferior efectivo. Así, el BCE implementó todos los programas del Asset Purchase Programme y, con el objetivo de favorecer el canal del crédito, los Targeted Longer-Term Rejinancing Operations. Así mismo, el tipo de la facilidad de depósito se adentró en terreno negativo, incentivando a los bancos a no depositar su liquidez en el banco central. 
+
+La crisis de la zona del euro también provocó una serie de reformas institucionales, claves para la optimalidad de la unión monetaria, entre las que destacamos:\footnote{Ver Anexo 7 y Tema 45-B
+}
+
+• La creación de un mecanismo permanente de rescate en situaciones de crisis (el Mecanismo Europeo de Estabilidad), tras diversos precedentes que mostraron carencias significativas (Mecanismo Europeo de Estabilidad Financiera y Facilidad Europea de Estabilización Financiera). 
+• El fortalecimiento de los mecanismos de supervisión y coordinación fiscal y macroeconómica, con la reforma del Pacto de Estabilidad y Crecimiento y la implantación del Semestre Europeo. 
+• Mecanismos de risk-sharing: la Unión Bancaria y la Unión del Mercado de Capitales.
+
+\subsubsection{Crisis de la Pandemia e Invasión Ucrania}
+Si bien los tipos de interés continuaron en niveles reducidos dado los riesgos detlacionistas persistentes frente al crecimiento real que experimentó la zona del euro desde 2014, el Eurosistema decidió discontinuar las compras netas del APP en diciembre de 2018. No obstante, la falta de reacción de la inflación y los riesgos que se materializaron para el crecimiento económico en 20 1 9 (guerra comercial de Estados Unidos-China, efecto del Brexit) provocaron que se volviesen a reactivar las compras de activos, se redujese el tipo oficial al -0,50\% y a que se implementase la tercera edición de los préstamos TLTRO.
+
+Durante el mes de marzo de 2020, a medida que se materializaron las consecuencias graves de la pandemia en Europa, los Tesoros europeos sufrieron unas fuertes alzas de sus rentabilidades soberanas (gráfico 1 ) y, en el caso de países como Italia o España, unos incrementos de las primas de riesgo. Italia fue castigada por los mercados en primer lugar al ser el primer país europeo en sufrir una oleada de contagios. La reacción por parte del BCE no se hizo esperar, anunciando una extensión de 1 20.000 millones de las compras de activos del APP. Ante los crecientes diferenciales de las rentabilidades de la zona del euro durante la semana en que se decretaron los principales confinamientos, especialmente en aquellos países más dependientes de sectores económicos que implican un alto contacto físico (como el turismo) el BCE decidió implementar un nuevo programa de compras de activos, el PEPP, dotado de una mayor flexibilidad que el APP para responder mejor a un shock común que tuvo consecuencias asimétricas en función del grado de especialización sectorial de los países europeos. Los tipos de interés se mantuvieron inalterados y el programa TL TRO se hizo más expansivo. Como durante la crisis de deuda, a raíz de la pandemia se implementaron diversas reformas que han contribuido a mejorar la optimalidad de la unión monetaria europea al reforzar los mecanismos de compartición de riesgos. Destacaremos dos:\footnote{Debido a la temática de este tema. nos centraremos en los aspectos que mayor relación tienen con la unión monetaria. y no con otros aspectos del ámbito regulatorio. presupuestario o de cohesión.
+} 
+• Instrumento SURE: su objetivo es proporcionar financiación a los Estados miembros por un importe máximo de 100.00ó ME para cubrir parte de los costes relacionados con la creación o la ampliación de los programas naciónales de reducción del tiempo de trabajo (ej.: los ERTEs). De manera relevante, el SURE se ha financiado con la emisión de bonos por parte de la Comisión Europea.
+
+• NextGeneration EU: consiste en un refuerzo de 750.000 millones de euros al presupuesto europeo 2021-2027, con el objetivo de que los Estados miembros, especialmente los más afectados por la crisis, puedan obtener tanto transferencias como préstamos. El NextGeneration también se financiará mediante la emisión de bonos.
+
+A través de la emisión de bonos por parte de la Comisión, por primera vez la Unión Europea ha conseguido crear un activo seguro europeo que contribuya a la integración fiscal y financiera de la unión monetaria.\footnote{Existen precedentes en la emisión de bonos por parte de la Comisión (por ejemplo. relacionados con el Euratom), pero de una magnitud poco significativa.
+} La Comisión está emitiendo bonos y letras a distintos plazos, una gran parte de ellos de carácter verde o social, contribuyendo a la profundización del mercado soberano europeo. Además, el hecho de que dichos bonos deban repagarse hasta 2058 envía dos importantes mensajes al mercado: i) la irreversibilidad del proyecto europeo y ii) la necesidad de una mayor capacidad fiscal de la UE en el futuro para poder repagar dichos bonos.
+
+Adicionalmente, otras instituciones europeas desplegaron una extensa red de seguridad para mitigar los impactos económicos de la pandernia. En primer lugar, el Grupo del Banco Europeo de Inversiones creó un Fondo de Garantía Paneuropeo dotado con 25.000 millones de euros-, materializados en garantías que los Estados miembros comprometen para que se puedan cubrir eventuales pérdidas en operaciones de crédito a empresas (especialmentes PYMES). En segundo lugar, el MEDE estableció un Instrumento de Apoyo ante la Crisis Pandémica a partir de una línea de crédito precautoria ya existente. ajustada a raíz de la crisis de la COVID-19. Esta línea de crédito puede proporcionar préstamos a todos los Estados miembros de la zona del euro (limitados al 2 % de su PIB), hasta un valor total de 240.000 millones de euros. Adicionalmente, durante 2020-2023 se han suspendido las reglas fiscales y se ha iniciado el debate político y técnico sobre su modificación para adaptarlas a las prioridades actuales, mejorando su cumplimiento y transparencia.
+
+Una vez la economía europea comenzó a reabrir tras la pandemia, la demanda - tanto la parte embalsada durante el confinamiento como la ordinaria - comenzó a superar a la oferta - que además sufrió fricciones comerciales en las cadenas de valor globales (rutas comerciales, menor producción industrial en China, etc.) - generando tensiones inflacionistas. Ya en diciembre de 2021, el BCE - y otros bancos centrales anteriormente - comenzaron a "normalizar" su política monetaria anunciando el fin del PEPP. Adicionalmente, la invasión de Ucrania por parte de Rusia, iniciada el 24 de febrero de 2022, tuvo corno consecuencia, desde el punto de vista inflacionista, la superposición de un shock de oferta adicional a los ya existentes, reflejado especialmente en el precio de los productos energéticos y en aquellos alimentos e inputs producidos tanto en Rusia corno en Ucrania. Durante estos meses, las cifras de inflación general superaron ampliamente el objetivo del 2% y, con un mayor retardo, las cifras de inflación subyacente fueron reflejando la misma evolución a medida que el shock de precios se generalizaba a lo largo de la economía europea. A nivel europeo, se han adoptado diversas medidas, en el terreno energético, agrícola, fiscal, etc., para hacer frente a la crisis derivada de la invasión (de hecho, se ha vuelvo a proponer, aunque con menor éxito, un mayor risk-sharing a través de la emisión conjunta de deuda para financiar medidas energéticas o de la coordinación de los impulsos fiscales nacionales) y, como veremos en la segunda parte del tema, el Eurosistema ha ajustado su política monetaria al nuevo  contexto inflacionista, con el objetivo tanto de influir en la inflación observada como en las  expectativas de inflación.
+
+\subsubsection{Miembros actuales: Eurozona}
+Además de los 12 Estados miembros iniciales, la zona del euro ha ido ampliándose desde entonces, hasta estar hoy en día compuesta por 1 9 países. Eslovenia entró en 2007, Chipre y Malta en 2008, Eslovaquia en 2009, Estonia en 2011 , Letonia en 20 14 y Lituania en 2015. El I de enero de 2023, Croacia formará parte del euro, sustituyendo su kuna, ampliándose la zona del euro a 20 países. 
+
+Además, algunos Estados (Mónaco, la ciudad del Vaticano, San Marino y Andorra) han alcanzado acuerdos monetarios con la zona del euro de manera que pueden emitir sus propios euros y emplean el euro como moneda de curso legal, pese a no formar parte de la UE. Estos acuerdos son la continuación natural de los que mantenían con Francia, Italia y España.
+
+El euro también es utilizado como moneda doméstica, sin ninguna clase de acuerdo oficial, en Montenegro y Kosovo (euroization). 
+
+En Dinamarca. la corona danesa fonna parte del nuevo mecanismo de cambio (MTC 2) con un margen de fluctuación del 2,25\% respecto la cotización del euro. No tiene obligación de entrar en el euro debido a la opt-out. Bulgaria entró en el MTC 2 en 2020, junto a Croacia, con paso previo para la adopción del euro. Otros países no miembros de la UE mantienen distintos regímenes de tipo de cambio fijo con el euro.\footnote{Véase la conferencia de Philip Lane de 31 de octubre de 2022 sobre los currency pegs del euro. Currency pegs: a euro urea perspective. Danmarks Nationalbank confercnce marking the 40th anniversary ofthe Danish fixed cxchange  rate rcgime. Además. se incluye en el tema un Anexo 12 sobre el papel internacional del euro.
+}
+
+Suecia tiene obligación de entrar en el euro en algún momento (no tiene opt-out), pero aún no participa en el MTC 2. Su moneda flota libremente en el mercado cambiario. En cuanto a los demás países, también tienen la obligación en algún momento de formar parte del euro. Para ello, el BCE y la Comisión elaboran cada dos años Informes de Convergencia para evaluar si el Estado en cuestión cumple con los requisitos para la adopción del euro. Hoy por hoy, no parece que ninguno de estos países vaya a entrar en el euro en el corto plazo (excepto Bulgaria). El Consejo decide aceptar o no la entrada de un nuevo país en la UEM.
+
+
+\clearpage
+\section{Política Monetaria de la Unión: Estructura actual}
+\puntosclave{
+    La creación de la unión monetaria implicó la creación de un banco central supranacional, el Banco Central Europeo, y de la agrupación de los Bancos Centrales Nacionales en el Eurosistema (para aquellos que tienen el euro como moneda). Es en el Consejo de Gobierno del BCE (donde está representado también el Eurosistema) donde se toman las decisiones de política monetaria para la zona del euro, las cuales se implementan por lo general de manera descentralizada por los Bancos Centrales Nacionales. 
+    
+    El objetivo de política monetaria del Eurosistema es el mantenimiento de la estabilidad de precios, definida, tras la revisión de 2021 como una tasa de inflación a medio plazo del $2\%$. Para la consecución de este objetivo, el Eurosistema tiene en consideración tanto elementos de la economía real, como del sistema monetario y financiero. 
+    
+    La consecución del objetivo se produce a través del uso de los instrumentos de política monetaria. Tradicionalmente, el Eurosistema ha utilizado las operaciones de mercado abierto (de corto plazo), las facilidades permanentes y, en menor medida, las reservas mínimas. Como respuesta a la crisis financiera y a la crisis de la deuda, el Eurosistema comenzó a utilizar operaciones de mercado abierto de más largo plazo, compras de activos financieros (especialmente deuda pública) y otra serie de mecanismos para asegurar la unidad, la credibilidad y la estabilidad del euro.
+}
+
+Comenzaremos analizando el marco institucional a partir del cual se aplica la política monetaria única. A continuación, estudiaremos las características de dicha política, incluyendo sus objetivos, estrategia e instrumentos.
+
+\subsection{Instituciones: ¿Quién participa en la Política Monetaria de la Unión?}
+La Política Monetaria de la Unión no se estructura de una forma sencilla de comprender. Con el compromiso político asumido en 1992 de crear una moneda única, consagrado en el Tratado de Maastricht, y de transferir la responsabilidad de la política monetaria al nivel europeo, la banca central en Europa adoptó un nuevo y singular diseño institucional. Este preveía reunir a las instituciones nacionales (es decir, los bancos centrales nacionales (BCN)) y a una nueva institución europea independiente (es decir, el Banco Central Europeo (BCE)) para formar el Sistema Europeo de Bancos Centrales (SEBC), una nueva construcción del Derecho de la Unión Europea.
+
+Para garantizar que las decisiones de política monetaria pudieran adoptarse de manera eficaz e implementarse uniformemente en todos los Estados miembros de la UE cuando el euro se introdujera en 1999, así como en caso de futuras ampliaciones, los dirigentes europeos consideraron esencial crear un sólido centro de toma de decisiones —el BCE—. Este se combinaría con brazos operativos descentralizados, los BCN, que trabajarían conjuntamente como un sistema coherente e integrado. La idea se hizo realidad en 1998, cuando se estableció el BCE, y comenzó a operar en 1999 con la introducción del euro. A partir de ese momento, la UE tendría, a través del SEBC, competencia exclusiva en el ámbito de la política monetaria para aquellos Estados miembros que hubieran adoptado el euro.
+
+Sin embargo, estaba claro que se necesitaría más tiempo para que todos los Estados miembros adoptaran el euro. Esto hizo necesario distinguir el SEBC, compuesto por el BCE y los BCN de todos los Estados miembros de la UE, del grupo más reducido compuesto por el BCE y los BCN de los Estados miembros que habían adoptado el euro y para los cuales la competencia para llevar a cabo una política monetaria única se situaba ya en el nivel de la UE. El término «Eurosistema» comenzó a utilizarse para referirse a este último grupo. Aunque había sido ampliamente utilizado en la práctica, el término «Eurosistema» solo fue introducido en el Derecho primario de la UE por el Tratado de Lisboa, que entró en vigor el 1 de diciembre de 2009.
+
+El funcionamiento del Eurosistema se basa en un modelo de toma de decisiones centralizada e implementación descentralizada. Combina al BCE, una institución de la UE cuyas decisiones se adoptan de forma centralizada por su máximo órgano de decisión, el Consejo de Gobierno, y a todos los BCN de la zona del euro (sus brazos operativos).
+
+El Consejo de Gobierno está compuesto por los miembros del Comité Ejecutivo del BCE y los gobernadores de los BCN de los Estados miembros que han adoptado el euro. Es el principal órgano decisorio del BCE, ya que su competencia abarca todas las funciones estatutarias del SEBC, desde la política monetaria hasta los billetes y los sistemas de pago, las estadísticas, los aspectos jurídicos e informáticos y la cooperación internacional, por citar solo algunos. El Comité Ejecutivo del BCE es responsable de ejecutar la política monetaria en la zona del euro de conformidad con las decisiones adoptadas por el Consejo de Gobierno, de establecer el orden del día y, con ese fin, de presentar propuestas de decisión al Consejo de Gobierno, así como de la gestión diaria del BCE. Un tercer órgano decisorio, el Consejo General, está integrado por el Presidente y el Vicepresidente del BCE y los gobernadores de los BCN de todos los países de la UE. Se trata de un órgano transitorio, ya que dejará de existir una vez que todos los Estados miembros de la UE hayan adoptado el euro. Finalmente, para las decisiones de supervisión, el Reglamento del Mecanismo Único de Supervisión (MUS)¹ estableció el Consejo de Supervisión como un órgano interno del BCE. Su función es proponer decisiones para que el Consejo de Gobierno las apruebe mediante un procedimiento de no objeción.
+
+La piedra angular de la interacción entre el nivel europeo y el nacional está constituida por una serie de comités del Eurosistema/SEBC, que son grupos de expertos del BCE y de los BCN encargados de asesorar a los órganos decisorios del BCE y al Consejo de Supervisión. La mayoría de estos comités contaban con predecesores que apoyaron el trabajo técnico que condujo al establecimiento formal del BCE y del SEBC en 1998 y a la introducción del euro en 1999. En 1998, el Consejo de Gobierno decidió aprovechar esta experiencia positiva y, sobre la base de las disposiciones del Reglamento Interno del BCE, confirmó que estos comités continuarían como comités del SEBC. Esto permitiría beneficiarse de su experiencia técnica y garantizar la integración fluida del sistema.
+
+Mientras el BCE se preparaba para el establecimiento del Mecanismo Único de Supervisión (MUS) en noviembre de 2014 y la ampliación de sus funciones para incluir la supervisión prudencial de los bancos, se decidió que no se crearían nuevos comités. En su lugar, los comités existentes del Eurosistema/SEBC pertinentes se reunirían, para los asuntos relacionados con las funciones supervisoras del BCE, en una composición específica (composición del MUS), integrada por miembros del BCE y de los BCN y autoridades nacionales competentes (ANC) pertinentes. Además, se previó que el Consejo de Supervisión estableciera subestructuras de carácter temporal, como grupos de trabajo o grupos especiales (task forces), y recibiera apoyo en materia microprudencial de redes y grupos de expertos integrados por especialistas del BCE y de las ANC.
+
+Desde su creación inicial, los comités del Eurosistema/SEBC han prestado un apoyo esencial a los órganos decisorios mediante su experiencia técnica y su asesoramiento. Han sido un elemento institucional clave para respaldar los esfuerzos del sistema en favor de la integración y para forjar una cultura de trabajo común y una identidad compartida del sistema. Más de 25 años después de que se hiciera referencia por primera vez a ellos en un artículo del Boletín Mensual del BCE⁴, esta publicación arroja luz sobre las funciones y los principales procedimientos de trabajo de estos comités, explica cómo han evolucionado desde 1998 y presenta brevemente cada uno de ellos de manera individual.
+
+El Sistema Europeo de Bancos Centrales (SEBC) está constituido por los miembros del Eurosistema y por los bancos centrales nacionales (BCN) de la Unión cuya moneda no es el euro.
+
+\subsubsection{Banco Central Europeo}
+El Banco Central Europeo se encuentra en el núcleo de la Política Monetaria de la Unión. Se trata de un organismo supranacional con personalidad jurídica propia y rango de institución de la UE desde la entrada en vigor del Tratado de Lisboa.
+
+El BCE se creó el I de junio de 1998 en Frankfurt y asume desde entonces las funciones del antiguo Instituto Monetario Europeo. Desde el 1 de enero de 1999 se hace cargo de la instrumentación de la política monetaria de la zona del euro. 
+
+Principios rectores de la actividad del BCE:
+a) Independencia: La teoría económica y la evidencia ernpmca apuntan a que la independencia del banco central favorece el mantenimiento de la estabilidad de precios, objetivo primordial del SEBC. En el caso del BCE, esta independencia se garantiza desde una doble. dimensión: 
+• Personal: los miembros del Comité Ejecutivo i) cuentan con un mandato de 8 años y ii) la separación del cargo únicamente puede darse por incapacidad o falta grave, sobre la que únicamente puede pronunciarse el Tribunal de Justicia de la UE.
+• Funcional: el BCE i) puede decidir de manera autónoma sobre la utilización de los instrumentos de política monetaria a su disposición, ii) tiene prohibido, junto con los BCN, conceder préstamos a organismos de la UE o a entidades nacionales del sector público, lo que lo protege de la influencia de los poderes públicos (art. 123 TFUE) y iii) tiene su propio presupuesto, no integrado en el presupuesto de la UE. 
+
+b) Transparencia: en una sociedad democrática, la independencia de un banco central debe quedar compensada con la rendición de cuentas de su gestión y decisiones ante la opinión pública. Así, el BCE está ohligado a publicar informes trimestrales sobre las actividades  del Eurosisterna, un informe anual sobre sus actividades y la política monetaria del año anterior y del año en curso y, por último, un estado financiero consolidado semanal. Además, el presidente del BCE y otros miembros del Comité Ejecutivo comparecen frecuentemente ante la Comisión de Asuntos Económicos y Monetarios del Parlamento Europeo. En la práctica, el BCE ha decidido llevar a cabo una política de información más amplia de la que imponen los requisitos señalados. 
+
+Además, la transparencia puede aumentar la eficacia de la política monetaria ya que fomenta su credibilidad, impone autodisciplina a los responsables de su conducción y orienta a los mercados. En este sentido, la estrategia de comunicación de la política de comunicación juega un papel fundamental. En este sentido, cabe señalar cómo, cuando la zona del euro se encontró en su effective lower bouncl,\footnote{Tras su reunión de 4 de julio de 2013, el Consejo de Gobierno anunció una versión cualitativa e indefinida defonvard guidance sobre los tipos de interés. En particular, anunció: «el Consejo de Gobierno del BCE espera que los 1ipos de inlerés permanezcan en los niveles acluales o menores por un período prolongado de tiempo. Esta perspecliva se basa en la previsión de una inflación general con/rolada en el medio plazo. dada la debilidad de la economía real y la débil dinámica monetaria». Posteriores comunicados del BCE mantuvieron esa política de comunicaciónforward guidance y la extendieron también a otros instrumentos de política monetaria (APP y PEPP). Su principal implicación es que el BCE ya no comunica únicamente cómo valora las condiciones económicas y los riesgos para la estabilidad fi nanciera en el medio plazo. sino también las consecuencias que dicha valoración implica para la orientación futura de la política monetaria.
+} se produjo un cambio sustancial en la estrategia de comunicación del BCE, al incorporar explícitamente indicaciones sobre la orientación futura de la política monetaria -práctica conocida corno jorward guidance"-\footnote{La orientación 'forward guidance" de la política de comunicación de los bancos centrales encuentra su fundamento en que los efectos de la política monetaria no dependen únicamente de los tipos de interés a muy corto plazo que el banco central controla directamente. sino también en las expectativas formadas por el público sobre cómo dichos tipos de interés se comportarán en el futuro. Las expectativas sobre los tipos de interés futuros son relevantes porque afectan a decisiones económicas importantes como la inversión o el consumo duradero e,_ indirectamente, el empleo. la producción y la fijación de precios. Para un análisis más detallado del uso del fonvard guidance, ver --El uso de la orientación de expectativas o forward guidance como instrumento de política monetaria. Banco de España. Boletín Económico, diciembre 2013'" o ''The ECB 's Fonvard Guidance. ECB. Monthly 8111/etin, April 20/ -1:·
+}, rompiendo así con el principio mantenido hasta esa fecha de "no pre-commitment ". La introducción de esta nueva práctica se produjo como reacción a un nuevo contexto en el nivel de precios en la zona del euro en el que la inflación comenzó a situarse muy por debajo del 2\%, acompañado de una caída significativa en varias medidas de las expectativas de inflación a largo plazo. Con la normalización de la política monetaria en 2022, se ha sustituido el forward guidance sobre los tipos de interés por un enfoque \textit{meeting by meeting} en función de los datos disponibles. 
+
+Capital del BCE: El capital del BCE procede de los BCN de todos los Estados miembros de la UE.\footnote{A 1 de enero de 2022, el capital del BCE ascendía a 10.825.007.068.61 euros. La clave de capital del Banco de España es del 9,69\%.
+} Las participaciones de los BCN en este capital se calculan utilizando una clave nacional que refleja la participación de los respectivos países en la población y en el PIB de la UE, ambos con igual peso a efectos de dicho cálculo. El BCE ajusta las participaciones cada cinco años y cuando un nuevo país se adhiere a la UE.
+
+La mayor parte de la suscripción desembolsada por los BCN corresponde a los estados miembros de la zona del euro, mientras que los BCN de los no pertenecientes a la zona del euro deben desembolsar un pequeño porcentaje de su participación en el capital suscrito del BCE como contribución a los costes operativos del éste. 
+
+Los beneficios y pérdidas netos del BCE se asignan entre los BCN de la zona del euro de conformidad con las claves de capital.\footnote{Los ingresos del Banco Central (lo que, en la práctica, se considera señoreaje) provienen, principalmente. de los intereses que genera su activo (los bonos adquiridos, los préstamos otorgados a la banca. las reservas internacionales, . . . ), mientras que los principales gastos tienen que ver con la remuneración de reservas y demás gastos operativos. De hecho, una fomia de concebir un banco central es como si fuese un swap en el que. por un lado. tiene unos ingresos a tipo lijo (si se considera que los bonos adquiridos por motivos de política monetaria van a estar un largo periodo de tiempo en el balance) y unos gastos a tipo variable (la remuneración de reservas). Actualmente, en 2023. ante la subida de los tipos a los que se remunera la facilidad de depósitos, es posible que varios BCN de la zona del curo entren en pérdidas por esta razón. Es probable que la repercusión de dichas pérdidas sea escasa: una anotación de la misma en el balance del BCN que perdurará hasta que se compense con ingresos futuros. Al fin y al cabo, un banco central. al ser capaz de crear liquidez. no puede quebrar.
+} Posteriormente, el Banco de España realiza un ingreso al Tesoro Público por la cuantía de los beneficios distribuidos.  
+
+
+
+
+
+\paragraph{Órgano político: Consejo de Gobierno}
+Asimismo, tiene encomendada la elaboración de dictámenes consultivos. Dichos dictámenes serán obligatorios para cualquier propuesta o proyecto de disposición legal que entren dentro del ámbito de competencias del BCE.\footnote{Por ejemplo, en materia de acuerdos cambiarios con terceros países. responsabilidad del ECOFIN. en la fijación de posiciones comunes sobre cuestiones con especial interés para la UEM en instituciones financieras internacionales como el FMI o, recientemente, en la aplicación de una contribución al sector bancario español.
+} Por otro lado, el BCE podrá presentar de forma voluntaria dictámenes acerca de materias del ámbito de su competencia, aunque no sea requerido por las instituciones de la UE o por los gobiernos de los Estados miembros. 
+
+Por último, cabe señalar cómo el BCE ha recibido recientemente nuevas atribuciones en lo relativo a las funciones de supervisión prudencial. En 2011 entró en funcionamiento la nueva arquitectura de supervisión financiera de la UE, que incluye tres nuevas Autoridades Europeas de Supervisión, con el fin de mejorar la supervisión microprudencial, y la Junta Europea de Riesgo Sistémico (JERS), responsable de la supervisión macroprudencial del sistema financiero de la UE.\footnote{En el sector bancario (EBA). de seguros (EIOPA) y de los mercados de valores (ESMA).
+} Pues bien, el BCE tiene encomendada la función de Secretaría de la JERS, encargándose también de prestarle apoyo analítico, estadístico, administrativo y logístico. Además, los miembros del Consejo General del BCE son miembros con derecho de voto de la Junta General de la JERS y el presidente del BCE preside la JERS durante sus primeros cinco años de existencia. Además, más adelante, los jefes de Estado o de Gobierno de la UE decidieron promover la creación de un supervisor bancario único. Así, en noviembre de 2014 entró en funcionamiento el Mecanismo Único de Supervisión (MUS), dentro del que el BCE tiene asignada la función de supervisión directa de las entidades clasificadas como significativas. El MUS es uno de los pilares de la Unión Bancaria.
+
+Órganos rectores: la política monetaria del BCE se basa en un sistema de toma colectiva de decisiones. Los dos órganos rectores del BCE a los que les corresponde la responsabilidad de la Política Monetaria Única son el Consejo de Gobierno y el Comité Ejecutivo. El Consejo General es el tercer órgano rector y su existencia se mantendrá mientras sigan existiendo Estados miembros de la UE que no hayan adoptado el euro.
+
+a) Consejo de Gobierno: órgano rector supremo del BCE, está compuesto por todos los miembros del Comité Ejecutivo y por los gobernadores de los BCN de los Estados miembros de la zona del euro, y estará presidido por presidente del BCE.
+
+Funciones:
+• Adoptar las orientaciones y decisiones necesarias para garantizar el cumplimiento de las funciones asignadas al SEBC. • Formular la política monetaria de la zona del euro, incluidas la adopción de decisiones relativas a «los objetivos monetarios intermedios, los tipos de interés básicos y el suministro de reservas» en el Eurosistema, así como establecer las orientaciones necesarias para su cumplimiento. 
+
+Decisiones: en general, las decisiones se adoptan, como regla general, por mayoría simple y con voto de calidad del presidente.\footnote{En lo concerniente a cuestiones financieras -como la suscripción de capital del BCE. la transferencia de activos exteriores de reserva, la distribución de los ingresos monetarios. ele.-. los votos de los miembros del Consejo de Gobierno se ponderan confonne a la participación de cada banco central nacional en el capital suscrito del BCE.
+} 
+
+Cada miembro del Comité Ejecutivo dispone de un voto, mientras que sólo 15 gobernadores de los BCN tendrán derecho a voto (ostentándolo con carácter rotatorio).\footnote{Según el artículo I O del Protocolo (nº 4) sobre los Estatutos del SEBC y del BCE. se debe introducir un sistema de rotación en el mecanismo de votación del Consejo de Gobierno cuando en cuanto el número de Estados de la zona del euro supere los dieciocho. Esto sucedió el I de enero de 2015. cuando Lituania pasó a fonnar parte de la zona del euro. El propósito de la rotación es garantizar la eficacia del sistema de toma de decisiones del BCE incluso con un mayor número de participantes. Los gobemadores de los países de la zona del euro que ocupan las cinco primeras posiciones (según el tamaño de sus economías y de sus sectores financieros) disponen de cuatro votos. Los demás (actualmente. catorce) disponen de once. Para ejercer sus derechos de voto, los gobernadores se tu man siguiendo una rotación mensual.
+} Al adoptar decisiones, los miembros del Consejo de Gobierno no actúan como representantes de sus respectivos Estados miembros, sino como personas plenamente independientes. 
+Reuniones: al menos 10 veces al año, aunque en la práctica se suele reunir el primer jueves de cada mes, lo que da certidumbre en los mercados. Pueden participar en las reuniones el presidente del Consejo de la UE y un miembro de la Comisión Europea, aunque sin derecho de voto.
+
+\paragraph{Órgano ejecutivo: Comité Ejecutivo}
+b) Comité Ejecutivo: órgano encargado de la gestión ordinaria del BCE. Está compuesto por la presidenta, el vicepresidente y otros cuatro miembros36, que tendrán un mandato no renovable de 8 años y desempeñarán sus funciones con dedicación exclusiva. Su nombramiento corresponde al Consejo Europeo por mayoría cualificada, a partir de una recomendación del Consejo de la Unión Europea. Presidenta: Christine Lagarde. Vicepresidente: Luis de Guindos. Resto de miembros: Fabio Panetta Isabel Schnabel, Frank Elderson y Philip Lane (economista-jefe).
+
+Funciones: • Gestión ordinaria del BCE. • Implementar la política monetaria, según las orientaciones del Consejo de Gobierno. • Preparar las reuniones del Consejo de Gobierno; • Asumir determinados poderes que delega en él el Consejo de Gobierno. Decisiones: adoptadas por mayoría simple, con voto de calidad del presidente. Reuniones: semanales, generalmente los martes.
+
+c) Consejo General: formado por el presidente y el vicepresidente del BCE, y por los 27 gobernadores de los BCN de los Estados miembros de la UE. Funciones: desempeña las funciones heredadas del IME que todavía han de llevarse a cabo porque no todos los miembros de la UE han adoptado el euro. Con carácter no exhaustivo: 
+• Respecto a los Estados miembros de la UE que aún no han adoptado el euro: i) reforzar la coordinación de las políticas monetarias con el fin de garantizar la estabilidad de precios y ii) adoptar las medidas necesarias para fijar irrevocablemente los tipos de cambio.
+• Otras: elaborar informes acerca de las actividades del BCE y recopilar estadísticas. 
+Reuniones: generalmente trimestrales. 
+
+
+
+
+
+
+
+\subsubsection{Bancos Centrales Nacionales: Eurosistema}
+
+
+
+
+
+
+El \textit{Eurosistema} se refiere al Banco Central Europeo (BCE) y a los BCN de los veinte Estados miembros de la zona del euro. El término \textit{zona del euro} se refiere al área que comprende los Estados miembros de la UE que han adoptado la moneda común. 
+
+Los miembros del Eurosistema están encargados de dirigir la política monetaria de la Zona Euro. Así, mientras haya Estados que conserven sus divisas nacionales, se mantendrá la distinción entre el Eurosistema y el SEBC.\footnote{Artículo $127(1)$ y $282(2)$ del TFUE. Cabe señalar que el art. $127$ TFUE se refiere los objetivos y las funciones del SEBC y no a las del Eurosistema, ya que su redacción se basó en que el euro forma parte del acervo comunitario. En cualquier caso, al hablar de objetivos y funciones nos referiremos indistintamente a SEBC y Eurosistema.
+} Los BCN de dichos Estados miembros tendrán un estatuto especial dentro del SEBC. 
+
+
+
+
+
+
+
+
+Funciones: 
+el Eurosistema tiene 4 funciones básicas: 
+1. Definir y ejecutar la política monetaria de la zona del euro. 
+2. Realizar operaciones de divisas (sin perjuicio de la posesión y gestión de fondos de maniobra en divisas por parte de los Gobiernos de los Estados miembros). Los BCN del Eurosistema han transferido al BCE activos exteriores de reserva por un importe total aproximado de 40 mm de euros, constituidos en un 85\% por divisas y en un 15\% por reservas en oro. A cambio, los BCN han recibido activos remunerados denominados en euros a pagar por el BCE. Los BCN del Eurosistema participan en la gestión de las reservas exteriores del BCE: actúan como agentes del BCE siguiendo unas directrices fundamentales de gestión establecidas por éste. Los demás activos exteriores de reserva del Eurosistema son propiedad de los BCN. que se ocupan de su gestión. El Eurosistema regula las transacciones realizadas con estos activos de reserva, en concreto, aquéllas cuyo importe supere un cierto límite necesitan la aprobación previa del BCE.
+3. Poseer y gestionar las reservas oficiales de divisas de los Estados miembros.
+4. Promover el buen funcionamiento de los sistemas de pago (Anexo 1 3 del euro digital). 
+
+Asimismo, el BCE, como institución independiente, tiene encomendadas otras funciones, entre las que destaca la relativa a la estabilidad financiera y la supervisión prudencial. También pueden citarse las relacionadas i) con los billetes (el BCE tiene el derecho exclusivo de autorizar la emisión de billetes en la zona del euro), ii) con la elaboración de estadísticas o iii) con la cooperación europea e internacional.\footnote{No asi de moneda metálica, para la que la decisión sobre la emisión es competencia de los Estados miembros (aunque será necesaria la aprobación del BCE en cuanto al volumen de dicha emisión).
+}
+
+En lo que respecta a la política cambiaría, aunque los tratados prevén que el ECOFIN y el BCE compartan la responsabilidad de las decisiones, las disposiciones que figuran en ellos garantizan que dicha política sea totalmente coherente con el principal objetivo de la política monetaria única, la estabilidad de precios.\footnote{El articulo 119(2) del TFUE establece explícitamente que el objetivo principal tanto de la política monetaria única como de la política cambiaría es mantener la estabilidad de precios.
+}
+
+Principios de actuación: el SEBC actuará con arreglo a los principios:
+t . de economía de mercado abierta y de libre competencia
+ii. de independencia en el ejercicio de sus facultades y en el desempeño de sus funciones y obligaciones. El principio de independencia implica que ni los BCN ni el BCE podrán solicitar ni recibir instrucciones tanto del resto de instituciones de la UE como de los gobiernos de los Estados miembros. Tanto unos como otros se comprometen a no tratar de influir en las decisiones tomadas en el seno del SEBC.
+
+Dirección: el SEBC está regido por los órganos rectores del BCE, el Consejo de Gobit:rno y el Comité Ejecutivo. Corresponde, por tanto, analizar el BCE para estudiar con mayor detalle la composición y funciones de estos órganos rectores. Además, ello nos permitirá profundizar en cómo se articula el principio de independencia del SEBC.
+
+
+\subsubsection{Bancos Centrales Nacionales: Sistema Europeo de Bancos Centrales} 
+
+Para concluir el estudio del marco institucional debemos referirnos a los BCN, cuya participación y funciones en éste difieren según éstos pertenezcan o no a la zona del euro. En cualquier caso, los Estatutos del BCE garantizan la independencia personal de sus gobernadores en términos similares a los del BCE, aunque estableciendo un mandato más reducido para sus respectivos gobernadores (fijado en 5 años frente a los 8 del Comité Ejecutivo del BCE).  
+
+a) BCN de la zona del euro: participan en la aplicación de la política monetaria única de la zona del euro, ejecutando instrucciones del BCE. En particular, efectúan operaciones de política monetaria,\footnote{Las operaciones de mercado abierto (MRO. L TRO, TLTRO, . . . ) y las facilidades las gestionan los BCN. Las compras de activos (APP, PEPP, . . . ) las realizan los BCN. excepto un 10\% del total. que las compra el propio BCE (donde se aplica el reparto de riesgos entre todo el Eurosistema). En la práctica. de manera frecuente. llega a los trading desks de los BCN las instrucciones del BCE sobre qué límites tienen para comprar, reinvertir, otorgar préstamos, etc .. en función de la clave de capital (o con mayor flexibilidad si se quiere mitigar el riesgo de fragmentación de los mercados de deuda) y los BCN gestionan dichas operaciones con los principales bancos market-makers.
+} como el suministro de liquidez a las entidades de crédito, y garantizan la liquidación de pagos nacionales y transfronterizos que no se realizan en efectivo. Asimismo, llevan a cabo las operaciones de gestión de las reservas de divisas por cuenta propia como agentes del BCE. Además, los BCN realizan la mayor parte de las tareas relacionadas con la recopilación de información estadística y la emisión y el tratamiento de los billetes en sus países respectivos. Asimismo, los BCN pueden tener asignadas funciones no relacionadas con la política monetaria, como la supervisión bancaria o de otro tipo de entidades (proveedores de servicios de pago, entidades de dinero electrónico, . . .) o la gestión de reclamaciones.
+
+b) BCN no-zona del euro: no participan en la política monetaria única pero mantienen el compromiso de la estabilidad de precios y llevan a cabo tareas estadísticas.
+
+\subsection{Política Monetaria: ¿Qué objetivos persigue el Banco Central Europeo?}
+La estrategia de política monetaria del BCE consta de dos elementos principales. El primer elemento de esta estrategia es una definición cuantitativa de la estabilidad de precios. El segundo elemento es un enfoque basado en dos pilares para el análisis de los riesgos para la estabilidad de precios. Este último elemento proporciona un marco que garantiza que el Consejo de Gobierno evalúe toda la información pertinente y realice los análisis necesarios para tomar sus decisiones de política monetaria, adoptando un planteamiento prospectivo y preventivo.
+
+\subsubsection{Objetivo principal: Estabilidad de precios}
+Tasas de inflación del 2\% ...
+. . . mantenidas en el medio plazo . . .
+. . . medidas con la variación del IPCA de la zona del euro. 
+
+Justificación: existencia de un consenso teórico y empírico sobre las bondades de la estabilidad de precios como objetivo de la política monetaria (ver Anexo 8).
+
+Definición cuantitativa de la estabilidad de precios del BCE: el TFUE no ofrece una definición clara de lo que se entiende por estabilidad de precios. Sin embargo, el Consejo de Gobierno del BCE consideró necesario definir con mayor precisión dicho objetivo para así una conseguir i) una mayor transparencia de la política monetaria, ii) una referencia clara y susceptible de medición que permita al público exigir responsabilidades al BCE y, iii) una guía de las expectativas sobre la evolución de los precios que permita aumentar la credibilidad y efectividad de la política monetaria del BCE. 
+
+Así, para determinar el objetivo de estabilidad de precios con mayor precisión, en 1998 el Consejo de Gobierno del BCE anunció que:
+
+«La estabilidad de precios se define como un incremento interanual del Índice
+Armonizado de Precios de Consumo (IPCA) de la zona del euro inferior al 2\%. La
+estabilidad de precios ha de mantenerse en el medio plazo». 
+
+Posteriormente, en 2003 se produjo una revisión de la estrategia, en la que se quería excluir la deflación de la definición, y el Consejo de Gobierno aclaró que, de acuerdo con la definición, su objetivo es mantener las tasas de inflación «por debajo del 2\%. pero próximas a este valor, en el medi o plazo». 
+
+En julio de 2021, por segunda vez desde su creación, el BCE revisó su estrategia de política monetaria tras un largo proceso de estudio y debate, en un contexto en el que la zona del euro se encontraba en su límite inferior de los tipos de interés. Así, su objetivo pasa a ser mantener: «una inflación del 2\% en el medio plazo».
+
+Implicaciones de la definición de estabilidad de precios: 
+
+• 2\% es lo suficientemente bajo para obtener los beneficios de la estabilidad de precios.
+
+• Se adopta un objetivo simétrico, de manera que se considerarán indeseables tanto las cifras de inflación por debajo como por encima del $2\%$. Se provee así un margen de maniobra frente al riesgo de deflación. Además, el Consejo de Gobierno reconoció el efecto asimétrico que pueda darse en una economía que esté operando en el límite inferior de los tipos de interés nominales, como era el caso de la zona del euro durante (y antes) de la pandemia. En esas situaciones estaría justificada una política monetaria especialmente contundente o persistente que evitase el afianzamiento de unas expectativas deflacionistas. Ello podría tener como consecuencia que, transitoriamente, la inflación se situase moderadamente por encima del objetivo.\footnote{En general, la revisión del objetivo de 2021 se ha interpretado como un gui1)0 ·'do1·ish ", es decir. tendente a favorecer unas condiciones de financiación acomodaticias. en contraposición a una visión ··J,awkisl, .. de la política monetaria más preocupada por los riesgos inflacionistas. Es importante tener en cuenta que la revisión estratégica se finalizó en julio de 2021 y, por lo tanto. antes de que se materializase el shock inflacionista de finales de 2021 y 2022.
+}
+
+• Proporcionar un margen suficiente para permitir: (i) un ajuste más suave de los desequilibrios macroeconómicos entre los países de la zona del euro, evitando que la inflación de los distintos países caiga persistentemente en territorio negativo; (ii) las rigideces salariales a la baja, que podrían aumentar excesivamente el desempleo; (iii) un sesgo de medición positivo en el índice de precios, que podría implicar que el verdadero nivel de precios sea inferior al medido.
+
+• La orientación a medio plazo refleja el consenso con respecto a que la política monetaria no puede, y por tanto no debe, acomodarse a la evolución de los precios o de la inflación en horizontes temporales cortos, de unas pocas semanas o de meses, evitando así la sobrerreacción ante retardos o tensiones transitorias.\footnote{Los cambios registrados en la política monetaria solo repercuten en los precios con un desfase temporal variable. y la magnitud de su efecto final es incierta. Por tanto. la política monetaria no puede contrarrestar todas las perturbaciones imprevistas que afecten al nivel de precios y. en consecuencia, es inevitable que la inflación registre cierta volatilidad a corto plazo. Por otro lado. la orientación a medio plazo también pennite que. al reaccionar ante perturbaciones que afectan a la inflación. el banco central no se convierta en una fuente independiente de fluctuaciones innecesarias del producto. Para una explicación más detallada de la orientación a medio plazo de la política monetaria del BCE. ver el recuadro 3.2 de la página 74 del libro .. La Política Monetaria del Banco Central Europeo. (Banco Central Europeo, 20 1 1 )''.
+}
+
+• " . . . medidas en términos del IPCA de la zona del euro en su conjunto": 
+o El objetivo de estabilidad de precios del BCE se evalúa a partir de la evolución de los precios de la zona del euro considerada en su conjunto, lo que implica que pueda ser compatible con la existencia de diferenciales de inflación entre Estados. o Se mide en términos del Índice Armonizado de Precios al Consumo (IPCA) que es un índice que se ha annonizado en los distintos países de la zona del euro y aproxima las variaciones registradas a 16 largo del tiempo en el precio de una cesta representativa de bienes de consumo.\footnote{Esto es. medir la estabilidad de precios a través del IPCA implica medirla en términos de la inflación general. Otros indices de inflación «subyacente» pueden proporcionar información complementaria acerca de los factores más permanentes que inciden en la evolución de los precios, excluyendo de la cesta determinados componentes volátiles. Sin embargo. pese a que el BCE realiza un seguimiento de estos indicadores, no considera que la inflación subyacente sea una referencia adecuada para medir la estabilidad de precios en la zona del euro.
+} Tras la revisión de 2021. se considera que el IPCA debe ser reformado para incluir determinados costes relacionados con la tenencia de una vivienda en propiedad (owner-occupied housing).\footnote{A diferencia de lo que ocurre con los gastos por alquiler de vivienda. que se incluyen en la cesta del I PC. los servicios de estadística han considerado tradicionalmente que la compra de vivienda era una decisión de inversión, no de consumo. No obstante. siendo estas compras un determinante importante del poder adquisitivo de los ciudadanos. este enfoque no reconocía que una vez se adquiere una casa. si se reside en ella. ya no es necesario realizar gastos de alquiler. Por lo tanto. debe imputarse una parte del coste de adquisición de la vivienda a la cesta de consumo. en vez de a la de  inversión. Actualmente, Eurostat está estudiando cómo incluir estos aspectos en el IPCA y, cuando concluya. se calcula que la inflación de la zona del euro podría llegar a aumentar unas décimas derivado del OOH.
+}
+
+\subsubsection{Objetuvos secundarios: }
+Como ya hemos visto. el objetivo principal de la política monetaria única es el de mantener la estabilidad de precios, al que se subordina, en caso de conflicto, la obligación del SEBC de prestar apoyo a las políticas económicas generales de la UE para contribuir a la consecución de los objetivos de ésta. Podemos englobar la estabilidad financiera en este último ámbito. 
+
+\paragraph{Estabilidad financiera} 
+
+
+De esta manera, la contribución de la política monetaria del BCE a la estabilidad financiera queda subordinada al objetivo de estabilidad de precios al considerar que, en última instancia, es la mejor contribución que la política monetaria puede hacer para favorecer la estabilidad financiera. Al mismo tiempo, al velar por el correcto funcionamiento del mecanismo de transmisión de la política monetaria, la estabilidad financiera ayuda a los bancos centrales a fomentar la estabilidad de precios. Por tanto, desde una perspectiva a medio y largo plazo, la estabilidad financiera y la estabilidad de precios son objetivos de política monetaria que se refuerzan recíprocamente.
+
+Sin embargo, es posible que estabilidad de precios y estabilidad financiera no vayan de la mano desde una perspectiva de corto plazo, sobre todo cuando se producen efectos indeseados en el uso de los instrumentos de política monetaria (como el ajuste de tipos de interés) para perseguir el objetivo primordial de la política monetaria única. En efecto, la crisis financiera iniciada en 2008 demostró que la estabilidad de precios no es suficiente para garantizar la estabilidad financiera. Así, durante el periodo anterior al inicio de la crisis, se acumularon en la zona del euro desequilibrios en forma de "burbujas" a pesar de que la inflación se mantenía estable en niveles bajos. Igualmente. un contexto de condiciones monetarias muy laxas, con medidas no convencionales de política monetaria y tipos de interés negativos puede incentivar procesos de búsqueda de rentabilidad (searchfor yield) que deriven en una asunción excesiva de riesgos y una asignación ineficiente de los recursos por intermediarios financieros. Asimismo, esa laxitud monetaria podría generado "burbujas" en los precios de algunos activos financieros y reales o, también, provocar tensiones en algunos sectores financieros concretos, como el de las compañías de seguros de vida y fondos de pensiones. 
+
+Sin embargo, como sabemos, el TFUE no menciona la estabilidad en los precios de los activos como parte del mandato del BCE.\footnote{En las negociaciones iniciales del euro se consideraba que la supervisión microprudencial nacional era suficiente para salvaguardar la estabilidad financiera, hipótesis que fue descartada por la crisis financiera global.
+} Ello implica que la política monetaria única no debe estar dominada por cuestiones de estabilidad financiera, como tampoco lo está por la política tiscal.\footnote{Sabemos que el artículo 123( 1 ) TFUE prohíbe expresamente al BCE prestar a gobiernos o instituciones públicas. así como adquirir títulos de deuda de éstos en el mercado primario.
+} Este es el motivo por el que el BCE, entre 20 1 4 y 2021, adoptó una política monetaria de marcado carácter expansivo, a pesar de las voces que reclamaban tomar en consideración los riesgos que ello podía provocar en la estabilidad financiera de la zona del euro. No obstante, ello no implica que la búsqueda de la estabilidad financiera se haya dejado de lado, sino que se ha considerado más adecuado utilizar instrumentos de política económica que conforman la política macroprudencial (la cual es competencia de los BCN para el sector bancario).
+
+Así, en los últimos años se han tomado importantes medidas para mejorar la estabilidad financiera en la Unión Europea, como la creación del Mecanismo de Supervisión Único (MUS) y la Junta Europea de Riesgo Sistémico (JERS), mencionados anteriormente, o la promulgación de ciertos Reglamentos y Directivas que conforman un sistema armonizado de supervisión macro- y microprudencial de las er1tidades bancarias de la zona del euro.\footnote{Entre otros: el Reglamento (EU) nº 575/20 1 3 sobre requisitos de capital (CRR) y la Directiva 201 3/36/EU sobrerequerimientos ele capital (CRD IV), que adaptan y amplían los Acuerdos ele Basilea 111, o el Reglamento (UE) nº468/20 1 4 del Mecanismo Único de Supervisión
+}
+
+
+\paragraph{Cambio Climático}
+Uno de los aspectos clave de la revisión estratégica de 202 1 ha sido el impacto del cambio climático en el objetivo de estabilidad de precios. Como explica su Plan de acción climática, si bien el BCE no es el actor fundamental que debe liderar la lucha contra el aumento de las temperaturas, su adaptación a este nuevo contexto es necesaria. Ello se justifica en los efectos que, tanto el cambio climático en sí (riesgos fisicos), como el proceso de transición a una economía verde (riesgos de transmisión), tendrán en las variables que determinan el tono monetario del Banco (inflación, output, interés natural, productividad, empleo ... ) y en el valor y el riesgo de los activos del balance del Banco.
+
+El Plan detalla una serie de iniciativas que irá implementado el Eurosistema en los próximos años: requisitos verdes para la elegibilidad de los activos que pueden ser colaterales en operaciones de mercado abierto o que pueden ser adquiridos bajo un programa de compras; descarbonizar la cartera del programa de compra de bonos de empresas (CSPP); mejoras metodológicas en la modelización macroeconómica, en los indicadores estadísticos y en el análisis de riesgos.
+
+
+
+
+
+
+\subsection{Política Monetaria del BCE: ¿Cómo se anticipa a los acontecimientos y lleva a cabo sus objetivos?}
+
+Para poder cumplir con su objetivo principal, el BCE necesita poder valorar los riesgos para la estabilidad de precios. Para no perder información relevante en la evaluación de dichos riesgos, su análisis se organiza a partir de dos perspectivas complementarias sobre la determinación de la evolución de los precios, conocidas como "los dos pilares".
+
+Este enfoque ofrece la posibilidad de contrastar las indicaciones· proporcionadas por el análisis económico a más corto plazo con las derivadas del análisis monetario y financiero a más largo plazo. Al adoptar un enfoque diversificado para interpretar la situación económica, la estrategia del BCE tiene por objeto adoptar una política monetaria sólida en un entorno de incertidumbre. Desde 2021, se insiste en que debe hacerse una evaluación integrada de ambos pilares, dadas las múltiples interrelaciones existentes.
+
+\subsubsection{Estrategia: Anclar la inflación objetivo a medio/largo plazo}
+
+
+\paragraph{Primer pilar: Análisis económico} 
+Sigue una perspectiva de corto a medio plazo ya que se centra en la valoración de la situación económica existente y en los riesgos implícitos para la estabilidad de precios en dicho horizonte temporal. 
+
+En particular, analiza cómo influye en la determinación de los precios la interacción entre la oferta y la demanda en los mercados de bienes, servicios y factores en horizontes temporales cortos. Para ello, se vale de distintos indicadores: evolución del producto total, la demanda agregada y sus componentes, la política fiscal, la situación de los mercados de trabajo, una amplia gama de indicadores de precios y costes, la trayectoria del tipo de cambio, la economía mundial y la balanza de pagos, así como múltiples encuestas a consumidores y empresas.\footnote{La mayoría de los modelos que utiliza el Eurosistema para analizar el ciclo económico son dynamic stochastic general equilibrium models (DSGE). con economía abierta y rigideces y fricciones financieras. Un conocido modelo es el New Area Wide Model 11 del BCE (COENEN et al.. 2020).
+} 
+
+En este análisis, la atención se centra en la necesidad de identificar la naturaleza de las perturbaciones que afectan a la economía, sus efectos en el comportamiento de los costes y de los precios y las perspectivas de propagación a la economía de corto a medio plazo. Por ejemplo, la respuesta adecuada de política monetaria ante las consecuencias inflacionistas de un alza transitoria del precio del petróleo en los mercados internacionales (shock de oferta exógeno) podría ser diferente de la que cabría dar a un aumento de los precios de consumo resultante de subidas salariales que no se corresponden con el crecimiento de la productividad. Las proyecciones macroeconómicas que el staff del Eurosistema realiza trimestralmente son clave para la toma de decisiones del Consejo de Gobierno.
+
+\paragraph{Segundo pilar: Análisis monetario y financiero}
+Tradicionalmente, el BCE identificaba una tasa de crecimiento monetario que proporcionase la señal pertinente de la existencia de riesgos para la estabilidad de precios en el medio-largo plazo, complementando el análisis real anterior. 
+
+Así, el BCE seguía un enfoque práctico y estableció un valor de referencia cuantitativo para el crecimiento del agregado monetario M3, del 4,5\% interanual.\footnote{El Eurosistema ha definido tres agregados monetarios para la zona del euro: M1, compuesto por los billetes y monedas en circulación (efectivo en circulación) y por los depósitos a la vista; M2, compuesto por los pasivos incluidos en M1, más los depósitos a plazo de hasta dos años y los depósitos disponibles con preaviso de hasta tres meses: y M3, que comprende los pasivos incluidos en M2 más las cesiones temporales, las participaciones en fondos del mercado monetario e instrumentos del mercado monetario y los valores de renta fija de hasta dos años emitidos por las instituciones financieras monetarias. El agregado monetario M3 es el más estable y. por ello. ha sido el elegido por el Eurosistema para definir un valor de rclerencia para el crecimiento del dinero.
+} En cualquier caso, cabe señalar que dicho valor de referencia no constituía una estrategia de monetary /argel, sino únicamente una referencia para analizar la información contenida en los desarrollos monetarios de la zona del euro. 
+
+La nueva estrategia reconoce la menor correlación entre agregados monetarios e inflación y, por lo tanto, resta peso al seguimiento de los agregados. Además, la estrategia recoge las lecciones aprendidas tras la crisis financiera global y amplía el análisis monetario al "financiero",   incluyéndose aspectos como (i) los canales de transmisión de !a política monetaria (crédito, , préstamos bancarios, asunción de riesgos, fijación del precio de los activos); (ii) los factores que pueden alterar dicha transmisión (por ej., un aumento de la intermediación financiera no bancaria, la fragmentación del mercado) o (iii) los riesgos que la inestabilidad financiera pueda tener para la consecución de la estabilidad de precios. En este sentido, el análisis examina en qué medida las medidas macroprudenciales pueden mitigar los riesgos para la estabilidad financiera que son relevantes para la estabilidad de precio.
+
+\subsubsection{Instrumentos: }
+Para alcanzar su objetivo primordial de mantener la estabilidad de precios, el Eurosistema utiliza un conjunto de instrumentos y procedimientos que constituyen su marco operativo. Mientras que la estrategia de política monetaria determina el nivel de tipos de interés del mercado monetario que es necesario para mantener la estabilidad de precios a medio plazo, el marco operativo establece la manera de alcanzar dicho nivel con los instrumentos y los procedimientos de política monetaria disponibles.\footnote{Los tipos de interés a corto plazo del mercado monetario desempeñan un papel fundamental en la transmisión de la política monetaria. Al controlar dichos tipos. la política monetaria influye de forma significativa en los tipos de interés nominales a corto plazo y. a través de diversos canales. en las decisiones de gasto de las empresas y los hogares. en la evolución monetaria y financiera y. en última instancia. en el nivel de precios.
+}
+
+Así, el Eurosistema conduce los tipos de interés del mercado monetario\footnote{EL BCE lija tres tipos de interés oficiales: • El tipo de las operaciones principales de refinanciación (ti1>0 rcpo). que es el tipo de interés de las operaciones principales de financiación (MRO). • El tipo de la facilidad marginal de crédito, que es el tipo al que los BCN del Eurosistcma prestan liquidez a un día a los bancos comerciales. Con él, se fija el ··techo·· de los tipos de interés en el mercado intcrbancario. • El tipo de la facilidad de depósito. que es el tipo al que se remuneran los depósitos a un día realizados por los bancos comerciales en los BCN. Con él, se fija el ·'sucio·• de los tipos de interés en el mercado interbancario.
+} mediante la señalización de su posición monetaria a través de la gestión de la liquidez en el mercado monetario y mediante la modificación de las condiciones por las que está dispuesto a realizar transacciones en dicho mercado (tipos de interés oficiales, requisitos de colateral, etc.).\footnote{En el Anexo I se explica en mayor detalle el funcionamiento de la transmisión ele la política monetaria en los mercados monetarios europeos.
+} Para lograrlo, el BCE cuenta con los instrumentos de política monetaria, que, desde un punto de vista histórico, se pueden dividir en dos grandes grupos:
+
+• Medidas convencionales: las operaciones de mercado abierto, las facilidades permanentes y el coeficiente de caja o requerimiento de reservas mínimas.
+
+• Medidas no convencionales: introducidas desde el estallido de la crisis econom1ca y financiera en 2007-2008, con el objetivo de complementar a las medidas convencionales para reparar los mecanismos de transmisión de la política monetaria, primero, y para afrontar el contexto de baja inflación, después. Nos encontramos con operaciones de mercado abierto a más largo plazo y/o condicionadas (VL TRO. TL TRO). compras de activos, forward guidance, tipos negativos. Desde la revisión de 202 1, el BCE considera que estos instrumentos fonnan parte habitual de la caja de herramientas del Eurosistema, dada la utilidad que presentan en un contexto de límite bajo de los tipos de interés nominales y que, por tanto, dejan de ser "no convencionales".\footnote{A pesar de que. tradicionalmente, los opositores han expuesto este tema diferenciando entre instrumentos tradicionales y los no convencionales, a la vez que paralelamente contaban la historia de la crisis financiera y de la deuda pública en Europa. consideramos que. en 2023, es más eficiente realizar una presentación sistemática, no histórica. Ello por dos motivos: i) porque el propio BCE ya no diferencia entre instrumentos no convencionales y ii) existen economías de alcance de tiempo y de comprensión si la exposición se realiza en función de las características de los instrumentos. y no por su momento de aplicación.
+}
+
+\paragraph{Operaciones de mercado abierto}
+Estas operaciones consisten en realizar una compra (venta) temporal de activos financieros para inyectar (drenar) liquidez del sistema bancario. Se realizan a iniciativa del BCE. Desempeñan un papel importante para controlar los tipos de interés, sei'lalar la orientación de la política monetaria y gestionar la situación de liquidez del sector bancario de la zona del euro.
+
+Mediante los principales tipos de medidas convencionales (MRO y L TRO), el Eurosistema presta fondos a sus entidades de contrapartida,\footnote{Son aquellas entidades que actúan como contrapartida del Eurosistema en las operaciones de politica monetaria, para lo que deben cumplir ciertos criterios de selección. En la zona del euro. las únicas entidades que pueden acceder a la financiación del Eurosistema son los bancos. al estar conectados al sistema TARGET. TARGET es el sistema de pagos mayorista (entre bancos) a través del cual se implementan las operaciones de política monetaria. utilizando dinero del banco central (reservas).
+} siempre contra la entrega de activos de garantía adecuados (colateral)\footnote{El principal activo de colateral son bonos de deuda pública. dado su reducido riesgo y elevada liquidez.
+}, para proteger al Eurosistema de posibles riesgos financieros. Por lo tanto, las operaciones de mercado abierto se estructuran como repos (repurchase agreements o acuerdos de recompra), mediante los cuales los bancos obtienen reservas en su activo (y registran una deuda derivada del préstamo en su pasivo). El BCN correspondiente registra un derecho de cobro frente al banco en su activo y, en su pasivo, registra un aumento de las reservas de dicho banco en su cuenta corriente del BCN (esta creación ex novo del pasivo del banco central refleja la creación monetaria que ha implicado la inyección de liquidez).\footnote{Al igual que un consumidor tiene en su banco comercial un depósito (que supone dinero para el consumidor). los bancos comerciales tienen depósitos en su BCN, que se denominan reservas (y que suponen el dinero para el banco, con el cual hacen operaciones interbancarias y de política monetaria). Las reservas. junto a los billetes y las monedas, son los dos únicos ·•dineros" provistos por el banco central que existen y suponen el activo más liquido del sistema monetario. Como hemos visto. las reservas se crean al dar un préstamo a la banca (operación de mercado abierto) o, como veremos. al comprar activos (quantitative easing).
+}
+
+Las operaciones de mercado abierto se llevan a cabo al tipo oficial MRO del BCE (en diciembre de 2022, 2,50\%), con las excepciones que se indican para operaciones especiales. Estudiemos los tipos de operaciones de mercado abierto en detalle:
+
+a) Operaciones principales de refinanciación (o MRO, por sus siglas en ingles). 
+Son las operaciones de mercado abierto más importantes y representan el instrumento fundamental de política monetaria del Eurosistema en un contexto de liquidez nonnal en el mercado (véase Anexo 1 ). Las MRO y LTRO han sido escasamente utilizadas desde que el Eurosistema empezó a operar con exceso de liquidez tras la implementación de políticas monetarias no convencionales. • Descripción: se trata de operaciones periódicas de inyección de liquidez vía repos, realizadas con periodicidad semanal conforme a un calendario prefijado y con vencimiento también a una semana, ejecutadas mediante el procedimiento de subasta estándar, a tipo de interés variable (o subasta "holandesa", habitual hasta 2009) o fijo (habitual desde 2009).\footnote{En el contexto del Eurosistema, son «estándar» aquellas subastas que se realizan de conformidad con un calendario anunciado previamente y se ejecutan dentro de las 24 horas que transcurren entre el anuncio de la subasta y la notificación del resultado. Pueden participar en ellas las entidades de contrapartida. El Eurosistema puede llevar a cabo subastas a tipo de interés fijo o a tipo de interés variable. En el primer caso. el BCE determina previamente el tipo de interés y las entidades de contrapartida solicitan los fondos que desean obtener a dicho tipo. En el segundo caso. las entidades de contrapartida pujan por el volumen de liquidez y el tipo de interés al que desean llevar a cabo la operación. Las entidades de contrapartida pueden presentar múltiples pujas con diferentes niveles de tipos de interés. En cada puja. deben especificar el volumen de l iquidez que desean obtener al tipo de interés respectivo. El Consejo de Gobierno puede fijar un tipo mínimo de puja para las subastas a tipo de interés variable, con el fin de señalar la orientación de la política monetaria. En ambos procedimientos. el BCE decide el volumen de liquidez que se va a proporcionar. En una subasta a tipo de interés fijo. l a adjudicación suele efectuarse por prorrateo entre las pujas_ de las distintas entidades, en función de la relación entre la cantidad total que se va a adjudicar y el volumen total solicitado. En una subasta a tipo de interés variable, las pujas con los tipos de interés más altos son las primeras en cubrirse y, después, se van aceptando sucesivamente las de tipos de interés más bajos. hasta agotar la cantidad total de liquidez que se va a adjudicar. Para el tipo de interés más bajo adjudicado, es decir. el «tipo marginal de adjudicación», la adjudicación se efectúa por prorrateo entre las pujas, en función del volumen total de liquidez a adjudicar decidido por el BCE. En cada adjudicación. el tipo de interés aplicado es igual al tipo pujado. En circunstancias excepcionales, el BCE puede decidir adjudicar el volumen total de liquidez solicitado por las entidades de contrapartida, es decir. satisfacer la totalidad de las pujas (ji,// al/01111ent). lo cual fue lo común desde las necesidades de liquidez que creó la congelación del mercado interbancario tras la quiebra de Lchman Brothers.
+} • Objetivos: conducción de los tipos de interés (es el principal determinante del canal de transmisión de los tipos de interés) y gestión de la liquidez bancaria (permiten atender necesidades a corto plazo, con cierta planificación, dado un calendario).
+
+b) Operaciones de refinanciación a plazo más largo (L TRO). 
+• Descripción: se trata de operaciones periódicas de inyección de liquidez vía repos, realizadas con periodicidad mensual conforme a un calendario prefijado y con vencimiento, en principio, a tres meses, ejecutadas mediante subastas estándar. • Objetivos: proporcionar liquidez a más largo plazo al sistema bancario y, así, evitar que solo se pueda acceder a activos líquidos del banco central (reservas) durante una semana. • Otros tipos de L TRO: en el marco de las medidas no convencionales tras la crisis financiera global, el Eurosistema decidió ampliar los plazos de las L TRO (a seis meses y un año), crear operaciones a muy largo plazo (VL TRO) y operaciones condicionadas a la concesión de crédito (TL TRO). VL TRO ( Very longer-term Rejinancing Operations ): en diciembre de 20 1 1 y febrero de 2012 se realizaron dos operaciones de refinanciación a 3 años por un volumen conjunto de más de mil millones de euros. Su devolución terminó en febrero de 2015.
+
+TLTRO (Targeted Longer-Term Refinancing Operations): en junio de 20J4 el BCE anunció el lanzamiento de nuevas operaciones de refinanciación a largo plazo, pero esta vez condicionadas a la concesión de créditos a empresas y hogares (excepto para la adquisición de vivienda). 
+
+❖ TL TRO I G unio 20 1 4): se instrumentó a través de un total de 8 operaciones, una cada tres meses entre septiembre de 20 1 4 y junio de 2016, con vencimiento en septiembre de 20 1 8 .
+
+❖ TLT RO 1 1 (marzo 20 1 6): tras la experiencia positiva del primer programa, y ante el comportamiento pausado del crédito, se añaden 4 operaciones, una cada tres meses entre junio de 20 1 6 y marzo de 20 1 7, con vencimiento de 4 años. Los préstamos también están condicionados pero, a diferencia de la TL TRO 1, en caso de no conseguir un volumen determinado de nuevo crédito, las TL TRO 11 no están sujetas a la obligación de devolución anticipada. Se aplica el tipo de interés de las MRO en el momento de la inyección. pero ajustándose tanto más a la baja cuanto mayor sea la cantidad concedida de préstamos, hasta el 1ímite del tipo de la facilidad de depósitos. 
+
+❖ TL TRO l t l (septiembre 2019): ante las perspectivas deflacionistas en 20 1 9 se busca reforzar la trans!l)isión de la política monetaria otorgando liquidez al sector bancario. Las condiciones de dichos préstamos fueron relajadas en abril de 2020 para evitar un credit crunch motivado por la pandemia. Así, tras la revisión de abril de 2020, el programa consiste en I O operaciones de crédito con un vencimiento máximo de tres afíos.\footnote{Como en los anteriores programas, las entidades de contrapartida tienen la posibilidad de realizar devoluciones anticipadas voluntarias en determinadas fechas que establece el BCE.
+} Se establecen dos tipos de interés: de 50 p.b. por debajo del tipo medio de la facilidad de depósito durante la vida de la operación (es decir, del - 1\% en aquellos años), en caso de que los bancos aumenten interanualmente el crédito concedido a sociedades rio financieras y hogares,\footnote{La gran mayoría de los bancos de la zona del euro consiguieron aumentar el volumen de crédito concedido interanualmente y. por lo tanto, disfrutar las condiciones más favorables de los TLTROs.
+} o el tipo medio de la facilidad de depósitos si no se alcanza dicho objetivo de crédito (-0,50\%).\footnote{Esta estructura de tipos de interés creó la posibilidad de que los bancos obtuviesen un beneficio de arbitraje. es decir, sin riesgo. La financiación que los bancos obtienen con los TLTRO la utilizarían. en un primer momento. para conceder crédito a la economía real y poder así cumplir la condicionalidad de los mismos. No obstante. una vez cumplido el objetivo. los bancos acumularon significativas reservas de los TL TRO (y por otros motivos) en su activo. que depositaban en su cuenta corriente del BCN. Entre 2019 y 2022, debido al conocido como rwo-tier reserve system, una cantidad sustancial de las reservas depositadas en el BCN estaban excluidas de la penalización del tipo negativo de la facilidad de depósito (-0.5\%). Por lo tanto. si un banco obtenía financiación al - 1\% y lo podía depositar al 0\%, obtenía un beneficio de 100 p.b. (o de 50 p.b. sobre la parte no excluida del reserve system). Una vez comenzaron a subirse tipos en 2022. dicho beneficio se aumentó, pues el depósito se hacía a un tipo positivo. De ahí que se modificasen rctroactivamente las condiciones del préstamo TL TRO para eliminar dicho beneficio.
+} En noviembre de 2022, el BCE decidió modificar retroactivamente la remuneración de los TL TRO vivos, con el objetivo de que dichas operaciones también contribuyeran a la normalización de la política monetaria. Así, desde entonces hasta el vencimiento de la .operación, los bancos dejaron de recibir el tipo ultra-expansivo anterior a pagar el tipo de la facilidad de depósitos (que es positivo desde septiembre de 2022).\footnote{Al eliminar el beneficio sin riesgo. el BCE incentivó a los bancos a que devolviesen anticipadamente sus préstamos TL TRO. reduciendo así el exceso de liquidez en el sistema y el balance del Eurosistema.
+} El volumen máximo de créditos TL TRO concedidos fue de 2,2 billones de euros.
+
+❖ PEL TRO (Pandemic Emergency Longer-Term Refinancing Operations, abril 2020): estas operaciones buscan proveer liquidez a aquellos bancos que, debido a la composición de su cartera de préstamos, no pueden acceder a la financiaciónTL TRO. En abril de 2020 se,anunciaron siete operaciones PELTRO y en diciembre de 2020 cuatro más. Tienen un vencimiento de un año. Se llevaron a cabo como procedimientos de licitación a tipo fijo con adjudicación completa. El tipo de interés fue de 25 puntos básicos inferior al tipo medio aplicado en las MRO (el 0\% entonces) durante la vigencia del préstamo, favoreciendo el atractivo de los mismos.
+
+c) Operaciones de ajuste ("fine tunning"). 
+• Descripción: se trata de diversos tipos de operaciones (repos, swaps de divisas y depósitos a tipo de interés fijo), tanto de inyección como de absorción de liquidez, sin periodicidad ni vencimiento prefijado, ejecutadas tanto mediante subastas rápidas como mediante procedimientos bilaterales con un número limitado de bancos.
+
+• Objetivos: regular la situación de liquidez del mercado monetario y controlar los tipos de interés, en particular para suavizar los efectos que en estos causan las fluctuaciones inesperadas de liquidez en el mercado.
+
+d) Operaciones estructurales
+• Descripción: de nuevo, se trata de diversos tipos de operaciones (en este caso repos, emisión de deuda\footnote{Si bien nunca se ha empleado, la emisión de títulos de deuda por parte del Eurosistema supondría una operación de absorción de liquidez del sistema bancario (los bancos compran deuda del BCE a cam)Jio de sus reservas).
+} y compraventa outright de títulos), tanto de inyección como de absorción de liquidez, sin periodicidad ni vencimiento prefijado, ejecutadas tanto mediante subastas estándar u operaciones bilaterales. 
+• Objetivos: ajustar la posición de liquidez estructural del Eurosistema frente al sector financiero, es decir, el volumen de liquidez disponible en el mercado en un plazo más largo. 
+
+El siguiente gráfico ilustra la importancia que los distintos tipos de. operaciones de mercado abierto han ido teniendo durante los años de vida del Eurosistema. En particular, se destaca la sustitución de las MRO y los L TRO por los TL TRO a partir de 2015, con el objetivo de reconstruir el canal de transmisión de la política monetaria.
+
+Ill.IIJ.IJ. Facilidades permanentes
+Son operaciones que se realizan entre los BCN y los bancos comerciales a un tipo de interés fijado por el Eurosistema. Tienen por objeto i) proporcionar o absorber liquidez a un día a iniciativa de las entidades de contrapartida (a diferencia de las operaciones de mercado abierto, en las que la iniciativa corresponde al Eurosistema), así como, ii) controlar los tipos de interés del mercado monetario a un día (€STR\footnote{El €STR (euro short -term rote) es el tipo de interés benchmark del mercado monetario no garantizado, que refleja el coste para los bancos de la zona del euro de obtener financiación a un día en dicho mercado (por lo tanto, de otros bancos u otros agentes del mercado monetario). En dicho mercado se negocian contratos linancieros no garantizados (como depósitos). Dicho benchmark comenzó a publicarse por el BCE desde octubre de 2019 y. desde el I de enero de 2022. sustituye completamente a su predecesor. el EONIA. El euro overnight index average rote era tipo benchmark a un día publicado por la Federación Bancaria Europea, calculado como la media ponderada de todos los préstamos a un día no garantizados. de acuerdo con la información facilitada por un panel compuesto por las entidades de crédito más activas en el mercado monetario. A diferencia del fSTR. el EONIA se basaba en una comunicación (no en transacciones reales ocurridas en la plataforma de pagos TARGET2) - por lo que estaba sujeto a manipulación - y solamente consideraba operaciones interbancarias.
+}) y, en especial, reducir su volatilidad. El Eurosistema ofrece dos tipos de facilidades pem1anentes a sus entidades de contrapartida:
+
+a) Facilidad marginal de crédito
+
+• Descripción: pennite a las entidades obtener liquidez a un día de los bancos centrales nacionales contra activos de garantía, a un tipo de interés fijado por el BCE.\footnote{Cabe señalar que el BCE ha variado los requisitos y nivel de exigencia de los activos aceptados como garantía en múltiples ocasiones desde el inicio de la crisis financiera. buscando un acceso adecuado de las entidades de contrapartida a las facilidades permanentes
+} Salvo por el requisito de presentar activos de garantía suficientes, las entidades no suelen tener restringido el acceso a estas facilidades.
+
+• Función: establecer un techo a los tipos de tipos de interés a un día en el mercado monetario.\footnote{Dado que el tipo de interés que deben pagar las entidades de crédito generalmente es sustancialmente mayor que el del mercado.
+} A diciembre de 2022, el tipo de interés aplicado a estas operaciones es 2,75\%) 
+
+Facilidad de depósito
+• Descripción: Permite a las entidades realizar depósitos a un día en los bancos centrales nacionales, a un tipo fijado por el BCE, generalmente sin límites.\footnote{En 2022, dado que los bancos tienen un exceso de liquidez superior a 4 billones de euros (por los TL TRO, APP yPEPP), éstos están depositando dichas reservas en la faci lidad de depósitos y obteniendo una remuneración positiva (desde septiembre de 2022). La otra opción sería dejar sus reservas en la cuenta corriente del BCN. donde obtendrían un tipo del 0%.
+}
+• Función: establecer un suelo a los tipos de tipos de interés a un día en el mercado monetario. A diciembre de 2022, el tipo de interés empleado para remunerar estas operaciones es 2,00%.
+
+lll.lll.lll. Reservas mfnimas
+
+Son un depósito en los bancos centrales nacionales que el BCE obliga a realizar a las instituciones crediticias de la zona del euro. Su objeto es estabilizar los tipos de interés del mercado monetario,\footnote{Esta función se lleva a cabo a través del mecanismo de promedios, que permite a las entidades de crédito suavizar las fluctuaciones diarias de la liquidez (por ejemplo, las derivadas de oscilaciones en la demanda de billetes), dado que los desequilibrios de carácter transitorio que se produzcan en las reservas pueden compensarse con desequilibrios de signo contrario que tengan lugar en el mismo periodo de mantenimiento. Este mecanismo permite a las entidades de crédito beneficiarse de la concesión de préstamos en el mercado monetario. incurriendo en un déficit de reservas, cuando los tipos de interés del mercado monetario en los plazos más cortos se sitúan por encima de los niveles previstos para el resto del periodo de mantenimiento. En el caso contrario, pueden tomar prestado en el mercado y mantener un exceso de reservas. En teoría, este «arbitraje intertemporal» debería garantizar la igualdad durante el período de mantenimiento entre el nivel actual de los tipos de interés del mercado monetario a los plazos más cortos y su nivel esperado al final del período de mantenimiento. Este mecanismo estabiliza el tipo de interés a un día durante dicho período. con lo que se evitan intervenciones frecuentes del banco central en el mercado monetario. El mecanismo de promedios funciona con gran flexibilidad durante el período de mantenimiento. Sin embargo. al final del período, las exigencias de reservas han de cumplirse obligatoriamente y las entidades de crédito ya no pueden trasladar los déficits o superávits de liquidez a un período futuro.
+} al suavizar las fluctuaciones diarias de liquidez, así como ampliar (o crear) el déficit estructural de liquidez en el sistema bancario, lo que facilita la tarea del BCE a la hora de controlar los tipos de interés del mercado monetario mediante operaciones de inyección de liquidez.\footnote{
+Es decir. un aumento de las reservas mínimas requeridas supone un aumento de demanda de liquidez por las entidades de crédito. que el BCE puede satisfacer a través de inyecciones de liquidez.
+}
+
+El importe de las reservas obligatorias que cada entidad debe mantener se calcula multiplicando la base de reservas por un coeficiente de reservas que, desde diciembre de 2011, quedó fijado en el 1\%.\footnote{En lugar del 2\% fijado al inicio de la tercera fase de la Unión Económica y Monetaria. La razón de esta disminución se encuentra en el mayor uso por las entidades de crédito de las operaciones de refinanciación en un contexto de tensiones de liquidez. ya que ello hacia que no fuera necesario unos requisitos de reservas mínimas tan elevados como en condiciones nonnales para conducir las condiciones del mercado monetario.
+} La base de reservas se compone de: depósitos a la vista, depósitos a plazo hasta 2 años y papel comers;ial/letras de hasta 2 años: El resto de los pasivos de la banca con plazos superiores no están sujetos a reservas mínimas.
+
+Las reservas asi determinadas se deben mantener durante un período ligeramente superior a un mes (el llamado "periodo de mantenimiento") y se remuneran, desde octubre de 2022, al tipo de la facilidad de depósito.\footnote{Anteriormente se remuneraban al tipo de las operaciones principales de refinanciación. Dicha decisión se debió a que. según el BCE, el tipo de la facilidad de depósitos refleja en mejor medida (en esos momentos) el coste de oportunidad para los bancos en el mercado monetario. Dicha decisión pem1itió también reducir la remuneración positiva que estaba recibiendo el alto volumen de liquidez que tienen los bancos en los bancos centrales.
+} El período de mantenimiento de reservas se inicia a partir del día de la liquidación de la primera operación principal de retinanciación posterior a la reunión del Consejo en la que tomen decisiones de política monetaria. Una entidad cumple las exigencias de mantenimiento de reservas durante ese periodo si la media de los saldos diarios en su cuenta en el banco central no es inferior a la cantidad exigida. 
+
+En la actualidad. el principal volumen de reservas en los bancos centrales lo constituyen las reservas "voluntarias" y no las obligatorias (suponen aproximadamente el 4\% del total de reservas), como consecuencia de una década de políticas monetarias expansivas.\footnote{Ver Anexo l .
+} Si dichas reservas se mantienen en la cuenta corriente del BCN se remuneran al 0% (de ahí que haya habido un trasvase de dichas reservas voluntarias a la facilidad de depósito) 
+
+Un breve comentario sobre la evolución de los tipos de interés oficiales. Hemos visto los instrumentos "convencionales" de política monetaria del Eurosistema. mediante los cuales el BCE conduce los tipos de interés del mercado monetario en condiciones normales. Sin embargo, la crisis financiera global iniciada en 2007 trajo consigo una rápida pérdida de confianza generalizada en la solidez de las entidades bancarias, que imposibilitó el adecuado funcionamiento de los mercados interbancarios. En el ámbito de la política monetaria convencional. los principales bancos centrales decidieron recortes de los tipos de interés oficiales, hasta situarlos en niveles mínimos históricos. El caso de la zona del euro no fue una excepción y desde la primera bajada de tipos en 2007 se produjo una senda descendente de los tipos de interés hasta niveles no vistos con anterioridad. En el caso de la facilidad de depósito, dicho tipo llegó a terrenos negativos con el objetivo de aumentar su impulso expansivo al penalizar que los bancosno canalizasen sus reservas hacia el crédito.\footnote{El BCE compensó el efecto negativo que el tipo negativo de la facilidad de depósitos tenia sobre la rentabilidad de los bancos con dos mecanismos: i) el beneficio obtenido sin riesgo dados los tipos aún más negativos de los préstamos TLTRO 111 (ver nota 83) y ii) la implementación del rwo-lier reserve system. que pennitia que un volumen de reservas bancarias igual a seis veces el requisito mínimo de reservas del banco estuviese exceptuado de pagar el tipo negativo de la facilidad de depósitos. Cuando los tipos de interés oficiales se volvieron positivos en 2022 se derogó dicho sistema escalonado. De hecho. los bancos reciben grandes intereses por parte del Eurosistema dado el amplio volumen de reservas que tienen depositadas
+}
+
+Posteriormente, el shock inflacionario post-Covid, junto a las consecuencias de la invasión de Ucrania, provocaron que el BCE iniciase un proceso de normalización de la política monetaria, consistente, entre otras medidas como veremos, en el alza simultánea de sus tres tipos oficiales. En principio, el objetivo del BCE es llevar dichos tipos hacia un terreno neutral (donde no supongan ni un acomodo ni una restricción monetaria). No obstante, tanto la determinación de dicho tipo de interés neutral, como la evolución de la inflación, están sujetas a alta incertidumbre.
+
+A diciembre de 2022, los tipos de interés oficiales del BCE son: • Tipo de las operaciones principales de refinanciación (repo): 2,50\% • Tipo de la facilidad marginal de crédito: 2,75\% • Tipo de la facilidad de depósito: 2,00\% 
+
+\paragraph{Programas de compra de activos} 
+En general, la compra de activos por parte del banco central supone el aumento del balance del mismo, de manera que en su activo se registra el nuevo título adquirido y, en su pasivo, un aumento de las reservas del banco comercial que le ha vendido el título. Por su parte, el creador de mercado obtiene liquidez (reservas) con la que aumentar su oferta de crédito, a la vez que se ejerce una presión a la baja en los tipos de interés a más largo plazo de las curvas de tipos (especialmente en el caso de la deuda pública). Por lo tanto, a diferencia de los tres instrumentos anteriores, los efectos de los programas de compra de activos no se centran en el mercado monetario.
+
+Estos instrumentos, conocidos en el mundo anglosajón como quantitative easing (QE), fueron introducidos de manera discreta por el Eurosistema a partir de 2009,\footnote{Por razones de espacio. hemos optado por no incluir la totalidad de programas de compras de activos, centrándonos en los más recientes y/o significativos. Entre otros. no comentamos el Securiries Marker Programme (SMP). que fue el primero en implementarse, así como las primeras versiones de programas que posterionnente se integraron bajo el paraguas del APP. Para un análisis más detallado, consultar: '·The ECB ·s response to the financia/ crisis, Monthly Bulletin, ECB. October 201 O", ·'The ECB ·s non-standard 111011etary po/icy measures. Working paper series n. 1 528. ECB. April 201 3", o '"The Role o/the ce111ra/ bank balance sheet in monetary poliq. Economic 13ulletin, lssue 4, ECB. 2015...
+} con el objetivo de solucionar problemas de transmisión de la política monetaria en determinados segmentos. No obstante, su adopción masiva se produjo a partir de 20 1 4, ya con un marcado objetivo de profundizar el tono expansivo del BCE ante unas débiles perspectivas de inflación. Desde entonces, se han convertido en un instrumento más del BCE, especialmente en situaciones en las que los tipos de interés oficiales están en su límite inferior, no siendo capaces de "relajar" más el tono monetario. a) Asset Purchase Programme (APP): se compone de cuatro programas, en función de los títulos a adquirir: 
+
+
+❖ Public Sector Purchase Programme (PSPP): o Se creó en enero de 20 1 5, ante el deterioro de las perspectivas de inflación y la inefectividad de las medidas previamente adoptadas. o Las compras pueden ser de bonos de gobiernos centrales de la zona del euro, agencias,\footnote{Por ejemplo. ADIF o los Institutos de Finanzas de Cantabria y Catalui'la.
+} instituciones europeas, organizaciones internacionales y bancos multilaterales\footnote{Un 10\% de las compra5 totales debe hacerse de instituciones supranacionales. La responsabilidad de estos bonos la ostentan todos los bancos centrales del Eurosistema.
+} y, desde diciembre de 2015, gobiernos regionales y locales. No se excluye la deuda soberana de ningún Estado miembro. si bien se exige una calificación crediticia mínima de grado de inversión (lo que excluye a Grecia) y se incluye expresamente la deuda indexada a la inflación. o Las tenencias por el Eurosistema de un título concreto no pueden superar el 33\% del valor nominal del título en cuestión. Así mismo, el Eurosistema no puede poseer más del 33\% de la deuda viva de un emisor.\footnote{En 2018. el TJUE sentenció un caso (Case C-493/1 7 Weiss) que cuestionaba la participación del Bundesbank dentro de las compras del PSPP, la prohibición de financiación de los Gobiernos y la aplicación del principio de proporcionalidad. El TJUE concluyó que el PSPP follllaba parte de la política monetaria. cuya competencia es exclusiva de los órganos de la Unión, y que respetaba el resto de las infracciones alegadas. En 2020, el Tribunal Constitucional Alemán sentenció que el BCE debería realizar un test de proporcionalidad de los efectos del PSPP. dado su carácter .. ilimitado". Dicha sentencia ha sido interpretada como una vulneración del principio de supremacía del Derecho Europeo sobre los ordenamientos jurídicos nacionales, al reabrir un tema ya sentenciado por el TJUE.
+} o El reparto de las compras se realiza según la clave nacional (Espaf\a el 12,6\%).\footnote{Esta cifra no coincide con-la clave oficial española, dado que se hacen ajustes (por ejemplo. exclusión de Grecia).
+} o Las compras se realizarán exclusivamente en el mercado secundario y de fonna conjunta por el BCE\footnote{El BCE realiza el 10\% de las compras totales, cuya responsabilidad se comparte por el Eurosistema,
+} y los bancos centrales nacionales.\footnote{Los BCN solan1ente pueden comprar deuda emitida por su soberano y, algunos BCN. deuda de instituciones internacionales. Las compras que realizan los BCN, siempre bajo las directrices del BCE. son bajo su exclusiva responsabilidad, lo cual es relevante en el supuesto de que se produjesen pérdidas de capital. Esta característica contribuye a la incompletitud de la unión monetaria descentralizada.
+}
+
+❖ Corporate Sector Purchase Programme (CSPP):
+o Se creó en marzo de 2016. o Adquiere deuda emitida por el sector privado de la zona del euro (deuda corporativa) con, al menos. grado de inversión. o Como se anunció en julio de 2022, el Eurosistema pretende descarbonizar gradualmente sus tenencias de bonos corporativos, en una trayectoria alineada con los objetivos del Acuerdo de París. Para ello, el Eurosistema sesgará estas compras hacia emisores con mejor comportamiento climático mediante la reinversión de los reembolsos previstos en los próximos años.
+❖ Asset Backed Securities Purchase Programme (ABSPP):
+o Se creó en septiembre de 2014. o Adquiere bonos de titulización o ABS (asset backed securities).\footnote{Un bono de titulización es un bono emitido por un Vehículo Especial (Fondo de Titulización en España). respaldado por una detellllinada cartera de activos cuyos flujos sirven para atender los pagos de dicho bono. Una característica importante de los bonos de titulización, y que los diferencia de otros instrumentos del mercado de capitales. es su aislamiento en caso de quiebra de la entidad cedente (aquella entidad que transfiere los activos al vehículo especial). A esta cualidad se la denomina bankruptcy remote. A través de la titulización. unos activos no negociables en mercado organizado (la cartera titulizada. como pueden ser los préstamos hipotecarios) se transfonnan en unos instrumentos negociables que son los bonos de titulización.
+} o Incluye compras tanto en el mercado primario como en el secundario de títulos tanto retenidos como no retenidos, con un límite a la cuota de una emisión que puede acumular el BCE (70\%).\footnote{Los ABS, al igual que los covered bonds, pueden haber sido retenidos por los emisores (bancos) para su utilización como garantía ante el BCE o estar en manos de inversores finales.
+}
+
+❖ Covered Bond Purchase Programme 3 (CBPP3): o Se creó en septiembre de 2014, si bien existieron dos programas precedentes en junio de 2009 y noviembre de 2011, ya finalizados. o Adquiere covered bonds o bonos garantizados.\footnote{Los covered bonds son cruoiales como fuente de financiación de las entidades de crédito para rcfinanciar préstamos al sector privado y público. Es un instrumento de renta fija emitido por una entidad de crédito, asegurado por un pool de préstamos hipotecarios o de deuda pública contra el que se tiene derecho preferente en caso de default de la entidademisora, frente al resto de acreedores de ésta. Es decir. mientras que en el caso de los bonos de titulización los pagos sirven se atienden con los flujos de caja que genere la cartera de activos titulizada. los covered bonds funcionan como un instnnnento de deuda emitido por la entidad de crédito con los pagos que se acuerden en el contrato de emisión. independientemente de los flujos de caja generados por los activos de garantía.
+} La elección de estos instrumentos  refleja el papel de éstos en la facilitación de nuevos flujos de crédito a la economía. Así, su compra por el BCE debería contribuir a la reducción de los tipos de interés de los préstamos subyacentes a los mencionados instrumentos, mejorando las condiciones de préstamo y creando espacio para que los bancos den más crédito. o Incluye compras tanto en el mercado primario como en el secundario de títulos tanto retenidos como no retenidos. Además, la tenencia no puede superar el 70\% del volumen emitido del bono. 
+
+Respecto de la evolución del APP, en octubre de 2014, el Eurosistema comenzó a adquirir valores en el marco de su programa de compras de activos (inicialmente CBPP3 y ABSPP), hasta que comenzó a expandirse en enero de 2015 (PSPP) y marzo de 2016 (CSPP). Los ritmos de compras netas mensuales han variado en función de las previsiones de inflación del Eurosistema, alcanzando un máximo de 80.000 millones mensuales en 2016 y 2017 (ver Anexo 9 para un mayor detalle).
+
+En la actualidad, en el marco de nonnalización de la política monetaria, el BCE decidió interrumpir las compras netas de activos en el marco del APP a partir del I de julio de 2022. No obstante, se siguen reinvirtiendo las cuantías de los títulos que vayan venciendo durante un período de tiempo prolongado después de la fecha en la que el BCE comience a elevar los tipos de interés oficiales.\footnote{Esto implica que la cuantía de activos del APP que el Eurosistema tiene en su balance no descenderá a pesar de que no se hagan nuevas compras netas pues. en caso de que un bono llegue a su vencimiento. el Eurosistcma compraría un bono similar de ese país (se reinvierte). Por lo tanto. al continuar las reinversiones del APP. continúan las compras brutas (cuando se produce un vencimiento). pero no las netas (el balance total no varía).
+}
+
+En el futuro cercano, a medida que el Eurosistema comience el quantitative tightening (QT), esto es, el proceso de reducción de su balance, el APP será el primer programa en reducirse. Ello se puede hacer de dos maneras: i) dejando de reinvertir los bonos que vayan venciendo (por lo que la reducción de los estímulos monetarios sería más gradual) o ii) vendiendo activamente determinados bonos (lo cual implicaría un tono monetario más restrictivo). En principio, dado el riesgo de recesión que hay sobre la zona del euro, a pesar de la alta inflación, se espera que el BCE fije una cantidad mensual de activos que se van a dejar de reinvertir cada mes, dando cierta guía al mercado de sus planes de QT. 
+
+
+b) Pandemic Emergency Purchase Programme (PEPP): El 18 de marzo de 2020, el BCE decidió lanzar su programa estrella de lucha contra la pandemia, consistente en la compra de activos (similar al APP).
+
+❖ Cuantía: Inicialmente, este programa de compras tendría la capacidad de adquirir activos hasta un volumen de 750.000 millones, que se vio incrementada en junio de 2020 con 600.000 millones adicionales y de nuevo en diciembre de 2020 con 500.000 millones, llegando a un total de 1,85 billones de euros. Finalmente, se adquirieron 1,68 billones de euros.
+
+❖ Títulos adquiribles: los mismos cuatro tipos de activos que en el APP, si bien es la deuda pública la que predomina en la cartera del PEPP (como el PSPP en el APP).
+
+❖ Diferencias respecto del APP: o El APP no fijaba un volumen total de compras bajo el programa, sino una guía mensual. o El PEPP es más flexible que el APP, tanto en ténninos temporales (en principio se podían realizar compras hasta marzo de 2022, pero nada impedía que estas acabasen antes o después, según las condiciones de financiación que existiesen en el mercado), como de clave de capital\footnote{De hecho. las compras del PEPP han estado sesgadas hacia Italia (y. en menor medida, España y otros países).
+} o de límite por emisor (bajo el APP solamente se puede adquirir hasta el 33\% del universo elegible de deuda de un país, mientras que esos límites no son vinculantes en el PEPP). Además, se garantiza en todo caso la adquisición de títulos emitidos por Grecia.
+
+En la actualidad, en el marco de nonnalización de la política monetaria, el BCE deci,dió interrumpir las compras netas de activos en el marco del PEPP a partir del I de abril de 2022. No obstante, se siguen reinvirtiendo las cuantías de los títulos que vayan venciendo hasta diciembre de 2024. La fijación de dicho límite indica que el quantitative tightening comenzaría por el APP, si bien nada impediría que el Consejo de Gobierno modificase la fecha límite de las reinversiones del PEPP para adaptarla al tono monetario deseado. 
+
+\paragraph{Riesgo de denominación: Outright Money Transactions (OMT) y Protección para la Transmisión (TPI)}
+
+Estos instrumentos tienen como objetivo evitar la fragmentación de los mercados de deuda pública en la zona del euro. La zona del euro es una unión monetaria con una política monetaria única que, sin embargo, tiene un tipo de interés distinto para cada emisor de deuda pública. Si bien el hecho de que los tipos de interés de la deuda pública reflejen distintos fundamentales económicos es compatible con el ideal de una unión monetaria, el hecho de que aparezcan diferenciales (spread o primas de riesgo) entre los tipos de interés soberanos no relacionados con los fundamentales (y sí, por ejemplo, con la especulación en los mercados sobre el posible fin del euro) sí que supone un problema para la unión monetaria. La razón principal se encuentra en laestabilidad de precios:\footnote{Este argumento ha sido reiterado por el BCE en numerosas ocasiones, especialmente después de que la presidenta Lagarde afim1ase. desafortunadamente, que "el BCE no está para solucionar los problemas de 1,preads de los países·•, tras el fuerte risk-o.ff provocado por la pandemia en marzo de 2020. A los pocos días el BCE anunció la creación del PEPP. contribuyendo a la reducción de las primas de riesgo.
+} si el BCE está, por ejemplo, implementando una política monetaria expansiva cuyo objetivo intermedio es. la reducción de los tipos de interés en los mercados europeos, el hecho de que aparezcan spreads - provocando que algunos tipos aumenten - supondría un impedimento para la transmisión del tono monetario deseado. 
+
+a) Outright Monetary Transactions (OMT): tras un aumento histórico de las primas de riesgo en varios países de la zona del euro, en julio de 2012 el BCE anunció su disposición a comprar títulos de deuda soberana en el mercado secundario sin límites, previo cumplimiento de ciertas  condiciones. Draghi realizó dicho anuncio para posteriormente afirmar la irreversibilidad del euro y el famoso "whatever it takes" que ya hemos comentado.
+
+❖ Motivación: salvaguardar la unicidad y la transmisión de la política monetaria en un contexto de fuertes tensiones en los mercados de deuda soberana, provocados por los temores de los inversores sobre la no viabilidad futura del euro. El BCE señalizaba así su disposición a intervenir en los mercados de deuda soberana, ayudando a reducir la probabilidad de equilibrios negativos autocumplidos (i.e., la salida de un país).
+
+❖ Características técnicas:\footnote{Así, estas OMTs se diferenciaría del existente en aquel entonces Securities Market Programme en tres aspectos clave: i) sometidas a estricta condicionalidad bajo un programa del FEEF/MEDE. ii) sin límites cuantitativos ex-ante y iii) con participación del BCE en igualdad de condiciones (parí passu) con los restantes acreedores.
+} posibilidad de compras sin límites cuantitativos ex-ante de títulos de deuda del sector público por el BCE, con la esterilización total de la liquidez resultante. Se activa previa solicitud del Estado miembro correspondiente, solicitud de un programa de asistencia financiera al FEEF/MEDE y respeto de la estricta condicionalidad asociada a éste.\footnote{Las compras del BCE sólo se activarán si el país ha solicitado previamente un préstamo (en la modalidad de ayuda precautoria mediante compras de deuda en el mercado primario). a los fondos de rescate. el EFSF o su sucesor. cuando entre en vigor, el ESM. Dicho préstamo da lugar a un ··contrato", !!I MoU (Memornndum of Understanding), donde el país que solicita la ayuda se obliga a llevar adelante reco11es de gasto y refom1as estructurales y a ser supervisado estrictamente por la Troika (FMI. BCE y Comisión Europea).
+}
+
+❖ Resultados: por el momento, el programa OMT nunca se ha activado. Ello no obsta a que su mera existencia haya contribuido a aliviar tensiones en las primas de riesgo de los bonos soberanos de los países periféricos, que iniciaron una senda descendente tras la creación del programa OMT.\footnote{El programa OMT levantó suspicacias en ciertos Estados miembros. En particular, un grupo de académicos alemanes plantearon ante el TJUE la posible contravención del programa OMT de los Tratados. ya que éste podría sobrepasar las atribuciones del 13CE en materia de política monetaria y podría violar la prohibición de ofrecer financiación monetaria a los Estados miembros. Sin embargo. en junio de 201 5 el TJUE confirmó que los Tratados de la Unión autorizan al SEBC a adoptar un programa con las características del programa OMT.
+}
+
+b) Instrumento para la Protección de la Transmisión {TPI)
+
+❖ Motivación: en julio de 2022 el BCE presentó un instrumento para luchar contra la fragmentación de los mercados de deuda de la zona del euro. Ello se había revelado corno especialmente necesario en un contexto de normalización de la política monetaria y de ampliación de los diferenciales de rentabilidades a medida que subían los tipos de interés. El TPI se concibe como un nuevo instrumento dentro de la caja de herramientas del Eurosistema.\footnote{En puridad. en el contexto de subida de tipos de 2022, se considera que el TPI es la segunda línea de defensa de la zona del euro ante el riesgo de fragmentación. La primera línea de defensa la constituye la capacidad del Eurosistema de reinvertir con flexibilidad (sin respetar las claves nacionales) los activos comprados bajo el PEPP. de manera que se reinviertan en mayor proporción los bonos de países con spreads. Se considera que el uso de dicha flexibilidad no ha sido, en general. muy significativo.
+} A pesar de la existencia del OMT se considera que su utilización es poco probable, pues la condicionalidad que lleva aparejada al MEDE supone un estigma negativo en los mercados.
+
+❖ Características técnicas: el BCE podrá decidir, discrecionalmente, adquirir títulos de deuda pública sin límites, en caso de que haya una seria amenaza para la transmisión de la política monetaria, no justificada en desequilibrios rnacroeconórnicos. Se prevé cierta condicionalidad respecto de las reglas fiscales y la sostenibilidad de la deuda.\footnote{Ver Anexo 10 para una descripción más exhaustiva del TPI.
+}
+
+❖ Resultado: no ha sido utilizado, si bien tanto el FMI corno el BCE consideran que su mera creación ha contribuido a que los diferenciales entre países no aumenten a medida que el BCE subía tipos. ayudando así a completar una unión monetaria imperfecta.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+\end{document}
