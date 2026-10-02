@@ -1,0 +1,1627 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Análisis de los instrumentos financieros de renta variable\\
+\large Análisis fundamental. Teoría de la elección en cartera. El Modelo de valoración de los activos de capital (CAPM). Teoría de la valoración de activos por arbitraje (APT). Análisis téncnico}
+\author{Marcelo Ortega}
+\date{Mayo 2026}
+\newcommand{\TemaCode}{3B23}
+
+\oldtitle{
+    
+}
+\changerationale{
+    Sin cambios.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     
+    }
+\vspace{1cm}
+
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+\clearpage
+\section{Aproximación empírica: Técnicas de valoración de activos}
+\puntosclave{
+    El modelo de MARKOWITZ (1952), o modelo de media-varianza, es un marco matemático para determinar la cartera óptima de activos financieros en función de la rentabilidad esperada y la tolerancia al riesgo de un inversor. 
+    
+    El modelo media-varianza aporta dos conclusiones fundamentales: 
+    \begin{lnum}
+        \item \textbf{Cartera de mercado}. Primero, que existe una única cartera compuesta por activos financieros arriesgados que es óptima para todos los inversores, independientemente de sus preferencias; y,
+        \item \textbf{Cartera óptima}. Segundo, que existe un conjunto de carteras que combinan activo libre de riesgo y cartera arriesgada que dominan en rentabilidad y riesgo a cualquier otra cartera posible. 
+    \end{lnum}
+    
+    El modelo asume que los inversores son aversos al riesgo, y prefieren carteras que minimicen el riesgo para un nivel dado de rentabilidad esperada, o que maximicen la rentabilidad esperada para un nivel de riesgo dado. 
+    
+    Los componentes básicos del modelo de MARKOWITZ (1952) son tres: los rendimientos esperados, las varianzas y las covarianzas de los activos financieros.\footnote{
+    \textbf{Rentabilidad esperada.-} La rentabilidad esperada de un activo es la rentabilidad media que un inversor puede esperar durante un periodo de tiempo, y suele estimarse utilizando datos históricos. La rentabilidad esperada de un índice de acciones internacional perteneciente a una economía desarrollada (e.g. SPS00 para EEUU), puede oscilar entre el 5.0\% y el 10.0\% anual, aproximadamente, o en tomo al 4.0\% y 8.0\% anual para una inversión inmobiliaria. 
+
+    \textbf{Varianza.-} La varianza define el riesgo de un activo financiero y atiende a la fluctuación o desviación media de los rendimientos del activo respecto de su rendimiento esperado. Indistintamente, es habitual utilizar la desviación típica o volatilidad de los rendimientos de un activo, pues ésta se reporta en porcentaje. Por ejemplo, la volatilidad anual del SPS00 está alrededor del 18,0\%. La volatilidad anual de una inversión inmobiliarias puede oscilar entre el 6,0\% y 9,0\% anual. 
+
+    \textbf{Covarianzas.-} La covarianza es la magnitud fundamental en el modelo de carteras. Es. una medida del grado en el que los rendimientos de los dos activos se mueven juntos: si dos activos ofrecen sistemáticamente rendimientos positivos (o negativos) cuando el ciclo econóníico es bueno, diremos que tienen covarianza positiva. Por el contrario, si ofrecen rentabilidades opuestas (la de uno aumenta cuanto la otra disminuye), decimos que ambos activos tienen covarianzas negativas. 
+    } Además de esto, es preciso especificar las preferencias del inversor a través de su función de utilidad.
+        
+    El impacto del modelo de MARKOWITZ en las finanzas modernas es, literalmente, inconmensurable. Se usa en la gestión de carteras y ha tenido un impacto fundamental en el desarrollo de este campo.
+
+    Algunas de las críticas del modelo provienen de sus supuestos. Por ejemplo, que los rendimientos financieros se distribuyen normalmente, lo que puede no ser (siempre) el caso. Además, algunos parámetros del modelo como las rentabilidades esperadas son dificiles de estimar con precisión. Otras críticas añadidas refi eren que el modelo no hace mencióna los costes de transacción e impuestos. A pesar de estas limitaciones, el modelo de Markowitz sigue siendo una herramienta imprescindible para comprender la relación entre riesgo y rentabilidad en la gestión de carteras.
+}
+
+Todo lo que se va a exponer a continuación parte de una premisa fundacional: la hipótesis ergódica aplica a los mercados financieros.
+
+\subsection{Descomposición de un activo: ¿qué lo define?}
+En líneas generales, los activos financieros podrían definirse bajo estas tres características básicas: (i) rentabilidad; (ii) riesgo; y, (iii) liquidez. Por supuesto, existen otras cualidades importantes (e.g.fiscalidad), pero las tres anteriores capturan bastante bien las peculiaridades que diferencian a unos de otros. 
+
+Bajo esta premisa, MARKOWITZ introduce el supuesto de que los rendimientos financieros son variables aleatorias que se distribuyen bajo una distribución de probabilidad normal:\footnote{El supuesto de normalidad de los rendimientos es muy conveniente para los propósitos del modelo, por tres razones: 
+\begin{lnum}
+    \item \textbf{Media: Rendimiento esperado}. Primero, porque el rendimiento esperado coincide con la media de la distribución de probabilidad;
+    \item \textbf{Varianza: Riesgo}. Segundo, porque la varianza de los rendimientos es una buena medida del riesgo (al fin y al cabo, es la fluctuación respecto a una rentabilidad esperada); y,
+    \item \textbf{Caracterización simple}. Tercero, porque la distribución normal tiene la particularidad de que podemos caracterizar toda la distribución únicamente con su media y varianza. 
+\end{lnum}
+} $r\sim N(\mu,\sigma)$. Veamos a continuación como se formaliza matemáticamente la rentabilidad esperada y riesgo de una cartera de activos financieros bajo el supuesto de normalidad.
+
+\subsubsection{Activo financiero: Rendimiento y riesgo}
+En términos corrientes, la rentabilidad o rendimiento de un activo financiero es el dinero ganado o perdido en una inversión durante un plazo de tiempo determinado y, en general, se expresa en términos porcentuales. 
+
+En Finanzas, distinguimos entre dos tipos de rentabilidades. En primer lugar, la rentabilidad realizada, que es aquella que ya se ha ejecutado. Analíticamente:\footnote{Siendo $S$ el número total de posibles estados de la naturaleza, $\pi_s$ la probabilidad real de que ocurra el estado $s$, y $r_{j,s}$ la rentabilidad del activo $j$ en el estado particular $s$.
+}
+
+\eqblock{
+\begin{aligned}
+    &\text{Rentabilidad realizada}:&&r_{j,t}=\frac{p_{j,t}-p_{j,t-1}+D_t}{p_{j,t-1}}\\[1em]
+\end{aligned}
+}{Definiciones: Rentabilidad realizada. Modelo de MARKOWITZ (1952)}
+
+Por ejemplo, si el año pasado compré una acción a un precio $p_{j,t-1}$, y hoy la vendo a un precio $p_{j,t}$, la rentabilidad realizada me permite saber el rendimiento obtenido por dicha inversión (una vez amortizada, ejecutada), en términos porcentuales. Como podemos intuir, la rentabilidad realizada nos proporciona poca información relevante a la hora de tomar decisiones de inversión, ex ante. Aunque tampoco hay que minusvalorar dicho indicador ya que, por ejemplo, nos puede proporcionar una medida adecuada como \textit{threshold}, para los activos en posesión. 
+
+¿Qué será entonces lo que nos interese especialmente? Nos interesa un indicador que nos permita saber la rentabilidad que podemos esperar de dicho activo, i.e. su \textbf{rentabilidad esperada}. Pero, ¿cómo podemos estimarla? Una buena forma de empezar es suponer que los datos históricos son una buena referencia para construir la distribución de los rendimientos de un activo. Con estos datos podemos generar la distribución de un activo y normalizarla para que siga una distribución normal. Suponiendo que estos datos están acotados, las medidas de interés de dicha distribución se obtendrán con los siguiente momentos:\footnote{Nótese que si la distribución fuese equiprobable, la esperando podría calcularse como: 
+$$E[r_j]\equiv \mu_j=\frac{1}{S}\sum_{s=1}^S\,r_{j,s}$$
+
+En el mundo financiero es frecuente utilizar la desviación típica más que la varianza. Esta representa la volatilidad, y su uso es más extendido que el de la varianza porque tiene el mismo orden de magnitud que los rendimientos financieros, y pueden ambos expresarse en porcentaje.
+}
+
+\eqblock{
+\begin{aligned}
+    &\underset{\text{\scriptsize Esperanza de la distribución de probabilidad}}{\text{Rentabilidad esperada de un activo financiero}:}&&\mathbb E[r_j]\equiv \mu_j=\sum_{s=1}^S \mathrm P(s)\,r_{j,s}\\[0.5em]
+    &\underset{\text{\scriptsize Desviación típica de la distribución de probabilidad}}{\text{Riesgo de un activo financiero}:}&&\sigma_j=\sum_{s=1}^S \mathrm P(s)\,(r_{j,s}-\mu_j)\\[0.5em]
+    &\underset{\text{\scriptsize Varianza de la distribución de probabilidad}}{\text{Varianza de un activo financiero}:}&&\mathrm{Var}(r_j)\equiv \sigma_j^2=\mathbb E\!\left[(r_j-\mu_j)^2\right]=\sum_{s=1}^S \mathrm P(s)\,(r_{j,s}-\mu_j)^2
+\end{aligned}
+}{}
+
+Como podemos ver, mediante la recopilación del conjunto de datos históricos y la ejecución de unos sencillos cálculos sobre este conjunto, obtenemos las tres medidas principales que el inversor tendrá en cuenta: la media o rentabilidad esperada de la distribución, el riesgo o desviación típica de ésta y la varianza de la distribución.\footnote{Nótese que, dada la definición de rentabilidad esperada de un activo financiero, la varianza o riesgo de dicho activo será calculada mediante la inclusión del momento de primer orden en la ecuación:
+$$\sigma_j^2\equiv\mathbb E_t[r_j-\mathbb E_t[r_j]]^2=\sum_{s=1}^S\pi_s(r_j-\mathbb E_t[r_j])^2$$
+La definición tradicional de riesgo en Finanzas está ligada a la idea de cambio o fluctuación frente a lo esperado. Esta imagen difiere de la intuición contemporánea, que considera el riesgo de una inversión como la probabilidad de sufrir una pérdida. Aunque no entraremos en detalle, en el contexto de la Economía Financiera el riesgo como fluctuación nace de la pérdida de utilidad esperada que un agente averso al riesgo sufre frente al resultado incierto de una lotería; a mayor variabilidad en el posible desenlace de la lotería, mayor riesgo. 
+
+Por eso, en este marco teórico diremos que el concepto que recoge con precisión la idea de riesgo o variabilidad frente a lo esperado es la \textbf{varianza}.
+}
+
+\subsubsection{Cartera financiera: Rendimiento y riesgo}
+Una vez tenemos todos estos valores, el paso natural es formalizar lo anterior para una cartera de activos. Y, para ello, es preciso introducir un nuevo concepto: la ponderación de cada activos dentro de la cartera de inversión, $\omega_j$. Esta ponderación o \textit{peso} de los activos de una cartera no es más que el porcentaje de la riqueza total del inversor que destina a un activo individual de la cartera:\footnote{Por ejemplo, cuando la riqueza de un inversor está invertida equitativamente en acciones de la empresa A y B diremos que la cartera de ese inversor tiene una ponderación del 50\% en activo A, y un 50\% en activo B:
+}
+
+\eqblock{
+\begin{aligned}
+    &\text{Ponderación de cada activo}:&&\omega_j\in[-1,1]\iff \underset{\text{\scriptsize riqueza del agente}}{\Omega_c}=\sum_{j=1}^N\omega_j=1
+\end{aligned}
+}{}
+
+Como vemos, las ponderaciones: (i) de todos los activos deben dentro de la cartera deben sumar 1, o el 100\% de la riqueza del inversor; y, (ii) las ponderaciones pueden ser negativas o positivas, siempre y cuando en conjunto sumen 1. Las ponderaciones negativas indican ventas en corto: sufragar una posición mayor a su riqueza en algún(os) activos (e.g. 120\%), para financiar una posición mayor a su riqueza en otro(s). 
+
+Con esto, podemos obtener las mismas medidas antes calculadas pero esta vez para una cartera de activos, ponderando el peso de cada activo apropiadamente. Analíticamente:
+
+\eqblock{
+
+\begin{aligned}
+    &\underset{\text{\scriptsize Esperanza de la distribución conjunta}}{\text{Rentabilidad esperada de la cartera}:}&&\mathbb E[r_c]=\mathbb E\!\left[\sum_{j=1}^N \omega_j r_j\right]=\sum_{j=1}^N\omega_j\mathbb E[r_j]\\[1em]
+    &\underset{\text{\scriptsize Varianza de la distribución conjunta}}{\text{Varianza de la cartera}:}&&\mathrm{Var}(r_c)\equiv \sigma_c^2=\mathrm{Var}\!\left(\sum_{j=1}^N \omega_j r_j\right)=\sum_{j=1}^N\sum_{h=1}^N\omega_j\omega_h\,\mathrm{Cov}_t(r_j,r_h)\\[1em]
+    &&&\equiv\sum_{j=1}^N\sum_{h=1}^N\omega_j\omega_h\,\sigma_{jh}\quad\text{donde},\,\,\underset{\text{\scriptsize entonces, si $h=j$, es la varianza del activo: $\sigma_{jj}=\sigma_j^2\equiv\mathbb E[(r_j-\mathbb E[r_j])^2]$}}{\sigma_{jh}=\sum_{s=1}^S\mathrm P(s)\left(r_{j,s}-\mathbb E[r_j]\right)\left(r_{h,s}-\mathbb E[r_h]\right).}\\[1em]
+    &\underset{\text{\scriptsize Desviación típica de la distribución conjunta}}{\text{Riesgo de la cartera}:}&&\sigma_c=\sqrt{\mathrm{Var}(r_c)}=\sqrt{\sum_{j=1}^N\sum_{h=1}^N\omega_j\omega_h\,\sigma_{jh}}
+\end{aligned}
+}
+
+Nótese que, aunque la esperanza de la distribución conjunta sí se obtiene directamente de ponderar cada rendimiento esperado con su peso en la cartera, tanto la desviación típica como la varianza experimentan una ligera modificación. ¿Qué significa el parámetro $\sigma_{jh}$ y por qué hay dos sumatorios? La razón es simple, cuando estamos evaluando la distribución conjunto de una cartera de inversión, esta depende de todos los pares posibles de activos $(j,h)$, es decir, no solo importa el riesgo individual de cada activo, sino también cómo se mueven conjuntamente. Esto es lo que conocemos como la covarianza de los activos. La covarianza mide el grado de movimiento conjunto de los rendimientos de los activos financieros. Por ejemplo, dos acciones cuyas rentabilidades incrementen durante los estados buenos de la economía, y disminuyan durante los estados malos, diremos que tienen covarianza positiva.\footnote{Este es el caso de acciones como BBVA y Santander, o Apple y Microsoft. Por el contrario, acciones cuyas rentabilidades sean opuestas durante el ciclo económico tendrán covarianza negativa. Por ejemplo, si tenemos una cartera compuesta por dos activos, el riesgo de la cartera se puede expresar como:
+$$\begin{aligned}
+    \sigma_c^2=\omega_1^2\sigma_1^2+\omega_2^2\sigma_2^2+2\omega_1\omega_2\sigma_{12}
+\end{aligned}$$
+} La expresión de la varianza de una cartera no es sencilla, por tanto, veamos un ejemplo y algunas de sus implicaciones para mejorar la comprensión.
+
+\paragraph{Covarianza: ¿Qué información nos proporciona?}
+Imaginemos, en primer lugar, que tenemos una cartera compuesta por dos activos diferentes. Si existe independencia entre los activos de una cartera, entonces sus covarianzas entre sí son cero ($\sigma_{jh}=0$). Por tanto, la covarianza de los activos de la cartera depederá de:
+
+\eqblock{
+\begin{aligned}
+    &\text{Activos independientes}&&\iff \mathrm P(r_j=x,r_h=y)=\mathrm P(r_j=x)\mathrm P(r_h=y)\\[1em]
+    &&&\Longrightarrow\quad \mathrm{Cov}(r_j,r_h)=\mathbb E[(r_j-\mathbb E[r_j])(r_h-\mathbb E[r_h])]=\mathbb E[r_jr_h]-\mathbb E[r_j]\mathbb[r_h]=0\\[2em]
+    &\text{Activos dependientes}&&\iff \mathrm P(r_j=x,r_h=y)\neq\mathrm P(r_j=x)\mathrm P(r_h=y)\\[1em]
+    &&&\Longrightarrow\quad \mathrm{Cov}(r_j,r_h)=\mathbb E[(r_j-\mathbb E[r_j])(r_h-\mathbb E[r_h])]=\mathbb E[r_jr_h]-\mathbb E[r_j]\mathbb[r_h]\neq0
+\end{aligned}
+}{}
+
+Es decir, si los activos son indenpendientes, la distribución conjunta factoriza e implica que el comportamiento de una variable no aporta información sobre la otra. Es decir, si los activos son independientes, las desviaciones respecto a sus medias no muestran ningún patrón sistemático conjunto: a veces coincidirán en signo positivo, otras en negativo, pero en promedio el producto de las desviaciones se cancela. 
+
+Sin embargo, si los activos no son independientes, el producto de las desviaciones no se cancelará. En esta situación, habrá dos nuevas implicaciones especialmente importantes:
+\begin{la}
+    \item \textbf{Covarianza positiva: Mayor desviación}. Si la covarianza de los activos es positiva, es decir, el producto de las desviaciones da cómo resultado una covarianza positiva, la desviación o volatilidad de la cartera será mayor que la de sus componentes individuales. Este aumento del riesgo conjunto respecto a los riesgos individuales hace que, cuando las cosas van bien, vayan mejor, pero cuando van mal, vayan peor;
+    \item \textbf{Covarianza negativa: Eliminación del riesgo}. Por otro lado, si la covarianza de los activos es en promedio negativa, entonces podríamos ser capaces de eliminar el riesgo de una cartera de inversión, buscando una composión de activos tal (equiponderada) que los movimientos entre sí se anulen y la desviación típica de la cartera, su volatilidad, se cero. Obteniendo de esta forma la rentabilidad espera de la cartera de forma segura.\footnote{MARÍN y RUBIO (2011). Si asumimos que los activos de la cartera están equiponderados, ($\omega_j=1/N$), entonces el riesgo de la cartera puede eliminarse totalmente: $$\sigma_c^2=\sum_{j=1}^N(1/N)^2\sigma_j^2=\frac{1}{N}\left(\sum_{j=1}^N\frac{\sigma_j^2}{N}\right)=\frac{1}{N}\bar\sigma_j^2$$
+    Cuando el número de activos que componen la cartera es alto ($N\gg0$). La variable $\bar\sigma_j^2$ ha sido introducida por conveniencia, y captura la varianza media de los activos de la cartera.
+    }
+\end{la}
+
+De hecho, otra implicación importante es que, si aumentarnos el número de activos de la cartera ($N\gg0$), la contribución individual de cada activo ($\sigma_j$) al riesgo conjunto de la cartera tiende a desaparecer, y persiste en su lugar la contribución de una covarianza media (segundo sumando). Esto nos avanza un resultado muy relevante en Economía Financiera: que existen dos riesgos en una cartera de activos, uno individual, que puede eliminarse mediante la diversificación; y otro conjunto o sistemático, que depende del grado de relación entre los activos de la cartera, y que no puede diversificarse.
+
+\paragraph{Correlación: ¿Qué es y qué información nos proporciona?}
+
+
+
+
+
+\subsection{Carteras de inversión: Técnicas de representación}
+Ahora que conocemos los estadísticos más importantes, podemos caracterizar algunas relaciones particularmente interesantes en el ámbito de las finanzas. 
+
+\subsubsection{Entorno media-varianza: Pares dominantes}
+Una de las más básicas es la relación que proporciona el entorno \textbf{rentabilidad-riesgo}, que puede ser fácilmente representada gráficamente.  Sobre el plano, representamos diferentes carteras en función de su retorno esperado y su riesgo/volatilidad:\footnote{
+Evidentemente, tal y como están representadas, dado un mismo nivel de riesgo, el inversor siempre preferirá mayor rentabilidad esperada. Así, el agente escogerá antes el activo $B$ al $A$, y el $C$ al $D$, independientemente de las preferencias del inversor. En este sentido, diremos que el activo $B$ es más eficiente (en sentido rentabilidad-riesgo) que el activo $A$, pues ofrece una mayor rentabilidad esperada para el mismo nivel de riesgo.
+
+Y, de forma equivalente, dado un mismo nivel de rentabilidad esperada, el inversor siempre preferirá elactivo de menor riesgo. En ese sentido, el activo $B$ ($A$) será siempre escogido frente al activo $C$ ($D$), independientemente de las preferencias del riesgo del inversor.
+} 
+
+\imagenfit{Fig1.png}{Plano media-varianza}{Apuntes ICEX-CECO. Tema 3.B.23}
+
+Con solo cuatro carteras alternativas, podemos ver dos cosas esenciales. En primer lugar, que se puede establecer un orden de eficiencia/dominancia entre carteras una vez fíjemos nuestro parametro de comparación (riesgo o rentabilidad). En segundo lugar, que pueden existir activos libres de riesgo (e.g. bonos soberanos) que ofrezcan una rentabilidad determinada. Por ejemplo, un activo que paga una rentabilidad ($r_f$) y que no acarrea ningún riesgo (particular, sí sistémico). 
+
+Nótese también que el gráfico permite también representar ponderaciones de carteras, no solo pares de rentabilidad-riesgo. Es decir, un agente que invierta todo su patrimonio en activo $A$ ($\omega_A=1$), espera exponerse al par rentabilidad-riesgo característico; pero esto puede ser fácilmente generalizable en términos de ponderación de dicho activo con otro. 
+
+\subsubsection{Ponderación: Capital Allocation Line (CAL)} 
+¿Cómo podemos representar dichas combinaciones? Muy sencillo. 
+
+Imaginemos, por simplificar, que el inversor quiere comparar los pares resultantes de las diferentes combinaciones de activo libre de riesgo ($r_f$) y cualquiera de los activos con riesgo representados, supongamos que $A$. Por como hemos definido la rentabilidad y el riesgo de una cartera de inversión, sabemos que un activo cuyo riesgo es nulo no guarda relación con un activo con riesgo: su covarianza es cero. Por tanto, si desarrollamos la fórmula, obtendremos la siguiente ecuación:\footnote{Rápidamente:
+\begin{lnum}
+    \item \textbf{Primer paso}. Desarrollamos las estadísticos tal y como se muestra en los apartados precdentes. 
+    $$\begin{aligned}
+        &\text{Rentabilidad esperada}:&&\mathbb E[r_c]=\omega_A\mathbb E[r_A]+\omega_f\mathbb E[r_f]=\omega_A\mathbb E[r_A]+(1-\omega_A)\mathbb E[r_f]\\[0.5em]
+        &\text{Varianza de la cartera}:&&\sigma_c^2=\omega_A^2\sigma_A^2+\omega_f^2\sigma_f^2+2\omega_A\omega_f\sigma_{Af}=\omega_A^2\sigma_A^2+(1-\omega_A)^2\sigma_f^2+2\omega_A(1-\omega_A)\sigma_{Af}
+    \end{aligned}$$
+    \item \textbf{Segundo paso}. Simplificamos la fórmula teniendo en cuenta que, por definición, el activo libre de riesgo tiene riesgo cero, y covarianza cero con el activo arriesgado ($\sigma_f^2=\sigma_{Af}=0$):
+    $$\begin{aligned}
+        &\text{Rentabilidad esperada}:&&\mathbb E[r_c]=\omega_A\mathbb E[r_A]+(1-\omega_A)\mathbb E[r_f]\\[0.5em]
+        &\text{Varianza de la cartera}:&&\sigma_c^2=\omega_A^2\sigma_A^2
+    \end{aligned}$$
+    \item \textbf{Último paso}. Despejamos la ponderación del activo arriesgado $w_A$ en la ecuación del riesgo de la cartera y lo sustituimos en la ecuación de la rentabilidad de la cartera. Obtendremos así la ecuación que se representa. 
+\end{lnum}
+\textbf{OJO.-} El lector habrá observado que, al resolver la ponderación en la varianza de la cartera ($\sigma_c^2=\omega_1^2\sigma_1^2$), aparecen dos soluciones ($\sigma_c=\omega_1\sigma_1$ y $\sigma_c=-\omega_1\sigma_1$). Descartaremos la ecuación de la recta con pendiente negativa porque está dominada en todo punto por las carteras generadas con la solución positiva (MARÍN y RUBIO, 2011).
+}
+
+\eqblock{
+\begin{aligned}
+    \mathbb E[r_c]=r_f+\left[\frac{\mathbb E[r_A]-r_f}{\sigma_A}\right]\sigma_c
+\end{aligned}
+}{}
+
+Esta expresión relaciona la rentabilidad esperada de la cartera con el riesgo de esta que asume el inversor diversificando su patrimonio. Es muy interesante porque, como vemos, es en realidad la ecuación de la recta, donde la pendiente es fija (primer término del producto) y la variable independiente $\sigma_c=\omega_A\sigma_A$ depende directamente del peso del activo $A$ en la cartera de inversión. A esta recta que conecta ambos activos la llamamos línea de asignación de activos o Capital Allocation Line (CAL):\footnote{Una forma complementaria de entender la CAL es que ésta representa todas las posibles combinaciones entre el activo libre de riesgo y el activo 1, o conjunto de posibilidades de inversión. Así, un inversor que invierta el 50\% de su patrimonio en activo libre de riesgo y el otro 50\% en activo 1, estará situado en el punto A del gráfico. El punto B, por ejemplo, puede representar el par rentabilidad-riesgo de un inversor con ponderaciones del 75\% en activo 1, y 25\% en activo libre de riesgo, y así sucesivamente. 
+}
+
+\imagenfit{Fig2.png}{Conjunto de posibilidades de inversión para un agente que invierte en activo libre de riesgo y un activo arriesgado}{Apuntes ICEX-CECO. Tema 3B.23}
+
+La CAL recoge todos los posibles pares rentabilidad-riesgo que aparecen cuando combinamos el activo libre de riesgo y el activo arriesgado. Por ejemplo, la rentabilidad esperada de la cartera del inversor ($\mathbb E_t[r_C]$) cuando el riesgo de su cartera es cero ($\sigma_c=0$) será la rentabilidad del activo libre de riesgo. Igualmente, cuando el riesgo de su cartera iguale al riesgo del activo A ($\sigma_c=\sigma_1$), entonces la rentabilidad esperada de la cartera será idéntica a la del activo A (estará invertido 100\% en A). 
+
+\paragraph{Pendiente de la CAL: Ratio de SHARPE}
+La ecuación de la CAL contiene un parámetro que hemos pasado por alto y resulta extremadamente importante.
+
+La pendiente, que como hemos dicho es igual al primer término del producto se obtiene dividiendo: (i) el numerador, la prima de riesgo, ($\mathbb E_t[r_1]-r_f$), qué es la rentabilidad (esperada) extra que recibe el inversor por involucrarse en una inversión arriesgada; y, (ii) el denominador, el riesgo del activo arriesgado ($\sigma_1$). Esto es lo que se conoce como \textbf{ratio de SHARPE} e indica la rentabilidad extra por unidad de riesgo que el agente espera obtener. Como veremos, se trata de una ratio que nos ayuda a comparar la rentabilidad de una inversión con el riesgo que se asume al realizarla.
+
+De hecho, esta medida es extremadamente popular a la hora de comparar el desempeño (performance) de las carteras de inversión, ya que no se centra únicamente en su rentabilidad, sino que corrige por su riesgo.\footnote{
+Como veremos en el próximo capítulo, la ratio de SHARPE füe introducida por el economista americano SHARPE en el marco del modelo de valoración de activos CAPM.
+
+Por dar unos valores de referencia para el ratio de Sharpe, éste puede cifrarse entre un $0.45$ y un $0.65$ para una inversión que combine un índice bursátil y un bono del T esoro. Por supuesto, inversiones con mayores ratios de Sharpe serán altamente preferidas por el inversor.
+} 
+
+\paragraph{Combinación de riesgo óptima: Curva de Mínima Varianza (CMV)}
+Lo expuesto para una combinación de dos activos no impide que se pueda generalizar a un número indeterminado de ellos. De hecho, una de las propiedades fundamentales de todos los estadísticos presentados hasta ahora es que permiten su modelización conjunta, su descripción simultanea cuando se \textit{agregan} dos o más distribuciones.
+
+Y esto nos permite representar sobre el mismo gráfico, sin la derivación formal, cómo sería la CAL de diferentes carteras dados los rendimientos esperados, los riesgos y las ponderaciones alternativas de los diferntes activos que las componen. De esta forma, si suponemos que existen tres activos (o carteras de activos, es indistinto) y queremos valorar la posibilidad de combinarlos entre si, sabemos que, siendo uno de ellos un activo libre de riesgo, los pares rentabilidad-riesgo que ofrezcan las diferentes combinaciones dependerán del grado de correlación que exista entre los activos (o carteras) con componente de riesgo. Gráficamente, podemos visualizar las tres combinaciones polares ($-1,0,1$) como:
+
+\textbf{Introducir gráfico y ejemplo}
+
+¿Cuál es la lección económica que nos enseña la figura? Existen múltiples y valiosos resultados que se desprenden de ella:
+
+Primero, vemos que el conjunto de oportunidades del inversor varía dramáticamente en función del grado de correlación. Utilizando los mismos activos de partida (activos 1 y 2), vemos que los valores de riesgo obtenidos son diferentes; las rentabilidades esperadas son siempre las mismas, pues no dependen de la correlación. Por tanto, la correlación (o covarianza) entre los activos que componen una cartera juega un papel fundamental en el riesgo de la misma.
+
+Segundo, un menor grado de correlación entre los activos desplaza el conjunto de oportunidades de inversión hacia la izquierda, es decir, hacia la zona de menor riesgo. Éste es el efecto de la diversificación: cuanto más invertido sea el comportamiento de los activos, menor riesgo agregado en la cartera. El caso extremo es la correlación perfectamente invertida ($\rho_{12}=-1$).\footnote{Un ejemplo imperfecto de esta idea es el caso de los índices bursátiles de países desarrollados, como EEUU, y el oro: cuanto mejor marcha la economía, mejores rentabilidades de las acciones y peor comportamiento del precio del oro. Y viceversa, en los momentos malos, la bolsa cae y el oro se aprecia. El gráfico muestra que la combinación de dos activos arri esgados perfectamente incorrelados permite, sorprendentemente, generar una cartera libre de riesgo.
+}
+
+Por último, es importante destacar que para todas las correlaciones distintas a $+1$ generan carteras que son ineficientes. Dicho de otro modo: la simulación de carteras genera soluciones que son plausibles matemáticamente pero que no tienen sentido económico. Para entender esto, fijémonos únicamente en el conjunto de oportunidades de inversión de la figura 3 generado con correlación O; asumimos que los gráficos de correlaciones $1$ y $-1$ no existen. Como vemos, el conjunto de carteras que quedan por debajo de la cartera de mínima varianza (la de menor riesgo), es un conjunto ineficiente: para un mismo nivel de riesgo, siempre existe una cartera en el tramo superior de la curva que ofrece más rentabilidad esperada. En este sentido, los inversores sólo escogerán carteras situadas en la parte superior de la hipérbola. 
+
+En el mundo real, ¿cuál es el gráfico de oportunidades de inversión más habitual? Sin ninguna duda, la hipérbola que se genera con correlaciones en el intervalo ($-1,1$). El lector puede tomar como modelo la hipérbola del caso $\rho_{12}=0$ como el patrón más repetido (si no único) que aparece cuando representamos las posibles distintas combinaciones de activos arriesgados en el plano media-varianza.
+
+\begin{specialblock}{Cartera de mínima varianza para dos activos arriesgados}
+    Cuando se analizan carteras en el entorno media-varianza, existe una cartera muy relevante que es la cartera de menor riesgo o cartera de mínima varianza. Esta cartera se obtiene buscando el mínimo del riesgo de una cartera. Como muestran MARÍN y RUBIO (2011), partiendo de la varianza de una cartera de dos activos, sabemos que, 
+    
+    $$\begin{aligned}
+        \sigma_c^2=\omega_1^2\sigma_1^2+(1-\omega_1)^2\sigma_2^2+2\omega_1(1-\omega_1)\sigma_1\sigma_2\rho_{12}\\[0.5em]
+        \underset{\substack{\text{\scriptsize tomando}\\\text{\scriptsize derivadas}}}{\Longrightarrow} \frac{\mathrm d\sigma_c^2}{\mathrm d\omega_1}=2\omega_1\sigma_1^2-2\sigma_2^2+2\omega_1\sigma_2^2+2\rho_{12}\sigma_1\sigma_2-4\omega_1\rho_{12}\sigma_1\sigma_2=0\\[0.5em]
+        \Longrightarrow \omega_1(\sigma_1^2+\sigma_2^2-2\rho_{12}\sigma_1\sigma_2)+\rho_{12}\sigma_1\sigma_2-\sigma_2^2=0
+    \end{aligned}$$ 
+    
+    Despejando en la expresión anterior, obtenemos la ponderación del activo 1 en la cartera de mínima varianza:
+
+    $$\omega_1^*=\frac{\sigma_2^2-\rho_{12}\sigma_1\sigma_2}{\sigma_1^2+\sigma_2^2-\rho_{12}\sigma_1\sigma_2}$$
+    
+    Una de las características más relevantes del resultado anterior es que, si nos fijamos en la fórmula, no precisamos de información sobre las rentabilidades esperadas para calcular las ponderacione;; de la cartera de mínima varianza. Esta circunstancia es muy relevante, dado que los datos de rentabilidades esperadas suelen ser muy ruidosos y una de las críticas más habituales a la hora de la implementación real del modelo.
+\end{specialblock}
+
+
+
+
+
+\subsubsection{Cartera de activos arriesgados} 
+Turno ahora de entender cómo se representa una cartera de dos activos arriesgados en el modelo de MARKOWITZ. 
+
+El primer paso es acudir siempre a las expresiones de rentabilidad y riesgo de una cartera, en este caso de dos activos. En este caso, la novedad está en la ecuación del riesgo, donde la expresión de la covarianza la hemos sustituido por la correlación ($\sigma_{12}= \sigma_1 \sigma_2 \rho_{12}$) por conveniencia.
+
+\eqblock{
+\begin{aligned}
+    \mathbb E_t[r_c]=\omega_1\mathbb E_t[r_1]+(1-\omega_1)\mathbb E_t[r_2]\\[1em]
+    \sigma_c^2=\omega_1^2\sigma_1^2+\omega_2^2\sigma_2^s+2\omega_1\omega_2\sigma_{12}=\omega_1^2\sigma_1^2+(1-\omega_1)^2\sigma_2^2+2\omega_1(1-\omega_1)\sigma_1\sigma_2\rho_{12}
+\end{aligned}
+}{}
+
+A partir de aquí, se abren dos estrategias diferentes para visualizar la representación de una cartera con dos activos arriesgados: mediante álgebra y a través de simulación numérica. La solución algebraica se construye de forma similar a la desarrollada en el apartado anterior, con el inconveniente de que sólo es aplicable a activos cuyo coeficiente de correlación $\rho_{12}$ es estrictamente igual a  $\pm1$ (solo los casos polares). La simulación numérica es mucho más general, y abarca todos los posibles valores de correlación en el intervalo $[-1 , 1]$. 
+
+Por motivos de concreción, en este tema nos centraremos en la estrategia por simulación, invitando al lector interesado a que consulte las demostraciones algebraicas de la cartera de dos activos arriesgados para $\rho_{12}=1$ y $\rho_{12}=-1$ en MARÍN y RUBIO (2011).
+
+El procedimiento de simulación numérica para representar las diferentes carteras que surgen alcombinar dos activos arriesgados es muy sencillo: a partir de unos datos de rentabilidad esperada, volatilidad y correlación entre los activos arriesgados, tan sólo debemos generar ponderaciones aleatorias de estos activos en la cartera. Cada una de estas ponderaciones simuladas generará un par rentabilidad-riesgo de la cartera; par que colocaremos en el plano media-varianza. Y ya está.
+
+Para visualizar el procedimiento anterior, pongamos un ejemplo sencillo. Imaginemos que tenemos dos activos arriesgados, llamados Activo 1 y Activo 2, con los siguientes datos: rentabilidad esperada y volatilidad anuales del Activo 1, $\mathbb E_{t}[r_1]=12\%$ y $\sigma_1=20\%$, y 2, $\mathbb E_t[18\%]$ y $\sigma_2=32\%$. La correlación entre ambos activos es del $100\%$ ($\rho_{12}=1$). 
+
+El siguiente paso es incluir los datos anteriores en las ecuaciones de rentabilidad esperada y riesgo de una cartera de dos activos. Esto quedaría así, 
+
+\eqblock{
+\begin{aligned}
+    \mathbb E_t[r_c]=\omega_112\%+(1-\omega_1)18\%\\[1em]
+    \sigma_c^2=\omega_1^2(20\%)^2+(1-\omega_1)^2(32\%)^2+2\omega_1(1-\omega_1)(20\%)(32\%)(+1)
+\end{aligned}
+}{}
+
+Como vemos en la expresión anterior, la rentabilidad esperada y riesgo de la cartera quedan en función de las ponderaciones del Activo 1. Mediante el método de simulación, generamos aleatoriamente posibles valores de $\omega_1$, colocando en el plano cada par generado. Por ejemplo, para $\omega_1=50\%$, los valores de rentabilidad esperada y riesgo son $\mathbb E_t[r_c] = 15\%$ y $\sigma_c= 6.76\%$, respectivamente. Para $\omega_1= 75\%$, $\mathbb E_t[r_c]= 14\%$ y $\sigma_c= 5.29\%$, y así sucesivamente. 
+
+La figura 3 muestra el resultado de los pares rentabilidad esperada-riesgo para la cartera que combina Activo I y Activo 2. Las diferentes líneas atienden a diferentes valores de la correlación. 
+
+\imagenfit{Fig4.png}{Cartera de dos activos arriesgados bajo distintos niveles de correlación}{Apuntes ICEX-CECO. Tema 3.B.23}
+
+Por ejemplo, cuando la correlación es positiva y perfecta ($\rho_{12}=1$), una línea recta une a los activos 1 y 2. Conforme disminuimos la correlación, por ejemplo el caso de $\rho_{12=}0$, aparece una hipérbola que une ambos activos. En el caso extremo de correlación perfectamente negativa ($\rho_{12}=-1$), la hipérbola ha convergido a dos rectas que tocan el eje de ordenadas. En todos los casos anteriores, las líneas que unen los activos 1 y 2 representan diferentes pares rentabilidadriesgo. 
+
+
+
+\subsubsection{Generalización: carteras con múltiples activos arriesgados}
+De forma análoga al caso de dos activos, el conjunto de oportunidades de inversión para carteras con múltiples activos arriesgados puede calcularse mediante dos vías: la optimización numérica y la simulación. 
+
+La metodología más ortodoxa para representar el marco media-varianza de diversos activos arriesgados es la optimización numérica. En términos generales, se trata de minimizar la ecuación del riesgo de una cartera sujeta a un conjunto de restricciones. Éste es el procedimiento original utilizado por MARKOWITZ (1952), y recogido en MARÍN y RUBIO (2011) para obtener algebraicamente el conjunto de oportunidades de inversión con múltiples activos. Dada su tradición en la literatura financiera, hemos incorporado una versión resumida en el Anexo I de este tema. 
+
+En lugar de la optimación, este tema opta por la simulación numérica, un procedimiento que actualmente está ampliamente aceptado dada la potencia de cálculo de los ordenadores actuales. En cualquier caso, tanto la optimización como la simulación son dos vías equivalentes para llegar al mismo fin. El procedimiento de simulación es fácil de entender. Dados los.datos de rentabilidad esperada de los rendimientos de "n" activos, y su matriz de varianzas y covarianzas,
+
+\eqblock{
+\begin{aligned}
+    \mathbb E_t[r_c]=\sum_{j=1}^N\omega_j \mathbb E_t[r_j]\\
+    \sigma_c^2=\sum_{j=1}^N\sum_{h=1}^N\omega_j\omega_h\sigma_{jh}
+\end{aligned}
+}{}
+
+Se trata de generar aleatoriamente múltiples pesos de la cartera. Cada simulación aleatoria de estos pesos o ponderaciones de la cartera generará unos pares rentabilidad-riesgo que situaremos en el plano.
+
+\imagenfit{Fig5.png}{Cartera de tres activos arriesgados calculada mediante 100 simulaciones (izq.) y 1000 simulaciones (dch.)}{Apuntes ICEX-CECO. Tema 3.B.23}
+
+Para ilustrar esta metodología, el gráfico simula carteras para tres activos arriesgados con el siguiente vector de rentabilidades esperadas, $\mathbb E_t[r] =(12\%, 18\%, 22\%)$, y matriz de varianzas-covarianzas, $\sum=[(0.040,0.002,-0.01 3);(0.002,0.102,0.004); (-0.013,0.004,0.130)]$. Las implicaciones económicas más relevantes de esta figura son las siguientes: 
+\begin{lnum}
+    \item Cartera de mínima varianza. Existe una única cartera que es la de menor riesgo, o cartera de mínima varianza;
+    \item Carteras en la frontera. Son aquellas que tienen una menor volatilidad para un nivel de rentabilidad dado. Importante: que una cartera esté en la fronte ra no im plica que sea una cartera eficiente; y,
+    \item Carteras eficientes. Aquellas que dominan en sentido media-varianza: mayor rentabilidad pa ra un nivel de riesgo dado. o menor riesgo para un mismo nivel de rentabilidad dada. El conjunto de carteras eficientes de la figura serían todas las carteras que están en la parte supe rior de la frontera, comenzando por la cartera de mínima varianza.
+\end{lnum}
+
+
+Desde el punto de vista económico, es im portante notar que, en ausencia del activo libre de riesgo, el mejor conjunto de carte ras con activos arriesgados son las carteras eficientes que se encuentran en la frontera. Entre estas, es im posible decir si una es mejor frente a otra, pues de penderá de las preferencias de los agentes. Por ejemplo, ¿es mejor la cartera de mínima varianza u otra situada en una parte más alta de la frontera? Ambas son igualmente válidas: son las carteras que maximizan rentabilidad para un nivel de riesgo dado. Escoger entre una u otra de penderá del grado de aversión al riesgo del inversor.
+
+
+\subsection{Análisis técnico: Datos al servicio de la elección de cartera} 
+Ahora que conocemos todo el instrumental estadístico utilizado para definir los diferentes componentes que caracterizan un activo financiero, podemos presentar una primera aproximación al análisis de éstos cuyo objetivo es la \textbf{toma de decisiones de inversión}. Existe, esencialmente, una única aproximación cuantitativa que pretenda guiar estas decisiones, y es la que se conoce como \textbf{análisis técnico}.
+
+El análisis técnico es un método utilizado por operadores e inversores para evaluar y predecir los movimientos futuros de los precios en los mercados financieros, principalmente en el mercado bursátil.\footnote{A diferencia del análisis fundamental, que se centra en el valor intrínseco de una empresa, el análisis técnico se basa en el estudio de los datos históricos de precios y volúmenes de negociación para identificar pautas, tendencias y posibles niveles de soporte y resistencia.
+} Ahora bien, por su notable dependencia a la identificación de patrones, esta ténica suele estar orientada al desarrollo de estrategias a corto plazo.\footnote{Se dice que el análisis ténico parte del supuesto de que los precios reflejan toda la información relevante. Es decir, que el \textbf{precio es el correcto}. Personalmente, no estoy muy de acuerdo con esta afirmación puesto que lo único que verdaderamente requieren es que se cumpla la hipótesis ergódica y, en consecuencia, una aproximación cuantitativa pueda ser llevada a cabo. Sino, sería fundamentalmente erroneo. Ahora bien, a modo de resumir dicha hipótesis (que ya hemos visto en numerosas situaciones): si toda la información relevante sobre una acción o un mercado ya está reflejada en su precio (uno de los pilares de la hipótesis de los mercados eficientes de FAMA, infamia pura), los precios de las acciones responden automáticamente a la nueva información. Por lo tanto, los analistas técnicos sostienen que no es necesario analizar los factores fundamentales, puesto que ya están incorporados en el precio actual de la acción.
+}
+
+\subsubsection{Información: Patrones de comportamiento}
+Veamos brevemente cómo funciona esta técnica en la práctica. 
+
+En primer lugar, El supuesto de existencia de patrones de comportamiento en los precios se expresa en tres conceptos fundamentales del análisis técnico: el soporte y resistencia, las líneas de tendencia y los patrones gráficos.
+
+\paragraph{Comportamiento límite de mercado: Soporte y resistencia}
+El primero de ellos es crucial en el análisis técnico. 
+
+El soporte se refiere al nivel de precios en el que la caída de una acción podría detenerse debido a una concentración de la demanda por parte de los compradores: sería el límite inferior de un aumento súbito de la oferta. Por otro lado, la resistencia es el nivel de precios en el que el avance de una acción podría detenerse debido a la abundancia de oferta por parte de los vendedores: sería el límite superior de un aumento súbito de la demanda. Gráficamente:
+
+\imagenfit{Fig8.png}{Representación gráfica: Soporte y resistencia}{\href{https://www.enbolsa.net/trading-principiantes-soportes-resistencias-1/}{Enbolsa.net}}
+
+Identificar los niveles de soporte y resistencia puede ayudar a los operadores a determinar los posibles puntos de entrada y salida de sus posiciones. Por poner un ejemplo, imaginemos que las acciones de Telefónica han estado cotizando en un rango entre $50$ y $60$ euros durante los últimos seis meses. Cada vez que el precio se acerca a los $50$ euros, rebota, lo que indica un fuerte soporte. Por el contrario, cerca del nivel de $60$ euros, la acción se enfrenta a una fuerte presión de venta, lo que indica resistencia.
+
+\paragraph{Efecto rebaño: Lineas de tendencia}
+Complementariamente tendríamos las lineas de tendencia. Su análisis asume que los inversores padecen \textbf{efecto rebaño}. En consecuencia, una vez que se ha iniciado un sentido o rumbo en los precios de un activo, éste tiende a mantenerse durante algún tiempo. 
+
+\imagenfit{Fig9.png}{Representación gráfica: Lineas de tendencia}{\href{https://clubdecapitales.com/educacion/que-es-una-linea-de-tendencia/}{clubdecapitales.es}}
+
+Nótese que la linea de tendencia bajista (alcista) se representa mediante la unión de máximos (mínimos).
+
+Para facilitar su visualización, las plataformas de trading suelen representarlas mediante trazos en el plot de precios históricos de la título. Estas ayudan a los operadores a identificar la dirección de la tendencia y predecir futuros movimientos de los precios. Las líneas de tendencia pueden utilizarse para establecer canales de tendencia, que sirven de ayuda visual a los operadores para calibrar posibles objetivos de precios y zonas de soporte y resistencia. Por poner un ejemplo, imaginemos que las acciones de Telfónica han seguido una tendencia alcista durante el último año, formando un conjunto de mínimos alcistas que, al conectarlos con el trazo, permiten visualizar la trayectoria ascendente de la acción y anticipar futuros niveles de soporte.
+
+\paragraph{Magia negra: Patrones gráficos}
+Los patrones de gráficos son alineaciones que aparecen en los gráficos de precios y que crean algún tipo de forma reconocible. Los patrones comunes aparecen repetidamente y, según el análisis técnico, acarrean movimientos de precios posteriores similares. Los patrones gráficos se clasifican en dos grupos: patrones de continuación y de reversión. 
+
+\imagenfit{Fig10.png}{Representación gráfica: Magia negra}{\href{https://www.novatostradingclub.com/blog/patrones-trading/}{Patrones de trading. novatostradingclub.com}}
+
+Los patrones de continuación se utilizan para predecir la reanudación de una tendencia de mercado tras una breve pausa. Algunos ejemplos de este tipo son las banderas y triángulos. Por el contrario, los patrones de reversión proporcionarían información sobre un cambio en la tendencia predominante. Algunos ejemplos son la cabeza y los hombros, los dobles máximos y los dobles mínimos.
+
+\subsubsection{Indicadores técnicos} 
+Estos tres tipos de señales serían los suministradores de información de los operadores de trading. Sin embargo, como podemos haber intuido, muchos de ellos suelen recibirse ex post y, en consecuencia, no proporcionan gran información a la hora de predecir una inversión rentable desde la óptica del trader.
+
+En este sentido, deberemos complementarlas con los indicadores de trading. Estos suelen ser medidas basadas en precios y/o volúmenes que se utilizarían para predecir cambios en los precios. Los indicadores técnicos más habituales son las medias móviles, las bandas de Bollinger, el índice de fuerza relativa y los osciladores de momentum. Veámoslos brevemente.
+
+\paragraph{Indicador (I): Medias móviles}
+Las medias móviles son uno de los indicadores técnicos más utilizados. Se utilizan para suavizar las fluctuaciones en los precios durante un periodo específico, de cara a revelar tendencias y posibles niveles de soporte y resistencia. 
+
+\imagenfit{Fig11.png}{Representación gráfica: Media móvil}{\href{https://www.degiro.es/estrategias/analisis-tecnico/media-movil}{degiro.es}}
+
+La media móvil puede ser simple (simple mean average, o SMA) o exponencial (exponential mean average, o EMA). La SMA se calcula sumando los precios de cierre de una acción durante un número determinado de periodos (por ejemplo, días) y dividiendola por el total de periodos, literalmente, se calcula la media en cada periodo actualizado por los retardos que le correspondan. Por el contrario, la EMA asigna más peso a los precios recientes, siendo más sensible a la información presente que a la pasada.
+
+\paragraph{Indicador (II): Bandas de BOLLINGER}
+Las bandas de BOLLINGER consisten en una media móvil a la que se añade y sustrae un determinado número de desviaciones típicas, generalmente dos.
+
+\imagenfit{Fig12.png}{Representación gráfica: Periodo de 10 días (medias móviles) y una anchura de dos desviaciones típicas}{\href{https://es.wikipedia.org/wiki/Bandas_de_Bollinger#cite_note-3}{Wikipedia.org}}
+
+Generalmente se dice, aunque no sea cierto, que un inversor debe vender (comprar) si el precio de la acción se encuentra por encima de la banda superior (inferior), aunque esto no es por lo que incialmente se concibieron.\footnote{Al contrario de lo que a veces se cree, las bandas de Bollinger no pueden utilizarse para hacer predicciones fiables basadas cuán cerca o lejos esté el precio de una acción con respecto a su media. ¿Por qué? Porque una acción no se rige por ninguna función de distribución conocida. Por ejemplo, si se calculan las bandas con un parámetro de dos veces la desviación estándar, no se puede asumir que aproximadamente el 95\% de los precios de cierre permanecerán, en promedio, dentro de las bandas. Esto requeriría, entre otras cosas, que los precios tuviesen una distribución normal, lo cual generalmente no sucede. Además requeriría que se conociera la verdadera desviación estándar y no la calculada en la fórmula, que es sólo un estimativo incierto de la verdadera desviación. Además, se debe tener en cuenta que las desviaciones estándar del precio de las acciones por periodos finitos de tiempo no son parámetros fijos tal y como lo requiere la teoría clásica de la estadística, sino que son variables dependientes de la volatilidad del precio. 
+} No obstante, esta falsa interpretación del precio tocando o penetrando una banda, basada en unos supuestos estadísticos erróneos, se ha hecho tan popular que algunos inversionistas ahora utilizan dichos sucesos como señales para iniciar sus posiciones y al hacerlo, sin querer, le han dado significado a este tipo de eventos, que de otra manera no ocurrirían. 
+
+A pesar de todo esto, las bandas sí han demostrado ser muy útiles en el análisis de los precios de las acciones y por la desigualdad de CHEBYSHEV éstas contienen al menos el 75\% de los precios. Las bandas de Bollinger ofrecen una forma útil de visualizar la volatilidad del precio de una acción. No debe darse un significado especial a que el precio toque la banda superior o la inferior, como el mismo BOLLINGER señaló. Esos sucesos deberían analizarse junto a otros factores antes de tomar decisiones de inversión.
+
+\paragraph{Osciladores de momentum}
+Los osciladores de momentum se utilizan para captar niveles extremos de actividad en el mercado. Entre los más utilizados están:
+\begin{la}
+    \item \textbf{Índice de fuerza relativa} (Relative Strenght Index, RSI). El RSI mide la velocidad y el cambio de los movimientos de los precios con la intención de indicar si un activo está siendo sobrecomprado o no. Es un indicador comprendido entre $[0,100]$. Por ejemplo, una lectura del RSI por encima de $70$ indica que una acción está sobrecomprada y puede estar a punto de sufrir una corrección de precios, mientras que una lectura del RSI por debajo de 30 sugiere que una acción está sobrevendida y puede estar preparada para un posible rebote; y,
+    \item \textbf{Divergencia en medias móviles} (MACO). El MACO es un indicador de tendencia que muestra la relación entre dos medias móviles: la línea rápida (EMA a corto plazo) y la línea lenta (EMA a largo plazo). De esta forma, cuando la línea MACO cruza por encima de la línea de señal, genera una señal alcista, indicando una posible tendencia alcista. Por el contrario, un cruce por debajo de la línea de señal produce una señal bajista, lo que sugiere una posible tendencia bajista.
+\end{la}
+
+\subsubsection{Críticas al análisis técnico}
+A pesar de haber repasado únicamente algunos de sus componentes principales, podemos ver por qué el análisis técnico no está aceptado como herramienta de investigación dentro de la literatura científica financiera.\footnote{Véase, por ejemplo, el título del libro del prof. LO, catedrático de Finanzas del MIT: \textit{The Heretics of Finance: Conversations with Leading Practitioners of Technical Analysis} (2009), por LO y HASANHODZIC. Ed. Mary Ann McGuigan.
+} Los argumentos en contra de este tipo de análisis variados.
+
+Por ejemplo, una crítica evidente es que no precisa un conocimiento detallado del tipo de activo al que es aplicado, siendo generalmente indiferente al instrumento financiero aplicado. En ese sentido, sus principios aplican por igual al precio de una gran corporación -e.g. Microsoft- que al precio de la patata. Por otro lado, están los sesgos cognitivos relacionados a la subjetividad de la interpretación de los gráficos como la elección del patrón histórico que se está reproduciendo. Estas decisiones pueden ocasionar inconsistencia en las predicciones y decisiones de compraventa.
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Aproximación normativa: Diseño de la cartera de inversión}
+\puntosclave{
+    \textbf{CAPM.-} Modelo de valoración de activos con cartera de mercado
+    
+    El modelo de valoración de activos con cartera de mercado, o Capital Asset Pric ing Model (CAPM), describe la relación entre la rentabilidad esperada de un activo financiero arriesgado .Y su exposición a un riesgo sistemático, que es el comportamiento de la cartera de mercado. 
+    
+    La primera contribución del modelo CAPM se resume en la siguiente ecuación, $\mathbb E_t[r_j]=r_f+\beta_{iM}(\mathbb E_t[r_M]-r_f)$ es la rentabilidad esperada del activo individual $i$, $r_f$ es la rentabilidad del activo libre de riesgo, $\beta_{iM}$ mide la exposición del activo individual a la cartera de mercado, y $\mathbb E_t[r_M]$ es la rentabilidad de la cartera de mercado La segunda contribución es la exposición a un factor de riesgo. Esta idea viene condensada en la beta de un activo arriesgado, $PiM$ 
+    
+    La beta de un activo es una medida de la volatilidad delactivo en relación con el mercado, y se define como, cov(r¡, rM ) PiM = <J z M donde el numerador recoge la covarianza entre la rentabilidad del activo individual y la cartera de mercado, y el denominador es la varianza de la cartera de mercado. La tercera contribución del CAPM es 'la interpretación de la prima de riesgo del mercado. De acuerdo con el CAPM, E(rM ) - rr = Yprome dio <Jlt la prima de riesgo esperada del mercado -la compensación extra por arriesgarnos- es el producto de la aversión al riesgo del inversor promedio Ypromed io, y la vari anza de la cartera de mercado. En otras palabras, el producto de la aversión al riesgo por la incertidumbre del mercado.\footnote{De acuerdo con la ecuación anterior. a medida que el mercado se hace más volátil, la rentabilidad esperada del mercado aumenta y los precios de las acciones caen al mismo tiempo. Esta sería la interpretación de lo ocurrido entre 2007 y 2008. cuando la volatilidad se disparó y los precios de las acciones cayeron en picado. Menores precios implican mayores rendimientos esperados; de hecho, las rentabilidades realizadas del mercado en 2009 y 2010 fueron muy elevadas. Igualmente, a medida que el inversor medio es más averso al riesgo. algo habitual en tiempos de crisis, la prima de riesgo del mercado también aumenta. contribuyendo a la caída de los precios (ANG, 2011).
+    } 
+    
+    El CAPM se utiliza ampliamente como herramienta para estimar el coste de los recursos propios de una empresa, o el rendimiento esperado de los activos financieros. Pese a las críticas por sus supuestos, que no siempre se cumplen en los mercados reales, el CAPM ha tenido una importancia crucial en el desarrollo de otros modelos posteriores de valoración de activos.
+    
+    \textbf{APT.-} Modelos de valoración de activos por arbitraje 
+    
+    El modelo de valoración de activos bajo ausencia de arbitraj e (APT) sugiere que la rentabilidad esperada de un activo financiero puede modelizarse co_mo una función lineal de diversos factores que afectan sistemáticamente a los activos financieros, y donde cada factor tiene una prima de riesgo única. La teoría fue propuesta por primera vez por ROSS en 1976. 
+    
+    El APT muestra que cada factor de riesgo lleva aparejada una priña por riesgo, es decir. una compensación por estar expuesto a la variabilidad de esa fuente particular de incertidumbre. En ese sentido, el APT explicaría la correlación entre un par de activos diferentes, pues ésta se produce cuando estos dos valores se ven afectados por el mismo factor o factores. Aunque el CAPM pem1ite la correlación entre valores, este modelo no especi ftca los factores subyacentes que causan dicha correlación. 
+    
+    Una de las grandes contribuciones del APT es señalar la relevancia de la fuerza del arbit raje como inductor del equilibrio en los mercados. Bajo la perspectiva de que el modelo APT es cierto y las rentabilidades esperadas de los activos se explican a través de su sensibilidad a factores comunes, aquellos activos cuyas rentabilidades no sean las que marca el modelo estarán mal valorados. Por tanto, los inversores aprovecharán estas oportunidades, y realizarán operaciones que pem1itan obtener un beneficio seguro sin riesgo y sin invertir nada. En otras palabras, explotarán las operaciones de arbitraje del mercado. Éste es un supuesto importante del APT sobre el comportamiento de los inversores, y donde radica una de sus principales virtudes. 
+    
+    Respecto a las críticas del APT, sus detractores mencionan varias: una, el supuesto de que las primas de riesgo de los factores son constantes a lo largo del tiempo, lo que no oc urre en el mundo real. Además, el modelo no explica por qué determinados factores deben ser incluidos en la valoración, o siquiera cuáles son esos factores.
+} 
+
+Tras este breve introducción a uno de las aproximaciones desarrolladas para guiar las decisiones de inversión, es imperativo recordar algunos de los elementos desarrollados en el apartado anterior. En particular, los conceptos de rentabilidad esperada, riesgo o volatilidad y correlación de activos. ¿Por qué? Porque ahora presentaremos las diferentes aproximaciones normativas que se han desarrollado para guiar las decisiones de inversión. Curiosamente las decisiones que posibilitaron, como veremos, la inclusión de las Finanzas en el campo de la Economía, dado el absoluto rechazo que el análisis técnico padecia, por motivos más que razonables.
+
+\textbf{¿Qué queremos decir?} A continuación presentaremos las tres aproximaciones normativas más importantes de este campo: la Teoría de la elección de cartera, propuesto por MARKOWITZ; la primera aproximación a la fijación del precio de los activos en el mercado de capitales, propuesto por S...; y el Modelo APT, como una extensión de este segundo campo. Todas estas utilizan intensivamente los estadísticos presentados en la primera sección, por lo que, además de los supuestos que se impondrán cuando se exponga cada modelo, debemos recordar que al basarse en una aproximación cuantitativa requieren del cumplimiento de la Hipótesis Ergódica (en sentido estricto).
+
+
+\subsection{Modelo de MARKOWITZ (1952): Teoría de la elección de carteras}
+El primero de los modelos, Markowitz (1952), fundamenta las decisiones de inversión sobre dos aspectos: la \textbf{rendimiento esperado} y el \textbf{riesgo}. 
+
+Con esto, proporciona dos conclusiones fundamentales en el campo de las finanzas:
+\begin{la}
+    \item \textbf{Cartera de mercado}. Que existe una cartera de inversión que es óptima para todos los agentes; y,
+    \item \textbf{Cartera personal}. Que existe una cartera de inversión óptima personasl, dadas las preferencias sobre el par rentabilidad-riesgo de un inversor particular.
+\end{la}
+
+Vemos cómo llega a tales conclusiones.
+
+\subsubsection{Cartera de mercado: Desarrollo analítico}
+Obtener una cartera que sea óptima para todos los agnetes implica indentificar los activos financieros y ponderaciones que sean óptimas independientemente del inversor. O, en otras palabras, una cartera que domine fuertemente a cualquier otra en términos de rentabilidad-riesgo (independientemente de las preferencias, por tanto).
+
+Para demostrar que sí se puede obtener tal cartera, supongamos que el inversor construye su cartera combinando un activo libre de riesgo con otros activos arriesgados. En este caso, podemos obtener el conjunto de oportunidades de inversión que viene caracterizado por la ecuación de la CAL:
+
+\eqblock{
+\begin{aligned}
+    \mathbb E[r_c]=r_f+\left[\frac{\mathbb E[r_p]-r_f}{\sigma_p}\right]\sigma_c
+\end{aligned}
+}{}
+
+Donde $\mathbb E[r_p]$ y $\sigma_p$ denotan los pares rentabilidad-riesgo de cualquier cartera factible. Entonces, de todas las combinaciones posibles, ¿existe algún conjunto de posibilidades de inversión que domine al resto? 
+
+Efectivamente, la cartera que combina activo libre de riesgo y la cartera arriesgada tangente $T$ genera los mejores pares de rentabilidad-riesgo para cualquier nivel de riesgo definido. Como podemos ver en el gráfico, geométricamente, la cartera T es la que maximiza el ratio de SHARPE. En términos económicos, la cartera T es la que proporciona mayor prima de riesgo por unidad de riesgo. Dicho de otra forma, aquella que maximiza la rentabilidad esperada del inversor (más precisamente, su prima de riesgo) y minimiza su riesgo. 
+
+El resultado anterior es francamente importante, y conviene subrayar su relevancia económica: de acuerdo con MARKOWITZ (1952), en presencia de un activo libre de riesgo $!\exists$ una cartera compuesta por activos arriesgados que es óptima para todos los agentes, independientemente de sus preferencias. Por supuesto, serán las preferencias del agente las que determinen qué ponderaciones de activo libre de riesgo y cartera $T$ satisfarán sus necesidades. Pero, insistimos, independientemente de sus preferencias, el inversor siempre utilizará la cartera $T$ como activo arriesgado a la hora de construir su cartera final. 
+
+Las implicaciones del resultado anterior son enormes. De acuerdo a la figura, la inversión en activos arriesgados es una cuestión cerrada; es posible determinar una combinación de activos que sea óptima para todos los individuos, en el sentido de que maximiza la rentabilidad esperada y minimiza el riesgo. Por tanto, a la pregunta sobre cómo construir una cartera de inversión óptima, el modelo ofrece una respuesta contundente. No en balde, el resultado de MARKOWITZ (1952), conjuntamente con la idea de eficiencia de mercado, constituye el fundamento de lo que se conoce como inversión pasiva, según el cual es muy dificil construir carteras de activos arriesgados que superen en rentabilidad-riesgo al desempeño de la cartera óptima $T$.
+
+
+
+
+
+\imagenfit{Fig6.png}{Modelo de MARKOWITZ (1952)}{Apuntes ICEX-CECO. Tema 3.B.23}
+
+Los diferentes activos se disponen en el plano media-varianza en función de sus pares rentabilidad-riesgo. La combinación de esos tres activos genera la frontera eficiente que vemos en el gráfico, y donde hemos señalado la cartera de mínima varianza (CMV).
+Hemos ilustrado tres combinaciones diferentes del activo libre de riesgo con la CMV (CAL1), con el activo \#1 (CAL2), y con una cartera $T$ de la frontera Eficiente (CAL3). 
+
+
+\subsubsection{¿Cuál es mi cartera? La importancia de la función de utilidad en el modelo de carteras}
+Hemos derivado formalmente la frontera media-varianza, y sabemos que las mejores oportunidades de inversión se encuentran en la combinación entre activo libre de riesgo y la cartera tangente. Sin embargo, ¿cuál de todas esas carteras eficientes es la que debo escoger?
+
+\paragraph{Las funciones de utilidad}
+La respuesta a la pregunta anterior es que dependerá de la aversión al riesgo de cada inversor y de sus preferencias. Dichas preferencias pueden ser modelizadas a través de funciones de utilidad. En el caso del modelo de MARKOWITZ (1952), la función propuesta y que se conoce como utilidad media-varianza viene dada por la fórmula:
+
+\eqblock{
+\begin{aligned}
+    U=\mathbb E_t[r_p]-\frac{\gamma}{2}\sigma^2_{r_p}
+\end{aligned}
+}
+
+Donde $r_p$ es la rentabilidad de la cartera del inversor, y y su aversión al riesgo. Este coeficiente de aversión al riesgo se mueve generalmente entre valores, del $1$ (menor aversión) al $10$ (mayor aversión). En esta expresión, las preferencias del individuo se satisfacen cuando las rentabilidades esperadas son mayores -aumenta la utilidad- y disminuye el riesgo de la cartera. En otras palabras, el inversor descrito por estas preferencias considera como escenarios adversos aquellas ocasiones donde las medias son bajas y las varianzas, altas. 
+
+La función de utilidad anterior está íntimamente ligada a la función de utilidad de aversión relativa al riesgo constante, o CRRA ( constant risk relative aversion), cuya expresión matemática es:
+
+\eqblock{
+\begin{aligned}
+    U(W)=\frac{W^{1-\gamma}}{1-\gamma}
+\end{aligned}
+}
+
+La CRRA se utiliza ampliamente en la selección de carteras, pues tiene la propiedad de que es escalable: los pesos de las carteras obtenidos a través de esta expresión no dependen de la ri queza del inversor (da igual si el gestor maneja 5 millones de euros que 500 millones). Bajo la CRRA, la aversión al riesgo es similar para todos los niveles de riqueza, algo que la realidad desmiente; los inversores son más aversos a las pérdidas que a las ganancias. En términos generales, cuando calculamos utilidades esperadas del inversor, utilizar la CRRA o la utilidad de Markowitz es aproxim'adamente lo mismo. Como señala ANG (2011), la función de utilidad de Markowtiz es el caballo de batalla de la industria de inversión. Aunque la introdujo en su célebre trabajo de 1952, no fue hasta 1979 cuando, en un trabajo conjunto con Haim Levy, racionalizó el uso de su función de utilidad en un contexto de utilidades esperadas. Básicamente, Levy y Markowitz ( 1979) reinterpretaron cualquier función de utilidad en términos de utilidades media-varianza, 
+
+\eqblock{
+\begin{aligned}
+    \mathbb E_t[U(1+r_p)]\approx U(1+\mathbb E_t[r_p])+\frac{1}{2}\frac{\partial^2 U}{\partial W^2}(1+\mathbb E_t[r_p])\sigma^2_{r_p}
+\end{aligned}
+}{}
+
+donde U es la segunda derivada de la función de utilidad. La intuición detrás de esta expresión es que las variables más importantes a la hora de maximizar las preferencias del inversor son los rendimientos esperados -cómo de centradas están esas expectativas de rentabilidad- y su varianza -cüán dispersas están-. Existe un balance entre ambos efectos pues, como las funciones de utilidad son cóncavas, U" es negativa y, por tanto, el ténnino de la varianza penaliza la utilidad del inversor.
+
+\paragraph{Optimización media-varianza}
+Una vez determinada la función de utilidad, la detenninación de la cartera óptima para el inversor se realiza mediante el siguiente problema de optimización,
+
+\eqblock{
+\begin{aligned}
+    \max_{U_i} U_i=\mathbb E_t[r_p]-\frac{\gamma}{2}\sigma_{r_p}^2
+\end{aligned}
+}{}
+
+Donde los pesos w¡ corresponden a las ponderaciones en los activos arriesgados disponibles enla economía. Según la expresión anterior, el agente maximizará aquellas carteras7 que ofrecen una mayor rentabilidad y menor riesgo. sujeto a una serie de restricciones. Por ejemplo. una restricción habitual es que la suma de las ponderaciones de los activos de la cartera es el 100\% de la riqueza del inversor. Una restricción relevante es que el agente elegirá carteras situadas sobre la CAL de mayor ratio de Sharpe. Finalmente, otra restricción puede referir al uso de posiciones en corto, pennitiendo sólo el uso exclusivo de posiciones largas.
+
+
+
+\subsubsection{Valoración crítica Modelo de MARKOWITZ (1952)}
+La contribución del modelo de Markowitz (1952) al entendimiento de las finanzas de m ercado es, simplemente, fundamental. 
+
+Sin embargo, el modelo de carteras ha cosechado desde su irrupción numerosas críticas ligadas, básicamente, a algunos de sus supuestos. La primera crítica atañe a la asunción de que las rentabilidades de los activos financieros se distribuyen nonnalmente, algo que genera ineficiencias en las estimaciones de las rentabilidades y riesgo de los activos y, en consecuencia, en la elección de la cartera del inversor. La presencia de eventos extremos o crisis en los mercados, como el reciente Covid-19 o la crisis fi nanciera de 2008, son mucho más probables que las asumidas en una distribución nonnal, lo que genera un significativo impacto en las carteras. La segunda crítica es la complejidad paramétrica del modelo. La estimación de medias, varianzas y correlaciones de activos financieros implica un intenso esfuerzo computacional. Como señala Ang (2014), una optimización de 1 00 activos precisa de 5,5 10 parámetros. Por si fuera poco, la estimación de las rentabilidades esperadas utilizando datos históricos es particulannente ruidosa, algo que perturba la elección de la cartera óptima del inversor. Sin ánimo de ser exhaustivos, otras críticas al modelo de elección de carteras refieren a la especificación de la función de utilidad -mismo peso a escenarios buenos y malos, importancia de otros momentos de la distribución-; el efecto de la fiscalidad, costes de transacción y tasas al escoger los activos; el uso de la correlación como medida de dependencia lineal entre los activos fi nancieros; o, por último, obviar el impacto de los factores macroeconómicos y el ciclo económico en las rentabilidades esperadas de los activos. En coñclusión, los críticos señalan la dependencia del modelo de elección de carteras en supuestos poco realistas, datos históricos y correlaciones, así como esquivar las fricciones inducidas por los costes de transacción, los impuestos y las influencias del comportamiento. Pese a estas críticas, la teoría de carteras de Markowitz (1952) es la contribución científica que ha dado forma a nuestra comprensión de la gestión de carteras y la asignación de activos.
+
+
+\subsection{Modelo CAPM: Teoría del mercado de capitales (I)}
+Los modelos de valoración tienen como finalidad asignar un precio a los activos financieros. Como los precios tienen algunas características estadísticas no deseables (por ejemplo, no son estacionarios), esto dificulta enormemente el contraste empírico de hipótesis. Por ello, los investigadores e inversores se centran en las rentabilidades esperadas, dado que los precios se obtienen descontando los flujos de caja futuros a una tasa de rentabilidad esperada. En este contexto, hablar del bajo precio de un activo es equivalente a decir que tiene una rentabilidad esperada muy alta, y viceversa. 
+
+Los modelos de valoración tratan de explicar las rentabilidades esperadas de los activos. Por ello, cualquier modelo de valoración concluirá con una expresión matemática en la que la rentabilidad del activo es función de otras variables, generalmente unas fuentes o factores de riesgo comunes a todos los activos del mercado. 
+
+En esta sección presentamos dos de los modelos más influyentes de la literatura académica en la valoración de activos: el modelo de valoración de activos con cartera de mercado (CAPM), y el modelo de valoración basado en la ausencia de arbitraje (APT). Ambos modelos son pioneros en explicar las rentabilidades de los activos como exposiciones a fuentes de riesgo comunes como el comportamiento de la cartera de mercado (CAPM) o unos factores indeterminados (APT). Además, introducen ideas sobre equilibrio (CAPM) y ausencia de arbitraje (APT) que han tenido una larga influencia en la literatura posterior.
+
+Como señalamos al principio de este tema, el descubrimiento del CAPM fue condecorado con el premio Nobel de Economía en 1990. Nunca sabremos si, de no haberse producido el fallecimiento en 2017 de ROSS, proponente del modelo APT, sería también galardonado con este premio. Lo que no hay duda es que ésta y otras de sus contribuciones al entendimiento de los mercados han resultado cruciales en la historia moderna de las finanzas.
+
+\subsubsection{Pilares del CAPM}
+En este apartado estudiaremos tres conceptos clave para entender la contribución del CAPM: la beta, la cartera de mercado, y la línea del mercado de activos (SML).
+
+\paragraph{Nueva medida de riesgo: la beta ($\beta$)}
+Antes de caracterizar el CAPM nos detendremos en un resultado interesante y valioso para nuestros propósitos: formalizar cuantitativamente la idea de exposición al riesgo de una cartera de activos. Para ello, recordemos la -expresión del riesgo (volatilidad) de una cartera que desarrollamos en el modelo de MARKOWITZ:
+
+\eqblock{
+\begin{aligned}
+    \sigma_c=\left[\sum_{j=1}^N\sum_{h=1}^N\omega_j\omega_h\sigma_{jh}\right]^{1/2}
+\end{aligned}
+}{}
+
+¿Cuál es la contribución marginal de un activo individual $j$ al riesgo de la cartera $c$? En términos matemáticos, esto se calcularía con la siguiente derivada:
+
+\eqblock{
+\begin{aligned}
+    \frac{\partial \sigma_c}{\partial \omega_j}=2\frac{1}{2}\left[\sum_{h=1}^N\omega_h\sigma_{jh}\right]\left[\sum_{j=1}^N\sum_{h=1}^N\omega_j\omega_h\sigma_{jh}\right]^{-1/2}=\frac{\sum_{h=1}^N\omega_h\sigma_{jh}}{\sigma_c}=\frac{Cov(r_j,r_c)}{\sigma_c}
+\end{aligned}
+}{}
+
+Donde, como vemos, la contribución marginal del activo individual al riesgo de la cartera se captura a través de la covarianza dividida por el riesgo de la cartera. El resultado anterior es económicamente muy relevante: en el modelo de selección de carteras de MARKOWITZ (sección 11), aprendimos que todos los inversores escogerán la cartera eficiente -la tangente- para construir sus portfolios. Por tanto, a la hora de incluir un activo individual a su cartera eficiente, estarán muy interesados en conocer cómo y cuánto dicho activo contribuye a la volatilidad de su cartera eficiente (MARÍN y RUBIO, 2011). En términos proporcionales, la contribución al riesgo del activo individual sobre el riesgo total (volatilidad) de la cartera será:
+
+\eqblock{
+\begin{aligned}
+    \frac{Cov(r_j,r_c)/\sigma_c}{\sigma_c}=\frac{Cov(r_j,r_c)}{\sigma_c^2}=\beta_{jc}
+\end{aligned}
+}{}
+
+Que da lugar a la definición de la beta de un activo arriesgado: la medida de cómo un activo individual se mueve conjuntamente con una cartera, de forma que cuanto mayor es ese movimiento conjunto, mayor es la beta del activo. Una forma alternativa de entender la beta es a través de la correlación. Reescribiendo la expresión anterior:
+
+\eqblock{
+\begin{aligned}
+    \beta_{jc}=\frac{Cov(r_j,r_c)}{\sigma_c^2}=\frac{\rho_{jc}\sigma_j\sigma_c}{\sigma_c^2}=\frac{\rho_{jc}\sigma_j}{\sigma_c}
+\end{aligned}
+}{}
+
+Con $\rho_{jc}$ la correlación entre el activo individual y la cartera, sabemos que cuanto menor es la correlación mayor es la diversificación que ofrece el activo; es más probable que el activo dé buenas rentabilidades cuando la cartera se comporta peor. Por tanto, menor beta implica mayor diversificación, y por tanto menor riesgo. Por supuesto, una beta igual a uno implica que el activo es redundante, en el sentido de que tiene un riesgo similar al de la cartera. 
+
+La discusión anterior contiene un valor económico muy interesante (ANG, 2014): partiendo de una cartera diversificada, los activos con betas elevadas no serán atractivos para los inversores, pues se comportan como la cartera diversificada que ya poseen. Por tanto, estos inversores demandarán mayor rentabilidad individual a estos activos para tenerlos en cartera. Y viceversa: un activo con beta baja será muy solicitado por su tremendo beneficio de diversificación. Por ello, los inversores no exigirán compensación por mantenerlos en su cartera, estando dispuestos a pagar un precio mayor por adquirirlos. Estos activos son tan interesantes porque tienen grandes ganancias cuando el mercado se derrumba. El oro, o a veces los bonos del Estado, se presentan a menudo como ejemplos de activos de beta baja (o negativa) que tienden a dar beneficios cuando el mercado bursátil se desploma. Este fue el caso de los bonos del Estado, que fueron una de las pocas clases de activos que obtuvieron buenos resultados en la crisis financiera de 2008.\footnote{Con ello no decimos que los inversores siempre adquirirán activos con beta baja, sino que cualquier asunción de riesgo (mayor beta) precisa de una mayor rentabilidad para ser atractivo al inverso.
+} 
+
+Finalmente, se puede extender la idea de beta de un activo individual a la de beta de una cartera. De esta forma, la beta de una cartera cualquiera p en relación a cualquier cartera eficiente $T$ será,
+
+\eqblock{
+\begin{aligned}
+    &\beta_{pT}=&&\frac{Cov(r_p,r_T)}{\sigma_T^2}=\frac{Cov(\omega_{1p}r_1+\omega_{2p}r_2+\cdots +\omega_{Np}r_N,r_T)}{\sigma_T^2}=\\[0.5em]
+    &&&=\omega_{1p}\frac{Cov(r_1,r_T)}{\sigma_T^2}+\omega_{2p}\frac{Cov(r_2,r_T)}{\sigma_T^2}+\cdots +\omega_{Np}\frac{Cov(r_N,r_T)}{\sigma_T^2}=\\
+    &&&=\omega_{1p}\beta_{1T}+\omega_{2p}\beta_{2T}+\cdots +\omega_{Np}\beta_{NT}\quad=\sum_{j=1}^N\omega{jp}\beta_{jT}
+\end{aligned}
+}{}
+
+En definitiva, la beta de una cartera será el promedio ponderado de las betas individuales de cada uno de los activos que la componen.
+
+\paragraph{Cartera de mercado}
+La cartera de mercado es aquella cartera de activos arriesgados que todos los individuos utilizarán para construir sus carteras eficientes. Esta cartera de mercado es única e idéntica para todos los inversores, y pondera a cada activo financiero del mercado según su capitalización bursátil. La cartera de mercado es un resultado del CAPM que se obtiene por aplicación directa de los supuestos de partida del modelo a partir de la cartera óptima de MARKOWITZ.\footnote{Por motivos de concreción, no hemos abordado en detalle los supuestos del CAPM. Una discusión exhaustiva sobre estos supuestos y sus ímplicaciones en la determinación de la cartera de mercado puede encontrarse en el Capitulo 7 de MARIN y RUBIO (2011).
+} 
+
+En concreto, si todos los agentes escogen sus carteras según su rendimiento esperado y volatilidad sobre el mismo universo de activos, y mantienen expectativas homogéneas sobre el conjunto de oportunidades de inversión, la cartera tangente del modelo de MARKOWITZ (tangente a la recta entre el activo libre de riesgo y la frontera eficiente de activos arriesgados), será necesariamente la cartera de mercado. A esta CAL que une el activo libre de riesgo con la cartera de mercado se le conoce como Línea del Mercado de Capitales, o CML (Capital Market Line, en inglés). Es decir, como se asume que todos los inversores son optimizadores a la Markowitz y todos cuentan con el mismo conjunto de información, todos emplearán la misma cartera de mercado, por lo que sólo existirá una misma CML, común a todos ellos. 
+
+En términos prácticos, la cartera de mercado suele aproximarse a través de los índices de capitalización bursátil, como el S\&P500 o el IBEX 35. Por ello, cuando los agentes hablan de \textit{batir al mercado}, suelen referirse a obtener rentabilidades superiores a un índice bursátil determinado.
+
+\subsubsection{Derivación del CAPM}
+Como todo modelo teórico, el CAPM se basa en diferentes supuestos. Entre otros, cabe citar los siguientes: (i) los inversores son racionales y tratan de maximizar su utilidad esperada; (ii) todos los inversores pueden pedir prestado y prestar al tipo libre de riesgo; (iii) los mercados son eficientes, lo que significa que toda la información relevante se refleja en los precios de los valores; y (iv) no hay impuestos, costes de transacción ni otras fricciones de mercado.\footnote{Muchos de estos supuestos se han revelado inconsistentes con la realidad, como que todos los agentes tienen acceso a la misma información. Como señala Ang (201 4), es esperable que cuando se violen los supuestos del CAPM se deberían maniftestar primas de riesgo adicionales, quizá de forma más notoria en aquellos mercados que son íliquidos o ineficientes.
+}
+
+\paragraph{Demostración} 
+La demostración del CAPM que presentamos se basa en crear dos carteras diferentes y analizar su ratio de rentabilidad-riesgo. Como veremos, en un entorno de equilibrio, el ratio de Sharpe de todos los activos debe ser el mismo, por lo que los ratios de ambas estrategias serán iguales. Este resultado nos conducirá a la famosa expresión del CAPM. Comencemos montando la primera cartera. En ella, un agente ha invertido el 100\% de su riqueza en la cartera de mercado $r_M$. Dicho inversor desea ahora incrementar su inversión en cartera de mercado en una fracción $\delta$. Para ello, se financia (vende a corto) utilizando el activo libre de riesgo $r_f$. Por tanto:
+
+\eqblock{
+\begin{aligned}
+    \text{Rentabilidad}: \mathbb E[r_p]=\mathbb E[r_M]+\delta(\mathbb E[r_M]-r_f)\\[0.5em]
+    \text{Riesgo}:\sigma_p^2=Var(r_M+\delta(r_M-r_f))=Var((1+\delta)r_M-r_f)=(1+\delta)^2\sigma_M^2=\sigma_M^2+\delta\sigma_M^2+2\delta\sigma_M^2
+\end{aligned}
+}{}
+
+A partir de esta infonnación, una pregunta interesante para el inversor es conocer en cuánto ha incrementado su ratio rentabilidad-riesgo. Formalmente, esto se calcularía,
+
+\eqblock{
+\begin{aligned}
+    \frac{\delta \mathbb E_t[r_p]}{\Delta \sigma_p^2}=\frac{\mathbb E_t[r_M]-(\mathbb E_t[r_M]+\delta (\mathbb E_t[r_M]-r_f))}{\sigma_M^2-(\sigma_M^2-\delta \sigma_M^2-2\delta\sigma_M^2)}=\frac{\mathbb E_t[r_M]-r_f}{2\sigma_M^2}
+\end{aligned}
+}{}
+
+Donde hemos introducido el supuesto de que, dado que $\delta$ es una cantidad muy pequeña, $\delta^2$ es despreciable. Ya tenemos una cartera. Vamos a por la otra. 
+
+En esta ocasión, nuestro inversor -que, recordemos, tenía toda su riqueza en cartera de mercado se plantea ahora aumentar en una fracción $\delta$ su inversión en un activo arriesgado, digamos Telefónica ($r_{TEF}$). De nuevo, esta adquisición extra $\delta$ de Telefónica se financia con venta en corto de activo libre de riesgo. 
+
+\eqblock{
+\begin{aligned}
+    &\text{Rentabilidad (Telefónica)}:&&\mathbb E_t[r_p']=\mathbb E_t[r_M]+\delta(\mathbb E_t[r_{TEF}]-r_f)\\[0.5em]
+    &\text{Riesgo (Telefónica)}:&&\sigma_p^2=Var(r_M+\delta(r_{TEF}-r_f))=Var(r_M+\delta r_{TEF})=\sigma_M^2+\delta^2r_{TEF}^2+2Cov(r_M,r_f)
+\end{aligned}
+}{}
+
+Análogamente al caso anterior, calculamos el ratio entre los incrementos de rentabilidad-riesgo de la nueva cartera.
+
+\eqblock{
+\begin{aligned}
+    \frac{\Delta \mathbb E_t[r_p']}{\Delta\sigma_p^2}=\frac{\mathbb E[r_M]-(\mathbb E_t[r_M]+\delta(\mathbb E_t[r_{TEF}]-r_f))}{\sigma_M^2-(\delta^2\sigma_{TEF}^2+2\delta Cov(r_M,r_{TEF}))}=\frac{\mathbb E_t[r_{TEF}]-r_f}{2Cov(r_M,r_{TEF})}    
+\end{aligned}
+}{}
+
+Donde nuevamente asumimos que el factor $\delta^2$ es despreciabe. Y ahora viene la intuición económica. En un contexto de equilibro, sucede que el precio del riesgo tiene que ser el mismo para todos los activos, es decir,
+
+\eqblock{
+\begin{aligned}
+    \frac{\mathbb E_t[r_M]-r_f}{\sigma_M^2}=\frac{\mathbb E_t[r_{TEF}]-r_f}{Cov(r_M,r_{TEF})}
+\end{aligned}
+}{}
+
+Imaginemos que esto no fuera así. Si el precio del riesgo de Telefónica fuese mayor que el de la cartera de mercado, esto significa que el inversor de Telefónica recibiría más rentabilidad por unidad de riesgo que invirtiendo en la cartera de mercado. En esta situación, los inversores en la cartera de mercado responderían aumentando marginalmente la posición de Telefónica dentro de dicha cartera de mercado, incrementando el precio del riesgo agregado de la cartera de mercado hasta que ambos precios del riesgo (mercado y Telefónica) alcanzasen un equilibrio. Haciendo un poco de álgebra en la expresión anterior, vemos que,
+
+\eqblock{
+\begin{aligned}
+    \mathbb E_t[r_{TEF}]-r_f=\frac{Cov(r_M,r_{TEF})}{\sigma_M^2}(\mathbb E_t[r_M]-r_f)=\beta_{TEF}(\mathbb E_t[r_M]-r_f)
+\end{aligned}
+}{}
+
+Donde hemos hecho uso de la definición de beta. En términos generales, la expresión definitiva del CAPM es,
+
+\eqblock{
+\begin{aligned}
+    \mathbb E_t[r_i]-r_f=\beta_i(\mathbb E_t[r_M]-r_f)
+\end{aligned}
+}
+
+La lectura de la ecuación anterior es muy interesante: la prima de riesgo de cualquier activo individual, el extra que esperamos recibir respecto al activo libre de riesgo por arriesgarnos, varía en función de dos factores. Por una parte, la beta del activo individual con la cartera de mercado, esto es, su exposición al riesgo de la cartera de mercado. Por otro lado, la prima de riesgo del mercado. 
+
+Como se observa en la ecuación, la prima de riesgo del mercado es transversal a todos los activos del mercado: no importa qué activo estemos valorando, aplica igual a todos. Por lo tanto, lo que varía es el grado de exposición o covarianza (medido por la beta) que cada activo individual tiene respecto a la cartera de mercado. En este sentido, la fuente de valor de todo activo financiero arriesgado es el mercado (en la ecuación, la prima de riesgo del mercado) y la magnitud de ese valor proviene de su exposición a dicho mercado (en la ecuación, la beta).
+
+\imagenfit{Fig7.png}{Linea del mercado de capitales (CML, izquierda) y linea del mercado de activos (SML, derecha)}{Apuntes ICEX-CECO. Tema 3.B.23}
+
+Una forma complementaria de ver la ecuación del CAPM es la siguiente:
+
+\eqblock{
+\begin{aligned}
+    \mathbb E_t[r_i]=\underbrace{r_f}_{\substack{\text{\scriptsize compensación}\\\text{\scriptsize valor temporal}\\\text{\scriptsize del dinero}}}+\underbrace{\left(\frac{\mathbb E_t[r]-r_f}{\sigma_M}\right)}_{\substack{\text{\scriptsize precio del riesgo}\\\text{\scriptsize por unidad de riesgo}\\\text{\scriptsize de mercado}}}\underbrace{\rho(r_j,r_M)\sigma_i}_{\substack{\text{\scriptsize cantidad de}\\\text{\scriptsize riesgo}}}
+\end{aligned}
+}{}
+
+Donde la rentabilidad esperada de un activo arriesgado es la suma de dos partes: la parte segura, el activo libre de riesgo, que es la compensación por el valor temporal del dinero. Y la parte arriesgada, que es producto del precio del riesgo (ratio de Sharpe) y la cantidad de riesgo asumida.
+
+\paragraph{Linea del mercado de activos (SML)}
+El resultado principal del CAPM es la ecuación, 
+
+\eqblock{
+\begin{aligned}
+    \mathbb E_t[r_i]-r_f=\beta_i(\mathbb E_t[r_M]-r_f)
+\end{aligned}
+}
+
+Que encierra una conclusión interesante: que existe una relación positiva y lineal entre el rendimiento esperado de los activos y su beta. La representación gráfica de esta relación se le conoce como línea del mercado de activos, o SML (security market line. en inglés). El gráf ico 6 muestra una representación gráf ica de la SML. Para facilitar su comprensión, el gráf ico izquierdo de la figura 6 representa el resultado principal de Markowitz, a saber. que en presencia de un activo libre de riesgo existe una cartera óptima. que es la cartera tangente al conjunto de carteras eficientes (Cartera M). Esta cartera es la cartera de mercado y, en el contexto del CAPM, a la línea que representa el conjunto de posibilidades de inversión combinando activo libre de riesgo y cartera M se le llama línea del mercado de capitales, o CML (capital market line).
+
+El gráfico a la derecha del gráfico 6 muestra el nuevo entorno de decisión que introduce el CAPM. Si se fij a bien en la figura, en el eje de abcisas ya no está la varianza corno medida de riesgo; en su lugar, figura la beta del activo individual. Esto es así porque, según el CAPM, el riesgo ya se define como exposición a la cartera de mercado, que es la beta. En otras palabras, la covarianza con la cartera de mercado -nuestro factor de riesgo- es ahora nuestra nueva métrica del riesgo de un activo. A partir del argumento anterior, la rentabilidad esperada de un activo financiero se determina a través de su beta. En ese sentido, todos los activos arriesgados correctamente valorados estarán situados sobre la SML, llamada línea del mercado de activos por esta razón. Como se ve en el gráfico, el valor de la ordenada en origen ({]¡ = O) es el activo libre de riesgo. Asimismo, la rentabilidad esperada de un activo con beta igual a uno será igual a aquella de la cartera de mercado E(rM). Finalmente, a la pendiente de la SML se le conoce como ratio de Treynor,
+
+\eqblock{
+\begin{aligned}
+    &\text{Ratio de TREYNOR}:&&\frac{\mathbb E_t[r_i]-r_f}{\beta_i}
+\end{aligned}
+}{}
+
+Y que mide el exceso de rentabilidad que se obtiene al invertir en un activo arriesgado por unidad de riesgo sistemático (beta). Dos apuntes finales: 
+\begin{lnum}
+    \item Como señalan MARÍN y RUBIO (2011), es interesante remarcar que la CML se_obtiene mediante un argumento de eficiencia en media-varianza (Sección 11.lll.l). Sin embargo, la obtención de la SML se obtiene por argumentos de equilibrio (Sección 111.11.1); y,
+    \item En la SML, todos los activos correctamente valorados deben situarse sobre la línea. Si, por ejemplo, un activo tuviese una beta igual a uno y una rentabilidad esperada superior a la del mercado, ese activo estaría infravalorado. Es decir, dado el riesgo que soporta, su precio sería inferior al que correctamente debería contabilizar, pues está siendo descontado con un rendimiento esperado superior a lo que su beta justificaría. Rápidamente,- el mercado notaría esa ineficiencia, y todos los inversores se lanzarían a comprar ese activo infravalorado, aumentando su precio hasta equilibrio. 
+\end{lnum}
+
+Un razonamiento similar aplicaría al activo anterior cuando su rentabilidad esperada fuese inferior a la del mercado.
+
+\subsubsection{Valoración crítica y evidencia empírica} 
+Las principales críticas del CAPM refieren al realismo de sus supuestos de partida, el horizonte de inversión -un solo período- y el enfoque racional del inversor. Respecto a los supuestos, el CAPM dibuja un entorno económico irreal donde, por ej emplo, no existen costes de transacción o los agentes tienen toda la información sobre los activos, algo que no es cierto. Asimismo, el modelo no contempla el carácter dinámico de la economía, pues los agentes se informan hoy de las condiciones de mercado y toman las decisiones para el período siguiente, sin incluir en sus cálculos el comportamiento a largo plazo. Finalmente, existe una amplia evidencia ci entífica de que los inversores tienen sesgos de comportamiento, algo que quiebra el supuesto de racionalidad del modelo. La evidencia empírica también ha revelado discrepancias entre las predicciones del CAPM y la realidad del mercado. Por ejemplo, existen anomalías entre las rentabilidades de las acciones pequeñas frente a las de empresas grandes, o las discrepancias entre los activos valor y crecimiento, que no están recogidas por el CAPM. Esto ha dado lugar al desarrollo de los modelos multifactoriales como Fama y French ( 1992). que captan las complejidades que el modelo unifactorial no es capaz de recoger. Me gustaría finalizar en las palabras de Ang' (2014), quien menciona que es bien sabido que el CAPM es un fracaso espectacular, en el buen sentido del término. El modelo predice que lasprimas de riesgo de los activos sólo dependen de la beta del activo y sólo importa un factor, la cartera del mercado, predicciones todas ellas que han sido demolidas en miles de estudios empíricos. Pero el CAPM es un fracaso glorioso, pues no ha abierto nuevas formas de entender cómo los inversores que deben buscar las primas de riesgo y gestionar el riesgo de los activos. La intuición básica del CAPM sigue siendo cierta: que los factores subyacentes determinan las primas de riesgo de los activos y que estas primas de riesgo compensan las pérdidas de los inversores en los tiempos de alta utilidad marginal. El riesgo no es una propiedad de un activo aislado, sino de cómo se mueven los activos entre sí. Como señala Ang (20 14), el CAPM sigue siendo el modelo de trabajo de las finanzas pese al rechazo empírico: el 75\% de los profesores de finanzas abogan por su uso, y el 75\% de los directores financieros lo emplean y lo emplean en decisiones reales de presupuestación de capital.\footnote{Ver Welch (2008) o Graham y Harvcy (2001 ).
+}
+
+
+\subsection{Modelo APT: Teoría del Mercado de Capitales (II)} 
+El modelo APT dibuja una economía bajo los siguientes supuestos, 1. Los rendimientos de los activos se generan por N factores de riesgo sistemático, o fuentes comunes de riesgo; 2. no existen oportunidades de arbitraje; 3. existe un gran número de activos individuales en la economía, lo que permite eliminar el riesgo idiosincrático de los activos mediante diversificación. 
+
+Introduciremos el modelo APT en dos pasos, siguiendo una estrategia similar a Marín y Rubio (2 01 1). En primer lugar, nos centraremos en los fundamentos del primer supuesto del APT, los modelos factoriales. A continuación, presentaremos un ejemplo y a partir de ahí, induciremos la derivación del modelo.
+
+\subsubsection{Modelos factoriales}
+A continuación, desarrollamos uno de los supuestos fundamentales del APT , que es el proceso generador de rendimientos o modelo factorial. Insistimos en que este modelo factorial no es todavía el modelo APT, sino una premisa sobre cómo se originan los rendimientos (Marín y Rubio, 201 O). La rentabilidad de un activo individual r¡ puede entenderse como la contribución de dos pa['.tes: el componente esperado E [r¡] y la parte que recoge las sorpresas o innovaciones frente a lo esperado,
+
+\eqblock{
+\begin{aligned}
+    r_j\equiv\mathbb E_t[r_j]+\text{innovaciones}
+\end{aligned}
+}{}
+
+La naturaleza de las innovaciones que afectan a la rentabilidad de los activos financieros es doble: por una parte, están los shocks individuales o idiosincráticos, que atienden a causas individuales de la empresa (por ejemplo, cambios en el equipo directivo, accidentes que influyan en la producción, etc.). Por otro lado, la rentabilidad también está afectada por sorpresas que afecten al conjunto de la economía, como cambios en los tipos de interés o un cambio legislativo. En ténninos cuantitativos, estas dos ideas -shocks sistemáticos e idiosincráticos- se capturan a través de la siguiente expresión,
+
+\eqblock{
+\begin{aligned}
+    r_j=\mathbb E_t[r_j]+\beta_{1,j}I_1+\beta_{2,j}I_2+\cdots +\beta_{n,j}I_n+\varepsilon_j
+\end{aligned}
+}{}
+
+Donde $\varepsilon_j$ captura la innovación idiosincrática, $I_n$ es el conjunto de factores sistemáticos que influyen en el conjunto de los activos de la economía, y $\beta_{n,j}$ la sensibilidad o exposición del activo individual $j$ a cada uno de esos factores de riesgo sistemáticos. Por construcción, la covarianza entre los shocks sistemáticos e idiosincráticos es nula ($\sigma_{\varepsilon_j,\varepsilon_k}=0$, $\forall j,k$), es decir, no hay correlación entre una sorpresa en el ámbito idiosincrático de la empresa (e.g. cambios en el consejo de administración) con una noticia macroeconómica (un aumento no esperado de la inflación, por ejemplo). 
+
+Técnicamente, el modelo factorial se representa de la siguiente forma,
+
+\eqblock{
+\begin{aligned}
+    r_{j,t}=\alpha_j+\beta_{1,j}I_{1,t}+\cdots+\beta_{n,t}I_{n,t}+\varepsilon_{j,t},\qquad \text{donde}\,\,
+    \begin{aligned}
+        &\sigma_{\varepsilon_j,\varepsilon_k}=0\\[0.5em]
+        &\underset{\text{\scriptsize el riesgo de dicho activo individual}}{\sigma_j^2=\beta_{1,j}^2\sigma_1^2+\beta_2^2\sigma_2^2+\cdots \beta_{n,j}^2\sigma_n^2+\sigma_{\varepsilon_j}^2}
+    \end{aligned}
+\end{aligned}
+}{}
+
+De la ecuación anterior vemos que el riesgo individual puede descomponerse en dos partes, la componente sistemática o no diversificable (la que acompaña a las betas de los factores), y el riesgo idiosincrático del activo, $\sigma_{\varepsilon_j}^2$.
+
+La pregunta económica que nos resta es, ¿cuáles son esos factores sistemáticos que afectan a los rendimientos? ¿Es el mercado, como en el modelo CAPM? ¿Son el crecimiento económico o los tipos de interés? La respuesta es que necesitamos más estructura: con un supuesto sobre la ausencia de arbitraj e más un modelo generador de rendimientos, es todavía pronto para d.etenninar quiénes son esos factores. Imponer que fuese un factor u otro sería un supuesto muy exigente. por lo que precisamos de argumentos más exigentes -preferencias de los agentes, equilibrio, vaciado de mercado- para identificar claramente a esos factores de riesgo.
+
+\begin{specialblock}{Modelo de mercado como un modelo factorial}
+    Al modelo factorial,
+
+    $$r_{j,t}=\alpha_j+\beta_{j,m}r_{m,t}+\varepsilon_{j,t}$$
+
+    Con $r_{j,t}$ la rentabilidad esperada del activo individual, $r_{m,t}$ la rentabilidad esperada del mercado y $\beta_{j,m}$ la covarianza o beta del activo individual y la cartera de mercado, se le conoce como modelo de mercado. Este modelo, idéntico al que estudiamos en el CAPM, sería un caso especial de los modelos factoriales con el mercado como única fuente de incertidum bre. El CAPM y el modelo factorial de mercado se diferencian en la fonna de justificar el factor de mercado: mediante argumentos de elección óptima de cartera y vaciado de mercado - CAPM, o mediante el supuesto de que las rentabilidades $i$ ndividuales covarían con el comportamiento de la cartera de mercado; un supuesto extremadamente exigente -modelo factorial-. Es d ecir, mientras que en el primer caso la fundamentación consiste en una relación teórica, en el segundo dicha relación es meramente estadística (por lo que no podemos conocer con certeza cuáles son los factores a incluir). En este último caso, no existe ningún razonamiento económico detrás, algo que debe hacemos ser cautos a la hora emplear el modelo de mercado como modelo factorial (MARÍN y RUBIO, 2010).
+\end{specialblock}
+
+\subsubsection{Ejemplo - APT}
+El siguiente ejemplo está basado en Marín y Rubio (2011). Aunque hemos modificado el orden de la exposición, mantenemos los valores numéricos por si el lector desease consultar estareferenci a para mejorar su compresión. Imagine que usted es un gestor de fondos de inversión, y que constantemente estudia el mercado en búsqueda de buenas oportunidades. Desde hace tiempo, usted sigue a un fondo que le gusta particularmente, y cuya rentabilidad viene descrita a través del siguiente modelo factorial,
+
+\eqblock{
+\begin{aligned}
+    r_j=\mathbb E_t[r_j]+\beta_{1,j}I_1+\beta_{2,j}+\varepsilon_j=0,16+2,5I_1+0,2I_2+\varepsilon_j,\qquad \text{donde,}\quad \varepsilon_j=0
+\end{aligned}
+}{}
+
+Donde $I_1$ es el factor de riesgo de mercado, e $I_2$ es el factor de riesgo de cambios en los tipos de interés. En un abuso de notación, la ecuación anterior explicita que el fondo tiene riesgo idiosincrático, aunque sea cero. En otras palabras, la cartera) es una cartera bien diversificada, y el componente idiosincrático es nulo. El motivo de incluir este término es porque las conclusiones d e este ejemplo son extrapolables a cualquier activo individual, y no sólo carteras. Sin embargo, por intuición económica y simplicidad, mantendremos que el riesgo idiosincrático del fondo no existe.
+
+Como gestor, usted está interesado en replicar la cartera $j$.\footnote{
+Bueno, es cierto, quizá también podría comprar el fondo directamente y olvidarse de la réplica. Pero el fondo puede no estar disponible y, si lo hace. se quedará sin saber cómo fun ciona el APT.
+} Una forma sencilla de hacerlo es mediante la compra de otros fondos de inversión disponibles en el mercado y que replican el comportamiento de los factores de riesg9. Por ej emplo, si usted desea incluir ,en su cartera una mayor exposición al riesgo de mercado, puede hacerlo comprando un ETF (Exchange Traded Fund) que replique el comportamiento global del mercado financiero de acciones.\footnote{Véase, por ejemplo, los ETFs de iShares Core MSCI World ETF USO ( B lackRock), o el Lyxor MSCI World UCITS ETF (Amundi).
+} El mercado cuenta hoy en día con una amplia oferta de fondos que replican el comportamiento de factores financieros como el mercado, el valor o el momentum, entre otros. 
+
+Por tanto, usted ha decidido replicar el comportamiento de la cartera $j$ mediante la compra de los siguientes dos fondos que replican el comportamiento de los factores $I_1$ e $I_2$ . En concreto, dichos fondos factoriales están descritos por las siguientes ecuaciones,
+
+\eqblock{
+\begin{aligned}
+    r_{cI_1}=0,154+I_1\\[0.5em]
+    r_{cI_2}=0,176+I_2
+\end{aligned}
+}{}
+
+Donde, recordemos, la rentabilidad esperada de cada fondo -o factor- es del 15,4\% y del 17,4\% anual, respectivamente. Asimismo, definimos la prima de riesgo $\lambda$ de cada factor como,
+
+\eqblock{
+\begin{aligned}
+    \lambda_1=\mathbb E_t[r_{cI_1}]-r_f=15,4\%+4,0\%=11,4\%\\[0.5em]
+    \lambda_2=\mathbb E_t[r_{cI_2}]-r_f=17,6\%-4,0\%=13,6\%
+\end{aligned}
+}{}
+
+Donde hemos asumido que la rentabilidad del activo libre de riesgo es del 4.0\% anual. 
+
+Perfecto. Usted ya tiene el fondo que desea replicar (la cartera j) y los fondos/factores para efectuar la réplica. Ahora la clave son las ponderaciones, es decir, cuánto tiene que invertir en cada fondo factorial para replicar la cartera $j$. Para conocer la respuesta, fíjese en el modelo factorial que describe la cartera, y pregúntese lo siguiente: ¿cuál es la beta objetivo que deseo tener en mi cartera $j$ respecto al primer factor de riesgo? La respuesta es evidente, es $2,5$. Y a continuación, ¿cuál es la beta de la cartera factorial $I$ respecto al factor $1$? Está claro que la respuesta es $1,0$. (La exposición de una cartera que replica un factor al propio factor que replica es 1). Por tanto, para conseguir una exposición de $2,5$ al factor $1$ necesitará una ponderación del $2,5$ en la cartera factorial $1$. En otras palabras, las betas del modelo factorial de la cartera $j$ son en si mismas las ponderaciones de las carteras factoriales que buscamos. 
+
+Una puntualización respecto de las ponderaciones de la cartera réplica. Hemos visto en el apartado dedicado al modelo de MARKOWITZ que la suma de las ponderaciones de cualquier cartera es siempre $1$ ($\sum_{j=1}^N\omega_j=1$). En nuestro caso, la suma de las ponderaciones en las carteras factoriales es $2,7(=2.5 + 0.2)$, o un $270\%$. Obviamente, esto excede del 100\%, que es la riqueza total del individuo. Para financiar esta posición en las carteras factoriales, el inversor deberá tomar una posición corta de $-170\%$ en el activo libre de riesgo ($270\%-170\% = 100\%$). 
+
+Por tanto, contamos con dos carteras. Por una parte, la cartera $j$ original y que deseamos replicar. Por la otra, la cartera réplica. Comparemos sus rendimientos esperados. El de la cartera original es del $0,16$, o $16\%$ anual; recuerde que en el modelo factorial, el rendimiento esperado .es el coeficiente aj del modelo. El rendimiento esperado de la cartera réplica habrá que calcularlo, y será
+
+\eqblock{
+\begin{aligned}
+    \mathbb E_t^{\text{réplica}}[r_j]=(-1,7\cdot 4\%)+(2,5\cdot 15,4\%)+(0,2\cdot 17\,6\%)=35,2\%
+\end{aligned}
+}{}
+
+Y aquí nos enfrentamos a la parte más importante del modelo APT. La cartera} original ofrece una rentabilidad esperada del 16\%; la cartera réplica, del 35.2\%. Dicho de otro modo, la cartera réplica remunera más por el mismo riesgo soportado. Por tanto. es posible realizar una estrategia de arbitraje que explote estas diferencias. y que se basaría en vender la cartera $j$ y comprar la cartera réplica. Ésta es la clave del APT y, a continuación, la derivación del modelo:
+
+\eqblock{
+\begin{aligned}
+    &\mathbb E_t[r_j]=&&(-1,7\cdot 4\%)+(2,5\cdot 15,4\%)+(0,2\cdot 17,6\%)\\[0.5em]
+    &&&=-1,7 \cdot r_f+2,5\,\mathbb E_t[r_{cI_1}]+0,2\,\mathbb E_t[r_{cI_2}]\\[0.5em]
+    &&&=(1-\omega_{I_1}-\omega_{I_2})r_f+\omega_{I_1}\mathbb E_t[r_{cI_1}]+\omega_{I_2}\,\mathbb E_t[r_{cI_2}]\\[0.5em]
+    &&&=(1-\beta_{j1}-\beta_{j2})r_F+\beta_{j1}(\lambda_1+r_f)+\beta_{j2}(\lambda_2+r_f)\\[0.5em]
+    &&&=r_f+\beta_{j1}\lambda_1+\beta_{j2}\lambda_2\\[0.5em]
+    &\Longrightarrow&&\mathbb E_t[r_j]=r_f+\beta_{j1}(\mathbb E_t[cI_1]-r_f)+\beta_{j2}(\mathbb E_t[cI_1]-r_f)
+\end{aligned}
+}{}
+
+En definitiva, ésta última ecuación es la expresión del modelo APT para dos factores, y nos dice que la rentabilidad esperada de cualquier activo individual o cartera $j$ sin riesgo idiosincrático se explica a través de la rentabilidad del activo libre de riesgo más la exposición del activo o cartera j a factores de riesgo de la economía. En este sentido, la rentabilidad en exceso (por encima del activo libre de riesgo) del activo $j$ se entiende por la exposición a las primas de riesgo de los factores.
+
+\subsubsection{Derivación del Modelo}
+Una vez entendido el ejemplo anterior, la derivación del modelo APT es tan sólo la generalización de lo visto en la sección anterior. En el modelo APT, partimos de los siguientes supuestos: 1. los rendimientos de los activos $r_j$ se generan por un proceso factorial con $K$ factores de riesgo, de la forma $r_j=a_j+\beta_{1j}I_1+\beta_{2j}I_2+\cdots +\beta_{Kj}I_K$, donde asumimos que no existe riesgo idiosincrático del activo $j$; (ii) Existe un gran número de activos. individuales, de forma que la diversifi cación permite eliminar el riesgo idiosincrásico en su totalidad;\footnote{Este supuesto no es válido en una economía con un número finito de activos financieros. En otras palabras, el modelo no justifica económicamente el supuesto de eliminar el riesgo idiosincrático de los activos.
+} (iii) en la economía no existen oportunidades de arbitraje.
+
+Según el APT, el rendimiento· de una cartera donde invertimos el dinero en un activo libre de riesgo $r_f$ con ponderación $\left(1-\sum_{k=1}^K\beta_{jk}\right)$, y ponderaciones $\beta_{1j},...,\beta_{Kj}$ en las carteras/factores de riesgo, será,
+
+\eqblock{
+\begin{aligned}
+    r_c=\left(1-\sum_{k=1}^K\beta_{1k}\right)r_f+\sum_{k=1}^K\beta_{jk}I_K
+\end{aligned}
+}{}
+
+Si comparamos esta última ecuación con el supuesto que describe la rentabilidad del activo individual $r_j$,
+
+\eqblock{
+\begin{aligned}
+    r_j=a_j+\beta_{1j}I_1+\cdots+\beta_{Kj}I_K
+\end{aligned}
+}{}
+
+Vemos que ambas son idénticas si $a_j=(1-\sum_{k=1}^K\beta_{1k})r_f$. En términos económicos, estamosdiciendo que si el valor del coeficiente aj es el señalado, la cartera r, replica la rentabilidad del activo individual rj . 
+
+Imaginemos que el coeficiente $a_j<(1-\sum_{k=1}^K\beta_{1k})r_f$. Si esto ocurre, existirá una posibilidad de arbitraje por la cual podemos vender en descubierto la cartera $r_j$ (ofrece menos rentabilidad esperada o, en otras palabras, es mas cara) y comprar la cartera $r_c$, que ofrece una mayor rentabilidad esperada, es decir,
+
+\eqblock{
+\begin{aligned}
+    \left(1-\sum_{k=1}^K\beta_{1k}\right)r_f+\sum_{k=1}^K\beta_{jK}I_K-a_j-\sum_{k=1}^K\beta_{jk}I_K>0\\[0.5em]
+    \Longrightarrow\quad (1-\sum_{k=1}^K\beta_{1k})r_f>a_j
+\end{aligned}
+}{}
+
+De forma equivalente, podríamos obtener una rentabilidad positiva si $a_j>(1-\sum_{k=1}^K\beta_{1k})r_f$. Por tanto, la única forma de evitar posibilidades de arbitraje sería si $a_j=(1-\sum_{k=1}^K\beta_{1k})r_f$. Bajo este resultado, la ecuación de la rentabilidad de un activo individual quedaría,
+
+\eqblock{
+\begin{aligned}
+    &r_j=&&\left(1-\sum_{k=1}^K\beta_{1k}\right)r_f+\sum_{k=1}^K\beta_{jk}I_K\\[0.5em]
+    &\Longrightarrow&&\mathbb E_t[r_j]=\left(1-\sum_{k=1}^K\beta_{1k}\right)r_f+\sum_{k=1}^K\beta_{jk}\mathbb E_t[I_K]\\[0.5em]
+    &\Longrightarrow&&\mathbb E_t[r_j]=r_j+\sum_{k=1}^K\beta_{jk}(\mathbb E_t[I_K]-r_f)
+\end{aligned}
+}{}
+
+Donde el último paso ha sido obtenido sacando factor común de las betas. 
+
+La intuición económica de la expresión del APT es muy clara: la rentabilidad esperada de todo activo individual se explicá por dos términos: la rentabilidad del activo libre de riesgo, más la exposición del activo arriesgado a una serie de factores de riesgo comunes $K$.
+
+\subsubsection{Valoración crítica y evidencia empírica}
+Las principales críticas del modelo APT atienden a la elección (y determinación) de los factores del modelo y la dificultad de alguno de sus supuestos. 
+
+Como hemos señalado, el modelo es silente respecto a qué factores de riesgo debemos utilizar, algo que impide detenninar el significado exacto de la prima de riesgo de cada factor. En ese sentido, la flexibilidad del modelo es su principal carencia: la elección de los factores siempre estará condicionada por los datos de entrada, lo cual tendrá implicaciones en la predicción del modelo; imaginemos, por ejemplo, la irrupción de un cambio estructural en la economía. Todo ello es consecuencia, una vez más, de la escasa estructura impuesta sobre el modelo. 
+
+Por otro lado, la crítica hacia el APT también ha incidido sobre el supuesto del modelo factorial sin riesgo idiosincrático. En el modelo no hay nada que garantice que esto sea así y que no sea importante su contribución. Como señalan MARÍN y RUBIO (2011), \textit{este hecho es lo que distingue a los modelos de valoración basados en la ausencia de arbitraje de los modelos de valoración (tipo CAPM) justificados bajo condiciones de equilibrio, donde justamente dicho equilibrio es el que garantiza que el riesgo idiosincrásico es cero}. 
+
+Por último, la evidencia empírica del modelo APT es mixta y contingente a la selección de factores, datos y condiciones de mercado. Las controversias suscitadas por la limitación d e sus supuestos ponen de relieve los retos que plantea la aplicación del APT como un modelo de fijación de precios de itplicación universal.
+
+\clearpage
+\section{Aproximación fundamental: ¿Por qué hemos llegado hasta este punto?}
+\puntosclave{ 
+    El análisis fundamental es un método para evaluar el valor intrínseco de las acciones de una empresa mediante el estudio de diversos factores financieros y económicos. 
+    
+    El objetivo del análisis fundamental es identificar activos infravalorados o sobrevalorados en relación con su valor real. Parte del supuesto de que el precio de mercado no refleja transitoriamente una información fundamental del activo, y que esta información será incorporada en el futuro, una circunstancia que puede ser explotada por el inversor. 
+    
+    En esta metodología, las decisiones de compra o venta de un activo se basan en el estudio de los estados financieros de la empresa que respalda el activo, las tendencias del sector, las ventajas competitivas, la calidad de la gestión y las condiciones macroeconómicas a las que está expuesta dicha empresa en particular. 
+    
+    El análisis fundamental suele estar orientados a desarrollar estrategias de compra o venta a largo plazo. 
+    
+    El análisis técnico es un método utilizado por operadores e inversores para evaluar y predecir los movimientos futuros de los precios en los mercados financieros, principalmente en el mercado bursátil. 
+    
+    A diferencia del análisis fundamental, que se centra en el valor intrínseco de una empresa, el análisis técnico se basa en el estudio de los datos históricos de precios y volúmenes de negociación para identificar pautas, -tendencias y posibles niveles de soporte y resistencia. 
+    
+    Los analistas técnicos creen que los movimientos históricos de los precios pueden proporcionar información sobre el comportamiento futuro del mercado. 
+    
+    Los supuestos del análisis técnico son fundamente dos: primero, que los precios reflejan toda la información relevante; segundo, que existen patrones o pautas de comportamiento en los movimientos de los precios que se repiten. 
+    
+    El análisis técnico suele estar orientados a desarrollar estrategias de compra o venta a corto plazo.
+}
+
+Behavioural economics
+Estos patrones son la base de diversas herramientas y técnicas de análisis técnico utilizadas para identificar posibles oportunidades de negociación. Por último, existe un vínculo entre el análisis técnico y la economía del comportamiento (Behavioral Economics), una de las ramas más novedosas de la Economía. Y es que ambas metodologías de análisis se centran en la psicología humana y sus patrones de decisión. En particular, la economía del comportamiento estudia cómo influyen los sesgos psicológicos y las limitaciones cognitivas en las mencionadas decisiones económicas de los individuos. Estos sesgos, como la aversión a las pérdidas y la mentalidad de rebaño, suelen dar lugar a comportamientos irracionales en los mercados que pueden observarse e interpretarse mediante el análisis técnico. En este sentido, los patrones y tendencias de los gráficos pueden surgir corno resultado de la reacción en masa de los inversores ante determinados acontecimientos o noticias debido a sesgos cognitivos.
+
+
+
+Otra crítica más académica viene a través del supuesto de eficiencia de mercado. GROSSMAN y STIGLITZ (1980) demuestran que los mercados eficientes no funcionarían si todos los activos reflejasen la información de forma perfecta; es la hipótesis fuerte de eficiencia de los mercados. Por ello, la literatura ha desarrollado la hipótesis débil de eficiencia de los mercados, en la que cierto grado de ineficiencia en la adquisición de la información posibilita el funcionamiento de los mercados. 
+
+\subsection{Gestión activa de carteras: búsqueda de alpha y análisis fundamental}
+
+El análisis fundamental es una metodología para evaluar el valor intrínseco de las acciones de una empresa mediante el estudio de diversos factores financieros y económicos. Su objetivo es identificar activos infravalorados o sobrevalorados en relación con su valor real. Esta herramienta de ·análisis profundiza en los estados financieros 9e una empresa, las tendencias del sector, las ventajas competitivas, la calidad de la gestión y las condiciones macroeconómicas para tomar decisiones de inversión fundamentadas en un criterio económico. El análisis fundamental entronca con los modelos de valoración desarrollados anteriormente. Por ejemplo, hemos visto que el principal resultado teórico del CAPM es que la compensación por riesgo de los activos financieros. se explica por su grado de exposición (beta) a una cartera de mercado,
+
+\eqblock{
+\begin{aligned}
+    \mathbb E_t[r_i]-r_f=\beta_i(\mathbb E_t[r_M]-r_f)\\[1em]
+    \underset{\substack{\text{\scriptsize estimación}\\\text{\scriptsize empírica}}}{\Longrightarrow}\quad r_{i,t}-r_f=\alpha_i+\beta_i(r_{M,t}-r_f)+\varepsilon_{i,t}
+\end{aligned}
+}{}
+
+Donde $\alpha_i$ es el término conocido como alfa de Jensen. Si un activo presenta una rentabilidad en exceso (primer miembro de la ecuación) igual a la teórica calculada por el CAPM (segundo miembro), entonces $\alpha_i$ será cero. En otras palabras: cualquier rentabilidad en exceso no explicada por el CAPM se reflejará en un coeficiente $\alpha_i$ significativamente distinto de cero. 
+
+El alfa de Jensen complementa el análisis fundamental y evidencia su importancia: proporciona una medida cuantitativa del rendimiento esperado de una acción más allá de su exposición a una fuente de riesgo sistemática. Es decir, el coeficiente $\alpha_i$ puede revelar si los rendimientos esperadosde un activo son el resultado de una habilidad superior de la empresa (e.g., un mejor estado financiero no descontado por el mercado) o simplemente se deben a la exposición al riesgo de mercado. 
+
+Así, por último, el análisis fundamental está orientado a desarrollar estrategias de compra y venta a largo plazo. Al identificar las características fuertes y débiles subyacentes de una empresa, los inversores pueden tornar decisiones más informadas y confiar en sus opciones de inversión, independientemente de las fluctuaciones del mercado a corto plazo.
+
+\subsubsection{Conceptos básicos del análisis fundamental}
+El análisis fundamental explora las magnitudes fundamentales de una empresa en todos los órdenes: desde sus características básicas hasta el contexto económico en el que se desarrolla. Aquí proponemos una revisión del análisis fundamental en cuatro áreas, de abajo hasta arriba (bottom-up approach), de acuerdo al nivel de detalle sobre la empresa. Primero, examinaremos las principales herramientas contables asociadas a los estados financieros de la empresa, quizá el aspecto más importante del análisis fundamental. Segundo, al modelo de negocio y su gobernanza. Tercero, al sector industrial y contexto económico. Y, finalmente, a las técnicas de valoración empleadas para calcular el precio de la acción.
+
+\paragraph{Análisis bottom-up: Estados financieros y ratios}
+La contabilidad ofrece una información muy valiosa sobre la salud financiera de la empresa. En este sentido, el análisis fundamental examina detenidamente los estados financieros (balance, cuenta de resultados y flujo de caja), y algunas ratios específicas, como el ratio precio-beneficios. 
+
+Respecto a los estados financieros. El \textbf{balance} ofrece una instantánea de la situación financiera de una empresa en un momento determinado. Consta de activos, pasivos y fondos propios. Los inversores evalúan la liquidez de la empresa, los niveles de endeudamiento y la estructura de capital a través del balance. Analizando el balance de una empresa, los inversores pueden identificar si la empresa tiene una cantidad significativa de deuda en relación con sus fondos propios, lo que indica un mayor riesgo financiero. 
+
+La \textbf{cuenta de resultados} describe los ingresos, gastos y beneficios netos de una empresa durante un periodo determinado. Los inversores analizan el crecimiento de los ingresos, los márgenes de beneficios y la rentabilidad general a partir de la cuenta de resultados. Por ejemplo, una empresa que aumenta constantemente sus ingresos y márgenes de beneficio durante varios trimestres puede considerarse un negocio financieramente sano y en crecimiento. 
+
+Finalmente, el estado\textbf{ de flujo de caja} muestra las entradas y salidas de efectivo de las actividades de explotación, inversión y financiación. Ayuda a los inversores a comprender la capacidad de una empresa para generar efectivo y sus decisiones de inversión y financiación. Así, una empresa con un flujo de caja operativo positivo y una estrategia de financiación estable está mejor posicionada para financiar sus operaciones y su crecimiento. 
+
+Respecto a los ratios financieros. Aunque existe una gran variedad, los más utilizados son el ratio precio-beneficios (PER), el ratio precio-valor contable (P/8) y el ratio de apalancamiento (D/E). El PER mide el precio de las acciones de una empresa en relación con sus beneficios por acción (BPA). Ayuda a los inversores a calibrar cuánto pagan por cada euro de beneficios. Así, una acción con un elevado PER en relación con sus homólogas del sector puede considerarse sobrevalorada, mientras que un PER inferior puede indicar una acción infravalorada. El ratio precio-valor contable P/8 compara el precio de las acciones de una empresa con su valor contable por acción, indicando si las acciones cotizan por debajo o por encima de su valor liquidativo. Por ejemplo, u ratio P/8 inferior a I sugiere que la acción está infravalorada, mientras que un ratio superior a I indica una acción sobrevalorada. Por último, el ratio de apalancamiento compara la deuda total de una empresa con sus fondos propios. En finanzas, apalancamiento y endeudamiento son sinónimos. El origen de esta asociación es que a mayor nivel de deuda. una pequeña fluctuación en los ingresos implica un mayor impacto en los beneficios; la deuda tiene un efecto palanca sobre los beneficios. En este sentido, un ratio de apalancamiento elevado puede indicar que una empresa depende en gran medida de la deuda para financiar sus operaciones, lo que puede conllevar un mayor riesgo financiero.
+
+\paragraph{Análisis bottom-up: Otras aproximaciones} 
+
+\textbf{Modelo de negocios y gobernanza}. La calidad del equipo directivo de una empresa y sus prácticas de gobierno corporativo pueden influir significativamente en su éxito y, en consecuencia, en el valor de sus acciones. Por ejemplo, una empresa con un equipo directivo transparente y ético probablemente se ganará la confianza de los inversores, lo que repercutirá positivamente en el precio de sus acciones. Por otro lado, comprender el modelo de negocio de una empresa y sus ventajas competitivas es crucial en el análisis fundamental. Esto ayuda a los inversores a comprender cómo genera ingresos y beneficios la empresa. Un caso podría ser, por ejemplo, una empresa de software que sigue w1 modelo de negocio basado en suscripciones puede ofrecer flujos de ingresos más estables y predecibles en comparación con las ventas únicas.
+
+\textbf{Sector industrial y contexto económico}. Evaluar el sector en el que opera una empresa puede proporcionar infonnación sobre su potencial de crecimiento y su panorama competitivo. Por ejemplo, el análisis de la industria farmacéutica puede revelar posibles oportunidades de crecimiento debido al envejecimiento de la población y a la creciente demanda de productos sanitarios. Por otro lado, el análisis de los factores macroeconómicos puede ayudar a los inversores a comprender cómo puede influir la economía en general en los resultados de una empresa. Por ejemplo, sabemos que las empresas de consumo discrecional pueden experimentar una menor demanda de bienes y servicios no esenciales en tiempos de recesión económica.
+
+\paragraph{Técnicas de valoración del precio de la acción}
+En general, los analistas fundamentales utilizan dos técnicas para la valoración de acciones: el flujo de caja descontado y el descuento de dividendos. El flujo de caja descontado (discounted cash flow, o DCF), calcula el valor actual de los flujos de caja futuros de una empresa y descontándolos al presente utilizando un tipo de descuento apropiado, lo que penn ite a los inversores determinar el valor intrínseco de la acción. El modelo de descuento de dividendos (DDM) estima el precio de las acciones de una empresa en función de sus dividendos futuros previstos, que también se descuentan utilizando un tipo de descuento apropiado.
+
+\subsubsection{Críticas al modelo de análisis fundamental}
+El análisis fundamental está aceptado por las finanzas académicas, que utilizan muchos de sus principios para establecer el valor de los activos financieros. Sin embargo, las herramientas de análisis fundamental también adolecen de algunas deficiencias. La primera crítica al análisis fundamental son los supuestos que introduce sobre el comportamiento futuro de los flujos de caja o los dividendos de una acción, que pueden no resultar los esperados. Esta crítica se comparte con todos los modelos que involucran algún tipo de predicción, y básicamente refiere a la subjetividad que puede introducir el analista a la hora de determinar eventos futuros inciertos. La segunda crítica al análisis fundamental viene por la parte de la disponibilidad de información.Los estados financieros de algunas (muchas) empresas pueden no estar disponibles al analista, o incluso ser fraudulentos en algunas (pocas) de ellas. La transparencia y fiabilidad de las fuentes de información constituyen un reto para el analista fundamental. Por último, recordemos que el analista está expuesto a las pulsiones entre las diferentes narrativas del mercado. 16 En un contexto de abundan'cia de información donde diferentes historias compiten por su visión del hecho económico coyuntural, es fácil que el inversor pondere en exceso los flujos de caja de una narrativa determinada. Véase, por ejemplo, las sobrevaloraciones en las acciones relacionadas con el metaverso y el desarrollo de los mundos virtuales.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex}
+
+
+\clearpage
+\anexo{Demostración: Modelo MARKOWITZ (1952)}\label{anx:modelo_markowitz}
+Como acabamos de ver, la combinación de activo libre de riesgo y cartera tangente es la que genera el par rentabilidad-riesgo más eficiente. La demostración matemática parte de maximizar el ratio de Sharpe de una cartera formada por activo 1 ibre de riesgo ($r_f$) y una cartera arriesgada $p$, y ha sido tomada de MARÍN y RUBIO (2011). Como muestran los autores, los pesos de la cartera óptima T se obtienen al maximizar:
+
+
+$$\begin{aligned}
+    &\begin{aligned}
+        &\max_{\omega_j;\,\,\forall j=1,2,...,N}\theta_T=\left(\frac{\mathbb E_t[r_p]-r_f}{\sigma_p}\right)\\[0.5em]
+        &\text{s.a.}\quad \sum_{j=1}^N\omega_j=1
+    \end{aligned}\quad \sim\qquad \max_{\omega_j}=\theta_T=\frac{\sum_{j=1}^N\omega_j[\mathbb E_t(r_j)-r_f]}{\left[\sum_{j=1}^N\omega_j^2\sigma_j^2+\sum_{j=1}^N\sum_{\substack{h=1\\h\neq j}}^N\omega_j\omega_h\sigma_{jh}\right]^{1/2}}\\[2em]
+    &\text{CPOs:}\hspace{2em}\frac{\partial \theta_T}{\partial \omega_j}=\left[\sum_{j=1}^N\omega_j(\mathbb E_t[r_j]-r_f)\right]\left[\left(-\frac{1}{2}\right)\sigma_j^{-3/2}\left(2\omega_j\sigma_j^2+2\sum_{\substack{h=1\\h\neq j}}^N\omega_h\sigma_{hj}\right)\right]+\sigma^{-1/2}(\mathbb E_t[r_j]-r_f)=0,\quad \forall j=1,...,N\\[1em]
+    &\underset{\substack{\text{\scriptsize multiplicamos todo}\\\text{\scriptsize por $\sigma^{1/2}$}}}{\Longrightarrow}\hspace{2em}\\[1em]
+    &-\left[\underbrace{\frac{\sum_{j=1}^N\omega_j(\mathbb E_t[r_j]-r_f)}{\sigma}}_{\tilde{\theta}}\right]\left[\omega_j\sigma_j^2+\sum_{\substack{h=1\\h\neq j}}^N\omega_h\sigma_{jh}\right]+(\mathbb E_t[r_j]-r_f)=0\\[1em]
+    &\Longrightarrow\hspace{2em} -\tilde\theta\left[\omega_j\sigma_j^2+\sum_{\substack{h=1\\h\neq j}}^N\omega_{h}\sigma_{jh}\right]+(\mathbb E_t[r_j]-r_f)=0
+\end{aligned}$$
+
+Una vez conocidas las ponderaciones, el término $\tilde\theta=(\mathbb E_t[R_T]-r_F)/\sigma_T^2$ es una constante, y hace referencia a la cartera T y no a un activo j en particular. Resolvemos:
+
+$$\begin{aligned}
+    \frac{\partial \theta_T}{\partial \omega_j}=-\left(\underbrace{\tilde\theta\omega_1}_{z_1}\sigma_{1j}+\underbrace{\tilde\theta\omega_2}_{z_2}\sigma_{2j}+\cdots +\underbrace{\tilde\theta\omega_j}_{z_j}\sigma_j^2+\cdots +\underbrace{\tilde \theta\omega_N}_{z_N}\sigma_{Nj}\right)+\mathbb (E_t[r_j]-r_f)=0\\[2em]
+    \underset{\text{\scriptsize reordenamos}}{\Longrightarrow}\quad (\mathbb E_t[r_j]-r_f)=z_1\sigma_{1j}+z_2\sigma_{2j}+\cdots +z_j\sigma_{j}^2+\cdots +z_N\sigma_{Nj},\qquad \forall j=1,...,N
+\end{aligned}$$
+
+Que resulta en $N$ ecuaciones (activos) y $N$ incógnitas (las $z_j$). Para obtener las ponderaciones de la cartera $T$, $\omega_j$, a partir de las soluciones al sistema anterior ($z_j$) se utiliza la restricción $\sum_{j=1}^N\omega_j=1$. Es decir,
+
+$$\begin{aligned}
+    z_j=\tilde\theta\omega_j\quad \Longrightarrow\quad \sum_{j=1}^Nz_j=\tilde\theta\underbrace{\sum_{j=1}^N\omega_j}_{=1}=\tilde \theta\quad\Longrightarrow\quad w_j=\frac{z_j}{\sum_{j=1}^Nz_j}
+\end{aligned}$$
+
+
+
+
+
+\end{document}
