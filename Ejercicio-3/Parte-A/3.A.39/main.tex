@@ -1,0 +1,1170 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Tema 3.A.39 -- Déficit Público\\
+\large Conceptos. Financiación y sus consecuencias macroeconómicas. Dominación monetaria y dominación fiscal. La dinámica de la deuda pública y su sostenibilidad}
+\author{Marcelo Ortega}
+\date{Enero 2026}
+\newcommand{\TemaCode}{3A39}
+
+\oldtitle{Tema 3.A.38. La financiación del déficit público. Sostenibilidad de la deuda pública. Aspectos monetarios de la financiación del déficit público}
+\changerationale{Se busca alinear el título del tema con los últimos desarrollos en la literatura económica.}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     
+     
+    }
+\vspace{1cm}
+
+\modificaciones{
+    \textcolor{red}{\textbf{OJO} -> Incluir:} La visión heterodoxa, de raíz keynesiana y particularmente desarrollada por la escuela poskeynesiana y la Teoría Monetaria Moderna (MMT), parte de un punto de partida distinto: la identidad contable de los balances sectoriales (sectoral balances) desarrollada por \href{https://es.wikipedia.org/wiki/Wynne_Godley}{GODLEY}. Esta identidad establece que, por pura contabilidad, el saldo del sector público más el saldo del sector privado más el saldo del sector exterior deben sumar cero, de manera que un déficit del gobierno implica necesariamente un superávit equivalente del sector privado y/o exterior. Desde esta óptica, la deuda pública no es intrínsecamente problemática sino el reflejo contable de un superávit en otro sector de la economíase siguen varias implicaciones. En primer lugar, los déficits gubernamentales no son inherentemente problemáticos, y la pregunta relevante deja de ser \textit{cuánta deuda es sostenible} para convertirse en \textit{qué sector está siendo forzado a endeudarse si el gobierno persigue el superávit}. 
+
+    \href{https://www.youtube.com/watch?v=V_KqjvXoBPM&list=PLGGYihhM4K20lKnh051Q4tZcLmZxndmN-&index=3}{\textit{ The Deficit Myth}. The Levy Institute (Summer Camp) -- Youtube (2023)}
+}
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+\clearpage
+\section{Déficit Público: Marco General}
+\puntosclave{ 
+    La restricción presupuestaria del gobierno opera de forma similar a la de otros agentes económicos. En especial, al tener un horizonte infinito, ha de satisfacerse de forma intertemporal.
+    
+    El déficit nominal es en sí una medida incompleta e insatisfactoria de la orientación de la política fiscal por no tener en cuenta la inflación, el ciclo económico o el efecto de las privatizaciones. 
+    
+    En cierto sentido es irrelevante si se financia el déficit vía deuda o vía mayores impuestos porque los agentes adaptarán sus sendas de consumo y ahorro en el contexto de la equivalencia ricardiana. 
+    
+    Así mismo, si es necesario configurar una senda de impuestos para evitár problemas de sostenibilidad, el alisamiento impositivo es la mejor receta de política económica. 
+    
+    Por último, la tendencia al sesgo deficitario de las economías desarrolladas podría ser explicado por la configuración del proceso político aplicando el Teorema del Votante Mediano.
+}
+
+Al igual que cualquier otro agente económico el gobierno se enfrenta a una restricción presupuestaria. Naturalmente, esta restricción no ha de satisfacerse en cada periodo, pero sí de una forma intertemporal. La idea de la restricción presupuestaria intemporal del gobierno es simple: exige que el total de gasto público para todos sus fines iguale el total de su financiación proveniente de todo tipo de orígenes; incluyendo la emisión de dinero. Analíticamente, esta restricción puede representarse mediante la siguiente fórmula:
+
+\eqblock{
+\begin{aligned}
+    \underbrace{\underbrace{P_tG_t+iB_{t-1}}_{\substack{\text{\scriptsize Déficit Público}\\\text{\scriptsize (Conceptos)}}}=\underbrace{P_tT_t+(B_t-B_{t-1})}_{\substack{\text{\scriptsize Financiación y consecuencias macroeconómicas}}}+\underbrace{(M_t-M_{t-1})}_{\text{\scriptsize Aspectos Monetarios de la Financiación}}}_{\text{\scriptsize Dinámica de la Deuda y su Sostenibilidad}}
+\end{aligned}
+}{Restricción Presupuestaria del Gobierno: Componentes y Estructura. Déficit Público}
+
+Como vemos, a partir de la Restricción formulada se pueden identificar los diferentes conceptos a tratar en este Tema. Además, se aprecia que está definida en términos nominales, dado que deuda y la cantidad de dinero son variables nominales mientras que el gasto público real e ingresos impositivos reales se multiplica por el índice de precios, $P_t$.
+
+\begin{specialblock}{Gobierno y Autoridad Monetaria: Componentes de la RPG}
+    Para obtener bienes y servicios, los gobiernos en las economías de mercado necesitan generar ingresos. Una manera para conseguirlo es imprimiendo dinero, que será posteriormente utilizado para comprar recursos del sector privado. 
+    
+    Sin embargo, para entender las implicaciones de la inflación en los ingresos, uno debe comenzar con la restricción presupuestaria del gobierno:
+    \begin{la}
+        \item La rama fiscal del gobierno se enfrenta a la siguiente restricción presupuestaria: 
+        $$G_t+i_{t-1}D_{t-1}^T=T_t+(D_t^T-D_{t-1}^T)+RCB_t$$ 
+        Donde todas las variables están en términos nominales. El lado izquierdo de la ecuación consiste en los gastos públicos en bienes, servicios y transferencias ($G_t$), más el pago de intereses por la deuda total que ha contraído ($i_{t-1}D_{t-1}^T$). El lado derecho, refleja los ingresos por impuestos ($T_t$), más la nueva emisión de deuda ($D_t^T-D_{t-1}^T$), más ingresos directos del Banco Central ($RCB_t$); y,
+        \item La autoridad monetaria, o banco cent2ral, también se enfrenta a una identidad presupuestaria que vincula los cambios en sus activos y pasivos:\footnote{
+        En el caso de una economía abierta, existe una fuente de financiación adicional: la disminución de reservas internacionales. 
+        
+        La forma de introducir esta cuarta fuente de financiación en la ecuación vista, es distinguiendo entre deuda bruta y deuda neta. La deuda neta es la diferencia entre pasivos y activos del Gobierno (i.e. descontamos de la deuda bruta los activos del Gobierno, como por ejemplo las reservas internacionales y los depósitos que tiene en el sistema financiero y en el banco central). De esta manera, si consideramos que la deuda de la ecuación, $D$, es deuda neta, estaríamos considerando también las reservas internacionales como fuente de financiación. No obstante, puede hacerse explícito de la siguiente manera en la restricción presupuestaria de la autoridad monetaria:
+        $$(D_t^M-D_{t-1}^M)+RCB_t+e_t(R_t-R_{t-1})=i_{t-1}D_{t-1}^M+(M_t-M_{t-1})+e_{t-1}(i^*R_{t-1})$$ 
+        Donde $R$ son las reservas de divisas internacionales del país, $i^*$ es el tipo de interés internacional (que asumimos constante), y $e$ es el tipo de cambio nominal directo. Teniendo esto en cuenta, la restricción presupuestaria consolidada del sector público será: $$G_t+i_{t-1}D_{t-1}+e_t(R_t-R_{t-1})=T_t+(D_t-D_{t-1})+(M_t-M_{t-1})+e_{t-1}(i^*R_{t-1})$$ 
+        Lo ideal sería contemplar la deuda neta, y no la bruta. Contemplar la deuda neta es más realista, ya que una política fiscal podría ser insostenible para un nivel elevado de deuda bruta, pero volverse sostenible cuando consideramos la cantidad de activos de que dispone el Gobierno y los rendimientos que obtiene por ellos (reservas, empresas públicas, recursos naturales, etc.). No obstante, los activos que se consideran para determinar la deuda neta de los países son únicamente los activos financieros: reservas de divisas, reservas de oro, depósitos del Gobierno, préstamos hechos por el Gobierno, fondos de reserva, etc.
+        } 
+        $$(D_t^M-D_{t-1}^M)+RCB_t=i_{t-1}D_{t-1}^M+(M_t-M_{t-1})$$ 
+        Donde el lado izquierdo refleja los gastos y el lado derecho los ingresos. Por el lado de los gastos, $D_t^M-D_{t-1}M$ es igual a las nuevas compras de deuda pública del Banco Central y $RCB_t$ son los pagos directos realizados al Tesoro. Por el lado de los ingresos $i_{t-1}D_{t-1}^M$ es el cobro de intereses por la deuda adquirida y $M_t-M_{t-1}$ es el cambio en la base monetaria (\textit{high-powered money}).
+    \end{la}
+    
+    De esta forma, si denotamos como $D=D_T-D_M$ el stock de deuda pública en manos del público, las identidades presupuestarias del Tesoro y del Banco Central pueden ser combinadas para producir la siguiente identidad presupuestaria consolidada del sector público:
+    $$G_t+i_{t-1}D_{t-1}=T_t+(D_t-D_{t-1})+(M_t-M_{t-1})$$
+    
+    Una forma habitual de presentar la Restricción Presupuestaria del Gobierno (quizás la más completa), es en incremento logarítmico, añadiendo expectativas y expresandola en términos nominales:
+    $$\text{\tiny $g_t+\left(\frac{r_{t-1}-\gamma_t^y}{1+\gamma_t^y}\right)d_{t-1}=\underbrace{\tau_t}_{\text{\scriptsize Impuestos}}+(\underbrace{d_t-d_{t-1}}_{\text{\scriptsize Emisión de deuda nueva}})+(\underbrace{m_t-\frac{m_{t-1}}{(1+\pi_t)(1+\gamma_t^y)}}_{\substack{\text{\scriptsize señoreaje: $s_t$}\\\text{\scriptsize valor real del cambio}\\\text{\scriptsize en la base monetaria}}})+\underbrace{\frac{(\pi_t-E[\pi_t\;|\;\Omega_{t-1}])(1+r_{t-1})d_{t-1}}{(1+\pi_t)(1+\gamma_t^y)}}_{\text{\scriptsize Efecto de la inflación no esperada}}$}$$
+
+    En definitiva, es importante entender que la política fiscal y la política monetaria están vinculadas a través de la restricción presupuestaria del sector público. Las variaciones en la tasa de inflación pueden tener implicaciones en las decisiones de la autoridad fiscal acerca de los gastos y los impuestos, y de la misma manera, las decisiones de la autoridad fiscal pueden tener implicaciones en la oferta monetaria y la inflación. 
+    
+    Cuando la inflación es vista como un impuesto generador de ingresos distorsionador, el grado en el que debemos recurrir a ella depende del conjunto de impuestos alternativos disponibles para el gobierno y las razones por las que los individuos demandan dinero. Es por ello que la teoría de la imposición óptima también tiene implicaciones empíricas para la inflación.
+\end{specialblock}
+
+\subsection{Déficit Público: Conceptos}
+Partiendo de la restricción presupuestaria intemporal (RPI) del gobierno, es posible definir déficit presupuestario público como gasto en bienes y servicios, más los intereses pagados por la deuda, menos los impuestos netos de transferencias:
+
+\eqblock{
+\begin{aligned}
+    \text{déficit}_t=iB_t+P_tG_t-P_tG_t
+\end{aligned}
+}{Déficit Presupuestario del Gobierno. Déficit Público}
+
+\subsubsection{Limitaciones: Problemas de medición}
+Pese a la aparente sencillez en su fornrnlación el déficit público no es una medida adecuada para valorar tono de la política fiscal. Hay cuatro motivos que así lo justifican.
+
+\paragraph{Inflación}
+Las medidas oficiales del déficit presupuestario se calculan sumando los intereses nominales, $iB_t$, y el gasto público en bienes y servicios, $P_tG_t$, y restando los impuestos, una vez descontadas las transferencias, $P_tG_t$. Esta medida es un indicador de la variación de la deuda nominal. Si es positiva, el sector público está gastando más de lo que ingresa y, por tanto, debe emitir deuda. Si es negativa, el estado amortiza parte de la deuda existente. Pero esta medida no es adecuada para calcular la variación de la deuda real, es decir, de la variación de lo que tendrá que pagar el Estado, en bienes y no en dinero.
+
+En general, si $B_t$, es la deuda y $\pi_t$ es la inflación, la medida oficial del déficit sobreestima la medida correcta en una cuantía igual a $\pi_tB_t$. La medida correcta del déficit ajustado para tener en cuenta la inflación es igual a: 
+
+\eqblock{
+\begin{aligned}
+    \text{DéficitAjustado}_t=iB_t+P_tG_t-P_tT_t-\pi_tB_t=(i-\pi_t)B_t+P_t(G_t-T_t)
+\end{aligned}
+}{Déficit Ajustado. Déficit Público}
+
+Por tanto, cuanto más altas sean la tasa de inflación más imprecisa es la medida oficial del déficit. En los países en los que tanto la inflación como la deuda son muy altos, la medida oficial podría indicar un déficit muy elevado, incluso en presencia de una disminución de la deuda real. Esta es la razón por la que siempre debernos tener en cuenta la inflación antes de extraer conclusiones sobre la política fiscal. Es decir, la inflación incrementa la medida convencional de déficit incluso cuando está deflactada por el nivel de precios.\footnote{ 
+Para ilustrar este ejemplo es útili recurrir a un ejemplo:
+En 1979, el Gobierno Federal de los Estados Unidos declaró el déficit presupuestario de 28.000 millones de dólares. La inflación era del $8,6\%$ y la deuda pública que estaba en manos del público (excluida la Reserva Federal) a comienzos del año era de 495.000 millones. Por lo tanto, se podría haber producido un incremento muy notable en el servicio nominal de la deuda por la traslación de la inflación a los tipos nominales. Si suponemos una traslación perfecta del déficit, se había sobreestimado en $0,086\cdot 495.000\text{ M\$}=43.000\text{ M\$}$. El déficit presupuestario declarado de $28.000 \text{ M\$}$ cuando se corrige para tener en cuenta la inflación, ¡se convierte en un superávit presupuestario de $15.000 \text{M\$}$! En otras palabras, aumque la deuda pública nominal estana aumentando, la deuda pública real estaba disminuyendo.
+}.
+
+\paragraph{Privatización de Activos}
+Si el gobierno vende un activo, aumenta sus ingresos actuales y reduce por tanto el déficit. Sin embargo, al hacerlo renuncia a los ingresos que ese activo habría generado en el futuro. Si se valora un activo corno el flujo presente de ingresos que produciría, la venta no tiene efecto alguno sobre el valor presente de los ingresos públicos (asumiendo una correcta estimación del valor neto contable), de modo que la operación modifica el déficit presente pero no altera la restricción presupuestaria. Por ello, el argumento que apunta a que una privatización reduce el déficit sólo es válido desde una perspectiva estática y no si se tiene en cuenta la dinámica de la restricción presupuestaria del gobierno.
+
+\paragraph{Pasivos no contabilizados}
+Un tercer problema en la medición del déficit son los pasivos no contabilizados o créditos presupuestarios entendidos como compromisos del sector público de incurrir en el futuro en gastos para los que no están previstos los correspondientes ingresos. A diferencia de la venta o privatización de activos los pasivos no contabilizados sí tienen efectos en la restricción presupuestaria pero no en el déficit presente. Los países industrializados suelen comprometerse a elevados gastos en términos de prestaciones sociales, en particular relacionados con los sistemas públicos de pensiones. La posible desconexión entre el déficit y la restricción presupuestaria implica que se satisfagan las reglas legales sobre el déficit y a su vez se deteriore la satisfacción de la restricción presupuestaria intertemporal.
+
+\paragraph{Ciclo Económico}
+Muchas variaciones del déficit presupuestario público se producen automáticamente en respuesta a las fluctuaciones de la economía (adicionalmente y de manera independiente a la frecuente decisión del gobierno de implementar una política contracíclica para responder a los posibles shocks). En especial, ante una recesión disminuyen los ingresos públicos dado que las rentas disminuyen y menos agentes económicos pagan impuestos. Así mismo, se incrementan los gastos públicos dado que hay más personas que hacen uso de subsidios dedesempleo o ayudas. Esta variación del déficit presupuestario, qué se produce con independencia de una modificación normativa, está producida por los denominados \textbf{estabilizadores automáticos}. 
+
+Para evaluar si la política fiscal está bien orientada diferentes instituciones elaboran medidas que indican cuál sería el déficit si la producción se encontrase en su nivel potencial. Así, se intenta obtener una medida de déficit corregido por el ciclo económico. Si el déficit observado es elevado pero el déficit ajustado del ciclo es cero, la actual política fiscál es coherente con la ausencia de un aumento sistemático de la deuda a lo largo del tiempo. Esta aumentará mientras la producción sea inferior a su nivel potencial; pero cuando la producción retome a su nivel potencial, el déficit desaparecerá y la deuda se estabilizará.\footnote{
+En general, los gobiernos deben intentar mantener déficits ajustados por el ciclo cercanos a cero salvo en circunstancias extraordinarias. En la práctica, derivar estas medidas implica estimar el ciclo o brecha de producción que siendo una variable no observable siempre implica cierta controversia.
+} 
+
+La Comisión Europea analiza la drientación de la política fiscal según el déficit estructural. Se define déficit estructural como el déficit ajustado del ciclo, neto de medidas excepcionales y temporales (conocidas como \textit{one-offs}). Así el déficit ajustado por el ciclo será igual al déficit observado menos la estimación del ciclo (output gap) multiplicada por la sensibilidad del presupuesto al ciclo ($\varepsilon$).\footnote{
+La semielasticidad del saldo presupuestario con respecto al cido (i:) mide el efecto de las variaciones de la producción sobre el saldo de las administraciones públicas suponiendo que la economía funcione a su potencial. La semielasticidad presupuestaria es igual a la diferencia entre la semielasticidad de los ingresos y la semielasticidad de los gastos. Por el lado de los ingresos. las elasticidades de las distintas partidas de ingresos son estimadas ( IRPF. IVA . . . ). Se agregan utilizando como ponderaciones el peso de las partidas de ingreso en los ingresos totales. con el lin de obtener la elasticidad del nivel de ingresos totales ( en términos monetarios) con respecto a la producción. Por el lado de los gastos. se utiliza la elasticidad de los gastos relacionados con el desempleo. único gasto asumido como cíclico. ponderada con la proporción de los gastos relacionados con el desempleo en el PIB. La diferencia entre ambas semi-dasticidades. de ingresos y gasto. ofrece la sensibilidad del ciclo al output gap.
+}
+
+\eqblock{
+\begin{aligned}
+    \text{DéficitAjustadoCiclo}_t=\text{DéficitObservado}_t-\varepsilon\;x_t
+\end{aligned}
+}{Déficit Ajustado al Ciclo Económico. Déficit Público}
+
+A partir de este saldo ajustado se obtiene el saldo estructural al deducir del saldo ajustado del ciclo la diferencia entre ingresos y gastos no recurrentes, como pueden ser los derivados de un aumento de los impuestos para el que simultáneamente se anuncia su reducción o gastos como los asociados a una reestructuración bancaria
+
+\eqblock{
+\begin{aligned}
+    \text{DéficitEstructural}_t=\text{DéficitAjustadoCiclo}_t-\text{\textit{OneOffs}}_t
+\end{aligned}
+}{}
+
+La variación del déficit estructural se suele asociar con el esfuerzo estructural. Este esfuerzo estructural permite analizar las acciones de política fiscal (eliminando el ciclo y las medidas no recurrentes) y, por lo tanto, evaluar la idoneidad y el compromiso con la sostenibilidad de la política fiscal.
+
+\subsection{Déficit Público: Financiación}
+Volviendo a la restricción originalmente planteada, pasamos ahora a exponer las formas y alternativas que enfrenta el Gobierno para financiar el Déficit Público. Principalmente, se identifican las siguientes categorías:
+\begin{lnum}
+    \item \textbf{Impuestos, Tasas, Precios Públicos y Contribuciones Especiales}. Ingresos del Estado regulados en la Ley General Tributaria. Su naturaleza jurídica es diferente así como también lo es la razón por la cuál debe pagarlo el contribuyente. Son la principal fuente de ingresos en la mayoría de los países;
+    \item \textbf{Emisión de deuda}. Contracción de obligaciones con terceros que busca financiar los gastos corrientes a cambio de pagos futuros. El Poder Público no ostenta sus prerrogativas, en particular, la coacción, para la recaptación de ingresos por esta vía;
+    \item \textbf{Financiación monetaria}. Siendo el Estado el que ostenta la prerrogativa legal del Monopolio en la emisión de moneda, sólo éste Estado puede emitir moneda de curso legal, que, entre otras cosas, puede servir para cubrir sus propias necesidades de financiación;
+    \item \textbf{Fuentes de ingresos excepcionales}. Realmente, existen otras fuentes de financiación del gasto público, por ejemplo: a) Venta de patrimonio público; y/o b) Multas y sanciones.
+\end{lnum}
+
+\subsubsection{¿Cuál es la mejor forma de financiar el Gasto del Estado?: Desde la óptica de la Historía del Pensamiento Económico}
+Ahora que conocemos las diferentes definiciones relativas a la cuantificación del déficit público, las limitaciones o problemas de medición que presenta (y sus causas) y las alternativas (marco conceptual) que existen para financiar el Gasto/Déficit Público cabe preguntarse, ¿cuál es la mejor manera de financiar los Gastos del Estado? ¿Todas las alternativas presentan el mismo impacto macroeconómico? ¿Cómo influye cada uno sobre las decisiones de los agentes? ¿Existe una fórmula óptima de financiación?
+
+Estas preguntas han perseguido a los economistas desde los arbores de la ciencia, empecemos por tanto dando un repaso breve desde la óptica de la Historia del Pensamiento Económico para ver como han ido cambiando las aportaciones.
+
+\paragraph{Pensamiento Neoclásico} 
+De acuerdo con la escuela neoclásica, con precios completamente flexibles, el equilibrio de la economía queda totalmente determinado por el lado de la oferta (la oferta agregada es vertical): cumplimiento de la Ley de SAY. Por tanto, las políticas expansivas de demanda como la Política Fiscal no tendrían efecto sobre el crecimiento. 
+
+Estos autores defienden (por imposibilidad de introducirlo en el marco lógico-formal de sus Teorías) la inefectividad de la Política Fiscal como instrumento estabilizador. El elemento clave que llevaría a esa conclusión será la nula elasticidad de la demanda de dinero con respecto al tipo de interés ya que, como consideraban que los agentes demandaban dinero principalmente por motivo transacción y por ningún otro motivo, esto provoca que (en el contexto del Modelo IS-LM, a modo de ilustración grafica) la pendiente de la curva de demanda de dinero (LM) sea completamente vertical y se produzca un efecto \textit{crowding-out} total. Gráficamente:
+
+\textbf{INTRODUCIR GRAFICO DE EFECTOS POLÇITICA FISCAL EXPANSIVA}
+
+Por lo tanto, da igual como se financie esa política fiscal, su efectividad será nula.
+
+\paragraph{Aportaciones de KEYNES}  
+Frente a la visión clásica, desconsoladora para el \textit{policy-maker}, KEYNES se constituye como firme defensor de la Política Fiscal como forma de contrarrestar el déficit persistente de Demanda. 
+
+¿Por qué? La base de su tésis es considerar que el cumplimiento de la Ley de SAY es un caso muy particular del funcionamiento del mercado. Para el autor, de hecho, el funcionamiento de la Economía incumple de forma persistente la Ley de SAY (por tanto, la descarta) y se da un déficit persistente por el lado de la Demanda. Por lo tanto, la curva de oferta agregada no es vertical y es posible que el equilibrio de la economía quede determinado por el lado de la demanda. 
+
+Para exponer esta visión considera la existencia de rigideces nominales, tanto en precios como en salarios (Teoría General (1936)). En presencia de éstas, el mercado de trabajo se podría mantener en desequilibrio persistente, existiendo así \textbf{desempleo involuntario} e \textbf{ineficiencia asignativa} de los factores productivos. Una expansión (reducción) fiscal que aumentara (disminuyera) la demanda agregada contribuiría a reducir (aumentar) el desempleo y a estimular (deprimir) el crecimiento ya que las perturbaciones en la demanda elevarían (reducirían) el output (que no evdnría determinado por la Oferta sino por la Demanda). Por todo ello, sostiene que es necesario recurrir a Políticas Fiscales expansivas para relanzar la economía, sirviendo ésta como el instrumento central de la Política Económica.\footnote{
+Podemos considerar a KEYNES como el padre de la Política Fiscal.
+} 
+
+Además, KEYNES sugiere que un aumento del gasto sería generalmente más efectivo ya que supondría un estímulo directo sobre la economía. Esto se debe a que, una reducción de los impuestos afecta a la demanda de manera indirecta y parcial puesto que los agentes tienen un elevado grado de preferencia por la liquidez/ahorro (por lo que el uso de estos \textit{nuevo} recursos disponibles se detinaría solo parcialmente a consumo). Poco después, HAHN sugirió que se podía cuantificar el efecto de un aumento del Gasto Público mediante lo que el denominó \textbf{efecto multiplicador}: un aumento de la renta derivado del gasto público aumenta el consumo, y esto a su vez aumenta la renta. 
+
+En el contexto del marco IS-LM, para KEYNES, la inversión es muy volátil y poco sensible al tipo de interés (al depender de los \textit{animal spirits}) y la demanda de dinero sería muy elástica al tipo de interés (\textit{liquidity trap}). En conjunto la IS tendría mucha pendiente y la LM sería muy plana, por lo que la política fiscal sería muy eficaz. Haciendo uso del multiplicador del gasto público: 
+$$\frac{\Delta Y}{\Delta G}=1\frac{1}{(1-c(1-t))(1+v\;(k/h))}$$ 
+
+Para KEYNES, $v$ es muy reducida, ya que la inversión es muy poco sensible al tipo de interés (\textit{animal spirits}). Al mismo tiempo, $k$ es muy reducida y $h$ es muy elevada ya que la demanda de dinero es muy sensible al tipo de interés (\textit{motivo especulación}). Las expresiones de los multiplicadores muestran dos proposiciones claves de la política fiscal keynesiana:
+\begin{lnum}
+    \item Por una parte, el multiplicador del gasto público es mayor que 1; y,
+    \item Por otra, se observa que, ante una política fiscal expansiva el multiplicador del gasto es mayor que el de los impuestos. Esto se debe a que el gasto público incide directamente sobre la demanda agregada, mientras que los instrumentos impositivos afectan a la renta disponible de los hogares, que pueden decidir ahorrar o consumir.
+\end{lnum}
+
+Por tanto, las aportaciones de KEYNES respecto a la Política Fiscal pueden con los siguientes puntos:
+\begin{lnum}
+    \item Déficits públicos aumentan demanda agregada y estos estímulos son necesarios en muchas ocasiones;
+    \item En contexto de exceso de capacidad, además, aumentaría el output y empleo (incumplimiento de la Ley de SAY permanente);
+    \item Multiplicador positivo y expansión de output tras aumento del déficit: (i) aumenta consumo y ahorro; (ii) aumenta retorno a la inversión; (iii) aumenta también la inversión;
+    \item La forma de financiación del Déficit es relevante puesto que tiene efectos distintos sobre el output final:
+    \begin{la}
+        \item \textbf{Deuda Pública}. La financiación del déficit a través de la emisión de deuda subirá el tipo de interés. Tanto la demanda de dinero como la inversión son sensibles al tipo de interés (si la primera especialmente sensible), por lo que el aumeto del tipo de interés acabará reduciendo la inversión (y el ahorro privado) y, en consecuencia, habrá un \textit{efecto crowding-out} parcial que contrarreste los efectos positivos;
+        \item \textbf{Monetización del déficit}. Como el Banco Central puede comprar deuda del Gobierno, este mecanismo haría que el tipo de interés en los mercados financieros se mantuviese estable, por lo que el efecto expansivo de dicha Política Fiscal sería aún mayor. 
+    \end{la}
+\end{lnum}
+
+Por lo tanto, los Gobiernos pueden usar déficit para aumentar la renta y el empleo, en la medida que haya capacidad ociosa, y la Política monetaria debe ser pasiva, subordinada a la fiscal, con el fin de mantener el tipo de interés bajo y garantizar la mayor efectividad de la dichas Políticas.
+
+\paragraph{Monetarismo}
+La crítica monetarista acepta algunos planteamientos keynesianos pero considera que la inversión es muy sensible al tipo de interés y la demanda de dinero sería muy inelástica respecto al tipo de interés (al existir infinitos activos sustitutivos del dinero, la demanda de dinero es muy rígida). Por consiguiente, la curva IS sería muy elástica y la LM muy inelástica, de modo que la Política Fiscal tendría escasos efectos sobre el crecimiento. Además, tras la publicación y aceptación generalizada de la curva de PHILLIPS, los monetaristas consideran que, introduciendo HEA, a largo plazo, explotar este \textit{trade-off} sería conducir a la economía a la misma tasa de desempleo involuntario (o estructural), determinado por la tasa natural de desempleo, pero en un nivel mayor de inflación (lo que para estos supone efectos nocivos de diversa índole, por ejemplo, el incremento del tipo de interés real). Por tanto, la Política Fiscal no solo presentaría nula efectividad sobre el crecimiento a largo plazo, sino que sería ocivo pues tendría efectos inflacionistas. Haciendo uso del multiplicador del gasto público: 
+
+$$\frac{\Delta Y}{\Delta G}=\frac{1}{(1-c(1-t))(1+v(k/h))}$$
+
+Para los monetaristas: (i) $v$ es muy elevada, ya que la inversión es muy sensible al tipo de interés (ya que los individuos se guían por la rentabilidad y no por los animal spirits, pues son racionales); (ii) $k$ es muy elevada; y, (iii) $h$ es muy reducida, ya que la demanda de dinero es insensible al tipo de interés (consideran que existen infinitos activos sustitutivos del dinero, no sólo bonos como consideraba KEYNES). Por lo tanto, la Política Fiscal es menos efectiva que para KEYNES.
+
+Respecto a la financiación del déficit, estos autores sostienen que la forma óptima es vía monetización, ya que genera efectos riqueza y reajuste de carteras.\footnote{BENJAMIN FRIEDMAN considera que la emisión de deuda a corto plazo es similar a monetizar. La idea es que la deuda a corto plazo y el dinero son buenos sustitutos (al aumentar la demanda de bonos aumenta la de dinero).
+} 
+
+\paragraph{Revisión de BLINDER y SOLOW (1973): SNC final}
+En 1973, BLINDER y SOLOW publican un artículo titulado (\textit{Does fiscal policy matter?}) en el que defienden que un déficit financiado con deuda es más expansivo que uno monetizado. Por tanto, siendo éstos los últimos vestigios del neokeynesianismo o Síntesis Neoclásica, ponen en duda:\footnote{
+Introducen por primera vez la restricción presupuestaria del gobierno, que muestra que el gasto corriente y los pagos por intereses deben financiarse con impuestos, emisión de deuda o recursos captados por la monetización. En concreto, se trabajaría con señoreaje: valor real de los recursos captados.
+}
+\begin{la}
+    \item \textbf{Monetaristas}. La tesis monetarista de que el déficit financiado con deuda pública no tiene efectos expansivos; 
+    \item \textbf{KEYNES}. La tesis keynesiana y monetarista de que el déficit financiado con deuda es menos expansivo que el déficit monetizado.
+\end{la}
+
+Además, serán precisamente estos autores los que presentarán por primera vez la Restricción Presupuestaris del Gobierno que hemos expuesto al principio. 
+
+En síntesis, introducen el modelo conocido como \textit{rock-bottom}, en el que: (i) a diferencia de los modelos keynesianos, tienen en cuenta los efectos riqueza que producen las diferentes formas de financiación; y, (ii) a diferencia de los modelos monetaristas, el efecto riqueza no aumenta la demanda de dinero, sino sólo la de bienes (para los monetaristas depende fundamentalmente de la renta permanente, sin embargo, BLINDER y SOLOW siguen en este caso las tesis keynesianas.\footnote{Recordemos que para los keynesianos la demanda de dinero depende principalmente del tipo de interés, no tanto de la renta ni de la riqueza
+    } Las dinámicas de transición atendiendo a cada alternativa serían:
+\begin{la}
+    \item \textbf{Deuda}. La financiación del déficit mediante la emisión de deuda desplazará la curva IS a la derecha (mayor renta) y la emisión de bonos aumenta la riqueza de los agentes. Por tanto, como el efecto riqueza aumentará el consumo, esto expandirá aún más la curva IS; y,
+    \item \textbf{Monetización}. La financiación del déficit mediante monetización desplazará inicialmente la curva IS (mayor renta) y la curva LM (mayor demanda de dinero). Dicha monetización aumenta la riqueza de los agentes, que tiene efectos positivos sobre el consumo, lo que vuelve a expandir la renta (desplazamiento IS).
+\end{la}
+
+\textbf{INTRODUCIR GRÁFICO DE TRANSICION DE UN PUNTO A OTRO}
+
+De manera intuitiva y desde una prespectiva análitica, se puede ejemplificar este efecto positivo adicional de la emisión de deuda de la siguiente manera:\footnote{Como el déficit público financiado con deuda sí tiene efectos sobre la renta (en contra de la teoría monetarista) porque los agentes compran bonos y, además, estos bonos llevan aparejado un rendimiento positivo que dura varios periodos, el déficit financiado mediante deuda es más expansivo que si se monetiza. Por el contrario, un déficit que se monetiza dará lugar a un aumento de la renta más rápido a corto plazo, pero a largo plazo será inferior (en términos relativos) a su alternativa.
+}
+
+\eqblock{
+\begin{aligned}
+    &G_t+i_{t-1}B_{t-1}=T_t+(B_t-B_{t-1})+(M_t-M_{t-1})\\[1em]
+    &\text{En situación de Equilibrio Presupuestario:}\qquad \boxed{G+iB=T(Y)}\\[2em]
+    &\uparrow G\;\Longrightarrow\;\frac{\partial Y}{\partial G}=\frac{1}{T}\left[1+\frac{\partial iB}{\partial G}\right]\;
+    \begin{cases}
+        &\uparrow B:\; \partial M=0\;\overset{\uparrow B\;\Rightarrow\;\uparrow i}{\Longrightarrow}\;\partial (iB)>0\;\underbrace{\Longrightarrow}_{\substack{\text{\scriptsize Pago de }\\\text{\scriptsize intereses}}}\;\uparrow Y\\[0.5em]
+        &\uparrow M:\; \partial B=0\;\overset{\uparrow M^s}{\Longrightarrow}\;\partial\bar{(iB)}_M
+    \end{cases}\;\Longrightarrow\;\underbrace{\boxed{\left(\left.\frac{\partial y}{\partial g}\right|_B\right)>\left(\left.\frac{\partial y}{\partial g}\right|_M\right)}}_{\text{\scriptsize Confirmado por Evidencia Empírica}}
+\end{aligned}
+}{Emisión de deuda vs. Monetización: BINDER y SOLOW. Debates sobre la Financiación del Déficit Público}
+
+Estos autores consiguen vincular analíticamente, mediante la Función de Déficit Público (o Restricción Presupuestaria del Gobierno), la Política Fiscal y la Política Monetaria mediante el Tipo de Interés nominal y ponen énfasis en la necesidad de analizarlos de manera conjunto y no por separado. Sus conclusiones, como ya se ha recalcado, señalan que el Efecto Riqueza a largo plazo generado por la emisión de Bonos hace más efectiva la financiación del déficit mediante esta vía por el efecto expansivo asociado al pago de los Tipos de interés ($i$).
+
+\subsubsection{¿Cuál es la mejor forma de financiar el Gasto del Estado?: Equivalencia Ricardiana}
+Habiendo hecho este breve repaso desde la perspectiva de la Historia del Pensamiento Económico, nos centraremos en exponer las conclusiones más recientes que tratan de arrojar luz sobre este debate (aún persistente), dentro del marco de la revolución metodológica que sigue a la conocida crítica de LUCAS.
+
+Sin duda, un resultado clave a este respecto fue proporcionado por BARRO en su artículo \textit{Are government Bonds Net Wealth?} (1974), donde formaliza la conocida Equivalencia Ricardiana (o Teorema de la Equivalencia Ricardiana). ¿Qué expone BARRO? Y, en especial, ¿qué es la Equivalencia Ricardiana?\footnote{
+RICARDO lived in the middle of the long sequence of wars between the United Kingdom and France. RICARDO was keenly interested in how the government should finance the war (tax or debt). Makes it no difference – a switch from one instrument to the other does not change real allocations and prices in the economy. Therefore, this concept is also called the Modigliani-Miller theorem of public finance.
+
+Para RICARDO, 
+\begin{la}
+    \item \textbf{Impuestos}. Los impuestos constituyen un mal en cualquiera de sus formas. Lamentablemente, son necesarios en algunas ocasiones. Sin teoría explícita de tributación óptima;
+    \item \textbf{Deuda}. Por su parte, en lo que se refiere a la deuda, plantea la posibilidad de la equivalencia ricardiana, aunque rechaza considerarla seriamente. 
+\end{la}
+Por lo tanto, de su obra, la implicación de política económica que se deriva es que lo óptimo es minimizar gasto público (sea cual sea su forma de financiación). Perjudica a la acumulación de capital y perjudica al trabajo.
+}
+
+BARRO parte de los siguientes supuestos: 
+\begin{lnum}
+    \item \textbf{Agentes de vida infinita}. BARRO justifica este supuesto en un perfecto altruismo intergeneracional, lo que le permite desarrollar un Modelo de Horizonte Infinito (MHI) [\authorfont{Ver tema 3.A.29}];
+    \item \textbf{Racionalidad y previsión}. Los agentes son racionales y sus expectativas se forman conforme la HER, además de conocer la restricción presupuestaria del gobierno;
+    \item \textbf{Mercados de capitales completos y perfectos} (ausencia de restricciones de liquidez). Es decir, el tipo de interés es igual para los agentes privados y el sector público y además no hay restricciones de créditos;
+    \item \textbf{Gobierno}. BARRO incluye al gobierno en el modelo, como un agente que tiene una senda de gasto exógena y puede financiarse mediante la emisión de deuda o mediante impuestos;
+    \item \textbf{Gasto corriente}. El Gobierno efectúa una política de gasto corriente y no en inversión productiva.
+    \item \textbf{Impuestos no distorsionadores} (de suma fija). Los impuestos del Gobierno no generan efecto renta, pero tampoco tienen ningún efecto sobre las decisiones de los agentes.
+\end{lnum}
+
+Si consideramos una FUI isoelástica separablemente aditiva, y un horizonte de dos periodos, presentamos la Restricción Presupuestaria Intertemporal del Agente y la Restricción Presupuestaria del Gobierno analíticamente:
+
+\eqblock{
+\begin{aligned}
+    \boxed{
+    \begin{aligned}
+        &\text{RPG:}\quad &&G_1+\frac{G_2}{1+r}=\tau_1+\frac{\tau_2}{1+r}\\[1em]
+        &\text{RPI:}\quad &&C_1+\frac{C_2}{1+r}=\underbrace{(Y_1-\tau_1)+\frac{(Y_2-\tau_2)}{1+r}}_{W}\\[1em]
+        &\text{SN}_1:\quad &&\overbrace{S^*_{G,t}}^{\tau_t-G_t}+\overbrace{S_{P,t}}^{Y_t-C_t-\tau_t}
+    \end{aligned}
+    }
+\end{aligned}
+}{BARRO: Equivalencia Ricardiana. Análisis moderno}
+
+¿Qué implican estas restricciones y cómo cuantifican la efectividad de la PF? Veámoslo con un ejemplo, supongamos que se produce una reducción de impuestos en $t=1$:
+\begin{lnum}
+    \item Una reducción de impuestos en $t=1$ implicaría una disminución de la proporción de renta ingresada al Estado ($\downarrow \tau$);
+    \item Esta disminución en $t=1$ exige que, si no varía el valor absoluto del Gasto Público en ninguno de los dos periodos ($\Delta G_1=\Delta G_2=0$), deba ser compensado con un aumento de la recaudación en $t=2$ descontada al presente, es decir, $\uparrow \tau_2/(1+r)$; y,
+    \item Además, también conduce a una reducción del ahorro público ($S_{G,t}$) que, dada la igualdad restrictiva de la suma de ahorro nacional, debe ser compensado con un aumento del ahorro privado ($S_{P,t}$), es decir, $Y_1-C_1-\downarrow \tau_1\cdot Y_1=\uparrow S_{P,1}$.
+\end{lnum}
+
+Debido a que los impuestos se conciben como \textbf{no distorsionantes} (de suma fija) y la riqueza (descontada) se considera también un valor constante, la disminución en $t=1\longrightarrow\;\downarrow\tau_1$ no afecta al consumo $C_1$, por lo que no se experimenta ningún incremento. 
+
+\paragraph{Implicaciones de Política Económica}
+Las implicaciones en términos de Política Económica se desprenden directamente del cumplimiento de las condiciones impuestas:
+\begin{lnum}
+    \item \textbf{Los bonos no son riqueza neta}. Si los agentes no consumen más, dado el descenso en la carga tributaria en el periodo ($t=1$), ¿qué hacen con esos recursos? Los agentes ahorraran ese exceso de recursos disponibles y demandarán más títulos de deuda pública ($\uparrow B^d$) en vistas a hacer frente al incremento de impuestos que anticipan en el periodo siguiente. Como hemos visto, la riqueza descontada al presente se mentiene constantes ante cualquier variación, por tanto, los bonos no constituyen riqueza neta para los agentes, simplemente es una manera de trasladar ese ahorro al futuro de forma que no pierdan poder adquisitivo en el periodo siguiente, habida cuenta del coste real de manetener su riqueza, por ejemplo, en dinero en efectivo;
+    \item \textbf{Equivalencia Ricardiana}.\footnote{En general, podemos definir el resultado de la equivalencia ricardiana de la siguiente forma:
+    
+    \textit{Dada una trayectoria determinada de gasto público, no importa el método particular utilizado para financiar estos gastos, en el sentido de que el consumo real, la inversión y el rendimiento no se ven afectados. Concretamente, ya sea que los gastos se financien mediante impuestos o mediante deuda, los planes de consumo e inversión reales del sector privado se ven inalterados. En ese sentido, la deuda pública y los impuestos son equivalentes}.
+    
+    En otras palabras, la deuda del gobierno es simplemente contemplada como imposición pospuesta. Si el gobierno decide financiar su déficit emitiendo deuda hoy, los agentes privados ahorrarán más para redimir esta deuda en el futuro a través de mayores impuestos. Podemos resumir la equivalencia ricardiana en 3 ideas: 
+    \begin{lnum}
+        \item El perfil temporal de los impuestos no afecta al consumo;
+        \item Una política fiscal expansiva consistente en una reducción de impuestos financiada con deuda no tendrá ningún efecto sobre el consumo; y,
+        \item El hecho de que un aumento del gasto público se financie con impuestos o con deuda no afecta al consumo.
+    \end{lnum}
+    
+    La equivalencia ricardiana fue formulada inicialmente, tal y como sugiere su nombre, por el economista clásico británico DAVID RICARDO (1817), en su obra \textit{Principios de economía política y tributación}. No obstante, inmediatamente la descartó por ser irrelevante en la práctica.
+    } Dado que la forma en la que el Estado financia el Gasto Público es mediante la emisión de títulos de deuda, y estos: (i) se demandan en vistas al pago futuro de impuestos; y, (ii) únicamente se demandan por se un vehículo para preservar el valor real de la riqueza del agente; (iii) la forma en la que financie el Estado el Gasto es irrelevante para los agentes. Cualquier desahorro público por un incremento del Gasto no proporcional al incremento de Ingresos se ve neutralizado por un aumento del ahorro privado para hacer frente a impuestos futuros; y,
+    \item \textbf{Ineficacia a largo plazo de la Política Fiscal}. Si el objetivo perseguido por el \textit{policy maker} es incidir mediante un aumento del Gasto Público en el sector real de la economía, el modelo muestra como esta incidencia es nula: (i) no hay un incremento del consumo en ninguno de los periodos; y, (ii) la riqueza de los agentes se mantiene constante, descontada al presente. Es decir, volviendo al primer punto, si se financia el Déficit Público emitiendo Deuda Pública, los Bonos no son riqueza neta. 
+\end{lnum}
+
+En definitiva, los títulos de deuda pública no son considerados riqueza neta, siendo el déficit público neutral independientemente de su financiación. El impacto de una política fiscal expansiva viene determinado por la composición del gasto público, independientemente de su forma de financiación:
+\begin{la}
+    \item \textbf{Títulos de deuda}. Generan un aumento del ahorro privado para hacer frente a un previsible aumento de impuestos en el futuro;
+    \item \textbf{Recaudación de impuestos}. Esta recaudación disminuirá la renta disponible de los agentes y por lo tanto el ahorro en comparación con la financiación mediante títulos de deuda; y,
+    \item \textbf{Monetización}. Las expectativas de emisión continua en el futuro generan un aumento del ahorro en previsión del impuesto inflacionario asociado.
+\end{la}
+
+En una economía abierta, el resultado de la equivalencia ricardiana se mantiene. Además, implica que el reparto del endeudamiento frente al exterior entre hogares y sector público no tiene importancia, y lo relevante para las decisiones de consumo e inversión es la posición de la economía en su conjunto frente al exterior. Por ejemplo, dada una senda de gasto público, una reducción de impuestos no afectaría al saldo de la cuenta corriente, ya que el aumento del endeudamiento del sector público se vería compensado por el aumento del ahorro del sector privado, sin que fuese necesario recurrir a la financiación exterior (SCHMITT-GROHE et al., 2016).
+
+Sin embargo, es importante destacar que la equivalencia ricardiana no implica que el gasto público no tenga efectos sobre el output, sobre el consumo o el empleo (de hecho, en un modelo de ciclo real como este sí que los tiene), sino que estos efectos serán los mismos independientemente de cómo se financia este gasto.\footnote{No obstante, en caso de que la política fiscal expansiva se lleve a cabo mediante una reducción de impuestos, financiada vía deuda, el efecto será nulo.
+}\textsuperscript{,}\footnote{
+Sin embargo, la proposición de equivalencia ricardiana ha provocado que algunos autores, siguiendo un razonamiento similar al de BARRO, defiendan la existencia de efectos no keynesianos en la política fiscal.
+
+Los efectos no keynesianos de la política fiscal han sido esgrimidos como argumento en favor de las recientes experiencias de consolidación en numerosos países de la zona euro. Con agentes que forman sus expectativas de forma racional, conociendo la Restricción Presupuestaria del Gobierno, una política fiscal contractiva puede tener efectos expansivos al acompañar las reducciones de gasto de reducciones creíbles equivalentes en impuestos a través de un \textit{crowding-in} de la actividad del sector privado o incluso reducciones en las primas de riesgo.
+
+En este tipo de modelos, una consolidación fiscal (i.e. política fiscal restrictiva) puede ir acompañada de una expansión de la actividad agregada. El mecanismo fundamental detrás de este tipo de efectos es el siguiente:
+\begin{lnum}
+    \item Los agentes privados son conscientes de la restricción intertemporal a la que se enfrenta el gobierno;
+    \item Ante las dudas sobre la sostenibilidad de las finanzas públicas, una consolidación fiscal hoy (siempre que resulte creíble), puede despejar dicha incertidumbre y generar confianza sobre el futuro; y,
+    \item De esta manera, dicha política será percibida por los agentes como unos menores pagos de impuestos en el futuro. La riqueza disponible de los agentes aumentaría y al mismo tiempo se reduciría la incertidumbre sobre su renta futura ya que los agentes confían en un saneamiento de las cuentas públicas. Ambos efectos tendrían un impacto positivo sobre el consumo que podría compensar el efecto de la reducción inicial del gasto público.
+\end{lnum}
+
+El razonamiento anterior es tanto como suponer un multiplicador keynesiano negativo.
+} 
+
+No obstante, la conclusión más clara (y aceptada) que otorga el modelo es la noción de que la Política Fiscal no es tan efectiva como anticipaban los keynesianas. Los agentes se comportan de manera racional y, en consecuencia, tienen en cuenta el comportamiento del resto de los agentes a la hora de tomar sus decisiones. Cuando el Gobierno decida llevar a cabo una Política Fiscal muy expansiva, es normal y coherente pensar que los agentes anticiparán un aumento de la recaudación del Estado en un periodo posterior para hacer frente a esta, lo que conduciría a un aumento del ahorro y un impacto menor de la Política Fiscal en el crecimiento a largo plazo (llevado al límite, las conclusiones del modelo).
+
+\paragraph{Limitaciones: Incumplimiento de la Equivalencia Ricardiana} 
+Ahora bien, ¿son estos resultados concluyentes y determinantes a la hora de verificar la ineficacia de la Política Fiscal? No del todo. Para que se verifique la equivalencia ricardiana es necesario que se cumplan una serie de supuestos de carácter muy restrictivo. Por ejemplo, algunas posibles razones del incumplimiento de la equivalencia ricardiana serían las siguientes (ver HEIJDRA, 2017, pág 192):
+\begin{la}
+    \item \textbf{Vidas finitas} (MGS). Si los individuos tienen un horizonte finito o sólo son parcialmente altruistas anticiparán que parte de la carga fiscal recaerá en generaciones futuras. Esto conducirá a que los hogares incrementen el consumo en el momento presente y reduzcan los recursos destinados a la acumulación de capital (por tanto, modificando las decisiones);
+    \item \textbf{Coste de endeudamiento heterogeneo}. Si, por ejemplo, el coste de endeudamiento (el coste del capital) no es homogeneo, en particular, si es más bajo para el Sector Público ($r_{\text{Público}}$) que para el Sector Privado ($r_{\text{Privado}}$), enntonces los títulos de deuda sí que serán riqueza neta ya que, endeudándose el Sector Público, los agentes esperarán pagar menos impuestos para hacer frente a esa deuda futuro de lo que deberían en caso de aumentar la recaudación ya y tener que endeudarse los agentes para hacer frente al consumo.
+    \item \textbf{Impuestos distorsionantes} (no de suma fija). En presencia de impuestos distorsionantes, que incorporen efecto sustitución (p.ej. sobre las rentas del trabajo o de capital), no se cumplirá la equivalencia ricardiana y el momento de pagar el impuesto importa porque afecta a los incentivos para ahorrar y la oferta de trabajo relativa. Ante una bajade se los impuestos al trabajo se espera una mayor oferta de trabajo, lo que daría lugar a un mayor empleo y mayor output. o Hilar con la imposición óptima de Ramsey (regla de la elasticidad inversa);
+    \item \textbf{Política de gasto ejecutada en gastos de inversión productiva}. La equivalencia ricardiana se cumple asumiendo que la política de gasto se ejecuta en gastos corrientes, no en gastos de inversión productiva que pudieran generar un rendimiento adicional que permitiera una autofinanciación completa mediante un mayor crecimiento potencial y unos mayores ingresos asociados;
+    \item \textbf{Restricciones de liquidez y mercados de capitales no completos o imperfectos}. BARRO supone mercados de capitales completos y perfectos, de manera que el tipo de interés es igual para los agentes privados y el sector público y además no hay restricciones de créditos. Si los mercados de capitales no son perfectos, en presencia de restricciones de liquidez, el consumo de los individuos será más sensible a la renta actual; y,
+    \item \textbf{Racionalidad limitada, comportamiento miope o falta de información} (CAMPBELL y MANKIW y THALER): Aunque los mercados de capital fueran perfectos, si una fracción de los consumidores son miopes y consumen su renta actual, tampoco se cumplirá la equivalencia ricardiana porque el consumo aumentaría inmediatamente tras una bajada de impuestos. Por otro lado, si la deuda fuese sostenible en el tiempo, los Agentes no tendrían porque esperar un incremento futuro de impuestos.
+\end{la}
+
+Por tanto, ¿se ajustan el modelo a la realidad? ¿Podemos considerar que sus resultados son determinantes? Pongamos, por ejemplo, énfasis en ver qué sucede con la senda de la deuda y cómo influye esto en la validez de las conclusiones. ¿Qué sucede si la deuda es sostenible en el tiempo?
+
+
+\subsubsection{Dominancia: Fiscal vs. Monetaria}
+Hasta aquí hemos analizado los principales conceptos relacionados con el deficit público, su efectividad, sus formas óptimas de financiación, la importancia de mantener una senda de deuda estable (equilibrada) y como podemos calificarla como tal (como mínimo, desde una perspectiva teórica). Pero al principio introdujimos la Restricción Presupuestaria del Gobierno con la posibilidad explícita de financiar la deuda mediante el aumento de la base monetaria. Esto es precisamente lo que se conoce como \textbf{monetización de la deuda} y ha sido objeto de debate a lo largo de casi cien años. 
+
+Veamos pues, brevemente, las principales aportaciones de la literatura económic al respecto y, en particular, las implicaciones que esto tiene en términos de Política Económic pues cabe recordar que el dinero juega un papel fundamental eían la econom y el menoscabo (inherente) de la confianza en este por parte de los agentes no es cuestión valadí.
+
+\subsection{Política Fiscal y Política Monetaria: Vínculo}
+Retomando la Restricción Presupuestaria del Gobierno, incluyendo esta vez la parte monetaria, tendríamos la siguiente expresión:
+
+\eqblock{
+\begin{aligned}
+    G_ti_{t-1}B_t=T_t+(B_t-B_{t-1})+\underbrace{(M_t-M_{t-1})}_{\text{\scriptsize Aspectos monetarios de la PF}}
+\end{aligned}
+}{Restricción Presupuestaria del Gobierno: Monetización. Aspectos monetarios de la Política Fiscal}
+
+
+
+
+
+\clearpage
+\section{Dinámica del Déficit Público}
+Para valorar la sostenibilidad de la deuda tenemos, en primer lugar, que entender lo que es la \textbf{dinámica de la deuda}.
+
+Para entender este concepto es ilustrativo retomar la Restricción Presupuestaria Intertemporal del Gobierno. Nos centraremos en el aspecto puramenta funcional del Gobierno por lo que ignoraremos los posibles efectos que se deriven de la Política Monetaria. Por tanto, la RPG quedaría:
+
+\eqblock{
+\begin{aligned}
+    &\text{RPG:}&&B_t=(1+i_t)B_{t-1}+\underbrace{G_t-T_t}_{X_t}\\[2em]
+    &\overset{\left(\frac{B_t}{Y_t}=\frac{(1+i_t)B_{t-1}}{Y_t}+\frac{X_t}{Y_t}\right)}{\underbrace{\Longrightarrow}_{\substack{\text{\scriptsize En términos nominales}\\\text{\scriptsize Dividimos por: $\frac{\cdot}{Y_t}$ (renta nominal)}}}}
+    &&\boxed{b_t=\left(1+\underbrace{\overbrace{i_t+\pi_t}^{r_t}-\overbrace{g}^{\substack{\text{\tiny Crecimiento real}\\\text{\tiny de la Economía}}}}_{\lambda}\right)\;b_{t-1}+x_t}\\[2em]
+    &\underbrace{\Longrightarrow}_{\text{Iteramos}}
+    &&\text{\scriptsize
+    $
+    \left(\begin{aligned}
+        &b_t=(1+\lambda)\underbrace{b_{t-1}}_{\text{\scriptsize $b_{t-1}=(1-\lambda)b_{t-2}+x_{t-1}$}}+x_t\\[0.5em]
+        &b_t=(1+\lambda)^2\underbrace{b_{t-2}}_{\text{\scriptsize $b_{t-2}=(1-\lambda)b_{t-3}+x_{t-2}$}}+(1+\lambda)x_{t-1}+x_t\\[0.5em]
+        &b_t=\underbrace{(1+\lambda)^3b_{t-3}}_{\text{\scriptsize Exponencial de Ratio cte.}}+\underbrace{(1+\lambda)^2x_{t-2}+(1+\lambda)x_{t-1}+x_t}_{\text{\scriptsize Se expande a la TAYLOR}}\\[0.5em]
+        &\hspace{9em}\vdots\\[0.5em]
+        &b_t=(1+\lambda)^Nb_{t-N}+\sum_{s=0}^{N-1}(1+\lambda)^sx_{t-s}
+    \end{aligned}\right)$
+    }\\[0.5em]
+    &\underbrace{\Longrightarrow}_{\substack{\text{\scriptsize Invertimos e imponemos}\\\text{\scriptsize Condición de transversalidad}}}
+    &&\text{\scriptsize
+    $
+    \left(\begin{aligned}
+        &\text{\scriptsize Backward-looking:}\quad b_t=(1+\lambda)^Nb_{t-N}+\sum_{s=0}^{N-1}(1+\lambda)^sx_{t-s}\\[0.5em]
+        &\hspace{10em}\Downarrow\;\;\;\substack{\text{\tiny Mismo procedimiento pero hacia adelante}\\
+        \text{\tiny $b_{t+1}=(1+\lambda)b_{t-1}+x_t\;\Rightarrow\;b_t=\frac{b_{t+1}-x_{t+1}}{1+\lambda}$}\\
+        \text{\tiny $\vdots$}\\
+        \text{\tiny $b_{t}=\frac{b_{t+2}}{(1+\lambda)^2}-\frac{x_{t+2}}{(1+\lambda)^2}-\frac{x_{t+1}}{(1+\lambda)}$}}\\[0.5em]
+        &\text{\scriptsize Forward looking:}\quad b_t=(1+\lambda)^{-N}b_{t+N}-\sum_{s=0}^{N-1}\frac{x_{t+s}}{(1+\lambda)^s}\\[0.5em]
+        &\hspace{10em}\Downarrow\\[0.5em]
+        &\hspace{1em}
+        \begin{aligned}
+            &\hspace{4em}\text{\scriptsize Incorporamos Expectativas}\\
+            &\hspace{9.2em}+\\
+            &\text{\scriptsize Condición de Transversalidad: $\;\lim_{t\to\infty}{(1+\lambda)^{-N}b_{t+N}}=0$}
+        \end{aligned}
+    \end{aligned}\right)$
+    }\\[2em]
+    &\Longrightarrow
+    &&\underbrace{\boxed{b_t=-E\left[\left.\sum_{s=0}^\infty\frac{x_{t+s}}{(1+\lambda)^s}\;\right|\;\Omega_{t}\right]}}_{\substack{\text{DP (nominal) $=$ Flujo Esperado Superávits primarios}\\\text{(descontados a la tasa $\lambda$)}}}
+\end{aligned}
+}{Senda del Déficit Público: Expectativas, Crecimiento e Incremento de la Deuda Pública. Dinámica y sostenibilidad del Déficit Público}
+
+Por tanto, vemos como pasamos de: (i) la expresión de la Restricción Presupuestaria del Gobierno donde expresamos la Deuda Pública en el periodo $t$ como la suma del Gasto Público en servicio de la Deuda Pública y el Déficit Primario del Sector Público ($X_t$); a, (ii) su análoga en términos nominales y sobre sus sendas de crecimiento (aplicando logaritmos). 
+
+La tercera expresión, la más importante, la obtenemos proyectando este senda hacia delante, teniendo en cuenta el papel que las Expectativas juegan en esta previsión (influencia directa sobre la inflación y Tipo de Interés Nominal, e indirecta sobre el resto de variables a través de las anteriores) y aplicando la restricción/condición de transversalidad (que los agentes tenedores de Deuda Pública no la conservan en caso de que el Estado no pueda hacer frente a sus obligacions). Con todo, la Deuda Pública (tasa de variación en términos nominales) se expresa como función de las expectativas de los agentes sobre los flujos de superávits primarios descontados al presente por una tasa $\lambda=1+i_t-\pi_t-g$.
+
+\subsection{Sostenibilidad de la Deuda Pública} 
+Y, ¿qué nos dicen estos resultados? Retomando la identidad contable expresada en tasas de crecimiento y en términos nominales, vemos como tenemos una Ecuación en Diferencias. Diremos que la deuda pública es sostenible\footnote{\textbf{Diferencia entre solvencia y sostenibilidad}. La solvencia es un concepto que hace referencia a un sujeto (p.ej. el Estado), mientras que la sostenibilidad se refiere a una política (p.ej. la política fiscal):
+\begin{la}
+    \item \textbf{Solvencia}. Diremos que un país es solvente cuando puede atender al pago de intereses de su deuda y es capaz de refinanciarla; y,
+    \item \textbf{Sostenibilidad}. Una política fiscal (o un déficit) será sostenible si se puede mantener en el tiempo sin que dé lugar a una situación explosiva. 
+\end{la}
+Así, ser puede ser solvente sin ser sostenible (al menos durante un tiempo), pero no al revés (i.e. no se puede ser sostenible sin ser solvente). Cuando hablamos de sostenibilidad del déficit nos estamos refiriendo a solvencia, ya que los problemas de liquidez pueden solucionarse mediante una reestructuración de los pagos.
+} cuando la política económica (fiscal y monetaria) que la genera se puede mantener indefinidamente en el tiempo, esto es, cuando permite alcanzar una ratio constante de (Deuda Pública)/PIB. De ahí que esta ratio constituya un importante determinante del riesgo-país. En contraposición, diremos que una situación presupuestaria se considera insostenible si existe un déficit estructural permanente que da lugar a un efecto bola de nieve y genera un incremento continuado de la ratio Deuda Pública/PIB. Los problemas de sostenibilidad pueden desencadenar en lo que se conoce como sudden-stop, consistente en el rechazo de los acreedores a seguir prestando fondos al gobierno, lo que obligará a tomar medidas duras para reducir la necesidad de financiación.
+
+\eqblock{
+\begin{aligned}
+    &\text{Si $\lambda>0\;\Longrightarrow\;g<r$}\;\Longrightarrow\;\text{\textbf{Senda explosiva}}\;\underbrace{\Longrightarrow}_{\text{\scriptsize Impoerativo}}x_t<0\;\\[0.5em]
+    &\text{Si $\lambda<0\;\Longrightarrow\;g>r$}\;\Longrightarrow\;\text{\textbf{Senda sostenible}}\;\underbrace{\Longrightarrow}_{\text{\tiny Podemos}}\;\downarrow \text{DP}+\left(\overbrace{\sum_{t=x}^Tx_t>0}^{\text{\tiny Acumulando Déficits Primarios}}\right)
+\end{aligned}
+}{Senda del Déficit Público: Condiciones de Sostenibilidad. Dinámica y sostenibilidad del Déficit Público}
+
+Gráficamente, la sostenibilidad de la Deuda Pública vendría represtando como sigue:
+
+\textbf{INCLUIR GRÁFICOS DE SOSTENIBILIDAD DE LA SENDA}
+
+\subsection{Déficit Pública: Apertura económica}
+No obstante, el análisis de sostenibilidad presentado obvia algunos aspectos muy relevantes que afectan a la dinámica de la Deuda Pública. En particular, es importante distinguir entre economías abiertas o cerradas.
+
+\subsubsection{Deuda Pública: Economía Cerrada}
+En una economía cerrada, será especialmente relevante analizar si los mercados de capitales cuentan con capacidad suficiente para absorber la senda de crecimiento de la Deuda Pública, que dependerá principalmente de la capacidad de financiación del ahorro privado. Si el ahorro privado no es suficientemente grande, podría impedir financiar el Déficit Público a través de la emisión de títulos. 
+
+Analíticamente, si reinterpretamos la identidad contable en términos nominales tenemos que:
+
+\eqblock{
+\begin{aligned}
+    &\begin{cases}
+        &\boxed{\text{Identidad Contable:}\quad B_t=B_{t-1}+S_t-I_t}\\[0.5em]
+        &\left.\begin{aligned}
+            &\text{RPG:}\quad &&B_t-B_{t-1}=X_t+i_tB_t\\[0.5em]
+            &\text{S}_N:\quad &&S_t=I_t+(B_t-B_{t-1})
+        \end{aligned}\right\}\;
+        \Longrightarrow\;\overbrace{X_t=B_t=\underbrace{(S_t-I_t)}_{\text{\scriptsize Exceso de Fondos Prestables}}-\overbrace{i_tB_{t-1}}^{\text{\scriptsize Deuda heredada}}}^{\text{\scriptsize Limitación básica por cantidad de fondos prestables y deuda heredada}}
+    \end{cases}\\[2em]
+    &\underbrace{\Longrightarrow}_{Y_t=(1+\pi_{t}+g_{t})Y_{t-1}}
+    \begin{cases}
+        \frac{B_t}{Y_t}=\frac{B_{t-1}}{Y_t}+\frac{S_t}{Y_t}-\frac{I_t}{Y_t}\\[0.5em]
+        \frac{B_{t-1}}{Y_t}=\left(\frac{B_{t-1}}{Y_t}\right)\left(\frac{Y_{t-1}}{Y_t}\right)=\frac{b_{t-1}}{(1+\pi_t+g_t)}
+    \end{cases}\;\Longrightarrow\;b_t=+s_t-i_t^º+\frac{b_{t-1}}{(1+\pi_t+g_t)}
+\end{aligned}
+}{Senda del Déficit Público: Economía cerrada. Dinámica y sostenibilidad del Déficit Público}
+
+Si asumimos que $s_t-i_t^º>x_t$ (de lo contrario estaríamos en una situación pésima ya que no podríamos financiar ningún Défiit Público, por muy pequeño que sea), vemos que esta condición de Economía cerrada nos deja únicamente financiar un nivel constante de déficit, marcado como $\bar b$ en el siguiente gráfico:
+
+\textbf{INCLUIR GRÁFICO ECONOMÏA CERRADA}
+
+\subsubsection{Déficit Público: Economía Abierta}
+Por tanto, si queremos financiar un mayor nivel de déficit, deberemos abrir la economía a flujos financieros exteriores (que nos permitirán también no vernos supeditados a nivel de inversión). Sin embargo, para atrear inversores internacionales, será necesario ofrecer una rentabilidad suficiente en nuestros títulos de deuda. Analíticamente:
+
+\eqblock{
+\begin{aligned}
+    i_t=\underbrace{i^*}_{\text{\scriptsize Tipo de referencia}}+\overbrace{\rho}^{\text{\scriptsize Prima riesgo país}}\qquad \text{donde, }\rho\equiv
+    \begin{cases}
+        \text{Volatilidad del país }(\sigma)\Longrightarrow\;\uparrow\sigma\;\Longrightarrow\;\uparrow\rho\\[0.5em]
+        \text{Volatilidad TC }(\sigma_e)\;\Longrightarrow\;\uparrow e\;\Longrightarrow\;\downarrow K_{ext}\;\Longrightarrow\;\uparrow\rho
+    \end{cases}
+\end{aligned}
+}{Senda del Déficit Público: Economía abierta. Dinámica y sostenibilidad del Déficit Público}
+
+Como vemos, el atractivo inversor se verá influenciado por la rentabilidad. Sin embargo, la volatilidad del país y del tipo de cambio encarecen enormemente los costes de financiación por lo que habrá de prestar especial atención a la posibilidad de que la apertura financiera traigo consigo una dinamica explosiva del endeudamiento público.
+
+\subsection{Implicaciones de Política Económica}
+Hemos visto cómo la sostenibilidad de la deuda depende de distintas variables sobre las que puede influir el sector público. Por lo tanto, a modo de síntesis, cabe recalcar que el:
+\begin{lnum}
+    \item Políticas de fomento al crecimiento económico: El crecimiento económico consigue reducir la ratio deuda/PIB al aumentar el denominador. De ahí la importancia del destino que se les dé a esos fondos: gasto corriente o inversión pública.
+o
+Se pueden llevar a cabo reformas estructurales destinadas a aumentar el crecimiento del output mediante un mejor aprovechamiento de la capacidad productiva y aumentando el crecimiento de la productividad de los factores.
+2)
+Políticas que reduzcan el tipo de interés:
+o
+En línea con esto CARMEN REINHART introduce el concepto de represión financiera.
+•
+La idea es que los gobiernos canalizan el ahorro privado hacia la deuda pública con el objetivo de limitar el tipo de interés de la deuda pública de forma que se garantiza su sostenibilidad.
+•
+Una manera de hacerlo es limitar otras fuentes de ahorro para conducir al ahorrador a la compra de estos títulos. Por ejemplo, se podría (i) limitar los intereses ofrecidos por los bancos comerciales, lo que reduce su atractivo y aumenta el de la deuda pública; (ii) nacionalizar fondos de inversiones privados para invertirlos en deuda pública, con lo que se genera una demanda de deuda que reduce el tipo de interés; (iii) limitar la inversión exterior.
+3)
+Consolidación fiscal: Supone una reducción del déficit por el aumento de los impuestos o la reducción de los gastos (o ambas).
+o
+En cualquier caso, esta solución en ocasiones presenta inconvenientes:
+•
+Puede afectar a la tasa de crecimiento y agravar el problema:
+▫
+En 2012, el FMI admitió que los multiplicadores fiscales eran mayores que los que había estimado para aconsejar una consolidación fiscal rápida (las investigaciones anteriores a la Gran Recesión señalaban que estaban cercanos a 1 o incluso ligeramente superiores). Ante un multiplicador elevado, el ajuste podría ser gradual, sostenido y acompañado de reformas estructurales ante la existencia de un problema estructural de las finanzas públicas.
+•
+Es necesario tener en cuenta el momento del ajuste:
+▫
+Por otra parte, existe consenso en que es mejor realizar el ajuste presupuestario en períodos de crecimiento económico y no en recesión, en vistas de realizar una política fiscal contracíclica.
+•
+Hay que tener en cuenta la composición del ajuste:
+▫
+Por el lado de los gastos, si se reducen los gastos en capital productivo afectará a la productividad del país.
+▫
+Por el lado de los ingresos, hay que tener en cuenta el grado de distorsión de cada uno de los impuestos y del sistema impositivo en general26.
+La credibilidad del ajuste es importante para ver la reacción de los agentes:
+▫
+El objetivo sería desencadenar los efectos no keynesianos del déficit. Una reducción permanente del gasto público creíble será percibida por los agentes como menores
+
+pagos de impuestos en el futuro, lo que generaría un efecto positivo sobre el
+consumo y la inversión que compensaría el efecto inicial de la reducción del gasto público. La explicación reside en que los agentes son conscientes de la restricción presupuestaria del gobierno.
+▫
+Una forma de ganar credibilidad es a través del desarrollo de reglas fiscales. Una regla fiscal persigue limitar el déficit mediante la fijación de límites numéricos sobre determinados agregados presupuestarios y/o mediante procedimientos presupuestarios. Por ejemplo:
+→
+La limitación del crecimiento nominal del gasto público por debajo del crecimiento nominal del PIB potencial (regla de gasto de la UE) o limitación del crecimiento del consumo público.
+→
+Limitación del déficit público (en cualquiera de sus vertientes).
+→
+Limitación de la deuda pública.
+4)
+Monetización del déficit.
+5)
+Enajenación del patrimonio del Estado.
+6)
+Default, quita de deuda o reprogramación: Si el nivel de deuda es mayor que el de estado estacionario puede ocurrir que la consolidación fiscal sea insuficiente y que la generación de un superávit aún mayor sea inviable económicamente. Por ello, un gobierno podría plantear alcanzar un acuerdo con acreedores de reprogramación o quita de la deuda. El problema es que en términos dinámicos podría ser difícil recuperar la confianza en la deuda pública de un país ante episodios recurrente de quita.
+\end{lnum}
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+%% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+
+
+\clearpage
+\anexo{Análisis de la Deuda Pública en España}\label{anx:deuda_españa}
+
+
+
+
+
+
+
+\end{document}
