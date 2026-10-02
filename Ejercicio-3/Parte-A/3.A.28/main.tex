@@ -1,0 +1,1253 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Tema 3.A.28 -- La tasa natural de paro y de la NAIRU\\
+\large La persistencia del desempleo}
+\author{Marcelo Ortega}
+\date{Diciembre 2025}
+\newcommand{\TemaCode}{3A28}
+
+\oldtitle{Tema 3.A.31. Análisis macroeconómico del mercado de trabajo: teoría del desempleo de equilibrio; la NAIRU y la persistencia en el desempleo}
+\changerationale{Se clarifica el título eliminando la referencia explícita a “macroeconomía” (también el contenido de los nuevos títulos A.26 y A.27 se clasifican generalmente dentro de esta rama de la Economía).}
+
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+    Se comenzará con una revisión histórica de la curva de Phillips, eje de los siguientes apartados; pero esto sólo debería de exponerse muy brevemente. Se recomienda poner énfasis en la noción de tasa de paro natural y en las implicaciones sobre la curva de Phillips de cada tipo de expectativas, sin entrar en el desarrollo analítico de la curva de Lucas.
+
+    A continuación, se introducen las dos principales aproximaciones neokeynesianas, y por tanto estos dos apartados son los que requieren una exposición con mayor detalle.
+    \begin{lnum}
+        \item Primero, se analiza un modelo sencillo de la NAIRU. que sirve también para anali7.ar la persistencia del desempleo; y,
+        \item Segundo, se desarrolla un modelo DSGE de la NEK en el que el mercado de trabajo se incorpora a través de un modelo de búsqueda y emparejamiento. Se ha optado por incluir también en el tema una versión baseline sin rigideces, pero ésta no debería de desarrollarse en la exposición, ya que es objeto de estudio del [\authorfont{Ver Tema 3.A.26}] y no responde estrictamente al título de este tema: se incluye para contextulizar el modelo completo de la NEK y facilitar la comprensión.
+    \end{lnum}
+    
+    De cara a la exposición oral, convendría cantar una versión simplificada del modelo DSGE de la NEK, sin entrar en todo el detalle de la formulación analítica. En el \textbf{Anexo 3}, se plantea la curva de Phillips salarial en el marco del modelo de GALÍ, cuya incorporación a la exposición oral puede resultar enriquecedora.
+
+    Finalmente, se presenta la evidencia empírica sobre la cuestión. Esta es especialmente relevante en este tema, por lo que ha de ser expuesta con detenemiento.
+    }
+\vspace{1cm}
+
+\modificaciones{
+    \textbf{IMPORTANTE:} La principal crítica dirigida hacia la NAIRU es que utiliza HEA, averiguar más al respecto, me lo ha dicho ROSELL
+
+    \textbf{IMPORTANTE:} Una de las principales críticas dirigidas hacia la fijación de precios à la CALVO es que no está microfundamentada
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}\label{intro}
+Robinson, the doyen of Cambridge radical economic thought, began her influential book, Introduction to the Theory of Employment, (reprinted seven times by the 1950s) with these wellknown words: “The modern economic system fails to provide employment continuously for all who desire to work....”(Robinson, 1937 and 1969) The consensus that she and Keynes shared was that markets did not clear automatically and as complex social constructions, labour markets required very different kinds of policies to ensure optimum outcomes. Both Keynes and Robinson, had come to the conclusion that the rules of supply and demand bid down the price of labour  without providing sufficient reason for the private sector to invest in human capital. Most importantly, labour markets would have to provide a sufficient amount of steady employment domestically and internationally
+
+
+
+
+\subsection{Contextualización}\label{context}
+
+\subsubsection{Relevancia}\label{importance}
+El análisis macroeconómico del mercado de trabajo tiene dos objetivos fundamentales. Por una parte, trata de explicar las fluctuaciones cíclicas, así como los movimientos a largo plazo de las variantes relevantes del mercado de trabajo, como la tasa de desempleo, las horas trabajadas y las vacantes. Por otra parte, el análisis macroeconómico del mercado de trabajo pem1ite analizar la influencia del equilibrio del mercado de trabajo como mecanismo de transmisión de las perturbaciones y de las políticas económicas, monetaria y fiscal. y, por tanto, la eficacia de las políticas de estabilización macroeconómicas. La existencia de desempleo involuntario durante las fases recesivas del ciclo constituye uno de los mayores problemas de las economías desarrolladas actuales (Galí, 2010) ya que el desempleo involuntario tiene importantes costes tanto en tém,inos ecónomicos, al existir recursos ociosos que alejan a las economías de su nivel potencial de producción, como de bienestar, para las personas desempleadas y para el conjunto de la sociedad. Por ello, el análisis del mercado de trabajo constituye un elemento central dentro de la teoría macroecónomica y de las distintas escuelas de pensamiento (Snowdon y Vane, 2005).
+
+
+\subsubsection{Historia}\label{history}
+Desde los años 60, el análisis macroeconómico del mercado de trabajo ha pivotado en tomo a la relación entre desempleo e inflación, observada incialmente por Phillips ( 1958). El posterior desarrollo y justificación teórica de esta relación ha dado lugar a la introducción de distintas nociones de desempleo de equilibrio de las economías, en torno al cual fluctuaría el desempleo a corto plazo. 
+
+No obstante, el incremento del desempleo en las economías desarrolladas tras los dos shocks del petróleo de los años 70 y la posterior persistencia de elevados niveles de desempleo en las dos década siguientes, fundamentalmente en los países europeos, ha dado lugar a un crecientes interés por el estudio de las causas de esa persistencia (Dlanchard, 2006). La interacción de las pertubaciones macroecónomicas con el distinto grado de rigidez de las instituciones y políticas del mercado de trabajo podría explicar tanto la persistencia del desempleo como gran parte de las diferencias empíricas observadas en el desempleo entre países. Del mismo modo, la rigidez en las instituciones del mercado de trabajo afectará a la transmisión de las perturbaciones macroecónomicas y a la eficacia de las políticas de estabilización. Por ello, el análisis macroeconómico del mercado de trabajo y sus implicaciones constituye una cuestión de máximo interés.
+
+\subsubsection{Problemática}\label{problem}
+En el presente Tema intentaremos dar respuesta a las siguientes cuestiones:
+\begin{lnum}
+    \item \textit{¿Qué es el desempleo estructural o de equilibrio? }
+    \item \textit{¿Cómo se modeliza éste?} En especial, \texit{¿qué factores determinan el nivel?}
+    \item {¿cómo las teorías estudiadas en los demás se aplican para hallarlo?}
+\end{lnum}
+
+\subsection{Estructura de la exposición}\label{structure}
+
+
+
+
+
+
+\clearpage
+\section{Descomposición del desempleo: Desempleo y Tasa Natural}
+\puntosclave{
+    La curva de Phillips es una herramienta que permite medir la relación entre las variaciones en el nivel general de precios y la inflación, y por tanto un importante instrumento de política económica así como una modelización central de los posibles equilibrios en los que se puede encontrar el mercado de trabajo. La especificación germinal es de orden empírica, pero a lo largo de los años, las diferentes escuelas de pensamiento económico han aplicado sus spuestos de referencia para incorporarla en su cuerpo teórico.
+
+    La primera Teoría que estudia el desempleo como un factor estructural fue introducida por FRIEDMAN (1968).
+
+    Los modelos de emparejamiento son la aplicación a la Economía Laboral de las teorías de búsqueda, y son especialmente útiles para exp licar el desempleo friccional. Siguiendo a FRIEDMAN (1968), el desempleo friccional es un importante componente de la tasa natural de paro. 
+    
+    La Ley de Okun es una relación empírica que permite medir la sensibilidad del empleo a los movimientos cíclicos y a los shocks agregados en el mercado de bienes.
+}
+
+Las series temporales en economía se pueden descomponer en \textbf{tendencia}-\textbf{ciclo}-\textbf{ruído}. Esta metodología es especialmente relvante en este Tema puesto que el concepto de equilibrio en el mercado de trabajo se refiere al primero de los tres: la tendencia o \textbf{nivel estructural}. 
+
+La incorporación del desempleo desde una perspectiva macroeconómica (enfoque generalista-walrasiano) se inicia con el \textit{descubrimiento} (con muchas comillas) de la curva de PHILLIPS, que es una de las relaciones fundamentales en el análisis macroeconómico del mercado de trabajo y tiene un papel central en las controversias sobre la relación entre inflación y la tasa de desempleo.
+
+\imagenfit{CurvaPHILLIPS.png}{Curva de PHILLIPS: Reino Unido 1861-1913}{PHILLIPS, 1958}
+
+La primera aproximación para fundamentar teóricamente, e incorporar desde un enfoque macroeconómico, la existencia de la Curva de PHILLIPS fue dado por el marco de la Síntesis Neoclásica, ortodoxia en la época.\footnote{Véase [\authorfont{Ver Anexo \ref{anx:lipsey}}] para el desarrollo de LIPSEY.\\
+
+Durante los años 60, los economistas de la SNC integraron la curva de PHILLIPS ya que permitía establecer un mecanismo para explicar la inflación que, hasta ese momento, no existía dentro del modelo IS-LM. En efecto, en el modelo IS-LM se asumía el nivel de precios como dado, de modo que los cambios en lademanda agregada afectan a la renta de la economía y al empleo. 
+} Estas portaciones se pueden resumir como la existencia de una relación negativa entre la tasa de variación de los salarios (nominales) y la tasa de desempleo, ya que el primero dependerá del exceso de demanda en el mercado de trabajo, y podrá aproximarse por el nivel de desempleo:
+
+\eqblock{
+\begin{aligned}
+    \boxed{\frac{\dot W}{W}=f(U)}
+\end{aligned}
+}{Curva de PHILLIPS. Marco Síntesis Neoclásica}
+
+Por tanto, permitiría relacionar la determinación del nivel de producción y el empleo con la inflación de salarios y precios, pudiéndose explotar la relación estable entre inflación y desempleo, mediante políticas expansivas de demanda.\footnote{SAMUELSON y SOLOW (1960), tras discutir los posibles determinantes de la inflación en Estados Unidos en la segunda década de los 50, presentan la curva de PHILLIPS para Estados Unidos, estableciendo la relación entre tasas de variación de los salarios y tasa de desempleo. A continuación, estiman la curva de PHILLIPS en términos de tasa de variación de los precios y tasa de desempleo y encuentran que, al igual que en el caso de los salarios, existe una relación negativa entre la inflación de precios y desempleo. Al discutir las implicaciones de este trade off, argumentan que puede ser explotado, al menos a corto plazo, desde el punto de vista de la política económica para alcanzar las combinaciones deseadas de inflación y desempleo. Aunque SAMUELSON y SOLOW (1960) plantean la dificultad de explotar la curva de PHILLIPS en el largo plazo, por la complejidad de sus determinantes, a partir de su trabajo, el trade off existente entre inflación y desempleo, pasó a formularse en términos de inflación de precios y a interpretarse la curva de PHILLIPS como un menú de combinaciones de inflación y desempleo que las autoridades económicas pueden explotar. De este modo sería posible alcanzar menores tasas de desempleo de forma pemrnnente, mediante impulsos de la demanda agregada, aceptando de forma permanente una mayor inflación:
+
+\imagenfit{CPHILLIPS_EEUU.png}{Curva de PHILLIPS modificada para EEUU}{SAMUELSON y SOLOW, 1960}
+} Como vemos, dentro del marco de la Síntesis, el nivel de desempleo era considerado como consecuencia de un desequilibrio en términos agregados, por la existencia de fricciones nominales que debían (y podían) sortearse mediante poíticas expansivas de $DA$.
+
+\subsection{Tasa natural de paro: FRIEDMAN}
+Sin embargo, esta interpretación presenta una limitación fundamental: al establecer una relación entre salarios nominales y desempleo está ignorando el hecho de que en el mercado de trabajo el equilibrio queda determinando por el salario real. 
+
+Así, FRIEDMAN (1968) explica, precisamente, que la fundamentación teórica de la SNC, \textit{contiene un defecto fundamental: la falta de distinción entre salarios nominales y salarios reales}. Es decir, considera que un menor nivel de desempleo indica un exceso de demanda de trabajo lo que producirá una presión al alza de los salarios reales, no de los nominales, por lo que la Curva de PHILLIPS original, al estar expresada en términos de salarios nominales, no estaría bien especificada. 
+
+Para ver las implicaciones del argumento de FRIEDMAN, hay que analizar la determinación del salario en el mercado de trabajo. Las empresas y los trabajadores negociarán el salario nominal, pero su variable de interés último es el salario real. Cuando negocien el salario nominal para un determinando período de tiempo, lo harán teniendo en cuenta sus expectativas de inflación, anticipando así cual será el salario real. Por lo tanto, la curva de Phillips debería ampliarse para considerar las expectativas de inflación, $\pi_t^e$, como una variable adicional en la determinación de la tasa de variación de los salarios nominales. La curva de PHILLIPS aumentada con expectativas de inflación sería:
+
+\eqblock{
+\begin{aligned}
+    &\underbrace{\underbrace{\frac{\dot W}{W}}_{\substack{\text{\scriptsize Variación de los}\\\text{\scriptsize salarios nominales}}}=\underbrace{f(U)}_{\substack{\text{\scriptsize Tasa de desempleo}\\\text{\scriptsize refleja Exceso $L^d\equiv X_L$}}}+\overbrace{\pi_t^e}^{\substack{\text{\scriptsize Variación de la inflación}\\\text{\scriptsize esperada: \textbf{dinámico}}}}}_{}\\
+    &\hspace{7.5em}\Downarrow\\
+    &\hspace{2em}\text{Concepto estructural: \textbf{NRU}}\sim\underbrace{\boxed{\frac{\dot P}{P}=\alpha(U_n-U)+\pi_t^e}}_{\substack{\text{\scriptsize Teniendo en cuenta todas las imperfecciones}\\ \text{\scriptsize estructurales propias del mercado.}\\\text{\scriptsize Corresponde al EG Walrasiano}}}\\[1em]
+\end{aligned}
+}{Incorporación de HEA: Tasa natural de desempleo (NRU). FRIEDMAN (1968)}
+
+Es decir, la variación de los salarios nominales queda determinada por la tasa de desempleo (que refleja el exceso de demanda en el mercado de trabajo) y la variación de la inflación esperada. Además, al ser un fenómeno dinámico (estructural) introduce el concepto de \textit{tasa de natural de desempleo}, que será aquella asociada con el equilibrio del mercado en el mercado de trabajo y a la estructura de salarios reales resultantes: el nivel de desempleo resultante del equilibrio general Walrasiano que recoge las características estructurales del mercado de trabajo y de los bienes (fricciones e imperfecciones, costes de información, de movilidad, estructura impositiva); y se expresará en términos del nivel general de precios.
+
+La introducción de la inflación esperada en la Curva de PHILLIPS implica que no existe una única curva de PHILLIPS, sino distintas curvas asociadas cada una de ellas a una inflación esperada diferente. Para ilustrarlo, se puede plantear la curva de PHILLIPS en términos de variación de los precios. 
+
+\imagenfit{HEA_CPHILLIPS.png}{Curva de PHILLIPS con expectativas adaptativas}{Apuntes ICEX-CECO. Tema 3.A.28}
+
+Se puede suponer que la economía se encuentra inicialmente en equilib rio en un punto como $A$, con una tasa de desempleo $\bar U$ una tasa de innflación y una inflación esperada de la misma magnitud ($\pi_0=\pi^e$). Si las autoridades económicas llevan a cabo una política expansiva de demanda agregada:
+\begin{lnum}
+    \item El exceso de demanda en el mercado de bienes generará una presión al alza de los precios;
+    \item Al incrementarse los precios, si, dadas las expectativas de inflación, los salarios nominales no se modifican, el salario real estaría disminuyendo, por lo que las empresas aumentarían su demanda de trabajo;
+    \item La mayor demanda de trabajo generará un cierto incremento salarial. Con una inflación esperada de $\pi_0$, los trabajadores interpretarían estos incrementos del salario nominal como aumentos del salario real y aumentarían su oferta de trabajo;
+    \item Como resultado, el desempleo se reduciría hasta $U_1$, con una tasa de inflación $\pi_1$, de modo que la economía se encontraría en el punto $B$ de la Curva de Phillips a corto plazo;
+    \item A medida que los trabajadores perciban que sus salarios reales no han aumentado, adaptarán sus expectativas de inflación, $\pi^e=\pi_1$ y demandarán mayores incrementos en los salarios nominales, para incorporar la mayor inflación esperada;
+    \item Al aumentar los salarios, las empresas reducirán su demanda de trabajo, aumentando el desempleo, hasta alcanzarse el punto $C$.
+\end{lnum} 
+
+En este punto, la economía se encuentra en la tasa natural de paro (NRU), pero la tasa de inflación es superior a la que existía inicialmente. Es decir, cuando la inflación es completamente anticipada en las demandas salariales de los trabajadores, el desempleo se sitúa en su tasa natural y no existe una disyuntiva entre inflación y desempleo. Por lo tanto, los puntos $A$ y $C$ describen la situación de equilibrio del mercado de trabajo en la que la inflación es perfectamente anticipada. De este, modo se obtiene la Curva de PHILLIPS a largo plazo, que será vertical en la tasa natural de desempleo, que se considera entonces un parámetro de equilibrio, es decir, estructural de la economía.\footnote{Para exponer, si se requiere, aquí hay algunas implicaciones en términos de política económica.\\
+El hecho de que la curva de Philips sea vertical a largo plazo implica que las políticas expansivas de demanda agregada sólo podrán reducir el desempleo por debajo de la tasa natural de desempleo cuando la inflación no sea totalmente anticipada. Si los agentes tienen expectativas adaptativas, la inflación esperada se basa en los valores anteriores de la inflación y los errores de previsión se incorparán progresivamente en las expectativas. Es decir, las políticas expansivas de demanda podrán reducir el desempleo por debajo de la tasa natural de forma temporal, pero a medida que los agentes incorporen sus errores predicción en las expectativas y la inflación sea totalmente anticipada, la economía volverá a la tasa natural de desempleo y las políticas de demanda no conseguirán reducir el desempleo. La curva de Phillips vertical a largo plazo tiene otra consecuencia importante: si las autoridades económicas tratan de mantener la tasa de paro por debajo de su nivel natural de forma permanente, el resultado será una inflación creciente, es la llamada hipótesis aceleracionista de la inflación.} Por tanto, FRIEDMAN (1968) es el primero en formular teóricamente la existencia de lo que se conoce como desempleo natural.
+
+\textbf{Definición.-} (Desempleo natural) El desempleo natural es la tasa de desempleo de equilibrio a largo plazo de una economía, determinada por las características estructurales e institucionales de su mercado de trabajo, y que se mantiene cuando la producción se sitúa en su nivel potencial; equivale a la tasa de desempleo que persiste una vez descontado el desempleo de origen cíclico. 
+
+Está comúnmente aceptado que el desempleo natural está compuesto por el desempleo estructural y el desempleo friccional (ambos componentes estructurales o de tendencia).
+
+\textbf{Definición.-} (Desempleo estructural) Es el componente del desempleo total que persiste incluso cuando la producción se sitúa en su nivel potencial y no existen fluctuaciones cíclicas, y que surge de desajustes persistentes entre la composición de la oferta y la demanda de trabajo derivados de rasgos estructurales del mercado laboral (instituciones, tecnologías, cualificaciones o rigideces).
+
+\subsection{Desempleo friccional: NEK-2}
+El desempleo friccional es otro de los cuatro componentes del desempleo. Puede definirise como:
+
+\textbf{Definición.-} El desempleo friccional es el componente del desempleo total que se debe a la no coincidencia instantánea entre las decisiones de oferta y demanda de trabajo, es decir, al hecho de que, en cada momento del tiempo, existe un subconjunto de trabajadores temporalmente desocupados y un subconjunto de puestos temporalmente vacantes que todavía no han sido emparejados, pese a ser compatibles; debido a la existencia de fricciones en el mercado de trabajo (por ejemplo, informacionales o tiempo).
+
+Los modelo más utilizado para formalizar la existencia de desempleo friccional son los modelos de búsqueda. En éstos, el desempleo de equilibrio se deriva de las transiciones desde el empleo al desempleo y desde el desempleo al empleo, que se ven influenciadas por las perturbaciones agregadas y las decisiones individuales. Desde un enfoque macroeconómico (equilibrio general en la economía y no solo parcial en mercado de trabajo) lo más correcto es presentar el modelo de referencia de la NEK-2 que incorpora una versión adaptada del Modelo DIAMOND-PISSARIDES-MORTGENSEN a un enfoque de equilibrio general.\footnote{Para el desarrollo analítico completo del Modelo DPM, equilibroi parcial en el mercado de trabajo, véase [\authorfont{Ver Tema 3.A.26}]
+}
+
+El modelo de Blanchard y Galí (2010) recoge de forma manejable los elementos básicos de los modelos neokeynesianos con fricciones de búsqueda:
+\begin{lnum}
+    \item Fricciones reales en el mercado de trabajo debidas a la búsqueda (Modelo DPM);
+    \item Rigideces de salario real; y,
+    \item Rigideces nominales de precios.
+\end{lnum}
+
+\subsubsection{Hogares}
+Los hogares toman decisiones de consumo, oferta de trabajo y demanda de bonos para maximizar su utilidad esperada intertemporal:
+
+\eqblock{
+\begin{aligned}
+    \boxed{\begin{aligned}
+    &\max_{U}{\sum_{t=0}^{\infty}\beta^t\;U(C_t,L_t)}\\[1em]
+    \text{s.a.}\;
+    &\begin{cases}
+        \text{(1ero): Elección entre variedades}\\[0.5em]
+        \text{(2ndo):} \; C_t+\frac{Q_t\;B_t}{P_t}\leq\frac{B_{t-1}}{P_{t-1}}+W_t\;N_t
+    \end{cases}
+    \end{aligned}}\qquad \text{donde,}
+    \begin{cases}
+        \partial U/\partial C_t>0\quad y\quad \partial^2U/\partial^2 C_t\leq0\\[1em]
+        \partial U/\partial L_t>0\quad y\quad \partial^2U/\partial^2 L_t>0\;\text{\scriptsize (Deseutilidad del trabajo)}\\[1em]
+        \beta\equiv\quad \text{Factor descuento intertemporal}\\[1em]
+        P_t\equiv\quad \text{Precio del bien consumo}\\[1em]
+        W_t\equiv\quad \text{Salario real}\\[1em]
+        B_{t-1}\equiv\quad \text{Bonos comprados en $t-1$}\\[1em]
+        Q_t\equiv\quad \text{Precio del bono: $Q_t=\frac{1}{1+i_t}$}\\[1em]
+    \end{cases}
+\end{aligned}
+}
+
+Por lo tanto, la restricción presupuestaria establece que el gasto en consumo y las adquisiciones de bonos deben ser igual a la suma de ingresos salariales, más el rendimiento de los bonos adquiridos en el período anterior, netos de impuestos.
+
+\subsubsection{Los flujos en el mercado de trabajo}
+
+En el mercado de trabajo existen fricciones reales asociadas a la búsqueda y el emparejamiento del empleo que se modelizan de forma simplificada: \footnote{Nótese que se está suponiendo implícitamente que la tasa de participación es del 100\%, todos los individuos están dispuestos a trabajar o están empleador, a diferencia del Modelo DMP} 
+
+\eqblock{
+\begin{aligned}
+    &\text{El empleo de $j$ evoluciona siguiendo la expresión:}\quad N_t(j)=(1-\delta)N_{t-1}(j)+H_t(j)\\[1em]
+    &\left.\begin{aligned}
+        \text{El desempleo a nivel agregado evoluciona:}\quad &U_t=1-(1-\delta)N_{t-1}\\[0.5em]
+        \text{Las contrataciones evolucionan:}\quad &H_t=N_t-(1-\delta)N_{t-1}\\
+    \end{aligned}\right\}\;\text{Presión:}\;x_t=\frac{H_t}{U_t}\\[1em]
+    &\text{Coste contratación:}\quad G_t=A_tB\;x_t^\alpha\quad\text{donde,}\;
+    \begin{cases}
+        \alpha\ge0\\
+        \bar B>0
+    \end{cases}\\[1em]
+\end{aligned}
+}{Flujos de (des)empleo y costes de contratación. Desempleo friccional: Modelo NEK-2}
+
+El grado de estrechez constituye un elemento central en el funcionamiento del mercado de trabajo, ya que va a influir sobre el coste marginal de las empresas y, por tanto, sobre la inflación. El grado de estrechez se puede interpretar, tal y como está definido, como la probabilidad de encontrar un empleo. En cuanto al coste de contratación, $G_t$, éste depende de la estrechez del mercado de trabajo: si el desempleo es reducido y las empresas desean realizar muchas contrataciones, será más difícil encontrar el trabajador adecuado. Este enfoque difiere ligeramente de la formulación habitual de los modelos de búsqueda en los que los costes de contratación dependen del coste para la empresa de abrir una vacante y del tiempo que tardan en cubrirla. Este tiempo suele ser una función de la estrechez del mercado de trabajo, definida en términos de vacantes. La formulación que se utiliza aquí asume que las vacantes se cubren de forma inmediata y se dejan fuera del análisis, lo que simplifica el modelo. No obstante, se recoge la misma idea: la contratación es costosa y depende de la estrechez del mercado de trabajo
+
+\subsubsection{Empresa}
+En el modelo propuesto se supone que existen dos tipos de empresa:
+\begin{lnum}
+    \item Empresas de \textit{bien intermedio}. Este bien es producido por un continuo de empresas que actúan en un entorno de competencia perfecta y utilizan únicamente el trabajo como factor de producción. El objetivo de éstas será maximizar sus beneficios, definidos como los ingresos de renta del bien intermedio menos el coste salarial y el coste de contratación más el ahorro futuro en el caso de que no tenga que contratar de nuevo. En el óptimo, el ingreso del producto marginal real del trabajo (definido como el precio del bien intermedio por la productividad marginal del trabajo) se iguala al coste marginal del trabajo, que incluye el coste marginal de una contratación, menos el ahorro esperado de no tener que contratar un trabajador en el periodo siguiente; y,
+    \item Empresas de \textit{bienes finales}. El bien final es producido por un continuo de empresas, en un entorno de competencia monopolística y utilizan únicamente el bien intermedio como factor de producción. Se supone que existen rigideces nominales que son introducidas à la Calvo en la determinación del precio final.\footnote{En cada periodo sólo hay un determinado porcentaje de empresas, ($1-\theta$) que puede ajustar sus precios mientras que el resto de empresas, $\theta$, no pueden ajustarlos y tienen que mantener los del periodo anterior. De este modo, el grado de rigidez de precios de la economía se puede medir por el valor de $\theta$: cuanto mayor sea, menos empresas pueden ajustar los precios y el tiempo que transcurrirá entre cambios de precios será más elevado.\\
+    Las empresas que pueden variar sus precios los determinarán óptimamente, maximizando el valor descontado de los beneficios. Hay que tener en cuenta que cuando las empresas pueden ajustar precios consideran la existencia de la rigidez nominal en su decisión, ya que existe una probabilidad de que en el futuro deseen ajustar los precios y no puedan debido a la rigidez nominal.}
+\end{lnum}
+
+El problema de maximización de la empresa del bien final se representa de la manera habitual, teniendo por objetivo maximizar el valor descontado de los beneficios que obtendrán durante el periodo en el que ese precio está vigente. Ahora bien, como la empresa tiene poder de mercado, fijará el precio de su producto (bien final) atendiendo a un margen sobre el valor marginal (precisamente el bien intermedio), por lo tanto, el equilibrio de las empresas productoras del bien final permite destacar dos de los elementos clave del modelo:
+\begin{lnum}
+    \item La determinación de precios es la habitual en presencia de rigideces según de fijación de precios à la Calvo. La empresa fija el precio como una media ponderada de los costes marginales presentes y futuros; y,
+    \item El coste marginal de la empresa productora del bien final depende, precisamente, de las fricciones del mercado de trabajo (costes de contratación) y del salario, pues la existencia de rigideces de salarios reales hará que estás también influyan en el coste marginal y, por tanto en la determinación de precios y en el equilibrio de la economía.
+\end{lnum}
+
+\eqblock{
+\begin{aligned}
+    \frac{P_t^I}{P_t}A_t=W_t+G_t-(1-\delta)E_t[\cdot]
+\end{aligned}
+}{Efecto contagio: Fricciones en el mercado de trabajo se trasaladan a la economía en su conjunto. Desempleo friccional: Modelo NEK-2}
+
+\subsubsection{Determinación de salarios}
+La existencia de fricciones en el mercado de trabajo asociadas a la búsqueda y el emparejamiento, hace que cada vez que se establece una relación laboral entre la empresa y el trabajador se generen unas rentas económicas, ya que no es necesario continuar con la búsqueda y, por tanto, no se incurre en los costes asociados a ella. Estas rentas deben repartirse entre la empresa y el trabajador mediante algún tipo de mecanismo, que habitualmente se supone negociado alcanzando el Modelo de Nash.\footnote{Véase [\authorfont{Ver Tema 3.A.27}]} 
+
+\eqblock{
+\begin{aligned}
+    &\max_{W_t}{S_t^{H_t\;\xi}\;S_t^{F(1-\xi)}}\quad\text{donde,}
+    \begin{cases}
+        \xi&\equiv\text{Poder de negociación de los trabajadores}\\[0.5em]
+        S_t^F=G_t&\equiv\text{Valor del emparejamiento para la empresa}\\[0.5em]
+        S_t^H=V_t^N-V_t^U&\equiv\text{Valor del emparejamiento para los hogares}\\
+    \end{cases}\\[1em]
+    &\text{Condición optima}\Longrightarrow\;(1-\xi)S_t^H=S_t^F\to S_t^H=\gamma S_t^F\quad\text{\scriptsize $\gamma\equiv$ poder negociación de trabajadores}\\[1em]
+    &\text{Solución:}\qquad \boxed{W_t=\underbrace{\chi C_tN_t^\phi}_{\text{\scriptsize $RMS_C^L$}}+\overbrace{\gamma\left(\cdot\right)}^{\substack{\text{\scriptsize Refleja condiciones}\\\text{\scriptsize mercado de trabajo}}}}\quad \text{y,}\;
+    \begin{cases}
+        \partial \gamma(\cdot)/\partial x_t>0\\[0.5em]
+        \partial \gamma(\cdot)/\partial G_t<0\\[0.5em]
+        \partial \gamma(\cdot)/\partial P(\text{No estar empleado})=(1-x_{t+1})<0\\[0.5em]
+    \end{cases}
+\end{aligned}
+}{Equilibrio salarial para el periodo. Desempleo friccional: Modelo NEK-2}
+
+Por tanto, a partir del salario real consistente con la negociación, es posible obtener la tasa de desempleo de equilibrio en el modelo:
+
+\eqblock{
+\begin{aligned}
+    \text{Desempleo de equilibrio:}\qquad \boxed{u=\frac{\delta(1-x)}{\delta(1-x)+x}}
+\end{aligned}
+}{Equilibrio general: desempleo. Desempleo friccional: Modelo NEK-2}
+
+Esta tasa de desempleo de equilibrio depende de la estrechez, que en equilibrio es constante, y de la tasa de destrucción de empleo, por lo que es constante. Este resultado es importante ya que supone que la tasa de desempleo es invariante a los shocks de productividad, lo que se puede interpretar como una versión extrema del puzzle de Shimer.\footnote{BLANCHARD y GALÍ (2010) explican que está invarianza se debe a motivos diferentes. En SHIMER (2005) la relación marginal de sustitución entre consumo y trabajo es constante y los movimientos del salario se deben a las fricciones del mercado de trabajo muy sensibles a la productividad. En el modelo BLANCHARD y GALÍ (2010) la relación marginal de sustitución se mueve uno a uno con la productividad y el empleo no cambia, sin que intervengan las fricciones del macado de trabajo.
+}\textsuperscript{,}\footnote{El hecho de que en los modelos NEK-2 con fricciones de búsqueda, los salarios resultado de la negociación tengan una gran flexibilidad y no recojan las fluctuaciones observadas del desempleo ha provocado que se introduzcan rigideces en la modelización del salario. Una posibilidad es suponer que existen rigideces según el mecanismo à la Calvo también en la determinación del salario. Así, en cada periodo un porcentaje de empresas podría ajustar salarios y lo haría mediante negociación según el Modelo de Nash, mientras que otro porcentaje de empresas mantendría el salario del periodo anterior. De este modo, el salario se desviaría del negociado según el Modelo de Nash con flexibilidad de salarios. Sin embargo, si no existen grandes perturbaciones, el salario se mantendría dentro de unos niveles aceptables para el trabajador y la empresa (GALÍ, 2010a), en una situación en la que los valores del emparejamiento para las dos partes, $S_t^F$ y $S_t^H$, son positivos. También es posible introducir un componente inercial adicional suponiendo que las empresas que no puede renegociar salarios los indexan a la inflación pasada.\\
+BLANCHARD y GALÍ (2010) introducen la rigidez del salar io real de forma sencilla, simplemente suponiendo que:
+$$W_t=\Theta A_t^{1-\lambda}$$
+Donde $\Theta$ es una constante positiva y $\lambda\in[0,1]$ es un índice de la rigidez del saiario real. Este salario es compatible con el que resultaría de la negociación y, además, supone que existe rigidez y el salario real no se ajusta completamente con la productividad. Con rigideces de salarios y fricciones reales, la estrechez en el mercado de trabajo, y, por tanto, los movimientos del empleo y del desempleo, dependen de los movimientos presentes y futuros de la productividad. Esto hace que una perturbación de productividad afecte al equilibrio del mercado de trabajo y que la respuesta de las variables del mercado de trabajo afecte al equilibrio macroeconómico.
+}
+
+
+\subsection{Desempleo cíclico: Ley de OKUN}
+Otro componente del desempleo es el desempleo cíclico, que podemos definir como sigue:
+
+\textbf{Definición.-} El desempleo cíclico es el componente del desempleo total definido como la diferencia entre la tasa de desempleo observada y la tasa de desempleo natural, cuando la producción efectiva se desvía del producto potencial. Es, por construcción, el desempleo asociado a fluctuaciones transitorias de la actividad económica respecto a su tendencia de largo plazo.
+
+Uno de los trabajos más citados para comprender el impacto del desempleo cíclico es lo que conocemos como la Ley de OKUN, que se refiere a la relación empírica entre los cambios en el desempleo y la producción. 
+
+Es un componente básico de los modelos macroeconómicos tradicionales, donde la función de oferta agregada se deriva de la combinación de la Ley de OKUN con la curva de Phillips. En la contribución original de OKUN (1962), se introduce la relación empírica entre el desempleo y la producción en el contexto de la cuantificación de la producción potencial y la medición de los costos sociales del desempleo en términos de producción perdida:
+
+\eqblock{
+\begin{aligned}
+    \underbrace{\boxed{y_t-y_{nt}=-\alpha(U_t-U_{nt})}}_{\text{Ley de OKUN}}\quad \text{con}\;\; \alpha>0
+\end{aligned}
+}{Regresión y coeficiente de OKUN ($\alpha$). Desempleo cíclico, asociado a cambios en la producción}
+
+OKUN (1962) presenta estimaciones para Estados Unidos basadas en tres especificaciones econométricas alternativas destinadas a cuantificar empíricamente la relación entre el desempleo y el crecimiento de la producción: 
+\begin{la}
+    \item Regresión de los cambios (trimestrales) en la tasa de desempleo sobre los cambios porcentuales (trimestrales) en la producción (representada por el Producto Nacional Bruto, o PNB);
+    \item Regresión de la tasa de desempleo sobre las desviaciones porcentuales de la producción potencial, definida como la tendencia exponencial en el PNB; y,
+    \item Regresión de la tasa de empleo (logaritmizada) sobre una tendencia lineal en el tiempo y el PNB (logaritmizado).
+\end{la} 
+
+El efecto de los cambios en la producción sobre el desempleo se cuantifica mediante el parámetro estimado asociado con la variable de producción en cada una de estas regresiones, cuyo inverso se conoce habitualmente como el coeficiente de Okun. Los resultados en la contribución de Okun indican que existe aproximadamente una relación de tres a uno entre el desempleo y los cambios en la producción, en el sentido de que un aumento (disminución) de tres puntos porcentuales en la producción (o la brecha de producción, según la especificación) se asocia con una disminución (aumento) de un punto porcentual en el desempleo.\footnote{OKUN sostiene que una reducción en la tasa de desempleo induciría un aumento en la fuerza laboral al persuadir a los trabajadores desalentados a buscar empleo activamente, y también presenta estimaciones del aumento en las horas trabajadas por persona empleada causado por el aumento de la producción. El análisis realizado en la contribución de Okun, basado en datos para Estados Unidos en 1960, asigna aproximadamente el 56 por ciento del cambio en la producción al efecto de los cambios en la contribución total de trabajo medida en horas trabajadas, mientras que el resto se atribuye a aumentos en la productividad. 
+
+PRACHOWNY (1993) aborda la cuantificación de la relación entre el desempleo y la producción proponiendo una especificación basada en una función de producción bastante general, donde se pueden estimar por separado los efectos independientes de los cambios en el desempleo, las horas trabajadas, la utilización de la capacidad y la fuerza laboral en la producción. En este contexto, las especificaciones empíricas de Okun serían apropiadas solo si se satisfacen ciertas restricciones de parámetros en la función de producción. PRACHOWNY (1993) propone entonces etiquetar la Ley de Okun como Teoría de Okun y probar estas restricciones directamente sobre los datos.  Las estimaciones del efecto directo del desempleo en la producción obtenidas utilizando esta especificación son más pequeñas que en la contribución original de Okun, aunque la estrategia de modelado econométrico utilizada (basada en estimar la función de producción en forma de brecha y en primeras diferencias) no está exenta de críticas.
+} No obstante, cabe hacer algunas cosideraciones:
+\begin{lnum}
+    \item \textit{La relación no es ceteris paribus}. El propio Okun señala que ésta captura también los efectos de los cambios simultáneos en la fuerza laboral, las horas trabajadas y la productividad;\footnote{\footnote{Esta regla general se propone como un promedio ponderado subjetivamente (OKUN 1962, p. 100) de las estimaciones obtenidas de las tres especificaciones. Las estimaciones basadas en datos que incluyen el período posterior a la crisis del petróleo, que se pueden encontrar en la mayoría de los libros de texto macroeconómicos modernos, tienden a revelar un coeficiente de Okun que está más cerca de dos que de tres. Los argumentos de Okun sugieren que la relación encontrada entre el desempleo y la producción no debe entenderse como una relación \textit{ceteris paribus}, sino más bien como una captura también de los efectos de los cambios, simultáneos en la fuerza laboral, las horas trabajadas y la productividad.
+}}
+    \item \textit{Los resultados dependerán de la naturaleza de los impactos que afectan a la economía}. La interpretación habitual de la relación resumida por la Ley de Okun se refiere a argumentos basados en impactos en la demanda agregada;\footnote{Attfield y Silverstone (1997) reconsideran este enfoque utilizando técnicas de cointegración y encuentran estimaciones que son comparables con los valores originales en Okun (1962). Obviamente, la relación observada entre los cambios en la producción y los cambios en la tasa de desempleo está determinada por la naturaleza de los impactos que afectan a la economía. La interpretación habitual de la relación resumida por la Ley de OKUN se refiere a argumentos basados en impactos en la demanda agregada.\\
+    BLANCHARD y QUAH ( 1989) enfatizan la importancia de identificar los impactos de demanda y oferta para estimar e interpretar el coeficiente de OKUN. Utilizando un sistema dinámico formado por la tasa de desempleo y el crecimiento de la producción, evalúan el problema aislando los impactos de la oferta y la demanda e interpretando las respuestas de estas dos variables a cada tipo de impacto. Los resultados sugieren que el coeficiente de OKUN implícito para los impactos de la demanda está ligeramente por encima de dos, mientras que no existe una relación sistemática de corto plazo entre el desempleo y los cambios en la producción después de un impacto de oferta.
+    } y,
+    \item \textit{El valor del coeficiente de Okun variará entre países}. Dependerán, entre otras cosas, de factores económicos (mercado de bienes y de trabajo) e institucionales.\footnote{
+    Si bien muchos libros de texto de macroeconomía tienden a enfatizar que la relación entre los cambios a corto plazo en la producción y el desempleo es una regularidad empírica robusta y confiable, gran parte de la literatura que aborda la Ley de OKUN se centra en evaluar la solidez de esta relación entre países, a lo largo del tiempo, en diferentes especificaciones econométricas y en diferentes estados del ciclo económico, como recesiones versus expansiones.\\
+    Los resultados de esta rama de la literatura apuntan a la existencia de coeficientes de Okun asimétricos y específicos de cada país, con una elasticidad más alta del desempleo ante los cambios en la producción durante las recesiones que durante las expansiones, y una elasticidad más baja en los países de Europa continental en comparación con Canadá, Estados Unidos y Reino Unido. Las estimaciones del coeficiente de Okun parecen ser sensibles a la especificación y al método de desestacionalización utilizado para obtener el componente cíclico de la producción y la tasa de desempleo. Además, esta literatura empírica suele reportar evidencia de inestabilidad estructural, con un quiebre en el coeficiente de OKUN que tiene lugar en la década de 1970.
+    }
+\end{lnum}
+
+\subsection{Desempleo estacional: métodos analíticos y propiedades}
+El último componente del desempleo es el desempleo estacional y estaría mayormemente asociado al término de ruido observado. Sin embargo, su magnitud y amplificación en términos agregados tiene una fuerte componente estructural.
+
+\textbf{Definición.-} El desempleo estacional es el componente periódico del desempleo total que resulta de variaciones predecibles y recurrentes en la demanda de trabajo dentro del año, asociadas a patrones estacionales sistemáticos (de clima, calendario o ciclos productivos), y que se identifica como componente regular y repetitivo de las series temporales de empleo.
+
+
+
+
+
+\clearpage
+\section{Introducción de rigideces reales: Persistencia y NAIRU}
+\puntosclave{
+    
+}
+
+
+\subsection{Obtención de la NAIRU}
+En el modelo de la curva de PHILLIPS con expectativas (adaptativas o racionales), la NRU está asociada con una inflación estable y queda determinada por las características estructurales del mercado de trabajo, tratándose, por tanto, de un concepto de equilibrio. 
+
+Frente a ésto, los economistas de la NEK-1 introdujeron el concepto de NAIRU, tasa de desempleo no aceleradora de la inflación. La NAIRU también representa un concepto de tasa de paro de equilibrio, que se ve afectada por las características estructurales del mercado de trabajo, al igual que la tasa natural, pero, en algunos casos, también se puede ver afectada por el ajuste gradual de la economía a las perturbaciones pasadas que inciden sobre la inflación.\footnote{Ball y Mankiw (2002) consideran que el concepto de NAIRU es \textit{aproximadamente sinónimo del de tasa natural de desempleo}, por lo que son, por tanto, conceptos similares. 
+}
+
+La tasa natural de desempleo queda determinada por el equilibrio del mercado en un entorno competitivo. La NAIRU es la tasa de desempleo que hace compatible los objetivos de salario real de los trabajadores con el salario real resultante de la productividad del trabajo y el margen salarial. Por lo tanto, la NAIRU quedará determinada por el equilibrio resultante del poder de mercado de los trabajadores y las empresas y, de este modo, su fundamentación se relaciona con las teorías que recogen la existencia de imperfecciones en el mercado de bienes y factores. Es decir, tanto la tasa natural de desempleo como la NAIRU son concepto de desempleo de equilibrio, asociado a una inflación constante, pero con una diferente microfundamentación. A continuación se presenta un modelo sencillo de equilibrio en el mercado de trabajo y se utiliza para explicar los determinantes de la NAIRU y su persistencia.
+
+\subsubsection{Curva salarial}
+Una de las manera que emplea la literatura para obtener la determinación del salario es mediante un proceso de negociación entre un sindicato y la empresa. El poder de negociación del sindicato va a depender de dos factores:
+\begin{lnum}
+    \item La facilidad de la empresa para sustituir a un trabajador si este no acepta el salario vigente; y,
+    \item La facilidad del trabajador para encontrar otro empleo.
+\end{lnum} 
+
+En consecuencia, se puede plantear que el poder de negociación depende de la situación del mercado de trabajo. Además, empresa y sindicato negociarán el salario nominal a partir de unas expectativas de precios, por lo que cuanto mayor sea la inflación esperada mayor será el salario nominal que tratará de negociar el sindicato. Por lo tanto, la ecuación de salarios se puede establecer como:
+
+\eqblock{
+\begin{aligned}
+    \boxed{W=P^e\;f(u,z)}\qquad \text{donde,}
+    \begin{cases}
+        \partial W/\partial u<0\\
+        \partial W/\partial z>0
+    \end{cases}
+\end{aligned}
+}{Curva salarial. Modelo NAIRU}
+
+Es decir, el salario negociado depende negativamente del desempleo, $u$, y de otros factores institucionales, $z$, que pueden tener un efecto positivo sobre el salario real negociado, como, por ejemplo, la protección por desempleo. El principal resultado de esta ecuación es que la remuneración del trabajador es superior a su desutilidad marginal de trabajar (existe un mark-up salarial).
+
+\subsubsection{Fijación de precios}
+Como se supone que las empresas operan en un contexto de competencia imperfecta en el mercado de bienes, la condición de maximización del beneficio implica que:
+
+\eqblock{
+\begin{aligned}
+    P=(1+M)CMg\quad \underbrace{\Longrightarrow}_{\substack{\text{\scriptsize A corto plazo: $\bar K$}\\\text{\scriptsize Si suponemos RCE: $Y=AN$}}}\quad \overbrace{\boxed{P=(1+M)\frac{W}{A}}}^{\text{Ecuación de precios}}\\[2em]
+    \Longrightarrow\underbrace{\boxed{\frac{W}{P}=\frac{A}{1+M}}}_{\substack{\text{\scriptsize Salario real}}}\to\frac{W}{P}=A(1-m),\quad \text{donde,}\; m=\frac{M}{1+M}\\[1em]
+    \text{Por tanto,}\quad W\left(\underbrace{M}_{\text{\scriptsize Margen}}\;,\; \overbrace{A}^{\text{\scriptsize Productividad}}\right)
+\end{aligned}
+}{Ecuación de precios y salarios. Rigideces reales: Modelo NAIRU}
+
+Es decir, el precio se fija como un margen sobre el coste marginal y, por tanto (asumiendo corto plazo y RCE), el salario real fijado por las empresas depende del margen y de la productividad del trabajo, pero no del nivel de desempleo o de la situación del mercado de trabajo.
+
+\subsubsection{Equilibrio}
+Entonces, en el equilibrio el salario real negociado y el salario real fijado por la empresa deben igualarse:
+
+\imagenfit{EqNAIRU.png}{La NAIRU y el equilibrio en el mercado de trabajo}{Apuntes ICEX-CECO. Tema 3.A.28}
+
+El equilibrio se alcanzaría en el punto $A$, con un salario real $W_0/P_0$ y un nivel de empleo, $N_0$. El desempleo sería la diferencia entre el nivel de pleno empleo y el nivel de empleo $N_0$ que hace compatible los objetivos salariales de empresas y trabajadores. Este nivel de desempleo correspondería a la NAIRU. 
+
+\subsubsection{Estática comparativa}
+El modelo permite analizar los determinantes de la NAIRU, el efecto de las políticas económicas y las razones que explican la persistencia del desempleo.
+
+\paragraph{Políticas de demanda}
+En primer lugar, respecto al efecto de las políticas de demanda, se puede suponer una política expansiva de demanda (fiscal o monetaria). Partiendo de una situación de equilibrio (punto A del gráfico 6), el incremento de la demanda agregada haría que las empresas aumentasen su nivel de producción, incrementándose así el empleo. A este mayor nivel de empleo los sindicatos tendrían más poder de negociación y negociarían un salario mayor {B). Dado el poder de m ercado, las empresas trasladarían este incremento salarial a precios (suponiendo el margen constante) reduciéndose la demanda. En el siguiente periodo, los objetivos de empresa y sindicatos siguen siendo incompatibles. Los sindicatos reclamarían mayores incrementos salariales, que los empresarios trasladarían de nuevo á precios. Al a umentar los precios, descendería- de nuevo la demanda, con lo que se reduciría la producción y el empleo hasta C. Este proceso se repetiría hasta alcanzar de nuevo el equilibrio en A. Es decir, una política expansiva de demanda daría l ugar a una reducción temporal del desempleo, pero no a fectaría a¡ la NAIRU.
+
+\imagenfit{NAIRU_PolDA.png}{La NAIRU y el efecto de una política expansiva de demanda}{Apuntes ICEX-CECO. Tema 3.A.28}
+
+\paragraph{Perturbaciones de oferta} 
+El modelo también permite analizar los efectos de una perturbación de oferta. Por ejemplo, una perturbación negativa de la productividad haría que los empresarios incrementasen el nivel de precios (suponiendo que el margen permanece fijo), lo que reduciría la demanda agregada y, en consecuencia, la producción y el empleo , y tendría un efeéto negativo sobre el salario real fijado. Los trabajadores, que no han modificado sus demandas salariales, estarían dispuestos a aceptar un salario menor, situándose en un punto de la c urva de salario real negociado como B. Sin embargo, el salario real en B sigue sin ser compatible con el salario real fijado por los em presarios, que reaccionarían incrementando de nuevo los precios. Finalmente, el equilibrio se alcanzaría en C con un menor nivel de salario real y un aumento de la NAIRU.
+
+\imagenfit{NAIRU_ShockOferta.png}{La NAIRU y el efecto de una perturbación negativa de oferta}
+
+\subsection{Persistencia e histéresis}
+
+\subsubsection{Histéresis}
+El modelo también permite analizar el fenómeno de la histéresis del desempleo, que fue introducido por Blanchard y Summers (1987), y supone que la tasa de desempleo de equilibrio actual depende de la evolución pasada del desempleo. Por tanto, sería un fenómeno de medio plazo. 
+
+
+En su versión más extendida,\footnote{
+  En su versión pura supondría que no existe una única tasa de desempleo de equilibrio, de modo que cambios en la demanda agregada que generen desempleo darán lugar a modificaciones de la tasa de paro de equilibrio a medio y largo plazo. En este caso, las políticas de demanda agregada no sólo afectarán al desempleo a corto plazo, sino también al de equilibrio  a largo plazo.
+} la histéresis supondría que, aunque haya una única tasa de desempleo de equilibrio a largo plazo, las variaciones del desempleo darían lugar a modificaciones de la tasa de equilibrio a medio plazo y este tardaría mucho tiempo en volver al valor de largo plazo. Por lo tanto, el desempleo exhibiría una elevada persistencia. 
+
+Blanchard y Summers (1987), describen algunas razones fundamentales que podrían explicar el fenómeno de la histéresis: 
+\begin{lnum}
+  \item Las reducciones en la acumulación del capital;\footnote{Al reducirse el empleo también se produce una caída en la productividad marginal del capital y, por lo tanto, en los beneficios. Como resultado, las caídas del empleo se ven acompañadas por reducciones de la acumulación de capital, lo que genera disminuciones adicionales del empleo. De este modo, la dinámica de la acumulación de capital llevaría a un aumento profundo y persistente del desempleo.
+  }
+  \item La pérdida de capital humano;\footnote{El desempleo hace que los trabajadores no puedan mantener y actualizar sus cualificaciones y habilidades profesionales mediante el trabajo, depreciando su capital humano, especialmente si el desempleo es de larga duración. La pérdida de capital humano, junto con un cierto desánimo de los desempleados si permanecen mucho tiempo en esa situación, haría muy dificil que puedan volver a encontrar un empleo, aumentando así el desempleo de equilibrio.
+  } y,
+  \item La existencia de insiders y outsiders.\footnote{Véase [\authorfont{Ver Tema 3.A.27}] para el modelo de referencia.\\
+  Los trabajadores empleados, insiders, cuya principal preocupación es mantener su empleo, participarían en la negociación colectiva, mientras que los trabajadores desempleados, outsiders, no tendrían capacidad de influir en la negociación. Esto implicaría que, en presencia de perturbaciones negativas, los trabajadores que sean despedidos dejarían de participar en la negociación y los trabajadores que mantengan su empleo tenderían a negociar salarios más altos, de modo que el desempleo no volvería a su nivel anterior al shock y seguiría un proceso similar a un paseo aleatorio. En el modelo de la NAIRU presentado en este apartado, el fenómento de la histéresis del desempleo se podría producir por un desplazamiento de la curva de salario real negociado hacia arriba o por un desplazamiento de la curva de salario real fijado hacia abajo.
+  } 
+\end{lnum}
+
+\paragraph{Histéresis: Insiders y Outsiders. Efectos sobre la NAIRU}
+Aunque resulte solo coherente desde el punto de vista expositivo, formulemos  un caso de histéresis pura y su dinámica de ajuste ante un shock de oferta. En concreto, supondremos que estamos ante una estructura de trabajadores insiders y outsiders,  y veremos como una contracción de la demanda agregada puede generar un incremento permanente del desempleo (histéresis pura).\footnote{Blanchard (2006) argumenta que, en el ejemplo de INSIDERS-OUTSIDERS que plantearemos, la histéresis pura es demasiado extrema. Desde un punto de vista teórico considera que existen mecanismos a través de los cuales la existencia de trabajadores outsiders desempleados puede afectar al resultado de la negociación:
+\begin{la}
+  \item Por una parte, los trabajadores insiders también tienen una cierta probabilidad de pasar al desempleo, por lo que se preocuparían por la situación del mercado de trabajo y cuando el desempleo sea elevado serán más cautelosos en sus reivindicaciones salariales; y,
+  \item Por otra parte, en el proceso de negociación entre sindicatos y empresas éstas pueden aumentar su poder de negociación amenazando con contratar desempleados y cuanto mayor sea el número de desempleados, más creíble será esa amenaza.
+\end{la} 
+
+Por todo ello, Blanchard (2006) concluye que la existencia de insiders y outsiders dará lugar a una persistencia elevada del desempleo, pero no a una histéresis pura.
+} 
+
+Si la economía se encuentra en equilibrio en un punto como $A$ y se produce una contracción de la demanda agregada, la demanda de bienes caerá y las empresas reducirán su producción y su demanda de empleo ($\downarrow Y\to\downarrow L$). Al aumentar el desempleo los trabajadores internos estarían dispuestos a reducir su salario real. Sin embargo, como este ajuste no es inmediato por la existencia de fricciones, el salario real no se ha modificado, por lo que el nivel de empleo se reduce hasta un punto como $B$. 
+
+\imagenfit{Histereses_NAIRU.png}{La histéresis del desempelio}{Apuntes ICEX-CECO. Tema 3.A.28}
+
+Una vez se ha reducido el empleo, los trabajadores que han conservado su empleo querrán conseguir el mayor salario real posible, por lo que en la negociación solicitarán el mismo salario monetario vigente antes de la perturbación $\Longrightarrow$ Para un mayor nivel de desempleo el salario real negociado será el mismo, la curva ($WS'$) se desplaza hacia arriba y la tasa de desempleo no aceleradora de la inflación aumenta de $NAIRU_0$ a $NAIRU_1$. Por lo tanto, el aumento del desempleo, al dar lugar a que los desempleados pasen a ser outsiders no representados en la negociación colectiva, no reduciría la capacidad de negociación de los sindicatos. En definitiva, un shock de demanda agregada que elevase el desempleo a corto plazo, en presencia de una estructura de trabajadores internos y externos, podría dar lugar a una modificación de la $NAIRU$ a largo plazo, produciéndose el fenómeno de la histéresis del desempleo.
+
+En este modelo simplificado, el desempleo aumenta, pero también se produce una disminución en el salario real. Sin embargo, buena parte de la evidencia empírica nos muestra como en las economías europeas durante los años 70's, periodo en el que sufrieron importantes shocks negativos de oferta, los salarios reales aumentaron existiendo conflictividad laboral, fruto de la existencia de distintas rigideces reales y nominales. Por ello, se hace necesario considerar la influencia de las rigidices reales y nominales del mercado de trabajo y analizar su importancia para el equilibrio del mercado de trabajo y del conjunto de la economía.
+
+\subsubsection{Persistencia del desempelo: NEK-2}
+Para ello resulta muy ilustrativo volver a recurrir al modelo formulado en el apartado anterior, BLANCHARD y GALÍ, en el que los autores introducen las fricciones en el mercado de trabajo dentro de un enfoque de equilibrio general. 
+
+Como sabemos, en términos agregados, dado que la determinación de los precios del bien final es equivalente a la del modelo canónico el equilibrio del modelo se puede caracterizar de la forma habitual (con la de rigideces nominales: fijación de precios à la CALVO), teniendo en cuenta además la existencia de rigideces del mercado de trabajo (fricciones reales). Por lo tanto, las relaciones que describen el equilibrio son las siguientes:
+\begin{lnum}
+    \item La relación de inflación, en la que esta depende de las desviaciones presentes y futuras del coste marginal respecto de su valor de equilibrio: 
+    $$\pi_t=\beta E_t[\pi_{t+1}\;|\;\Omega_t]+k\hat{mc}_t$$
+    Donde $\hat{mc}_t$ es la desviación del coste marginal real respecto a su estado estacionario que depende de: (i) las perturbaciones de productividad (como el modelo económico); (ii) de las fricciones del mercado de trabajo; y, (iii) de las rigideces de salarios;
+    \item La relación entre consumo, tipo de interés e inflación que se obtiene de las decisiones sobre consumo de los hogares: 
+    $$c_t=E_t c_{t+1}-\frac{1}{\sigma}(i_t-E_t[\pi_{t+1}\;|\;\Omega_t]-\rho)$$
+    Donde $\rho=-\log{\beta}\;\text{y}\;i_t=-\log{Q_t}$; y el consumo, igual que el coste marginal, depende de las fricciones del mercado de trabajo y de las rigideces de salarios; y,
+    \item La relación entre la estrechez del mercado de trabajo y el empleo, en desviaciones respecto al estado estacionario: 
+    $$\delta\hat x_t=\hat{n}_t-(1-\delta)(1-x^{ee})\hat{n}_{t-1}$$
+    Donde $\hat{x}_t=\log{x_t}-\log{x^{ee}}$ es la desviación de la estrechez respecto al estado estacionario y $\hat{n}_t=\log{n_t}-\log{n^{ee}}$ la del empleo.
+\end{lnum}
+
+BLANCHARD y GALÍ (2010) utilizan este modelo para ilustrar la relación entre inflación y desempleo y para analizar la influencia del mercado de trabajo en la respuesta a las perturbaciones macroeconómicas.
+
+\paragraph{Inflación y desempleo} 
+En cuanto a la primera cuestión, Blanchard y Galí (2006) derivan una relación implícita entre inflación y desempleo, similar a la curva de Phillips.\footnote{Asumiendo que los costes de contratación son pequeños en relación al output y que la tasa de destrucción de empleo es pequeña, lo que implica que las fluctuaciones en la estrechez son grandes en relación con las del empleo.
+} En primer lugar, es posible obtener una relación entre estrechez del mercado de trabajo y desempleo:
+
+\eqblock{
+\begin{aligned}
+    &\boxed{(1-u^{ee})\delta\hat{x}_t=-\hat{u}_t+(1-x^{ee})(1-\delta)\hat{u}_{t-1}}\\[1em]
+    &\text{Donde,}\quad \hat{u}_t=u_t-u^{ee}\\[2em]
+    \text{Por tanto,}\quad
+    &\begin{cases}
+        \text{Si (dinámico),}\quad \uparrow\delta \;\;\text{y}\;\;\uparrow x^{ee}\Longrightarrow (1-x^{ee})(1-\delta)\simeq0\to \hat{x}_t\simeq-\frac{\hat{u}_t}{(1-u^{ee})\delta}\\[0.5em]
+        \text{Si (estático),}\quad \downarrow\delta \;\;\text{y}\;\;\downarrow x^{ee}\Longrightarrow (1-x^{ee})(1-\delta)\simeq1\to \hat{x}_t\simeq-\frac{(\hat{u}_t-\hat{u}_{t-1})}{(1-u^{ee})\delta}\\
+    \end{cases}
+\end{aligned}
+}{Desequilibrio dinámico: estrechez y empleo. Desempleo friccional: Modelo NEK-2}
+
+Para mostrar la importancia de esta relación, se puede comparar el caso de dos economías con diferentes instituciones del mercado de trabajo:
+\begin{la}
+    \item Supongamos que en la primera economía el mercado de trabajo es muy dinámico por lo que los valores de $\delta$ y $x^{ee}$ son elevados y, por tanto, hay grandes flujos de empleo al desempleo y la duración del desempleo es reducida. Por tanto, en un mercado dinámico, la estrechez se mueve fundamentalmente con la tasa de desempleo; por otro lado,
+    \item Si suponemos otra economía con un mercado de trabajo esclerótico, con valores de $\delta$ y $x^{ee}$ reducidos, en ésta habrá poca movilidad del empleo al desempleo, y el desempleo tendrá una duración larga. Por lo que en un mercado, menos dinámico, la estrechez dependerá de los cambios en la variación de la tasa de desempleo.
+\end{la}
+
+Estas diferencias dan lugar a importantes diferencias en las respuestas a perturbaciones macroeconómicas. A partir de la derivada de la relación entre inflación y empleo, podremos obtener las siguientes conclusiones: 
+\begin{lnum}
+    \item La inflación depende negativamente de la tasa de desempleo y de las variaciones de ésta;
+    \item La influencia de la tasa de desempleo y de sus variaciones depende del grado de dinamismo del mercado de trabajo. Cuanto más esclerótico sea el mercado de trabajo mayor es el efecto del cambio en la tasa de desempleo sobre la inflación; y,
+    \item La política monetaria no puede estabilizar simultáneamente la inflación y el desempleo. Si, ante un shock de productividad, la autoridad monetaria quisiese estabilizar la inflación y el desempleo simultáneamente, no podría, ya que al existir rigideces de salarios ( r > O ),. estos no se ajustan completamente a los cambios en la productividad.
+\end{lnum}
+
+Analíticamente,
+
+\eqblock{
+\begin{aligned}
+    &\text{(1)}\quad \partial \pi_t/\partial u_t<0\quad \text{y}\quad \partial \pi_t/\partial \hat{u}_t<0\\[1em]
+    &\text{(2)}\quad \text{Si,}\;\;\uparrow\uparrow \delta \quad \text{y}\quad \uparrow\uparrow x^{ee}\quad
+    \left\{\begin{aligned}
+        \partial \pi_t/\partial u_t<<0\\
+        \partial \pi_t/\partial \hat{u}_t<<0
+    \end{aligned}\right.\quad \text{\scriptsize (y viceversa)}\\[1em]
+    &\text{(3)}\quad \text{Si,} \quad \underbrace{\downarrow p}_{\substack{\text{\scriptsize Shock de}\\\text{\scriptsize productividad}}}\;\Longrightarrow\text{PM}
+    \left\{\begin{aligned}
+        \text{o,}\quad \pi_t\to\pi^*\\
+        \text{o,}\quad u_t\to u^*\\
+    \end{aligned}\right\}\quad\substack{\text{Los dos {no se puede}:}\\\text{$\exists$ rigideces salariales ($\lambda>0$)}}
+\end{aligned}
+}{Efectos de las instituciones en el comportamiento agregado de la economía. Desempleo friccional: Modelo NEK-2}
+
+\paragraph{Perturbaciones macroeconómicas} 
+BLANCHARD y GALÍ (2010) analizan las implicaciones de la existencia de rigideces del mercado de trabajo para la implementación de dos políticas monetarias extremas: 
+\begin{la}
+    \item La estabilización del desempleo; y,
+    \item El objetivo de inflación estricto.
+\end{la} 
+
+En el caso de una política dirigida a conseguir la estabilización del desempleo ante una perturbación de productividad: 
+
+\eqblock{
+\begin{aligned}
+    \text{Si,} \quad \underbrace{\downarrow p}_{\substack{\text{\scriptsize Shock de}\\\text{\scriptsize productividad}}}\;\Longrightarrow
+    \;\left\{\begin{aligned}
+        &\text{Obj.: \textbf{desempleo}}\;(\hat{u}_t=0)\Longrightarrow\pi_t=-\Phi\lambda\hat{\alpha}_t\quad\text{y}\;
+        \begin{cases}
+            \partial\pi_t/\partial\Phi>0\;\text{\scriptsize (persistencia)}\\[0.5em]
+            \partial\pi_t/\partial\lambda>0\;\text{\scriptsize (rigidez salarios)}\\[0.5em]
+            \partial\pi_t/\partial\hat{\alpha}_t>0\;\text{\scriptsize (rigideces nominales)}
+        \end{cases}\\[1em]
+        &\text{Obj.: \textbf{inflación}}\;(\pi_t=0)\\
+        &\hspace{2em}\Longrightarrow\hat{u}_t=(1-\delta)(1-x^{ee})\hat{u}_{t-1}-(\Phi\lambda/k)\hat{\alpha}_t\quad\text{y}\;
+        \begin{cases}
+            \uparrow\delta\quad \text{y}\quad \uparrow x^{ee}\\
+            \hspace{1em}\Longrightarrow\;\text{\scriptsize Alta persistencia: $1\cdot\hat{u}_{t-1}$}\\[1em]
+            \downarrow\delta\quad \text{y}\quad \downarrow x^{ee}\\
+            \hspace{1em}\Longrightarrow\;\text{\scriptsize Baja persistencia ($0\cdot\hat{u}_{t-1}$)}\\[2em]
+            \partial u_t/\partial\Phi>0\Longrightarrow \;\uparrow\uparrow \hat{u}_t\\[0.5em]
+            \partial u_t/\partial\lambda>0\Longrightarrow\;\uparrow\uparrow \hat{u}_t\\[0.5em]
+            \partial u_t/\partial\hat{\alpha}_t>0\Longrightarrow\;\uparrow\uparrow \hat{u}_t
+        \end{cases}
+    \end{aligned}\right.
+\end{aligned}
+}{Inexistencia de la \textit{divina coincidencia}. Rigideces reales y nominales: Modelo NEK-2}
+
+Es decir, ante un shock negativo de productividad:
+\begin{la}
+  \item Para evitar que aumente el desempleo, será necesario aceptar una mayor inflación. Cuanto mayor sea la persistencia del shock, la rigidez de salarios o las rigideces nominales, mayor será el incremento de la inflación; y, por otro lado,
+  \item Para tratar de estabilizar la inflación, habrá que aceptar un mayor desempleo. 
+\end{la} 
+
+Así pues, la autoridad monetaria no puede estabilizar a la vez el desempleo y la inflación (no se produce divina coincidencia), y éste mostrará una cierta persistencia, independientemente de la persistencia de la perturbación de la productividad, que dependerá fundamentalmente del dinamismo del mercado de trabajo.
+
+Blanchard y Galí (2010) muestran que la política monetaria óptima estará entre estas dos opciones extremas y consistiría en estabilizar parcialmente con dos variables. Por tanto, este modelo permite integrar fricciones del mercado de trabajo (búsqueda y emparejamiento), rigideces de salarios y rigideces nominales. El diseño de las instituciones del mercado de trabajo tiene importantes implicaciones para el equilibrio macroeconómico: un mercado de trabajo poco dinámico dará lugar a mayores incrementos del desempleo y a una mayor persistencia de este ante perturbaciones negativas de productividad. Del mismo modo, condiciona la articulación de la política monetaria, ya que una estabilización estricta de la inflación dará lugar a fluctuaciones persistentes y amplias del desempleo, especialmente en mercado esclerótico.
+
+\subsection{Evidencia empírica} 
+El crecimiento del desempleo en los países desarrollados a partir de los años 70, especialmente tras las dos crisis del petróleo, dio lugar a un creciente interés tanto teórico corno emp írico sobre las causas e impl icaciones del desempleo. Blanchard (2006) explica que en el momento en que comienza a producirse ese aumento del desempleo, el concepto de tasa de natural de desempleo acaba de ser planteado por Friedman y, desde entonces, aunque no se ha alcanzado una teoría única del desempleo, s í se han producido importantes avances en el análisis acroeconómico, a nivel teórico y empírico, del mercado de trabajo . En este apartado se exponen algunos de esos resultados empíricos. El incremento del desempleo en los países europeos en los años 70 es explicado por Blanchard (2006) en térm inos de un modelo de la NAIRU, por el efecto de dos perturbaciones negativas: los shocks del petróleo de 1973 y 1979 y la caída en el crec imiento de la prod uctividad total de los factores en los años 70. El ajuste ante estas dos perturbaciones negativas habría requerido una ralentización en el crecimiento de los salarios. Sin embargo, en un período de cierta inestabilidad y descontento social en m uchos países europeos, se produjeron importantes demandas salariales. En una coyuntura en la que las pert urbaciones negativas requerían un ajuste salarial, el resultado fue un aumento del desempleo. Blanchard (2006), explica que el desarrollo de un marco conceptual y del análisis emp írico del aumento del desempleo en los 70 s e debe a Bruno y Sachs29 . Bruno y Sachs argumentan que el ��urnento del desempleo se debería a la interacción de las pertubaciones negativas con la existencia de rigideces en el ajuste en salario real (a mayor rigidez, más lento el ajuste del salario real) y en el salar io nominal (cuanto mayor es la rigidez nominal más' lento es el ajuste del salario nom inal a cambios en los precios). Estas rigideces podr ían tener su or igen en la estructura de la negociac ión colectiva. En particular, Calrnfors y Dr iffill ( 1988) se centran en los efectos del grado de centralización, de la negociación colectiva, entendido como el nivel (estatal, regional o empresa) en el que se lleva a cabo la negociación, sobre los resultados macroeconómicos.
+
+En los años 80 el desempleo en Europa continuó aumentando. Aunque en la primera mitad de la
+década se aplicaron políticas monetarias contractivas para reducir la infla��ión (incrementando el
+desempleo por encima de la NAIRU), en la segunda mitad, en ausencia de shocks de petróleo y con una inflación estable el desempleo se mantuvo en niveles elevados (8-9\%). La productividad total de los factores mantuvo un crecimiento débil por lo que la persistencia en el desempleo sugería que los mecanismos de detenninación de salarios no se habrían ajustado a la nueva realidad del menor crecimiento de la productividad (Blanchard, 2006). Esto hizo que la investigación sobre las causas de la persistencia del desempleo se centrase en el análisis de la histéresis. Blanchard y Summers (1987) estiman unas ecuaciones de salarios en las que los salarios dependen de la expectativas de inflación, del empleo, del empleo retardado uno y dos períodos ydel tamaño de miembros del sindicato o grupo de insiders; y unas ecuaciones el empleosuponiendo que sigue un proceso AR( 1) para el Reino Unido, Francia, Alemania y Estados Unidos. Sus resultados muestran que en el caso de los países eu��opeos existiría evidencia de ungrado sustancial de histéresis, ya que la ratio entre el coeficiente del empleo y del empleo retrasado un período es aproxidamente uno, valor que en su modelo teórico sugiere en el caso de histéresis estricta. Por otra 'parte, Blanchard (2006) se muestra favorable a la existencia de persistencia y no de histéresis pura ya que la existencia de histéresis implicaría, contrariamente a la evidencia empírica existente, que los cambios en la población activa no tendrían efectos sobre el empleo.
+
+
+\clearpage
+\section{Aproximación alternativa al desempleo desde la Economía Institucional}
+\puntosclave{
+  A partir de los años 90's y 2000's, crece el interés por explicaciones neoinstitucionalistas, por las cuales el nivel de desempleo no vendría únicamente determinado por factores estrcítamente de mercado, sino también por las instituciones (legislación, relaciones de poder entre empleadores y trabajadores, etc.)
+}
+
+En los años 90 el desempleo se mantuvo en niveles elevados en Europa aunque con una gran heterogeneidad entre países, lo que dió lugar a nuevas líneas de investigación teóricas entre las que podemos destacar el creciente interés en la influencia de las instituciones del mercado de trabajo (dentro del marco ortodoxo, esto ya se había incorporado en cierta medida con los modelos de búsqueda). 
+
+Por ejemplo, Nickell (1997) analiza la influencia de las instituciones del mercado de trabajo sobre el desempleo y la oferta de trabajo, mediante una regresión del desempleo, del desempleo a largo plazo y del desempleo a corto plazo frente a una serie de instituciones del mercados de trabajo\footnote{ Con datos de sección cruzada de países europeos, Estados Unidos y Canadá durante el período 19 83-19 89 y 1989-1994.
+} Sus principales resultados son: 
+\begin{lnum}
+  \item \textit{Regulación, protección del empleo y costes de ajuste.} La legislación sobre protección del empleo y la regulación laboral general no tienen efectos significativos sobre el desempleo.
+  Sin embargo, la legislación de protección del empleo tiende a reducir el desempleo a corto plazo y a aumentar el desempleo a largo plazo y a reducir la oferta de trabajo;
+  \item \textit{Protección por desempleo: activas y pasivas}. Tiene un importante efecto sobre el desempleo de forma que tasas de reposición más elevadas y una mayor duración de la protección tienden a elevar el desempleo. Las políticas activas, especialmente si se combinan con una duración reducida de la prestación por desempleo, tienden a reducir el desempleo;
+  \item \textit{Cobertura sindical}. La cobertura de la negociación colectiva tiene una gran influencia sobre el desempleo, elevándolo tanto a corto como a largo plazo. No obstante, una elevada coordinación en la negociación, tanto de sindicatos como de asociaciones empresariales, puede compensar el efecto de la cobertura de la negociación; y,
+  \item \textit{Impuestos sobre el trabajo}. NICKELL encuentra que puede elevar el desempleo y reducir la oferta de trabajo, aunque en la literatura también existen trabajos que rechazan un efecto a largo plazo de la carga impositiva total sobre el desempleo. 
+\end{lnum} 
+
+Blanchard y Wolfers (2000) analiza el efecto de las instituciones y los shocks macroeconómicos sobre el desempleo. Sus resultados en cuanto a la influencia de las instituciones encuentran que los efectos de pertubaciones macroeconómicas de signo negativo (sobre la productividad total de los factores, movimientos adversos de la demanda de trabajo y aumentos del tipo de interésreal) sobre el desempleo son mayores cuanto más rígidas son las instituciones del mercado detrabajo (mayores niveles de protección por desempleo, de protección en el empleo, de imposición sobre el trabajo y cobertura sindical). Por su parte, una mayor coordinación en la negociación colectiva y una mayor acción de las políticas activas del mercado de trabajo suavizan el efecto de estas pertubaciones. 
+
+Bassannini y Duval (2006) produndizan en la línea de investigación de Blanchard y Wolfers (2000) y estiman un modelo de datos de panel para 20 países de la OCDE en el que la tasa de desempleo depende de una serie de indicadores de la estructura del mercado de trabajo y de la . rigidez de la regulación de los mercados de bienes. Además se incluye el output-gap, para recoger los efectos del ciclo, y efectos fijos de tiempo y de país. Sus resultados encuentran que la carga impositiva, la tasa de reposición de la prestación por desempleo y la regulación de los mercados de productos tienden a elevar el desempleo agregado, mientras que la protección en el empleo y la densidad sindical no son significativos. Por otra parte, la mayor centralización de la negociación colectiva reduce el desempleo. De acuerdo a los resultados obtenidos, las instituciones y políticas del mercado de trabajo se identifican como determinantes fundamentales del desempleo: explicarían aproximadamente el 50\% de las diferencias observadas entre países en los cambios en el desempleo entre 1982 y 2003 y, cuando se tiene en cuenta el ciclo a través del output gap hasta el 75\% de esas diferencias. Además, separan el efecto del output-gap en cuatro tipos de pertubaciones encontrando que un aumento de la productividad total de los factores tiende a reducir el desempleo30, mientras que las perturbaciones sobre los términos del comercio (incremento de los precios relativos de las importaciones), de los tipos de interés reales y los shocks adversos de demanda de trabajo tienden a elevar el desempleo.
+
+
+
+
+
+
+\clearpage
+\section{Conclusión}
+
+\subsection{Recapitulación}
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+\MyBibItem{Autor}{Título}{Año}{DOI -- LINK}
+
+
+% --- Anexos (no aparecen en el índice) ---
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+\clearpage
+\anexo{Desarrollo teórico de la Curva de PHILLIPS: LIPSEY (SNC)}\label{anx:lipsey}
+El economista neozelandés A. W. PHILLIPS publicó en 1958 un trabajo titulado \textit{La relación entre el desempleo y la tasa de variación de los salarios monetarios en el Reino Unido entre 1861 y 1957}. En él obtuvo la siguiente relación entre la tasa de crecimiento de los salarios y la tasa de desempleo: 
+
+$$\log(\Delta \pi_t^w+0.9)=0.984-1.394\log{(U_t)}$$
+
+Es decir, la tasa de variación de los salarios nominales está relacionada de forma inversa y no lineal con la tasa de desempleo.\footnote{Por ejemplo, según la relación estimada por PHILLIPS (1958) con una tasa de desempleo del 5,5\%, la tasa de variación de los salarios nominales sería del cero por ciento, mientras que con una tasa de desempleo del 2,5\% la tasa ele crecimiento de los salarios nominales sería del 2\%. Además, los datos observados de salarios nominales y tasa de desempleo para el período 1948-1957 presentaban un buen ajuste a la relación estimada para el período 1861-1913, lo que sugería la existencia de una relación estable y a largo plazo entre inflación y desempleo.
+}
+
+\imagenfit{CurvaPHILLIPS.png}{Curva de PHILLIPS: Reino Unido 1861-1913}{PHILLIPS, 1958}
+
+Es decir, los periodos de menor desempleo coincidían con un mayor crecimiento de los salarios y, por ende, un menor crecimiento de los precios. Aunque el análisis de Phillips (1958) es empírico, su artículo plantea inicialmente algunas hipótesis que podrían explicar la relación entre salarios nominales y tasa de desempleo. 
+
+En particular, plantea que la existencia de exceso de demanda tiende a hacer que el precio de un bien se eleve, lo que en el mercado de trabajo implicaría que el salario crezca, a medida que las empresas incrementan rápidamente los salarios para atraer trabajadores. 
+
+Por otra parte, Phillips (1958) argumenta que parece que los trabajadores son reticentes a rebajar sus salarios cuando la demanda de trabajo es reducida y el desempleo es elevado, por lo que la relación entre el desempleo y la tasa de variación de los salarios es posible que sea altamente no lineal. Además, también señala que no sólo el exceso de demanda de trabajo, sino también su tasa de variación y, por tanto, la del desempleo afecten a la tasa de variación del salario nominal. Es decir, si el desempleo cae de forma muy rápida (incluso aún partiendo de niveles elevados) es posible que los salarios se aceleren, a medida que las empresas hacen mayores ofertas salariales para contratar trabajadores.
+
+En su trabajo de 1960, LIPSEY propuso un fundamento teórico para la Curva de Phillips basado en dos supuestos fundamentales:\footnote{
+LIPSEY (1960). \textit{The relation between Unemployment and the Rate of Change of Money Wage rates in the United Kingdom. 1862-1957. A further Analysis}
+}
+
+\begin{lnum}
+    \item Existe una relación lineal positiva entre la tasa de crecimiento de los salarios nominales y el exceso de demanda de trabajo:
+    $$\frac{\dot W}{W}=\alpha X_L=\alpha \left(\frac{L^d-L^s}{L^s}\right)$$
+    Donde $X_L$ es el exceso de demanda de trabajo y $\alpha>0$.
+    \item Existe un relación no negativa entre el exceso de demanda de trabajo y el desempleo:
+    $$X_L=\beta(U)$$
+    Donde $\beta$ es un parámetro negativo variable tal que:
+    \begin{la}
+        \item Cuando $X_L\to0\Longrightarrow U=U^*;\quad \text{con}\;\;U^*>0$; y,
+        \item Cuando $X_L\to0\Longrightarrow U\to0$
+    \end{la}
+    Es decir, (a) cuando el mercado de trabajo se vacía, existe un cierto grado de desempleo positivo debido a fricciones del mercado de trabajo, en el que existen trabajadores que cambian de empleo o buscan uno nuevo; y, (b) que cuando el exceso de demanda tiende a cero implica que el desempleo tiende a cero, implicaría que sucesivos incrementos de la demanda, darían lugar a reducciones del desempleo cada vez menores. Entonces, la oferta de trabajo será igual al número de trabajadores empleador más el de desempleados y la demanda de trabajo sería igual a la suma de trabajadores empleados y de puestos vacantes existentes, por lo que el exceso de demanda de trabajo también puede expresarse como: $X_L=(V-U)/(E+U)\Longrightarrow X_L=\beta(U)$
+\end{lnum} 
+
+Combinando estos dos supuestos es posible justificar la existencia de una relación negativa entre la tasa de variación de los salarios y la tasa de desempleo, ya que la variación del salario nominal depende del exceso de demanda en el mercado de trabajo, que se aproxima por el nivel de desempleo:
+
+$$\frac{\dot W}{W}=f(U)$$
+
+
+\anexo{Desempleo friccional: Enfoque parcial. Modelo DPM}\label{anx:dpm}
+Se considera que este desempleo es de equilibrio porque las empresas y los trabajadores maximizan sus pagos bajo expectativas racionales, dados los procesos que describen la creación y destrucción de empleo. Además, los salarios se determinan de forma que se explotan todas las ganancias económicas del emparejamiento entre las empresas y el trabajador cuando se produce una contratación. Por tanto, suponen que la contratación es una actividad descentralizada, resultado de las decisiones de los trabajadores y las empresas:
+\begin{la}
+    \item \textit{Los trabajadores}. Cuando están desempleados deben decidir si seguir desempleados o buscar un empleo. En la situación de desempleo el trabajador puede recibir prestaciones por desempleo o puede que obtenga utilidad al disfrutar del ocio o realizar actividades domésticas. Por su parte, el proceso de búsqueda es incierto, ya que existen otros trabajadores desempleados que compiten por encontrar un empleo, puede que no existan vacantes o puede que las cualificaciones del trabajador no se ajusten a las requeridas para ocupar las vacantes existentes. Por lo tanto, el proceso de búsqueda es costoso para el trabajador; por otro lado,
+    \item \textit{Las empresas}. Necesitan contratar trabajadores para realizar el proceso productivo y el proceso de contratación es costoso. Por una parte, tienen que anunciar la vacante, realizar procesos de selección, etc. Por otra, existe incertidumbre sobre si podrán encontrar un candidato con las cualificaciones adecuadas o si será contratado por otra empresa. Si en el mercado de trabajo hay muchas vacantes y pocos desempleados buscando empleo, (\textit{tightness} es elevado), será menos probable que la empresa contrate a alguien. 
+\end{la} 
+
+Podemos considerar que la dinámica de los flujos de trabajo sigue la siguiente ecuación (denotamos con $\dot x$ a las tasas de variación entre periodos):
+
+$$
+\begin{aligned}
+    \text{Evolución del desempleo:} \quad &\dot u=\underbrace{\lambda(1-u)}_{\text{\scriptsize Flujo de entrada: FED}}-\underbrace{\theta q(\theta)u}_{\text{\scriptsize Flujo de salida: FSD}}\quad \sim\quad \boxed{\dot u=\lambda(1-u)-vq(\theta)}\\[1em]
+    \text{donde,}
+    &\begin{cases}
+        \lambda\equiv \quad \text{Tasa (exógena) de destrucción de empleo}\\[0.5em]
+        \theta\equiv \quad \text{Grado de presión en el mercado de trabajo (\textit{tightness}):}\;\;\theta=\frac{v}{u}\\[0.5em]
+        q(\theta)\equiv \quad \text{Tasa/Funcion de cobertura de una vacante}\;\;q(\theta)=\frac{m}{v}\\[0.5em]
+    \end{cases}\\[0.5em]
+    \text{Y,}\quad &\boxed{\partial q/\partial \theta \leq 0} \Longleftarrow\text{\scriptsize (Equivalente a la curva de BEVERIDGE: Graficar Curva)}\\[1em]
+    &\text{Entonces, (por la condición de equilibrio $\dot u=0$), fijando $\bar\lambda$}\\[0.5em]
+    &\Longrightarrow \quad \boxed{v=\frac{\bar\lambda(1-u)}{q(\theta)}}\quad\text{y,}
+    \left\{\begin{aligned}
+        \uparrow u\to\downarrow\theta\to\uparrow q(\theta)\to\downarrow v\\[0.5em]
+        \downarrow u\to\uparrow\theta\to\downarrow q(\theta)\to\uparrow v
+    \end{aligned}\right\}\Rightarrow \text{Curva BEVERIDGE}
+\end{aligned}
+$$
+
+Es decir, existe por un lado un flujo continuo de entrada al desempleo ($FED$) caracterizado por el número de trabajadores empleados (normalizado a uno sobre la población activa menos el número de personas en desempleo) que viene condicionado por un factor exógeno; y, por otro lado, un flujo de salida continuo del desempleo ($FSD$) caracterizado por el número de vacantes disponibles y la tasa de cobertura de una vacante, que a su vez depende de la presión en el mercado de trabajo ($\theta$). Con esta información podemos reconstruir de forma teórica la Curva de BEVERIDGE:
+
+\imagenfit{CurvaBeveridge_Lambda.png}{Curva de BEVERIDGE. Fijando: $\bar\lambda$}{Apuntes ICEX-CECO. Tema 3.A.26}
+
+Una vez hemos relacionado el número de puestos vacantes y el desempleo observado, como consecuencia de las presiones del mercado de trabajo, veamos como podemos obtener un desempleo de equilibrio, estable y óptimo, dada esta estructura de mercado. Para ello, introduciremos sólamente (por ser una versión simplificada) lo que se conoce como la condición de creación de empleo (fruto del comportamiento optimizador de la empresa) y la ecuación de salarios (fruto del comportamiento optimizador de los trabajadores).
+
+$$
+\begin{aligned}
+    \text{Condición de creación de empleo:}\quad &\underbrace{\bar p-w-\frac{(\bar r+\bar\lambda){\bar p\bar c}}{q(\theta)}=0} \quad \text{donde,}
+    \begin{cases}
+        \text{\scriptsize$\bar r\equiv$ Tasa de descuento}\\[0.2em]
+        \text{\scriptsize$(\bar p-w)\equiv$ Coste bruto del empleado}\\[0.2em]
+        \text{\scriptsize$\bar p\bar c\equiv$ Coste de un puesto no cubierto}\\[0.2em]
+    \end{cases}\\
+    &\hspace{4.4em}\Downarrow\\[1em]
+    w(\theta)= \;&\underbrace{\bar p-\frac{\mathrm{C}}{q(\theta)}}_{\partial w/\partial\theta<0}=\underbrace{(1-\bar\beta)\bar z+\bar\beta \bar p(1+\bar c\theta)}_{\partial w/\partial\theta>0}\Longrightarrow \boxed{\text{Eq:}\;(\bar w, \bar\theta)}\\[1em]
+    &\hspace{5em}\Uparrow\\
+    \text{Ecuación de salarios:}\quad &\overbrace{w=\underbrace{(1-\bar\beta)\bar z}_{\substack{\text{\scriptsize Mín. renta:}\\\text{\scriptsize \textit{Outside} option}}}+\overbrace{\bar\beta \bar p(1+\bar c\theta)}^{\substack{\text{\scriptsize Renta de poder:}\\\text{\scriptsize \textit{Inside} power}}}}^{} \quad \text{donde,}
+    \begin{cases}
+        \text{\scriptsize$\beta\equiv$ Poder negociación}\\[0.2em]
+        \text{\scriptsize$z\equiv$ Valor de la alternativa al trabajo (outside)}\\[0.2em]
+        \text{\scriptsize$p\equiv$ Plusvalía/Productividad del trabajador}\\[0.2em]
+        \text{\scriptsize$c\theta\equiv$ Costo esperado de cubrir vacante}\\
+    \end{cases}
+\end{aligned}
+$$
+
+Como vemos, la condición de equilibrio salarial que iguala la condición de creación de empleo (comportamiento optimizador de la empresa) y la condición de oferta, o ecuación de salarios (comportamiento optimizador del trabajador), conduce a un equilibrio en el que obtendremos un valor determinado de $w$ y un valor determinado de $\theta$. Esto se puede representar mediante el siguiente gráfico:
+
+\imagenfit{EqSalarialMORTGENSEN.png}{Determinación de salario en el modelo de búsqueda}{Apuntes ICEX-CECO. Tema 3.A.28}
+
+Por tanto, se observa que el grado de presión en el mercado de trabajo de equilibrio, $\bar\theta$, solo depende de los parámetrosdel modelo (tasa de descuento, poder de negociación, valor del ocio, productividad del trabajador) y es independiente del nivel de desempleo. De este modo, la condición de creación de empleo puede expresarse de manera lineal, como relación de vacantes y desempleo: $v=q(\bar\theta)u$ y, entonces, podremos verificar la condición de equilibrio de mercado como relación entre vacantes y desempleo friccional:
+
+\imagenfit{DesempleofriccionalMORTGENSEN.png}{Determinación del desempleo en el modelo de búsqueda}{Apuntes ICEX-CECO. Tema 3.A.28}
+
+Por otro lado, los parámetros que determinan el emparejamiento (elasticidad y eficiencia del mismo) y la destrucción de empleo afectan a las dos curvas. Un incremento de la productividad, aumenta el incentivo de la empresa a sacar vacantes, de modo que para cada nivel de desempleo hay más vacantes y la curva de creación de empleo se desplazará a la izquierda hasta alcanzar un nuevo equilibrio con menor desempleo y mayor número de vacantes.\footnote{Los aumentos del poder de negociación de los trabajadores, de la protección por desempleo y de los costes de creación de vacantes tienen el efecto contrario y desplazan la curva de creación de empleo hacia la derecha, alcanzándose un nuevo equilibrio con menos vacantes y mayor desempleo. Esto se debe a que se reduce el beneficio de abrir una vacante para la empresa, ya que se incrementa el coste del trabajador (aumenta el salario al elevarse el poder de negociación o las prestaciones por desempleo) o directamente al incrementarse el coste de la vacante. 
+} En el caso de un aumento de la tasa de destrucción de empleo, la curva de BEVERIDGE se desplaza hacia fuera, ya que aumentan los flujos de entrada en el desempleo en relación con los de salida, por tanto, la curva de creación de empleo cambia también su pendiente rotando hacia la derecha, ya que aumenta el coste de la vacante al reducirse el tiempo que se espera que esté cubierta. En el nuevo equilibrio el desempleo aumenta, pero el efecto sobre las vacantes es indeterminado, al desplazarse las dos curvas.
+
+Los modelos de búsqueda se basan en la existencia de fricciones reales en el mercado de trabajo, ya que el proceso de búsqueda y emparejamiento es costoso para empresas y trabajadores, y describen la dinámica del mercado de trabajo como resultado de los flujos de trabajadores desde el empleo hacia el desempleo (y viceversa) derivados de las decisiones de búsqueda y contratación de empresas y trabajadores. Dada la relevancia del modelo neokeynesiano para el análisis de las fluctuaciones macroeconómicas y de los modelos de búsqueda para la comprensión del mercado de trabajo, desde los años 2000 el análisis macroeconómico del mercado de trabajo se ha centrado en integrar estos dos enfoques, surgiendo a sí una amplia literatura que analiza las interacciones entre las rigideces nominales de precios y las rigideces del mercado de trabajo. Los modelos de la NEK-2 con rigideces de precios implican que la inflación queda determinada por la evolución del coste marginal, que depende crucialmente de la estructura del mercado de trabajo.
+
+
+\end{document}
