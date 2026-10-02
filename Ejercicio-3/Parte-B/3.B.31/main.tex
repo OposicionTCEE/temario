@@ -1,0 +1,1185 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== Tº\text{C} propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin Tº\text{C} propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Cambio Climático y su impacto en la economía\\
+\large Evidencia y modelos integrados de evaluación. Acuerdos internacionales y principales medidas adoptadas para hacer frente al cambio climático}
+\author{Marcelo Ortega}
+\date{Marzo 2026}
+\newcommand{\TemaCode}{3B31}
+
+\oldtitle{
+    B.32. Economía y medio ambiente. Bienes públicos globales
+}
+\changerationale{
+    Para diferenciar este tema del tema de externalidades de la parte A y del tema de política medioambiental del Cuarto Ejercicio, se esperaría un enfoque macroeconómico, que se complementa con una referencia a instrumentos concretos, que deberían explicarse también con una perspectiva económica y analítica. Los modelos integrados de evaluación son usados de forma muy extendida por los principales organismos internacionales que analizan las implicaciones del cambio climático.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     
+    }
+\vspace{1cm}
+
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+
+
+\clearpage
+\section{Cambio Climático: Marco conceptual}
+\puntosclave{
+    La causa principal del cambio climático es la quema de combustibles fósiles, la emisión de contaminantes, la deforestación y los cambios en el uso de la Tierra.
+    
+    El cambio climático nos preocupa porque aumenta la frecuencia e intensidad de los eventos meteorológicos extremos, propicia la subida del nivel del mar, altera los ecosistemas, disminuye las precipitaciones en algunas regiones y empeora la salud de la población. 
+    
+    El impacto teórico del cambio climático sobre el sistema económico se produce a través dede riesgos fisicos (elevadas temperaturas y desastres climáticos) y riesgos de transición(costes de ajuste), que afectan al crecimiento, la estabilidad macroeconómica, la implementación de la política económica y la desigualdad. 
+    
+    La evidencia empírica disponible parece confirmar los efectos nocivos del cambio climático sobre el sistema económico.
+} 
+
+Podemos definir el cambio climático como la variación global del clima de la Tierra. Se estima que la temperatura media del aire en la superficie de la Tierra se ha incrementado aproximadamente en $1º\text{C}$ desde 1900, especialmente desde mediados de la década de 1970.\footnote{Diversas mediciones reflejan que el nivel de $\text{CO}_2$ en la atmósfera ha aumentado un $40\%$ desde 1800, y que dicho incremento se origina en la quema de combustibles fósiles, la emisión de contaminantes en diversos procesos agrícolas e industriales, la deforestación y los cambios en el uso de la tierra.
+
+Existen causas naturales que explican parte de este incremento de la temperatura, como las variaciones en la energía generada por el Sol, cambios en la órbita de la Tierra alrededor del Sol o las erupciones volcánicas. Sin embargo, las simulaciones realizadas por los científicos a través de modelos climáticos indican que el impacto de estos factores no es suficiente para explicar una variación tan pronunciada de la temperatura. Los científicos utilizan los denominados \textit{Earth System Models} para simular el sistema climático de la Tierra con el máximo detalle posible
+} 
+
+\subsection{Causas: ¿Por qué está sucediendo?}
+El consenso científico apunta a la emisión de gases de efecto invernadero (principalmente $\text{CO}_2$) derivados de la actividad humana como causa principal de este fenómeno. La emisión de estos gases produce un efecto en la atmósfera que se materializa en un aumento generalizado de la temperatura de la Tierra. 
+
+El actual calentamiento inducido por el $\text{CO}_2$ es ya un fenómeno irreversible en escalas de tiempo humanas (salvo fruto del avance tecnológico). Según diversas estimaciones, el retorno a los niveles de la era preindustrial requeriría la paralización inmediata de las emisiones durante miles de años. Además, el mantenimiento de la trayectoria actual de las emisiones provocaría un aumento adicional de la temperatura comprendido entre $2,6º\text{C}$ y $4.8º\text{C}$ a finales del siglo XXI. 
+
+Debemos tener en cuenta que la atmósfera es uno de los ejemplos más representativos de un bien comunal global, de uso rival, no excluible y compartido por todos los territorios y generaciones. La actividad económica del ser humano produce emisiones de gases de efecto invernadero que se acumulan y dañan la atmósfera, dando lugar al cambio climático. Este fenómeno puede enmarcarse como un mal público global, al suponer un coste o desutilidad no rival, no excluible y generalizado en todos los territorios y generaciones futuras. En ausencia de un precio a pagar por generar estas emisiones, los agentes económicos producirán una externalidad negativa, emitiendo un volumen de gases superior al óptimo. 
+
+\subsubsection{Política Climática: Intergovernamental Panel on Climate Change (AGNU, 1988)}
+En 1988, la Asamblea General de las Naciones Unidas (AGNU) creó el \textbf{Intergovernamental Panel on Climate Change} (IPCC) con el objeto de preparar una revisión exhaustiva del estado de los conocimientos de la ciencia del cambio climático, así como elaborar recomendaciones a los gobiernos en el diseño de políticas públicas que aborden esta problemática. Desde entonces, el IPCC ha elaborado seis \textit{Assesment Report} (AR), considerados a menudo como los informes científicos más completos sobre el cambio climático disponibles a día de hoy. 
+
+\paragraph{Riesgos: ¿Qué está en juego?}
+Según el sexto \textit{Assesment Report} (AR$6$) del IPCC, para $127$ riesgos clave identificados, los impactos evaluados a medio y largo plazo son varias veces superiores a los observados actualmente. Entre los riesgos y vulnerabilidades que entraña el Cambio Climático, así como sus conclusiones más destacadas, encontramos (AR$6$):
+\begin{lnum}
+    \item \textbf{Ecosistemas: divergencia}. La vulnerabilidad de los ecosistemas y las sociedades al cambio climático difiere sustancialmente entre las regiones y dentro de ellas;
+    \item \textbf{Calentamiento global: riesgos climáticos}. El calentamiento global, que alcanzará $1,5º\text{C}$ a corto plazo, provocará un aumento inevitable de múltiples riesgos climáticos que afectan a los ecosistemas y a las sociedades humanas. No obstante, si se consigue contener el calentamiento en torno a este nivel, los daños se reducirán considerablemente con respecto al escenario inercial;
+\end{lnum}
+
+También deja claro que, a partir de 2040, los riesgos asociados al cambio climático dependerán en gran medida de las acciones de mitigación y adaptación implementadas hasta entonces. Debemos tener en cuenta que los impactos y riesgos son cada vez más complejos y difíciles de identificar, cuantificar y gestionar. La aparición simultánea de múltiples peligros y su interacción con otros dará lugar a un agravamiento del riesgo global sistémico y la aparición de riesgos en cascada entre sectores y regiones. Además, desde la literatura estríctamente económica se ha intentado dar una mayor granulación al concepto de riesgo, principalmente por vía de dos canales:
+\begin{lnum}
+    \item \textbf{Riesgos físicos}. Estos riesgos vendrían deriyados de las altas temperaturas y los eventos meteorológicos extremos, como huracanes, inundaciones, etc; y,
+    \item \textbf{Riesgos de transición}. Estos riesgos engloban los costes de ajuste que sufrirán las economías como consecuencia del cambio climático y/o las políticas climáticas. Un ejemplo es la obsolescencia tecnológica que supone la transición energética. 
+\end{lnum}
+
+
+\subsection{Efectos: ¿Cómo afecta el cambio climático?} 
+Conocidas sus causas y las vulnerabilidades aparejadas, podemos preguntar cómo y de qué manera se materializarán estos riesgos: ¿por qué y en qué puede manifestarse esta condición lesiva?
+
+\subsubsection{Generales: Assesment Report $6$}
+Según el sexto \textit{Assesment Report} (AR$6$) del IPCC, el cambio climático ha impactado, o va impactar, de muchas maneras en el entorno y las sociedades humanas. De entre los efectos más generales observados, se destaca su impacto en:
+\begin{lnum}
+    \item \textbf{Fenómenos climáticos}. Aumento de la frecuencia e intensidad de los fenómenos climáticos y meteorológicos extremos, incluidos los calores extremos en la tierra y en el océano, las fuertes precipitaciones, la sequía y los incendios;
+    \item \textbf{Oceános y precipitaciones}. Acidificación de los océanos, la subida del nivel del mar y disminución de las precipitaciones en algunas regiones;
+    \item \textbf{Ecosistemas terrestres}. Daños sustanciales e irreversibles en los ecosistemas terrestres, de agua dulce, costeros y marinos de alta mar. Aproximadamente la mitad de las especies evaluadas a nivel mundial se han desplazado hacia los polos o hacia zonas más elevadas;
+    \item \textbf{Salud}. Deterioro de la salud fisica y mental de la población mundial. Los fenómenos de calor extremo han aumentado la mortalidad y morbilidad de la población en todo el mundo. Los riesgos de enfermedades transmitidas por el agua y los alimentos han aumentado en algunas regiones a causa de patógenos acuáticos sensibles al clima. El aumento de la exposición al humo de los incendios forestales y al polvo atmosférico se asocia con trastornos cardiovasculares y respiratorios. Algunos problemas de salud mental están relacionados con el aumento de las temperaturas y los traumas provocados por los fenómenos meteorológicos extremos. 
+\end{lnum}
+
+Como vemos, el impacto nocivo no se circunsribe únicamente a la economía, sino que desborda el marco acotado y se proyecta en múltiples frentes. 
+
+\subsubsection{Economía: Identificación de los canales de impacto}
+A pesar de ello, sí podemos describir algunos de sus efectos económicos potencialmente más perjudiciales, principalmente por su impacto desigual entre sectores (más expuestos al clima, como la agricultura, la silvicultura, la pesca y el turismo) y entre territorios (ciclones tropicales). De hecho, llega a ser tan desigual que se han identificado algunos efectos económicos positivos en regiones que se han beneficiado de una menor demanda de energía, así como de una mayor productividad agrícola y atractivo turístico. 
+
+El resultado económico de todo ello, previsiblemente será una pérdida de bienestar conjunto de la humanidad que se canalizará mediante los siguientes fenómenos/factores económicos.
+
+\paragraph{Crecimiento económico: Dotación de factores}
+En primer lugar, el cambio climático afecta negativamente a la \textbf{dotación de factores} de la función de producción, con el consiguiente deterioro del crecimiento económico potencial. En concreto: 
+\begin{la}
+    \item \textbf{Factor trabajo}. El volumen de empleo disponible de las economías podría verse afectado por una reducción de la oferta de trabajo y un aumento de la tasa de desempleo estructural. El principal riesgo físico serían las temperaturas extremas, que podrían reducir la tasa deactividad de los trabajadores o el número de horas ofertadas por trabajador. Los riesgos de transición aparecerían como consecuencia de las mayores migraciones y los cambios  sectoriales en l a demanda de empleo derivados de un clima diferente. Estas alteraciones en elmercado de trabajo podrían dificultar el emparejamiento entre oferta y demanda de trabajo, dando lugar a un incremento del desempleo estructural; y,
+    \item \textbf{Factor capital}. Por otro lado, la acumulación de capital se vería negativamente afectada por el riesgo fisicoque supone una mayor frecuencia de eventos climáticos extremos. La mayor frecuencia de desastres naturales también podría retrasar inversiones por la mayor incertidumbre, reduciendo así la acumulación de capital. A su vez, aparecerían nuevos riesgos de transición, como un efecto desviación de las inversiones desde el capital productivo hacia el capital de adaptación al nuevo escenario climático, o la mayor proporción de activos varados, que son aquellos cuya supervivencia está comprometida o no es viable en la transición energética hacia una economía descarbonizada.
+\end{la}
+
+Por ultimo, no hay que perder de vista (aunque no sea estríctamente un factor productivo), su impacto sobre la \textbf{Productividad Total de los Factores} o Tecnología (PTF). La acumulación de capital humano se podría ver comprometida por riesgos fisicos relacionados con el empeoramiento de la salud de los trabajadores, incluyendo una mayor mortalidad. A su vez, aparecen múltiples riesgos de transición como la desviación de las inversiones desde la I+D hacia otras actividades (la reconstrucción de infraestructuras, etc.), la obsolescencia de tecnologías consolidadas ante la aparición de nuevas políticas climáticas, o la pérdida de eficiencia productiva que supondrían las disrupciones en el comercio internacional, como las producidas por cambios geofisicos (aumento del nivel del mar, etc.) o la asimetría regulatoria entre diferentes regiones del mundo. 
+
+\paragraph{Agregados macroeconómicos y Política Económica: Inestabilidad e ineficacia}
+Por otro lado, y como consecuencia indirecta del menor crecimiento económico previsto, se espera que comprometa ciertamente la estabilidad rnacroeconómica. Como consecuencia, esencialmente, del impacto de un menor crecimiento económica sobre las siguientes características:
+\begin{lnum}
+    \item \textbf{Posición cíclica}. En primer lugar, los eventos macroeconómicos extremos se pueden interpretar como shocks de oferta que afectan a la economía. La mayor frecuencia de estos eventos y la incertidumbre que les acompaña (son dificiles de anticipar y su impacto es dificil de estimar a priori) implica, por tanto, una nueva fuente de inestabilidad macroeconórnica que deben afrontar los agentes económicos y los policymakers. Los shocks de oferta negativos que suponen estos desastres climáticos suelen venir acompañados de importantes paquetes de gasto público (labores de reconstrucción y paquetes de ayuda a familias y empresas) que dan l ugar a shocks de demanda positivos. La suma de ambos efectospuede dar lugar a importantes desviaciones del PIB observado con respecto a su potencial, favoreciendo así la aparición de otros desequilibrios macroeconómicos, corno tensiones inflacionistas, déficits presupuestarios abultados o desequilibrios significativos en la cuenta corriente;
+    \item \textbf{Estabilidad de precios}. Por otro lado, la mayor frecuencia de los eventos climáticos extremos presumiblemente aumentará la volatilidad de los precios, especialmente de los alimentos, la vivienda y la energía. La volatilidad de los precios podrá verse incrementada también a consecuencia de las políticas climáticas. Por ejemplo, la variación de los precios de los derechos de emisión de gases de efecto invernadero (una de las políticas climáticas más relevantes) añade incertidumbre y volatilidad a los costes de producción, y por lo tanto a los precios. Las expectativas de inflación serían también más inciertas y sufrirían revisiones más frecuentes y pronunciadas. El efecto de las políticas climáticas (impuestos verdes, etc) sobre  la evolución de los precios de los combustibles fósiles puede dar lugar a una desviación persistente entre las mediciones de la inflación general y la inflación subyacente, dificultando así la elaboración de previsiones de inflación a medio plazo;\footnote{La inflación subyacente es un indicador muy útil para intuir o predecir la inflación futura. ya que excluye los precios de los productos energéticos y los alimentos no elaborados, cuyos precios son especialmente volátiles.
+    } y,
+    \item \textbf{Estabilidad financiera}. Por último, los riesgos fisicos y de transición ocasionados por el cambio climático pueden exacerbar los riesgos tradicionales del sistema financiero: riesgo de crédito, de mercado y de liquidez. En efecto, los factores de riesgo climático pueden reducir el valor de los activos de los deudores y aumentar el riesgo de crédito. A su vez, los riesgos climáticos pueden alterar o revelar nueva información sobre el valor fundamental de los activos, dando lugar a fuertes oscilaciones de precios que derivan en un incremento del riesgo de mercado. Finalmente, los factores de riesgo climático también pueden afectar al riesgo de liquidez de las instituciones financieras, ya sea de manera directa, a través de su capacidad para obtener fondos o liquidar activos, o indirectamente a través de las demandas de liquidez de los clientes. Por ejemplo, los eventos climáticos extremos pueden provocar un aumento fuerte y repentino de la demanda de liquidez por motivo de precaución por parte de las instituciones financieras, los hogares y las empresas, poniendo en peligro la estabilidad global del sistema financiero. 
+\end{lnum}
+
+Estos efectos tienen a su vez consecuencias sobre la elaboración, diseño e implementación de la Política Económica: incertidumbre sobre la posición cíclica de la economía, la ruptura de los canales de transmisión de la política monetaria y las implicaciones sobre la política fiscal. 
+
+En primer lugar, la aplicación de la política fiscal y la política monetaria puede verse dificultada por la incertidumbre que rodea a los eventos climáticos extremos: \textbf{la persistencia de estos shocks y su efecto sobre la senda de crecimiento a largo plazo es incierta}, aumentando la probabilidad de que se sobrerreaccione o infrarreacione ante este tipo de perturbaciones. Ante un desastre climático, existen tres hipótesis alternativas acerca de la respuesta del sistema económico: (i) destrucción creativa, según la cual, la respuesta de los agentes económicos y/o autoridades ante el surgimiento de una catástrofe natural puede propiciar la aparición de innovaciones tecnológicas que incrementen el PIB a largo plazo con respecto al escenario sin catástrofe natural; (ii) recuperación de la tendencia, según la cual, el desastre natural solo tendría un impacto temporal en el PIB, para después recuperar la senda que se habría producido en ausencia del desastre natural; o, (iii) la no recuperación, en la que el efecto del desastre natural sobre el PIB es permanente. Gráficamente:
+
+\imagenfit{Fig1.png}{Posibles efectos de desastres naturales sobre el PIB. PIB expresado en logarítmos}{BATTEN (2018)}
+
+La dificultad de conocer a priori en cuál de los tres escenarios nos encontramos dificulta la toma de decisiones ante un desastre natural. Por ejemplo, nótese que bajo la hipótesis de no recuperación, el efecto del shock será permanente y por tanto su mitigación mediante políticas monetarias expansivas sería poco conveniente, mientras que bajo la hipótesis de la recuperación de la tendencia, una política monetaria expansiva podría acelerar la recuperación, aunque con una inflación superior.  
+
+Por otro lado, las disrupciones ocasionadas por los riesgos climáticos pueden afectar a la conducción de la política monetaria dañando la capacidad de los bancos centrales para cumplir sus funciones: \textbf{los mecanismos de transmisión de la política monetaria pueden verse alterados}. En efecto, el cambio climático podría reducir la sensibilidad del ahorro y la inversión al tipo de interés, dada la mayor incertidumbre de las empresas en sus decisiones de inversión y la mayor aversión al riesgo de los hogares ante los riesgos climáticos. Estos mismos elementos, unidos al menor crecimiento de la productividad, podrían reducir el tipo de interés natural de la economía, reduciendo el margen de maniobra de los bancos centrales para bajar los tipos de interés ante un shock adverso (Zero Lower Bound).\footnote{El tipo de interés natural puede definirse corno aquel que prevalecería en equilibrio con precios y salarios perfectamente flexibles.
+
+Recordemos que el tipo de interés nominal no puede bajar mucho más allá del 0\%.
+} El canal del crédito también puede verse limitado, dadas las pérdidas de capital ocasionadas por los desastres climáticos extremos. Estas pérdidas de capital reducen el valor de las garantías de los deudores y la rentabilidad de los bancos, impidiendo que su oferta de crédito aumente significativamente con una política monetaria expansiva. La ruptura de los canales anteriores implica una menor influencia del tipo de interés en los precios de losactivos, rompiendo también este canal de transmisión. También la menor predictibilidad de la política monetaria puede reducir su credibilidad y romper el canal de las expectativas, reduciendo la efectividad del forward guidance y desanclando las expectativas de inflación de los agentes económicos. 
+
+Por último, el cambio climático y sus riesgos imponen importantes condicionantes sobre la política fiscal de los gobiernos: \textbf{la transición hacia una economía baja en carbono requiere la movilización de recursos}, que deben financiarse en un contexto de elevado endeudamiento público en las principales economías del mundo y buena parte de los países en desarrollo. Los problemas de sostenibilidad de la deuda pueden verse acrecentados a raíz del incremento de las primas de riesgo de la deuda soberana que provocan los riesgos climáticos. En este contexto, el espacio fiscal de los estados podría verse reducido considerablemente, impidiendo el uso de políticas fiscales expansivas ante shocks adversos de demanda. 
+
+\paragraph{Desigualdad: Impactos asimétricos}
+Un último canal de impacto que preocupa mucho a los académicos y políticos es sus consecuencias sobre la desigualdad. Como se ha dicho, el impacto económico del cambio climático difiere significativamente entre sectores económicos, regiones y grupos sociales. Los eventos climáticos extremos afectarán a los países en desarrollo en mayor medida que los países desarrollados, entre otros motivos por la especialización de los países en desarrollo en sectores especialmente afectados por el cambio climático, como la agricultura. 
+
+La distribución de la renta dentro de cada región también puede verse afectada por el impacto de las políticas climáticas, que alteran el sistema impositivo y la orientación del gasto público. Por ejemplo, los impuestos verdes y determinadas subvenciones para la reducción de las emisiones (renovación de vehículos, etc) podrían ser regresivos y acrecentar la desigualdad en la distribución de la renta. Por otra parte, los desastres climáticos pueden aumentar la tasa de pobreza, dado su efecto negativo sobre la riqueza de las familias.
+
+\subsubsection{Evidencia Empírica: ¿Cuánto afecta el Cambio Climático?}
+La literatura disponible en el ámbito de la economía del cambio climático documenta que la temperatura, las precipitaciones y los eventos climáticos extremos ejercen una influencia significativa sobre múltiples variables económicas (JONES y OLKEN, 2014).
+
+\paragraph{¿Cuánto afecta sobre la renta?}
+En lo referido a la relación entre los ingresos y las condiciones climáticas, la literatura ofrece multitud de estudios con datos de corte transversa y con datos de panel.\footnote{Los estudios con datos de corte transversal toman valores de diversos países para un periodo de tiempo determinado. Por ejemplo. temperatura media y PI 8 per cápita de una muestra de países par.1 el año 2019.
+}\textsuperscriptt{,}\footnote{Los estudios con datos de panel. toman valores de diversos países a lo largo del tiempo. Por ejemplo. temperaturan media y PIB per cápita de una muestra de países entre el año 2000 y 2015.
+}
+
+Utilizando datos de corte transversal, GATES (1967) encuentra una correlación negativa entre el ingreso per cápita y la temperatura, posteriormente corroborada por GALLUP, SACHS y MELLINGER (1999). En la misma línea. DELL, JONES y OLKEN (2009) encuentran que los países  reducen su ingreso per cápita un 8.5\% por cada $1º\text{C}$ adicional de temperatura. NORDHAUS (2006) encuentra que el 20\% de las diferencias de ingreso entre África y los países desarrollados se puede explicar por variables geográficas, tales como la temperatura o las precipitaciones. En general, los análisis con datos de corte transversal encuentran una relación negativa y bastante clara entre la temperatura e ingresos. Sin embargo, estas estimaciones pueden confundir el impacto del clima con otras variables relevantes para las cuales no siempre hay datos. Para aislar más directamente el impacto del clima, los investigadores a menudo recurren a los datos de panel. 
+
+Utilizando datos de panel, Hsiang (2010) encuentra que un aumento de la temperatura de $1º\text{C}$ reduce el PIB un $2,5\%$. Nordhaus (2010) estima que el coste anual de los huracanes en EEUU se aproximó al $0,1\%$ del PIB entre 1 950 y 2008. Según DELL, JONES y OLKEN (2012), el aumento de la temperatura en lº\text{C} a lo largo de un año reduce el ingreso per cápita de un país en un $1,4\%$. HSIANG y JINA (2013) estiman que los ciclones acontecidos entre 1970 y 2008 restaron 1 ,3 puntos porcentuales al PIB mundial. 
+
+Otras publicaciones estiman el impacto del cambio climático sobre otras variables.
+
+\paragraph{¿Cómo afecta en los precios?}
+PARKER (2018) investiga el impacto de varios tipos de desastres naturales en los precios para un panel de $212$ países para el periodo $1980-2012$. Según sus resultados, el impacto de un desastre natural sobre los precios difiere en función del tipo de país (afecta mucho más a los países en desarrollo) y el tipo de desastre (tormentas e inundaciones aumentan la inflación a corto plazo, mientras que los terremotos la reducen). 
+
+\paragraph{¿Cómo afecta sobre la financiación?}
+Por su parte, HUYNH and XIA (2020) encuentran que la exposición a los riesgos climáticos incrementa los costes de financiación de las empresas, a través de mayores tipos de interés en los bonos corporativos. Otros autores, como CEVIK y TOVAR (2022), investigan el impacto del cambio climático sobre la desigualdad para un panel de $158$ países entre $1955$ y $2019$. Sus resultados apuntan a que la desigualdad en la distribución de la renta se ve incrementadacuando aumenta la vulnerabilidad de un país frente al cambio climático.
+
+
+
+\clearpage
+\section{Cambio climático: Marco teórico de evaluación (IAM y alternativas)}
+\puntosclave{
+    Los Modelos Integrados de Evaluación simulan la respuesta de la economía ante distintos escenarios y políticas climáticas. Su uso es cada vez más frecuente entre los gobiernos e instituciones internacionales para el diseño de políticas climáticas. 
+    
+    Estos modelos permiten estimar el Coste Social del Carbono (SCC), que puede definirse como el valor monetario de la externalidad negativa que produce la emisión de una tonelada adicional de $\text{CO}_2$.
+    
+    El modelo DICE, referencia esencial en la economía del cambio climático, integra la  emisión y acumulación de gases de efecto invernadero dentro del modelo neoclásico decrecimiento económico. 
+    
+    Según los resultados de la última versión estándar del modelo DICE, la política climática óptima requiere que el mercado o las autoridades establezcan un precio o impuesto por tonelada de $\text{CO}_2$ emitida en torno a los 43 dólares americanos a precios de 2018. Bajo esta política óptima, el calentamiento global superaría los 3º\text{C}.
+    
+    El modelo RICE regionaliza el modelo DICE, permitiendo desagregar los costes y beneficios del cambio climático y las políticas climáticas por regiones. Los resultados del modelo apuntan a una disparidad considerable en los efectos del cambio climático y las políticas climáticas. 
+    
+    Los Modelos de Integrados de Evaluación presentan limitaciones metodológicas que invitan a la cautela en su uso. A pesar de ello, estos modelos tienen una aplicación cada vez más extendida en nuevos ámbitos como la política monetaria o las finanzas.
+}
+
+Conocemos los canales teóricos que describen el impacto del cambio climático sobre el sistema económico, canales que contrastan con la evidencia empírica, dando lugar a un interés generalizado por parte de los policy makers en la implementación de políticas públicas que aborden este problema. 
+
+
+
+\subsection{Modelos Integrados de Evaluación}
+Para facilitar el diseño de las mismas, los economistas han desarrollado los Modelos Integrados de Evaluación (IAM, por sus siglas en ingles), que pueden entenderse como una especie de laboratorio en el que los economistas simulan la respuesta de la economía ante distintos escenarios y políticas climáticas.\footnote{Los Modelos Integrados de Evaluación deben su nombre a que integran conocimiento proveniente de distintas disciplinas, recogiendo las interdependencias entre el sistema económico y el clima. Así, los IAM permiten evaluar simultáneamente los efectos de las emisiones sobre el clima, y del cambio climático sobre la economía.
+}
+
+A diferencia de la literatura empírica descrita anteriormente, estos modelos especifican hipótesis sobre el comportamiento de las variables económicas y climáticas, así como sobre su interacción. De este modo, además de estimar el impacto del cambio climático y las políticas climáticas, estos modelos proporcionan una explicación detallada del cómo y el por qué se producen tales efectos. 
+
+El coste del cambio climático viene perfectamente resumido en lo que se denomina Coste Social del Carbono (SCC, \textit{social cost of carbon}), que los IAM permiten estimar. Propiamente, el SCC se define como el impacto marginal de las emisiones de $\text{CO}_2$ sobre el valor presente descontado del consumo de los hogares.\footnote{Por sencillez, nos referimos siempre a las emisiones de $\text{CO}_2$ y nos olvidamos del resto de gases de efecto invernadero. Esto no supone un problema metodológico, ya que se puede encontrar una equivalencia entre el resto de gases y el $\text{CO}_2$. De esta forma, medimos la emisiones siempre en toneladas de $\text{CO}_2$, aunque no todas las emisiones sean de este gas.
+} Por ejemplo, si el SCC es de $40\$$, la emisión de una tonelada adicional de $\text{CO}_2$ provocaría una reducción del valor presente descontado del consumo de los hogares en $40\$$. Intuitivamente. esto sería equivalente a una reducción del consumo de $40\$$ en el periodo presente, manteniendo inalterado el consumo en el resto de periodos. 
+
+Como se puede apreciar, la idea detrás del SCC es muy similar al \textbf{precio sombra}, en este caso de las emisiones. Es decir, el valor monetario de la externalidad negativa que produce la emisión de una tonelada adicional de $\text{CO}_2$. Por este mismo motivo, el SCC nos indica, generalmente, el precio o impuesto óptimo que deberían pagar los emisores de $\text{CO}_2$ por tonelada emitida. 
+
+Existen múltiples modelos IAM en la literatura, desarrollados de manera independiente y que han sufrido diversas variaciones a lo largo del tiempo. 
+
+\subsubsection{Modelo DICE: Supuestos y desarrollo}
+Probablemente, el más importante de todos ellos sea el \textbf{Dynamic Integrated Climate-Economy Model} (DICE), elaborado por NORDHAUS en la Univerisdad de Yale (1992) y que le valió el Nobel de Economía en 2019.\footnote{La primera versión del modelo fue desarrollada en el artículo \textit{Rolling the "DICE": An Optimal Transition Path for Controlling Greenhouse Gases} (1992), publicado en la revista Resource and Energy Economics. 
+} Desde su primera publicación, el modelo ha sufrido múltiples revisiones, la más actual la versión DICE-$2016$R$3$. 
+
+Esencialmente, aborda la problemática del cambio climático a partir del modelo de crecimiento óptimo de RAMSEY-KOOPMANS-CASS, en el que los agentes económicos sacrifican parte de su consumo presente para invertir en bienes de capital, con el propósito de incrementar sus posibilidades de consumo futuro. Sobre este punto de partida, incluye las inversiones climáticas, con un tratamiento análogo al de las inversiones en bienes de capital en el modelo estándar. 
+
+El modelo cuenta con un módulo económico y un módulo climático, toma en consideración toma la economía mundial y parte de un conjunto de supuestos (ecuaciones) que describen la relación inmediata entre las variables económicas y las variables climáticas.\footnote{Esto es, sin tener en cuenta los efectos de segunda ronda entre variables.
+} 
+
+\paragraph{Módulo económico} 
+El módulo económico incluye, principalmente, una función de bienestar social (que relaciona el consumo con el bienestar), una función de producción (que relaciona la dotación de factores con la producción) y una función de emisiones (que relaciona positivamente las emisiones de gases de efecto invernadero con la producción). 
+
+Supongamos la existencia de un planificador benevolente que quiere maximizar la siguiente función de bienestar social: 
+
+\eqblock{
+\begin{aligned}
+    W=\sum_{t=1}^\infty\frac{c_t^{1-\varphi}}{1-\varphi}L_t(1+\rho)^{-t}\\[1em]
+    Y_t=A_t\,K_t^\alpha L_t^{1-\alpha}
+\end{aligned}
+}
+
+Donde $W$ representa el valor descontado del bienestar del conjunto de la sociedad, $t$ representa el tiempo para un número infinito de periodos de tiempo. $c_T$ es el consumo per cápita en el periodo $t$ y $\varphi$ es un parámetro que indica la aversión a la desigualdad intergeneracional.\footnote{Con esta función de bienestar social. la sociedad prefiere repartir el consumo entre los periodos en vez de concentrarlo solo en un único periodo. El parámetro tp nos indica en qué grado la sociedad desea repartir el consumo entre periodos. Cuanto mayor sea el valor de tp. rpayor será el deseo de la sociedad por repartir el consumo entre periodos, por lo que podemos interpretar este parámetro como la aversión de la sociedad a la desigualdad ínter-generacional.
+} $L_t$ indica eltamaño de la población en cada periodo de tiempo $t$. Por último, $\rho$ es el tipo de descuento generacional, que puede interpretarse como el grado de impaciencia de la sociedad.\footnote{Cuanto mayor sea el valor, más impaciente será la sociedad.
+} 
+
+La sociedad produce bienes y servicios a través de la misma función de producción Cobb-Douglas que encontramos en el modelo neoclásico de crecimiento económico. Donde Yt, At, Kt y Lt representan respectivamente la producción, la tecnología, el stock de capital y el tamaño de la población en el periodo t. El parámetro a indica la elasticidad de la producción con respecto al stock de capital. La elasticidad de la producción respecto a la población es 1 - a, por lo que la función es homogénea de grado uno. El modelo asume un crecimiento exógeno y decreciente de Lt y At. 
+
+Cada periodo t, la sociedad destina una proporción $\Gamma$t de la producción (Yt) a la reducción de las emisiones de $\text{CO}_2$: \textit{\textbf{abatement costs}}. Además, cada periodo t, una proporción Dt de la producción (Yt) se destina a reparar los daños ocasionados por el cambio climático. Sustrayendo los abatement costs y los daños, obtenemos la producción neta de la economía: 
+
+\eqblock{
+\begin{aligned}
+    Q_t=(1-D_t)[1-\Gamma_t]Y_t
+\end{aligned}
+}
+    
+La sociedad destina producción neta (Qt) se destina al consumo agregado (Ct) y a la inversión en bienes de capital físico ($I_t$) El stock de capital agregado (Kt) sigue la misma dinámica que en el modelo de neoclásico de crecimiento, donde ók representa la tasa de depreciación del capital: 
+
+\eqblock{
+\begin{aligned}
+    Q_t=C_t+I_t\\[1em]
+    K_t=(1-\delta_k)K_{t-1}+I_t
+\end{aligned}
+}{}
+
+La produccion (Yt) genera emisiones de $\text{CO}_2$ de acuerdo con la siguiente ecuación: 
+
+\eqblock{
+\begin{aligned}
+    E_t=\sigma_t(1-\mu_t)Y_t+\text{Eland}_t
+\end{aligned}
+}{}
+
+Donde Et representa las emisiones, $\sigma_t$ es la ratio $\text{CO}_2$ - producto ($Y_t$), que decrece con el paso del tiempo. Elandt representan las emisiones exógenas que se producen por lós nuevos usos de la tierra. μe es la tasa de reducción de las emisiones, que se determina en la siguiente ecuación: 
+
+\eqblock{
+\begin{aligned}
+    \Gamma_t=\theta_t\,\mu_t^{\varphi}
+\end{aligned}
+}
+
+En la que $\theta_t$ decrece con el paso del tiempo. Según la ecuación (7), a medida que pasa el tiempo se necesita destinar una menor proporción de la producción ($\Gamma_t$) para reducir las emisiones a una tasa μt. Además, la ecuación nos dice que si mantenemos constante la proporción $\Gamma_t$, la tasa de reducción de las emisiones crecerá con el paso del tiempo. 
+
+La proporción de la producción que la sociedad destina a reparar los daños ocasionados por el cambio climático (Dt) depende del cambio de temperatura media global del planeta (Tt), siguiendo la siguiente ecuación: 
+
+\eqblock{
+\begin{aligned}
+    D_t=\beta_1\,T_t+\beta_2T_t^2
+\end{aligned}
+}
+
+Donde $\beta_1$ y $\beta_2$ son parámetros que determinan la sensibilidad de los daños al cambio detemperatura media global del planeta.
+
+
+\paragraph{Módulo climático }
+El módulo climático incluye ecuaciones que describen el ciclo de carbono (dinámicade la masa acumulada de $\text{CO}_2$ en sus distintas reservas), el forzamiento radiativo (relaciona el forzamiento radiativo con la acumulación de $\text{CO}_2$ en la atmósfera) y el calentamiento de la superficie y los océanos (que describe la dinámica del calentamiento de la atmósfera y los océanos, recogiendo el impacto del forzamiento radiativo dentro de este proceso).\footnote{El forzamiento radiativo es la diferencia entre la energía solar absorbida por la Tierra y la energía irradiada de vuelta al espacio. Un forzamiento radiativo positivo significa que la Tierra recibe más energía de la luz solar que la que irradia al espacio. Esta ganancia neta de energía causará calentamiento. Por el contrario. el forzamiento radiativo negativo significa que la Tierra emite más energía de la que recibe del sol. lo que produce enfriamiento.
+} 
+
+El modelo DICE asume que el planeta cuenta con tres reservas de carbono en las que se pueden concentrar las emisiones de $\text{CO}_2$ . Estas reservas son la atmósfera (A), las profundidades de los océanos (O) y una mezcla entre la biosfera y la superficie de los océanos (B). La masa acumulada de $\text{CO}_2$ (M,) se reparte entre estas tres reservas. y se mueve de una a otra de acuerdo con el ciclo de carbono, que viene descrito en la siguiente ecuación: 
+
+\eqblock{
+\begin{aligned}
+    M_{it}=\pi_t\,E_t+\sum_{j=1}^3\pi_{ji}M_{jt-1}
+\end{aligned}
+}{}
+
+Donde $i = A, B$ y $O$. El parámetro $\pi_i$ representa el efecto directo de las emisiones totales de un periodo t en la masa de $\text{CO}_2$ acumulada en una reserva concreta. El parámetro $\pi_{ji}$ indica la proporción de $\text{CO}_2$ que cambia de una reserva) a otra reserva i en cada periodo t. La acumulación de $\text{CO}_2$ en la atmósfera ($M_{At}$) da lugar al forzamiento radiativo, según la siguiente ecuación: 
+
+\eqblock{
+\begin{aligned}
+    F_t=\eta\left[\log_2\left(\frac{M_{At}}{M_{A1750}}\right)\right]+FE_t
+\end{aligned}
+}
+
+Donde F, indica el cambio en el forzamiento radiativo total ocasionado por la acumulación de $\text{CO}_2$ en la atmósfera. El parámetro $\eta$ indica la sensibilidad del forzamiento radiativo a la masa de $\text{CO}_2$ acumulada en la atmósfera y FE, nos indica el forzamiento radiativo ocasionado por fuerzas exógenas. Finalmente, el forzamiento radiativo da lugar al calentamiento global de acuerdo con el siguiente modelo climático:
+
+\eqblock{
+\begin{aligned}
+    T_t=T_{t-1}+\xi_1[F_t-\xi_2T_{t-1}-\xi_3(T_{t-1}-TO_{t-1})]\\[1em]
+    TO_t=TO_{t-1}+\xi_4[T_{t-1}-TO_{t-1}]
+\end{aligned}
+}{}
+
+Donde $TO$, es la temperatura media en las profundidades de los océanos y los parámetros $\xi_1$, $\xi_2$, $\xi_3$ y $\xi_4$ indican la sensibilidad de las temperaturas medias respecto a sus determinantes.
+
+\paragraph{Calibración y resolución: Implicaciones de Política Económica}
+Las ecuaciones (1-12) recogen los supuestos del modelo DICE-$2016$R$3$.\footnote{En realidad, faltan algunas ecuaciones auxiliares de menor imponancia.
+} 
+
+Una vez establecidas los supuestos del modelo, es necesario otorgar valores a los parámetros de las ecuaciones que forman parte de este conjunto de supuestos. Este proceso se conoce como \textbf{calibración}: permite que los valores de las variables endógenas en el estado estacionario del modelo sean consistentes con los datos observados en el mundo real.\footnote{Por ejemplo, si el tipo de interés real promedio de una economía es del 4\% anual en la serie histórica, entonces el tipo de interés real en el estado estacionario del modelo debería estar cerca del 4\% anual.
+}
+
+De esta forma, se puede utilizar el modeló como simulador de lo que ocurriría en la economía (y el clima) ante una perturbación, un nuevo escenario o una detenninada política económica climática. NORDHAUS (2017) utiliza diversos métodos para calibrar el modelo. Por ejemplo, los parámetros $\varphi$ y $\rho$ de la función de utilidad (1) reciben, respectivamente, valores de $1,45$ y $0,015$ para calibrar el tipo de interés real en el modelo ($\sim$ tipo de descuento del $1,5\%$ anual). La población Lt de la función de producción (2) crece a una tasa tal que la población total se aproxime a los 10.500 millones de personas en el año 2100, tal y como predice la ONU. El parámetro at de la ecuación de emisiones (7) decrece a un ritmo del $1,5\%$ anual, siguiendo los datos de la evolución global de emisiones de $\text{CO}_2$ sobre PIB. 
+
+Tras el calibrado, el modelo está listo para ser resuelto. Analíticamente, el modelo consiste en un conjunto de ecuaciones diferenciales no lineales, que deben ser optimizadas sujetas a una restricción en un horizonte infinito. Este problema se puede anotar simplificadamente a través de las siguientes dos ecuaciones (NORDHAUS, 2018):
+
+\eqblock{
+\begin{aligned}
+    \boxed{
+    \begin{aligned}
+        \max_{c_t}W=\sum_{t=1}^\infty\frac{U(c_t)L_t}{(1+\rho)^t}\\[0.5em]
+        \text{s.a.}\quad c_t=f(n_t,z_t,\omega)
+    \end{aligned}
+    }
+\end{aligned}
+}{}
+
+Donde $U(c_t)$ es la función de utilidad per cápita para cada periodo, que depende del consumo per cápita ($c_t$). El resto de variables endógenas (como la temperatura global o el stock de capital) viene recogido en el vector nt. Las variables exógenas (como la población o la tecnología) vienen recogidas en Zt. Por último, el vector w contiene todos los parámetros del modelo (como la elasticidad de la producción respecto al stock de capital). En definitiva, el modelo consiste en maximizar la ecuación ( 1 ) sujeta a todas las demás (2- 1 2). La resolución del problema nos da la senda de consumo per cápita (et) que maximiza el bienestar social (W) cumpliendo con todas las restricciones (14). 
+
+La resolución del problema anterior es compleja. No obstante, la lógica del modelo es idéntica a la del modelo de RAMSEY-KOOPMANS-CASS. El consumidor representativó tiene que elegir una senda óptima de consumo, sabiendo que todo consumo presente tiene un coste de oportunidad futuro. El sacrificio del consumo presente permite realizar inversiones fisicas (aumento del stock de capital) y climáticas (reducción de las emisiones) que aumentan la producción y las posibilidades de consumo en el futuro.
+
+Una vez resuelto, el modelo DICE-$2016$R$3$ permite realizar proyecciones bajo distintos escenarios. El Gráfico 2 muestra las proyecciones del calentamiento global bajo seis escenarios alternativos. El primero de ellos se corresponde con el escenario base o business as usual, en el  que no se ejecuta ninguna política climática. El segundo y tercer escenario se corresponden con maximice la función de bienestar social del modelo (1). 
+
+La diferencia entre ambos escenarios radica en que en el escenario segundo se utiliza una función de daños (8) estándar. mientras que en el escenario tercero se supone una función de daños mucho más agresiva. Los escenarios cuarto y quinto se corresponden con estrategias de limitación del calentamiento global a $2º\text{C}$ para un promedio de 100 y 200 años.\footnote{Comenzando en 2020.} El sexto escenario consiste en impedir que el calentamiento global supere los $2º\text{C}$ en ningún periodo.
+
+\imagenfit{Fig2.png}{Calentamiento global bajo distintos escenarios: Grados sobre niveles de $1900$}{\href{https://www.nobelprize.org/uploads/2018/10/nordhaus-lecture.pdf}{NORDHAUS (2018)}}
+
+Una conclusión controvertida de este modelo es el hecho de que la implementación de una política climática óptima (ya sea con una función de daños u otra) daría lugar a un calentamiento global en torno a $3º\text{C}$, lo cual supera ampliamente los objetivos internacionales en esta materia.\footnote{El Acuerdo de París establece un objetivo formal de limitación del calentamiento global no superior a los $2º\text{C}$ sobre los niveles preindustriales, con la intención más ambiciosa de rebajar esta cifra a los $1.5º\text{C}$.
+} Un objetivo más consistente con la política óptima sería la limitación del calentamiento global a $2º\text{C}$ para un promedio de 200 años. Los daños económicos asociados a Lin calentamiento global de $3º\text{C}$ se estiman en torno al $2\%$ de la producción mundial. Para un calentamiento de $6º\text{C}$, los daños ascenderían al $8\%$. 
+
+Una de las aplicaciones más útiles del modelo DICE-$2016$R$3$ es la estimación del SCC. El SCCt en un periodo ,r t nos indica la reducción del valor presente descontado del consumo agregado en $t$ que se produce cuando se incrementan las emisiones en una tonelada adicional en $t$. La Tabla 1 muestra la evolución del SCC a lo largo del tiempo para distintos escenarios. 
+
+En los escenarios de política óptima, el SCC refleja exactamente el precio o impuesto óptimo que debería pagarse por la emisión de una tonelada adicional de $\text{CO}_2$ . Con una función de daños (8) estándar, el precio o impuesto óptimo por tonelada de $\text{CO}_2$ habría sido de $43\$$ (nivel de precios de 2018) en 2020, y debería ascender con el paso del tiempo hasta situarse en $295\$$ en 2100. El SCC en el escenario óptimo con función de daños estándar es muy cercano al del escenario base, pero no idéntico. Esto se debe a que en el SCC es creciente respecto del $\text{CO}_2$ acumulado. La elevada incertidumbre existente en torno a la función de daños (8) se puede comprobar observando el elevado rango del SCC bajo los dos escenarios de política óptima ($43\$$-$108\$$, 2020). Esta incertidumbre dificulta enormemente la política climática, al no haber una estimación robusta del precio o impuesto que debería pagarse por emitir una tonelada adicional de $\text{CO}_2$ en cada periodo,
+
+\imagenfit{Fig3.png}{Evolución de Coste Social del Carbono: Dólares americanos de 2018}{\href{https://www.nobelprize.org/uploads/2018/10/nordhaus-lecture.pdf}{NORDHAUS (2018)}}
+
+Por este y otros motivos, habitualmente la política climática se implementa a través de objetivos de limitación del calentamientq global. En estos casos, el SCC nos indica el sacrifico de la sociedad en ténninos de consumo presente cuando emitimos una tonelada adicional, siendo consistentes con el cumplimiento del objetivo establecido. Por ejemplo, si fijamos un objetivo de calentamiento global promedio inferior a los 2,5º\text{C} a lo largo de los próximos 200 años (línea 4 de la Tabla 1 ), la emisión de una tonelada adicional de $\text{CO}_2$ en 2020 requiere una reducción del valor presente descontado del consumo agregado de 49\$ para cumplir dicho objetivo. Si sustituimos ese objetivo por un límite estricto de 2,5º\text{C} (línea I O de la Tabla 1 ), la emisión de unatonelada adicional de $\text{CO}_2$ debe compensarse con una reducción del consumo presente de 95\$.
+
+Según los resultados del modelo DICE-20 16R3, a día de hoy no sería factible impedir un nivel de calentamiento global superior o igual a l .5º\text{C} (línea 1 2 de la Tabla 1 ). por lo que el cálculo del SCC no tendría sentido.
+
+\subsubsection{¿Limitaciones? Alternativas y extensiones}
+En las últimas décadas, los IAM han recibido una atención creciente de los economistas y los policymakers. En el ámbito de la política económica, destaca su utilización para el conocido Stern Review (2006), posiblemente el más exhaustivo, conocido y debatido dentro de la economía del clima (CAIRNCROSS, 2006), que generó un intenso debate entre partidarios y detractores del mismo.\footnote{Según las estimaciones de STERN, el coste total de no tomar ninguna medida para frenar el cambio climático en los próximos dos siglos equivale, como mínimo, a una reducción pennanente del $5\%$ del consumo global per cápita. Sobre estos resultados, el informe propone destinar el $1\%$ del PIB anual a inversiones destinadas a frenar el cambio climático, si bien dos años después el mismo STERN elevó la cifra hasta el $2\%$ argumentando que sus estimaciones previas infravaloraban el impacto económico del cambio climático.
+
+En el ámbito académico, la influencia de los IAM ha quedado demostrada con la concesión del Premio Nobel de Economía de 2018 al economista NORDHAUS, por sus contribuciones pioneras a la economía del cambio climático a través del desarrollo del modelo DICE y sus extensiones.
+} Fruto de este, las cuestiones climáticas ganaron peso en la agenda política y los IAM fueron cada vez más relevantes dentro de la literatura especializada.
+
+La amplia aceptación del Modelo DICE provocó rápidamente la emergencia de numerosas alternativas y extensiones, fruto de las sucesivas aportaciones de sus creadores y diversos colaboradores.\footnote{De entre las alternativas más destacadas están: (i) el \textit{Policy Analysis of the Greenhouse Effect Model} (PAGE), desarrollado por HOPE en la Universidad de Cambridge (RU), que vio la luz en 1993, con la publicación del artículo homónimo en la revista Energy Policy; y, (ii) el \textit{Climate Framework for Uncertainty, Negotiation and Distribution Model} (FVND), desarrollado por TOL, de la Universidad de Sussex (RU), publicado por primera vez en 1997 en la revista Environmental Mode/ling and Assesment.
+
+De hecho, el \textbf{Stern review} (2006) que, como decíamos, trata los efectos del cambio climático sobre la economía mundial, se decanta por la versión del año 2002 del modelo PAGE, elaborado por HOPE. 
+} De entre sus extensiones más notables tenemos: (i) el Modelo RICE (Regional lntegrated model of Climate and the Economy), propuesto por NORDHAUS y YANG (1996), que desagregaron el modelo por regiones para estudiar el impacto diferenciado del cambio climático entre las mismas; (ii) el Modelo PRICE (\textit{Probabilistic Regional Integrated model of Climate and the Economy}), propuesto por NORDHAUS y POPP (1997), que añadieron incertidumbre al modelo RICE; (iii) el Modelo R-DICE (\textit{Research and DICE Model}), propuesto por NORDHAUS (2010), que introduce la innovación en el modelo DICE como variable endógena; y, (iv) el modelo C-DICE (Coalition DICE Model), propuesto por NORDHAUS (2015), que introduce la formación endógena de coaliciones regionales para el diseño e implementación de la política climática. 
+
+Veamos brevemente algunas extensiones. 
+
+\paragraph{Modelo RICE}
+El Modelo RICE regionaliza el modelo DICE diviendo el mundo en doce regiones, algunes como países grandes (Estados Unidos y China), mientras que otras regiones son compuestas, como la Unión Europea o Latinoamérica. Al igual que el Modelo DICE, el modelo RICE ha sufrido varias alteraciones hasta la última versión, RICE-2010. 
+
+Cada región maximiza su propia función de bienestar social sujeta a sus propias restricciones, determinando así una senda óptima de consumo, inversión y emisiones a lo largo del tiempo. Cada región produce un único bien que puede ser utilizado para consumo, inversión o reducción de emisiones. No existe comercio internacional de bienes entre regiones, pero sí de derechos de emisión, dando como resultado un precio homogéneo. En el modelo hay dos tipos de avance técnico. Por una parte, encontramos el cambio tecnológico tradicional, neutral en sentido de Hicks, que afecta a la Tecnología de la función de producción Cobb-Douglas. Por otra parte, existe avance tecnológico en la eficiencia del uso de carbono, que se materializa como una reducción de la ratio de emisiones de $\text{CO}_2$ sobre el consumo de energía. El modelo cuenta con un módulo climático, similar en lo esencial al del modelo DICE.
+
+Una de las aplicaciones más relevantes del modelo RICE es el análisis de la distribución regional de los daños del cambio climático. Los resultados del modelo muestran una elevada disparidad regional, señalando a la India, África y la Unión Europea como las regiones más afectadas por el cambio climático. En el lado opuesto, se encontrarían las regiones de Rusia y Europa del Este, que obtendrían beneficios modestos para niveles moderados de calentamiento global. El modelo cuantifica daños moderados en Estados Unidos. Esta elevada disparidad tiene que ver, principalmente, con la calibración de la función de daños para cada región25. La India se ve muy afectada dada la importancia de los monzones en su agricultura. En África, el factor más importante es la salud de la población. La Unión Europea es la región más vulnerable dentro de las regiones ricas, debido a los fuertes impactos potenciales sobre la agricultura y la costa. Estados Unidos se ve menos afectado debido a su clima templado y a la baja dependencia de su economía de los sectores más expuestos. En el lado opuesto, las regiones de Rusia y de Europa del Este se beneficiarían de mejoras significativas en su producción agrícola.
+
+El modelo RICE también nos permite estudiar el impacto regional de políticas o escenarios alternativos, algo fundamental en la negociación de acuerdos climáticos globales como el Protocolo de Kyoto o el Acuerdo de París. Imponiendo la política climática óptima con una asignación neutral de los derechos de emisión entre regiones, la Unión Europea sería claramente la región más beneficiada, mientras que Rusia, Europa del Este y China obtendrían pérdidas moderadas.\footnote{Los derechos de emisión se podrían redistribuir entre países. alterando así los efectos distributivos entre países de la política climática óptima. Si en lugar de derechos de emisión se estableciesen impuestos, esta redistribución se podría hacer con transferencias entre países.
+} 
+
+Esta disparidad regional se debe a varias causas. Las más importantes son la heterogeneidad de la función de daños (vista anteriormente), la heterogeneidad en los costes de abatimiento y la heterogeneidad en los tipos de interés real.\footnote{La ecuación del modelo equivalente a la ecuación (7).
+} La heterogeneidad en la función de daños y en los costes de abatimiento da lugar a distintas funciones de producción netas.\footnote{
+La ecuación del modelo equivalente a la ecuación (3).
+} Las diferencias regionales en los costes de abatimiento se deben al distinto avance tecnológico en la eficiencia del uso de carbono. El tipo de interés real afecta considerablemente al impacto económico de las políticas climáticas, al determinar el valor presente descontado del consumo de cada economía. Las regiones con altos tipos de interés reales (como China) están menos dispuestas a sacrificar el consumo presente a cambio de un mayor consumo futuro, mientras que en otras regiones (Unión Europea) la situación es la contraria.\footnote{El tipo de interés real en el modelo neoclásico de crecimiento guarda una relación inversa con la abundancia de capital. Por tanto, los países desarrollados tienden a tener menores tipos de interés real.
+} Dado que las políticas climáticas exigen precisamente una reducción del consumo presente para aumentar el consumo futuro, los diferentes tipos de interés real juegan un papel fundamental.
+
+\paragraph{Otras extensiones} 
+Los modelos 1AM suelen ser modelos extendidos de crecimiento económico. centrados en la estimación del SCC. Sin embargo, elementos tan importantes como los efectos del cambio climático sobre la estabilidad macroeconómica o el sistema financiero se quedan fuera del análisis que puede realizarse con los 1AM tradicionales. 
+
+En el ámbito macroeconómico, el análisis del cambio climático se ha completado gracias al desarrollo de los modelos E-DSGE (Environmental Dynamic Stochastic General Equilibrium). Esta categoría de modelos incluye desde ligeras modificaciones de los modelos DSGE estándar, hasta modelos 1AM extendidos con perturbaciones estocásticas (los llamados DSGE-IAM). Una de las principales aplicaciones de los modelos E-DSGE es la evaluación de los efectos a corto y medio plazo de distintos regímenes de políticas medioambientales. Por ejemplo, Fischer y Springborn (2011) estudian los efectos macroeconómicos de un impuesto a las emisiones, un límite absoluto a las emisiones y un objetivo de intensidad en un modelo de precios flexibles.\footnote{Un objetivo de intensidad se refiere a un objetivo de emisiones en relación a alguna variable macroeconómica comola producción. los ingresos. o el empico.
+} Sus resultados muestran que el límite absoluto a las emisiones permite reducir la volatilidad de la mayor parte de las variables macroeconómicas. 
+
+También con un modelo de precios flexibles, HEUTEL (2012) concluye que bajo la política climática óptima las emisiones son procíclicas. En un modelo con rigidez de precios y tres tipos de shocks (tecnológico, fiscal y monetario), DI DIO (2015) muestra que la idoneidad de los diferentes regímenes (objetivo de intensidad, impuesto a las emisiones, o esquema cap- and-trade) depende del grado de rigidez de precios existente. CAI, JUDD y LONTZEK (2013) desarrollan una extensión estocástica del modelo DICE, encontrando que la amenaza de un punto de inflexión climático induce incrementos significativos e inmediatos en el SCC, incluso para puntos de inflexión de baja probabilidad e impacto.\footnote{En climatología, un punto de inflexión es un umbral que. de ser traspasado. lleva a cambios significativos (y a menudo irreversibles) en el sistema climático.
+}
+
+En el ámbito de las finanzas, los IAM se han utilizado para enriquecer los modelos Climate VaR ( Value at Risk), que tratan de estimar el impacto del cambio climático sobre el riesgo de mercado de una cartera de activos. En general, los resultados de estos estudios encuentran pérdidas medias esperadas moderadas. Sin embargo, en los escenarios extremos las pérdidas serían muy elevadas, siendo estas segundas las que deberían preocupar más al inversor neutral al riesgo y sobre todo al averso (Amargant y Gutiérrez, 2022). DIETZ, BOWEN, DIXON y GRADWELL (2016) util izan una versión extendida del modelo DICE para estimar el impacto del cambio climático sobre los mercados financieros. Según sus resultados, bajo el escenario business-as-usual, los activos financierds a nivel global sufrirán una pérdida esperada del 1,8\% de su valor entre los años 2015 y 2100 a raíz del cambio climático.
+
+\subsection{Los IAM: ¿Una regresión científica?} 
+La utilización de Modelos IAM para la valoración de escenarios y políticas climáticas está cada vez más extendida entre la academia y los policymakers. Quizá por este mismo motivo, los IAM han estado expuestos a importantes críticas. 
+
+Una de las críticas más profundas y conocidas proviene de PINDYCK (2013), que afirma lo siguiente en relación a la utilidad de los IAM: \textit{These models have crucial flaws that make them clase to useless as tools for policy analysis... IAM based analyses of climate policy create a perception ok knowledge and precision, but this perception is illusory and misleading}. Y, lamentablemente, no puede ser más cierto. 
+
+Aunque quizás no por las razones esgrimidas por PYNDYCK, los Modelos IAM constituyen un ejemplo paradigmático que evidencia, no solo las grandes carencias de la metodología ortodoxa, sino también la apabullante distancia que genera la adopción de esta metodología y la realidad que pretende reflejar.\footnote{Las críticas esgrimidas por PINDYCK pueden verse en [\authorfont{Ver Anexo \ref{anx:criticas_pindyck}}]} En términos coloquiales, podríamos decir que los Modelos IAM (y la aproximación metodológica ortodoxa) constituye una \textbf{verdadera regresión científica}.
+
+Centrémonos en plantear algunas preguntas que puedan dejar ver por qué. 
+
+\subsubsection{Estructural: ¿Qué pasa cuando buscamos una única solución?}
+
+El sistema visita densamente todo el atractor: dada suficiente evolución temporal, cualquier región arbitrariamente pequeña del atractor será visitada. Esto implica que el sistema tiene propiedades estadísticas bien definidas y estacionarias, aunque ninguna trayectoria individual sea predecible a largo plazo. La distinción entre "impredecible individualmente" y "estadísticamente regular" es fundamental para entender por qué la climatología (estadística de largo plazo) es posible aunque la predicción meteorológica (trayectoria individual) tenga horizonte finito.
+
+
+
+
+
+\subsubsection{Realidad climática: ¿Cómo calibrar el entorno climático?}
+
+
+
+
+
+
+\subsubsection{Omitiva: ¿Dónde están las variables económicas?}
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Cambio climático: Economía política}
+\puntosclave{
+    Los gobiernos pueden abordar el cambio climático a través de políticas de mitigación (reducir las emisiones de $\text{CO}_2$) y políticas de adaptación (minorar los daños del cambio climático). 
+    
+    El establecimiento de un impuesto sobre las emisiones de $\text{CO}_2$ permitiría internalizar el coste externo de las actividades productivas contaminantes. Un resultado similar se puede obtener repartiendo derechos de emisión negociables. 
+    
+    El cambio climático es un mal público global que impone la necesidad de la coordinación internacional de las políticas climáticas. El reto de la coordinación es alcanzar un equilibrio de NASH que sea óptimo de PARETO.
+    
+    El Acuerdo de París, firmado en la COP- 2 1 de París (2015), establece un objetivo de limitación del calentamiento global a un máximo de 2º\text{C} respecto a los niveles preindustriales, con la ambición de rebajar dicha cifra hasta los 1,5º\text{C}. Para ello, se establece un sistema de Contribuciones Determinadas a Nivel Nacional que se van revisando y escalando en ciclos de cinco años.
+    
+    La firma de acuerdos como el Protocolo de Kyoto ( 1997) y el Acuerdo de París (2015) han impulsado medidas contra el cambio climático en todos los niveles (plurilateral, nacional, regional y local), propiciando la proliferación de nuevos mercados de emisiones e impuestos sobre el $\text{CO}_2$ en todo el mundo. El Pacto Verde Europeo (2019) es un buen ejemplo de la importanda creciente de las políticas climáticas en la agenda política internacional.
+}
+
+Por suerte, o por desgracia para NORDHAUS y otros, las vicisitudes de la política son más complejas que la simplicidad de los resultados que proporcionan los Modelos IAM. Por ello, conviene acabar repasando las diferentes decisiones, estrategias y políticas llevadas a cabo para frenar el avance del Cambio Climático y mitigar sus posibles consecuencias. 
+
+\textbf{¿Qué queremos decir?} Con este fin, proporcionaremos en primer lugar una aproximación general de las estretagias político-económicas llevadas a cabo en dos area fundamentales: la mitigación, para afrontar las causas, y la adaptación, para afrontar sus consecuencias de la mejor manera posible. Después presentaremos brevemente los diferentes acuerdos y vías de coordinación internacional que se han abierto al respecto.
+
+\subsection{Políticas: ¿Qué podemos hacer?}
+El cambio climático es un mal público ocasionado por la acumulación de gases de efecto invernadero en la atmósfera. La política climática trata de reducir los daños ocasionados por este fenómeno de la manera más eficiente posible. Para ello, los policymakers cuentan con dos enfoques o estrategias: la política de mitigación y la política de adaptación.
+
+\subsubsection{Políticas de mitigación: Causas}
+Las políticas de mitigación atacan a las causas del cambio climático, es decir, tratan de reducir las emisiones de gases de efecto invernadero para evitar que superen su óptimo social. En un escenario de laissez-faire, el precio de los bienes y servicios solo recoge los costes privados de las empresas que los fabrican y la utilidad o bienestar privada que reportan a sus consumidores. Esta situación nos lleva a un equilibrio de mercado que no es óptimo de Pareto.\footnote{Recordemos que un óptimo de Pareto es un estado social en el que se agotan todas las posibilidades de intercambio mutuamente beneficioso entre los agentes económicos. de forma que no sea posible beneficiar a uno de ellos sin perjudicar a otro.
+} La política de mitigación trata de ajustar los precios relativos de los bienes y servicios para llevar a la sociedad a un nuevo equilibrio que sí sea óptimo de Pareto. Dentro de las políticas de mitigación podemos enumerar las siguientes.
+
+\paragraph{Emisiones: Impuestos y/o Derechos}
+Un remedio estándar para forzar la intemalización de los costes externos es el establecimiento de un impuesto por unidad de contaminante. En este caso, sería un impuesto por tonelada emitida de C0 2 o equivalente. Este impuesto afectaría al precio de los bienes y servicios en proporción a las emisiones necesarias para su producción, incentivando así la sustitución de bienes y servicios más intensivos en emisiones por otros menos contaminantes. El importe de este impuesto debería coincidir con el SCC para corregir al completo este fallo de mercado. 
+
+Una alternativa a los impuestos sobre las emisiones es el sistema cap-and-trade. Bajo este sistema, las autoridades determinan el volumen total de emisiones que se pueden realizar en un determinado periodo de tiempo. Posteriormente, las autoridades reparten derechos de emisión a las empresas en función de algún criterio (por ejemplo, se pueden repartir gratuitamente en función del promedio de emisiones en los últimos aflos, o mediante subasta). Una vez repartidos tales derechos, las empresas pueden generar emisiones por un valor igual a los derechos que poseen. En caso de no consumir la totalidad de sus derechos, las empresas pueden venderlos en el mercado de emisiones a aquellas empresas que necesiten emitir una cantidad superior a lo que tenían asignado. Si el volumen de emisiones establecido por las autoridades se corresponde con el óptimo social, el precio de estos derechos de emisión debería igualarse al SCC. 
+
+En principio, los impuestos sobre las emisiones y el sistema cap- and-trade son equivalentes en términos de eficiencia económica, pues en ambos casos el coste de contaminar sería similar al SCC. Aparentemente, la única diferencia entre ambos sistemas es el papel del mercado y de las autoridades en la determinación del equilibrio. En el Gráfico 3 podemos comprobar como bajo un sistema de impuestos (izquierda), las autoridades determinan el coste de las emisiones, mientas que el mercado determina el volumen de emisiones. Bajo un sistema cap-and-trade (derecha), las autoridades determinan el volumen de emisiones y el mercado determina su precio. En ambos casos, el equilibrio de mercado (esto es, el par SCC y E0 ) es idéntico.
+
+\imagenfit{Fig4.png}{Equilibrio de mercado: Impuestos vs Derechos de emisión negociables}{Apuntes ICEX-CECO. Tema 3.B.31}
+
+Aunque aparente ambas políticas son similares, en la práctica existen diferencias notables entre ambos sistemas. Las ventajas del sistema de impuestos son las siguientes: 
+
+En general. se asume que el establecimiento de un impuesto es más sencillo de entender y más transparente que un sistema cap-and-trade. Los sistemas de tipo cap-and-trade pueden ser complejos y requieren mayor burocracia y costes de gestión para funcionar. 
+
+La implementación de un impuesto sobre las emisiones es más sencilla y rápida que un esquema cap-and-trade. Dada la necesidad de reaccionar con rapidez al cambio climático, puede ser poco recomendable dedicar demasiado tiempo a diseñar un sistema cap-and-trade. 
+
+El avance tecnológico abarata las inversiones destinadas a reducir las emisiones, induciendo a las empresas a reducir su demanda de emisiones (es decir, la demanda de emisiones del Gráfico 3 se desplazaría a la izquierda). Bajo un sistema de impuestos, el nuevo equilibrio  tras la reducción de la demanda seguiría siendo óptimo, pues el coste de emitir seguiría siendo similar al SCC. Por el contrario, bajo un sistema cap-and-lrade, el desplazamiento de l a demanda hacia la izquierda daría lugar a una reducción del precio de los derechos d e emisión, situándolo por debajo del SCC. Las autoridades tendrían que estar ajustando pennanentementeel volumen de emisiones para evitar desviaciones respecto del óptimo social.
+
+Un sistema de impuestos proporciona una mayor estabilidad y previsibilidad de los costes de las emisiones. Esta estabilidad es muy beneficiosa para los inversores, que necesitan estimar el retomo de sus inversiones a largo plazo en un contexto de incertidumbre. La volatilidad de precios que puede surgir en un esquema cap-and-trade puede dificultar la toma de decisiones de inversión de empresas y hogares en proyectos de eficiencia energética. Por otra, parte, la volatilidad de los precios de los derechos de emisión se puede trasladar al conjunto de los precios de la economía, afectando a la estabil idad de precios del conjunto del sistema económico. 
+
+Un sistema de impuestos pennite aumentar la recaudación del sector público, que podría destinarse a red.ucir otros impuestos distorsionantes o a compensar a los hogares vulnerables ante el aumento de los precios de algunos productos especialmente afectados como la gasolina. En un sistema cap-and-trade, el sector público también podría incrementar su recaudación en l a misma cuantía si subastase los derechos de emisión, pero dicha subasta siempre sería susceptible de sufrir la posible colusión de los compradores, falseando el precio de la subasta y reduciendo la recaudación del sector público.\footnote{Si la subasta de derechos se produce en un escenario competitivo. los demandantes de emisiones serían precioaceptantes y pujarian lo máximo que están dispuestos a pagar. En consecuencia. la subasta revela ria la verdadera curva de demanda de emisiones y el precio de la subasta sería el SCC. La recaudación del sector público. bajo este escenario, sería equivalente a la obtenida bajo un sistema de impuestos. Sin embargo. si la subasta se produce en un escenario de oligopsonio. los demandantes podrían pactar sus pujas con el objetivo de falsear la demanda de mercado. y con ella, el precio de los derechos de emisión. En este caso, aunque el volumen de emisiones seguiría siendo igualmente óptimo, la recaudación del sector público sería inferior.
+}
+
+Las ventajas del esquema cap-and-trade son las siguientes: 
+
+Aunque los efectos teóricos de un sistema de impuestos y de un esquema cap-and-trade son idénticos, el · esquema cap- and-trade no tiene la connotación negativa que tienen los impuestos en la opinión pública, por lo que su implantación es más factible políticamente, sacando al sistema de los vaivenes políticos. 
+
+El sistema cap-and-trade permite tener en cuenta consideraciones distributivas, dado que el precio de mercado de los derechos de emisión será independiente de la asignación inicial de los derechos que realicen las autoridades. Por ejemplo, las autoridades podrían favorecer el desarrollo económico de una región desfavorecida otorgándole más derechos de lo que le correspondería en un escenario neutral. En un sistema de impuestos, las autoridades también pueden destinar la recaudación adicional a programas redistributivos, pero siempre existirá la posibilidad de que se destine a otros usos. 
+
+La principal ventaja del sistema cap-and-trade es que las emisiones son conocidas con total certidumbre, al ser fijadas de antemano por las autoridades. Dado que la política climática se suele implementar con objetivos de reducción de emis,iones, un esquema cap-and-tradegarantiza el cumplimiento de estos objetivos. En un sistema de impuestos, el cumplimiento de un objetivo específico de reducción de emisiones puede implicar numerosos ajustes impositivos, algo que puede ser poco factible políticamente. 
+
+El establecimiento de un sistema u otro es una decisión política que dependerá de elementos como las preferencias sociales y el funcionamiento de las instituciones.
+
+\paragraph{Otras políticas de mitigación} 
+El proceso político de implementar uno de los dos sistemas anteriores puede ser bastaryte complicado. Ambos esquemas suponen la imposición de un coste explícito por contaminar que se traslada al conjunto de la sociedad en forma de mayores precios de los bienes y servicios. El rechazo social puede dificultar la puesta en marcha de este tipo de mecanismos. Ante esta problemática, los gobiernos de todo el mundo han desarrollado otros esquemas alternativos que tratan de incentivar la reducción de las emisiones sin necesidad de cargar un coste explícito sobre las emisiones.\footnote{En realidad. estas políticas son igualmente costosas para los agentes económicos. pero a diferencia del impuesto sobre las emisiones o el esquema cap-and-trade. su coste es implícito al pagarse indirectamente a través de los impuestos, etc. Esto puede reducir el coste percibido de las políticas climáticas y aumentar el apoyo social a las mismas.
+} 
+Algunas de estas políticas son las siguientes:
+Subsidios para la reducción de emisiones: el abaratamiento a través de subvenciones de las actividades libres de emisiones es una manera de incrementar el precio relativo de las actividades contaminantes, sin necesidad de cargar un coste adicional sobre las mismas. Por ejemplo, la promoción de las energías limpias a través de subvenciones abarata su coste, aumentando el precio relativo de los combustibles fósiles y promoviendo su sustitución por energías limpias. Otros ejemplos de políticas que permiten ajustar los precios relativos sin cargar un coste directo a los agentes económicos son las subvenciones de inversiones en eficiencia energética (rehabilitación de edificios, etc) o para la adquisición de vehículos eléctricos. 
+
+Inversión en l+D: el sector público puede destinar parte de su presupuesto a labores de I+D para el desarrollo de energías alternativas o nuevos métodos de producción que generen menos emisiones. También puede otorgar un tratamiento fiscal favorable para las empresas que destinan recursos a estas labores. El desarrollo de nuevas tecnologías que reduzcan las emisiones reduce el coste del resto de medidas (las empresas pagarían menos impuestos o derechos de emisión, el sector público gastaría menos en subvenciones, etc). En efecto, el desarrollo de nuevas tecnologías podría eventualmente expulsar a los combustibles fósiles y otras actividades contaminantes del mercado, haciendo innecesaria la política climática y permitiendo la vuelta a un escenario de no intervención o laisse=-faire.
+
+Imposición de estándares de eficiencia energética o bajo uso de carbono: las autoridades pueden regular los estándares mínimos que deben cumplir algunos bienes contaminantes (maquinaria. electrodomésticos, vehículos, etc.) para su venta y consumo. La imposición de estos estándares obliga a los agentes económicos a realizar las inversiones necesarias para reducir las emisiones
+
+Ampliación de sumideros naturales de carbono: los sumideros de carbono son zonas naturales en las que se puede almacenar el carbono, como suelos y los bosques. Los bosques reciclan el $\text{CO}_2$ convirtiéndolo en oxígeno, y la restauración de los suelos degradados puede capturar ingentes cantidades de $\text{CO}_2$, evitando su acumulación en la atmósfera. Las autoridades pueden ampliar estos sumideros aumentando los recursos destinados a la gestión de los bosques y la modificación de las prácticas agrícolas. 
+
+Políticas de concienciación s·ocial: el sector público puede tratar de alterar el comportamiento de los agentes económicos sin necesidad de · alterar los precios relativos, actuando directamente sobre las preferencias de la sociedad. Las campañas de concienciación pueden inducir a los agentes a tener en cuenta el bienestar del conjunto de la sociedad a la hora de tomar sus decisiones de consumo. El sector público puede contribuir a esta labor con certificaciones medioambientales para productos verdes, promoción de las finanzas sostenibles, etc. Las políticas anteriores son una alternativa a la creac1on de un nuevo impuesto o al establecimiento de derechos de emisión, si bien en la práctica suelen utilizarse de manera complementaria.\footnote{ En el apartado IV.111. se describen las principales medidas adoptadas en la esfera internacional contra el cambio climático. Lejos de optar por un único enfoque, la tendencia apunta a una combinación de todas las políticas existentes.
+} La principal ventaja de estos esquemas es el menor rechazo social que generan.  Sin embargo, estas políticas generan nuevas distorsiones en el mercado que podrían acabar empeorando la situación inicial.\footnote{Recordemos que el teorema del \textit{second-best} nos advierte de que la eliminación de una distorsión en el mercado podría reducir el bienestar social, si al menos otra distorsión permanece vigente.
+} Por ejemplo, las medidas que requieren un incremento del gasto público (subvenciones, inversiones, etc.) deben financiarse con impuestos distorsionantes y pueden propiciar la aparición de fallos del sector público.\footnote{Los impuestos distorsionantes alteran los precios relativos y nos llevan a un equi librio sub-óptimo.
+
+Los fallos del sector público son aquellas actuaciones de las autoridades que nos llevan a un equilibrio sub-óptimo
+} Otras medidas como imposición de estándares reducen la autonomía de los agentes económicos para decidir cómo reducir sus emisiones de la manera más eficiente. Por todo ello, estas medidas deberían implementarse tras la puesta en marcha de un análisis coste-beneficio riguroso.\footnote{Un análisis coste-beneficio es un ejercicio de estimación de los costes y benelicios sociales de una detcm1inada política pública.
+}
+
+\subsubsection{Políticas de mitigación: Efectos} 
+Las políticas de mitigación pueden reducir las emisiones y situarlas más cerca de su óptimo social, pero no pueden impedir los daños ocasionados por los gases acumulados durante siglos en la atmósfera. Para lidiar con las consecuencias del cambio climático, las autoridades cuentan con las políticas de adaptación. Estas políticas están orientadas a minorar los daños ocasionados por el calentamiento global. Los agentes económicos privados pueden tomar medidas o realizar inversiones que les protejan de los efectos del cambio climático, pero a menudo este tipo de inversiones o medidas tienen carácter de bien público o comunal, por lo que, bajo un escenario de. no intervención o laissez-faire, el volumen de recursos o el alcance de las medidas de adaptación llevadas a cabo por el sector privado sería socialmente insuficiente. Algunos ejemplos de políticas de adaptación al cambio climático son las siguientes: 
+
+Construcción de diques para protegerse de la subida del nivel del mar y de eventos meteorológicos extremos como inundaciones y huracanes.
+
+Cambio de las pautas de cultivo en la agricultura para adaptarse a las condiciones meteorológicas cambiantes. 
+
+Desarrollo de instrumentos de aseguramiento públicos o privados frente a catástrofes relacionadas con el clima. 
+
+Modificación de los estándares y reglamentos en sectores como la construcción, que obliguen al sector privado a protegerse frente a las consecuencias del cambio climático. 
+
+En la implementación de estas políticas, los po/icymakers deben tener en cuenta que los recursos destinados a políticas de adaptación podrían igualmente destinarse a políticas de mitigación. Existe, por tanto, un trade-of f entre políticas de adaptación y de mitigación, cuya resolución requiere, de nuevo, la implementación de un análisis coste-beneficio riguroso.
+
+\subsection{Coordinación Global: ¿Cómo lo podemos hacer?}
+El cambio climático es un fenómeno global ocasionado por la actividad productiva de todos los países del mundo. Sin embargo, las consecuencias del cambio climático sobre cada país son independientes del volumen de gases emitidos por cada país individualmente. Dado que las políticas climáticas son costosas para los países que las implementan, la existencia de una coordinación global de las políticas de mitigación contra el cambio climático es imprescindible.\footnote{Las políticas de adaptación. generalmente. carecen de dimensión global. por lo que pueden tratarse nom1ahnente a escala nacional o regional.
+}
+
+\subsubsection{Diplomacia climática: Historia} 
+A pesar de la dificultad de alcanzar un acuerdo climático efectivo a nivel global, la lucha contra el cambio climático sí ha conseguido ganar peso en la agenda política internacional. Desde el establecimiento por primera vez de la United Nations Framework Convention on Climate Change (UNFCCC) en la Cumbre de Río de Janeiro de 1992, se han producido negociaciones periódicas en la esfera internacional conocidas como Conferences of the Porties (COPs), orientadas a la consecución de un acuerdo global de reducción de emisiones. Los principales hitos en las negociaciones internacionales para la reducción de las emisiones son las siguientes: 
+
+1 995, Berlín: se celebra la primera COP (COP- 1), en la que se acuerda que los países en desarrollo estén exentos de tomar medidas de reducción de emisiones obligatoriamente. 
+
+1997, Kyoto: se celebra la COP-3, en la que se aprueba el Protocolo de Kyoto, que obliga a los países desarrollados a reducir sus emisiones durante el periodo 2008-2012 en comparación a sus niveles de referencia, establecidos en 1990. 
+
+200 1 , Bonn: se celebra la segunda parte de la COP-6, en la que se alcanza un acuerdo sobre las condiciones de cumplimiento y financiación del Protocolo de Kyoto. Estados Unidos abandona el Protocolo de Kyoto y se convierte en observador de las negociaciones.
+
+2009, Copenhague: se produce la COP-15, en la que se intenta, sin éxito, establecer un acuerdo vinculante post-Kyoto, pero declara un objetivo de limitación del calentamiento global a los 2º\text{C}. Los países desarrollados se comprometen a proporcionar ayudas climáticas por valor de 100 mil millones de dólares a los países en desarrollo. 
+
+201 1 , Durban: se produce la COP-17, en la que los participantes se comprometen a alcanzar un acuerdo universal lo antes posible, y siempre antes de 2015, para su entrada en vigor en 2020. 
+
+2012, Doha: se produce la COP-18, en la que se ratifica el segundo .periodo de vigencia del Protocolo de Kyoto, 2013-2020.
+
+2015, París: tiene I ugar la COP-21, en la que 195 países firman el Acuerdo de París, que comienza a aplicarse en 2020, tras la expiración del Protocolo de Kyoto. El acuerdo establece como objetivo mantener el calentamiento global por debajo de los 2º\text{C}, y persigue esfuerzos para limitar el aumento a los l ,5º\text{C}. 
+
+Desde la COP-21 de 2015 se han producido otras seis conferencias. La última de ellas, la COP-27, tuvo lugar en Sharm el-Sheikh (Egipto) en noviembre de 2022. Esta última conferencia, bautizada como "la COP de África", avanzó en cuestiones muy importantes para los países en desarrollo, como la firma de un acuerdo para financiar las pérdidas y los daños en los países vulnerables afectados por las catástrofes climáticas. Sin embargo, algunas voces críticas denuncian el escaso avance en los compromisos necesarios para cumplir los objetivos del Acuerdo de París.
+
+\paragraph{Protocolo de Kyoto}
+Bajo el Protocolo de Kyoto, los países industriales se comprometieron a reducir sus emisiones durante el periodo 2008-2012 en relación a los niveles de 1990. Por ejemplo, Estados Unidos se comprometió a una reducción del 7\%, Francia del 8\% y Japón del 6\%. En promedio, los países se comprometieron a una reducción del 5\%. El hecho de que países en desarrollo como China e India no tuvieran obligación de reducir sus emisiones provocó la salida de Estados Unidos en 2001. A pesar de ello, el Protocolo de Kyoto entró en vigor en 2005. Tras su expiración en 2020, el Protocolo de Kyoto arroja un balance mixto. Algunos países como Canadá y Estados Unidos, no solo no redujeron sus emisiones, sino que las incrementaron. En efecto Canadá abandonó el acuerdo en 2011 y Estados Unidos nunca llegó a entrar. En Europa, algunos países cumplieron o incluso sobrepasaron sus objetivos, aunque otros se quedaron cortos. Rusia y otros países de Europa del Este sobrepasaron ampliamente sus objetivos de reducción de emisiones, aunqüe más que gracias a una acción climática deliberada, se debió a la profunda crisis económica que sufrieron durante la transición desde una economía planificada a una economía de mercado. Técnicamente, los objetivos del Protocolo de Kyoto se cumplieron, pero solo gracias a esta fuerte reducción de las emisiones en Rusia y Europa del Este. 
+
+Por otra parte, el cumplimiento de los objetivos de Kyoto es, en realidad, ilusorio. Esto se debe a que en el esquema de Kyoto, las emisiones emitidas en la producción de bienes y servicios se asignan al país en el que tiene lugar la producción, y no en el lugar en el que se consumen dichos bienes. Por tanto, este sistema de contabilización no tiene en cuenta el outsourcing de las emisiones o "fuga de carbono" que llevaron a cabo los países desarrollados a través de las importaciones de países en desarrollo, especialmente de China. En consecuencia, más que reducirse las emisiones, lo que se consiguió más bien fue desplazar su localización geográfica. En efecto, el volumen global de emisiones siguió creciendo durante el periodo de vigencia dela Protocolo de Kyoto. A pesar de ello, el Protocolo de Kyoto fue indudablemente un paso adelante en la diplomacia climática, sembrando las bases para una cooperación más ambiciosa en el futuro. 
+
+\paragraph{Acuerdo de París }
+
+Tras el fracaso de la Conferencia de Copenhague (COP- 15) para establecer un acuerdo vinculante post-Kyoto, la idea de firmar un acuerdo vinculante fue descartada por considerarse poco factible. En su lugar, los negociadores recurrieron a un nuevo enfoque en el que cada país estableciese sus propios objetivos voluntariamente, con la esperanza de que la presión mutua llevase a los países a proponer los objetivos más ambiciosos posibles. De esta idea surgieron las llamadas Contribuciones Determinadas a Nivel Nacional (NDCs, por sus siglas en inglés) en las que se basa el Acuerdo de París. El Acuerdo de París establece un objetivo formal de limitación del calentamiento global no superior a los 2º\text{C} sobre los niveles preindustriales, con la intención más ambiciosa de rebajar esta cifra a los 1 ,5º\text{C}. El Acuerdo de París se implementa a través de ciclos de cinco años, en los que los países miembros van revisando sus NDCs, asumiendo compromisos cada vez más ambiciosos. El proceso de negociación de estos NDCs está específicamente diseñado para presionar a los países a cumplir con sus compromisos e ir escalándolos con el paso del tiempo. El Acuerdo de París también incluye la puesta a disposición de ayuda financiera y técnica para apoyar las políticas de adaptación y mitigación del cambio climático de los países en desarrollo. El Acuerdo de París ofrece perspectivas mixtas sobre su eficacia. Por una parte, su amplio apoyo internacional (con 1 95 países firmantes, incluyendo Estados Unidos47) facilita la coordinación de las políticas de mitigación del cambio climático. Sin embargo, la ausencia de sanciones formales frente a los incumplimientos reduce la capacidad del acuerdo para evitar el free-riding. Por último, en relación a los objetivos del Acuerdo de París, cabe destacar la posibilidad de que sean excesivamente ambiciosos, al menos si los comparamos con las proyecciones del modelo D ICE- 20 l 6R3 de Nordhaus. En efecto, los resultados de este modelo sugieren que alcanzar el objetivo de 1,5º\text{C} es prácticamente imposible, y que el escenario óptimo se alcanzaría con un objetivo en torno a Jº\text{C}, sensiblemente superior a los 2º\text{C} del Acuerdo de París. 
+
+
+\subsubsection{Principales medidas adoptadas a nivel internacional} 
+Los acuerdos internacionales como el Protocolo de Kyoto y el Acuerdo de París han impulsado la agenda climática de los gobiernos en varios países y regiones del mundo. Algunas de las principales medidas adoptadas a raíz de la diplomacia climática son las siguientes: • El sistema cap-and-trade opera en algunas regiones del mundo48 . En 2005, la Unión Europea lanzó el Emissions Trading Scheme (EU-ETS), que establece un mercado de emisiones para toda la Unión Europea49. En su cuarta fase (2021-2030), el volumen de emisiones se reducirá a un ritmo del 2,2\% anual (frente al 1, 74\% de la fase anterior, 2013-2020). En esta cuarta fase se generaliza la subasta corno método principal de obtención de derechos y se eliminan progresivamente las asignaciones gratuitas a lo largo del periodo 2026-2030, salvo para sectores expuestos a la fuga de carbono. En Estados Unidos, funciona desde 2008 la Region al Greenhouse Gas Initiative (RGGI), bajo la cual once estados del noreste de Estados Unidos establecen un mercado conjunto de emisiones. A este grupo de estados se le une California, que desde el año 2013. utiliza un esquema cap -and-trade similar. En Canadá, el esquema cap and- trade está presente en nueve regiones, que se han ido incorporando a este esquema progresivamente desde 2007, cuando un esquema cap-and-trade comenzó a funcionar en la región de Alberta. Siete regiones de China también se han ido incorporando a este sistema, que comenzó a utilizarse en 2013 en la ciudad de Pekín y en la provincia de Cantón. Otros países que cuentan con sistemas cap-and- trade son Nueva Zelanda, Corea del Sur y Kazajistán. 
+
+El número de países que han establecido impuestos que gravan de alguna forma las emisiones de CO/º (corno los impuestos sobre los combustibles fósiles o sobre los vehículos) no ha parado de aumentar en las últimas décadas, con un claro liderazgo del continente europeo. En el año 1990, este tipo de impuestos solo existían en Finlandia. A lo largo de la década de los noventa, Suecia, Noruega, Dinamarca, Eslovenia y Polonia implementan impuestos similares.En la siguiente década (2000-2009), Estonia, Letonia y Suiza se unen a este grupo de países.Entre el año 201 O y el año 2020 se produce un importante avance, con la aparición deimpuestos sobre las emisiones en Japón, Canadá, Reino Unido, Australia, Irlanda, Islandia, Francia, Portugal, Ucrania, México, Colombia, Argentina, Chile y Sudáfrica. 
+
+La cooperación contra el cambio climático llega también a las administraciones locales. La red de rnegacil!dades C40, fundada en 2005 y compuesta por cien megaciudades en todo el mundo, trata de favorecer la reducción de las emisiones urbanas. Otra red similar de cooperación es el Pacto Mundial de Alcaldes por el Clima y la Energía, compuesta por quinientas ciudades de todo el mundo. Según la ONU, se espera que en 2050 aproximadamente entre el 65\% y el 75\% de la población mundial resida en ciudades, que a día de hoy ya son responsables del 75\% de las emisiones globales de $\text{CO}_2$ a nivel mundial, debido principalmente al transporte y el consumo energético de los edificios. En este escenario, el papel de las ciudades en la mitigación del cambio climático es fundamental. 
+
+Tras la crisis financiera del año 2008, comenzó a ganar peso en los países desarrollados la idea de implementar un plan de inversiones pública y privada que permitiese simul táneamente consolidar la recuperación económica y favorecer la transición hacia una economía de bajas emisiones. Esta propuesta genérica se popularizó en los países desarrollados bajo el nombre de Green New Deal y comenzó a desarrollarse de manera independiente por diversos gobiernos. En 20 19, Estados Unidos aprobó una resolución legislativa por la que se reconocía el deber del gobierno federal de implementar un Green New Dea en el país. 
+
+La Comisión Europea también se sumó a esta iniciativa en 2019, con la aprobación del Pacto Verde Europeo, con el que se pretende que Europa se convierta en 2050 en el primer continente climáticamente neutro. La pandemia del año 2020 y la recesión asociada a la misma catapultaron esta propuesta, al permitir a los gobiernos impulsar inversiones que promoviesen la recuperación de la economía, favoreciendo al mismo la transición ecológica. La UniónEuropea acordó en 2020 habilitar los fondos NextGenerationEU para la doble tarea de recuperar la economía de la crisis ocasionada por la pandemia e impulsar un cambio estructural que hiciese a la región más resiliente, digital y verde, en línea con los objetivos establecidos previamente por el Pacto Verde Europeo. En Estados Unidos, la aprobación en 2021 de la Build Green lnfrastructure and Jobs Act supuso la activación decidida de esta propuesta, orientada a la construcción de infraestructuras de transporte verde. 
+
+La diplomacia económica es cada vez más exigente en la lucha contra el cambio climático. en línea con la propuesta de crear un club climático. Un ejemplo reciente es el acuerdo alcanzado en diciembre de 2022 en el seno de la Unión Europea para imponer el Carbon Border Adjustment Mechanism (CBAM), un arancel comunitario sobre productos contaminantes (hierro, acero, cemento, fertilizantes, aluminio y electricidad), orientado a evitar que la transición verde de la Unión Europea reste competitividad a su industria,incentivando así el proceso de descarbonización de sus socios comerciales.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+\clearpage
+\anexo{PINDYCK: Críticas ortodoxas a los Modelos IAM}\label{anx:critica_pindyck}
+Según PINDYCK, algunos elementos de estos modelos son arbitrarios, pero tienen un efecto enorme en la estimación del SCC. Especial atención merecen los parámetros $\varphi$ y $\rho$ de la función de bienestar social, ya que el valor de estos parámetros será crucial a la hora de determinar la senda óptima de consumo a lo largo del tiempo.\footnote{La ecuación del modelo equivalente a la ecuación (1).
+} Dicho de otra forma, los valores $\varphi$y $\rho$ determinan en qué grado la generación presente estaría dispuesta a reducir su consumo a cambio de un mayor consumo para las generaciones futuras. La calibración de estos parámetros requiere juicios devalor. 
+
+Por ejemplo, mientras que Nordhaus calibra estos parámetros para que el tipo de interés del modelo sea consistente con la evidencia observada, el Stern Review no consideraba ético valorar el bienestar de las generaciones futuras con criterios de mercado. Por ello, en la elaboración de este i nforme se asignaron valores muy reducidos de $\varphi$ y $\rho$, aumntando así el peso de las generaciones futuras dentro de la función de bienestrar social. El resultado de estas disparidadesen la calibración de estos parámetros es una dispersión muy elevada entre el SCC estimado por unos modelos y otros. Pindyck también resalta otras limitaciones metodológicas de los 1AM, como la elevada incertidumbre que existe aún acerca de los efectos de la concentración de $\text{CO}_2$ sobre la temperatura. Argumenta también que la función de daños de estos modelos carece de fundamento teórico o empírico. Además. afinna que estos modelos son incapaces de tener en cuenta el elemento que. según Pindyck, es el más determinante del SCC. Este elemento es la posibilidad de que el cambio climático derive en un resultado catastrófico.\footnote{Para los científicos climáticos, una catástrofe consistiría, por ejemplo, en sufrir un calentamiento de $7º\text{C}$-$8º\text{C}$ en 2100.
+}
+
+Por todo ello, Pindyck propone sustituir los complejos 1AM por una alternativa más sencilla, consistente en aproximar subjetivamente la probabilidad de que el cambio climático derive en un escenario catastrófico. Después, se podría aproximar alguna distribución del impacto de este escenario sobre el PlB, el stock de capital, u otra variable económica. Según Pindyck, dada la incertidumbre existente en torno a la evolución del calentamiento global y su impacto económico, es más conveniente basarse en algo plausible o verosímil que en complejos modelos aparentemente precisos.
+
+\end{document}
