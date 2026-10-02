@@ -1,0 +1,1263 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Tema 3.A.5 -- La síntesis neoclásica.\\
+\large El monetarismo}
+\author{Marcelo Ortega}
+\date{Noviembre 2025}
+\newcommand{\TemaCode}{3A05}
+
+\oldtitle{Tema 3.A.5. Críticas al modelo de la síntesis neoclásica: los modelos neokeynesianos de desequilibrio y la crítica monetarista}
+\changerationale{Las referencias a los modelos de la Síntesis Neoclásica en los temas de Macroeconomía pasarían a ser marginales ya que se debería de priorizar el empleo de modelos DSGE basados en la hipótesis de expectativas racionales, por lo que éste es el tema en el que el opositor debería demostrar conocer los principales trabajos y los atributos de esta escuela, predominante en la mayor parte de la segunda mitad del s.XX. Los autores de la Síntesis y los Monetaristas son contemporáneos, mantienen encendidos debates durante varios años, y presentan similitudes en el marco metodológico: por ello se les estudia en el mismo tema, a modo de contraposición.}
+
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+    La labor del buen opositor es la de ser capaz de entender estas escuelas en términos comparados, y no ver los dos apartados como meros departamentos estancos. 
+    
+    En cuanto a la distribución de tiempos, ambas escuelas merecen la misma asignación de minutos.
+    }
+\vspace{1cm}
+
+\modificaciones{
+    Falta añadir TODA la introducción y toda la conclusión
+
+    \textcolor{red}{OJO ->} Podríamos incluir la siguiente afirmación siempre y cuando la razonemos: \textit{FRIEDMAN es, ciertamente, un personaje muy interesante. La razón, desde mi punto de vista, es la paradoja que subyace en su razonamiento. Por un lado, es sin duda uno de los mejores investigadores y analistas económicos del siglo XX (Historia Monetaria de la economía de los Estados Unidos). Por otro lado, es uno de los teóricos menos científicos que han aparecido en la Historia del Pensamiento Económico}. (Podemos incluir aquí la suposición de SANDEL respecto al surgimiento y triunfo de las tésis monetaristas y neoliberales)
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}\label{intro}
+En primer lugar, podríamos preguntarnos porque es importante estudiar \textbf{X} desde un punto de vista histórico. 
+
+Para responder a esta pregunta puede resultar muy ilustrativo el Premio Nobel de Economía de 2024, en particular, el concepto de \textit{destrucción creativa}. Un autor, o autores, puede encuadrarse en una época, resultar ser el contorno entre épocas o precisamente las ideas germinales de cambio que motivan el nacimiento de otra época, pero lo que es innegable es que ese autor es fruto del conocimiento previo que la ciencia ha alcanzado.
+
+\imagenfit{DestruccionCreativa.png}{Ilustración: Destrucción creativa}{\href{https://www.nobelprize.org/prizes/economic-sciences/2025/press-release/}{Nobel Prize Outreach 2025. Nov 2025.}}
+
+Si visualizamos el conocemiento económico como una escalera que se ha ido desarrollando a lo largo de su breve historia, es imprescindible conocer en que momento (peldaño) nos encontramos, es decir, cuál es la frontera del conocimiento, para poder avanzar, pero no por ello es menos importante entender y conocer el camino que nos ha traído hasta aquí, puesto que este conocimiento previo es condición necesaria para la innovación.
+
+\imagenfit{PrescriptiveKnowledgeVSPropositionalKnowledge.png}{Ilustración: Conocimiento Prescriptivo y Conocimiento Proposicional}{\href{https://www.nobelprize.org/prizes/economic-sciences/2025/press-release/}{Nobel Prize Outreach 2025. Nov 2025.}}
+
+
+\subsection{Contextualización}\label{context}
+
+\subsubsection{Relevancia}\label{importance}
+
+
+\subsubsection{Historia}\label{history}
+
+
+\subsubsection{Problemática}\label{problem}
+
+
+\subsection{Estructura de la exposición}\label{structure}
+
+
+\clearpage
+\section{Contexto histórico}
+
+\subsection{Autores y Universidad de referencia}
+
+
+\clearpage
+\section{Síntesis neoclásica}
+\puntosclave{ 
+Las ideas de la Síntesis Neoclásica constituyeron un paradigma ampliamente aceptado basado en implicaciones de política económica keynesianas a corto plazo y neoclásicas a largo plazo. 
+
+Los economistas de la Síntesis enfatizaron la necesidad de formalizar las ideas en modelos matemáticos. 
+
+El modelo IS/LM fue la piedra angular de la Síntesis Neoclásica. Se trata de un modelo macroeconómico de economía cerrada con rigidez de precios y salarios e implicaciones de política económica keynesianas. 
+
+La Curva de Phillips completó el instrumental de la Síntesis Neoclásica. La principal proposición del modelo es que existe un trade-off entre inflación y desempleo.
+
+}
+
+En los años posteriores a la publicación de la Teoría General una serie de economistas elaboraron papers para tratar de interpretar la obra de Keynes y buscar una comparación entre las ideas keynesianas y las ideas neoclásicas. Esta tarea no fue nada sencilla. En palabras de Mankiw, la experiencia al leer la Teoría General es a la vez estimulante, pero al mismo tiempo frustrante dada la dificultad de interpretar las diferentes piezas del puzzle que componen la obra de Keynes. Por ejemplo, en el capítulo 12, Keynes declara que el mensaje central del libro es la incertidumbre que rodea a las decisiones de inversión, pero en el resto de los capítulos, por simplicidad, se basa en información perfecta. Por otra parte, la obra de Keynes es ensayística: no existe un modelo formal en términos matemáticos. Esto generó en la comunidad académica la necesidad de formular el modelo keynesiano con métodos matemáticos relativamente simples. Este programa de investigación común llevó a la publicación en 1937 de diversos trabajos de Meade, Harrod y Hicks. Hicks en su obra “Mr Keynes and the Classics”(1937) transformó las ideas de Keynes en un sistema de ecuaciones simultáneas a partir del cual se podían comparar estas ideas con las ideas “clásicas”, Además su modelo admitía una representación gráfica mediante una curva que reflejaba el  equilibrio del mercado de bienes (SI) y otra curva que reflejaba el equilibrio en el mercado monetario (LL) Hansen, en un segundo momento, partió del modelo de Keynes para la elaboración del modelo que a posteriori ha sido reconocido como el caballo de batalla de la Síntesis Neoclásica: el modelo IS/LM.
+
+El término \textit{Síntesis Neoclásica} fue empleado por P. SAMUELSON en referencia a un consenso entre los principales economistas americanos en la década de los 50's:
+
+En los años recientes el 90\% de los economistas americanos se han dejado de llamar Economistas Keynesianos o Economistas Anti-Keynesianos. En cambio, han trabajado juntos hacía una síntesis entre los postulados neoclásicos y las teorías keynesianas de determinación de la renta. El resultado podría ser llamado como síntesis neoclásica y es compartido por todos menos por el 5\% que se sitúan en los extremos”. 
+
+Por una parte, los economistas de la síntesis neoclásica defienden dos ideas de corte keynesiano:
+\begin{la}
+    \item En primer lugar, afirman que los precios y salarios no se ajustan con rapidez para vaciar los mercados. Es decir, la propiedad de estabilidad de los mercados no era instantánea sino lenta;
+    \item En segundo lugar, las políticas de demanda pueden estabilizar el ciclo económico y, en consecuencia, priorizan la política fiscal a la política monetaria.
+\end{la}
+
+Debido a la incorporación de estas dos ideas, el profesor DE VROEY considera más preciso hablar de macroeconomía keynesiana. Con una argumentación parecida, el New Institute of Economic Thinking emplea el término neokeynesianismo. 
+
+Sin embargo, los economistas de la síntesis no destierran completamente algunas ideas y metodologías neoclásicas. Por ejemplo, defienden que, en el largo plazo, los mercados se ajustan gracias a la flexibilidad de precios. Por tanto, se acepta la teoría convencional del equilibrio general competitivo para explicar la determinación de precios y cantidades una vez que salarios y precios habían tenido suficiente tiempo para ajustarse para vaciar los mercados. De este modo, en otros campos, como en la teoría microeconómica, en la teoría del comercio internacional o la teoría del crecimiento económico, algunos economistas que participaron en la síntesis como HICKS, SAMUELSON o SOLOW realizaron aportaciones empleando metodología neoclásica. Finalmente, podemos señalar que a raíz de la década de los 50 algunos economistas buscaron microfundamentar los principales postulados de la Teoría General. En palabras de MODIGLIAN:
+
+“Uno de los aspectos principales que ha dominado mi investigación científica ha sido integrar los principales postulados de la Teoría General con la metodología establecida de la Ciencia Económica, la cual descansa en el comportamiento optimizador de los agentes económicos”. 
+
+En definitiva, arguyen que las ideas neoclásicas y keynesianas no son incompatibles pudiendo coexistir. El modelo neoclásico con flexibilidad de precios y vaciado de mercados es válido para temas microeconómicos y para el análisis macroeconómico a largo plazo (Teoría del crecimiento económico) mientras que las ideas keynesianas son válidas para un análisis macroeconómico a corto plazo. Bajo esta óptica podemos emplear el término acuñado por MANKIW de Síntesis Neoclásico-Keynesiana. En cualquier caso, los economistas de la Síntesis se centran, siguiendo el término de Mankiw, en la parte keynesiana de la Síntesis. Es decir, el objeto principal de estudio no era la oferta agregada sino la demanda agregada, reduciendo la parte de la oferta al supuesto de la rigidez de precios exógena.
+
+
+Limitando el análisis a los economistas de la síntesis neoclásica, a diferencia de otras escuelas como el monetarismo y la nueva macroeconomía clásica, la existencia de un líder se antoja más problemática, al existir diversos trabajos que han sido muy relevantes. Podríamos hablar en cambio de economistas pioneros que fueron más influyentes como John Hicks con su obra “Mr Keynes and the Classics” (1937) de donde se extrae una primera versión del modelo IS/LM. Asimismo, algunos economistas como Modigliani fueron relevantes en los años inmediatamente posteriores de la publicación de la Teoría General. Al no existir un líder claro, tampoco podemos hablar en puridad de seguidores, sino de economistas que compartieron el objetivo de reconstrucción y que terminaron compartiendo los mismos postulados. En esta línea podemos mencionar a Tobin, Samuelson o a SolowVeamos someramente la contribución de algunos economistas de la Síntesis. Citaremos a autoresque han recibido el Premio Nobel de Economía • Samuelson: Su trabajo seminal, “Foundations of Economic Analysis” sentó las bases de su carrera como economista académico. Sus contribuciones son numerosas y abarcan distintas ramas de la teoría económica. Su contribución principal a la Síntesis Neoclásica fue la obra que escribió junto a Solow en 1960 “Analytical Aspects of Anti-Inflation Policy”. A raíz de este paper se incorpora la curva de Phillips al instrumental de política de la Síntesis Neoclásica. Es uno ejemplo de la SNC como fusión de microeconomía neoclásica para escenarios de largo plazo/competencia perfecta y keynesianismo en el corto plazo. Así, respecto a sus contribuciones a la teoría microeconómica, podemos citar la teoría de la preferencia revelada, su modelo de consumo-ahorro o la condición de eficiencia en la provisión de bienes públicos. Respecto a sus contribuciones en economía financiera, participó en el desarrollo de la teoría de los mercados financieros eficientes. Finalmente, destacamos sus contribuciones al desarrollo de la teoría neoclásica del comercio internacional. • Solow. Al igual que Samuelson, no solo podemos considerar a Solow como uno de las principales figuras de la Síntesis Neoclásica sino también una figura clave en otras ramas de la teoría económica, sobre todo en la teoría del crecimiento económico. Su aportación más conocida es un modelo de crecimiento de 1956 considerado como una reformulación del modelo Harrod-Domar con supuestos neoclásicos. Además, destacamos sus estudios sobre las contribuciones al crecimiento de la inversión en capital fijo y la influencia de la tecnología que marcaron el origen de la llamada "contabilidad del crecimiento”. • Hicks. Además del citado paper, “Mr Keynes and the Classics”., Hicks destaca por teorizar acerca de la existencia de equilibrios generales temporales: una suerte de microfundamentación de inspiración keynesiana de modelos no-walrasianos. Entre sus otras contribuciones a la teoría microeconómica figuran sus aportaciones a la teoría de la demanda del consumidor, resaltando la distinción entre efecto renta y efecto sustitución y sus trabajos sobre el excedente del consumidor. Asimismo, resaltamos su Teoría de los Salarios en 1932, donde sienta las bases de la teoría neoclásica de la demanda de trabajo. Por otra parte, citamos sus contribuciones la economía del bienestar y en concreto a los criterios de compensación, y a la teoría del ciclo económico (utilizando la noción del acelerador).
+
+Modigliani. Escribe en 1944 “Liquidity Preference and The Theory of Interest and Money”. Se trata de una obra decisiva, junto con la de Hicks, en la elaboración del modelo IS/LM canónico. Por otra parte, Modigliani y sus colaboradores diseñaron el considerado como el modelo macroeconométrico más relevante: el MPS model que contenía 334 ecuaciones. Por otro lado, debemos mencionar sus contribuciones a la teoría del valor de la empresa mediante el desarrollo del teorema de Modigliani y Miller. Finalmente, citamos la hipótesis del ciclo vital del consumo. • Tobin. Escribe en 1958 “Liquidity Preference as Behaviour Towards Risk”. En esta obra, Tobin aporta microfundamentos sólidos para la demanda de dinero y de todo tipo de activos. Este trabajo de Tobin también fue muy influyente para el desarrollo del modelo de valoración de activos financieros (modelo CAPM). Además, destacamos la introducción del concepto de “q de Tobin” y su propuesta de imposición a la conversión al contado de divisas para desincentivar los flujos de capitales especulativos (“Tasa Tobin”). • Meade. Escribe en 1937 “A simplified model of Mr. Keynes system”. El objetivo de este modelo es representar en forma algebraica la Teoría General, en particular, la determinación del nivel de empleo global de una economía con dos sectores productivos. Además, destacan sus aportaciones a la teoría de la economía internacional, analizando el modelo keynesiano en contextos de economía abierta y sus contribuciones en el análisis de los efectos de las políticas comerciales sobre el bienestar • Klein. Recibe el Premio Nobel de Economía en 1980 por la «construcción de modelos econométricos de coyuntura y su aplicación al análisis de la política económica». Uno de ellos fue un modelo macroeconométrico pionero de la economía americana que realizó junto a Goldberger (“An Econometric model of the US”).
+
+Impacto y relevancia 
+Los economistas de la Síntesis Neoclásica consolidan un paradigma que dura hasta la emergencia en la década de los 70 de los postulados de la Nueva Macroeconomía Clásica. Sin embargo, se puede argumentar que estas ideas permanecen en la profesión hoy en día bajo la Nueva Economía Keynesiana cuyas diferencias con respecto a la Síntesis son fundamentalmente metodológicas y no conceptuales. Por otra parte, debido a su versatilidad, el modelo IS/LM ha continuado enseñándose en las universidades y hasta finales del siglo pasado ha sido la principal referencia en los modelos macroeconométricos de la mayoría de los gobiernos y bancos centrales.
+
+\subsection{Método: econometría y expectativa estática}
+
+Los economistas de la síntesis neoclásica emplearon mayor formalización matemática que los monetaristas y otras escuelas de pensamiento coetáneas. De hecho, entre la década de los 40 y los 70, se desarrolla la econometría, una herramienta fundamental para el análisis económico ya que proporcionaba los instrumentos necesarios para la refutación de teorías. 
+
+\subsubsection{Econometría} 
+La econometría puede considerarse como la confluencia de dos corrientes de pensamiento, la que representan los economistas con inclinación hacia las matemáticas y la que constituyen los estadísticos con aficiones económicas. A partir de la década de los años 30's, las técnicas estadísticas arraigaron en Estados Unidos, donde encontraron un campo propicio debido a la mentalidad pragmática de los norteamericanos.\footnote{Entre ellos destacaron otrora los ingleses W. PETTY, GREGORY KING, JEVONS, EDGEWORTH y MARSHALL; los franceses QUESNAY, COURNOT; el suizo DANIEL BERNOULLI; el italiano PARETO; el alemán J.H. VON THÜNEN y el norteamericano FISHER.
+} Además de los fundadores del NBER y la Sociedad de Econometría, ya citados en el tema anterior, se distinguieron como económetras: MOORE (1869-1958),\footnote{Sobre todo, la deducción estadística de curvas de demanda y sus diversos tipos de elasticidad. Aunque otros autores habían trabajado con curvas matemáticas de oferta y demanda, SCHUMPETER (1954) opina que CHEYSSON en 1887, LEHFELDF, en \textit{La elasticidad de la demanda del trigo} (1914) y MOORE, fueron los primeros autores que, tras un largo paréntesis de unos doscientos años, continuaron la tarea emprendida por GREGORY KING.\\Sus obras más importantes son: \textit{Las leyes de los salarios} (1911); \textit{Ciclos económicos: su ley y su causa} (1914); \textit{Predicción de la cosecha y el precio del algodón} (1917); \textit{Génesis de ciclos económicos} (1923) y \textit{Economía sintética} (1929)
+}, H. SCHULTZ (1893-1938),\footnote{Alumno de Moore en la Universidad de Columbia, continuó la labor investigadora iniciada por su maestro, en colaboración con expertos estadísticos. Resultado de estos estudios fueron sus libros \textit{Leyes estadísticas de demanda y oferta} (1936), \textit{Teoría y medición de la demanda} (1938) y su artículo \textit{Interrelación entre demanda, precios y renta}
+} P. DOUGLAS (1892-1976),\footnote{Estudiante de la Universidad de Columbia, en la época de profesorado de MOORE y de JOHN B. CLARK, ejerció la docencia en la Universidad de Chicago donde tuvo la oportunidad de seguir las investigaciones econométricas, iniciadas por MOORE, sobre la distribución de la renta, en especial los salarios, y la comprobación estadística de las productividades marginales de los factores de la producción. Su obra más relevante de estudios econométricos es \textit{La teoría de los salarios} (1934). DOUGLAS y otro profesor de la Universidad de Chicago, el matemático C. W. COBB, ya habían realizado estudios sobre la renta nacional, cuyos resultados plasmaron en el artículo \textit{Una teoría de la producción} (1928), donde usaron una variante de la función de producción social de WICKSELL que contemplaba solamente dos factores productivos, dando lugar a lo que se cononce como Función COBB-DOUGLAS (en particular, a la función de coeficientes en la que centraron la principal parte de su investigación $\beta=1-\alpha$, estimando una distribución de ingresos de $1/3$ para el capital ($\alpha$) y $2/3$ para el salario ($\beta$).
+} y LEONTIEF (1906-1999)\footnote{Profesor de Harvard, con sus estudios de las tablas sectoriales Input-Output, no puede dejar de mencionarse en lo relativo a la investigación econométrica; ni tampoco que al llegar a los EEUU trabajó de investigador en el NBER. A partir de la II Guerra Mundial, los avances logrados en la Econometría se aprovecharon para la investigación estadística de los coeficientes de las tablas de Leontief.
+}
+
+\paragraph{Influencia en la Síntesis Neoclásica}
+Los autores de la síntesis trabajarán con modelos macroeconométricos basados en sistemas de ecuaciones simultáneas lineales que representan el comportamiento agregado de la economía. La economía se subdivide en distintos sectores de actividad y los parámetros se seleccionan usando métodos estadísticos. El economista holandés TINBERGEN (1937) desarrolló el primer modelo a nivel nacional para Holanda que después extendió para Estados Unidos y para el Reino Unido. KLEIN por su parte junto a GOLDBERGER creó \textit{An Econometric model of the US} (1955), un modelo de 63 variables que constituyó la primera representación empírica del sistema keynesiano. Estos modelos se ampliaron hasta el punto de incluir cientos de ecuaciones, cada una desarrollando algún aspecto estructural de la economía o el comportamiento de algún agente económico. El modelo más ambicioso fue el modelo MPS de Modigliani y sus colaboradores que contenía 334 ecuaciones. 
+
+\subsubsection{Metodología}
+
+\paragraph{Expectativas estáticas}
+Como decíamos anteriormente, para la formulación del modelo IS/LM los economistas de la Síntesis Neoclásica reducen la parte de la oferta agregada al supuesto de la rigidez de precios exógena. Es decir, se asume que en el corto plazo no existirán cambios en el nivel de precios. Formalmente, 
+
+$$p_t=p_{t-1}$$
+
+Ello implica que el ajuste de la economía en el corto plazo se daba en cantidades y por tanto las políticas económicas tienen efecto en el nivel de empleo de la economía. 
+
+Sin embargo, los economistas de la síntesis neoclásica aceptan la teoría de formación de precios neoclásica para el largo plazo, es decir, conciben que los precios son flexibles y serán la principal variable de ajuste para plazos más largos. En su versión más sencilla del modelo agregado de Oferta y Demanda, esto se traduce en la existencia de tres curvas de Oferta:\footnote{Nótese la similitud con la partición temporal neoclásica en la teoría de Marshall.} 
+\begin{lnum}
+    \item Una de muy corto plazo, perfectamente elástica en línea con la ecuación de arriba;
+    \item Una de largo plazo, perfectamente inelástica, que permite un ajuste neoclásico en precios; y,
+    \item Una de corto plazo con pendiente positiva.\footnote{La convergencia de la curva de muy corto plazo a la de largo plazo fue estudiada por autores como Dornbusch.\\
+Véase por ejemplo el Modelo de sobrerreacción (1976): \href{https://en.wikipedia.org/wiki/Overshooting_model?utm_source=chatgpt.com}{Wikipedia.org} o \href{https://people.ucsc.edu/~hutch/Econ241a/Articles/Dornbusch_overshooting.pdf?utm_source=chatgpt.com}{\textit{Expectations and Exchange Rate Dynamics} (1976)}}
+\end{lnum}  
+
+\paragraph{Axiomática común}
+Además, cabe destacar la congruencia respecto a las hipótesis que comparten y vinculan a los autores que enmarcamos en la síntesis neoclásica:
+\begin{lnum}
+    \item \textit{Epistemología instrumental}, como hemos dicho, su gran afinidad por las matemáticas llevó, en muchos casos, a estos autores a hacer un uso intensivo de éstas en la formulación de sus modelos;\footnote{La popularidad de estos modelos macroeconométricos decayó en los años 70's, precisamente la \textit{crítica de Lucas} fue decisiva en esta tendencia. Para LUCAS, estos modelos, al reflejar meras relaciones entre agregados macroeconómicos, no tenían en cuenta el comportamiento optimizador de los agentes. Esto hacía que los coeficientes estimados no tuvieran en cuenta posibles cambios en el periodo de las políticas económicas. En otras palabras, esos coeficientes estimados no eran parámetros exógenos, sino que eran variables endógenas sensibles a cambios en las políticas. Paralelamente, los shocks del petróleo llevaron a invalidar las predicciones de estos modelos macroeconómicos estructurales y llevaron a los investigadores a desarrollar múltiples nuevas especificaciones. Al mismo tiempo, en esta década se desarrollaron los modelos econométricos de series temporales de la familia de medias móviles (ARMA) que tuvieron mayor capacidad predictiva.\\
+    \textbf{Importante.-} Esto no implica de ninguna manera que la corriente naciente rechazara en el uso de las matemáticas, nada más lejos de la verdad, lo que implica es la incorporación de un elemento clave: la microfundamentación de los modelos (recurriendo también a las matemáticas para su formalización).}
+    \item \textit{Individualismo metodológico}, caracterizado por la convicción de poder reducir la división abstracta existente entre la microeconomía y la macroeconomía mediante la agregación de agentes;
+    \item \textit{Racionalidad ilimitada}, convencidos de que los agentes guiaban sus decisiones movidos por razonamientos profundos que conluían en la maximización de su bienestar;\footnote{Una de las preocupaciones de economistas como MODIGLIANI era emplear la metodología neoclásica para recoger los postulados de la Teoría General. Uno de ellos era integrar el comportamiento optimizador de los individuos en la teoría macroeconómica keynesiana. Ello dio pie en los años 50 a la microfundamentación de distintas variables agregadas como la demanda consumo, la demanda de inversión o la demanda de dinero. Esta integración de metodología neoclásica para formalizar las variables agregadas con las que trabaja Keynes es otro de los aspectos más notables de la síntesis neoclásica. Sin embargo (especialmente entre los autores más keynesianos de la síntesis neoclásica), la fe en la racionalidad no era ciega: los animal spirits se percibían como uno de los principales determinantes de la inversión y por tanto de la demanda agregada.
+    }\textsuperscript{,}\footnote{Esto se ejemplifica enormemente con la labor conciliadora que realiza SAMUELSON de la Teoría Neoclásica de la Demanda del consumidor a través de un proceso inductivo (la Preferencia Revelada), alcanzando el mismo conjunto axiomático
+    }y, 
+    \item \textit{Concepción de una economía basada en el intercambio y la escasez} que, en consecuencia, implica un comportamiento optimizador de recursos por parte de los agentes en aras de maximizar su bienestar recurriendo al intercambio.
+    \item 
+\end{lnum}
+
+\subsection{Principales lineas de investigación}
+
+\subsubsection{El Equilibrio general en el IS-LM(-BP)} 
+Se trata del modelo macroeconómico de economía cerrada dominante de la síntesis neoclásica.\footnote{La popularidad del modelo es tal que aún se enseña en estudios de grado de todo el mundo por su simplicidad, facilidad de estudio de los efectos de política económica e identificación de mecanismos de transmisión adecuados. De hecho, la mayoría de los modelos desarrollados por la OCDE, FMI y BCE confirman efectos desbordamiento de las políticas análogas a los que predice el modelo. Sin embargo, en instituciones internacionales y en programas de estudio de máster y doctorado el empleo de modelos de equilibrio general dinámico estocástico es más común.
+} 
+
+El modelo IS/LM parte de la especificación de los principales determinantes de las variables macroeconómicas más relevantes (consumo, inversión, demanda de dinero, etc.) e incorpora tanto el sector real (mercado de bienes) como el sector monetario, que están conectados por dos factores:
+\begin{la}
+    \item \textit{El tipo de interés}. Afecta a ambos sectores: al sector real, a través de la inversión; al sector monetario, a través de la demanda de dinero; y,
+    \item \textit{La renta}. Es un determinante de la demanda de dinero (atesoramiento y motivos de demanda de dinero en el marco keynesiano)
+\end{la}
+
+Aunque el modelo IS/LM sea en esencia un modelo de demanda, existen una serie de supuestos implícitos por el lado de la oferta que van a hacer que la demanda determine el output sólo en el corto plazo (\textit{demand-driving economy}, pero en el largo plazo la Ley de SAY), en particular debemos destacar dos:
+\begin{lnum}
+    \item \textit{Stock de capital fijo}. La existencia de un stock de capital fijo en el corto plazo es un supuesto central de la síntesis; y,
+    \item \textit{Rigideces en los salarios nominales}. La existencia de salarios nominales exogeneizados en el corto plazo; es decir, no determinados por los mecanismos de ajuste propios del sistema.
+\end{lnum}
+
+\paragraph{Primeros planteamientos}
+\begin{specialblock}{¿Es la síntesis neoclásica una conciliación o una crítica?}
+    Antes de empezar esta parte, debemos hacer un apunte fundamental.
+    
+    La Síntesis Neoclásica, que dominará sobre gran parte del mundo académico desde la publicación de la Teoría General hasta la década de los años 70's surge, a priori, como una crítica frontal a la consideración de ésta como una formulación innovadora. Como veremos, el pionero o promotor de estas ideas "conciliadoras" será HICKS en \textit{Mr. Keynes and the "Classics"; A Suggested Interpretation} (1937). Nótese que es, literalmente, un año depués de la publicación de la Teoría General. 
+
+    Cabe preguntarse: ¿Debemos plantear la síntesis neoclásica como una continuación del pensamiento de KEYNES? Habrá muchas respuestas al respecto, pero considero que no. 
+
+    La síntesis neoclásica precisamente representa el conservadurismo intelectual y la resistencia que las viejas ideas pueden oponer frente a las corrientes de cambio o revoluciones científicas. Aunque esto pueda postergar la innovación académica (en este caso durante más de 30 años de marginación) es una consecuencia inevitable de la potencia de las ideas, y no es, ni mucho menos, característico del ámbito económico:\\ 
+    Nadie puede, ni osa, deslegitimar a EINSTEIN en el campo de la física, pero su oposición frontal al desarrollo pionero de la física cuántica podría haber conducido perfectamente al rechazado académico generalizado hacia este campo, lo cual habría, indudablemente, retrasado lo inevitable, pero habiendo perdido años valiosos de investigación. Por suerte para todos, a pesar de la influencia indudable que EINSTEIN ejercía sobre sus colegas, muchos de ellos creyeron que, a la postre, \href{https://www.nationalgeographic.com.es/ciencia/einstein-contra-cuantica-dios-no-juega-a-dados-universo_24976}{¡\textit{Parece ser que Dios sí que juega a los dados...}!}
+\end{specialblock}
+ 
+
+Hicks en \href{https://public.econ.duke.edu/~kdh9/Courses/Graduate%20Macro%20History/Readings-1/Hicks_Mr.%20Keynes%20and%20the%20Classics.pdf}{\textit{Mr. Keynes and the "Classics"; A Suggested Interpretation} (1937)}, señala que una característica central de la obra de KEYNES era la introducción de rigideces en el mercado a través de la consideración de un salario nominal rígido, y argumenta que ésta no es, en ninguna medida, un elemento diferenciador del modelo keynesiano frente al clásico, compatibilizando su visión de lo "clásico" (KEYNES hace alusión a la teoría de PIGOU como "clásica") y la visión de KEYNES. HICKS descarta que la Teoría "clásica" del mercado de trabajo de PIGOU, \textit{The Theory Of Unemployment} (1933) [Véase la interpretación propuesta por KEYNES, aclarada, sobre la obra de PIGOU: \href{https://www.marxists.org/reference/subject/economics/keynes/general-theory/ch19a.htm#1}{\textit{Appendix to Chapter 19. Professor Pigou’s “Theory of Unemployment”}}],  pueda ser considerada como referente y argumenta que muchos economistas neoclásicos hubieran analizado el mercado de trabajo en términos nominales (es decir, variable exógena) y no reales (variable endógena). 
+
+Al no existir previamente en la literatura un modelo neoclásico centrado en salarios nominales y no salarios reales, HICKS construye este modelo en su obra de 1937 y argumenta que la rigidez de salarios y el atesoramiento es un causa apropiada del desempleo involuntario masivo que evidenciamos durante la Gran Depresión y la ineficacia de las políticas intervencionistas y dirá que \textit{[T]he General Theory of Employment is} (only) \textit{the Economics of Depressión}. HICKS aclara que dicho salario no es el salario nominal de equilibrio, y por tanto, genera una situación de desempleo en el mercado de trabajo; y desarrollará esta situación analítica y gráficamente.
+
+$$M=L(I,i); \quad I_x=C(i); \quad I_x=S(I)\qquad \text{donde,}
+\begin{cases}
+    M\equiv \;\text{\scriptsize Cantidad de dinero}\\[0.5em]
+    I_x\equiv \;\text{\scriptsize Valor de inversiones}\\[0.5em]
+    I\equiv \;\text{\scriptsize Renta total}\\[0.5em]
+    i\equiv \;\text{\scriptsize Tipo de interés}
+\end{cases}$$
+
+HICKS señalará que este sistema de ecuaciones se diferencia únicamente en la demanda de dinero ($L$, preferencia por la liquidez, en contraposición a la formulación clásica $M=kI$) y la no independencia de la tipo de interés sobre el ahorro (frenta a la formulación clásica, $I_x=S(i,I)$). Gráficamente, el sistema propuesto por HICKS correponde (dentro del marco neoclásico) a la siguiente situación:
+
+\imagenfit{HICKS_1.png}{Curvas IS-L y representación de la Curva de demanda de dinero en presencia de la \textit{trampa de liquidez} o atesoramiento}{\textit{Mr. Keynes and the Classics; A Suggested Interpretation}. HICKS, 1937}
+
+\imagenfit{HICKS-2.png}{Curvas Inversión-Tipo de interés (para Consumo y Ahorro) y representación del equilibrio en la economía real IS-L a través del Tipo de Interés como función de la renta ($I$)}{\textit{Mr. Keynes and the Classics; A Suggested Interpretation}. HICKS, 1937}
+
+\paragraph{Economía cerrada}  
+MODIGLIANI escribe en 1944 \textit{Liquidity Preference and The Theory of Interest and Money} (en la revista \textit{Econometrica}). Se trata de una obra decisiva, junto con la de Hicks, en la elaboración del modelo IS/LM canónico. 
+
+A través de su integración del modelo IS-L de HICKS con el mercado laboral, el artículo de MODIGLIANI pasó a la literatura como una contribución fundamental a la construcción de la síntesis neoclásica y un primer paso hacia la restauración de la visión prekeynesiana.
+
+\textsc{El mercado de bienes: curva IS}
+
+La curva IS representa la combinación de renta y tipo de interés que mantiene el mercado de bienes en equilibrio, integrando la demanda de consumo, la demanda de inversión y el gasto público. Tiene pendiente negativa puesto que una disminución del tipo de interés llevaría a una mayor inversión y por tanto a una mayor renta. El valor de la pendiente depende tanto de la sensibilidad de la inversión al tipo de interés como de la propensión marginal a consumir. 
+
+Para la síntesis neoclásica, la inversión es poco sensible al tipo de interés, por lo que la curva IS será inélastica que la curva de demanda de dinero ($LM$).
+
+$$IS:\quad Y=C(Y)+Y(r)+G$$
+
+Donde:
+\begin{lnum}
+    \item $C(Y)=C_0+c(Y-T)$. $C$ es el consumo agregado, $Y$ la renta corriente, $C_0$ el componente autónomo del consumo, $Y-T$ la renta corriente minorada por los impuestos (renta disponible) y $c$ la sensibilidad del consumo a la renta disponible. El consumo agregado depende de un componente autónomo y fundamentalmente de la renta corriente. Además: $0<c<1$, es decir, ante un aumento de la renta, el aumento del consumo será de menor proporción. La propensión marginal decreciente del consumo implica que se cumple la ley psicológica de Keynes. Por otra parte, la gran sensibilidad del consumo a la renta disponible ($Y-T$) implica que éste se verá afectado por políticas económicas que afecten a la renta del periodo;
+    \item $I(r)=I_0-br$. $I$ es la inversión agregada, $I_0$ un componente de la inversión independiente del tipo de interés, $r$ el tipo de interés y $b$ la sensibilidad de la inversión al tipo de interés. La Síntesis Neoclásica concibe la inversión como el componente más inestable de la demanda, pues los volátiles estados de ánimo de los empresarios (\textit{animal spirits}) tienen una influencia determinante en las decisiones de inversión. En cambio, el tipo de interés sería un determinante de segundo orden; y,
+    \item $G$ hace referencia al gasto público discrecional del gobierno. Dada la construcción del modelo, el sector público tiene a su alcance la determinación del equilibrio del sistema.
+\end{lnum}
+
+\textsc{El mercado monetario: la curva LM}
+
+La curva $LM$ indica las combinaciones de renta y tipo de interés que mantienen el mercado monetario en equilibrio. Tiene pendiente positiva puesto que, si la renta se incrementa, la demanda de dinero aumenta y por tanto el tipo de interés debe aumentar para que se reduzca la demanda especulativa de dinero y la oferta de dinero sea igual a la demanda de dinero. El valor de la pendiente depende de la sensibilidad de la demanda de dinero respecto al tipo de interés y a la renta. 
+
+Para la síntesis neoclásica, la demanda de dinero es muy sensible al tipo de interés, por lo que la curva $LM$ será más elástica. 
+
+$$LM: \frac{M}{P}=kY-hr$$ 
+
+Donde:
+\begin{lnum}
+    \item M es la oferta monetaria;
+    \item P el nivel de precios;
+    \item k la sensibilidad de la demandade dinero a la renta; y,
+    \item h la sensibilidad de la demanda de dinero al tipo de interés.
+\end{lnum}  
+
+Las únicas variables endógenas son los dos determinantes de la demanda de dinero: la renta y el tipo de interés.\footnote{La introducción explícita del tipo de interés en la función de demanda de dinero constituye una influencia clara de Keynes. El tipo de interés se considera el coste de oportunidad de tener dinero, es decir, lo que podrían obtener si invirtieran el dinero en bonos.
+}
+
+\textsc{Equilibrio: IS-LM}
+
+Como se observa, el tipo de interés al ser un determinante tanto de la demanda de dinero como de la demanda de inversión lleva a que en este modelo no se cumpla la dicotomía clásica. 
+
+\imagenfit{Equilibrio_IS-LM.png}{Equilibrio del modelo IS-LM}{Apuntes ICEX-CECO. Tema 3.A.5}
+
+Como existen dos ecuaciones con dos incógnitas podemos emplear el método de sustitución y hallar tanto la renta como el tipo de interés de equilibrio del modelo. El punto de corte entre la curva IS y la curva LM determina el nivel de renta y el nivel de tipo de interés de la economía. 
+
+\paragraph{Economía abierta}
+El modelo IS-LM-BP, también conocido como modelo MUNDELL-FLEMING consiste en el Modelo IS-LM aplicado a una economía abierta.\footnote{El modelo MUNDELL-FLEMING es un modelo económico desarrollado por R. MUNDELL (1932-2021) y M. FLEMING (1911-1976).
+} 
+
+Se añade la curva BP, que refleja equilibrio en el sector exterior. La demanda agregada entonces también de la demanda de exportaciones, la demanda de importaciones y el tipo de cambio. No solo existe una liberalización comercial en este modelo sino también de capitales. En concreto, la salida neta de capitales depende del diferencial de tipo de interés entre dos economías. En este modelo la efectividad de la política monetaria y de la política fiscal depende del grado de movilidad de capitales y del régimen cambiario. 
+
+$$BP:\qquad  X(Y^*)-mY+\phi e=\beta(r-r^*) $$
+
+Donde $\beta\in(0,1)$ refleja el grado de movilidad de capitales, siendo $1$ perfecta movilidad y $0$ ausencia de movilidad:
+\begin{la}
+    \item Si $\beta=1$, la curva $BP$ sería perfectamente horizontal; mientras que,
+    \item Si $\beta=0$, la curva $BP$ sería perfectamente vertical.
+\end{la}
+
+\subsubsection{Política económica en el marco de la SNC}
+
+\paragraph{Economía cerrada}
+
+\textsc{Política monetaria expansiva}
+
+La expansión monetaria provocará que un mismo tipo de interés esté asociado con mayor renta. Por tanto, la curva LM se desplaza hacia la derecha, indicando un efecto expansivo sobre la demanda. El equilibrio final se daría en el punto 1 donde se obtiene un mayor nivel de renta y un menor tipo de interés. Como vemos, una política monetaria expansiva tiene efectos positivos sobre la renta. Gráfico 2. Política monetaria expansiva Fuente: fabiansalazar.es Hicks considera que la pendiente de la curva LM comprende tres intervalos: uno horizontal, otro con pendiente positiva y otro vertical. Si la curva IS intercepta con la curva LM en el tramo horizontal de esta última se daría una situación de trampa de liquidez, es decir, una situación donde la elasticidad de la demanda de dinero al tipo de interés es infinita. Bajo esta situación, una política monetaria llevaría a que la nueva liquidez inyectada en la economía se atesora y no segaste y en consecuencia no tendría un impacto positivo sobre la renta. Hicks señaló que laconsideración de una situación de trampa de liquidez es el supuesto distintivo de una economía keynesiana frente a una economía neoclásica y se daría en una situación de crisis económica. De esta manera, la política fiscal sería la herramienta de política necesaria para hacer frente a situaciones de crisis. Gráfico 3. Trampa de liquidez Fuente: fabiansalazar.es
+
+\textsc{Política fiscal expansiva}
+
+El aumento del gasto público implica que, para cada nivel de tipo de interés, la renta es mayor para equilibrar el mercado de bienes, con lo cual, la curva IS se desplaza a la derecha, indicando un efecto expansivo sobre la demanda agregada. El equilibrio final se daría en el punto 1 donde se obtiene un mayor nivel de renta y un tipo de interés más elevado. Por tanto, una política fiscal expansiva tiene efectos positivos sobre la renta; no obstante, se da un efecto crowding out debido al aumento del tipo de interés.\footnote{Al financiar el déficit con emisión de deuda pública se produce un exceso de oferta de bonos que el mercado tiene que absorber, por lo que el precio de los bonos baja, es decir, sube el tipo de interés.
+}
+
+Gráfico 4. Política fiscal expansiva Fuente: fabiansalazar.es En algunos casos la realización de una política fiscal expansiva generará una situación donde los gastos del estado superan a sus ingresos, por lo que se genera un déficit público que se puede financiar vía impuestos, emisión de deuda o monetización. En el caso de la financiación vía impuestos, el modelo IS/LM permite llegar al teorema de Haavelmo especifica que, incluso manteniendo un presupuesto equilibrado con más impuestos, un aumento del gasto público se traduce en un efecto expansivo sobre la renta. La intuición es que el efecto expansivo del aumento del gasto público es mayor que el efecto contractivo del aumento de impuestos debido al valor de los multiplicadores. Respecto a la emisión de deuda, se produciría un exceso de oferta de bonos que el mercado tiene que absorber, por lo que el precio de los bonos baja y por tanto sube el tipo de interés. A este efecto se le conoce como crowding-out financiero. Además, el mayor gasto derivado de la expansión fiscal conlleva un aumento de la demanda de dinero y por ende un aumento del tipo de interés para equilibrar el mercado monetario. A este último efecto se le conoce como crowdingout transaccional. Si se opta por la monetización, el incremento de la demanda de dinero es absorbido por el aumento de la oferta monetaria (con lo que el mercado de dinero está en equilibrio). No hay aumento en los tipos de interés, evitando el crowding out. Por tanto, según este enfoque, bajo unos supuestos keynesianos, el déficit financiado a través de la monetización es más expansivo que con deuda pública. El multiplicador del gasto público teniendo en cuenta los efectos monetarios es mayor.
+
+\paragraph{Economía abierta}
+A título de ejemplo podemos plantear la efectividad de una política monetaria expansiva asumiendo un tipo de cambio flexible y una perfecta movilidad de capitales ($\beta=1$). 
+
+\textbf{Gráfico 5. Política monetaria expansiva Fuente: fabiansalazar.es }
+
+Partiendo del punto $0$ si se realiza una política monetaria expansiva, se desplaza la curva $LM$ hacia la derecha y se llegaría a un punto $1$, donde la reducción del tipo de interés de la economía genera salidas de capitales hacia otros países, lo que deprecia la moneda nacional. Esta depreciación genera una ganancia en la competitividad, lo que aumenta las exportaciones netas y genera un movimiento hacia la derecha de la curva $IS$. En comparación a una situación de economía cerrada, la política monetaria expansiva es más efectiva.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Pero, ¿introdujo Modigliani la rigidez salarial para conciliar la economía clásica y la keynesiana? ¿Era la relación entre la rigidez salarial y el desempleo el tema central original del artículo de Modigliani, como sostienen sus intérpretes? El objetivo de mi artículo es doble: reconstruir la génesis del artículo de Modigliani publicado en Econometrica en 1944 y reexaminar su lugar en los fundamentos de la síntesis neoclásica. Mi sugerencia es que Modigliani introdujo esta hipótesis no para conciliar los dos sistemas, sino como un conveniente dispositivo analítico y una suposición realista para mostrar el funcionamiento de una economía monetaria en la que las variables reales dependen de la cantidad de dinero. A través de la rigidez salarial, también demostró la coherencia del desempleo con una posición de equilibrio estable para evitar, en el \textit{Caso keynesiano} (de preferencia por la liquidez), un proceso de deflación indefinido. 
+
+En otras palabras, Modigliani no se centró únicamente en la relación entre el empleo y las condiciones del mercado laboral, sino en el papel crucial del dinero en la determinación de las variables reales y la explicación del equilibrio del desempleo. La atención de Modigliani al origen monetario y la solución al desempleo contrasta fuertemente con el descuido en la síntesis neoclásica del aspecto monetario del sistema y su inclinación hacia la política fiscal. Además, la interpretación estándar de la contribución de Modigliani asume una relación entre la rigidez salarial y el desequilibrio a corto plazo/equilibrio a largo plazo (la llamada esquizofrenia en la síntesis neoclásica), una relación que Modigliani no discute, al menos en 1944. Por el contrario, en interpretaciones posteriores de su artículo, se referirá al desempleo como una característica sistemática de una economía que depende del dinero para realizar transacciones.
+
+
+\subsubsection{La curva de \authorfont{PHILLIPS}}
+Las primeras versiones del modelo IS-LM no permitían explicar la formación del nivel de precios puesto que asumían precios rígidos. Esta situación se volvió insostenible en la década de los 60 cuando la inflación pasó a ser un fenómeno ineludible.
+
+\imagenfit{Inflation_UK-US.png}{Crecimiento interanual del índice de precios en Estados Unidos e Inglaterra}{(a) \href{https://researchbriefings.files.parliament.uk/documents/RP02-44/RP02-44.pdf}{Inflation: the value of the pound 1750-2001}. House Of Commons Research Paper, 2001} | (b) \href{https://bidenwhitehouse.archives.gov/cea/written-materials/2021/07/06/historical-parallels-to-todays-inflationary-episode/}{\textit{Historical Parallels to Today’s Inflationary Episode}. The White House, 2021}
+
+Cómo se puede apreciar en las series históricas de la variación interanual del CPI en estas dos economías, durante el periodo anterior a los años 60's las variaciones del CPI parecen autoajustarse a lo largo de la serie o mantener, en el caso de los EE.UU un comportamiento relativamente moderado (a excepción, evidentemente, de los periodos bélicos característicos del s. XX). Sin embargo, a partir de los incios/mediados de los años 60's, la inflación interanual parece ser (y es) un fenómeno que persiste, atrayendo la atención de los economistas con el fin de explicar las causas y consecuencias de este fenómeno (formación de los precios).
+
+La curva de Phillips permite una explicación de este fenómeno y por tanto dio respuesta a lo que se denominó la ecuación perdida del sistema. De esta manera, pasó a ser una de las relaciones fundamentales en el análisis macroeconómico y tiene un papel central en las controversias sobre la relación entre la inflación y la tasa de desempleo. El origen de la curva de Phillips se remonta al trabajo empírico publicado en 1958 por el economista neozelandés ALBAN W. PHILLIPS. En él obtuvo que la tasa de variación de los salarios nominales está relacionada de forma inversa y no lineal con la tasa de desempleo.
+
+\imagenfit{CurvaPhillips.png}{Curva de Phillips}{\textit{The Relation Between Unemployment and the Rate of Change of Money Wage Rates in the United Kingdom, 1861–1957}. A. W. Phillips, 1958}
+
+Aunque el análisis de Phillips es empírico, su artículo plantea algunas hipótesis que podrían explicar la relación entre salarios nominales y la tasa de desempleo:
+\begin{lnum}
+    \item Por un lado, parte de que cuando la demanda de trabajo es elevada esto equivale a la existencia de pocos trabajadores desempleados. De esta manera, las fuerzas del mercado llevarían a que las empresas eleven los salarios para atraer trabajadores; y,
+    \item Por otro lado, para explicar la no linealidad Phillips consideraque los trabajadores son reticentes a rebajar sus salarios cuando el desempleo es elevado. 
+\end{lnum}
+
+LIPSEY (1960) propuso un fundamento teórico para la curva de Phillips basado en dos pilares fundamentales:
+\begin{lnum}
+    \item Existe una relación lineal positiva entre la tasa de crecimiento de los salarios nominales y el exceso de demanda de trabajo:\\
+    $$\frac{\dot W}{W}=\alpha X_L=\alpha \left(\frac{L^D-L^S}{L^S}\right)$$
+    \item Existe una relación no lineal negativa entre el exceso de demanda de trabajo y el desempleo:
+    $$X_L=\beta(U)$$
+    Donde $\beta$ es un parámetro negativo variable tal que cuando el exceso de demanda de trabajo tiende a $0$, el desempleo tiende a un determinado valor positivo debido a las fricciones del mercado de trabajo.
+\end{lnum}
+
+Combinando estos dos supuestos es posible justificar la existencia de una relación negativa entre la tasa de variación de los salarios y la tasa de desempleo, ya que la variación del salario nominal depende del exceso de demanda en el mercado de trabajo que se aproxima por el nivel de desempleo: 
+
+$$\frac{\dot W}{W}=f(U)$$
+
+SAMUELSON y SOLOW (1960) transformaron el objeto de estudio desde la variación de los salarios a la variación en los precios. Para ello justificaron que existe una relación proporcional entre aumentos de los salarios y aumento de la inflación cuando la inflación se explica por un aumento de los costes. Los autores estiman la curva de Phillips para Estados Unidos en términos de tasa de variación de los precios y tasa de desempleo, encontrando una relación negativa y no lineal entre ambas variables. Por ello, la curva de Phillips pasó a interpretarse como un \textit{trade-off} de política económica donde un incremento del empleo se realizaría a expensas de mayor inflación.
+
+\clearpage
+\section{Monetarismo}
+\puntosclave{
+El Monetarismo, encabezado por FRIEDMAN fue una de las principales escuelas críticas de la Síntesis Neoclásica. Los Monetaristas defendieron la importancia del dinero y criticaron las principales tesis del modelo IS-LM, llegando a implicaciones de política económica más cercanas a las neoclásicas tradicionales.
+
+FRIEDMAN se interesó particularmente por la metodología de la ciencia económica defendiendo el falsacionismo, la prevalencia de la economía positiva y la tesis de la irrelevancia de los supuestos.
+
+Por el lado de la demanda, los Monetaristas introdujeron teorías alternativas de la demanda de consumo y la demanda de dinero que llevaron a implicaciones de política económica diferentes a las de la Síntesis.
+
+Por el lado de la oferta, los Monetaristas criticaron los postulados de la Curva de Phillips tradicional y formularon la tesis aceleracionista de la inflación.
+}
+
+El contexto histórico en el que se desarrolla esta escuela es similar al de la SNC: los años posteriores a la Segunda Guerra Mundial. Es precisamente el fuerte crecimiento económico de aquellos años (en los que el paradigma de la SNC fue el de referencia) lo que llevó al Monetarismo a una posición secundaria. Si bien los postulados monetaristas sí fueron relevantes en los círculos académicos, no cobraron un mayor peso hasta los shocks de oferta de la década de 1970, ante la incapacidad del modelo de la SNC de explicar de manera satisfactoria . 
+
+Las raíces del monetarismo residen en la teoría cuantitativa del dinero que fue uno de los pilares centrales de la teoría monetaria clásica y encuentra sus principales formulaciones antes del siglo XVIII en las obras de Azpilcueta, Bodin o Hume. La teoría cuantitativa establece que cambios en el producto nominal agregado de la economía (que reflejan cambios en el volumen físico de producto y en el nivel de precio) están explicado por cambios en la cantidad total de dinero y en la velocidad de circulación del dinero. En el largo plazo, cambios en la velocidad son normalmente más pequeños, por lo que cambios en el producto nominal se determinan principalmente por cambios en la cantidad total de dinero. Por añadidura, en el largo plazo el crecimiento del volumen de producto físico está determinado principalmente por factores reales, por lo que los cambios monetarios afectan principalmente al nivel de precios. La correlación observada entre cambios en la cantidad de dinero y en los precios confirma que la inflación es resultado de la expansión monetaria y puede ser prevenida por un control adecuado de la oferta monetaria. Esta idea es la base de una de las frases más conocidas de Friedman: \textit{La inflación es siempre y en todo lugar un fenómeno monetario.}
+
+Milton Friedman fue la cabeza visible de la crítica monetarista y aún hoy es uno de los profesores más reconocidos de la facultad de economía de la Universidad de Chicago.\footnote{Junto con George Stigler y Gary Becker, contando los tres incluso con un pequeño museo dentro del edificio de dicha facultad.} Al principio de su carrera profesional se dedicó a la estadística y reflexionar sobre la metodología en la teoría económica. Sin embargo, en 1957 Friedman escribe una de sus obras más reconocidas: “A theory of the Consumption Function” que contiene una de las principales críticas a la teoría de la demanda de consumo keynesiana. En los años posteriores Friedman profundiza su crítica al modelo IS/LM y junto con las contribuciones de otros autores completan la denominada “contrarrevolución monetarista” El reconocimiento del trabajo de Friedman llegó con la concesión del Premio Nobel de Economía en 1976. Aparte de Friedman otros economistas monetaristas relevantes han estado fuertemente ligados a la Universidad de Chicago y entre ellos se cuentan Karl Brunner, Alan Meltzer, Philip Cagan, Harry Johnson, Laidler, Frenkel o Anna Schwartz.
+
+\begin{specialblock}
+    Friedman fue tanto un economista académico como un divulgador al gran público de las virtudes del capitalismo y del liberalismo económico. Desde 1935 hasta 2005 publicó 18 libros técnicos y 14 para el público general, 104 artículos económicos técnicos y 192 artículos, audiencias y conferencias destinadas al gran público, sin contar sus innumerables columnas en periódicos. 
+    
+    El profesor Michel de Vroey propone separar la carrera de Friedman en tres periodos. En un primer momento, hasta mediados de los años 50 escribió sobre metodología, estadística y observamos sus primeras contribuciones en teoría monetaria. En un segundo momento, hasta los 70, encontramos los años más creativos de su carrera. En 1956 escribe un paper seminal que dio forma al concepto de “monetarismo”: “The Quantity Theory of Money- A Restatement”. En los años posteriores vinieron otros artículos importantes de teoría monetaria Dentro de este periodo, Friedman escribe junto a Anna Schwartz, “A Monetary History of the United States”, una de sus obras más conocidas al suponer una reinterpretación de las causas de la Gran Depresión.). Finalmente, en un tercer momento, Friedman continúa publicando, pero se centra en la divulgación de sus ideas. 
+
+    Podemos considerar a Milton Friedman tanto un gran economista académico como un gran divulgador de ideas. Sin embargo, esa segunda faceta es indudablemente controvertida y, en opinión de muchos economistas coetáneos, ensombreció su legado y afectó a su credibilidad. Friedman ha sido uno de los defensores más ardientes del libre mercado contribuyendo a influenciar a la opinión pública sobre la deseabilidad de las ideas de la libertad económica en un contexto de expansión del gasto público y de inflación entre 1965 y 1991 aproximadamente. Este argumento le llevó a posiciones ideológicas muy cercanas al ala más conservadora del Partido Republicano de EEUU, jugando un papel incluso en el régimen militar del dictador Pinochet en Chile. En este sentido, en ciencia política, es considerado uno de los padres del “neoliberalismo”.    
+\end{specialblock}
+
+Impacto y relevancia 
+
+Harry Johnson habló de “contrarrevolución monetarista” para referirse al impacto de las propuestas de esta escuela. El keynesianismo de la Síntesis Neoclásica se encontró con un oponente combativo, dispuesto a discutir la práctica totalidad de sus tesis, utilizando el mismo marco teórico de referencia. El énfasis dejó de centrarse solamente en las limitaciones del mercado, y pasó también a situarse en las limitaciones de la intervención del estado. Hay que atribuirle al monetarismo también el mérito de haber ‘resucitado’ la importancia del mercado monetario (la curva LM, que había sido dejada de lado en los años 40 y parte de los 50 ante la importancia de multiplicadores y aceleradores), así como de la importancia del lado de la oferta, y en particular del mercado de trabajo. También la consideración de los efectos riqueza y de un abanico más amplio de activos financieros relevantes en la demanda de dinero forma parte de la macroeconomía actual. No obstante, el monetarismo ha dejado de ser una fuerza relevante en el debate económico del siglo XXI. Casi todos sus miembros han pasado a engrosar las filas de los Nuevos Clásicos (como la NMC), y no hay aportaciones significativas de tono monetarista (en sentido estricto) al debate moderno.
+
+Más aún, los monetaristas no fueron los únicos en criticar los postulados de la Síntesis Neoclásica en los años 60 y 70. Las críticas vinieron también desde el campo keynesiano, particularmente la escuela de los neokeynesianos de desequilibrio.
+
+\subsection{Objeto y método}
+El término Monetarismo, introducido por BRUNNER, refleja una de las ideas fundamentales de esta escuela que podemos sintetizar con la expresión \textit{Money Matters}. En concreto, monetarismo significa la creencia de que el dinero es el principal determinante de la demanda global. 
+
+Por otro lado, Friedman participará en el debate entre los partidarios de la economía positiva y la normativa, que alcanzará un punto álgido durante este periodo, con la denominada controversia FRIEDMAN-MYRDAL:
+\begin{la}
+    \item Para MYRDAL, los principales conceptos económicos se hallan cargados implícitamente de juicios de valor; mientras que,
+    \item FRIEDMAN defenderá la prevalencia de la economía positiva, ya que considera que ésta será independiente de cualquier postura ética que se adopte. El único papel de la economía normativa para Friedman es supeditarla a los resultados de la economía positiva.\footnote{A modo de ejemplo, FRIEDMAN lleva a cabo proposiciones normativas tales como su defensa de que las autoridades monetarias deben preocuparse por mantener controlado el ritmo de crecimiento de la oferta monetaria, pero esta afirmación se deriva de sus estudios de economía positiva que apuntan a la primacía de los incrementos de la oferta monetaria como factor determinante de la inflación.}
+\end{la}
+
+\subsubsection{Metodología}
+Friedman reflexionó sobre el método de la ciencia económica en su ensayo \textit{The Methodology of Positive Economics}. Para FRIEDMAN, el propósito de la ciencia económica es abordar problemáticas concretas que puedan confirmarse empíricamente y realizar predicciones, en consecuencia, las proposiciones teóricas que sean empíricamente refutadas deben ser rechazadas. Por tanto, la metodología de FRIEDMAN supone una traslación a la ciencia económica del criterio de POPPER, siendo un gran defensor de la falsabilidad. 
+
+Por otro lado, FRIEDMAN defendió la tesis de la irrelevancia de supuestos, en defensa de que una teoría se juzga por el poder predictivo de sus conclusiones y no por el realismo de sus supuestos.\footnote{Uno de los ejemplos de FRIEDMAN es el supuesto de maximización de beneficios de las empresas. Aunque no sea perfectamente cierto se puede acercar a la realidad y pragmáticamente los economistas pueden trabajar con este supuesto.}
+
+Por lo que respecta a su instrumental y conjunto aximoático, a pesar de su reivindicación de los neoclásicos, los monetaristas criticarán a la Síntesis Neoclásica en su mismo terreno y con su mismo lenguaje:\footnote{Serán los sucesores del monetarismo, la Nueva Macroeconomía Clásica, los que repudien la mayor parte del instrumental keynesiano y de la Síntesis Neoclásica y vuelvan a conceptos más puramente neoclásicos.
+} los componentes de la demanda agregada y la demanda de dinero, el modelo IS-LM y la curva de Phillips; por lo que no se puede aperciar una verdadera ruptura metodológica respecto a éstos ni tampoco un retorno a los economistas neoclásicos. Sin embargo, sí que introducen un elemento distintivo particular que será de gran importancia en desarrollos posteriores.
+
+\paragraph{Expectativas adaptativas}
+Una de las principales aportaciones metodológicas de los monetaristas frente a los postulados de la SNC fue la concepción de una la hipótesis adaptativa en la formación de expectativas. 
+
+El nivel de crecimiento de los precios esperado para un periodo $t$ estará en función de lo ocurrido en periodos anteriores:
+
+$$\dot P_t^e=\sum_{i=1}^n\lambda_i\;\cdot\;\dot P_{t-i}$$
+
+Siendo $\lambda_i$ la ponderación de cada uno de los periodos pasados. Los periodos más próximos en el tiempo serán los que tengan mayor ponderación. También se puede reformular la expresión, de forma que la hipótesis incluya el aprendizaje de los agentes sobre sus errores pasados. En su versión más simple:
+
+$$\dot P_{t+1}^e=\dot P_t^e+\lambda(\dot P_t-\dot P_t^e)$$
+
+Las expectativas sobre el crecimiento de los precios en el período $t+1$ (futuro) son iguales a las expectativas anteriormente formuladas sobre la inflación para el periodo presente más una ponderación $\lambda$ del error de predicción anteriormente cometido. La ponderación $\lambda$ expresaría la velocidad de aprendizaje. Si $\lambda=1$, todo el error cometido es tenido en cuenta. 
+
+
+\subsection{Principales lineas de investigación}
+
+\subsubsection{Teoría cuantitativa del dinero y reglas de política monetaria}
+
+\paragraph{La Demanda de dinero} 
+La reformulación de la demanda de dinero juega un papel central en la teoría monetarista. Las implicaciones de esta nueva concepción van a ser profundas para la determinación de la demanda agregada y para la política económica. 
+
+La premisa básica de FRIEDMAN es que el dinero es un bien que reporta utilidad y la demanda de dinero ha de ser tratada como tal (como la de cualquier otro bien).\footnote{Retoma la tradición de MARSHALL, FISHER y PIGOU, pero acepta las diferentes motivaciones que argumentaba KEYNES para demandar dinero (medio de pago para realizar transacciones, depósito de precaución, rentabilidad-especulación), aunque las lleva más allá.
+}  Tendrá una utilidad marginal decreciente y los individuos tenderán a sustituir dinero por otros bienes cuando éstos le reporten mayor utilidad marginal. En particular, los bienes sustitutivos del dinero serán los bonos, las acciones y otras participaciones de capital, e incluso los activos reales (en particular, los bienes duraderos).
+
+La utilidad que reporte la tenencia de estos otros activos representará el coste de oportunidad de mantener dinero: 
+\begin{lnum}
+    \item Los bonos reportarán un interés $r_b$;
+    \item las acciones y otras participaciones de capital una rentabilidad (vía dividendos o plusvalías) $r_k$;
+    \item La inflación ($\pi^e$), por su parte, hará disminuir la utilidad de la tenencia de dinero, y hará comparativamente más atractiva la tenencia de otros activos financieros, así como de bienes de consumo (en particular, bienes de consumo duradero).
+\end{lnum}
+
+El resultado de estas consideraciones será una definición de la demanda de dinero como esta:
+
+$$M^d=f\left(W, r_b, r_k, \pi^e, \frac{W_H}{W}\right)\cdot P$$
+
+Podemos hacer las siguientes observaciones:\footnote{También nótese que hemos eliminado los subíndices temporales para simplificar la notación.}
+\begin{lnum}
+    \item $\frac{\partial M^d}{\partial W}>0$. A mayor riqueza de los agentes, mayor necesidad tendrán de dinero para financiar sus transacciones o para que les sirva como depósito de valor. Asimismo, la riqueza de los agentes limita la cantidad de dinero que pueden demandar;
+    \item $\frac{\partial M^d}{\partial r_b}<0;\quad \frac{\partial M^d}{\partial r_k}<0$. A mayor rentabilidad de otros activos financieros, mayor coste de oportunidad de mantener saldos monetarios, y menor demanda de dinero;
+    \item $\frac{\partial M^d}{\partial \pi^e}<0$. La tasa esperada de variación porcentual de los precios $\pi^e=E\left[\frac{\partial P}{\partial t}\frac{1}{P}\right]$ afecta negativamente a la utilidad esperada del dinero, y por lo tanto a su demanda.;
+    \item $\frac{\partial M^d}{\partial W}>0$. Cuanto más dependiente de las rentas del trabajo, mayor sea el cociente entre riqueza humana $W_H$ (rentas del trabajo) y riqueza total, y mayor será la demanda de dinero. Esto es debido a que las rentas del trabajo son, generalmente, más inciertas que las provenientes de activos financieros. De este modo, los agentes desearán mantener más dinero por motivos de precaución;
+    \item $\frac{\partial M^d}{\partial \left(\frac{W_H}{W}\right)}>0$. A mayor riqueza de los agentes, mayor necesidad tendrán de dinero para financiar sus transacciones o para que les sirva como depósito de valor. Asimismo, la riqueza de los agentes limita la cantidad de dinero que pueden demandar;
+    \item $\frac{\partial M^d}{\partial P}>0$. El nivel absoluto de precios (y no su tasa de variación) determinará la demanda nominal de dinero. Resulta evidente que, a mayor nivel de precios, hará falta mayor cantidad de saldos nominales de dinero por motivos de transacción.\footnote{Este último aspecto es importante, ya que conlleva que los agentes estarán libres de ilusión monetaria (algo necesario para poder suponer, como Keynes, que los salarios son rígidos a la baja), e introduce un mayor grado de racionalidad en la modelización de la conducta de los agentes. }
+\end{lnum}
+
+Podemos obtener la demanda de saldos reales de dinero $M^d / P$ con sólo pasar el nivel de precios $P$ del otro lado de la ecuación. Reordenando e introduciendo la renta permanente $Y_p$ como equivalente anualizado de la riqueza:\footnote{Es determinante que la función de demanda de dinero dependa de la riqueza $W$, y, de forma equivalente, de la renta permanente $Y_p$. La renta permanente se supone menos volátil que la renta corriente, con lo que la función de demanda de dinero será más estable de lo supuesto por la Síntesis Neoclásica.}
+
+$$\frac{M^d}{P}=f\left(Y_p, r_b, r_k, \pi^e, \frac{W_H}{W}\right)$$
+ 
+Si agrupamos los rendimientos de otros activos financieros distintos del dinero (bonos y participaciones de capital) en un tipo de interés $r$, será equivalente a considerar, de forma simplificada, que la demanda de saldos reales será una función estable y directa de la renta permanente y de una función $g$, que agrupará los efectos del tipo de interés y la inflación esperada:
+
+$$\frac{M^d}{P}=g(r, \pi^e)Y_p$$
+
+\paragraph{Mecanismos de Transmisión: la Teoría Cuantitativa del Dinero}
+Pero la pregunta clave es ¿cómo afectará esta concepción de la demanda de dinero a la concepción de la demanda agregada? ¿Por qué el dinero importa tanto? Para ello hay que continuar con el análisis, en el marco de la teoría cuantitativa.\footnote{Friedman siempre reivindicó la herencia de Irving Fisher, así como la de los neoclásicos de Cambridge como Marshall y Pigou, que hicieron distintas formulaciones y matizaciones a la Teoría Cuantitativa del dinero.
+}. Siendo $M$ la cantidad de dinero, $V$ la velocidad de circulación del dinero, $P$ el nivel de precios, e $Y$ el volumen de transacciones (o renta real de la economía). Para FRIEDMAN (originalmente de FISHER), la causalidad va de la parte izquierda de la ecuación a la derecha:\footnote{Las variaciones en la oferta monetaria $M$ y en la velocidad de circulación $V$ provocarán cambios en la renta nominal $PY$.}
+
+$$\underbrace{MV=PY}_{\text{\scriptsize Causalidad:} \Rightarrow}\quad \rightarrow\quad \underbrace{\frac{M}{P}=\frac{1}{V}Y}_{\text{\scriptsize Equilibrio en el mercado monetario}}$$
+
+El mercado monetario estará en equilibrio si la oferta de saldos reales ($M/P$) iguala a la demanda de saldos reales, $(1/V)Y$. Es inmediata la analogía con la teoría de FRIEDMAN sobre la demanda de dinero, en la que podremos establecer que $1/V=g(,\pi^e)$, y podremos asimilar $Y$ a $Y_p$, para el largo plazo:\footnote{Según la definición de FRIEDMAN, la renta corriente $Y$ tiene un componente permanente y uno transitorio: $Y=Y_p + Y_{TR}$. El componente transitorio será aleatorio, de media $0$, con lo que a largo plazo $Y=Y_p$.
+} 
+\begin{la}
+    \item Al ser la función de demanda de dinero a largo plazo una función estable de la renta permanente (que sólo se verá afectada por factores reales), las variaciones en la cantidad de dinero sólo se transmitirán a precios;\footnote{Es una manera más elaborada de llegar a la misma conclusión de FISHER.
+    } pero,
+    \item En el corto plazo, aunque $V$ sea estable,\footnote{Por la estabilidad de la demanda de dinero, inelástica a diferencia de SNC} lo que sostiene FRIEDMAN es que, ante variaciones de la oferta monetaria $M$, se producirán variaciones en $P\;Y$.\footnote{En este aspecto su postura difiere de la visión tradicional de FISHER, en la que $Y$ era determinado exclusivamente por factores reales tanto para el corto como para el largo plazo.
+    } Esto es debido (principalmente) al mecanismo de transmisión monetarista: 
+    \begin{lnum}
+        \item Ante un aumento en la oferta de dinero, éste será relativamente más abundante; y,
+        \item Se sustituirá por otros bienes sustitutos, como activos financieros como bonos y participaciones de capital, cuyos precios subirán y cuyas rentabilidades bajarán; per también,
+        \item Por activos reales, lo que estimulará la actividad económica de forma directa.
+    \end{lnum}
+    De este modo, Friedman justifica que los ciclos tienen un origen esencialmente monetario, y que la política monetaria tiene un gran efecto sobre la actividad económica:
+    $$\Delta M\rightarrow M^s>M^d\;\text{(dinero abundante)}\rightarrow \Delta \text{DA (activos financieros y reales)}\rightarrow\Delta P\;Y$$
+\end{la}
+
+Pero, ¿en qué medida se trasladarán a precios o a variación de la actividad real las variaciones en la oferta monetaria? Friedman responde que es imposible saberlo a priori. La ecuación que solucione este problema no se conoce: es la famosa \textit{ecuación perdida del monetarismo}. Por tanto, dado que no se conoce en qué medida las variaciones de la cantidad de dinero afectarán a corto plazo a los precios o a la renta real, es mejor no introducir perturbaciones monetarias en el sistema.\footnote{No obstante, ¿no nos hemos olvidado de algo? Por supuesto, del mecanismo de transmisión keynesiano: 
+\begin{lnum}
+    \item Al aumentar la oferta monetaria;
+    \item El mercado de bonos se verá afectado por la vía de la sustitución de dinero por bonos (el Banco comprará Bonos), disminuyendo el tipo de interés $r$; y
+    \item Afectará a $M^d$ (que disminuirá) y a $V$, que también disminuirá, provocando que el efecto sobre $P\;Y$ sea menor: las variaciones en $V$ compensarán las variaciones de $M$, al menos en parte.
+\end{lnum}\\
+Lo que defenderán los monetaristas es que la importancia del mecanismo de transmisión keynesiano es pequeña, y que el mecanismo de transmisión importante es el monetarista que hemos explicado. Esta controversia dio lugar a numerosas investigaciones empíricas para dilucidar la cuestión, cuyo resultado ha sido ambiguo.
+}
+
+
+
+
+
+
+Recuadro 3. La demanda de dinero en un contexto inflacionario: el modelo de Cagan Cagan analiza bajó que condiciones la demanda de dinero sería inestable. Argumenta que, en una economía hiperinflacionaria, el principal determinante de la demanda de dinero sería la inflación esperada. De esta manera, cobran una especial relevancia dos parámetros de su modelo: la sensibilidad de la demanda de dinero a la inflación esperada y la velocidad de revisión de las expectativas de inflación. Si estos parámetros son suficientemente elevados, el desanclaje de las expectativas llevaría a grandes desajustes en el mercado monetario y podría acelerar la hiperinflación. En definitiva, una de las implicaciones de política económica que se deriva de los monetaristas es la necesidad de contar con una política monetaria antiinflacionaria para que la demanda de dinero sea estable.
+
+
+\subsubsection{Renta permanente}
+Un pilar fundamental de la teoría keynesiana, y de las hipótesis más intervencionistas de la Síntesis Neoclásica, es la concepción de la función de consumo.\footnote{Para Keynes, la función de consumo en un momento $t\;(Ct)$ se expresa como:\footnote{Siendo $c_0$ el consumo mínimo de subsistencia, $c’$ la propensión marginal a consumir (menor que uno), e $Y_t$ la renta disponible en el momento $t$.
+}
+
+$$C_t=c_0+c'\;Y_t$$
+
+La implicación fundamental de esta concepción consiste en que, partiendo de una situación de equilibrio, al aumentar la renta y la producción, el consumo crecería menos que proporcionalmente (al ser la propensión marginal a consumir $c’< 1$ y la propensión media a consumir $Y/C$ decreciente por la forma de la función de consumo), provocando un exceso de oferta (subconsumo) y desempleo, concida como la \textit{tesis del estancamiento}, y, en consecuencia, el estado debería intervenir mediante un aumento del gasto público para evitar que se produjera esta situación. Gráficamente (1 indica el equilibrio inicial):
+
+\imagenfit{ConsumoKeynesiano.png}{La Función de Consumo Keynesiana}{Apuntes ICEX-CECO. Tema 3.A.5}
+}
+
+FRIEDMAN, propone (1957) una concepción muy distinta de la función de consumo keynesiana, que no resistía la contrastación con la evidencia empírica.\footnote{Cómo se explica en la nota de página anterior, esta consideraba la propensión marginal a consumir decreciente con la retna.\\
+Los trabajos de Simon Kuznets sobre series temporales indicaron que la propensión media a consumir no era decreciente, como en el caso de la función de consumo keynesiana, sino constante.
+} Su propuesta es la construcción de una función de consumo que depende fundamentalmente de la renta permanente $Y_p$.
+
+\textbf{Definición.-} (Renta permanente) Es el flujo de renta que puede ser mantenido permanentemente en el tiempo y que puede ser consumido íntegramente sin afectar a la fuente de la que deriva. Pretende describir cómo los agentes distribuyen el consumo a lo largo de sus vidas y, para ello, supone que el consumo de una persona en un determinado momento del tiempo está determinado no solo por sus ingresos actuales, sino que también por la expectativa sobre los ingresos que tendrá en los próximos años (su ingreso permanente).
+
+La renta permanente en un momento $t\;Y_{p,t}$ es un concepto íntimamente ligado a la riqueza ($W_t$):
+
+$$Y_{p,t}=r\;\cdot\;W$$
+
+Siendo:
+\begin{lnum}
+    \item $r$ el tipo de rendimiento interno que se espera obtener de la riqueza en un periodo; y,
+    \item $W_t$ está compuesta por:
+    \begin{lnum}
+        \item El valor actualizado de los bonos\footnote{$B$ es el valor nominal de los bonos, $r$ el tipo de interés.\\
+Se supone, por simplificar, que el bono es perpetuo y que renta un tipo de interés uniforme $r$. Su valor actualizado será, por definición, $B / r$.
+} que posee, $B_t / r$;
+        \item Sus saldos monetarios $M_t$;
+        \item El capital; y,
+        \item Las rentas salariales.
+    \end{lnum} 
+\end{lnum} 
+
+El consumidor no tomará sus decisiones de consumo únicamente en función de su renta en el período ya que, al ser racional, tendrá en cuenta el conjunto de rentas que espere recibir a lo largo del tiempo, representadas por la renta permanente:\footnote{Por ejemplo, si el consumidor percibe que el incremento de su renta disponible en un momento puede ser efímero (un componente de renta transitoria), no tomará decisiones en función de ella, sino en función de lo que espera obtener también en el futuro
+}
+
+$$C_t=k\left(r, \frac{W_{H,t}}{W_t}, \theta\right)\;\cdot Y_t$$
+
+La función será lineal, siendo:
+\begin{lnum}
+    \item $k$ una constante entre $0$ y $1$ que dependerá:
+    \begin{lnum}
+        \item Inversamente del tipo de interés (al ser éste el coste de oportunidad del consumo);
+        \item Inversamente también de la proporción de rentas que se esperan obtener del trabajo en relación al total, ya que las rentas del trabajo son más inciertas y, por tanto, el capital humano no se puede utilizar como garantía;\footnote{El valor actualizado de las rentas del trabajo es la riqueza humana. El cociente $\frac{W_H}{W}$ representa su importancia relativa sobre el total de la riqueza: la dependencia del trabajo como generador de renta.
+        } y,
+        \item Del factor $\theta$, que representa el resto de factores, como los gustos personales, la incertidumbre, la posición social, etc.
+    \end{lnum}
+    \item  $Y_t$, que representa la renta disponible en un momento $t$.
+\end{lnum}
+
+\imagenfit{ConsumoMonetarista.png}{La Función de Consumo Monetarista}{Apuntes ICEX-CECO. Tema 3.A.5}
+
+Las implicaciones de esta concepción, mucho más fundamentada microeconómicamente que la
+de KEYNES, son importantes:
+\begin{lnum}
+    \item \textit{No hay riesgo de subconsumo}. La participación del consumo en la demanda se mantendrá constante a medida que aumente la renta. La economía será menos inestable y habrá menos posibilidades de desempleo. La tesis del estancamiento queda desacreditada;
+    \item \textit{Se podrán producir efectos riqueza sobre el consumo.} Ante cambios en el tipo de interés y en la cantidad de dinero, los individuos alterarán sus decisiones de consumo. 
+\end{lnum}
+
+Esto tiene implicaciones de política económica importantes, como veremos luego.\footnote{La principal crítica que recibirá la hipótesis de la renta permanente es la imposibilidad de observar la renta permanente. ¿Cómo podrá decidir un individuo su consumo respecto a algo que no conoce?\\ La respuesta de FRIEDMAN es que el individuo racional sí que estima sus rentas futuras (de todas las fuentes), y que la renta permanente no es más que un artefacto que sintetiza este hecho y permite simplificar el modelo.
+}
+
+
+\subsubsection{Curva de PHILLIPS y tasa natural de paro}
+Una de las proposiciones de la Síntesis Neoclásica que tuvo mayor resonancia fue la del modelo de la Curva de Phillips, en la formulación de SAMUELSON y SOLOW (1960) y de LIPSEY (1965), sucitamente: se podía reducir la tasa de desempleo, a cambio de elevar la tasa de inflación. 
+
+Las críticas de los monetaristas no se hicieron esperar. Principalmente, arguyeron que el modelo era inconsistente, dado que suponía un comportamiento irracional del mercado de trabajo. Su razonamiento fue como sigue.
+
+\paragraph{Inconsistencia SNC: Mercado de trabajo e ilusión monetaria}
+Para que se pudiera dar un nivel de desempleo por debajo del que equilibraría el mercado de trabajo haría falta que los empresarios pagarán, solamente, unos salarios reales\footnote{Aunque anteriormente hayamos utilizado la letra $W$ para designar la riqueza, ahora vamos a utilizarla para referirnos al salario. Cuando utilicemos la letra $w$, nos referiremos a los salarios reales, $W/P$.
+} como $w_{bajo}$, y al mismo tiempo que los trabajadores percibieran que cobran un salario $w_{alto}$: esto solamente es posible en el caso de que padecieran de un problema de ilusión monetaria; es decir, que fueran sistemáticamente engañados en su percepción. Los monetaristas arguyen que como ete comportamiento no es racional, tampoco puede ser considerado satisfactorio desde el punto de vista teórico.
+
+\imagenfit{MercadoTrabajoPhillips.png}{El mercado de trabajo de la curva de PHILLIPS}{Apuntes ICEX-CECO. Tema 3.A.5}
+
+Tras esta rgumentación y rechazo al supuesto de la ilusión monetaria, FRIEDMAN introduce en el debate un elemento de gran relevancia en la macroeconomía actual: la importancia de las expectativas, sobretodo en el mercado de trabajo. El razonamiento es como sigue:
+\begin{lnum}
+    \item Los trabajadores ofrecerán trabajo en función de los salarios reales que \textbf{esperen} obtener;
+    \item Los salarios nominales es lo que negocian con los empresarios;
+    \item Pero en los salarios reales W/P entra el nivel de precios;
+    \item Será lógico que, si los trabajadores esperan un nivel de precios mayor que en el período anterior, exijan un salario nominal más alto.
+\end{lnum}    
+
+Los trabajadores, en el planteamiento de FRIEDMAN, forman sus expectativas los trabajadores como analíticamente se decribe en la hipótesis de las expectativas adaptativas (HEA).\footnote{Recordamos la formulación:
+$\dot P_{t+1}^e=\dot P_{t}^e+\lambda (\dot P_{t}-\dot P_{t}^e)$
+} Una de las claves de esta concepción consiste en que los trabajadores pueden cometer errores de predicción, es decir, si la inflación efectiva es mayor que la prevista a la hora de negociar salarios, los trabajadores creerán que sus salarios reales son mayores de lo que en realidad son (por la existencia de información imperfecta) y ofrecerán mayor trabajo para un salario real dado (o viceversa):
+
+\imagenfit{ErroresPrediccion.png}{El mercado de trabajo con errores de predicción}{Apuntes ICEX-CECO. Tema 3.A.5}
+
+Para los empresarios, en cambio, sería más sencillo calcular el salario real que para los trabajadores, situándose en todo momento en su curva de demanda de trabajo $L^d$, donde el salario real es igual al valor de la productividad marginal del trabajo (neoclásicos). Si el gobierno pone en práctica políticas monetarias o fiscales expansivas que hagan aumentar la inflación:
+\begin{lnum}
+    \item El resultado es que sería posible, a corto plazo, que la economía se situara en un nivel de ocupación $L_1$, superior al que vacía el mercado de trabajo, en virtud de la ilusión monetaria temporal de los trabajadores;\footnote{Para FRIEDMAN, la curva de Phillips de la Síntesis Neoclásica refleja este resultado.
+} pero,
+    \item Como los trabajadores revisarán en cada periodo sus expectativas de precios (HEA), y en el siguiente periodo, los trabajadores preverán que la inflación será mayor, ya que si $\lambda=1$, la previsión será que se repetirá la inflación del año anterior y negociarán sus salarios al alza; y,
+    \item Si el gobierno no introduce estímulos superiores y la tasa de inflación se mantiene, la economía volverá a una tasa de ocupación $L^*$, en la cual el mercado de trabajo se vacía y esta tasa de ocupación se corresponderá con un nivel determinado de desempleo $U_N$,\footnote{Si $L_T$ es la fuerza laboral total (población activa), y $L$ el nivel de ocupación, ($L_T-L$) será la tasa de desempleo $U$. $U_N$ será ($L_T-L^*$), e incluirá, al menos, un componente de desempleo friccional.
+    } que PHELPS bautiza como tasa natural de desempleo. 
+\end{lnum}
+
+Ésta depende únicamente de factores reales, como la productividad, las preferencias de los trabajadores, la estructura del mercado de trabajo, etc. Por tanto, El gobierno podrá reducir de nuevo el desempleo, pero sólo a costa de acelerar la inflación, aprovechándose de los errores de predicción de los agentes lo que da lugar a lo que se conoce como la Teoría Aceleracionista de la Inflación:
+
+\imagenfit{TeoriaAceleracionista.png}{La Teoría Aceleracionista de la inflación}{Apuntes ICEX-CECO. Tema 3.A.5}
+
+Se trata de una curva de Phillips aumentada por las expectativas. En cada periodo, los agentes ajustarán sus expectativas y solo se podrá mantener un nivel de empleo superior al natural con un constante aumento de la inflación.  Es decir, como a largo plazo la curva de Phillips es vertical en la tasa natural de desempleo,\footnote{De este modo, si la economía se sitúa en la tasa natural de desempleo o por debajo, la inflación no se acelerará. El término NAIRU (Non Accelerating Inflation Rate of Unemployment) es acuñado por los monetaristas, aunque luego será retomado por la Nueva Economía Keynesiana, particularmente en Europa y en el marco del modelo de competencia imperfecta. Es interesante reseñar que en España y Europa se suele asociar el término NAIRU a la NEK, y en EEUU al monetarismo.
+} los agentes reajustarán sus expectativas a la nueva inflación, aunque será posible sorprenderlos a corto plazo a costa de acelerar la inflación. 
+
+No obstante, a partir de ciertos niveles de inflación, el dinero empezará a dejar de cumplir sus funciones esenciales. La inflación introducirá distorsiones en la economía, hasta el punto de que la curva de Phillips podría tener pendiente positiva y mayores aumentos de inflación generarán desempleo.
+
+\subsection{Implicaciones de política económica}
+Las proposiciones de la escuela monetarista que acabamos de estudiar tienen implicaciones de política económica muy claras, que se pueden apreciar, como hizo FRIEDMAN originalmente, en un modelo IS-LM como el de la Síntesis.
+
+\subsubsection{Efectos sobre el Equilibrio: Política fiscal vs. Política monetaria}
+
+\paragraph{Función de consumo y efectos riqueza}
+
+\begin{specialblock}{Resumen.- Implicaciones de política económica de la demanda de consumo monetarista}
+    Política fiscal. Será poco efectiva para afectar al consumo, porque incluso bajo el supuesto keynesiano de que la política fiscal puede aumentar la renta corriente, el individuo distribuiría la mayor renta entre los distintos periodos.
+    
+    Política monetaria. Podrá ser efectiva debido a la generación de efectos riqueza. Ante cambios en el tipo de interés y en la cantidad de dinero, los individuos alterarán sus decisiones de consumo.
+\end{specialblock}
+
+La política monetaria y fiscal deberá tener en cuenta un mecanismo de transmisión recalcado por los monetaristas, los efectos riqueza, entre los que distinguimos los siguientes tipos:
+\begin{lnum}
+    \item \textit{Efecto riqueza directo} (Efecto Pigou). Al aumentar la cantidad de dinero (o de bonos), se incrementará la riqueza de los individuos, y por lo tanto crecerá el consumo y la IS se desplazará a la derecha.
+    $$\Delta M(\Delta B)\rightarrow\Delta W\rightarrow\Delta C$$
+    \item \textit{Efecto riqueza indirecto}. Las variaciones en los tipos de interés inducidas por los cambios en la $IS$ o la $LM$ harán variar el valor de los bonos, y por lo tanto, la riqueza y el consumo, desplazando la $IS$ a la izquierda (si hay $\Delta r$) o a la derecha (si hay $\nabla r$)según el caso.
+    $$\Delta r\rightarrow\nabla W\rightarrow\nabla C$$
+    \item \textit{Efecto reajuste de cartera}. En caso de emisión de deuda del Estado (déficit público), los bonos serán más abundantes relativamente que el dinero. Se sustituirán bonos por dinero y la $LM$ se desplazará hacia la izquierda.
+    $$\Delta B\rightarrow\Delta M^d$$
+\end{lnum} 
+
+Los efectos conjuntos serán, para una política monetaria expansiva:\footnote{La política monetaria expansiva será muy eficaz, al tener en cuenta los efectos riqueza. La $LM$ se moverá hacia la derecha (resultado tradicional de la Síntesis), pero el efecto riqueza directo (ya indicado por PIGOU en los años 30's) desplazará la $IS$ a la derecha. La bajada de los tipos de interés, por su parte, provocará el efecto riqueza indirecto de expansión del consumo, al incrementarse el valor de los bonos y otros activos financieros.
+}
+
+\imagenfit{PolMonetariaFRIEDMAN.png}{Efectos riqueza sobre el consumo para una política monetaria expansiva}{Apuntes ICEX-CECO. Tema 3.A.5} 
+
+La política fiscal expansiva, por el contrario, será menos eficaz. El efecto PIGOU expansivo derivado del aumento de las tenencias de bonos de los agentes se verá contrarrestado por las consecuencias del aumento del tipo de interés (efecto riqueza indirecto), que desplazará la $IS$ a la izquierda, y por el reajuste de cartera, en caso de que se produzca un déficit público financiado vía deuda, que desplazará la $LM$ a la izquierda.
+
+\paragraph{Demanda de inversión y demanda de dinero}
+Incluso sin tener en cuenta los efectos riqueza, la política monetaria será, para los monetaristas, más efectiva que la política fiscal: El resultado opuesto al de la Síntesis Neoclásica. La función de inversión será sensible al tipo de interés, con lo que la IS tendrá pendiente negativa. Por su parte, la demanda de dinero no será muy sensible al tipo de interés, y el mecanismo de transmisión monetarista prevalecerá respecto al keynesiano. Representado de una manera muy simplificada, la LM tendría pendiente vertical: Al ser la demanda de dinero inelástica al tipo de interés (una hipótesis que hemos avanzado en el apartado del mecanismo de transmisión monetarista), la curva LM será vertical11. 
+
+La efectividad de la política fiscal se verá completamente anulada, en estas condiciones. El único efecto será el de desplazar el gasto privado en inversión (se contrae al subir el tipo de interés) por gasto público. Es lo que se conoce como “efecto crowding-out total”. Además, es bastante posible que el gasto público en inversión sea menos eficiente que el gasto privado, con lo que el uso de la política fiscal con fines expansivos es altamente desaconsejado por los monetaristas.
+
+
+
+\imagenfit{PolFiscalFRIEDMAN.png}{Efectos riqueza sobre el consumo para una política fiscal expansiva}{Apuntes ICEX-CECO. Tema 3.A.5}
+
+
+Los monetaristas extraen dos conclusiones esenciales:
+\begin{lnum}
+    \item La política monetaria es mucho más efectiva que la política fiscal. De hecho, opinan que los ciclos económicos, históricamente, han sido provocados esencialmente por variaciones en la oferta monetaria;\footnote{Los estudios de M. FRIEDMAN y A. SCHWARTZ en\textit{ A Monetary History of The United States} (1963) tienen por objeto demostrar esta tesis. Prestan particular atención a la depresión de 1929 y concluyen que las perturbaciones en el sistema financiero (quiebras de bancos, en particular) y el signo restrictivo de la política monetaria tuvieron el efecto de contraer de forma brutal la liquidez del sistema. Para ellos, ésta sería la principal causa (no la única) de la Gran Depresión de los años 30. El otro factor determinante habría sido la ola de proteccionismo mundial, que redujo el comercio a niveles mínimos.
+    } y,
+    \item Las políticas activas de estabilización no son recomendables. La política fiscal no es muy efectiva y tiene retardos muy importantes, y la política monetaria, aunque efectiva, también tiene retardos16. Más aún, no es posible mantener el nivel de desempleo por debajo de la tasa natural de desempleo más que a costa de acelerar la inflación, algo que es altamente peligroso para el sistema económico.\footnote{Los retardos en política monetaria tenidos en cuenta por los monetaristas, según estudios de WARBURTON (1966), FRIEDMAN (1958,61) y FRIEDMAN y SCHWARTZ (1963) pueden ser de hasta 18 meses, y son además muy variables.
+    }
+\end{lnum} 
+
+En concreto, sus recomendaciones muy distintas de las de la Síntesis Neoclásica:
+\begin{lnum}
+    \item Una política monetaria reglada, no sujeta a influencia política, y dirigida al control de la inflación. Friedman, en concreto, propone en 1956 un crecimiento constante de la cantidad de dinero (suficiente para suministrar la liquidez necesaria al sistema). En cuanto a su diseño, recomiendan el control de la cantidad de dinero, y no del tipo de interés. También recomiendan el uso de operaciones de mercado abierto para su instrumentación; y,
+    \item Una intervención mínima del sector público. Al confiar en la estabilidad del sector privado y considerar los problemas de las políticas de estabilización, la conclusión monetarista está clara: una vuelta al laissez-faire neoclásico.
+\end{lnum} 
+
+También los monetaristas abogaron por la libertad en los tipos de cambio, la libre flotación de las monedas, y abogaron por el fin del sistema de Bretton-Woods.\footnote{Sus consejos tuvieron influencia en la decisión de Nixon de abandonarlo en 1973.
+}  
+
+La recomendación más controvertida de los monetaristas en los años 70's fue la del uso de contracciones monetarias \textit{de choque} que sirvieran para reducir la inflación, aun a costa de provocar una recesión. El sentido de esta medida era el dar una solución pronta al problema de la inflación, aunque fuera a un coste importante, para permitir un crecimiento más sostenible a largo plazo sin inflación.
+
+
+Podemos enumerar someramente los principales postulados monetaristas:
+\begin{lnum}
+    \item La flexibilidad de precios y salarios es una aproximación aceptable para modelizar la realidad económica;
+    \item Los individuos no determinarán sus decisiones de consumo en función de su renta corriente, sino de su renta permanente;
+    \item La demanda de dinero es estable;
+    \item Las fluctuaciones en la cantidad de dinero provocan fluctuaciones a corto plazo en la demanda (y no a la inversa), y son la principal causa de los ciclos económicos;
+    \item La inflación es causada únicamente por aumentos en la oferta monetaria superiores a los que requiere el crecimiento de la renta. Rechazan las teorías que suponen que pueda producirse inflación por presiones en los costes;
+    \item El mercado de trabajo está en equilibrio, determinándose una tasa natural de desempleo; y,
+    \item La política monetaria debe ser reglada.
+\end{lnum}
+
+
+
+
+
+
+El resto del cuerpo doctrinal monetarista consiste esencialmente en la defensa de muchos postulados neoclásicos tradicionales que habían sido criticados por los keynesianos. En consecuencia, el Monetarismo va a adoptar una postura en materia de política económica opuesta en casi todos sus puntos a la de la Síntesis Neoclásica. 
+
+Otra idea fundamental monetarista es la estabilidad de la economía de libre mercado. De esta manera, los monetaristas eran más reacios a políticas de estabilización que los economistas de la síntesis neoclásica. Friedman fue más allá y señaló diversos problemas de las políticas de estabilización relacionados con la discrecionalidad de los gobiernos, el problema de la inflación o los lags de la política monetaria.
+
+
+
+\paragraph{Influencia}
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión}
+
+\subsection{Recapitulación}
+
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+\MyBibItem{Autor}{Título}{Año}{DOI -- LINK}
+
+
+% --- Anexos (no aparecen en el índice) ---
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+\end{document}
