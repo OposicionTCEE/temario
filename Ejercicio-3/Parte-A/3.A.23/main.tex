@@ -1,0 +1,1477 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{list}{}{%
+          \setlength\leftmargin{1em}
+          \setlength\rightmargin{1em}
+      }
+      \item[]
+      \small
+      \noindent\textbf{#1}\\[-0.3em]
+      \rule{\linewidth}{0.4pt}\\[0.6em]
+    }{%
+      \end{list}
+    }
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+\makeatletter
+\newcounter{anexo}
+\renewcommand{\theanexo}{\Roman{anexo}}
+
+\newcommand{\anexo}[1]{%
+  \clearpage
+  \phantomsection
+  \refstepcounter{anexo}%
+  \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+  \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+}
+\makeatother
+
+
+%-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+     % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Formato al leer el .stc (reutilizamos los \l@... estándar del .toc) ---
+% Si quieres el mismo aspecto que el TOC nativo, NO redefinas nada aquí:
+% \l@section, \l@subsection, etc. ya están definidos por la clase.
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%% EMPEZAR EL DOCUMENTO %%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% --- Datos del tema ---
+\title{Tema 3.A.23 -- Economía del Bienestar (II)\\
+\large Fallos de mercado: externalidades y bienes públicos. Intervención y fallos del sector público}
+\author{Marcelo Ortega}
+\date{Noviembre 2025}
+\newcommand{\TemaCode}{3A23}
+
+\oldtitle{Tema 3.A.23 -- Economía del bienestar (II). La optimalidad de la competencia perfecta y las imperfecciones del mercado. Las externalidades y los bienes públicos. Los fallos del sector público.}
+\changerationale{Se elimina la referencia a la optimalidad, cuestión abordada en el tema A.22. De este modo, se esperaría del opositor que el análisis de las externalidades y los bienes públicos fuera más detallado y actual, en concreto profundizando en las cuestiones relacionadas con el diseño de mecanismos.}
+
+\begin{document}
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{
+    De cara a siguientes vueltas, se ha de profundizar en la cuestión central en Economía del Bienestar en el momento actual: los problemas de información y el diseño de mecanismos.
+    
+    En cuestión del reparto de tiempos:
+    \begin{lnum}
+        \item Exponer de manera eficiente los modelos de \authorfont{SAMUELSON y \authorfont{PIGOU}}, y,
+        \item Reforzar su explicación en materia del empleo de mecanismos para solventar los fallos de mercado típicos.
+    \end{lnum}
+    
+    Se recomienda la profundización sobre esto último más allá de lo expuesto en este tema.
+
+    \textcolor{red}{\textbf{OJO!}} Dejar claro que la distinción que se realizará entre externalidades y bienes públicos es una herramienta expositiva. En la realidad, no "existe tal distinción". Lo que existe verdaderarmente es una distinta naturaleza del efecto externo que se genera: en el caso de las \textit{externalidades} expuestas tratamos con efectos externos de naturaleza privada (rivalidad); en el caso de \textit{bienes públicos} presentamos efectos externos de naturaleza pública (no rivalidad). Esa es la única distinción existente. 
+    
+    }
+\vspace{1cm}
+\modificaciones{
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\section{Introducción}
+La Economía del Bienestar es una rama de la Economía cuya propia definición y delimitación no es pacífica dentro de la literatura, pues ha variado desde los inicios de la ciencia económica como disciplina autónoma y está íntimamente relacionada con el debate acerca de la existencia o no de una Economía positiva (del ser) y una Economía normativa (del deber ser). 
+
+La economía del bienestar es la rama del análisis microeconómico que intenta valorar, desde un punto de vista colectivo, las distintas situaciones en que puede encontrarse un sistema económico y, por ello, tiene dos objetivos fundamentales:
+\begin{lnum}
+    \item Buscar los instrumentos que permitan realizar una valoración de la deseabilidad social de estados económicos alternativos; estados caracterizados por una asignación de recursos y una distribución de la renta determinados;  y,
+    \item Maximizar el bienestar social. Es decir, proporcionar normas de política económica que permitan alcanzar el estado o estados realizables socialmente más preferidos.
+\end{lnum}
+
+El criterio fundamental que ha surgido en el campo de la economía del bienestar para valorar los distintos estados alternativos es el de la eficiencia económica. La noción de eficiencia económica se refiere al mejor uso posible de unos recursos limitados, es decir, un sistema económico será eficiente si no desperdicia recursos haciendo máximo el bienestar de los individuos. Los teoremas del bienestar fueron desarrollados por el economista de origen ruso \authorfont{ABBA LERNER}, pionero del keynesianismo, aunque serían posteriormente \authorfont{ARROW y DEBREU} quienes desarrollen formalmente los mismos.  
+
+\subsection{Contextualización}
+\subsubsection{Relevancia}
+En esta exposición analizaremos aquellas circunstancias en donde el mercado fracasa a la hora de asignar recursos de manera eficiente.
+
+Esto es lo que se conoce como un fallo de  mercado, y existen diferentes tipos: monopolio, información asimétrica, externalidades y bienes públicos. 
+
+A lo largo de la presente exposición, nos centraremos en estos dos últimos fallos del mercado. 
+
+Hacemos esta distinción porque existe una clara diferencia entre los dos primeros fallos de mercado que hemos descrito y los dos últimos: 
+\begin{la}
+    \item En el caso de los rendimientos crecientes y de la información imperfecta, el objetivo de la intervención es reestablecer el equilibrio general competitivo, que sigue siendo un óptimo de Pareto: desearíamos estar en una situación competitiva, y vamos a intentar alcanzarla a través de la intervención; pero,
+    \item En el caso de las externalidades y los bienes públicos, como demostraremos, el objetivo de la intervención ya no va a ser recuperar la asignación de equilibrio general competitivo, puesto que la solución competitiva cuando existen estos tipos de fallos de mercado ya no es la óptima, por lo que el objetivo de la intervención será intentar que sí lo sea.
+\end{la}
+Por tanto, a la hora de analizar estos fallos de mercado, vamos a centramos en los siguientes puntos: 
+\begin{lnum}
+    \item En primer lugar la diferencia entre la asignación de recursos que haría el mercado bajo condiciones de EGC, versus la asignación que será la eficiente u óptima, y,
+    \item A continuación analizaremos los posibles mecanismos correctores que pudieran emplearse para alcanzar la asignación óptima, con sus ventajas y limitaciones.
+\end{lnum}
+
+\subsubsection{Historia}
+Como grandes momentos históricos en esta rama cabe separar grosso modo tres: 
+\begin{lnum}
+    \item Utilitarismo de finales del s.XIX;
+    \item Nueva teoría de la Economía del Bienestar, tras las aportaciones de autores como \authorfont{PARETO} y \authorfont{ROBBINS};
+    \item Novísima teoría de la Economía del Bienestar, tras la crítica de ARROW y la emergencia de la importancia de los problemas de información.\footnote{Lógicamente, esta tercera aproximación es la que resulta de especial interés al opositor, por lo que conviene estar fuertemente familiarizado antes del estudio con, por un lado, el funcionamiento de los mercados en competencia perfecta (especialmente, el modelo de equilibrio general [\authorfont{Ver Tema 3.A.21}]) y, por otro y especialmente, las herramientas de la Teoría de Juegos (en concreto en lo referido a juegos cooperativos y el diseño de mecanismos [\authorfont{Ver Tema 3.A.14}], pero también otros como los modelos de información asimétrica [\authorfont{Ver Tema 3.A.13}]).}
+\end{lnum}
+En un sentido más amplio, podría considerarse que todos los economistas, desde el momento en que han formulado valoraciones sobre los determinantes del bienestar social, son economistas del bienestar:
+\begin{lnum}
+    \item Desde los mercantilistas (que relacionan el bienestar social con la acumulación de metales preciosos en el país) y \authorfont{ADAM SMITH}, que implícitamente relacionaba bienestar social con el volumen total de producción (para así alejamos del estado estacionario). Un precedente más cercano podría constituirlo \authorfont{BENTHAM}, para quien el concepto de bienestar va asociado al de utilidad.\footnote{\authorfont{BENTHAM}, junto con los autores de la primera revolución marginalista (\authorfont{JEVONS, MENGER y WALRAS}) calculan el bienestar mediante la agregación de funciones de utilidad cardinales.}
+    \item No obstante, el primer economista del bienestar propiamente dicho se considera que ha sido \authorfont{MARSHALL}, quién propone una concepción de bienestar en la que éste es susceptible de medición en términos monetarios, lo que permite las comparaciones interpersonales de bienestar mediante el concepto de excedente del consumidor. 
+    \item Algunos años después, \authorfont{PARETO (1912)}, a la postre sucesor de WALRAS en la cátedra de Lausana, rechaza esta concepción cardinalista, negando que el bienestar sea mensurable y que por tanto las comparaciones interpersonales de utilidad o bienestar sean posibles. \authorfont{PARETO} propone una nueva teoría del bienestar asentada en dos principios:
+    \begin{la}
+        \item Principio del individualismo. Cada agente económico es el mejor juez posible de su propio bienestar.
+        \item Principio de unanimidad. Una situación económica sólo conllevará un mayor bienestar social que otra si en el paso de la segunda a la primera ningún individuo ve reducido su bienestar individual.\footnote{\authorfont{PARETO} se dio cuenta de que si, ante un cambio en la situación, se puede argumentar que algún individuo sale beneficiado sin perjudicar a los demás, el cambio es beneficioso para la sociedad o colectividad de individuos, y ésta establecerá una ordenación entre las situaciones. \authorfont{PARETO} establece unas condiciones para el bienestar máximo o eficiencia económica, y el óptimo de \authorfont{PARETO} es una condición para la maximización de la cantidad total de la producción, dadas las cantidades de factores, los gustos o preferencias de los individuos que los consumen y la distribución de la renta. 
+        \begin{la}
+            \item La importancia del criterio aportado por PARETO radica en su simplicidad y su carácter neutral, al requerir la formulación de juicios de valor considerados débiles, permitiendo valorar el sistema competitivo como mecanismo de asignación de recursos en una economía.
+            \item El problema deriva de su falta de aplicabilidad, puesto que el concepto de bienestar social sólo es realmente útil cuando es aplicable a situaciones no comparables desde el punto de vista paretiano (situaciones en las que algunos agentes mejoran y otros empeoran).
+        \end{la}}
+    \end{la}
+    \item Posteriormente, \authorfont{\authorfont{PIGOU} (1920)} señala que el bienestar social será una función con dos argumentos fundamentales: la eficiencia y la equidad. Así, la sociedad podría aumentar su bienestar produciendo más o logrando una distribución más equitativa de una renta dada.
+\end{lnum}
+A partir de los años 30’s las aportaciones a la economía del bienestar se polarizan en tomo a dos grandes líneas de investigación:
+\begin{lnum}
+    \item Las vinculadas a la nueva economía del bienestar (años 20’s-30’s), a través del principio de compensación potencial, en virtud del cual una situación económica es preferible a otra siempre que los individuos que mejoran puedan identificar e indemnizar a los que se vean perjudicados y aun así seguir disfrutando de mayor bienestar individual: esta es la idea que subyace a los criterios de compensación.
+    \item Otras aportaciones posteriores (años 50’s - 60’s) que, sobre la base de las ideas de \authorfont{BERGSON}, propugnan una función de bienestar social que, a través de una relación de las variables que se postulaban como determinantes del bienestar social, ofrecería como resultado la ordenación deseada de los estados económicos.
+\end{lnum}
+Posteriormente, \authorfont{ARROW}, en el marco de la novísima economía del bienestar social, demostraría que, imponiendo un conjunto de condiciones en principio razonables, la obtención de dicha función de bienestar social sería imposible. 
+Este es, por tanto, el contexto en que se desarrollan las aportaciones teóricas que vamos a ver en este tema.
+
+Las teorías germinales de los bienes públicos y las externalidades datan de la primera mitad del s.XX. El opositor de primera vuelta ha de cerciorarse de que conoce correctamente estos modelos.
+
+\subsubsection{Problemática}
+En presencia de fallos de mercado, la asignación a la que conduzcan éstos no será un óptimo de Pareto a nivel global. Dentro de los fallos de mercado, focalizaremos la exposición en dos: los bienes públicos y las externalidades.
+
+Se trata de situaciones en las que la solución de equilibrio general competitivo no representará una situación de óptimo de Pareto, y por lo tanto deberemos buscar otra solución óptima. 
+
+En ambos casos vamos a ver cómo la existencia del fallo de mercado se esgrime como justificación para la intervención del sector público en la economía. tratando de paliar los efectos negativos de dichos fallos.
+
+No obstante, ha de quedar claro que la existencia de fallos de mercado será condición necesaria, pero no suficiente, para justificar esa intervención del sector público: ya que ésta siempre debe confrontarse con los propios fallos del sector público.
+
+\subsection{Estructura de la exposición}
+El que vamos a seguir el siguiente esquema:
+\begin{lnum}
+    \item Criterio de Pareto y los óptimos económicos. comenzamos definiendo el óptimo paretiano como la situación más deseada: queremos que la asignación de recursos que hace la economía sea un óptimo de Pareto. Para que lo sea, deben cumplirse tres condiciones (que la asignación sea óptima en la producción, en el intercambio y óptimo optimorum o global). ¿Esto nos da un único óptimo de Pareto? No: existen infinitos óptimos paretianos, lo cual es un problema porque nos genera un resultado que es una indeterminación.
+    \item Teoremas Fundamentales de la Economía del Bienestar, los teoremas del bienestar nos permiten concluir que, de todos los puntos óptimos (de todos los puntos sobre la Gran Frontera de Posibilidades de Utilidad), podernos definir al menos uno, que es el resultado del Equilibrio General Competitivo, ya que las condiciones de equilibrio del sistema competitivo cumplen las condiciones para ser un óptimo de Pareto (según el primer teorema del bienestar). Además, el segundo teorema del bienestar nos dice que cualquier otra asignación puede ser también un óptimo paretiano si se puede inferir de la reasignación de recursos a partir de una asignación de EGC, sin más que redistribuir los recursos.
+    \item Teoría del second best
+\end{lnum}
+\clearpage
+
+
+
+
+\clearpage
+\section{Externalidades}
+\puntosclave{
+    Estaremos bajo la presencia de externalidades cuando el consumo o la producción de cierto bien genere efectos sobre terceros no reflejados en los precios.
+    
+    La solución pasará por que los agentes internalicen en sus decisiones los costes y beneficios sociales de sus acciones. Esto puede conseguirse a través de impuestos pigouvianos a través de una mejor delimitación de los derechos de propiedad, aplicando el Teorema de \authorfont{COASE} .
+    
+    Una de las implementaciones prácticas que ha tenido el Teorema de \authorfont{COASE} ha sido a través del Mecanismo de Derechos de Emisión de la UE.
+}
+
+El Primer Teorema Fundamental de la Economía del Bienestar nos dice que los equilibrios competitivos son necesariamente PARETO óptimos bajo unas condiciones no excesivamente restrictivas. A partir del Segunda Teorema Fundamental de la Economía del Bienestar, sabemos que, bajo hipótesis adecuadas de convexidad, cualquier asignación PARETO óptima puede alcanzarse como una asignación competitiva tras una redistribución apropiada de la riqueza mediante transferencias de suma fija (bien sea de riqueza o de dotaciones iniciales). Por tanto, bajo los supuestos de estos teoremas, las posibilidades de intervención que mejoren el bienestar en el mercado se limitan estrictamente a la realización de transferencias de riqueza con el propósito de alcanzar objetivos distributivos.
+
+Sin embargo, una de las condiciones necesarias para que se garantice el cumplimiento de estos teoremas es la ausencia de efectos externos no internalizados. Ahora bien, los efectos externos son omnipresentes en la vida real. Por ejemplo, los efectos externos en forma de deterioro ambiental, que han atraído tanto la atención académica como la pública durante décadas.\footnote{Véase, por ejemplo, PAPANDREOU, 1994; STAVINS, 2000
+} O, de manera más general, situaciones en las que un consumidor o una empresa se vea directamente afectado por las acciones de otros agentes de la economía; es decir, efectos externos derivados de las actividades de otros consumidores o empresas. 
+
+En el ámbito académico, estos efectos externos constituyen lo que se conoce como un \textbf{fallo de mercado}: situaciones en las que algunos de los supuestos de los teoremas del bienestar no se cumplen y en las que, en consecuencia, no puede confiarse en que los equilibrios de mercado produzcan resultados PARETO óptimos. 
+
+\subsection{Definición: Fallo de Mercado}
+Empezamos nuestra exposición tratando las externalidades. Sorprendentemente, una definición plenamente satisfactoria de externalidad ha resultado algo esquiva. No obstante, diremos que existe una externalidad ($h$) cuando la función de utilidad de los individuos (o la función de costos o producción de una empresa) depende no solo de variables bajo su control ($x_\ell\in\mathbb R^L$), sino también de variables bajo el control de otros ($h\in\mathbb R_+$), y cuando esta dependencia no se produce a través de una transacción de mercado. Así:
+
+\eqblock{
+\begin{aligned}
+    &\forall i: (\{\succsim_i\in\mathbb R^{L+1}\}_{i=1}^I)\\[2em]
+    &u_i(x_{1i},\ldots,x_{Li},h)
+    \left\{\begin{aligned}
+        &\partial u_i(x_{1i},\ldots,x_{Li},h)/\partial h&&\neq 0\\[0.5em]
+        &\partial u_{-i}(x_{1(-i)},\ldots,x_{L(-i)},h)/\partial h&&\neq 0
+    \end{aligned}\right.\\[2em]
+    &\underset{\substack{\\[0.5em]\\(\text{\scriptsize simplificamos, sin pérdida de generalidad})}}
+    {\left\{\begin{aligned}
+        &(1)\;\underset{\text{\scriptsize con respecto al bien numerario $\omega_i$}}{\text{$\succsim_i$ cuasi-lineares}}\\
+        &(2)\;\underset{\text{\scriptsize a estos precios, la riqueza del agente es $\omega_i$}}{\text{Precio-aceptantes}}\\
+        &(3)\;\text{Dos agentes}
+    \end{aligned}\right\}}\Longrightarrow\quad
+    \boxed{\begin{aligned}
+        v_i(\mathbf p,\omega_i,h)\equiv\quad 
+        \underset{\substack{\\[1em]\\\quad \text{\large s.a. $\quad \mathbf p\cdot \mathbf x_i\leq \omega_i$}}}{\max_{\mathbf x_i\geq 0}u_i(\mathbf x_i,h)}
+    \end{aligned}
+    }\\[1em]
+    &\overset{\substack{\Downarrow\\[0.5em]\\}}{\text{Aplicando condiciones}}\quad\Longrightarrow\quad v_i(\cdot)=\phi_i(\mathbf p,h)+\omega_i\underset{\text{\scriptsize price takers}}{\Longrightarrow}\text{Función de efecto Externo:}\;\underset{\text{\scriptsize Donde, $\phi''_i(h)<0$}}{\boxed{v_i(\cdot)=\phi_i(h)}}
+\end{aligned}
+}{Efecto externo (externalidades): Definición formal del problema y la función de efecto externo. Externalidades}
+
+Por tanto, podemos expresar la función de efecto externo como una función de subutilidad sin pérdida de generalidad. Es decir, incorporar estas consideraciones en nuestro formalismo de preferencias y tecnología es una cuestión sencilla: basta con definir las preferencias o el conjunto de producción de un agente no solo sobre sus propias acciones, y también sobre las del agente que genera el efecto externo. Pero, como veremos, el efecto sobre el equilibrio de mercado es significativo: en general, cuando existen efectos externos, los equilibrios competitivos no son PARETO óptimos.
+
+\subsubsection{Características básicas: Externalidad Privada}
+Debemos destacar, en primer lugar, que para que exista un efecto externo debe existir primero un efecto: alguna parte, supongamos, $K$ (la parte que afecta), debe producir un efecto sobre otra parte, pongámos $I$ (la parte afectada). Pero el efecto no solo debe estar presente, sino que también debe tener una significación positiva o negativa en términos de bienestar.\footnote{Por ejemplo, si el agua de la manguera del jardín de mi vecino fluye hacia mi jardín, existe un efecto físico. Pero si no me importa en absoluto, no puede decirse que exista una externalidad.
+} 
+
+\paragraph{Efectos directos: No pecuniarias}
+No obstante, la mera presencia de un efecto relevante para el bienestar de una parte sobre otra no constituye necesariamente una externalidad; se necesitan condiciones adicionales para que el efecto sea considerado externo. Por eso al decir directamente, buscamos excluir cualquier efecto que esté mediado por los precios. Es decir, existe una externalidad si, por ejemplo, la productividad de una pesquería se ve afectada por las emisiones de una refinería de petróleo cercana, pero no simplemente porque la rentabilidad de la pesquería se vea afectada por el precio del petróleo. El segundo emerge de la relación de intercambio y no de un efecto externo, ya que se está pagando por el petroleo. Por tanto, la externalidad se refiere únicamente a beneficios o daños que no se pagan; las relaciones de mercado no son efectos externos.
+
+De hecho, con comportamiento tomador de precios, el mercado es precisamente el mecanismo que garantiza un resultado PARETO óptimo. Por lo que la presencia de una externalidad no es meramente un fenómeno tecnológico, sino también una función del conjunto de mercados existentes. Volveremos sobre este punto más adelante. 
+
+\paragraph{Incidentales: actividades legítimas}
+Además, otra condición importante es que no son evitables por quien los sufre o perseguidos por quien se beneficia de ellos. Es decir, la externalidad se refiere solo a efectos incidentales y no a efectos intencionados (MISHAN, 1971). 
+
+Por ejemplo, la fábrica no emite humo por deseo propio; el humo es incidental al proceso de producción. Sensu contrario, el bienestar de una persona puede verse afectado por el asesinato, el robo, la amistad, la compañía, etc. Pero estos son efectos intencionados, y no pueden (suelen) describirse como externalidades. De hecho, según esta interpretación diferenciadora de la externalidad, la mayoría de las actividades ilegales han sido prohibidas debido a sus efectos externos perjudiciales.\footnote{Sin embargo, la distinción entre efectos primarios e incidentales es borrosa. Si un grupo de gamberros se divierte lanzando piedras, algunas de las cuales rompen una ventana, ¿es la rotura un efecto primario/intencionado o incidental? Si la contaminación del aire se vuelve tan grave que prohibimos toda forma de humo, ¿no se convertirá la emisión de humo en una actividad ilegal, al igual que romper una ventana? 
+
+Además, ¿no podría considerarse el efecto sobre la víctima de una actividad ilegal como la violación un efecto incidental de un intento drástico del agresor por lograr satisfacción sexual (quizá psicopática)? Los gerentes de fábrica están interesados en producir, no en contaminar la atmósfera. De manera similar, el violador puede estar interesado únicamente en su satisfacción sexual, no en infligir daño a la víctima. Por lo tanto, parece bastante lógico hablar de los efectos externos de los infractores sobre las víctimas o sobre la sociedad en general. 
+}
+
+\subsubsection{Implicaciones de Política Económica}
+Ahora que conocemos la definición de externalidad supongamos que estamos en un equilibrio competitivo en el que los precios de los bienes son $\mathbf p$. Es decir, en la posición de equilibrio cada una de las dos consumidoras maximiza su utilidad limitada únicamente por su riqueza y por los precios de los bienes intercambiados. 
+
+Debe entonces cumplirse que $K$ elige su nivel de $h \ge 0$ que maximice su función objetivo ($\phi_K(h)$).\footnote{Por lo tanto, el nivel de equilibrio de $h$, $h^*$, satisface la CPO ($\phi_1'(h^*) \le 0$, como hemos supuesto concavidad, sabemos que esto caracteriza un máximo). Esta se cumple con igualdad si $h^*>0$, dando lugar a una solución interior donde $h^*>'$ $\phi_1'(h^*) = 0$.
+} En contraste, en cualquier asignación Pareto óptima, el nivel óptimo de $h$ debe maximizar el excedente conjunto de los dos consumidores y, por tanto, debe resolver:
+
+\eqblock{
+\begin{aligned}
+    &K\equiv\text{Parte que afecta}\quad\wedge\quad I\equiv\text{Parte efectada}\\[1em]
+    &\Longrightarrow\quad \underset{\substack{\text{\scriptsize Cóncavas + Utilidad}\\\text{\scriptsize  marginal decreciente en $h$}}}{\phi_i''(h)\leq 0}:\quad \phi_K'(h)>0\quad \wedge\quad \phi_I'(h)<0\\[1em]
+    &\text{Óptimo de PARETO}\Longrightarrow\boxed{\max_{h\geq 0}\;\;\;\phi_K(h)+\phi_I(h)}\\[2em]
+    &\Longrightarrow\text{CPO}: \phi_K'(h)\leq - \phi_I'(h)\quad\Longrightarrow\quad \underset{\text{\scriptsize Óptimo de PARETO con solución interior}}{\boxed{\phi_K'(h)=\phi_I'(h)\iff h^º>0}}
+\end{aligned}
+}{}
+
+Como vemos, cuando existen efectos externos el nivel de equilibrio de $h$ no es óptimo salvo que $h^º = h^* = 0$, cosa que se daría únicamente en el caso de una solución de esquina.\footnote{Si consideramos el caso en que tenemos soluciones interiores, es decir, donde $(h^*, h^0) > 0$. Si $\phi_I'(\cdot) < 0$, de modo que $h$ genera una externalidad negativa, entonces tenemos $\phi_K'(h^0) = -\phi_I'(h^0) > 0$; dado que $\phi_1'(\cdot)$ es decreciente y $\phi_K'(h^*) = 0$, esto implica que $h^* > h^º$. En contraste, cuando $\phi_I'(\cdot) > 0$, $h$ representa una externalidad positiva, y $\phi_1'(h^0) = -\phi_2'(h^0) < 0$ implica que $h^* < h^º$.
+
+En el ejemplo actual, las utilidades cuasilineales hacen que el nivel óptimo de la externalidad sea independiente de los niveles de riqueza de los consumidores. En ausencia de cuasilinealidad, sin embargo, los efectos riqueza en el consumo de la externalidad hacen que su nivel óptimo dependa de las riquezas de los consumidores. Véase el Ejercicio 11.B.2 para una ilustración. Obsérvese, no obstante, que cuando los agentes considerados son empresas, los efectos riqueza están siempre ausentes.
+} Gráficamente, esta situación se puede representar como:
+
+\imagenfit{OptimoPareto_Externalidades.png}{Equilibrio ($h^*$) y Óptimo de PARETO ($h^º$) de una externalidad con efectos negativos}{\textit{Microeconomic Theory}. MAS-COLELL et al., 1995}
+
+No obstante, obsérvese que la optimalidad no implica normalmente la eliminación completa de una externalidad negativa. Más bien, el nivel de la externalidad se ajusta hasta el punto en que el beneficio marginal para $K$ de una unidad adicional de la actividad generadora de la externalidad, $\phi_K'(h^º)$, es igual al coste marginal para que soporta $I$, $-\phi_I'(h^º)$. Pero, ¿cómo alcanzamos este óptimo de PARETO?
+
+Pues bien, este fallo de mercado desvía la asignación resultante de una first best eficiente en el sentido de PARETO, lo que justifica en consecuencia la intervención del Sector Público mediante Políticas Económicas cuyo objetivo sea reconducir el mercado a una asignación second best PARETO óptima.
+
+\subsection{Soluciones}
+Por eso, habiendo identificado la ineficiencia del resultado del mercado competitivo en presencia de una externalidad, consideramos ahora tres posibles soluciones al problema. 
+
+Es importante destacar que al elegir entre métodos alternativos para abordar el problema, es necesario considerar no solo su capacidad para alcanzar el resultado deseado, sino también los costes (informativos, administrativos, etc.) de su implementación. En particular, porque es probable que distintos efectos externos se resuelvan mejor mediante distintos métodos, incluido no hacer nada.
+
+
+\subsubsection{Intervención: Regulación}
+El tipo más directo de intervención gubernamental para lograr eficiencia es el control directo de la actividad que genera la externalidad. El gobierno puede simplemente ordenar que h no sea mayor que $h^º$, su nivel óptimo. Con esta restricción, $K$ fijará efectivamente el nivel de la externalidad en $h^º$.
+
+Imaginémos que la industria pesquera está conformada por diversos agente que actúan en situación de competencia perfecta. En este escenario, podemos aplicar por analogía el efecto externo planteado considerando $K$ como un pescador que genera efectos externos negativos sobre el resto de pescadores, aglutinados en $I$, debido a que el equilibrio se halla en una situación en la que se sobreexplotan los recursos pesqueros y, por tanto, requiere la intervención del policy maker mediante el establecimiento de cupos de expltación. Esto es lo que se conoce como la tragedia de los comunes:\footnote{Los bienes comunales son aquellos bienes públicos que cumplen la propiedad de no exclusividad pero no la propiedad de no rivalidad, esto es, la utilidad de los consumidores del bien comunal depende también del consumo del resto de consumidores del mismo. Otra posible definición de bien comunal es la siguiente: son aquellos activos que tienen la propiedad de rivalidad, pero cuya propiedad no está delimitada a un único individuo. [\authorfont{Ver Anexo \ref{anx:exbp}}].
+}
+
+\imagenfit{TragediaComunes.png}{Representación gráfica de la sobreexplotación del bien comunal}{Microeconomía. GRAVELLE y REES, 2014}
+
+Por simplicidad, podemos asumir que el valor económico de todas las capturas realizadas depende sólo del número de horas de trabajo por cad productor en el mercado: $q = f(L) = f (\sum_iL_i)$. La función que representa el valor económico de las capturas será inicialmente creciente pero, tras alcanzar un máximo, el valor comenzará a disminuir debido a la sobreexplotación de los recursos pesqueros. 
+
+\paragraph{Implicaciones de Política Económica}
+Por tanto, el planificador deberá establecer el óptimo de capturas desde un punto de vista social. Para alcanzarlo puede utilizar diversos mecanismos. 
+
+Por ejemplo, si dispusiera de la información suficiente podría  maximizará el excedente social de la economía a través de la maximización de su función, representada por: $\max_{L}{\Pi(L)}= p\cdot f(L) - w\cdot L$, teniendo en cuenta que en el óptimo $p\cdot f'(L)-w=0$
+
+Por otro lado, también podría recurrir a otro tipo de información (no económica) para fijar el número máximo de capturas (cuota) y distribuir los derechos entre los diferentes productores, de manera que éstos sean repartidos entre los pescadores de la forma más eficiente y descentralizada posible.\footnote{Además, para maximizar la eficiencia en labor de explotación, podemos permitir el libre comercio de dichos derechos, de tal forma que aquellos que los valoren más (aquellos que sean más eficientes en la pesca), serán quienes compren más derechos. Una solución muy parecida a la descrita es la que se ha establecido a través de la Política Pesquera Común en la Unión Europea, con la introducción del Total Admisible de Capturas y de unas cuotas asignadas a cada Estado miembro.
+}
+
+\subsubsection{Interveción: Impuestos/Subvenciones}
+Una segunda opción es que el gobierno intente restaurar la optimalidad imponiendo un impuesto o subveción sobre la actividad que genera la externalidad. Esta solución se conoce como instrumentos pigouvianos, en honor a PIGOU (1932). Supongamos que $I$ debe pagar un impuesto $t_h$ por cada unidad de $h$. 
+
+\eqblock{
+\begin{aligned}
+    \left.\begin{aligned}
+        &\hspace{4em}\underset{\text{\scriptsize(Externalidad negativa $\Longrightarrow \phi_I(h)<0$)}}{\text{IMPOSICIÓN}}\\
+        &\over\begin{aligned}
+            \\
+            &\text{Fijamos}:\quad t_h = -\phi_K'(h^º) > 0\\[0.5em]
+            &\hspace{2em}\Downarrow\quad \left(\max_{h \ge 0} \; \phi_K(h) - t_h h\right)\\[0.5em]
+            &\underset{\text{\scriptsize (individual)}}{\text{Óptimo (CPO)}}:\quad \boxed{\phi_K'(h) \le t_h}\\[1em]
+            &\underset{\text{\scriptsize si, $h>0,\;\;$}}{\Longrightarrow}\boxed{\phi_K'(h^º)=t_h=-\phi_I'(h^º)}    
+        \end{aligned}
+    \end{aligned}\hspace{3em}\right|
+    \hspace{3em}\begin{aligned}
+        &\hspace{4em}\underset{\text{\scriptsize(Externalidad positiva $\Longrightarrow \phi_I(h)>0$)}}{\text{SUBVENCIÓN}}\\
+        &\over\begin{aligned}
+            \\
+            &\text{Fijamos}:\quad s_h = -\phi_I'(h^º) > 0\\[0.5em]
+            &\hspace{2em}\Downarrow\quad \left(\max_{h \ge 0} \; \phi_K(h) + s_h h\right)\\[0.5em]
+            &\underset{\text{\scriptsize (individual)}}{\text{Óptimo (CPO)}}:\quad \boxed{\phi_K'(h) \leq -s_h}\\[1em]
+            &\underset{\text{\scriptsize si, $h>0,\;\;$}}{\Longrightarrow}\boxed{\phi_K'(h^º)=-s_h=-\phi_I'(h^º)}
+        \end{aligned}
+    \end{aligned}
+\end{aligned}
+}{}
+
+Dado que $t_h = -\phi_i'(h^º)$, $h = h^º$ satisface la condición (recordando que $h^º$ está definido por $\phi_i(h^º) \le -\phi_j'(h^º)$, con igualdad si $h^º > 0$). Además, dado que $\phi_i''(\cdot) < 0$, $h^º$ es la solución única. Obsérvese que el impuesto que restaura la optimalidad es exactamente igual al efecto marginal negativo de la externalidad en la solución óptima. Es decir, es exactamente igual a la cantidad que $I$ estaría dispuesta a pagar para reducir ligeramente $h$ desde su nivel óptimo $h^º$. Al enfrentarse a este impuesto, $K$ realiza efectivamente un cálculo costo-beneficio individual que internaliza la externalidad que impone sobre $I$.
+
+Varios puntos adicionales merecen señalarse respecto a esta solución pigouviana:
+\begin{lnum}
+    \item \textbf{Subvención $=$ Impuesto} (indistintamente del tipo de externalidad). Primero, la optimalidad puede alcanzarse tanto gravando la externalidad como subsidiando su reducción. Por ejemplo, en el caso de una externalidad negativa, supongamos que el gobierno paga un subsidio $s_h = -\phi_I'(h^0) > 0$ por cada unidad en que la elección de $h$ por parte de $K$ esté por debajo de $h^*$, su nivel en el equilibrio competitivo. Entonces la consumidora $K$ maximizará $\phi_K(h) + s_h (h^* - h) = \phi_K(h) - t_h h + t_h h^*$, lo cual es equivalente a un impuesto de $t_h$ por unidad sobre $h$ combinado con una transferencia de suma fija de $t_h h^*$. Así, un subsidio a la reducción de la externalidad combinado con una transferencia de suma fija puede replicar exactamente el resultado del impuesto;
+    \item \textbf{Correlación con la actividad}. Segundo, no siempre es posible restaurar la eficiencia gravando directamente la actividad que produce la externalidad. Por ejemplo, si una empresa contamina en el proceso de producir, un impuesto sobre la producción reduce el nivel de producción, pero puede no afectar, o afectar insuficientemente, las emisiones. Gravar la producción solo logra la optimalidad en el caso especial en que las emisiones mantengan una relación fija y monótona con el nivel de producción; y,
+    \item \textbf{Requisitos informacionales exigentes}. Tercero, el enfoque mediante impuestos/subsidios y el enfoque mediante cuotas son igualmente efectivos para alcanzar un resultado óptimo. Sin embargo, el gobierno debe poseer una gran cantidad de información sobre los beneficios y costos de la externalidad para fijar el nivel óptimo tanto de la cuota como del impuesto.
+\end{lnum}
+
+\paragraph{Imposición Bilateral: Información e Incentivos}
+En linea con esta tercera limitación, veámos algunas aportaciones que intentan sortearla. 
+
+En primer lugar, NG (2002), considera que, para un coste externo importante como el daño ambiental, un impuesto pigouviano basado en una estimación aproximada probablemente sea mejor que no hacer nada. Además, como muestra NG (2001a), en la mayoría de los casos en los que es deseable cierta reducción de la contaminación, el problema de estimar un impuesto que mejore la eficiencia puede resolverse fácilmente, por ejemplo, mediante el coste marginal de abatimiento, que es más fácil de estimar que el coste marginal del daño.\footnote{El coste de abatimento es el coste de una intervención que reducirá las emisiones GEI en una tonelada. Por ejemplo, al sustituir una caldera de gas por una bomba de calor, se reducirá las emisiones GEI. Pero habrá que pagar la instalación, la electricidad necesaria para hacerla funcionar, a la vez que se ahorrará dinero al dejar de comprar gas. Si se divide el coste adicional total (coste de inversión más diferencia de costes de funcionamiento) por las emisiones evitadas, se obtiene el coste de abatimiento en euros por tonelada de carbono no emitida. Este coste puede ser positivo, pero también negativo (como es probablemente el caso de la bomba de calor, ya que es más eficiente desde el punto de vista energético). Para seleccionar las acciones climáticas prioritarias, tiene sentido tener en cuenta el coste de abatimiento. Al fin y al cabo, los costes de abatimiento negativos corresponden a oportunidades de reducir las emisiones con un beneficio económico neto. Y los costes de abatimiento más bajos indican oportunidades de evitar emisiones a bajo coste. Si se dispone de un presupuesto de x millones de euros para reducir las emisiones, la elección de los costes de reducción más bajos maximizará la reducción de emisiones.
+
+\href{https://magnuscmd.com/es/el-big-macc/}{El Big MACC. MAGNUS (commodities)}
+} Además, dicho impuesto normalmente generará una recaudación total superior al gasto en abatimiento. Sin embargo, debido al carácter global del problema, es necesaria la cooperación internacional.
+
+No obstante, se ha argumentado que la plena optimalidad no puede alcanzarse mediante la imposición de un impuesto unilateral (Buchanan y Stubblebine, 1962, p. 383). En $h^º$, la valoración marginal (en valor absoluto) de $I$ sobre la actividad no es igual a la valoración marginal de $K$ (neta de impuesto). Por tanto, existe un incentivo para que negocien y alcancen un nuevo nivel de actividad, $h^1$, aunque este no sea el punto socialmente óptimo (ni individual). Al pasar de $h^º$ a $h^1$, $I$ y $K$ mejoran/empeoran sus respectivas areas sombreadas. 
+
+\textbf{INTRODUCIR GRÁFICO DE ÓPTIMOS NEGOCIADORES}
+
+Hay, por tanto, una ganancia neta SEE’ que puede repartirse entre $I$ y $K$. Sin embargo, esto no constituye una mejora social, ya que se pierde recaudación fiscal por valor de $S’S E E’$. 
+
+Para evitar este resultado no óptimo, BUCHANAN y STUBBLEBINE proponen que $I$ también sea gravada para que tenga en cuenta los costes impuestos a $K$. Este segundo impuesto sobre $I$ debería estar positivamente correlacionado con la reducción del nivel de actividad de $K$ desde el punto $h^*$, o negativamente correlacionado con $h$, desplazando así las curvas de valoración marginal de los agentes, que intersectarían en el punto socialmente óptimo $h^º$. Si este impuesto sobre $I$ estuviera positivamente correlacionado con el aumento del nivel de actividad de $K$, desplazaría su curva de coste marginal hacia arriba, alejando la intersección con MVK’ del punto socialmente óptimo S.
+
+La tributación bilateral propuesta puede ser superflua. Si la negociación entre las partes es posible, puede alcanzarse un óptimo de Pareto sin necesidad de impuestos. Si la negociación es imposible, un impuesto único sobre $K$ puede ser suficiente para alcanzar el óptimo. No obstante, la tributación bilateral puede ser pertinente cuando la negociación es posible pero se considera injusta o demasiado costosa. Por supuesto, deben tenerse en cuenta también los costes administrativos de aplicar una tributación bilateral.
+
+La tributación bilateral puede cumplir además otros dos propósitos. En el ejemplo ilustrado en la Figura 7.2, si I puede evitar la deseconomía externa (por ejemplo, mudándose) a un coste inferior al coste de K por reducir la molestia (es decir, ESP en la Figura 7.2), entonces sería deseable que $I$ lo hiciera en lugar de que $K$ redujera su nivel de actividad. Sin embargo, con la aplicación (o la expectativa inminente de aplicación) del impuesto unilateral, $I$ no está motivada a hacerlo a menos que se le exija pagar una cantidad equivalente al coste (o a la pérdida de utilidad) que soporta $K$ al reducir la externalidad que genera. En segundo lugar, la magnitud de la deseconomía soportada por $I$ es difícil de determinar en la práctica. Bajo un sistema de impuesto unilateral, $I$ tiene incentivos para exagerar su daño a fin de aumentar el tipo impositivo sobre $K$ y así reducir aún más la actividad de este. Pero si $I$ está obligada a pagar un impuesto igual al coste soportado por $K$ al reducir la externalidad, no se beneficiará de una reducción de la actividad de $K$ más allá de $h^º$. Por tanto, tendrá incentivos para revelar su función de daño con veracidad.
+
+De manera similar, dado que $K$ también debe pagar por el daño sufrido por $I$, tendrá incentivos para revelar su función de valoración marginal con veracidad. De hecho, puede demostrarse que, incluso ante una declaración exagerada por parte de una de las partes, la otra seguirá encontrando que la honestidad es la mejor estrategia bajo un sistema de tributación bilateral. La deshonestidad no solo perjudica a la otra parte, sino también a quien actúa deshonestamente.\footnote{Lamentablemente, este resultado favorable no se generaliza al caso en que $I$ y/o $K$ estén formados por varios individuos o empresas con distintas funciones de valoración marginal. Por ejemplo, si $K$ es una empresa contaminante e $I$ está compuesta por un gran número de individuos afectados pueden ocurrir dos cosas:
+\begin{la}
+    \item \textbf{Valoraciones marginales idénticas}. Si todos los individuos ($I$) tienen curvas de valoración marginal idénticas, la suma vertical de las $i$ curvas individuales da lugar a $\sum_i\phi_i(h)=I\cdot \phi_i(h)$, cuya intersección con la curva de valoración marginal de $K$ determina el punto socialmente óptimo $h^º$. Si cada individuo debe pagar $1/I$ del coste impuesto a $K$ por reducir la externalidad (curva PD en la Figura 7.3), todos estarán motivados a revelar su curva de valoración marginal con veracidad, siempre que crean que los demás también lo harán en promedio. Así, para cualquier individuo $I$, si cree que las curvas reportadas por los demás suman $\sum_i\phi_i(h)$, concluirá que, si ella también informa con veracidad, la curva agregada intersectará a lade $K$ en $h^º$. 
+    Por el contrario, si exagera o subestima su valoración, el nivel efectivo de $h$ se apartará de $h^º$. Pero, dado que debe pagar $1/I$ del coste impuesto a $K$ y que su propia valoración marginal equivale a $1/I$ de la valoración marginal agregada, le convendrá que $h$ se reduzca hasta $S$, donde la suma intersecta a la curva $K$ y MVJ intersecta a $(1/I)\cdot \phi_i(h)$.
+    
+    Además, aunque este análisis supone que la verdadera curva de $K$ es conocida, si relajamos este supuesto, el resultado no cambiaría. Dada cualquier curva reportada, sea verdadera o no, cada individuo estará motivado a que el nivel de $h$ se sitúe en la intersección entre $\sum_i\phi_i(h)$ y la de $K$ reportada. Por tanto, la conclusión anterior no se ve afectada por una revelación falsa por parte de $K$. Además, como $K$ debe pagar un impuesto igual a $-\sum_i\phi_i(h)$, también tendrá incentivos para revelar su curva con veracidad;
+    \item \textbf{Valoraciones marginales heterogeneas}. Sin embargo, si introducimos diferencias en las curvas individuales de valoración marginal surgen problemas. Los individuos con una valoración marginal alta (en valor absoluto) estarán motivados a exagerarla, mientras que aquellos con una valoración baja tenderán a subestimarla. No podemos confiar en que estas tendencias opuestas se compensen exactamente para producir una valoración marginal agregada verdadera. Si intentamos evitar esta dificultad haciendo que cada individuo pague según su valoración reportada, surge otro problema: cada uno intentará subestimar su valoración para reducir su propio pago. Este es el conocido problema del \textit{free rider} en la literatura sobre bienes públicos. Esta dificultad puede superarse mediante un mecanismo más complejo, como se mostrará más adelante (para una discusión más detallada y referencias pertinentes, véase la Sección 8.3; los principiantes pueden omitir el párrafo siguiente).
+\end{la}
+}
+
+
+\paragraph{Implicaciones de Política Económica}
+La intervención del sector público cuando existen externalidades bajo las premisas de \authorfont{PIGOU}\footnote{\authorfont{ARTHUR PIGOU}, discípulo de \authorfont{MARSHALL}, es considerado uno de los padres de la economía del bienestar, y es precisamente a él a quien se debe esta distinción que acabamos de ver entre Coste Marginal Social y Coste Marginal Privado: análisis por el cual se le considera también precursor de la economía medioambiental, al aplicar este análisis a las externalidades negativas medioambientales derivadas de la contaminación y abogar por la intervención del Estado mediante subsidios o impuestos para internalizar las externalidades.
+} se basa esencialmente en los siguientes instrumentos: 
+\begin{lnum}
+    \item \textit{Establecimiento de un impuesto específico sobre las unidades fisicas del bien consumido} (NO sobre su valor, ya que así no estaríamos gravando la externalidad negativa). Haciendo que los costes marginales de producir/consumir el bien aumenten (gráficamente, la curva de costes marginales de desplazaría hasta alcanzar el precio $P_0$ en nuestro gráfico);\footnote{Así, la intersección de la curva de demanda se produciría en el punto eficiente en el que se tiene en cuenta la externalidad: se produciría una cantidad $X_0$ a un precio $P_0$, que, ahora sí, ya está teniendo en cuenta la externalidad. Este mecanismo es posiblemente uno de los más antiguos que existen. Pese a que los impuestos suelen tener una connotación negativa, es importante señalar que un instrumento tipo \authorfont{PIGOU} no necesariamente tiene que elevar la carga impositiva de la sociedad en su conjunto, si su recaudación se emplea para reducir otros impuestos, o para financiar otras políticas o gastos socialmente deseables. Además, su presencia puede tener un efecto incentivo sobre la inversión en I+D+i con el objetivo de evitar incurrir en la actividad sobre la que recae el impuesto (por ejemplo, desarrollo de tecnologías menos contaminantes). Esto a su vez puede incentivarse mediante el empleo del segundo instrumento tipo \authorfont{PIGOU}, \textit{las subvenciones}. En la práctica, el problema reside en conocer:
+    \begin{lnum}
+        \item  La actividad exacta que genera la externalidad; 
+        \item La función de costes marginales totales, y,
+        \item La utilidad marginal de los agentes, para conocer el impacto de la externalidad. 
+    \end{lnum}
+    Por ejemplo, a la hora de conocer el coste marginal que tiene la emisión de gases de efecto invernadero, el informe \authorfont{STERN (2006)} apuntaba un coste de 300 dólares por tonelada de GEI, mientras que el informe Nordhaus señala que dicho coste es de 30 dólares por tonelada de GEI. La discrepancia surge de la incertidumbre sobre la magnitud de los efectos, el uso de una diferente tasa de descuento a la hora de actualizar los flujos futuros, etc. En definitiva, si el sector público se equivoca en sus cálculos y fija un impuesto demasiado alto, el bienestar final podría incluso empeorar con respecto a la situación de partida.} y, 
+    \item \textit{Establecimiento de una subvención específica por unidad de producto no producida hasta alcanzar la cantidad deseada $ X_0$.} El establecimiento de subvenciones sería el instrumento empleado en el caso de tratarse de una externalidad positiva, de modo que se abarate el consumo o producción para así alcanzar la cantidad óptima.\footnote{La subvención constituye una alternativa al impuesto pigouviano cuando confluyen los elementos que dificultan el cálculo del impuesto pigouviano adecuado (por las limitaciones que hemos visto), o cuando existe una fuerte resistencia de los grupos de presión que pierden bienestar con la actividad en cuestión, lo cual puede hacer que sea más sencillo introducir una subvención para incentivar un determinado comportamiento o desincentivar cierta actividad (externalidad positiva o negativa respectivamente).
+    
+    La ventaja obvia de las subvenciones es que son más fácilmente aceptadas por la colectividad (frente a la percepción más negativa del impuesto). Sin embargo, también presentan desventajas: 
+    \begin{lnum}
+        \item En primer lugar, al igual que sucede con los impuestos, pueden presentarse problemas de información que dificulten el cálculo de la cantidad óptima a producir;
+        \item Además, en el caso de las externalidades negativas, se está produciendo una transferencia de bienestar a favor del agente que la causa (puede generar una impresión de estar premiando al agente que produce la externalidad negativa);
+        \item Por último, habrá que financiar un mayor gasto público, lo que implicará mayores impuestos o menor gasto en otras partidas para mantener el mismo saldo.
+    \end{lnum}
+    } 
+\end{lnum}
+
+En definitiva, para que estos instrumentos lleven a una solución óptima, será necesario conocer la valoración que los agentes económicos realizan de la externalidad en cuestión ya que el modelo se enfrenta (al igual que en el caso de los bienes públicos) a un problema de revelación de preferencias, con todas las implicaciones que ya vimos en el apartado anterior.\footnote{Además, no hay que olvidar que, al introducir un instrumento fiscal, estamos incorporando una distorsión adicional al modelo, en términos de la teoría del second best, es complejo determinar si esta nueva distorsión nos sitúa más cerca o más lejos de una situación más eficiente.
+}
+
+\subsubsection{Derechos de propiedad: Negociación descentralizada (Teorema de COASE)}
+Otro enfoque busca una intervención menos intrusiva, asegurando simplemente que se cumplan las condiciones para que las partes alcancen por sí mismas un acuerdo óptimo sobre el nivel de la externalidad.
+
+Supongamos que se establecen derechos de propiedad exigibles respecto a la actividad que genera la externalidad. Por ejemplo, asignamos a $I$ el derecho a un entorno libre de externalidades. En este caso, $K$ no puede generar la externalidad sin el permiso de $I$. Supongamos que la negociación adopta la forma de una oferta de tómalo o déjalo (característico de los razonamientos de COASE) en la que $I$ exige un pago $T$ a cambio de permitir un nivel $h$.
+
+\eqblock{
+\begin{aligned}
+    &\text{Negociación}:
+    \left\{\begin{aligned}
+        &(1)\;\;\underset{\text{\scriptsize ejecutables y bien definidos}}{\text{Dchos. de propiedad}}\\
+        &(2)\;\;I\;\text{ostenta los derechos}
+    \end{aligned}\right.\\[1em]
+    &\text{Si $I$ exige $T$ para alcanzar $h$, $K$ aceptará}\iff \boxed{\phi_K(h) - T \ge \phi_K(0)}\\[2em]
+    &\Longrightarrow \boxed{\begin{aligned}
+        &\max_{h \ge 0,\, T} \; \phi_I(h) + T\\
+        &\text{s.a.}\quad \phi_K(h) - T \ge \phi_K(0)
+    \end{aligned}}\quad\overset{\substack{\text{\scriptsize pero la RCI}\\\text{\scriptsize es vinculante}}}{\underset{\text{\scriptsize por tanto,}}{\Longrightarrow}}\quad \underset{\text{\scriptsize está resuelto por construcción, el resultado es el óptimo social $h^º$}}{\boxed{\max_{h \ge 0} \; \phi_I(h) + \phi_K(h) - \phi_K(0)=h^º}}
+\end{aligned}
+}{}
+
+Además, es importante destacar que la asignación precisa de estos derechos entre las dos partes consumidores es irrelevante para el logro de la optimalidad.\footnote{Supongamos, por ejemplo, que en su lugar $K$ tiene el derecho a generar tanta externalidad como desee. En este caso, en ausencia de cualquier acuerdo, $K$ generará el nivel de externalidad $h^*$. Ahora $I$ deberá ofrecer un $T < 0$ (es decir, pagar a $K$) para obtener un $h < h^*$. En particular, $K$ aceptará el nivel de externalidad $h^º$ si y solo si $\phi_K(h) - T \ge \phi_K(h^*)$. Como consecuencia, $I$ ofrecerá fijar $h$ en el nivel que resuelve $\max_{h \ge 0} (\phi_I(h) + \phi_K(h) - \phi_K(h^*))$. Una vez más, resulta el nivel óptimo de externalidad $h^º$.
+} La asignación de derechos afecta únicamente la riqueza final de las dos consumidoras al alterar el pago realizado por $K$ a $I$. En el primer caso, $K$ paga $\phi_K(h^º) - \phi_K(0) > 0$ para poder fijar $h^0 > 0$; en el segundo, “paga” $\phi_1(h^º) - \phi_1(h^*) < 0$ a cambio de fijar $h^º < h^*$. 
+
+Esto es lo que se conoce como el Teorema de COASE (Coase, 1960): si el intercambio de la externalidad es posible, la negociación conducirá a un resultado eficiente independientemente de cómo se asignen los derechos de propiedad.\footnote{\authorfont{RONALD COASE}, economista de la London School of Economics galardonado con el premio Nobel de Economía en 1991 \textit{Por su descubrimiento y clarificación del significado de los costos de transacción y los derechos de propiedad para la estructura institucional y el funcionamiento de la economía.}, plantea en los años 50's una solución alternativa a la de \authorfont{PIGOU}.
+
+\authorfont{COASE} critica los instrumentos de tipo \authorfont{PIGOU} por considerarlos demasiado intervencionistas/distorsionadores. Éste autor señala que el beneficio del impuesto no siempre va a recaer sobre los perjudicados por la externalidad, y que además el coste del mismo no siempre va a recaer sobre el agente que causa la externalidad, en la medida en que éste pueda trasladarlo al agente perjudicado o a otros agentes (si tiene poder de mercado para ello).
+} En esencia, \authorfont{COASE} traslada el análisis de costes típico de la empresa al entorno más general del mercado acuña el concepto de coste social, que surge por falta de definición de la propiedad privada, la propiedad pública y el baremo de responsabilidades. Ante la presencia de costes sociales \authorfont{COASE} propone una cuantificación económica de los daños (o beneficios), una delimitación de las responsabilidades (que implica conocer correctamente quién genera ese daño) y una cuantificación del beneficio marginal que supone seguir realizando la actividad a pesar del daño, resarciendo por ello.\footnote{Es más, \authorfont{COASE} señala que no siempre es conveniente eliminar la externalidad, puesto que ésta es el resultado de una actividad productiva que seguramente será beneficiosa. Por ello, a veces debe permitirse la externalidad, llegando a un óptimo social mediante la negociación, si los costes de transacción son menores que lo que se consigue con el intercambio.
+}  Gráficamente:
+
+\imagenfit{DchosCOASE_externalidades.png}{La distribución final de las utilidades bajo diferentes esquemas de propiedad y diferentes procesos de negociación ($K\equiv 1$, $I\equiv 2$)}{\textit{Microeconomic Tehory}. MAS-COLELL et al. 1995}
+
+Podemos ver como el conjunto de posibilidades de utilidad para las dos consumidoras. Cada punto en la frontera de este conjunto corresponde a una asignación con nivel de externalidad $h^º$. Los puntos $a$ y $b$ corresponden a los niveles de utilidad derivados, respectivamente, de niveles de externalidad $0$ y $h^*$ en ausencia de transferencias. Constituyen la situación inicial tras la asignación de derechos de propiedad (a $I$ y $K$, respectivamente), pero antes de la negociación. 
+
+En el procedimiento de negociación adoptado (que otorga a $I$ el poder de hacer una oferta de \textbf{tómalo o déjalo}), los niveles de utilidad después de la negociación son los puntos $f$ y $e$, respectivamente. Si el poder de negociación hubiera estado en manos de $K$, los niveles de utilidad posteriores a la negociación habrían sido los puntos $d$ y $c$, respectivamente.\footnote{Otros procedimientos de negociación pueden dar lugar a otros puntos en los segmentos $[f, d]$ y $[e, c]$, respectivamente.
+}
+
+\paragraph{Implicaciones de Política Económica}
+No obstante, en términos de Política Económica cabe detacar que la existencia de derechos de propiedad bien definidos y exigibles es esencial para que este tipo de negociación tenga lugar. Si los derechos de propiedad no están bien definidos, no estará claro si $K$ debe obtener el permiso de $I$ para generar la externalidad. Si los derechos no pueden hacerse cumplir (quizá el nivel de h no es fácilmente medible), entonces $K$ no tiene necesidad de comprar el derecho a generar la externalidad a $I$. Por esta razón, los defensores de este enfoque señalan la ausencia de estas instituciones jurídicas como un obstáculo central para la optimalidad.
+
+Por otro lado, esta solución al problema de la externalidad tiene una ventaja significativa sobre los esquemas de impuestos y cuotas en términos del conocimiento requerido por el gobierno: no necesita conocer las preferencias de los agentes. Sin embargo, para que la negociación conduzca a la eficiencia, es imprescindible que los agentes si lo posean el uno del otro. Cuando los agentes son en cierta medida ignorantes de las preferencias de los demás, la negociación puede no conducir a un resultado eficiente.
+
+Dos puntos adicionales sobre estos tres tipos de soluciones merecen destacarse. Primero, cuando los dos agentes son empresas, una forma que puede adoptar un acuerdo eficiente es la venta de una empresa a la otra. La empresa fusionada internalizaría completamente la externalidad al maximizar sus beneficios. (Esto supone que el propietario tiene control total sobre la empresa; en entornos más realistas con problemas de incentivos, los resultados pueden diferir).
+
+Segundo, los tres enfoques requieren que la actividad generadora de la externalidad sea medible. Esto no es trivial; en muchos casos la medición puede ser tecnológicamente inviable o muy costosa (por ejemplo, medir contaminación del aire o ruido). Un cálculo adecuado de costos y beneficios debe tener en cuenta estos costos. Si la medición es muy costosa, puede ser óptimo permitir que la externalidad persista.
+
+\paragraph{Externalidades y mercados ausentes}
+La observación de que la negociación puede generar un resultado óptimo sugiere una conexión entre externalidades y mercados ausentes. Un sistema de mercado puede verse como un procedimiento particular de intercambio.
+
+Supongamos que los derechos de propiedad están bien definidos y son exigibles, y que existe un mercado competitivo para el derecho a generar la externalidad. Supongamos que la consumidora 2 tiene el derecho a un entorno libre de externalidades. Sea p_t el precio del derecho a generar una unidad de la actividad.
+
+La consumidora 1 elige cuántos derechos comprar, h_1, resolviendo \max_{h_1 \ge 0} \; \phi_1(h_1) - p_t h_1, cuya condición de primer orden es
+\phi_1'(h_1) \le p_t, con igualdad si h_1 > 0. (11.B.6)
+
+La consumidora 2 decide cuántos derechos vender, h_2, resolviendo
+\max_{h_2 \ge 0} \; \phi_2(h_2) + p_t h_2,
+cuya condición de primer orden es
+\phi_2'(h_2) \le -p_t,
+con igualdad si h_2 > 0. (11.B.7)
+
+En equilibrio competitivo debe cumplirse h_1 = h_2. Por tanto, se obtiene
+\phi_1'(h^{**}) = -\phi_2'(h^{**}),
+lo que implica que h^{**} = h^0, el nivel óptimo. El precio de equilibrio es
+p_t = \phi_1'(h^0) = -\phi_2'(h^0).
+
+El mercado funciona así como un procedimiento particular de negociación para repartir las ganancias del intercambio.
+
+Vemos que, si existe un mercado competitivo para la externalidad, se alcanza la optimalidad. Por tanto, las externalidades están intrínsecamente ligadas a la ausencia de ciertos mercados competitivos, como señalaron Meade (1952) y Arrow (1969).
+
+Sin embargo, la idea de un mercado competitivo con un solo comprador y un solo vendedor es poco realista. No obstante, muchas externalidades importantes involucran a numerosos agentes. En esos contextos multilaterales, el supuesto de comportamiento tomador de precios puede ser más razonable, y un mercado competitivo para la externalidad podría conducir a un resultado eficiente. La validez de esta conclusión depende de si la externalidad es de naturaleza “privada” o “pública”, cuestión que se analiza posteriormente.
+
+
+
+
+
+\clearpage
+\section{Bienes Públicos}
+\puntosclave{
+    Los bienes públicos se definen como aquellos bienes que presentan dos características fundamentales: la no exclusión y la no rivalidad.
+    
+    El mercado es incapaz de proveer la cantidad óptima del bien público porque no consigue internalizar que todos los individuos pueden disfrutar de cada unidad producida, por lo que éste sería infra provisto.
+    
+    La condición de optimalidad viene dada por la Condición de \authorfont{SAMUELSON}. No obstante, su implementación práctica se enfrenta a un problema esencial, el problema del \textit{free rider}.
+    
+    Si ignorarnos este problema, un mecanismo óptimo de financiación serían los precios \authorfont{LINDAHL}.
+    
+    Existen múltiples extensiones al análisis de los bienes públicos: bienes públicos locales, bienes comunales, bienes públicos globales, etc.
+}
+
+Hasta aquí hemos nos hemos ocupado principalmente de los efectos externos derivados de la producción/consumo de bienes privados. Ahora bien, estos efectos, considerados en abstracto, tienen también la naturaleza de bien privado. Pensemoslo: hemos planteado que si el proceso de producción de una empresa genera efectos negativos a un grupo identificable de consumidores, la asignación PARETO óptima puede alcanzarse distribuyendo el beneficio/coste de este efecto entre los agentes de la economía. El elemento esencial para la resolución de este problema era permitir que los agentes internalizasen el bien o el mal (individualizado) de manera que la provisión alcanzada fuese de naturaleza second best. 
+
+Pero en este desarrollo subyace un supuesto esencial: el efecto de la acción de $K$ sobre $I$ debe ser rival en el sentido relevante. Es decir, el daño (o beneficio) está ligado a un afectado identificable y puede, al menos en principio, internalizarse mediante un pago/compensación entre partes. Formalmente:
+
+\eqblock{
+\begin{aligned}
+    &\underset{\text{\scriptsize bien rival}}{\text{Externalidad}}\Longrightarrow h: U_I = U_I(\cdot, h)\\[1em]
+    &\underset{\text{\scriptsize no rivalidad}}{\text{Bien público}}\Longrightarrow U_i = U_i(\cdot, h)\quad \forall i=1,\dots,I\\[1em]
+\end{aligned}
+}
+
+Ahora bien, ¿qué pasa si el efecto no se puede internalizar de manera acotada e identificable? Esto es, ¿qué pasa si el mismo nivel entra como argumento en todas las funciones de utilidad? Pensemos por ejemplo en la contaminación atmosférica, ¿cómo podemos compensar eficientemente los daños alcanzando una asignación eficiente y que sea económicamente viable? Es imposible, la contaminación entraría como bien no rival en cada Función de Utilidad individual y, en consecuencia, cada individua exigiría una compensación global por los daños ocasionados. Por tanto, en este contexto la externalidad (positiva/negativa) deja de ser un problema bilateral de compensación y se convierte en un problema de provisión: decidir el nivel de $h$ requiere considerar los beneficios/daños marginales de muchos individuos. El conocimiento, probablemente, el mejor ejemplo de una externalidad positiva de estas características: su uso para un propósito no impide su uso para otros. Y muestra lo que se conoce como \textbf{bien público}: un bien público es un bien cuyo uso por parte de un agente no impide su uso por parte de otros agentes.
+
+Dicho de otro modo, los bienes públicos son no rivales o no agotables: el consumo por parte de un individuo no reduce la cantidad disponible para los demás.  Estos bienes constituyen una parte cada vez más importante de la economía en su conjunto y, en cierto sentido, pueden considerarse un tipo especial de externalidad en el consumo (como veremos más adelante). Por tanto, obsérvese que un bien público no tiene por qué ser deseable; pueden existir males públicos. En cuyo caso, un \textbf{mal público} es un bien cuya recepción por parte de un agente no reduce su recepción por parte de otros agentes.
+
+También puede distinguirse según sea posible excluir a individuos de los beneficios del bien público. Todo bien privado es automáticamente excluible, pero los bienes públicos pueden o no serlo. El sistema de patentes, por ejemplo, es un mecanismo (aunque imperfecto) para excluir del uso del conocimiento. En cambio, puede ser tecnológicamente imposible o muy costoso excluir a ciertos consumidores de los beneficios de la defensa nacional o de un proyecto de mejora de la calidad del aire. Para simplificar, nos centraremos en el caso en que la exclusión no es posible.
+
+\subsection{Definición: Fallo de Mercado}
+Debido a la naturaleza de un bien público, la condición (de nivel superior) de optimalidad para su provisión es bastante diferente de la correspondiente a los bienes privados. Consideremos una economía con $I$ consumidores y un bien público ($h$), además de $L$ bienes privados comerciados. Adoptamos una perspectiva de equilibrio parcial: la cantidad del bien público no afecta a los precios de los $L$ bienes privados, y cada consumidor tiene utilidad cuasilineal respecto al mismo numerario. Podemos definir para cada consumidor $i$ una función de utilidad derivada sobre el nivel del bien público: $\phi_i(h)$, suponiendo que es dos veces diferenciable, con $\phi_i''(h)<0$ para todo $h\geq0$ (un bien público, $h$ no lleva subíndice $i$).\footnote{El coste de producir $q$ unidades es $c(q)$, dos veces diferenciable, con $c''(q)>0$. Nótese que el análisis sería igual para un bien público deseable y costoso, suponiendo $\phi_i'(\cdot)>0$ y $c'(q)>0$; que para un mal público cuya reducción es costosa $\phi_i(\cdot)<0$ y $c'(\cdot)<0$.
+} Entonces:
+
+\eqblock{
+\begin{aligned}
+    &\underset{\substack{\text{\scriptsize Enfoque Parcial}\\\text{\scriptsize bien frente numerario}}}{\text{Óptimo}}:\qquad \underset{\substack{\text{\scriptsize Nótese que sumamos verticalmente las funciones}\\\text{\scriptsize a diferencia de horizontalmente, porque el bien es}\\\text{\scriptsize \textbf{no rival}}}}{\boxed{\max_{q \ge 0} \sum_{i=1}^{I} \phi_i(q) - c(q)}}\Longrightarrow\text{CPO}: \sum_{i=1}^I\phi_i(q)\leq c'(q),\quad \text{\scriptsize con igualdad si $q=q^º>0$}\\[1em]
+    &\underset{\text{\scriptsize En un contexto de EGC (SAMUELSON, 1954)}}{\text{Equivalentemente, Óptimo}}:\sum_{i=1}^I{RMS}_{h,j}={RMT}_{h,j},\quad \forall j=1,\ldots,L
+\end{aligned}
+}{Bienes públicos: Condiciones óptimas de provisión del bien.}
+
+Por tanto, en este modelo cuasilineal, cualquier asignación óptima de Pareto debe maximizar el excedente agregado y cumplir la CPO necesaria y suficiente: la suma de los beneficios marginales debe igualar el coste marginal. Esto contrasta con el caso de bienes privados, donde cada consumidor iguala individualmente su beneficio marginal al coste marginal.
+
+\subsubsection{Características básicas: Externalidad Pública}
+Además, esta formulación nos permite reolver una cuestión muy interesante para enfatizar las diferencias en nuestra exposición: ¿Cuál es la característica básica que distingue a los bienes públicos de los bienes privados? De manera más general, ¿qué diferencia las externalidades públicas de las externalidades privadas? 
+
+\paragraph{No rivalidad}
+En primer lugar, y reincidiendo en lo que dijimos, la misma unidad de un bien público puede ser consumida por muchos individuos: su disponibilidad para uno no reduce su disponibilidad para otros. Esto se denomina \textbf{no rivalidad en el consumo}.\footnote{Ejemplos son la defensa nacional y la radiodifusión y televisión. El hecho de que yo sintonice una determinada emisión no reduce en absoluto su disponibilidad para otros oyentes. En cambio, una vez que he comido una manzana, ya no puede ser consumida por otros. Dos personas pueden compartir una manzana, pero cada una comerá solo la mitad. Por tanto, bienes como manzanas, pan, etc., son bienes privados.
+} Sin embargo, existen bienes intermedios entre los casos extremos de bien puramente público y puramente privado. Por ejemplo, los libros de biblioteca pueden ser utilizados por distintos lectores en distintos momentos, pero no simultáneamente. 
+
+Una característica relevante aquí es la existencia de costes medios decrecientes, como señaló BAUMOL (1977). A menudo un bien no es perfectamente no rival, por ejemplo, la radiodifusión (dado el programa, el lugar y la potencia de transmisión), pero una vez producidas algunas unidades, pueden suministrarse unidades adicionales a muy bajo coste. 
+
+Sin embargo, muchos economistas consideran que la cuestión de los costes decrecientes es independiente de la de los bienes públicos, ya que tanto los bienes públicos como los privados pueden producirse con costes decrecientes, crecientes o constantes. Esto se debe a que intervienen dos dimensiones distintas del bien. En un bien público puro, el coste marginal respecto a la segunda derivada es cero, pero puede ser decreciente, creciente o constante respecto a la primera derivada. 
+
+Si mantenemos constante la primera derivada. Centrémonos en el caso de costes fijos sustanciales, por ejemplo, la publicación de un libro. Una vez decidido publicarlo, los costes fijos están comprometidos y el libro puede servir a cualquier número de lectores sin reducir su disponibilidad para otros. Posee claramente la característica de no rivalidad. (Es cierto que el coste marginal de imprimir y distribuir copias adicionales no es cero, pero puede tratarse como un componente separado). Y, en realidad, esto ocurre en la mayoría de los bienes públicos.\footnote{Consideremos la televisión: la parte de radiodifusión es un bien público puro. Pero se necesita un televisor (y electricidad) para beneficiarse de la emisión. El televisor no es gratuito y es un bien privado. Se corresponde con el ejemplar del libro, mientras que la radiodifusión corresponde a la redacción y publicación. La principal diferencia es que la radiodifusión y los televisores suelen ser producidos por grupos distintos, cosa que no ocurre en la publicación de libros. No obstante, en algunos casos de televisión por cable, tanto la emisión como los televisores pueden ser suministrados por la misma organización. Por otra parte, podría reconocerse el aspecto público de los libros, de modo que los libros aprobados por comités independientes tengan sus costes fijos cubiertos, se suministren a distribuidores competitivos a coste marginal y puedan copiarse libremente. De hecho, algunas universidades e instituciones de investigación subsidian parcialmente la publicación de libros, aunque, debido a recursos limitados, suelen fijar precios para minimizar pérdidas y no al coste marginal (lo que implicaría mayores pérdidas).
+} No obstante, también podría objetarse que si consideramos el componente de coste fijo como un bien público, prácticamente todos los bienes tendrían un aspecto público.\footnote{Es cierto que la producción de la mayoría de los bienes implica costes fijos (por ejemplo, capital) a corto plazo. Pero si el capital se utiliza cerca de su capacidad, la producción no puede aumentar sin incrementar significativamente el coste marginal. Si la demanda total del mercado es grande en relación con la producción de una empresa, la competencia perfecta garantiza en el largo plazo un equilibrio con $P = CMg=CMe$ (escala óptima eficiente). Este es claramente un bien privado. Incluso si el tamaño eficiente es grande y existe un monopolista operando con costes medios decrecientes, la industria puede gestionarse más eficientemente de forma privada, aunque el componente de coste fijo tenga un aspecto de bien público. Esto depende tanto de la importancia relativa del coste fijo como de la eficiencia relativa de la producción privada frente a la pública.
+}
+
+\paragraph{No excluibilidad}
+La segunda característica propuesta es la no excluibilidad: una vez que el bien se proporciona a algunos individuos, es imposible o muy costoso excluir a otros de beneficiarse de él. La defensa vuelve a ser un buen ejemplo. También es difícil excluir a las personas de recibir señales de televisión. No obstante, pueden emplearse licencias (normalmente poco eficaces) o televisión por cable (eficaz pero costosa) como métodos de exclusión. Además, el coste de exclusión casi nunca es cero, ni siquiera para bienes puramente privados, ya que la producción y distribución de todos los bienes requieren el mantenimiento del orden jurídico.\footnote{Una característica relacionada y, en cierto modo, opuesta a la no excluibilidad es la no rechazabilidad. La defensa vuelve a ser un ejemplo: si tu país ha sido defendido de una invasión extranjera, tú también estás protegido, aunque prefieras el caos que produciría la invasión. Pero la no rechazabilidad es aún más importante en el caso de los males públicos (contaminación, etc.).
+
+Si un bien es perfectamente no rival, una vez producido puede ponerse a disposición de todos los individuos afectados sin coste adicional. Si un bien es perfectamente no excluible y no rechazable, debe ser consumido en la misma cantidad por todos los individuos afectados. La expresión afectados distingue entre bienes públicos locales, nacionales y globales. Por ejemplo, ciertas emisiones pueden recibirse solo dentro de un área geográfica determinada, mientras que otras pueden captarse casi en todo el mundo.
+}
+
+\subsubsection{Implicaciones de Política Económica}
+Algunos economistas enfatizan la no excluibilidad como característica esencial, argumentando que si existe exclusión, los bienes no rivales pueden proveerse eficazmente de manera privada. Pero si no consideramos la producción pública como condición necesaria y suficiente para definir un bien público, resulta analíticamente más fructífero considerar la no rivalidad como la característica definitoria básica, y entender la no excluibilidad y la no rechazabilidad como factores que dificultan la provisión privada. Según esta visión, podemos pasar a analizar las implicaciones en términos de Política Económica que genera la existencia de bienes de naturaleza pública.
+
+Supongamos que el bien público se provee privadamente y, por tanto, existe un mercado al precio $p$, y cada consumidor $i$ elige cuánto comprar $h_i\geq0$:
+
+\eqblock{
+\begin{aligned}
+    &h = \sum_i h_i:\qquad \boxed{\max_{h_i \ge 0} \; \phi_i\left(h_i + \underbrace{\sum_{k \ne i} h_k}_{\text{\scriptsize por no rivalidad}}\right) - p^* h_i}\Longrightarrow\text{CPO}: \phi_i'\left(h_i + \sum_{k \ne i} h_k\right) \le p^*,\quad \text{\scriptsize con $=$, si $h_i>0$}\\[1em]
+    &\text{Sea}\quad  \underset{\text{\scriptsize suma de consumos ind. óptimos}}{h^* = \sum_i h_i^*}=q^*,\\[0.5em]
+    &\text{Equilibrio (CPO's)}\Longrightarrow
+    \text{\scriptsize$\left\{\begin{aligned}
+        &\text{Consumidores}:\boxed{\phi_i'(h^*) \le p^*,\quad \forall i}\\[0.5em]
+        &\text{Productor(es)}:\underset{\text{\scriptsize sol:} \max_{q \ge 0} \; p^* q - c(q)}{\boxed{p^* \le c'(q^*)}}
+    \end{aligned}\right\}$}\Longrightarrow\underset{\text{\scriptsize donde, $\delta_i=1\iff h_i^*>0\;|\;\delta_i=0\iff h_i^*=0$}}{\boxed{\sum_{i=1}^I\delta_i[\phi'_i(q^*)-c'(q^*)]=0}}\\[1em]
+    &\overset{\substack{\text{\scriptsize como, $\phi_i'>0$,}\\\text{\scriptsize y, $c'>0$.}\\[0.5em]\text{{si: $I>1,\;q^*>0$}}}}{\underset{\text{\scriptsize en equilibrio}}{\Longrightarrow}}\hspace{5em} \boxed{c'(q^*)<\sum_{i=1}^I\phi'_i(q^*)}\Longrightarrow\text{\textbf{Infraprovisión}}
+\end{aligned}
+}{}
+
+Por tanto, en equilibrio competitivo la suma de beneficios marginales, correspondiente a la suma de valoraciones marginales de cada consumidor, excede el coste marginal medido como el coste de la última cantidad producida en equilibrio, $q^*$. Por tanto, el nivel de provisión privada es inferior al óptimo de PARETO. Gráficamente:\footnote{Obsérvese que la curva, como ya anticipamos, representa $\sum_i \phi_i(q)$
+corresponde geométricamente a una suma vertical de las curvas individuales $\phi_i(q)$ para $i=1,\ldots,I$ (mientras que en el caso de un bien privado la curva de demanda del mercado se obtiene sumando horizontalmente las demandas individuales).
+
+La gráfica muestra tanto este equilibrio como el nivel PARETO-óptimo
+}
+
+\imagenfit{BienesPublicos_Ineficiencia.png}{Provisión privada del bien público: Nivel de provisión insuficiente (no-óptimo)}{\textit{Microeconomic Theory}. MAS-COLELL et al. 1995}
+
+Vemos que siempre que $q^º> 0$ e $I > 1$, el nivel del bien público provisto es demasiado bajo; es decir, $q^* < q^º$. La causa de esta ineficiencia puede entenderse, en términos de externalidades, porque la compra del bien público por parte de cada consumidor genera un beneficio directo no solo para ella misma sino también para todos los demás consumidores. Por lo tanto, la provisión privada crea una situación en la que existen externalidades. 
+
+\paragraph{\textit{Free rider}: Revelación de preferencias}
+El hecho de que cada consumidor no tenga en cuenta los beneficios que su provisión del bien público genera para los demás suele denominarse problema del \textbf{free rider}: cada consumidor tiene incentivos para disfrutar de los beneficios del bien público provisto por otros mientras contribuye insuficientemente a su provisión.\footnote{De hecho, en el modelo presente el problema del free rider adopta una forma muy marcada. Para verlo de la forma más sencilla, supongamos que podemos ordenar a los consumidores según sus beneficios marginales, de modo que $\phi_1'(h) < \cdots < \phi_I'(h)$ para todo $h \ge 0$. Entonces la condición $\phi_i'(h^*)\leq p^*$ solo puede cumplirse con igualdad para un único consumidor, y además este debe ser el consumidor etiquetado como $I$.
+}
+
+Apoyándonos en nuestro gráfico, podemos ver este problema sencillamente con la curva de valoración marginal (demanda) inferior. Si consideramos que esta es la curva de valoración marginal de un único consumidor (el que mayor valoración marginal tiene), entonces el equilibrio alcanzado es aquel en el que se produce únicamente la cantidad en la que el valor marginal de la última unidad es igual al coste marginal de la última unidad producida, y todo el resto de consumidores disfruta de esa dotación global de bien público. Por tanto, solo el consumidor que obtiene el mayor beneficio marginal del bien público lo proveerá; todos los demás fijarán sus compras en cero en el equilibrio.
+
+Ahora que sabemos qué problemas emergen con la aparición de bienes públicos (o males) y como la intermediación del mercado no alcanza la optimalidad de PARETO, debemos preguntarnos qué alternativas tenemos para remediar esta ineficiencia asignativa; pues queda justificada la intervención del Sector Público.
+
+\subsection{Soluciones}
+En términos generales, la ineficiencia de la provisión privada suele corregirse mediante intervención gubernamental en la provisión de bienes públicos. Al igual que en el caso de las externalidades, esto puede hacerse no solo mediante intervenciones basadas en cantidades (como la provisión directa por parte del gobierno), sino también mediante intervenciones basadas en precios, como impuestos o subsidios.
+
+\subsubsection{Mecanismo de revelación: Precios LINDAHL}
+No obstante, aunque la provisión privada del tipo estudiado anteriormente conduce a un nivel ineficiente del bien público, existe en principio una institución de mercado que puede alcanzar la optimalidad y que trataremos brevemente.
+
+Suponiendo que, para cada consumidor $i$, existe un mercado para el bien público \textit{tal como lo experimenta el consumidor $i$}. Es decir, consideramos el consumo del bien público por cada consumidor como una mercancía distinta con su propio mercado podemos alcanzar un equilibrio de LINDAHL donde la provisión del bien público se conduce a la provisión eficiente mediante los mecanismos de mercado gracias al recurso analítico de mercados personalizados para el bien público.\footnote{Denotamos el precio de este bien personalizado por $p_i$. Obsérvese que $p_i$ puede diferir entre consumidores.
+
+Suponiendo que, dado el precio de equilibrio $p_i^{**}$, cada consumidor $i$ decide la cantidad total del bien público que consumirá, $h_i$, resolviendo $\max_{h_i \ge 0} \; \phi_i(h_i) - p_i^{**} h_i$. Entonces, Su nivel de consumo de equilibrio $h_i^{**}$ debe entonces satisfacer la condición necesaria y suficiente de primer orden $\phi_i'(h_i^{**}) \le p_i^{**}$, con igualdad si $h_i^{**}>0$. 
+
+Si concebimos la empresa como productora de un conjunto de $I$ bienes mediante una tecnología de proporciones fijas (es decir, el nivel de producción de cada bien personalizado debe ser necesariamente el mismo), resuelve el problema de optimización $\max_{q \ge 0} \; \left(\sum_{i=1}^{I} p_i^{**} q\right) - c(q)$. El nivel de producción de equilibrio de la empresa $q^{**}$ satisface entonces la condición necesaria y suficiente de primer orden $\sum_{i=1}^{I} p_i^{**} \le c'(q^{**})$, con igualdad si $q^{**} > 0$. Juntas $\phi_i'(h_i^{**})\leq p_i^{**}$ y $\sum_{i=1}^Ip_i^{**}\leq c'(q^{**})$, con la condición de vaciado de mercado $h_i^{**} = q^{**}$ para todo $i$ implican que $\sum_{i=1}^{I} \phi_i'(q^{**}) \le c'(q^{**})$, con igualdad si $q^{**} > 0$. 
+
+Comparando $\sum_{i=1}^I\phi_i'(q^{**})\leq c'(q^{**})$ con $\sum_{i=1}^I\phi_i'(q^º)\leq c'(q^º)$, vemos que el nivel de equilibrio del bien público consumido por cada consumidor es exactamente el nivel eficiente: $q^{**} = q^º$.
+} Analíticamente, alcanzamos:
+
+\eqblock{
+\begin{aligned}
+    &\text{Si,}\quad \exists \;\;(p_i^{**},h_i^{**})\quad \forall i: &&\underset{\substack{\text{\scriptsize existen mercados para cada consumidor}\\\text{\scriptsize y cada uno consume, al precio, $p_i^{**}$ (personal)}\\\text{\scriptsize el total del bien que va a consumir ($h^{**}$), el social}}}{h_i(p_i^{**})=h_i^{**}}\\[2em]
+    &\underset{\substack{\text{\scriptsize resolviendo}\\\text{\scriptsize problema}\\\text{\scriptsize maximización}}}{\Longrightarrow}\quad \text{Si,}\quad h_i^{**}=q^{**},&&\underbrace{\sum_{i=1}^I\phi_i'(q^{**})\leq c'(q^{**})}_{\text{\scriptsize Equilibrio LINDAHL}}\quad\text{y,}\quad \underbrace{\sum_{i=1}^I\phi_i'(q^º)\leq c'(q^º)}_{\text{\scriptsize Equilibrio Óptimo-PARETO}}\\[1em]
+    &\text{Como $q^{**}=q^º$}\quad \Longrightarrow&&\text{LINDAHL}\sim\text{PARETO}
+\end{aligned}
+}{Precios LINDAHL: Condiciones previas y solución eficiente. Bienes Públicos (infraprovisión): Mecanismos de Mercado}
+
+Para entender por qué se obtiene eficiencia, obsérvese que, una vez definidos mercados personalizados para el bien público, cada consumidor, tomando como dado el precio en su mercado personalizado, determina completamente su propio nivel de consumo del bien público; de este modo, las externalidades desaparecen. Gráficamente:
+
+\imagenfit{LindahlPrices.png}{Representación gráfica del equilibrio de \authorfont{LINDAHL}}{Microeconomía. GRAVELLE y REES, 2014}
+
+El equilibrio \authorfont{LINDAHL} se produce en el punto donde $D_1$ y $D_2$ intersecan. En este punto, dada la distribución de los precios \authorfont{LINDAHL}, ambos consumidores demandan la misma cantidad el bien. Además, la eficiencia de esta asignación de precios se puede observar a través de la tangencia de las curvas de indiferencia de ambos agentes: dados los precios \authorfont{LINDAHL} de equilibrio, no es posible redistribuir los gravámenes de tal forma que al menos uno de los individuos mejore y el otro permanezca indiferente. Esta solución a la hora de financiar la provisión del bien público constituye el \textit{first best}. Una vez introduzcamos la información asimétrica y la interdependencia estratégica será necesario renunciar a dicho mecanismo para encontrar soluciones de tipo \textit{second best} como es el Mecanismo de \authorfont{CLARKE-GROVES}.
+
+\paragraph{Implicaciones de Política Económica}
+Sin embargo, a pesar de las atractivas propiedades de los equilibrios de Lindahl, su realismo es cuestionable. En primer lugar, la posibilidad de excluir a un consumidor del uso del bien público es esencial para que este concepto de equilibrio tenga sentido; de lo contrario, un consumidor no tendría razón para creer que, si no realiza ninguna compra del bien público, no podrá consumirlo. Además, incluso si la exclusión es posible, estos son mercados con un único agente del lado de la demanda, por lo que el comportamiento de tomador de precios supuesto es poco probable. La idea de que las ineficiencias pueden, en principio, corregirse introduciendo el tipo adecuado de mercados —que aparece aquí y también en la Sección 11.B— es muy general. No obstante, en casos concretos esta “solución” puede o no ser una posibilidad realista. Volveremos a encontrar esta cuestión en el estudio de las externalidades multilaterales en la Sección 11.D. Como veremos, este tipo de externalidades comparte muchas de las características de los bienes públicos.
+
+\subsubsection{Intervención: Impuestos}
+Por otro lado, como ya hemos comentado, existe la posibilidad de alcanzar la eficiencia mediante impuestos/subvenciones. Supongamos que hay dos consumidores con funciones de beneficio $\phi_1(h_1+h_2) \quad \text{y} \quad \phi_2(h_1+h_2)$, donde $h_i$ es la cantidad del bien público comprada por el consumidor $i$, y que $q^º>0$. Un subsidio por unidad comprada a cada consumidor $i$ igual a $s_i = \phi_{-i}'(q^º)$ (o equivalentemente un impuesto de $-\phi_{-i}'(q^º)$ por cada unidad en que la compra del bien público por el consumidor $i$ quede por debajo de cierto nivel especificado) hace que cada consumidor enfrente el efecto marginal externo de su acción y, por tanto, genere un nivel óptimo de provisión del bien público.\footnote{Formalmente, si $(\tilde h_1,\tilde h_2)$ son los niveles de equilibrio competitivo del bien público comprados por los dos consumidores bajo estos subsidios, y $\tilde p$ es el precio de equilibrio, entonces las decisiones de $i$ sobre $\tilde h_i$ deben resolver $\max_{h_i \ge 0} \; \phi_i(h_i+\tilde h_j) + s_i h_i - \tilde p h_i$, por lo que la condición necesaria y suficiente de primer orden es $\phi_i'(\tilde h_i+\tilde h_j) + s_i \le \tilde p$, con igualdad si $\tilde h_i>0$.
+
+Sustituyendo $s_i$, y utilizando tanto la condición $p\leq c'(q)$ como la condición de vaciado del mercado $\tilde h_1+\tilde h_2=\tilde q$, concluimos que $\tilde q$ es la cantidad total del bien público en el equilibrio competitivo bajo estos subsidios si y solo si $\phi_i'(\tilde q)+\phi_{-i}'(q^º)\leq c'(\tilde q)$, con igualdad para algún $i$ si $\tilde q>0$. 
+
+Por tanto, por $\sum_i\phi_i'(q^º)\leq c'(q^º)$, vemos que esto implica $q = q^º$.
+} De esta forma, en el equilibrio final con un subsidio basado en la utilidad marginal del resto de consumidores en el óptimo, podemos alcanzar el equilibrio eficiente:\footnote{Para la demostración de una externalidad negativa con características de mal público (no rivalidad), [\authorfont{Ver Anexo \ref{anx:malpublico_solucion}}]}
+
+\textbf{INCLUIR GRÁFICO DE INTERSECCIÓN CON SUBSIDIO}
+
+\paragraph{Implicaciones de Política Económica}
+Tanto la provisión pública directa óptima como este esquema de subsidios requieren que el gobierno conozca los beneficios que los consumidores obtienen del bien público, es decir, su disposición a pagar en términos de bienes privados. Esto supone una limitación fundamental a la hora de aplicarlo en la realidad puesto que en la mayoría de ocasiones el Sector Público no dispone de dicha información.
+
+\subsubsection{Intervención: Regulación (Teorema de COASE, extendido)}
+Lo que nos conduce al último mecanismo que presentaremos. Un enfoque parcialmente basado en el mercado que permite alcanzar la optimalidad en presencia de una bien (mal) con características de no rivalidad. Consiste en fijar una cuota sobre el nivel total de la externalidad y distribuir ese número de permisos negociables de externalidad (cada permiso otorga a una empresa el derecho a generar una unidad de la externalidad).\footnote{Supóngase que $h^º = \sum_j h_j$ permisos se asignan a las empresas, recibiendo la empresa $j$ una cantidad $\bar{h}_j$. 
+
+Sea $p^*_h$ el precio de equilibrio de estos permisos. Entonces la demanda de permisos por parte de la empresa $j$, denotada $h_j$, resuelve: $\max_{h_j \ge 0} \; \pi_j(h_j) + p^*_h(\bar{h}_j - h_j)$ y, por tanto, satisface la condición necesaria y suficiente de primer orden: $\pi_j'(h_j) \le p^*_h$, con igualdad si $h_j > 0$.
+
+Además, el equilibrio en el mercado de permisos requiere que: $\sum_j h_j = h^º$. El equilibrio competitivo en el mercado de permisos tiene entonces un precio $p^*_h = - \sum_i \phi_i'(h^º)$, y cada empresa $j$ utiliza $h_j^º$ permisos, lo que da lugar a una asignación óptima.
+}
+
+La ventaja de este sistema frente a una cuota estricta surge cuando el gobierno dispone de información limitada sobre las funciones $\pi_j(\cdot)$ y no puede determinar qué empresas pueden asumir eficientemente la reducción de la externalidad, aunque sí disponga de suficiente información, quizá de tipo estadístico, para calcular el nivel agregado óptimo de la externalidad, $h^º$.
+
+\begin{specialblock}{Mecanismo de Derechos dé Emisión de la Unión Europea y el Mecanismo de Ajuste de Carbono en Frontera}
+    En este sentido, merece especial atención el estudio de la aplicación más exitosa que ha tenido el teorema del \authorfont{COASE}: el Mecanismo de Comercio de Derechos de Emisión de la Unión Europea, desarrollado en aplicación de los acuerdos del Protocolo de Kyoto, en el marco de los acuerdos de la Convención Marco de las Naciones Unidas para Cambio Climático. 
+
+    Se trata de un sistema Cap \& Trade, lo que significa que, cada año, se establece un límite al volumen total de emisiones de efecto invernadero que los sectores cubiertos por el mecanismo pueden emitir, el cual se reduce cada año. Dicho límite es a su vez dividido en permisos de emisión equivalentes a una tonelada de $CO_2$. En el año 2021, dicho limite se encontraba en 1570 millones de toneladas de $CO_2$. 
+    
+    Una vez asignados los derechos de emisión, los propietarios pueden comprar o vender dichos derechos, de tal forma que, como resultado del intercambio, las toneladas de $CO_2$ sean emitidas finalmente por aquellas empresas cuya contaminación tiene como contrapartida aquella producción con mayor valor añadido económico. 
+    
+    Uno de los resultados de la creación de un mercado de intercambio de derechos de emisión, así como de la asignación de un volumen creciente de dichos derechos a través de subastas, es la generación de un precio que permite a las empresas internalizar el coste de cada tonelada de $CO_2$ que emiten. El precio de los derechos de emisión ha ido aumentando a medida que el Cap de $CO_2$ se ha ido reduciendo. 
+    
+    Desde 2018, ha ascendido desde los 20€ por tonelada hasta haber rozado los 100€ en noviembre de 2021. Este precio ofrece una señal económica muy poderosa dentro de la economía de la Unión Europea para invertir en tecnologías de bajas emisiones. Gracias al funcionamiento del Mecanismo de Derechos de Emisión, en 2021 se había conseguido que las emisiones de los sectores cubiertos por el sistema se hayan reducido un 43\% con respecto de los niveles de 2005. 
+    
+    La reducción entre sectores no ha sido homogénea, ya que el grueso ha sido realizado por el sector involucrado en la generación de energía y la calefacción de edificios, seguida por el sector de la industria y, finalmente, el sector del transporte en avión. A su vez, como medida para prevenir la fuga de carbono, apoyar la transición ecológica y establecer unas condiciones de competencia justas en el mercado interior único de la UE, se ha introducido el Mecanismo de Ajuste de Carbono en Frontera. Gracias a su implementación, se igualará el precio del $CO_2$ introducido tanto en los productos domésticos como en las importaciones, con el fin de garantizar que los objetivos climáticos comunitarios no se ven disminuidos por la deslocalización de la producción industrial hacia países con unos estándares menos ambiciosos. 
+    
+    El Mecanismo funcionará de la siguiente forma: los importadores de la UE deberán de comprar certificados de CO2 correspondientes al precio que se habría pagado en caso de que los bienes hubieran sido producidos en la UE. Por otra parte, si el productor ya compró un derecho de CO2 en un tercer país, éste podrá ser descontado del precio del derecho de la UE. De esta  forma, no sólo se evita la deslocalización, sino que también se fomenta a países terceros que adopten prácticas de producción más sostenibles. Su puesta en marcha se iniciará en 2023 y quedará plenamente implementada en 2026.
+\end{specialblock}
+
+
+
+\clearpage
+\section{Public Choice Theory}
+\puntosclave{
+    La presencia de fallos de mercado será una condición necesaria pero no suficiente para la justificación de la intervención del Sector Público en la economía por motivos de eficiencia.
+    
+    La teoría del Diseño de Mecanismos ha hecho importantes contribuciones para sortear algunos de los problemas de información a los que se enfrenta el Sector Público. Entre los mecanismos desarrollados, destaca el de Clarke y Groves.
+    
+    La actuación del Sector Público puede ser intertemporalmente inconsistente. Ello puede deberse a los problemas de inconsistencia dinámica identificados por Kydland y Prescott o bien por las ineficiencias intertemporales derivadas de la economía política del Sector Público.
+    
+    La Teoría del Public Choice permite aplicar el instrumental económico a las decisiones del Sector Público para comprender sus motivaciones, predecir los equilibrios emergentes y analizar su deseabilidad desde un punto de vista de la eficiencia.
+}
+
+A lo largo de los dos apartados precedentes hemos visto como en presencia de determinados fallos de mercado, la intervención del Sector Público quedaría \textit{a priori} justificada. Además, hemos visto las condiciones necesarias para que los diferentes instrumentos de intervención de los que dispone el Sector Público alcancen, de manera directa o indirecta, la asignación PARETO óptima. 
+
+Ahora biene, una de los condiciones para que esto se cumpla es la disponibilidad de información: el Sector Público debe conocer de manera perfecta (o cuasi perfecta) el impacto que tienen las externalidades en cada uno de los agentes, sean de naturaleza privada (rivalidad y excluibilidad) o de naturaleza pública (no rivalidad y no excluibilidad) con el fin de conseguir que los agentes internalicen los efectos de estas a la hora de tomar sus propias decisiones. 
+
+No obstante, en la práctica, el grado en que un agente es afectado por una externalidad o se beneficia de un bien público suele ser conocido solo por él mismo. La presencia de información privada (o asimétrica) puede dificultar tanto los intentos centralizados (por ejemplo, cuotas o impuestos) como los descentralizados (por ejemplo, negociación) de alcanzar la optimalidad. 
+
+\subsection{Fallos del Sector Público}
+En consecuencia, de manera geeral se suele decir que la presencia de efectos externos es condición necesaria pero no suficiente para justificar la intervención del Sector Público. Esto se debe, principalmente, a que la ineficiencia derivada del Mercado deberá ser contrastado con la ineficiencia espera ex post para considerar necesaria o no dicha intervención. Podemos distinguir tres problemas de naturaleza diferente que dificultan la intervención del sector público:
+\begin{lnum}
+    \item \textbf{Información asimétrica}. Los problemas de información y revelación de preferencias, donde la teoría del diseño de mecanismos ha realizado aportaciones fundamentales;
+    \item \textbf{Inconsistencia temporal}. Los problemas de inconsistencia intertemporal del sector público, que se inician con las aportaciones iniciales de KYDLAND \& PRESCOTT (1977); y,
+    \item \textbf{Desalineamiento de incentivos} (captura del regulador). Los problemas de desalineamiento de incentivos enfatizados por la literatura de la Public Choice School.
+\end{lnum}
+
+Sin ser, evidentemente, excluyentes entre sí. Es decir, podríamos perfectamente enfrentarnos a un problema que contiene las tres simultaneamente. Repasaremos brevemente como puede enfrentar el Sector Público las dificultades de cada uno de estos problemas de la manera más general posible, por tanto, empezaremos definiendo los fundamentos de la economía de la siguiente forma:
+
+\eqblock{
+\begin{aligned}
+    &\text{Agentes}\qquad i=1,\ldots,I:\quad \underset{\substack{\text{\scriptsize elección o }\\\text{\scriptsize tecnologías}}}{X\subseteq\mathbb R^n}\\[0.5em]
+    &\Longrightarrow\;\;\underset{\text{\scriptsize Caracterización de sus preferencias o tecnología sobre $X$ en función del tipo}}{\boxed{\mathcal R_i=\{r_i(\cdot\;,\;\theta_i):X\to \mathbb R\;|\;\theta_i\in\Theta_i\}}}\\[1em]
+    &\text{donde,}
+    \left\{\begin{aligned}
+        &X&&\equiv\text{Conjunto de alternativas sociales posibles}\\
+        &\theta_i&&\equiv\text{Información privada del agente}\\
+        &r_i(\cdot\;,\;\theta_i)&&\equiv\text{Cómo este tipo evalúa las alternativas}
+    \end{aligned}\right.
+\end{aligned}
+}{Caracterización general de la información privada y su proyección sobre el conjunto de alternativas sociales posibles. Fallos del Sector Público: Diseño de mecanismos}
+
+Dado que $\theta_i$ es observado únicamente por el agente $i$, nos encontramos en un entorno caracterizado por información incompleta pero suponemos que los tipos de los agentes se extraen de una distribución a priori conocida por todos. En particular, denotando por $\theta_i=(\theta_1,\ldots,\theta_I)$ el perfil de tipos de los agentes, la densidad de probabilidad sobre las posibles realizaciones de $\theta \in \Theta_1 \times \cdots \times \Theta_I$ es $\phi(\cdot)$. La densidad de probabilidad $\phi(\cdot)$, así como los conjuntos $\Theta_1,\ldots,\Theta_I$ y las funciones de utilidad $u_i(\cdot,\theta_i)$, se suponen conocimiento común entre los agentes. Sin embargo, el valor específico del tipo de cada agente i es observado privadamente por ese agente.\footnote{La formulación aquí es restrictiva en cierto sentido: en algunos contextos relevantes, las preferencias de los agentes sobre los resultados dependen no solo de sus propias señales observadas, sino también de señales observadas por otros agentes (por ejemplo, las preferencias del agente i sobre celebrar un picnic en el interior o al aire libre pueden depender del conocimiento que el agente j tenga sobre las condiciones meteorológicas). A lo largo de la mayor parte de este capítulo nos centramos en el caso en el que las preferencias de un agente dependen únicamente de su propia señal, conocido como el caso de valores privados.
+}
+
+Ahora que hemos definido el escenario que caracteriza la información asimétrica, sobre el cual debemos valorar la deseabilidad o no de la intervención público, pasemos a ver los diferentes problemas que el Setor Público enfrenta.
+
+\subsection{Información asimétrica: Diseño de Mecanismos}
+El primero es el de la disponibilidad de información: presencia de información privada. Los diferentes instrumentos que permiten sortear esta dificultad se enmarcan, en general, dentro de lo que se conoce como la Teoría del Diseño de Mecanismos.\footnote{
+Es una parte de la Teoría de Juegos que analiza el establecimiento de instituciones que, al tiempo que respetan la existencia de información privada y el interés personal de los agentes, permitan la obtención de un resultado deseable, es decir, que aunque todos los agentes se comporten siguiendo sus intereses personales y utilicen la información privada de forma estratégica, se consiga que las interacciones entre ellos conduzcan a un resultado adecuado para el conjunto de la sociedad.
+
+Los trabajos de \authorfont{HURWICZ} (1962, 1970) marcan el nacimiento de la teoría del diseño de mecanismos. De acuerdo con la formulación de este autor, un mecanismo se define como un \textbf{sistema de comunicación en el que los participantes intercambian mensajes entre ellos}. Dichos mensajes determinan el resultado económico final. Estos mensajes pueden contener información privada que podrá ser veraz o no. El mecanismo se comportará como una máquina que procesa dichos mensajes, agregándolos. Por ejemplo, el mecanismo más conocido son los mercados competitivos. En ellos los agentes intercambian mensajes (la voluntad de compra o venta a distintos precios) y, a partir de la interacción entre estos mensajes surge un precio y una cantidad de equilibrio que maximizan el bienestar de la economía. Los agentes pueden siempre revelar mensajes falsos contrarios a sus verdaderas preferencias, pero, dadas las dinámicas de estos mercados, desearán siempre revelar su disposición real de comprar o producir una unidad adicional.
+
+La teoría del diseño de mecanismos buscará la manera de implementar un resultado deseable que nazca del equilibrio de los \textit{inputs} /mensajes obtenidos. 
+} Centrándonos en el scope de este tema, sea cual sea la naturaleza y tipo de externalidad que enfrentemos, cuando los agentes disponen de información privada acerca de su propia valoración (perjuicio), tenderán a expresar una valoración inferior (superior) a la real, con el fin de forzar un outcome más favorable a sus intereses.
+
+Supongamos que las valoraciones marginales de los diferentes agentes son deconocidas por el policy maker, ¿cómo debería encontrar el nivel óptimo de externalidad en la economía? Como los beneficios y costos no son observables, las partes involucradas pueden no tener incentivos para revelarlos de forma veraz si se les pregunta. Por ejemplo, supongamos que el gobierno simplemente pide al consumidor y a la empresa que informen sobre sus beneficios y costess derivados de la externalidad y luego aplica lo que parezca ser el resultado óptimo basándose en esos informes. Evidentemente (si se trata de una externalidad negativa), el consumidor tendrá un incentivo a exagerar sus costes cuando se le pregunte para evitar que a la empresa se le permita generar la externalidad. 
+
+La cuestión, entonces, es cómo diseñar mecanismos que controlen estos incentivos a informar incorrectamente y que, como consecuencia, permitan al gobierno lograr un resultado eficiente. 
+
+\subsubsection{Mecanismo de GLOVES-CLARK}
+¿Podemos diseñar un esquema que logre el nivel óptimo de generación de externalidad para cada realización de $b$ (el beneficio de la empresa por la externalidad) y $c$ (el costo para el consumidor)? Veamos brevemente al caso en el que solo hay dos niveles posibles de la externalidad, $0$ y $\bar h$.
+
+Imaginemos que el gobierno establece el siguiente mecanismo de revelación: se pide a la empresa y al consumidor que informen sus valores de $b$ y $c$, respectivamente, denotando dichos anuncios como $\hat b$ y $\hat c$. Para cada posible par de anuncios $(\hat b, \hat c)$, el gobierno fija un nivel permitido de la externalidad así como un impuesto o subsidio para cada uno de los dos agentes. 
+
+Supongamos, en particular, que el gobierno declara que fijará el nivel permitido de externalidad $h$ para maximizar el excedente agregado dado lo anunciado. Es decir, $h = \bar h$ si y solo si $\hat b>\hat c$. Además, si se permite la generación de la externalidad (es decir, si $h = \bar h$), el gobierno gravará a la empresa con un impuesto igual a $\hat c$ y subvencionará al consumidor con un pago igual a $\hat b$. Es decir, si la empresa quiere generar la externalidad (lo que indica al reportar un valor alto de $\hat b$), se le pide pagar el costo de la externalidad según lo declarado por el consumidor ($\hat c$); y si el consumidor permite la externalidad (al reportar un valor bajo de $\hat c$), recibe un pago igual al beneficio de la externalidad declarado por la empresa ($\hat b$). Es fácil ver que bajo este esquema tanto la empresa como el consumidor dirán la verdad, de modo que se obtendrá un nivel óptimo de generación de externalidad para cualquier par posible $(b, c)$. 
+
+Para demostrarlo, consideremos el anuncio óptimo del consumidor cuando su nivel de costo es $c$:
+\begin{la}
+    \item Si la empresa anuncia algún $\hat b > c$, entonces el consumidor prefiere que se permita la actividad que genera la externalidad (queda $\hat b-c$ mejor que si se impide). Por lo tanto, su anuncio óptimo satisface $\hat c<\hat b$; además, como cualquier anuncio de este tipo le da el mismo pago, también puede decir la verdad, es decir, $\hat c=c<\hat b$;
+    \item Por otro lado, si la empresa anuncia $\hat b\leq c$, el consumidor prefiere que el nivel de externalidad sea cero. Por lo tanto, le gustaría anunciar $\hat c\geq \hat b$; y nuevamente, como cualquiera de estos anuncios le da el mismo pago, puede decir la verdad, es decir, $\hat c=c\geq \hat b$. 
+\end{la}
+
+Así, sea cual sea el anuncio de la empresa, decir la verdad es una estrategia óptima para el consumidor: se trata de una estrategia \textbf{débilmente dominante para el consumidor}. De hecho, es su única estrategia débilmente dominante. Un análisis paralelo conduce a la misma conclusión para la empresa.
+
+Este esquema descrito es un ejemplo cásico del mecanismo de GROVES-CLARKE, y fue propuesto originalmente como un mecanismo para decidir si llevar a cabo proyectos de bienes públicos.\footnote{\authorfont{CLARKE} (1971) y \authorfont{GROVES} (1973) encontraron que, si no existen efectos renta en la demanda de bienes públicos (funciones de utilidad cuasi lineales), existe un conjunto de mecanismos en los que: (i) la revelación sincera de la disponibilidad a pagar del bien es la estrategia dominante, y, (ii) el nivel de equilibrio del bien público maximiza el bienestar social. Para alcanzarlo, el Sector Público pedirá a los consumidores que revelen su valoración del bien público, comprometiéndose a lo siguiente:
+\begin{lnum}
+    \item Proveer el bien público sólo si su coste total de provisión es inferior a la valoración agregada que hace el conjunto de consumidores de ese bien ($c(h^*)\leq BS=\sum_i\phi_i(h^*)$).
+    \item Cargar a cada individuo por la diferencia entre el coste total de provisión del bien y la suma de las valoraciones que el resto de individuos hayan manifestado: $c_i(h^*)=c(h^*)-\sum_{j\neq i}\phi_i(h^*)$.
+\end{lnum}
+
+Con esto, el consumidor no tiene incentivo a ocultar sus preferencias, ya que si lo hace se arriesga a que el bien público no se provea y, además, cuanto mayor sea su preferencia por el bien menor será el pago que afronte.  
+} De esta forma, dicho mecanismo lleva a cada agente a revelar su verdadera información y a internalizar el beneficio del bien público.\footnote{Existen algunas críticas que se han vertido sobre esta forma de mecanismo:
+\begin{lnum}
+    \item \textbf{Impuestos no distorsionantes/Efectos Renta nulos}. Sólo funciona cuando los impuestos no afectan al resto de decisiones de los agentes económicos, lo cuál sólo se cumple con preferencias cuasilineales;
+    \item \textbf{Sobrefinanciación}. Este mecanismo no genera un resultado Pareto eficiente ya que el nivel de provisión del bien público será óptimo pero se dará un problema de sobre financiación (en caso de que la valoración colectiva sea superior al coste de provisión). El exceso de recaudación se deriva de que los agentes deben de pagar un impuesto que refleje el coste que imponen sus preferencias sobre el resto de la sociedad. Ya que esta recaudación adicional no puede destinarse a ningún otro miembro que participe en el proceso de decisión,tendrá que desaparecer del sistema. Esto redundará en un consumo final de los agentes inferior al PARETO-óptimo.
+    \item \textbf{Comportamiento colusorio}. Dentro del mecanismo pueden darse dinámicas de colusión entre grupos de agentes, lo que distorsionará el resultado del mecanismo.
+\end{lnum}
+}
+
+\subsubsection{Implicaciones de Política Económica}
+Como vemos, en el diseño de mecanismos el concepto de compatibilidad de incentivos juega un papel fundamental, ya que deberá ser diseñado de tal forma que, dadas las reglas establecidas, la estrategia dominante de cada jugador conlleve la revelación de información privada. Esto parece una cuestión sencilla cuando el conjunto de agentes es muy limitado y la interacción se puede conseguir sin grandes costes. 
+
+No obstante, ¿qué pasa cuando existe una gran número de agentes y se debe valorar la intervención público en dicho contexto? ¿Existe siempre un mecanismo que permita la revelación honesta de las preferencias de los agentes?
+
+\paragraph{Principio de revelación}
+Puede parecer que la identificación de todas las preferencias implementables puede parecer una tarea desalentadora porque. Afortunadamente, un resultado importante conocido como el \textbf{principio de revelación} nos dice que: (i) si podemos restringir la atención a mecanismos en los que se pide a cada agente que revele su tipo, $(\theta_1, \ldots, \theta_I)$; y, (ii) la revelación veraz constituye la estrategia óptima para el agente. Entonces, cualquier asignación puede ser alcanzado a través de un mecanismo directo que satisfaga dichas condiciones.
+
+\paragraph{Teorema de GIBBARD-SATTERTHWAITE: Teorema de Imposibilidad}
+No obstante, el descubrimiento de este principio tan deseable vino de la mano del hallazgo de otros resultados más desalentadores. En especial, el Teorema de GIBBARD-SATTERTHWAITE, que fue descubierto de manera independiente a principios de la década de 1970, y es un resultado de imposibilidad similar en espíritu al teorema de ARROW.
+
+Este Teorema prueba que, para una clase muy general de problemas, no hay esperanza de implementar mecanismos (los autores hablan de funciones de elección social, [\authorfont{Ver Tema 3.A.24}]) satisfactorias mediante la búsqueda de estrategias dominantes. En esencia, los autores demuestran que si: (i) dado un conjunto de elección $X$, finito y con al menos tres elementos; (ii) el conjunto de todas las posibles relaciones de preferencias sobre $X$ del agente $i$ ($\mathcal R_i$) es igual al conjunto de todas las las relaciones de preferencias racionales sobre $X$ que tienen la propiedad de que ningún par de alternativas es indiferente. Entonces, el mecanismo (función de elección social) es implementable verazmente en estrategias dominantes si y solo si es dictatorial.
+
+
+supondremos aquí que el agente que genera la externalidad es una empresa y el agente afectado es un consumidor. (Para un tratamiento más general de algunos de los temas tratados en esta sección, véase el Capítulo 23).
+
+Supongamos entonces que podemos escribir la función de utilidad derivada del consumidor respecto al nivel de externalidad h (véase la Sección 11.B para más detalles sobre esta construcción) como
+
+\phi(h,\eta),
+
+donde \eta \in \mathbb{R} es un parámetro —llamado tipo del consumidor— que afecta al coste que la externalidad le genera.
+
+De manera similar, denotamos por
+
+\pi(h,\theta)
+
+el beneficio derivado de la empresa dado su tipo \theta \in \mathbb{R}.
+
+Los valores efectivos de \theta y \eta son observados privadamente: solo el consumidor conoce su tipo \eta, y solo la empresa conoce su tipo \theta. Sin embargo, las probabilidades ex ante (las distribuciones de probabilidad) de los distintos valores posibles de \theta y \eta son de conocimiento público. Para simplificar, suponemos que \theta y \eta son independientes.
+
+Como antes, suponemos que \pi(h,\theta) y \phi(h,\eta) son estrictamente cóncavas en h para cualquier valor dado de \theta y \eta.
+
+
+\subsection{Desalineamiento de incentivos: Public Choice Theory}
+\authorfont{ARISTÓTELES}, observando la sociedad griega en el siglo IV A.C., l legó a la conclusión de que la propensión natural del ser humano era el discurso y la actividad política. \authorfont{ADAM SMITH}, observando a la sociedad escocesa en el siglo XVIII, concluyó por el contrario que la propensión natural del ser humano era la participación en el intercambio económico. A partir de las contribuciones de estos dos gigantes intelectuales, dos campos surgieron en las ciencias sociales que han estado tradicionalmente separados por el tipo de preguntas que se plantean, los supuestos que hacen sobre las motivaciones individuales y las metodologías que emplean: 
+\begin{lnum}
+    \item \textbf{Ciencias Políticas vs. Económicas}. Por un lado la distinción entre las ciencias políticas, que han estudiado el comportamiento humano en el área pública y las ciencias económicas, que estudian el comportamiento humano en el mercado; y,
+    \item \textbf{Ciencias Sociales vs. Económicas}. Por otro lado, la distinción sobre los supuestos ya que, mientras las ciencias políticas asumen que los individuos persiguen el interés público, las ciencias económicas suponen que el ser humano persigue sus intereses privados. 
+\end{lnum}
+
+La Teoría del Public Choice tratará de aunar ambas perspectivas bajo una única óptica. 
+
+\paragraph{Teoría del Public Choice}
+Durante los años 30's surgió un sentimiento de desencanto generalizado hacia los procesos de mercado, que en consecuencia trajo un conjunto de modelos de socialismo de mercado que reflejaban cómo los gobierns podían suplantar al sistema de precios y asignar bienes de forma tan eficiente como los mercados.\footnote{A estos desarrollos se le une la aportación de \authorfont{ABRAM BERGSON} (1938), con el análisis seminal de la Función de Bienestar Social, que indicaba cómo las preferencias individuales de las agentes reflejadas en sus funciones de utilidad podían ser agregadas en una función que se comportaría como la función objetivo del gobierno, la cual le permitiría alcanzar el máximo bienestar social, maximizando dicha función, sujeta a la Gran Frontera de Posibilidad de Utilidad.} Como respuesta a estos desarrollos, \authorfont{ARROW} (1950) enunció su famoso Teorema de la Imposibilidad, el cual demuestra que es imposible encontrar una función de elección social que cumpla de forma simultánea cinco propiedades muy generales y deseables. Ello supuso un durísimo golpe para esta nueva literatura dentro de la Economía del Bienestar.\footnote{Otras de las obras más importantes que sientan las bases del campo del Public Choice son \textit{The Calculus of Consent} de \authorfont{JAMES BUCHANAN y GORDON TULLOCK} (1962) y \textit{The logic of Collective Action: Public Goods and the Theory of Groups} de \authorfont{MARCUS OLSON} ( 1965).}
+
+En definitiva, podemos sintetizar la metodología utilizada por el Public Choice para explicar los procesos de decisión no de mercado a través de tres elementos:
+
+\begin{lnum}
+    \item Realizamos los mismos supuestos sobre el comportamiento de los agentes que la teoría económica: agentes racionales, individualistas y utilitaristas.
+    \item Se modeliza el proceso de revelación de preferencias como uno análogo al del mercado: los votantes revelan sus preferencias y demandas a través de las votaciones, los ciudadanos entran y salen de grupos, etc.
+    \item Como resultado de las diferentes decisiones optimizadoras de los agentes, surge un equilibrio, y deberemos de analizar si éste es estable y eficiente. 
+\end{lnum}
+
+Algunas de las contribuciones más relevantes de este campo, que analizan los problemas más importantes a los que se enfrenta el Sector Público en su actuación son: 
+\begin{lnum}
+    \item \textit{Problemas de obtención de información y de revelación de incentivos}. Como ya hemos ido adelantando a lo largo del tema, existen situaciones en las que es manifiestamente complejo que los agentes se comporten de la forma en que desea el sector público;\footnote{Por ejemplo, a la hora de revelar sus preferencias sobre un determinado bien público. Principalmente, surgen problemas a la hora de:
+    \begin{lnum}
+        \item \textit{Obtener información.} Sobre los agentes en los que recaen los costes o beneficios de una determinada externalidad, sobre los verdaderos costes de provisión de un bienpúblico, sobre la predisposición a pagar por éste, etc; con frecuencia nos encontraremos con que la información es asimétrica, y pueden generarse problemas de principal-agente que nos llevan de lleno a la teoría de la agencia, y que implican la necesidad de establecer incentivos adecuados para obtener esa información oculta; o,
+        \item \textit{Incentivar}. Si el sector público y los agentes privados persiguen objetivos diferentes, se genera un conflicto entre la maximiz.ación de la función objetivo del sector público, que será el excedente como mejor expresión del bienestar social, y la maximización de la función objetivo del regulado (su función de utilidad o de beneficios privados).
+    \end{lnum}}
+    \item \textit{Aparición de efectos colaterales no deseados.} Pueden aparecer efectos colaterales no deseados que derivan en ineficiencias, en particular como consecuencia de lo anterior.\footnote{Así, por ejemplo, si no existe información simétrica sobre los verdaderos costes de provisión de un bien público, la decisión puede verse distorsionada. Igualmente cuando se desconoce el valor real de la externalidad negativa que genera la producción de un bien, si el impuesto pigouviano que se carga es excesivo puede terminar por provocar la retirada de la empresa de la actividad económica de que se trate y por tanto la no provisión del bien.}
+    \item \textit{Actividades de \textit{rent seeking}.} en la medida en que es posible que determinadas actividades concretas permitan obtener beneficios a los agentes regulados por la intervención del sector público, éstos destinarán una parte de los recursos a lograr ser regulados en la dirección que les permita maximizar sus rentas (beneficios o exenciones fiscales en el caso de externalidades positivas, por ejemplo).
+    \item \textit{Captura del regulador.} Dado que el sector público, cuando interviene, está en contacto frecuente con el regulado, puede llegar a desarrollar relaciones más próximas con éste y llegar a sentir simpatía por sus intereses, distorsionando así la actividad de intervención.\footnote{Este resultado es un reflejo del poder que pueden llegar a alcanzar los grupos de presión. }
+\item \textit{Problemas de información.} Cuando la intervención consiste en establecer medidas cuantitativas, pueden surgir dificultades para fijar la cantidad en concreto como consecuencia de la información asimétrica en cuanto al conocimiento de la función de costes marginales en el caso de la externalidad negativa, o de beneficios marginales en el caso de la positiva. Además, aun cuando se conociera su valor exacto, pueden surgir problemas a la hora de aplicar la medida particular a los agentes individuales, ya que se suele establecer la misma cuota para todos los agentes, cuando en realidad cada uno tiene un tamaño y unas características diferentes. Este mismo problema surge cuando se interviene con impuestos de suma fija en el caso de los bienes públicos.
+\end{lnum}
+
+Los problemas de la intervención del Sector Público hacen que sea necesario comparar la situación de fallo de mercado con el coste derivado de los fallos en la intervención del sector público, de forma que podamos determinar si la intervención nos acerca o nos aleja aún más del óptimo. En este sentido, nos movemos en el campo del second best, donde cabe recordar que, ante una determinada restricción. el cumplimiento de una más de las condiciones de equilibrio competitivo no necesariamente nos acerca más a la situación de óptimo paretiano.
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión}
+
+\subsection{Recapitulación}
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+
+
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+\MyBibItem{Autor}{Título}{Año}{DOI -- LINK}
+
+
+% --- Anexos ---
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+\clearpage
+\anexo{Otras extensiones al estudio de los bienes públicos}\label{anx:exbp}
+Bienes públicos globales: los bienes públicos globales se definen como aquellos bienes públicos que, además de cumplir las condiciones de no rivalidad y no excluibilidad, cumplen tres características adicionales:
+
+1. Carácter interpersonal: todos los grupos poblacionales lo consumen, independientemente de su estatus socioeconómico. 
+
+2. Carácter intergeneracional: sus beneficios se extienden más allá de las generaciones presentes, afectando a su vez a futuras generaciones todavía no nacidas.
+
+3. Carácter internacional: todos los países disfrutan de dicho bien público. El estudio de la provisión de los bienes públicos globales se ha de realizar de forma paralela a la globalización, la cual se ha caracterizado por dos factores: Mayor descentralización en la adopción de decisiones: la liberalización de las economías ha favorecido la integración de los mercados, incentivando la toma de decisiones por parte de los agentes de todo el mundo en ámbitos como el comercio, la inversión, el transporte, la migración o la comunicación. Incremento de la interdependencia: la mayor integración comercial, financiera, política y social ha provocado que eventos que antes tenían una escala local. como revoluciones sociales, guerras o tensiones en los mercados financieros, ahora tengan repercusiones alrededor de todo el mundo. En consecuencia, los bienes públicos globales como la paz, la st:guridad, el mantenimiento de las redes globales, la preservación de la salud mundial o la lucha contra el cambio climático adquieren hoy una importancia crucial. No obstante, muchas veces los esfuerzos internacionales para la provisión de los mismos han sido escasos o inexistentes. La provisión insuficiente de bienes públicos globales como la estabilidad macroeconómica, el mantenimiento del medio ambiente o el reparto equitativo de las ganancias del comercio internacional ha generado duras críticas contra la globalización. Por tanto, podemos señalar que la principal causa del descontento frente a la globalización la falta de provisión de bienes públicos globales. ¿Qué caracteriza la provisión de bienes públicos globales? Existen dos elementos fundamentales: (1) Al afectar a distintos países y generaciones de forma simultánea, las acciones que tome un país o una generación tendrán efectos sobre el resto. Es decir, existen efectos desbordamiento. (11) Por otra parte, un solo país es incapaz de proveer adecuadamente el bien. Por tanto, deben de ser provistos de manera multilateral. En definitiva, podemos señalar que, en la provisión eficiente de los bienes públicos globales, además del tradicional obstáculo del fallo de mercado, existe un fallo de país: la provisión eficiente de los bienes públicos la alcanzamos cuando una única entidad centraliza los costes y beneficios sociales. No obstante, a nivel mundial no existe ningún organismo rector con la misma capacidad coercitiva que tienen los Estados. Nos enfrentamos, por tanto, al Dilema de Westfal ia, entendida como aquella situación donde no existe un planificador central que conduzca a los países a la asignación Pareto-eficiente, por lo que todos acaban comportándose de manera estratégica, alcanzando un Equilibrio de Nash subóptimo en términos de Pareto. Bienes públicos locales: hasta ahora hemos analizado la actividad económica omitiendo cualquier consideración sobre la geografia del comercio: implícitamente, asumíamos que existía un único mercado al que accedían los consumidores sin costes de transporte. No obstante, en el mundo real, consumidores y mercados se encuentran dispersos. En consecuencia, si un bien público es ofrecido-en una única localización geográfica (por ejemplo, alumbrado eléctrico o servicio de extinción de fuegos), su disfrute estará limitado a aquellos individuos que vivan una vecindad próxima. 
+
+Por tanto, definimos los bienes públicos locales\footnote{Un concepto relacionado es el de los bienes de club, que se definen como aquellos bienes (parcial o totalmente) no rivales pero que sí son excluibles. Por ejemplo, la entrada a un cine, la pertenencia a un club de termis. etc.\\La presentación conjunta de ambos conceptos se justifica en la estrecha relación que existe entre ellos. La teoría de los bienes públicos locales analiza las decisiones de los gobiernos locales de gasto y recaudación. A través de sus decisiones, podrán limitar el número de individuos que disfrutan de los bienes públicos locales ofrecidos en su área. Ello se puede conseguir, por ejemplo, limitando la construcción de nuevas viviendas. Otro instrumento del que dispondrán para ejercitar su poder de exclusión es a través de los impuestos: todos los individuos que vivan en la localidad estarán forzados a pagar los impuestos locales y, quien no los pague, podrá ser excluido del consumo de los bienes públicos locales ofertados.} como aquellos de los que sólo pueden disfrutar los individuos que viven en un área geográfica determinada. Su carácter podrá ser no rival dentro de esta área o parcialmente rival (es decir, puede ser susceptible de congestión). El concepto de los bienes públicos locales puede ser utilizado para comprender la distribución de la población entre los diferentes municipios. De forma intuitiva, podemos pensar en las localidades como entes que compiten por atraer a cierta población a través de la oferta de paquetes de provisión de bienes públicos e impuestos a pagar. En consecuencia, los miembros de la población analizarán las diferentes ofertas y se asentarán en aquella localidad que les ofrezca el mayor nivel de utilidad. Ello generará flujos de población hasta que emerja un equilibrio en el que ningún agente puede incrementar su utilidad a través del cambio de localidad. La pregunta natural a realizarse es si el equilibrio que surge es eficiente o no. La Hipótesis de Tiebout establece que, bajo un conjunto de supuestos muy concretos y restrictivos, este equilibrio será eficiente. En primer lugar, Tiebout observó que los bienes públicos puros conducían a fallos de mercado debido a los problemas de revelación de preferencias ya mencionados, que conducían al free riding y hacían que la provisión privada fuera ineficiente. Bajo ciertas circunstancias, esto no ocurre con los bienes públicos locales: Supongamos que existe un número infinito de comunidades alternativas en las que un agente puede decidir vivir. Estas comunidades son heterogéneas en el sentido de que difieren en su provisión de bienes públicos locales. En contraste con la situación con bienes públicos puros, a través dé la elección del lugar de vivienda, el consumidor no tendrá ningún incentivo a ocultar sus preferencias reales: la localización elegida será aquella que ofrezca la combinación de impuestos y bienes públicos locales que maximiza su utilidad. A su vez, la competencia entrecomunidades por atraer a los individuos conducirá a un¡i provisión eficiente de los bienes públicos
+en términos productivos.
+
+En definitiva, si existe un número suficientemente alto de comunidades, todos los agentes se asentarán en aquella comunidad óptima para ellos y cada una de estas comunidades estará óptimamente dimensionada. En consecuencia, la asignación será Pareto eficiente, y las ineficiencias discutidas en el análisis de los bienes públicos puros no emergerán. Esta conclusión se puede expresar de la siguiente manera: los agentes revelan sus preferencias votando con los pies. lo que garantida la construcción de comunidades óptimas.
+
+\clearpage
+\anexo{Cuestiones previas: Fallos de mercado}\label{anx:fallosmercado}
+
+Los teoremas del bienestar fueron desarrollados por el economista de origen ruso \authorfont{ABBA LERNER}, pionero del keynesianismo, aunque serían posteriormente \authorfont{ARROW y DEBREU} quienes desarrollen formalmente los mismos.  En esta exposición analizaremos aquellas circunstancias en donde el mercado fracasa a la hora de asignar recursos de manera eficiente. 
+
+Esto es lo que se conoce como un fallo de  mercado, y existen diferentes tipos: monopolio, información asimétrica, externalidades y bienes públicos. 
+
+No obstante, su enumeración y la descripción de cada uno no nos permite comprender qué es exactamente un fallo de mercado. Un análisis más profundo de los mismos nos indica que existen un conjunto de causas subyacentes, relacionadas con los derechos de propiedad, la información y los costes de transacción. 
+
+\textbf{Definición.-} Un mercado puede ser entendido como una institución en la que los individuos y empresas intercambian no sólo bienes y servicios, sino derechos de propiedad de los mismos, que delimitan los usos que podemos dar a los activos subyacentes intercambiados.\footnote{En este sentido, los mercados son instituciones que organizan el intercambio del control de los activos en una economía.}
+
+Los mercados, bajo los supuestos de competencia perfecta, son instituciones eficientes,\footnote{Esto es, no es posible reasignar los recursos de tal forma que al menos un individuo mejore y el resto permanezcan indiferentes.}  pero la presencia de fallos de mercado conduce a que este hecho se incumpla: se producirán asignaciones ineficientes, de tal forma que seguirán existiendo posibilidades de intercambio mutuamente ventajosas para las partes involucradas. 
+
+Por tanto, la pregunta sobre por qué cierto mecanismo es ineficiente puede ser reorientada hacia la identificación de las barreras que están impidiendo esos intercambios mutuamente beneficiosos. En este sentido, la ineficiencia sólo puede persistir si se da al menos uno de estos tres elementos:
+
+\begin{lnum}
+    \item \textit{Insuficiente control. Excluibilidad imperfecta o no transferibilidad}. El control por parte de un individuo de cierto activo está definido por un sistema de derechos de propiedad. Éste sistema puede ser incompleto debido a la excluibilidad imperfecta o no transferibilidad:
+    \begin{la}
+        \item \textit{Excluibilidad imperfecta}. Surge cuando el control efectivo de un bien no es un derecho conferido a un único individuo, sino a un conjunto de individuos, o cuando los derechos de propiedad no están correctamente delimitados.\footnote{En este contexto pueden surgir dos problemas: (i) cierto individuo desea adquirir el control del activo, pero para ello debe de acordar dicha transacción con todos los propietarios, lo que puede acarrear unos costes de transacción inasumibles en ciertos casos (por ejemplo, la compra de un terreno donde vive una comunidad de vecinos); o, (ii) la excluibilidad imperfecta puede materializarse en una incapacidad de ejercer los derechos asociados a la propiedad de cierto activo (por ejemplo, un agricultor podría desear cultivar cierto terreno de su propiedad, pero si el Estado no defiende de manera adecuada su propiedad privada, no podrá evitar la apropiación no autorizada de sus cultivos.)} 
+        \item  \textit{No transferabilidad}. Surge cuando el propietario de cierto activo no dispone del derecho legal irrestricto a transferir el uso o propiedad del mismo.\footnote{Un ejemplo podría ser la imposibilidad por parte de un inquilino del derecho a subarrendar una habitación de la vivienda alquilada.}
+    \end{la}
+\item \textit{Costes de información o transacción}. Los intercambios requieren información (la identidad y localización de los potenciales vendedores y compradores, los términos de la transacción, la calidad de los activos intercambiados, etc.).\footnote{[\authorfont{Ver Tema 3.A.15}] La adquisición de esta información puede ser un proceso costoso, materializándose en costes de búsqueda, de negociación. de transacción etc. Dichos costes pueden ser tan significativos que potenciales transacciones mutuamente ventajosas no se lleven a cabo, dejando ganancias sin materializar.}
+\item \textit{Problemas de negociación}. Los análisis de \authorfont{EDGEWORTH} demuestran que, partiendo de una asignación inicial ineficiente, existen infinitas transacciones Pareto-eficientes, ubicadas en el núcleo de la caja. Dada la multiplicidad de posibles equilibrios, los agentes pueden ser incapaces de ponerse de acuerdo en los términos del intercambio, resultando en una transacción ineficiente.\footnote{Por ejemplo, en el caso del monopolio, la maximización del beneficio conduce a un vector de cantidades y precio que genera una pérdida irrecuperable de eficiencia. En esta situación, una unidad adicional de producción seguiría generando un excedente mayor a su coste de producción.}
+\end{lnum}
+
+\textsc{Descripción de los distintos tipos de fallos de mercado}\\
+ Analizando aquellas situaciones en las que el mercado no lleva a estados económicos óptimos desde el punto de vista de la eficiencia asignativa, encontramos cuatro categorías de fallo de mercado:
+ \begin{lnum}
+     \item \textit{Rendimientos decrecientes}. Las estructuras de costes decrecientes permiten la configuración de un monopolio natural. La asignación más eficiente pasa por la existencia de un único productor, ya que de esta forma se consiguen los mínimos costes. Sin embargo, generan una ineficiencia ya que: 
+     \begin{la}
+         \item Por un lado, hay una parte del excedente que, si bien se mantiene, cambia de manos, incrementando la desigualdad en la distribución del resultado, ya que el productor se apropia de parte del excedente del consumidor, y, 
+         \item Por otro lado, hay una parte del excedente que se pierde definitivamente, como reflejo de intercambios que serían económicamente rentables pero que no van a llevarse a cabo. Esta pérdida se denomina Triángulo de Harberger\footnote{En honor al economista \authorfont{ARNOLD HARBERGER} de la universidad de Chicago que utilizó estos triángulos no sólo para medir la pérdida de excedente que genera el monopolio natural sino también para medir otros tipos de ineficacia, como la provocada por los impuestos distorsionadores.}, o \textit{dead-weight loss}.
+     \end{la}
+Esta situación justificaría la intervención por parte del sector público, con el objetivo de minimizar esta pérdida. Se asume, por una parte, que la existencia de un único productor es la forma más eficiente de organizar un mercado dada la estructura de costes y/o condiciones de demanda. Sin embargo, a fin de intentar evitar que el monopolista abuse de su condición de único productor precio-determinante, el sector público puede intervenir, vía regulación de este monopolio [\authorfont{[Ver Tema 3.A.20]}]:
+\begin{la}
+    \item Estableciendo para el monopolista la obligación de fijar un precio igual al coste marginal (esto es, recuperar la situación del equilibrio competitivo). \footnote{De forma que:
+    \begin{la}
+        \item Si dicho punto queda por debajo de los costes medios (y por lo tanto implica pérdidas a largo plazo), se establezca una subvención para la empresa a fin de cubrir esas pérdidas y evitar que la empresa abandone el mercado, y,
+        \item A la inversa, si para la cantidad que iguala el precio al coste marginal los costes medios son inferiores y por tanto existe beneficio extraordinario, se fijará un impuesto que la empresa habrá de pagar, a fin de que a largo plazo su beneficio extraordinario sea nulo. 
+    \end{la} } Pero este método nos devuelve al inconveniente del que hemos hablado ya, y es que los impuestos y las subvenciones introducen distorsiones en la asignación de recursos, y por tanto un punto de \textit{equilibrio general competitivo más compensación vía impuesto o subvención} ya no puede considerarse un first best [\authorfont{[Ver Tema 3.A.22]}]. \\
+    Es necesario, por tantobuscar otras alternativas, otros equilibrios de segundo e incluso de tercer orden para el problema:
+    \item Fijar un precio igual al coste medio, de forma que a largo plazo se garantice que el beneficio extraordinario es nulo.\footnote{Aparecerían aquí, sin embargo, problemas de revelación de costes e incentivos a inflarlos artificialmente para obtener un beneficio extraordinario en el largo plazo.}
+    \item Fijar diferentes tarifas según demanda o sistemas de demanda pico- valle.\footnote{Los precios fluctuarán en función de una demanda que presenta una elevada ciclicidad, de modo que en los periodos de demanda más baja se fija un precio que simplemente cubra los costes variables, mientras que en los de demanda más potente el precio podrá cubrir ese coste variable más la totalidad de los costes fijos.}
+    \item Otros sistemas. Como: tarifas en dos partes, precios de \authorfont{RAMSEY-BOITEUX} en el caso de monopolios multiproducto, sistemas de precios tipo IPC-X, etc. 
+\end{la}
+En definitiva, todo un conjunto de medidas que tratan de minimizar la ineficiencia derivada de la existencia de un monopolio natural.
+\item \textit{Información imperfecta.} La información imperfecta puede ser: 
+\begin{la}
+    \item \textit{Incompleta}. Situaciones en las que se pueden presentar diferentes estados de la naturaleza, dando lugar a que las cantidades a consumir o a producir por los agentes sean variables contingentes, distinguiéndose tradicionalmente entre situaciones de riesgo (cuando se conoce la probabilidad de ocurrencia de los distintos estados de la naturaleza) o incertidumbre (cuando no se pueden asignar de forma objetiva dichas probabilidades).\footnote{En ambos casos, bajo la suposición de que los agentes son adversos al riesgo (ya que la evidencia empírica apunta a que lo son en la mayoría de los casos), la solución pasaría por diversas fórmulas que intentan internalizar los efectos de esa pérdida de información; ya sea a través de la contratación de seguros que cubran total o parcialmente de dicho riesgo (el grado de cobertura dependerá, principalmente, de que la prima por dicho seguro sea o no justa), o a través de otros sistemas como las puestas en común de riesgo (\textit{risk pooling}), la dispersión del riesgo (\textit{risk spreading}), los derivados en el caso de determinados productos financieros, etc.} 
+\item \textit{Asimétrica}. Los agentes que participan en la toma de decisiones tienen distinto nivel de información, lo que da lugar a pérdidas de eficiencia. Las situaciones de información asimétrica se adentran de lleno en la teoría de la agencia y en el análisis de las relaciones Principal-Agente.\footnote{Pueden clasificarse en dos grandes grupos: 
+\begin{la}
+    \item \textit{Riego moral}. La asimetría informativa deriva de la existencia de una acción oculta. El resultado es un resultado de second best, ya que hay una pérdida de eficiencia con respecto a la situación de competencia perfecta: el principal deberá pagar al agente un precio/coste mayor que el que pagaría en competencia perfecta (el coste de la no observablilidad), y el agente, al que suponemos adverso al riesgo, no percibe una mayor utilidad de ese mayor pago, ya que éste únicamente se ofrece como una compensación por asumir un riesgo siendo averso a éste. La solución pasa por el establecimiento de incentivos que inciten a revelar esa acción oculta. 
+    \item \textit{Selección adversa}. La asimetría informativa procede de información oculta. El resultado es de second best y se produce una pérdida de eficiencia con respecto a la situación de competencia perfecta; ya que el agente que tiene la característica deseada por el principal obtendrá una menor utilidad o satisfacción, y también supone un mayor coste para el principal. La solución pasaría por establecer un equilibrio separador, fijando unas condiciones de equilibrio para cada tipo de agente, utilizando para ello instrumentos como filtros o señales (a fin de que se cumpla el principio de revelación de \authorfont{MYERSON}). Aunque ello mantiene un resultado de second best, al existir una pérdida de eficiencia con relación al resultado competitivo.
+\end{la}}
+\end{la}
+\item \textit{Bienes públicos}. Un bien público es aquel que presenta dos características:
+\begin{lnum}
+    \item \textit{No rivalidad}. El bien puede ser consumido por más de un individuo a la vez, y,
+    \item \textit{No exclusión}. No existen medios, materiales o jurídicos, que permitan (sin incurrir en un coste prohibitivo) excluir al resto de agentes del disfrute de dicho bien.
+\end{lnum}
+\item \textit{Externalidades}. Decimos que existe un efecto externo o externalidad cuando existe una variable sobre la que decide un agente concreto, pero que a su vez supone un argumento en la función objetivo de otro agente.\footnote{Es decir, las decisiones de consumo o producción de un agente inciden en la utilidad o nivel de beneficios de otros agentes distintos, sin que esa incidencia se vea reflejada en el sistema de precios. Las externalidades pueden ser positivas (si aumentan la utilidad/beneficio del segundo agente) o negativas (si lo reducen).}
+ \end{lnum}
+
+
+\clearpage
+\anexo{Externalidad Negativa: Mal Público (Información completa)}\label{anx:malpublico_solucion}
+
+Supongamos que el nivel de externalidad experimentado por cada consumidor es $\sum_j h_j$, es decir, la cantidad total de externalidad generada por las empresas.
+
+En un equilibrio competitivo sin restricciones, la generación de externalidad de cada empresa $j$, $h_j^*$, satisface nuevamente la condición $\pi_j(h_j^*)\leq0$. En contraste, cualquier asignación Pareto-óptima implica niveles de generación de externalidad $(h_1^º,\ldots,h_J^º)$ que resuelven:
+
+$$\begin{aligned}
+    \max_{(h_1,\ldots,h_J)\ge0}\; \sum_{i=1}^{I} \phi_i\left(\sum_{j=1}^{J} h_j\right)+\sum_{j=1}^{J}\pi_j(h_j).
+\end{aligned}$$
+
+Este problema tiene como condiciones necesarias y suficientes de primer orden, para el nivel óptimo de externalidad de cada empresa $j$, $h_j^º$, $\sum_{i=1}^{I} \phi_i'\!\left(\sum_{j=1}^{J} h_j^0\right) \le -\pi_j'(h_j^0)$ con igualdad si $h_j^º>0$.
+
+Esta condición es exactamente análoga a la condición de optimalidad para un bien público, donde $-\pi_j'(\cdot)$ es el coste marginal de producción de la externalidad para la empresa $j$. Por analogía con la discusión sobre la provisión privada de bienes públicos, la introducción de un mercado estándar para la externalidad no conducirá aquí, como sí ocurría en el caso bilateral, a un resultado óptimo. Por tanto, el problema del free rider reaparece y el nivel de equilibrio de la externalidad (negativa) excederá su nivel óptimo.
+
+Para una externalidad multilateral no agotable, una solución basada en el mercado requeriría mercados personalizados para la externalidad, como en el concepto de equilibrio de LINDAHL. Sin embargo, todos los problemas del equilibrio de LINDAHL también afectarían a estos mercados. Como resultado, las soluciones puramente basadas en el mercado, personalizadas o no, son poco probables de funcionar en el caso de una externalidad agotable. Por el contrario, con información suficiente (un supuesto fuerte), el gobierno puede alcanzar la optimalidad mediante cuotas o impuestos. Con cuotas, el gobierno fija simplemente un límite superior al nivel de generación de externalidad de cada empresa $j$, igual a su nivel óptimo $h_j^º$.
+
+Por otro lado, los impuestos correctivos hacen que cada empresa enfrente el coste social marginal de su externalidad. En este caso, el impuesto óptimo es idéntico para todas las empresas y es igual a $t_h=-\sum_i \phi_i'\!\left(\sum_j h_j^º\right)$ por unidad de externalidad generada.
+
+Dado este impuesto, cada empresa $j$ resuelve $\max_{h_j\ge0}\; \pi_j(h_j)-t_h\,h_j$, cuyo primer orden necesario y suficiente es $\pi_j'(h_j)\le t_h$, con igualdad si $h_j>0$. Dado que $t_h=-\sum_i \phi_i'(\sum_j h_j^º)$, la elección óptima de la empresa $j$ es $h_j=h_j^º$.
+
+
+\clearpage
+\anexo{Modelo de Déficit Público: Problemas de Inconsistencia Dinámica}\label{anx:inconsistencia_dinamica}
+Por otro lado, el Sector Público puede tener incentivos a ejecutar Políticas Económicas inconsistentes desde una perspectiva temporal.\footnote{De acuerdo con \authorfont{BLANCHARD} y \authorfont{FISCHER} (1993) una política es inconsistente en términos dinámicos cuando una decisión futura que forma parte de un plan formulado en una fecha inicial deja de ser óptima desde el punto de vista de una fecha posterior, incluso cuando no ha aparecido nueva información relevante en este intervalo de tiempo. Es decir, la inconsistencia dinámica se refiere a cambios en la optimalidad de actuación ex ante y ex post.
+}
+
+El segundo caso que vamos a analizar es el del sesgo deficitario de la política fiscal.\footnote{Para una exposición más detallada del modelo descrito, consultar el apartado 13.4 del manual \textit{Advanccd Macroeconomics},\authorfont{DAVID ROMER}}\textsuperscript{,}\footnote{Varios países han presentado déficits persistentes durante desde los años 80's hasta la actualidad, que han redundado en un progresivo incremento de los niveles de deuda.} En este sentido, la Economía Política ha buscado identificar cuáles son las posibles fuerzas que han producido dichos déficits, aplicando el instrumental económico a la política.
+
+Por tanto, los políticos no serán vistos como planificadores sociales benevolentes, sino como individuos que buscan maximizar sus propias funciones objetivo, dadas las restricciones a las que se enfrentan y la información de la que disponen.\footnote{Este mismo razonamiento se aplicará a todos los agentes que participen en la actividad política, como los votantes y los grupos de presión.} Por lo que nos permite explicar equilibrios económicos potencialmente ineficientes como el resultado de la interacción entre las decisiones de los agentes políticos, donde cada uno actúa de acuerdo con sus propios incentivos. 
+
+En este sentido, el sesgo deficitario puede ser explicado como el resultado de una acumulación ineficiente de deuda por parte del líder democráticamente elegido con el fin de limitar el gasto de su sucesor político. El modelo que vamos a explicar de forma superficial es el de \authorfont{TABELLINI} y \authorfont{ALESLNA} (1990). Este modelo parte de los siguientes supuestos:
+\begin{lnum}
+    \item El Gobiero: (i) es elegido democráticamente en cada periodo; (ii) decide sobre el gasto (sobre $X$ e $Y$); (iii) dispone de una dotación en cada periodo ($W_t$); (iv) tiene acceso a mercados de deuda en el primer periodo ($D$ + condición de transversalidad);
+    \item Agentes polares (heterogenos) en sus preferecias sobre $X$ e $Y$;
+\end{lnum}
+
+La función de utilidad de los agentes puede ser representada por: 
+
+$$\begin{aligned}
+    &U_i=\sum_{t=1}^2\alpha_iu(X_t)+(1-\alpha_i)u(Y_t),\quad \text{donde,}
+    \left\{\begin{aligned} 
+        0\leq \alpha_i \leq 1\\[0.7em]
+        U'_i(\cdot)>0 \\[0.5em]
+        U''_i(\cdot)<0
+    \end{aligned}\right.\\[1em]
+    &\text{s.a.}
+    \underset{\text{\scriptsize podemos suponer que $W_1=W_2$}}{\left\{\begin{aligned}
+        &t_1&&\equiv X_1+Y_1=W_1+D\\[0.5em]
+        &t_2&&\equiv X_2+Y_2=W_2-D
+    \end{aligned}\right.}
+\end{aligned}$$
+
+Con preferencias polares el sesgo deficitario será insorteable. Veamos por qué.
+
+Supongamos que el gobierno representa los intereses de los agentes que valoran $X$, ($\alpha_i=1$), pero al final del período se enfrenta a unas elecciones. Este gobierno actuará maximizando la utilidad de sus votantes ($X$) y sólo destinará su gasto al bien $X$, maximizando su función objetivo: $U_X=u_{t_1}(W+D)+ p \cdot u_{t_2}(W-D)+ (1-p)u_{t_2}(0)$; donde $p$ es la probabilidad de ser reelegido y $u(0)$ se debe a que, si el otro partido político gana, los votantes que valoran el bien $X$ obtendrían una utilidad de $0$ en el período futuro (dado que dicho gobierno sólo financiará el bien $Y$). 
+
+La maximización de la función objetivo del partido en el poder con respecto de $D$ conduce a la siguiente CPO:
+
+$$\begin{aligned}
+    &\text{CPO:}\quad \frac{u_{t_1}'(W+D)}{u_{t_2}'(W-D)}=p\\[2em]
+    &\text{Por tanto,}\left\{\begin{aligned}
+        &\text{Si $p\to1$}\Longrightarrow D\to0&&: &&u'_{t_1}(W)=u'_{t_2}(W) \\[0.7em]
+        &\text{Si $p\to0$}\Longrightarrow D\to\infty&&: &&\underset{\text{\scriptsize recordar que $u'(\cdot) <0:\;\;\;\downarrow(W-D)\;\Longrightarrow\;\;\;u'(\cdot)\uparrow$}}{u'_{t_1}(W+D)\ll u'_{t_2}(W-D)}
+    \end{aligned}\right.
+\end{aligned}$$
+
+Por tato, si el gobierno fuera reelegido con seguridad éste elegiría la senda de deuda eficiente, igualándose así la $UMg$ entre períodos. No obstante, a medida que la probabilidad de ser reelegido se reduce, el nivel de endeudamiento aumentará (mayor consumo en el priemr periodo vía mayor endeudamiento), ya que es probable que en el próximo período todo el presupuesto sea destinado a $Y$, lo que derivaría $u_{t_2}(0)=0$. En conclusión, las dinámicas electorales, unidas a la polarización de las preferencias de los votantes, incrementan los incentivos al endeudamiento ineficiente.\footnote{Para evitar estos comportamientos subóptimos en términos dinámicos, se pueden establecer reglas fiscales de gasto en forma de una constitución fiscal, que se define como un conjunto de normas e instituciones que regulan la actividad financiera del Sector Público. Estas normas deberán de ser (i) lo suficientemente flexibles: cuando se necesiten excepciones, no deberán de impedir la actuación del Sector Público, (ii) claras, sencillas y transparentes y (iii) realistas en su aplicación y adecuadas en los objetivos que pretenden alcanzar.
+}
+
+
+\end{document}
