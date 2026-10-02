@@ -1,0 +1,963 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Economía de los países en desarrollo\\
+\large Teorías recientes del desarrollo económico. Evidencia empírica, con especial referencia a la aproximación experimental, e implicaciones para el diseño de políticas}
+\author{Marcelo Ortega}
+\date{Marzo 2026}
+\newcommand{\TemaCode}{3B28}
+
+\oldtitle{
+    B.29. Economía de los países en desarrollo. Teorías del desarrollo económico
+}
+\changerationale{
+    Se introduce una referencia explícita a “teorías recientes”, para tratar de evitar un enfoque por el cual se sucedan cronológicamente teorías desfasadas: estas teorías deberían de conocerse por parte del opositor, pero no se aconseja su desarrollo y formalización en profundidad. Por otro lado, en particular se introduce una mención a aproximaciones empíricas, de gran importancia hoy día, como acredita el Nobel de 2019 a Duflo, Banerjee y Kremer por su enfoque experimental.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     Hay dos formas de enfocar este Tema:
+     \begin{la}
+         \item \textbf{Teorías económicas \textit{del} desarrollo}. Desde la perspectiva \textit{del} desarrollo, explicando una sucesión de teorías explicativas de cómo, por qué y cuándo se desarrollaron los países. Dicho de otra forma, adoptar una perspectiva estática de la situación e intentar explicar de manera rigurosa y ordenada los diferentes enfoques teóricas, observaciones, indicadores y cambios que permiten explicar el desarrollo actual de determinados países frente al de otros; o,
+         \item \textbf{Teorías económicas \textit{para} el desarrollo}. Desde la perspectiva \textit{para} el desarrollo, que entiendo es la finalidad del Tema, aplicando un enfoque analítico sobre el ingente volumen de conocimiento acumulado y proyectarlo hacia un futuro \textit{mejor}. Esta vertiente exige adoptar una visión dinámica del desarrollo, asumiendo que la situación actual no tiene porque permanecer inalterada (ni para unos, ni para otros) y definiendo los conceptos y pilares fundamentales para progresar a futuro, conjuntamente, hacia un mayor nivel de desarrollo.
+     \end{la}
+    }
+\vspace{1cm}
+
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+Hace 4.000 años, cuando la dinastía Tinita, la isla de Islandia ni si quiera estaba habitada. 
+
+En el s.XVII, España era sin duda el país más desarrollado para los estándares de la época. Hoy en día, pertenece sin duda al grupo de países más desarrollados del planeta. No obstante, hace tres mil años las sociedades y conjunto de pueblos heterogeneos que habitaban en la región que hoy es el Reino de España, no podían si quiera empezar a compararse con sus análogos de las ciudades estado del valle del Éufrates. Ciudades que, hoy en día, se encontrarían entre algunos de los países menos desarrollados del plantea. 
+
+El desarrollo económico no es una situación material perenne: se es o no. Nada más lejos de la verdad. El desarrollo es una situación contingente: se puede ser o no. Si hay algún campo de estudio que refleje mejor el objeto y valor de la disciplina económica es, sin duda, el desarrollo económica: la observación, análisis y estudio de las condiciones y decisiones, tanto individuales como de su comunidad política, que moldean e instauran las condiciones materiales, institucionales y humanas en las que estos habitan. A esto nos enfrentamos cuando hablamos de \textbf{desarrollo económico}. Una tarea nada fácil...
+
+
+
+
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+
+
+
+
+
+\clearpage
+\section{Benchmark: ¿qué es el \textit{desarrollo}?}
+¿Qué preferiríamos, pertenecer al 10\% más pobre de un país de ingresos altos o del 10\% más rico de un país de bajos ingresos? Considerando ambos países como las colas opuestas de la distribución de países en términos de renta per cápita. 
+
+El estudio del «desarrollo» —es decir, del cambio en las sociedades humanas a lo largo del tiempo— no consiste simplemente en un catálogo interminable de personalidades, acontecimientos, conflictos y políticas. Necesariamente se centra en el proceso mediante el cual las instituciones políticas surgen, evolucionan y, finalmente, se deterioran. Si queremos comprender los rápidos cambios políticos y económicos del mundo contemporáneo, es importante situarlos en el contexto de la larga historia de la estructura institucional subyacente de las sociedades.
+
+Lo que me describes es una pregunta fundamentalmente de teoría política normativa: ¿por qué salud, educación, igualdad y oportunidad se convierten en objetivos políticos legítimos, y no simplemente en preferencias individuales o correlatos del crecimiento?
+
+
+\subsection{Proyección material: Crecimiento y transformación económica}
+
+\subsubsection{Crecimiento: ¿por qué las condiciones materiales son importante?}
+El crecimiento económico es esencial para el desarrollo humano, pero para aprovechar plenamente las oportunidades de mejora del bienestar que ofrece, debe gestionarse adecuadamente. Algunos países en desarrollo han tenido mucho éxito en la gestión de su crecimiento para mejorar la condición humana, mientras que otros han tenido menos éxito. No existe un vínculo automático entre el crecimiento económico y el progreso humano. Una de las cuestiones de política más relevantes se refiere al proceso exacto mediante el cual el crecimiento se traduce —o no se traduce— en desarrollo humano bajo diferentes condiciones de desarrollo.
+
+El análisis de estos casos nacionales conduce a varias conclusiones importantes. En primer lugar, el crecimiento acompañado de una distribución equitativa de la renta parece ser el medio más eficaz para lograr un desarrollo humano sostenido. En segundo lugar, los países pueden conseguir mejoras significativas en el desarrollo humano durante largos períodos —incluso en ausencia de un crecimiento económico sólido o de una buena distribución de la renta— mediante gastos sociales gubernamentales bien estructurados (como en Botswana, Malasia y Sri Lanka). En tercer lugar, unos gastos sociales públicos bien diseñados también pueden generar mejoras bastante notables en un período relativamente corto.
+
+En cuarto lugar, para mantener el desarrollo humano durante las recesiones y los desastres naturales, pueden ser necesarias intervenciones específicas y focalizadas (como ocurrió en Botswana, Chile, Zimbabue y la República de Corea entre 1979 y 1980). En quinto lugar, el crecimiento es crucial para sostener el progreso en el desarrollo humano a largo plazo; de lo contrario, dicho progreso puede verse interrumpido. En sexto lugar, a pesar de períodos de rápido crecimiento del PNB, el desarrollo humano puede no mejorar de manera significativa si la distribución de la renta es desigual y si el gasto social es reducido (como en Nigeria y Pakistán) o si dicho gasto es apropiado principalmente por los grupos más favorecidos (como en Brasil).
+
+
+
+
+\paragraph{Trampa de la pobreza}
+
+
+
+
+
+\subsubsection{Sostenibilidad: ¿por qué es necesario un crecimiento sostenible?}
+
+
+
+
+\paragraph{Trampas naturales}
+
+
+
+
+
+
+
+
+\subsection{Proyección humana: Desarrollo humano}
+La cuestión de cómo se genera la desigualdad y cómo se reproduce a lo largo del tiempo ha sido una preocupación central de las ciencias sociales durante más de un siglo. Sin embargo, la relación entre la desigualdad y el proceso de desarrollo económico dista mucho de estar plenamente comprendida.
+
+En primer lugar, respecto al efecto de la desigualdad sobre el crecimiento en las economías de mercado, el enfoque convencional de los manuales sostiene que la desigualdad es beneficiosa para los incentivos y, por tanto, favorable para el crecimiento, aunque las consideraciones relativas a los incentivos y al crecimiento puedan, en ocasiones, entrar en conflicto con objetivos de equidad o de aseguramiento. Por otro lado, los economistas del desarrollo han planteado desde hace tiempo argumentos en sentido contrario, aunque no siempre de manera formalizada. Por ejemplo, el libro Economic Development de TODARO presenta cuatro argumentos generales que explican por qué \textbf{una mayor igualdad en los países en desarrollo puede ser, de hecho, una condición para un crecimiento económico autosostenido}: (a) el desahorro y/o la inversión improductiva de los ricos; (b) los menores niveles de capital humano de los pobres; (c) el hecho de que los patrones de demanda de los pobres estén más orientados hacia bienes producidos localmente; y (d) el rechazo político por parte de las masas.
+
+Más recientemente, la idea de que la desigualdad favorece el crecimiento ha sido cuestionada por diversos estudios empíricos, generalmente basados en regresiones internacionales del crecimiento del PIB sobre medidas de desigualdad de ingresos. Todos ellos encuentran una correlación negativa entre la tasa media de crecimiento y distintos indicadores de desigualdad.
+
+Un caso de estudio particularmente interesante es el de Corea del Sur y Filipinas durante los últimos treinta años, analizado por Roland Benabou (1996). A comienzos de la década de 1960, ambos países presentaban características muy similares en términos de los principales indicadores macroeconómicos (PIB per cápita, inversión per cápita y tasas medias de ahorro), aunque diferían en el grado de desigualdad de ingresos. En Filipinas, la relación entre la participación en la renta del 20 % más rico y la del 40 % más pobre era casi el doble que en Corea del Sur. Durante los treinta años siguientes, el rápido crecimiento de Corea del Sur multiplicó por cinco su nivel de producción, mientras que el de Filipinas apenas se duplicó. Es decir, en contra de lo que predecía el argumento convencional, el país más desigual creció más lentamente.
+
+La primera parte de este trabajo se ocupa de aportar nuevas perspectivas teóricas sobre los efectos de la desigualdad en el crecimiento. A diferencia de los argumentos presentados por Todaro, intentará reconciliar los resultados empíricos anteriores con las teorías microeconómicas existentes sobre incentivos, centrándose en las imperfecciones de los mercados de crédito y en los problemas de riesgo moral. Mostraremos que, en determinadas circunstancias, una mayor desigualdad puede reducir la tasa de crecimiento de una economía.
+
+La implicación inmediata de nuestro análisis es que la redistribución puede favorecer el crecimiento. Sin embargo, es poco probable que el propio proceso de crecimiento deje inalterada la desigualdad. Surge entonces la cuestión de si esta retroalimentación genera un círculo virtuoso, en el que una política redistributiva pueda utilizarse para reducir la desigualdad, lo que a su vez aceleraría el crecimiento y provocaría automáticamente nuevas reducciones de la desigualdad. O, por el contrario, si el crecimiento inicia un círculo vicioso porque incrementa espontáneamente la desigualdad, haciendo necesarias políticas redistributivas permanentes.
+
+La literatura inicial sobre la evolución de la desigualdad de ingresos durante el proceso de desarrollo estuvo dominada por la denominada hipótesis de Kuznets. Utilizando tanto datos internacionales como series temporales, Simon Kuznets (1963) encontró una relación en forma de U invertida entre la desigualdad de ingresos y la renta per cápita. Este resultado se interpretó como una descripción de la evolución de la distribución de la renta durante la transición desde una economía rural hacia una economía industrial: la desigualdad aumentaría en las primeras etapas del desarrollo (debido a la urbanización y la industrialización) y disminuiría posteriormente (a medida que la industria absorbiera una proporción creciente de la mano de obra rural).
+
+En efecto, en Estados Unidos la participación de la riqueza total poseída por el 10\% más rico de los hogares aumentó desde aproximadamente el 50\% en torno a 1770 hasta cerca del 75\% hacia 1870, para luego descender nuevamente hasta alrededor del 50\% en 1970.
+
+Hasta la década de 1970, la hipótesis de Kuznets parecía explicar la experiencia no solo de Estados Unidos, sino también de la mayoría de los países de la OCDE, donde parecía existir un círculo virtuoso: una menor desigualdad favorecía el crecimiento, que a su vez reducía aún más la desigualdad.
+
+Sin embargo, la tendencia descendente de la desigualdad observada en estas economías durante el siglo XX se ha invertido bruscamente en tiempos recientes. En particular, los últimos quince años han sido testigos de un aumento significativo de la desigualdad salarial. Por ejemplo, durante la década de 1980, la relación entre el percentil 90 y el percentil 10 de la distribución salarial masculina aumentó un 27\% en el Reino Unido y un 18\% en Estados Unidos.
+
+A la luz de esta evidencia reciente, se necesitan nuevas teorías para comprender el impacto del crecimiento sobre la desigualdad. El crecimiento económico de los últimos veinte años ha estado estrechamente asociado con tres fenómenos: la liberalización comercial, el cambio tecnológico y la aparición de nuevas formas organizativas. La segunda parte de esta revisión analizará cómo estos tres factores pueden afectar a la desigualdad y, en particular, cómo pueden explicar la ausencia de un círculo virtuoso entre desigualdad y crecimiento.
+
+Las dos partes de este estudio se ocupan de conceptos diferentes de desigualdad. La primera se concentra en la desigualdad de riqueza, mientras que la segunda se centra en la desigualdad salarial. Esta elección no es arbitraria. En primer lugar, al analizar los efectos de la desigualdad sobre el crecimiento, nos interesa principalmente la manera en que la distribución puede afectar a la producción agregada y al crecimiento mediante su influencia sobre las inversiones individuales en capital humano o físico. Lo relevante, por tanto, es la distribución de la riqueza, independientemente de que esta provenga de la acumulación de ingresos laborales o de rentas del capital.
+
+En segundo lugar, al estudiar los efectos del crecimiento sobre la desigualdad, puede ser útil distinguir entre los cambios en los ingresos laborales y otras fuentes de renta. Concentrarse en los primeros, en lugar de en la renta de los hogares, permite abstraerse de los cambios en las políticas redistributivas, en los tipos de interés o en los patrones de formación de los hogares.
+
+La década de 1990 fue testigo de un resurgimiento del interés por los determinantes del crecimiento económico. El desarrollo de la teoría del crecimiento endógeno y la disponibilidad de datos comparables sobre ingresos nacionales y tasas de crecimiento para una amplia muestra de países han permitido el análisis empírico de las causas de las diferencias nacionales en las tasas de crecimiento. Dentro de esta extensa literatura, varios estudios han examinado el impacto de la desigualdad sobre el crecimiento económico. El panorama que presentan es notablemente inequívoco, ya que todos sugieren que una mayor desigualdad reduce la tasa de crecimiento. Este resultado resulta sorprendente tanto en relación con las teorías tradicionales del área como con los mecanismos a través de los cuales la desigualdad podría afectar el proceso de crecimiento.
+
+La evidencia sobre desigualdad y crecimiento sigue lo que ya se ha convertido en el enfoque estándar de las comparaciones internacionales sobre los determinantes del crecimiento. La tasa media anual de crecimiento del PIB per cápita durante el período 1960-1985 se regresa sobre un conjunto de variables explicativas observadas al inicio del período (es decir, alrededor de 1960), con el fin de evaluar su contribución relativa al crecimiento. Los diversos estudios que analizan el impacto de la desigualdad son consistentes tanto en los datos utilizados como en la metodología empleada.
+
+La teoría subyacente sostiene que la desigualdad de riqueza determina la inversión en capital físico o humano, la cual a su vez afecta la tasa de crecimiento de largo plazo. Desafortunadamente, la ausencia de datos sobre la distribución de la riqueza para un número suficiente de países obliga a los investigadores a utilizar variables sustitutivas en los estudios empíricos. El enfoque más común consiste en emplear datos sobre desigualdad de ingresos como aproximación a la desigualdad de riqueza. Generalmente se argumenta que esto no constituye un problema importante, ya que ambas medidas de distribución suelen variar conjuntamente en los análisis transversales. Alternativamente, la verdadera distribución de la riqueza se aproxima en ocasiones mediante la distribución de la tierra.
+
+Posteriormente se estiman ecuaciones en forma reducida en las que la tasa media de crecimiento del PIB se regresa sobre una medida de desigualdad correspondiente aproximadamente a 1960. Todos los estudios obtienen resultados consistentes.
+
+Alberto Alesina y Dani Rodrik (1994) regresan la tasa media de crecimiento durante 1960-1985 sobre el coeficiente de Gini de los ingresos y de la tierra alrededor de 1960. Los coeficientes estimados implican que ambas variables tienen un impacto negativo sobre el crecimiento, incluso controlando por el ingreso per cápita inicial y por la tasa de matriculación en educación primaria en 1960. Así, una mayor desigualdad en la distribución de los ingresos y de la tierra parece ralentizar el crecimiento económico. Simétricamente, una mayor igualdad parece favorecerlo.
+
+Torsten Persson y Guido Tabellini (1994) regresan la tasa media de crecimiento del PIB durante el mismo período sobre la participación en el ingreso correspondiente al tercer quintil de la distribución de ingresos para una muestra de países desarrollados y en desarrollo. Esta variable representa la participación de la clase media en el ingreso y, por tanto, se considera una medida de igualdad en la distribución subyacente. Su impacto sobre el crecimiento es positivo, significativo y robusto a la introducción de otras variables explicativas.
+
+Persson y Tabellini también encuentran un efecto positivo de su medida de igualdad sobre el crecimiento utilizando series temporales para nueve economías desarrolladas durante el período 1830-1985. Resultados similares son obtenidos por Roberto Perotti (1996) para una muestra más amplia de países.
+
+La Tabla 1, columna 1, presenta una ecuación en forma reducida en la que la tasa media de crecimiento se regresa sobre los regresores más habituales de la literatura sobre crecimiento (PIB per cápita, años medios de educación secundaria de la población masculina y femenina, y el valor del deflactor de inversión como aproximación a las distorsiones de mercado) y sobre una medida del tamaño de la clase media, denominada MID, definida como la participación en el ingreso correspondiente al tercer y cuarto quintiles de la distribución de ingresos.
+
+Además de la evidencia de que una distribución más igualitaria de la renta es beneficiosa para el crecimiento, la literatura empírica también aporta información sobre los mecanismos a través de los cuales la desigualdad afecta al crecimiento económico. Roberto Perotti (1992) destaca el papel de las restricciones de crédito. Utilizando la relación préstamo-valor (loan-to-value ratio) de las hipotecas domésticas como indicador de la disponibilidad de crédito, encuentra que una mayor disponibilidad de crédito tiene un efecto positivo y significativo sobre la tasa de crecimiento. Además, a medida que disminuye la participación en la renta de los dos quintiles inferiores —es decir, a medida que aumenta la desigualdad— el impacto de la disponibilidad de crédito sobre el crecimiento se incrementa. De forma similar, el efecto negativo de la desigualdad sobre la inversión en capital físico se ve reforzado por las fricciones crediticias.
+
+Otros estudios empíricos han señalado la volatilidad macroeconómica como el mecanismo de transmisión entre desigualdad y crecimiento. Se encuentra que la desigualdad de ingresos está positivamente correlacionada con la volatilidad, medida por la desviación estándar de la tasa anual de crecimiento del PIB. Las regresiones internacionales también muestran que una mayor volatilidad del crecimiento reduce sistemáticamente la tasa media de crecimiento durante el período considerado. Esto se debe, en parte, a su efecto disuasorio sobre la inversión en capital físico y humano.
+
+Surge entonces una cuestión evidente: ¿puede reducirse el impacto negativo de la desigualdad sobre el crecimiento mediante la redistribución? William Easterly y Sergio Rebelo (1993) examinan el impacto de la política fiscal sobre el crecimiento para una amplia muestra de países desarrollados y en desarrollo. Utilizando medidas de redistribución como los tipos impositivos marginales y medios y diversos tipos de gasto social, encuentran que la redistribución tiene, en todo caso, un efecto positivo sobre la tasa de crecimiento. Estos resultados son llamativos porque contradicen la visión tradicional, analizada más adelante, según la cual la redistribución es perjudicial para el crecimiento.
+
+Trabajos más recientes de Perotti (1996) muestran resultados similares. Estima una regresión de crecimiento mediante mínimos cuadrados en dos etapas, en la que las variables de política fiscal están determinadas endógenamente por la desigualdad. La redistribución, medida por el tipo impositivo marginal, parece tener un impacto positivo y significativo sobre el crecimiento económico, como puede observarse en la columna 2 de la Tabla 1. La evidencia descriptiva procedente de países en desarrollo también sugiere que la redistribución, en forma de reformas agrarias o educativas, ha desempeñado un papel importante en la promoción del crecimiento económico.
+
+Las regresiones internacionales de crecimiento han sido objeto de críticas debido a la especificación ad hoc de muchos modelos y a la fragilidad de numerosos resultados. Sin embargo, la evidencia empírica reciente proporciona, como mínimo, razones suficientes para cuestionar la validez de las teorías tradicionales sobre la influencia de la desigualdad y la redistribución en el crecimiento. Estas teorías sostenían que la desigualdad debería, en todo caso, estimular la acumulación de capital y el crecimiento.
+
+La idea de que la desigualdad de riqueza favorece el crecimiento se basa en tres argumentos principales.
+
+El primero es la hipótesis de Nicholas Kaldor, según la cual la propensión marginal al ahorro de los ricos es mayor que la de los pobres. Si la tasa de crecimiento del PIB está directamente relacionada con la proporción de la renta nacional que se ahorra, las economías más desiguales deberían crecer más rápido que aquellas caracterizadas por una distribución más equitativa de la renta. Joseph Stiglitz (1969) formalizó este argumento dentro de un modelo de crecimiento de Solow, mostrando que, con una función de ahorro lineal, el comportamiento agregado es independiente de la distribución. François Bourguignon (1981) fue un paso más allá y demostró que, con una función de ahorro convexa, la producción agregada sí depende de la distribución inicial y es mayor en el estado estacionario asociado a una distribución más desigual. Combinado con una función de producción AK, esto conduce a la predicción de que las economías más desiguales crecerán más rápidamente.
+
+Una segunda razón por la cual la desigualdad podría favorecer el crecimiento está relacionada con las indivisibilidades de la inversión. Los proyectos de inversión, especialmente la creación de nuevas industrias o la implementación de innovaciones, suelen implicar elevados costes hundidos. En ausencia de un mercado amplio y eficiente de acciones, la riqueza debe estar suficientemente concentrada para que un individuo o una familia pueda asumir dichos costes y poner en marcha una nueva actividad industrial.
+
+Por último, la idea de que existe necesariamente una disyuntiva entre eficiencia productiva e igualdad se basa en consideraciones de incentivos, formalizadas por primera vez por James Mirrlees (1971). En un contexto de riesgo moral, donde la producción depende del esfuerzo no observable realizado por los agentes o empleados, remunerarlos con un salario constante e independiente del resultado observable desincentiva claramente el esfuerzo. Sin embargo, hacer que la remuneración dependa excesivamente del rendimiento también puede resultar ineficiente desde el punto de vista del aseguramiento, especialmente cuando los resultados son muy inciertos y los trabajadores son aversos al riesgo.
+
+Este argumento básico sobre incentivos puede extenderse a toda la economía cuando los agentes son idénticos o cuando los mercados de capitales son perfectos, como muestra Rebelo (1991). En un modelo de crecimiento de Ramsey-Cass-Koopmans con mercados de capitales perfectos, la tasa de crecimiento del consumo individual viene dada por:
+
+$$g=\frac{r-p}{\sigma}$$
+
+donde p es la tasa de descuento intertemporal, r la tasa de interés después de impuestos y \sigma la elasticidad intertemporal de sustitución. Si todos los agentes tienen los mismos parámetros de preferencias, esta expresión también representa la tasa agregada de crecimiento. Al reducir la tasa de interés neta de impuestos, una mayor imposición disminuye la rentabilidad del ahorro y, por tanto, reduce los incentivos para acumular capital, disminuyendo así la tasa de crecimiento.
+
+La visión tradicional de la teoría económica sostiene, por tanto, que existe una disyuntiva fundamental entre eficiencia productiva (o crecimiento) y justicia social. La redistribución tiene un efecto directo y otro indirecto sobre el crecimiento. Por un lado, reduce las diferencias de renta y riqueza y, en consecuencia, disminuiría la tasa de crecimiento. Por otro, cuando la redistribución se financia mediante impuestos sobre la renta, reduce los incentivos a acumular riqueza al disminuir la rentabilidad después de impuestos del ahorro y de la inversión.
+
+En conjunto, la idea de que la desigualdad es necesaria para la acumulación de capital y que la redistribución perjudica el crecimiento está en contradicción con la evidencia empírica resumida anteriormente. Una posible explicación, propuesta por Alberto Alesina y Dani Rodrik (1994), así como por Torsten Persson y Guido Tabellini (1994), combina argumentos de economía política con el tradicional efecto negativo de los incentivos asociado a la redistribución.
+
+Estos autores sostienen que la desigualdad afecta a la tributación a través del proceso político cuando los individuos pueden votar para elegir el tipo impositivo (o, de forma equivalente, elegir un gobierno cuyo programa incluya una determinada política redistributiva). Si la desigualdad determina el grado de redistribución, entonces tendrá un efecto indirecto sobre la tasa de crecimiento de la economía.
+
+En general, cabría esperar que en sociedades muy desiguales un mayor número de votantes prefiera elevados niveles de redistribución que en sociedades más igualitarias. Si la redistribución reduce los incentivos para invertir y, por tanto, la tasa de crecimiento, entonces las sociedades más igualitarias deberían crecer más rápidamente.
+
+Aunque este enfoque de economía política logra explicar la correlación negativa entre desigualdad y crecimiento encontrada en las ecuaciones en forma reducida, los datos no lo respaldan completamente. La teoría implica que una mayor desigualdad aumenta el grado de redistribución, la cual tendría a su vez un efecto negativo directo sobre el crecimiento económico. Sin embargo, como se señaló anteriormente, la redistribución parece ejercer una influencia positiva, y no negativa, sobre el crecimiento.
+
+Además, cuando medidas de redistribución como los tipos impositivos o la magnitud del gasto social se regresan sobre medidas de desigualdad, los coeficientes obtenidos son o bien estadísticamente insignificantes o presentan un signo opuesto al predicho por la teoría, como puede observarse en la columna 3 de la Tabla 1.
+
+Por tanto, la evidencia relativa al impacto de la desigualdad y de la redistribución sobre el crecimiento económico todavía requiere una explicación satisfactoria por parte de la teoría económica.
+
+En el resto de esta sección se analizan los efectos de la desigualdad sobre el crecimiento en economías donde las dotaciones de riqueza o de capital humano son heterogéneas entre individuos y donde los mercados de capitales son imperfectos.
+
+Se argumenta que existen al menos tres razones por las cuales la desigualdad puede tener un efecto negativo directo sobre el crecimiento:
+
+a) La desigualdad reduce las oportunidades de inversión.
+
+b) La desigualdad empeora los incentivos de los prestatarios.
+
+c) La desigualdad genera volatilidad macroeconómica.
+
+En consecuencia, la redistribución hacia los individuos menos favorecidos, al reducir la desigualdad, puede favorecer el crecimiento en un entorno económico de estas características.
+
+
+
+
+
+\subsubsection{¿por qué la igualdad entre personas es importante?}
+
+
+
+
+\subsection{Proyección institucional: Desarrollo político}
+
+El \textit{desarrollo político} tiene diferentes dimensiones, de entre las que destacamos dos: el desarrollo del Estado (coerción y violencia) y el desarrollo del Estado de Derecho (lo que en inglés conocemos como \textit{rule of law}). Estas dos dimensiones se complementan, evidentemente, la una a la otra. Sin embargo, es necesario que las podamos distinguir adecuadamente puesto que su desarrollo no sucede, necesariamente, de forma paralela. 
+
+\subsubsection{Estado: ¿por qué el monopolio de la fuerza es importante?}
+
+
+
+
+
+\paragraph{Trampa de la violencia}
+
+
+
+
+
+
+\subsubsection{Estado de Derecho: ¿por qué es la capacidad del Estado?}
+La capacidad estatal, definida de forma amplia, es la capacidad del Estado para alcanzar sus objetivos, por ejemplo, proporcionar servicios públicos, hacer cumplir las leyes y regular la actividad económica. 
+
+Un gobierno determinado no posee tanto una única capacidad como un conjunto de \textbf{capacidades}: distintas habilidades, recursos, disposiciones y estrategias al servicio de diferentes fines. Mejorar la capacidad estatal requiere abordar la especificidad y reflexionar sobre desafíos y contextos concretos, incluidos los instrumentos de que dispone el Estado para inducir determinados comportamientos y alinear los intereses de cada grupo concreto con sus propios objetivos. Estas capacidades varían no solo entre países, sino también dentro de un mismo Estado e incluso dentro de un mismo sector. Esto refleja una variación paralela en las restricciones, los objetivos y las personas que actúan en nombre del Estado: cómo son gestionadas, cuál es su orientación, su formación y sus acciones, a menudo difíciles de observar.
+
+En conjunto, el desarrollo de la capacidad estatal es una cuestión tanto de habilidad como de voluntad. No se trata únicamente de un desafío técnico, porque la cuestión de la capacidad está profundamente entrelazada con las estructuras de incentivos subyacentes al sistema. Por ello, pueden lograrse avances cuando las soluciones técnicas están alineadas con los incentivos y capacidades de las partes interesadas. Por ejemplo, un estudio de caso sobre la contaminación atmosférica en Gujarat, India, descubrió que fueron necesarias verificaciones independientes para demostrar que el sistema existente de auditores ambientales era corrupto. Esto sirvió de base para una política revisada que abordaba los problemas de agencia subyacentes entre los supervisores y los propietarios de las fábricas, y que posteriormente fue adoptada a gran escala por la Junta de Control de la Contaminación. En este caso, el desarrollo de capacidades fue impulsado por reformadores internos, apoyado por presión externa (activismo judicial y de la sociedad civil) y reforzado mediante la colaboración con investigadores independientes.
+
+Sin embargo, sí sugieren que el pensamiento emergente ha producido unos pocos principios generales aplicables en todos los países. Según estos principios:
+
+1. Los Estados requieren múltiples capacidades.
+2. Estas capacidades dependen de numerosos factores, como el tipo de desafíos a los que se enfrentan los Estados y el espacio político y administrativo en el que deben desenvolverse.
+3. Deben construirse mediante procesos iterativos y contextualizados de descubrimiento.
+4. Deben enfatizar la agencia local, de modo que las personas del propio entorno —incluidos políticos, tecnócratas, burócratas de primera línea y ciudadanos— impulsen el proceso de descubrimiento, se beneficien de sus resultados y asuman la propiedad y el desarrollo de las capacidades que surjan.
+
+Los autores destacan cuatro aspectos sobre cómo se desarrollan las capacidades estatales.
+
+En primer lugar, las capacidades estatales no se desarrollan mediante un único acontecimiento fundacional, sino a través de un proceso continuo de mejora de las prácticas cotidianas.
+
+En segundo lugar, el proceso de construcción de capacidades es iterativo; por ello, no solo requiere tiempo, sino que está «vivo», en el sentido de que implica aprendizaje y adaptación. Este mensaje puede parecer simplemente una reformulación de la idea de que el aprendizaje mediante la práctica es importante. Sin embargo, sostendré que, en la formulación de políticas públicas (y más específicamente en la construcción de capacidades), aprender y actuar suelen entrar en conflicto.
+
+En tercer lugar, al desarrollar capacidades estatales debemos prestar atención a la agencia y al poder. Los agentes del Estado y los ciudadanos tienen sus propios objetivos y la capacidad de influir en los resultados. Este planteamiento coincide con la tradición de la economía política que pone el foco en los incentivos y características de los servidores públicos. Argumentaré que esta perspectiva pone de relieve dos compensaciones adicionales especialmente relevantes para el proceso de construcción de capacidades.
+
+En cuarto lugar, los autores recomiendan comenzar con un diagnóstico. Pero ¿cómo diagnosticar? Confío en que las compensaciones que destaco proporcionen una lista útil de aspectos a los que conviene prestar atención.
+
+Desde nuestra perspectiva, esta capacidad de implementación no es simplemente algo a lo que recurrir después de haber elegido la política técnicamente apropiada; la elección de qué hacer debe comenzar con una comprensión de las capacidades y limitaciones del Estado. La política está inextricablemente ligada a lo que el Estado puede hacer y, de hecho, hará. No siempre ocurre que los líderes políticos deseen que el Estado desarrolle mayores capacidades.
+
+
+
+
+\paragraph{Trampa de las capacidades}
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Proceso: ¿cómo (no) alcanzar el \textit{desarrollo}?}
+
+
+
+
+
+\subsection{Instrumentos internos: }
+
+
+
+
+
+
+
+
+
+\subsection{Instrumentos externos: }
+
+
+
+\textcolor{red}{\textbf{OJO} --} Nadie se desarrolla \textit{solo}. La división internacional del trabajo puede existir y conducir a dos resultados: (i) mejoras en eficiencia mediante progreso tecnológico; (ii) pérdidas de eficiencia mediante abaratamiento de los costes. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Preservación: ¿cómo mantener el \textit{desarrollo}?}
+
+
+
+
+
+\subsection{Instrumentos internos: }
+
+
+
+
+
+
+
+
+
+\subsection{Instrumentos externos: }
+
+
+
+\textcolor{red}{\textbf{OJO} --} Nadie se desarrolla \textit{solo}. La división internacional del trabajo puede existir y conducir a dos resultados: (i) mejoras en eficiencia mediante progreso tecnológico; (ii) pérdidas de eficiencia mediante abaratamiento de los costes. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+\end{document}
