@@ -1,0 +1,1292 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Tema 3.A.41 -- La inflación\\
+\large Causas y efectos sobre la eficiencia económica y el bienestar. Hiperinflación y deflación}
+\author{Marcelo Ortega}
+\date{Enero 2026}
+\newcommand{\TemaCode}{3A41}
+
+\oldtitle{Tema 3.A.39. La inflación: causas y efectos sobre la eficiencia económica y el bienestar}
+\changerationale{Se provee de más detalle acerca de lo que se espera que el opositor desarrolle en su exposición.}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     La estructura propuesta para el tema está alineada con el título y por tanto distingue entre causas y efectos. Sin embargo, se ha de destacar que la literatura económica ha priorizado generalmente el estudio de lo primero, por lo que inevitablemente ese primer bloque requiere de cierta sobreponderación en la distribución de tiempos.
+    }
+\vspace{1cm}
+
+\modificaciones{
+    Última Modificación: 28/01/2026
+
+    En persepectiva a la siguiente vuelta, hay que realizar la siguiente modificación en relación a la estructura. Partes y contenido:
+    \begin{lnum}
+        \item Marco Teórico: (i) Enfoque Monetario: Monetaristas y NMC; (ii) Enfoque de Demanda: Teoría Fiscal de Precios; y, (iii) Enfoque de Oferta: NEK-2 (la existencia de \textit{mark-ups} en la determinación del precio es un factor esencial de la inflación por la preservación del margen) y (a escoger: Teoría Nóridca (Inflación estructural, Apuntes de Víctor) o Inflación Dsirtibutiva (\textit{conflicting-claims approach}, poniéndolo en contexto con la NEK-2 y con las conclusiones del paper en relación al aplanamiento de la Curva de PHILLIPS)
+        \item  Casos polares: Hiperinflación y Deflación (no tocar) invertir el orden, razón: mantener el Modelo de la NEK-2 en la pizarra para aprovecharlo en los efectos de la inflación sobre la eficiencia!!! Hay que buscar poder reconciliar estas dos visiones!
+        \item Efectos: (i) Perspectiva Macroeconómica: Sobre la eficiencia (hay que buscar relacionarlo con el modelo anterior de forma que no se reescriba dos veces!); (ii) Perspectiva Microeconómica: Sobre el Bienestar (desde el punto de vista del consumidor)
+    \end{lnum}
+
+    Hay que incidir especialmente en la \textbf{inflación como variable de observación}: (i) inflación subyacente (la que importa a la Autoridad Monetaria: ¿qué es? ¿por qué importa? Depende menos del comportamiento interno de la economía ya que las referencias de pricing son internacionales (fenómeno precio-único)); y, (ii) inflación headline (CPI) medida más heterogenea y variada
+
+    \textcolor{red}{\textbf{OJO!}} Se ha añadido un recuadro extraído del Tema 3.A.42 acerca de los efectos (costes) de la inflación sobre el bienestar y diferentes puntos de vista. Anticipamos: no existe consenso al respecto.
+
+    \textcolor{red}{\textbf{OJO!} -- Poner especial énfasis en lo siguiente}
+    [...] KRUGMAN et al. (Eco Internacional, Modelo Factores específicos) [¿Por qué estudiamos los cambios en bienestar sobre la inflación? Inflación = Aumentos del índice de precios agregados -> ¿Por qué entonces afecta al bienestar?] Cuando PM y PA se modifican en la misma proporción, no se producen cambios reales. El salario aumenta en la misma proporción que los precios, por lo que el salario real, la relación entre el salario y los precios de los bienes, queda inalterado. Con la misma can tidad de trabajo empleado en cada secta,; y si se percibe el mismo salario real, las rentas reales de los propietarios del capital y de la tierra también permanecen sin cambios. Por tanto, todo el mundo está exactamente en la misma situación que antes. Se ilustra así un principio general: los cambio s en el nivel general de precios no tienen efectos reales, es decir, no modifican ninguna cantidad física en la economía. Solo los cambios en los precios relativos (que, en este caso, se equiparan con el precio relativo de las manufacturas y los alimentos, P MI PA) afectan al bienestar o a la asignación de recursos.
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+La inflación, y su prima igualmente problemática, la deflación, es uno de los parámetros macroeconómicos más relevantes y, como tal, objeto de un intenso debate sobre sus orígenes, sus peligros y sus posibles remedios. 
+
+\subsection{Contextualización}
+En su definición más básica, la inflación simplemente significa subida de precios. Nada más. Todo lo demás que suele asociarse al término (por ejemplo, demasiado dinero circulando, muy pocos trabajadores disponibles en el mercado laboral y, por tanto, cínicamente, demasiada poca gente desempleada, el dinero fiduciario volviéndose devaluado, etc.) ya forma parte de una determinada interpretación de la inflación y debería separarse de la mera estadística.
+
+Así pues, la inflación denota un aumento general de los precios, es decir, en el conjunto de la economía. Del mismo modo, la deflación denota una caída de los precios. Todos esos precios asociados a bienes y servicios son precios monetarios (o, como dicen los economistas, precios nominales). Indican lo que hay que pagar en dinero para comprar esos bienes y servicios. Pero, claro, hay que pagar dinero para comprar cosas. ¿Qué tiene de especial esa trivialidad? Pues todo, al menos en términos de teoría económica.
+
+Antes de adentrarnos en el debate teórico sobre la inflación entre las distintas escuelas de pensamiento económico, resulta útil recurrir a una introducción del reconocido historiador económico TOOZE (2021) sobre la inflación para afinar la definición del término:
+
+\textit{Al discutir la inflación, la economía abstrae de los choques idiosincrásicos. La inflación se define como una presión general al alza sobre todos los precios, independiente de choques de oferta idiosincrásicos. La inflación, en este sentido, es un concepto macroeconómico y agregado. El verdadero denominador común de la actividad económica en las sociedades de mercado es el dinero. Los bienes se intercambian por dinero. Por tanto, como una presión que actúa sobre los precios de todos los bienes, la inflación se define con respecto al dinero. De hecho, como nos recordó Rebecca L. Sprang en un artículo de opinión típicamente brillante, cuando el término }inflación\textit{ empezó a utilizarse en un contexto económico en las décadas de 1860 y 1870 se refería ante todo a la expansión de la moneda, no a los cambios de precios que pudieran resultar de esa expansión monetaria. Era la moneda la que se inflaba, no los precios}.
+
+Como hemos dicho, se trata de una de las cuestiones centrales en el estudio de la macroeconomía es la inflación, en particular: ¿cuáles son las causas de la inflación? Y, ¿cuáles son sus efectos?
+
+Dentro de estas cuestiones hay un relativo consenso en dos respuestas:
+\begin{lnum}
+    \item \textbf{Causas}. En relación a las causas, la inflación suele tener siempre su origen en una determinada Política Económica, en general monetaria, como ya decía M. FRIEDMAN (\textit{inflation is always and everywhere a moneta,y phenomenon}). Fruto de este consenso, las economías avanzadas han adoptado Políticas Monetarias más prudentes y ello ha coincidido con una rebaja de las tasas de inflación, muy notable desde la década de los 70, periodo que se conoce como \textit{Gran Moderación};
+    \item \textbf{Efectos}. En relación a los efectos, una inflación elevada y volátil es negativa para la eficiencia y el bienestar y para la estabilidad macroeconómica, perjudicando el crecimiento económico a largo plazo (y ello sin entrar en consideraciones de una economía abierta, donde también habría que constatar el deterioro de la competitividad exterior y la posible fuga de capitales). Los costes de la inflación sobre la eficiencia llevan a ciertos autores a plantear la optimalidad de una inflación negativa (la regla de FRIEDMAN). Pero la consideración de nuevo de rigideces nominales y reales puede aconsejar un objetivo de inflación nula. Asimismo la preocupación por la deflación en un contexto de bajos tipos de interés puede llevar a fijar un objetivo de inflación positiva. 
+\end{lnum}
+
+\imagenfit{Escuelas_Inflacion.png}{Orígenes y causas de la Inflación: Diferencias por Escuelas de Pensamiento Económico}{\href{https://www.exploring-economics.org/en/discover/inflation/}{\textit{Inflation in economic theory}. Exploring Economics (2021)}}
+
+\subsubsection{Relevancia}
+
+
+\subsubsection{Problemática}
+What’s inflation? 
+Why is it relevant? 
+And is there an agreed theory about its roots and causes, or is it a contentious concept?
+What gives rise to it, what factors might influence it, and, consequently, what might be done about it?
+
+
+
+\subsection{Estructura de la exposición}
+En este tema trataremos de reflejar el vivo debate que aún persiste sobre las causas y los efectos de la inflación:
+\begin{lnum}
+    \item El primer apartado versará sobre las causas y la modelización de la inflación actual de la inflación; 
+    \ite Seguidamente, se explican los dos contextos polares: la deflación (muy relevante para las economías avanzadas en la década de 2010) y la hiperinflación; y,
+    \ite Finalmente nos adentraremos en los efectos de la inflación, desprendiendo implicaciones para la elección de una determinada inflación óptima, abordándose un enfoque centrado en la eficiencia y el bienestar pero también en la estabilización macroeconómica.
+\end{lnum}
+
+
+\clearpage
+\section{La inflación: Marco Teórico}
+Empezaremos hablando de las causas de la inflación aunque, como se ha dicho, si bien es una cuestión debatida, podemos afirmar que la inflación es un fenómeno monetario, pero que es originada también por otras fuentes (asociadas a cambios en la oferta, productividad o inputs, problemas informacionales y expectativas, o interacción entre políticas económicas).\footnote{La introducción de rigideces en los modelos teóricos permite estudiar esto, de manera alineada con la evidencia empírica sobre el ciclo. En el largo plazo, asumiendo que las rigideces desaparecen y que los shocks en precios relativos por tanto se compensan entre sí. la inflación sería efectivamente un fenómeno estrictamente monetario. El estudio de los efectos de la inflación en ramas de la Economía ligadas a horizontes de largo plazo (Crecimiento. Desarrollo económico) no se aborda en este tema.
+} Por tanto, seguiremos un proceso de demonetarización del fenómeno para ilustrar las divergencias entre escuelas.
+
+\begin{specialblock}{Incidir en: ¿Es o no es un fenómeno monetario?}
+    \href{https://theothereconomy.com/en/articles/inflation-and-money/}{\textit{Inflation and money} The Other Economy (2023)}
+
+    Tres tipos: Inflación de Oferta, Inflación de demanda e Inflación Monetaria
+\end{specialblock}
+
+
+\subsection{Inflación: Fenómeno Monetario}
+El enfoque que trata la inflación como fenómeno monetario podemos decir que, dentro del marco contemporaneo de nuestra ciencia, se remonta a la publicación de la curva de Phillips. Momento a partir del cual todos los modelos macroeconómicos relevantes han tratado de aportar una explicación convincente del fenómeno de la inflación y, particularmente, de la eventual relación con el nivel de actividad y de empleo. 
+
+En todos los modelos que presentaremos, se asumen los siguientes supuestos:
+\begin{lnum}
+    \item \textbf{Existe un equilibrio que garantiza el vaciado de los mercados (funcionamiento eficiente)}, bien sea a corto plazo y/o a largo plazo, este se alcanzará;
+    \item El dinero es neutral, bien sea a corto plazo o a largo plazo, se cumple la dicotomía clásico y, en consecuencia, la inflación también debe ser comprendida como un fenómeno nominal (pero se ve exarcebada por la existencia de rigideces nominales/reales).
+\end{lnum}
+
+\subsubsection{Inflación \textit{irracional}: Monetarismo}
+El primer paso lo dió la escuela monetarista. La gran aportación de estos autores es la modelización de la inflación caracterizada por un equilibrio en el largo plazo (correspondiente con la tasa natural de paro, y en línea con la teoría cuantitativa del dinero) y una infinidad de posibles equilibrios en el corto plazo, correspondiente a distintos niveles de la Curva de Phillips, en función del ajuste de las expectativas de los agentes. 
+
+\textbf{INCLUIR GRÁFICO DE TRANSICIÓN DE LA TEORÍA MONETARISTA: CP-HEA}
+
+Por tanto, en esta concepción se postula una relación inversa sistemática entre desempleo e inflación; es decir, si el desempleo es alto, la inflación es baja, y viceversa. Así, la cantidad de trabajo máxima empleada queda determinada por factores estructurales del mercado laboral, siendo los salarios reales el principal de ellos:
+\begin{la}
+    \item \textbf{Recursos ociosos}. Si el desempleo es alto y, por tanto, la cantidad de trabajo empleado es baja, la producción adicional puede acomodarse simplemente contratando nuevos trabajadores, de modo que no existe necesidad de que los precios aumenten: al incrementarse el empleo, la oferta adicional crea su propia demanda, manteniendo intacta la Ley de Say; y, 
+    \item \textbf{Límites reales $\to$ Inflación}. Pero al aproximarse al nivel de empleo máximo, es decir, cuando la tasa de desempleo alcanza su límite inferior, la economía choca contra su capacidad productiva máxima, de modo que cualquier demanda adicional no puede satisfacerse mediante una mayor producción real; en su lugar, los precios comienzan a subir para equilibrar la producción nominal y la demanda.
+\end{la}
+
+Esta es la teoría de la inflación de PHELPS-FRIEDMAN: mediante el simple aumento de la demanda, la demanda adicional resultante solo generará INFLACIÓN a largo plazo, porque el equilibrio subyacente en el mercado laboral, determinado por el salario real, permanece completamente inalterado.\footnote{En el peor de los mundos, con precios fijados exógenamente, por ejemplo, debido a rigideces estructurales en el mercado laboral como los salarios mínimos, una oferta restringida crea holgura en la economía mientras la demanda sigue siendo elevada o es impulsada adicionalmente por el gasto deficitario y/o una política monetaria expansiva, dando lugar a una estanflación al estilo de los años setenta, es decir, una combinación de débil crecimiento económico y alta inflación. 
+} Otras de sus aportaciones complementarias son:
+\begin{lnum}
+    \item \textbf{Eficiencia y re-asignación: No existe inflación de costes}. La inflación, a diferencia de lo que sostiene especialmente la teoría poskeynesiana, nunca se derivará del simple aumento del precio de uno u otro factor productivo, ya que ello solo conduce a una recalibración del sistema de precios relativos por parte del subastador walrasiano, pero no a un aumento del nivel general de precios. Es decir, llevado al extremo, una inflación de costes derivada de un shock en el precio del petróleo es impensable: dicho shock simplemente dará lugar a una menor demanda de bienes intensivos en energía, desplazando recursos hacia bienes no intensivos en energía, y el mercado volverá a vaciarse. Al mismo nivel general de precios; y,
+    \item \textbf{Remuneración $=$ Productividad}. En este modelo del mundo, el trabajo solo será remunerado por su producto marginal, es decir, su producto real marginal multiplicado por el precio de dicho producto. Dado que existe competencia atomística, ningún trabajador (ni sindicato) podrá exigir más durante un periodo prolongado de tiempo. Por lo tanto, los salarios tampoco pueden ser los impulsores de la inflación, ya que están determinados por variables reales del mercado de trabajo (aunque fue un ferviente crítico del establecimiento de Salarios Mínimos por Ley).
+\end{lnum}
+
+Por tanto, como el propio FRIEDMAN (1970) dijo:
+
+\textit{La inflación es siempre y en todas partes un fenómeno monetario, en el sentido de que es y solo puede ser generada por un aumento de la cantidad de dinero que sea más rápido que el de la producción}
+
+\subsubsection{\textit{Information inflation}: NMC}
+Una de las aportaciones fundamentales llega con la curva de oferta de Lucas y la aplicación de la hipótesis de expectativas racionales (HER), bajo la cual los agentes tornan toda la información disponible y no cometen errores sistemáticos. En el contexto de la Nueva Macroeconomía Clásica, la inflación siempre tendrá origen en el uso de la política estabilizadora. Bajo el supuesto de vaciado continuo en los mercados y flexibilidad total de precios y salarios: la inflación no tiene un papel relevante porque los agentes responden inmediatamente ante las variaciones en la cantidad de dinero:
+
+\textbf{INCLUIR ADAPTACIÓN DE LA CURVA DE PHILLIPS EN EL CONTEXTO DE LA NMC}
+
+De hecho, la única forma de incidir realmente en la economía será mediante lo que denominan \textit{sorpresas monetarias} (término adaptado del monetarismo y llevado un paso más lejos). No obstante, los autores de la NMC defienden que la utilización sistemática de la \textit{sorpresa monetaria} acabará dañando la economía pues los agentes anticiparán niveles más altos de forma persistente, lo que menoscabará el potencial real de la economía: \textit{me engañarás una vez, pero no más}. 
+
+\subsubsection{NAIRU: NEK-2}
+Sin embargo, la vertiente teórica más relevante en la actualidad que toma la inflación como un fenómeno monetaria es, sin duda, la Nueva Economía Keynesiana (NEK-2).
+
+Ésta asume las aportaciones metodológicas de Lucas y de los modelos de la TCR en lo que respecta a la HER, la fundamentación microeconómica y la utilización modelos de equilibrio general dinámico (estocástico). Pero descarta la perfecta flexibilidad e introduce el supuesto de rigideces nominales (precios) y reales (imperfecciones) que explican el no vaciado de mercado y tratan de adaptarse a ciertos fenómenos empíricos como la rigidez de precios y la persistencia en la inflación.
+
+Suponiendo que los mercados operan en competencia imperfecta (existen rigideces reales) y que los salarios se determinan mediante procesos de negociación colectiva (rigideces nominales), donde empresarios y sindicatos, ambos con poder de mercado, negocian salarios asumiendo un coste y, por tanto, estos no se ajustan de manera instantanea sino que presentan persistencia; podemos formular el Modelo baseline de la NAIRU. 
+
+\paragraph{Curva salarial: Sindicatos}
+Se puede plantear que el poder de negociación depende de la situación del mercado de trabajo. Además, empresa y sindicato negociarán el salario nominal a partir de unas expectativas de precios, por lo que cuanto mayor sea la inflación esperada mayor será el salario nominal que tratará de negociar el sindicato. Por lo tanto, la ecuación de salarios se puede establecer como:
+
+\eqblock{
+\begin{aligned}
+    \boxed{SRN=\frac{W_{\text{\scriptsize nominal}}}{P^e_c}=\;f(u,z)}\qquad \text{donde,}
+    \begin{cases}
+        \partial W/\partial u<0\\
+        \partial W/\partial z>0
+    \end{cases}
+\end{aligned}
+}{Curva salarial. Modelo NAIRU}
+
+Es decir, el salario real negociado (SRN) depende negativamente del desempleo, $u$, y de otros factores institucionales, $z$, que pueden tener un efecto positivo sobre el salario real negociado, como, por ejemplo, la protección por desempleo. El principal resultado de esta ecuación es que la remuneración del trabajador es superior a su desutilidad marginal de trabajar (existe un mark-up salarial).
+
+\paragraph{Fijación de precios: Empresas}
+Como las empresas operan en un contexto de competencia imperfecta en el mercado de bienes, la condición de maximización del beneficio implica que:
+
+\eqblock{
+\begin{aligned}
+    &P=(1+\mu)CMg\quad \underbrace{\Longrightarrow}_{\substack{\text{\scriptsize A corto plazo: $\bar K$}\\\text{\scriptsize Si suponemos RCE: $Y=AL$}}}\quad \overbrace{\boxed{SRD\to P=(1+\mu)\;\frac{W}{PMe_L}}}^{\text{Ecuación de precios}}\\[2em]
+    &\Longrightarrow\underbrace{\boxed{\frac{W_{\text{\scriptsize nominal}}}{P}=\omega=\frac{PMe_L}{1+\mu}}}_{\substack{\text{\scriptsize Salario real}}}\to\omega=PMe_L(1-m),\quad \text{donde,}\; m=\frac{\mu}{1+\mu}\\[1em]
+    &\text{Por tanto,}\quad \omega\left(\underbrace{\mu}_{\text{\scriptsize Margen $-$}}\;,\; \overbrace{PMe_L}^{\text{\scriptsize Productividad $+$}}\right)
+\end{aligned}
+}{Ecuación de precios y salarios. Rigideces reales: Modelo NAIRU}
+
+Es decir, el precio se fija como un margen sobre el coste marginal y, por tanto (asumiendo corto plazo y RCE), el salario real fijado por las empresas (Salario Real Dado, SRD) depende del margen y de la productividad del trabajo, pero no del nivel de desempleo o de la situación del mercado de trabajo. De esta forma, alcanzamos el equilibrio en el mercado de trabajo, representado sobre el plano cartesiano con eje vertical representando el salario real y horizontal el nivel de empleo, en la intersección de las curvas SRD y SRN: el Salario Real Dado es perfectamente elástico respecto al salario real pues solo depende de la $PMg_L$ y del mark-up fijado.
+
+\textbf{INCLUIR GRÁFICO DE EQUILIBRIO INCICIAL EN LA NAIRU}
+
+Esta intersección es lo que se conoce como Tasa NAIRU o nivel de desempleo no acelerador de la inflación. A partir de esta intersección podemos extraer dos conclusiones principales: (i) el mercado de trabajo no se vacía pues existen rigideces reales que impiden el perfecto ajuste (dibujar la curva de oferta de trabajo con perfecto ajuste: desplazada hacía la derecha y considerando que $\mu=0\to \frac{W_{\text{\scriptsize nominal}}}{P}=PMe_L$); y, (ii) un nivel de inflación constante es perfectamente compatible con la intersección (¿por qué?). 
+
+Supongamos ahora que se lleva a cabo una expansión del Gasto Público y las empresas requieren de mayor número de empleados. Como sabemos, la disminución del desmpleo jugará en favor del poder de negociación de los trabajadores por lo que empezarán a reivndicar un aumento salarial. Este aumento salarial conduce el equilibrio en el mercado de trabajo a un punto inmediatamente por encima de la Curva SRD sobre la Curva SRN (aumento, de facto, del poder adquisitivo) y de los salarios reales. Este aumento salarial conduce, de la misma manera, a un incremento de los precios (para preservar el margen) lo que se vería reflejado en la Curva de PHILLIPS: sobre la Curva de PHILLIPS inicial ($CP_0$) nos desplazaríamos hacia el origen, dando lugar a un desempleo menor (ya generado) y un aumento de la inflación y, en el mercado de trabajo, al antiguo equilibrio a la derecha de la NAIRU. (Así sucesivamente)
+
+\paragraph{Implicaciones de Política Económica}
+Por tanto, para detener esta espiral inflacionista, la Política Económica debe conducirse a:
+\begin{la}
+    \item \textbf{Restricción de la Demanda}. Una restricción o disminución de la demanda que conduzca a un aumento del desempleo de forma que se traslade a su nivel NAIRU (demasiado empleo); o,
+    \item \textbf{Expansión Oferta}. Políticas expansivas de Oferta que permitan reducir la NAIRU, desplzando la curva SRN a la derecha. Por ejemplo, reduciendo la protección/cobertura al desempleo, disminuyendo los impuestos distorsionantes sobre las decisiones de consumo-ocio (IRPF).
+\end{la}
+
+\subsubsection{Limitaciones: Enfoque Monetario}
+Como vemos, los resultados de estas tres escuelas, consideradas en conjunto como el enfoque monetarista de la inflación convergen en cuestiones como la neutralidad del dinero. El concepto teórico que subyace en este planteamiento es la Teoría Cuantitativa del Dinero: dada una cantidad fija de bienes determinada por la economía real, un aumento de la oferta monetaria no puede sino elevar los precios, bien sea en el corto plazo o en el largo plazo.\footnote{Resultado directo del concepto de neutralidad del dinero: una economía está determinada por el conjunto de precios reales relativos, que no se ven afectados por cambios en la oferta monetaria, la cual solo afecta a la demanda nominal agregada.
+} 
+
+\eqblock{
+\begin{aligned}
+    &MV=PY&&\underset{(\bar V\;\text{y}\;\bar Y)}{\Longrightarrow}\quad \frac{M}{P}=kY\\[0.5em]
+    &\text{NMC:}&& \uparrow M\quad\underset{E[\;\cdot\;|\;\Omega_t]}{\Longrightarrow}\quad \uparrow P\\[0.5em]
+    &\text{Monetarismo y NEK-2}: &&\uparrow M\quad \underset{(P_{\perp}\;\text{y}\;Y^*>Y)}{\Longrightarrow}\; \overset{\text{(Eq. inestable)}}{k^*(\uparrow Y)}\;\text{pero,}\;\uparrow P\;\Longrightarrow\;k(\downarrow Y)
+\end{aligned}
+}{Teoría Cuantitativa del Dinero. Inflación: Enfoque Monetario}
+
+No obstante, existen una serie de limitaciones comunes, más o menos acuciantes, que ponen en duda esta visión:
+\begin{lnum}
+    \item \textbf{Velocidad del dinero}. La velocidad del dinero debe ser, relativamente, constante, lo cual no ocurre en la realidad, como puede observarse en el gráfico siguiente. Es razonable pensar que $V$ se ralentizará en un contexto económico deprimido. Ya que los agentes económicos pueden adoptar un comportamiento prudente y aumentarán su ahorro en lugar de comprar bienes y servicios. También pueden decidir invertir su dinero con el fin de obtener un rendimiento.\footnote{En este marco, cualquier cantidad excesiva de dinero inyectada por el banco central dará lugar a inflación si y solo si ese dinero es utilizado por el sector privado o por el Estado para comprar bienes y servicios. Si, por el contrario, se atesora en saldos bancarios o el Estado se niega a implementar un gasto fiscal adicional, el dinero adicional inflará en su lugar los activos financieros (no directamente el dinero de alta potencia del banco central, ya que estas llamadas reservas están restringidas a las cuentas de los bancos en el banco central y nunca fluyen hacia la economía en general, sino el crédito adicional que dichas reservas permiten crear en el sector bancario). He aquí la inflación de precios de los activos, del tipo que venimos observando desde la Gran Crisis Financiera de 2008.
+    } También pueden verse impedidos de consumir, como ocurrió durante los confinamientos provocados por la crisis sanitaria (lo que, \textit{ceteris paribus}, debería disminuir los precios). 
+
+    \imagenfit{VelocidadDinero_M1_M2.png}{Velocidad de circulación del dinero. Aarriba: Agregado $M_1$; Abajo: Agregado $M_2$}{FED. St. Louis}
+
+    \item \textbf{Utilización del dinero y recursos ociosos}. Un aumento de la oferta monetaria derivado de un mayor crédito a las empresas para inversiones productivas (como maquinaria) puede conducir a un aumento de la producción (siempre que dicha producción pueda venderse efectivamente). Por tanto, el dinero nisto es neutral con respecto a la actividad económica, como sostendría esta linea.\footnote{Los monetaristas reconocen que un aumento de la cantidad de dinero en circulación puede estimular la actividad económica a corto plazo. Sin embargo, este efecto se neutraliza a medio plazo: los agentes económicos anticipan un aumento de la inflación cuando se incrementa la oferta monetaria y adaptan su comportamiento en consecuencia (por ejemplo, no consumiendo ni invirtiendo más).
+    } La inyección de nuevo dinero tendría, por tanto, un efecto sobre el volumen de bienes y servicios intercambiados; y,
+    \item \textbf{Endogeneización de la oferta monetaria}.\footnote{
+    De hecho, como ha admitido con bastante franqueza el presidente de la Reserva Federal, POWELL: \textit{Lo que [la Fed] puede controlar es la demanda; realmente no podemos afectar a la oferta con nuestras políticas… así que la cuestión de si podemos lograr o no un aterrizaje suave puede depender en realidad de factores que no controlamos} (POWELL, 2022). Aunque el trabajo de Ratner y Sim no analiza la evidencia más reciente durante la pandemia, la carga de la prueba recae sobre los bancos centrales, que deberían demostrar —y no simplemente asumir— que la inflación actual es fundamentalmente de demanda y que la economía se encuentra ahora en el extremo izquierdo de la sección creciente de la curva de Phillips. Si la economía sigue situada en el tramo relativamente plano y lo único que ha ocurrido recientemente es que los shocks de oferta han desplazado ese tramo plano a un nivel más alto, a medida que las empresas han incorporado de forma persistente estos aumentos de costes en sus mark-ups, entonces las subidas de tipos de interés solo servirán para ralentizar la economía, con un impacto mínimo sobre la tasa de inflación agregada.
+    } La alteración de los agregados monetarios, como sabemos, dejo de formar parte de los instrumentos de Política Monetaria hace tiempo (periodo de Gran Moderación, a pesar de que parece haber vuelto); siendo el principal instrumento que utilizan las Autoridades Monetarias para incidir en la creación de dinero crediticio el Tipo de Interés. Por tanto, ¿cómo podemos atribuirle carácter nominal a la inflación si la demanda y oferta de dinero, endogeneizadas, vieneúltiman en  úinstancia determinadas ambas por determinantes reales?
+\end{lnum}
+
+No obstante, las limitaciones más importantes de esta vertiente vienen de su contrastación con algunos elementos de la evidencia empírica:
+\begin{lnum}
+    \item \textbf{Espirales inflacionistas.} En primer lugar, este enfoque defiende la existencia (por construcción del fenómeno que intentan explicar) de lo que se conoce como \textit{espiral inflacionaria de precios y salarios}. Un reciente paper publicado por el FMI encuentra poca evidencia de la existencia de espirales precio-salario (o salario-precio), al menos entendidas como una aceleración sostenida de los precios y de los salarios durante un periodo mayor a ocho trimestres, son difíciles de encontrar en el registro histórico reciente (1960-2020);\footnote{
+    \href{https://www.imf.org/en/publications/wp/issues/2022/11/11/wage-price-spirals-what-is-the-historical-evidence-525073}{\textit{Wage-Price Spirals: What is the Historical Evidence?} ALVAREZ et a. (2022)}
+    
+    \textbf{Conclusión}. De los 79 episodios identificados con aceleración de precios y salarios desde la década de 1960, solo una minoría experimentó una mayor aceleración tras ocho trimestres. Además, la aceleración sostenida de salarios y precios es aún más difícil de hallar cuando se analizan episodios similares al actual, en los que los salarios reales han caído de forma significativa. En esos casos, los salarios nominales tendieron a ponerse al día con la inflación para recuperar parcialmente las pérdidas de salario real, y las tasas de crecimiento tendieron a estabilizarse en un nivel más alto que antes de que se produjera la aceleración inicial. Con el tiempo, las tasas de crecimiento salarial fueron coherentes con la inflación y con la estrechez observada en el mercado laboral. Este mecanismo no pareció dar lugar a dinámicas de aceleración persistente que puedan caracterizarse como una espiral salario-precio. Aún es demasiado pronto para decir si la recuperación tras la pandemia de COVID-19 se desarrollará de manera similar a esos episodios pasados. No obstante, una conclusión importante del análisis es que una aceleración de los salarios nominales no debe interpretarse necesariamente como una señal de que se esté gestando una espiral salario-precio. De hecho, la historia sugiere que los salarios nominales pueden acelerarse mientras la inflación retrocede desde niveles elevados. En promedio, esto es precisamente lo que ha ocurrido tras episodios macroeconómicos similares en el pasado.
+    }
+    \item \textbf{Deflación observada: \textit{Ongoing} 2008}. Otra limitación importante al tratar de explicar este fenómeno desde un punto de vista monetario es su contrastación con los sucesos reciente. La crisis del 2008 generó en los Estados Unidos una amplía expansión del Gasto Público (inicial), con un déficit elevado y sostenido, bajos tipos de interés a corto plazo, y todo acompañado de una drástica reducción del crecimiento económico: pero, ¿dónde estaba la inflación? Ambos fenómenos, bajo este marco, actúan como aceleradores inflacionistas y, sin embargo, entró en un periodo deflacionista pronunciado y sostenido. De hecho, de manera más general nos podríamos preguntar, ¿por qué observamos más inflación en \textit{booms} económicos (periodos de crecimiento y expansión) y menos inflación (incluso deflación) en periodos de recesión?
+\end{lnum}
+
+De hecho, arduos defensores del enfoque monetario de la inflación han empezado a plantearse la posibilidad de que la inflación haya dejado de ser un fenómeno monetario (si es que alguna lo vez fue...). Así que pasemos a ver otros enfoques que pretenden ilustrar las causas de la inflación como un fenómeno real. 
+
+\subsection{Inflación: Fenómeno de Demanda}
+Los primeros que veremos están asociados a las fuerzas reales que guían la demanda de la economía.
+
+\subsubsection{\textit{Fiscal Theory of Prices}: Senda de Déficit Público}
+La primera vertiente teórica es la Teoría Fiscal del Nivel de Precios, donde la Política Fiscal determina la inflación no anticipada porque el valor real de la deuda pública heredada debe igualar el valor presente esperado de los superávits primarios futuros. Dado que la Política Monetaria fija el tipo de interés nominal y, por tanto, la inflación esperada, pero no el nivel de precios, la consistencia fiscal del equilibrio exige un ajuste inmediato del nivel de precios ante shocks fiscales no anticipados. De este modo, la inflación no anticipada queda endógenamente determinada como la única compatible con el equilibrio intertemporal del sector público.
+
+\eqblock{
+\begin{aligned}
+    &\underset{\text{\scriptsize Punto de partida de la TFP}}{\text{RPIG en términos reales:}}\quad \underset{
+    \substack{
+    \text{\scriptsize Condición de Equilibrio: (en términos reales)}\\
+    \text{\scriptsize Valor Deuda = Valor presente descontado de Superávits futuros}}}{\boxed{\frac{B_t}{P_t}=E\left[\left.\sum_{j=1}^\infty \beta^js_{t+j}\;\right|\;\Omega_{t}\right]}}\; 
+    \text{\scriptsize$
+    \begin{cases}
+        B_t\equiv\quad \text{\scriptsize Deuda Pública Nominal}\\[0.5em]
+        P_t\equiv\quad \text{\scriptsize Nivel de Precios}\\[0.5em]
+        s_{t+j}\equiv\quad \text{\scriptsize Superávit Primario Real (a partir de $t$)}\\[0.5em]
+        \beta_t\equiv\quad \text{\scriptsize Factor de descuento, p.e. $\frac{1}{1+i_t}$}\\[0.5em]
+    \end{cases}$}\\[1em]
+    &\text{Descomponemos:}\qquad \frac{B_t}{P_t}\beta E\left[\left.\frac{P_t}{P_{t+1}}\;\right|\;\Omega_t\right]\underbrace{=}_{\substack{
+    \text{\scriptsize HER estándar:}\\
+    \text{\scriptsize$1+i_t=E[\frac{P_{t+1}}{P_t}\;|\;\Omega_t]\Rightarrow i_t=E_t[\pi_{t+1}]$}\\
+    \text{\scriptsize $\equiv$ Eq. FISHER sin prima real}\\
+    \text{\scriptsize (Invertimos)}
+    }}\frac{B_t}{P_t}\frac{1}{1+i_t}=E\left[\left.\sum_{j=1}^\infty\beta^j\;s_{t+j}\;\right|\;\Omega_t\right]\\[2em]
+    &\text{Modelo Simple:}\\[0.5em]
+    &\left\{\begin{aligned}
+        &\text{Inflación anticipada:}\qquad &&i_t=E[\pi_{t+1}\;|\;\Omega_t]\\[0.5em]
+        &\text{Inflación no anticipada:}\qquad &&{\Delta E_{t+1}\pi_{t+1}=-\Delta E_{t+1}\sum_{t+1}^\infty\rho^j\;s_{t+1+j}}\quad
+        \text{\scriptsize$\text{donde,}\;\;\Delta E_{t+1}\equiv E\left[\cdot \;|\;\Omega_{t+1}\right]-E[\cdot \;|\;\Omega_t]$}
+    \end{aligned}\right.
+\end{aligned}
+}{Fiscal Theory of Prices. Inflación: Fenómeno de Demanda}
+
+Veamos paso a paso que sucede en las ecuaciones. En primer lugar, partimos de la Restricción Presupuestaria Intertemporal del Gobierno, donde el valor real de la Deuda Pública debe ser igual al valor descontado al presente de los superávits reales futuros esperados. La descomposición que realizamos en la segunda igualdad nos indica como la inflación esperada determina el tipo de interés nominal (y, en consecuencia, la Política Monetaria ancla expectativas, pero no fija el nivel de precios). Entonces, ¿qué fija el nivel de precios? 
+
+En los Modelos HER el nivel de precios queda indeterminado (porque la Autoridad Monetaria fija el Tipo de Interés que a su vez ancla expectativas de inflación) pero en los modelos TFP, un shock fiscal inesperado que, en consecuencia, lleva a un cambio en superávits futuros esperados tiene que tener una consecuencia inmediata sobre el nivel general de precios $P_t$. ¿Por qué? Porque la inflación no anticipada ajusta el valor real de la deuda y permite que la restricción intertemporal siga cumpliéndose. Además, teniendo en cuenta que el gobierno no ajusta superávits futuros para validar cualquier nivel de precios (lo cual supone una restricción adicional, pero presumiblemente lógica: la Política Fiscal es exógena, no solo el ajuste mediante inflación no anticipada hoy es posible, sino también necesaria para mantener dicha restricción.
+
+En síntesis, la Política Fiscal de Precios defiende que la inflación es un fenómeno de demanda, pero no como un exceso de demanda efectiva (gasto real) y/o tensión sobre la capacidad productiva real, sino por un exceso de pasivos nominales del Estado respecto al valor real esperado de sus ingresos futuros (que se cumple incluso si introdujésemos los pasivos de \textit{fiat money} en la ecuación). 
+
+Por tanto, ¿cómo se genera inflación? La inflación estalla cuando la gente no espera que el gobierno reembolse plenamente sus deudas, y viceversa, la inflación se modera o incluso se torna negativa cuando la economía entra en un punto tal que los agentes consideran que el único valor seguro en el que depositar su dinero es en manos del Gobierno.\footnote{
+La teoría fiscal se adapta bien a la economía actual: la innovación financiera socava la demanda de dinero, y los bancos centrales no controlan la oferta monetaria ni modifican agresivamente los tipos de interés, lo que invalida las teorías clásicas, mientras que los elevados niveles de deuda y los déficits amenazan con generar inflación y restringen la política monetaria. 
+}
+
+Aunque sin duda es muy valioso por su carácter exhaustivo y minucioso, el enfoque de la Teoría Fiscal de Precios sobre la inflación no resultaría sorprendente ni para los economistas poskeynesianos ni para los de la Teoría Monetaria Moderna, quienes desde hace tiempo han considerado la política fiscal como quizá el principal motor de los cambios en el nivel general de precios. Ello se debe a que el Estado puede hacer lo que nadie más en la economía puede: gastar primero y financiarse después, en lugar de hacerlo al revés. En su propia moneda, un gobierno es siempre solvente y siempre capaz de comprar bienes y servicios como desee. Naturalmente, después necesita reducir el poder adquisitivo de las empresas y los hogares para que estos no compitan por los recursos que requiere el Estado, es decir, mediante la tributación. Y al exigir a empresas y hogares que paguen esos impuestos precisamente con esa moneda, es únicamente a través de este mecanismo legal como el dinero conserva algún valor en absoluto en el caso de las monedas fiduciarias. 
+
+\subsubsection{\textit{Real-Resource Constraint}: Presión nominal sobre restricciones reales}
+Otra perspectiva desde la que se puede analizar la inflación como un fenómeno de demanda y estrechamente relacionada con la actuación de la Política Fiscal es la que proporciona el marco de la Teoría Moderna del Dinero (Modern Monetary Theory). 
+
+¿Qué diferencias presenta este enfoque respecto al tradicional monetario? Esta visión se aleja, en primer lugar, de la concepción keynesiana de restricción de recursos del Gobierno por analogía a un agente cualquiera.\footnote{Hay que recordar que, si bien es cierto que KEYNES veía de esta manera al Gobierno, vivió en una época donde el \textit{dinero} venía determinado por fundamentales económicas (determinantes reales): el patrón oro. Por tanto, concebir la actuación del Gobierno como un agente que compite contra otros en el mercado de dinero y, en consecuencia, que se enfrenta a una restricción presupuestaria que exige la sostenibilidad de la deuda es \textit{apropiado} en este contexto. Otra cosa valdría para la noción actual del dinero, donde no existe aparentamente ninguna restricción real para la oferta monetaria y, más aún, cuando la oferta se determina exógenamente.
+} El Gobierno, para la MMT, no se enfrenta a una Restricción de Recursos y la emisión de deuda es un instrumento de Política Económica como otro cualquier: los agentes deciden, si lo hacen, mantener sus ahorros en Bonos del Estado y no en otros activos, porque lo consideran seguros. 
+
+Si nos centramos en el fenómeno de la inflación: la visión keynesiana (o neo-keyneasiana) antes expuesta, pone el énfasis/punto a la actuación del Gobierno en el momento en el que se alcanza el pleno uso de los recursos productivos de un país. Momento a partir del cual cualquier estimulo generaría inflación (por exceso de saldos reales). Para la MMT, por el contrario, como el Gobierno nunca se ve constreñido por una Restricción Exógena (ya que el \textit{dinero} no impone dicha restricción), el énfasis se posicionará sobre el funcionamiento de la \textbf{economía real}: el Gobierno debe (y puede) generar suficiente estímulo fiscal/monetario para que la economía funcione a su plena capacidad, mientras esto no sea así, no habrá inflación; pero, incluso cuando se alcance, será también labor del Gobierno el control de esta mediante Políticas Fiscales que drenen el exceso de recursos (monetarios) de la economía con el fin de mantener el equilibrio en la plena capacidad. 
+
+Es decir:
+\begin{la}
+    \item \textbf{Expansión}. Si el gobierno, en virtud de su facultad de emitir moneda de curso legal, crea demanda real efectiva por encima de la oferta real disponible de bienes y servicios, los precios aumentan de manera generalizada; pero,
+    \item \textbf{Contracción}. La Política Fiscal se convierte en el principal instrumento para controlar la inflación en un sentido ex ante:\footnote{No \textit{ex-post} como argumentaría el enfoque monetario: medidas de austeridad fiscal
+    } cuando las fuerzas del mercado privado parecen estar generando presiones inflacionarias, principalmente a través de un crecimiento salarial exuberante por la razón que sea, los impuestos deberían aumentar para frenar dichas presiones inflacionarias.
+\end{la}
+
+En consecuencia, podemos considerar la inflación y la deflación como fenómenos reales, donde un aumento o una disminución del nivel general de precios es el resultado de mercados de bienes y servicios desequilibrados, nunca de demasiado dinero. 
+
+\subsubsection{Impliaciones de Política Económica}
+Ambos enfoques presentados se distancian mucho de las recomendaciones de Política Económica proporcionadas por el enfoque monetario. En ambos escenarios, la Política Fiscal juega un elemento fundamental en el control de la inflación, saludo y crecimiento de la economía real. De hecho, ambos enfoques enfatizan la \textit{inefectividad} o, incluso, la \textit{inadecuación} de la Política Monetaria en el control de la inflación:
+\begin{la}
+    \item \textbf{Teoría Fiscal de Precios}. En el primer caso, el control de la inflación mediante instrumentos de Política Monetaria conduciría a una variación de la inflación esperada de los agentes, pero nada influiría/incidiría en la inflación \textit{no-esperada}, siendo esta la verdadera causante de los desequilibros macroeconómicos y que solo puede ser controlada mediante las expectativas relativas a la senda de déficit/superávit fiscal;
+    \item \textbf{Teoría Monetaria Moderna}. El segundo enfoque propuesto (va un paso más allá) considera los instrumentos de Política Monetaria completamente ineficaces para el control de la inflación. Por el contrario, el Gobierno (Autoridad Fiscal) ostenta plenas competencias sobre los únicos instrumentos que pueden incidir en la inflación: el gasto y los impuestos. Por tanto, será esta la autoridad competente pata ajustar la brecha entre gasto e impuestos de manera que se equilibre la economía real en el punto de plena utilización de sus recursos.
+\end{la}
+
+Una seña distintiva es que MMT propone sustituir el ancla tipo NAIRU (desempleo como disciplina antiinflacionaria) por un buffer stock de empleo vía \textit{job guarantee}, ligado a conceptos como NAIBER.
+
+\subsection{Inflación: Fenómeno de Oferta}
+Por último, debemos introducir los factores de oferta que pueden incidir en las tensiones inflacionistas. 
+
+\subsubsection{Shocks de oferta: Marco NEK-2}
+Retomando el marco de la NEK-2 la inflación se puede también concebir como un fenómeno derivado de perturbaciones de oferta. 
+
+Como hemos visto, el enriquecido planteamiento de la NEK-2 vincula la inflación (aún desde una perspectiva fundamentalmente monetaria) a la evolución del coste real de las empresas. En este contexto, la denominada inflación de costes genera presiones inflacionarias incluso en ausencia de un sobrecalentamiento de la actividad económica. Un \textit{shock} de oferta negativo leva el coste de producir una unidad adicional de output para un nivel dado de actividad, desplazando la relación entre inflación y brecha de producto. En la NEK-2, este desplazamiento no se interpreta como una ruptura \textit{ad hoc} de la curva de Phillips, sino como la consecuencia directa de perturbaciones estructurales que afectan a la condición óptima de fijación de precios. Por ello, la inflación de costes aparece formalmente como un shock que introduce un \textit{trade-off} entre estabilidad de precios y estabilidad real, incluso cuando la demanda agregada no ejerce presiones expansivas.. Analíticamente:
+
+\eqblock{
+\begin{aligned}
+    &\underset{\text{\scriptsize Empresas buscan cumplir objetivos}}{\text{Ecuación de Precios:}} &&P=(1+\mu)CMg\underset{c/p}{=}(1+\mu)\frac{W}{PMe_L}\\[0.5em]
+    &\underset{\text{\scriptsize Salario ofrecido por las empresas}}{\text{Ecuación de salarios (SRD):}} &&\frac{W_{\text{nominal}}}{P}=\frac{PMe_L}{1+\mu}\\[1em]
+    &\downarrow PMe_L\;\Longrightarrow\;\downarrow \frac{W_{\text{nominal}}}{P}(CP_{0})\;&&\underset{\text{\scriptsize pero, $\omega_\perp$}}{\Longrightarrow}\;\uparrow CP_0(CP_1)\quad \cdots \underset{\text{\scriptsize Todos son conscientes del shock y no hay indexación: por eso no hay acaleración endógena}}{\text{(sube la CP verticalmente hacia arrid)}}
+\end{aligned}
+}{Marco de la NEK-2: Inflación de costes. Inflación: Fenómeno de oferta}
+
+Desde una perspectiva general, el fenómeno se magnifica. La implementación estándar de estos shocks de oferta en la NEK-2 se apoya en la introducción de un término estocástico en la Curva de PHILLIPS nueva-keynesiana, que captura desviaciones transitorias o persistentes del coste marginal real respecto a su nivel natural. Bajo precios rígidos a la Calvo, cualquier perturbación que eleve el coste marginal, como un aumento del precio de los insumos energéticos, disrupciones en las cadenas de suministro, caídas de la productividad o incrementos salariales no respaldados por ganancias de eficiencia, se traduce, \textit{ceteris paribus}, en una mayor presión al alza sobre los precios fijados por las firmas que pueden reajustarlos, una pérdida de eficiencia derivada de la dispersión de precios y un aumento de la inflación.
+
+No obstante, si bien la concepción de la NEK-2 se podría ajustar a la realidad desde una perspectiva macroeconómica. El análisis parcial que ofrece para el mercado de trabajo no parece ajustar a la videncia empírica. En particular, la década de los 70's en Estados Unidos estuvieron acaracterizados por elevadas tasas de inflación y altos niveles de desempleo, mientras que existe un consenso generalizado en que gran parte de los factores que incidieron en el aumento sostenido de la inflación se debieron a factores de oferta, no es así para el desempleo. Como vemos, el Modelo de la NAIRU parece indicarnos que los shocks negativos de oferta no afectarían a los niveles de empleo puesto que los agentes serían conscientes de ésto y, por tanto, simplemente la Curva de la PHILLIPS en la NAIRU se mantendría en un nivel mayor de inflación sin afectar al desempleo.
+
+\subsubsection{\textit{Conflicting-claims inflation}: Inflación distributiva}
+El último enfoque concibe la inflación como un fenómeno real vinculado a la distribución de la renta y a las reclamaciones en conflicto entre grupos (trabajadores, empresas y, a veces, el Estado). En esta perspectiva post-keynesiana no se presupone la existencia de un equilibrio macroeconómico único y estable al que la economía retorne de manera automática. En particular, se enfatiza que el nivel de actividad viene determinado por la demanda efectiva y que el gasto puede ser insuficiente de forma persistente, en parte porque el dinero funciona como reserva de valor y la preferencia por la liquidez puede inducir postergación del gasto. Esto conduce a descartar el concepto de NAIRU ya que si no existe un equilibrio macroeconómico de largo plazo, incluida una relación estable entre desempleo e inflación, carece de sentido mantener el desempleo en un determinado nivel para garantizar la ausencia de inflación.
+
+En este marco, \textbf{la inflación se interpreta como la manifestación nominal de un conflicto distributivo cuando las aspiraciones agregadas de renta real son incompatibles con la renta real factible}. La idea central es kaleckiana: las empresas fijan precios mediante reglas de mark-up sobre costes, de modo que el nivel de precios depende del salario nominal, la productividad y el margen asociado al poder de mercado. En forma simplificada, el precio puede representarse como un mark-up sobre el coste laboral unitario: 
+
+\eqblock{
+\begin{aligned}
+    P=(1+\mu)\frac{W}{PMe_L}
+\end{aligned}
+}{\textit{Conflicting-claims}: Inflación kaleckiana. Fenómeno de Oferta}
+
+Los trabajadores, a través de los sindicatos, tratarían de mantener el mark-up lo más bajo posible para que los salarios y la participación del trabajo en la renta sean mayores, mientras que las empresas intentarían lo contrario. El grado de poder de negociación determinaría así los ganadores y perdedores en la distribución de las rentas monopolísticas.
+
+La dinámica inflacionaria aparece cuando, por un lado, los trabajadores intentan recuperar o ampliar su salario real y, por otro, las empresas intentan preservar un margen o una participación de beneficios. Si un shock adverso reduce el conjunto de combinaciones compatibles entre salario real y margen, puede emerger una puja nominal: los salarios nominales suben para recomponer el salario real y los precios suben para recomponer márgenes. Por tanto, KALECKI, junto con autores menos conocidos como AUJAC (1950), plantea la visión según la cual la inflación es, ante todo, una expresión y un resultado de reclamaciones en conflicto en torno al producto nacional, mediado por la forma en que las empresas fijan los precios de sus productos en relación con la determinación de los salarios por parte de los trabajadores (que fijan \textit{vis a vis}). 
+
+Aunque pueda parecer muy similar a la formulación propuesta por la NEK-2, la esencia o la clave de esta visión es que: aunque en ambos modelos existe negociación salarial, en el caso kaleckiano también hay negociación sobre el \textit{mark-up} y el \textit{precio} del producto.
+
+\paragraph{Curva de PHILLIPS kaleckiana: Poder de negociación}
+Una reciente publicación de la FED (\href{https://www.federalreserve.gov/econres/feds/files/2022028pap.pdf}{RATNER y SIM, 2022}) sostienen que la Curva de PHILLIPS en Estados Unidos y el Reino Unido ha sido prácticamente plana desde la década de 1980 debido a la erosión significativa del poder de negociación de los trabajadores.\footnote{
+\href{https://www.ineteconomics.org/perspectives/blog/the-fed-tackles-kalecki}{\textit{The FED tackles KALECKI}. (Blog)}
+
+Este proceso comenzó durante los años de Reagan y Thatcher y se reflejó especialmente en la caída de las tasas de afiliación sindical a lo largo de las últimas cuatro décadas. Así, el supuesto triunfo sobre la inflación durante aproximadamente cuarenta años, hasta el repunte experimentado en el último año a raíz de la Covid-19, no puede atribuirse plenamente a la conducta de la política monetaria de la Reserva Federal estadounidense y del Banco de Inglaterra. El working paper de la Fed, por tanto, arroja serias dudas sobre el relato dominante, según el cual la Política Monetaria del entonces presidente de la Fed, VOLCKER, basada en fuertes subidas de los tipos de interés, fue la responsable de domar la inflación de los años ochenta.
+
+La principal conclusión de su trabajo es clara: las subidas de los Tipos de Interés pudieron haber ayudado (Shock VOCKER), pero fue más bien el conflicto de clases, y en particular la ofensiva contra la clase trabajadora, lo que estuvo detrás del éxito inflacionario de la Gran Moderación, con consecuencias de largo alcance. Planteado de este modo, el argumento puede sonar bastante subversivo para muchos economistas ortodoxos. De hecho, como escribe PETERSON (2022) en el Financial Times: \textit{procediendo desde lo más profundo de la Fed, esto roza la herejía. Al fin y al cabo, los bancos centrales han estado durante mucho tiempo cautivos de teorías que los convertían en los héroes de la historia}.
+} Los autores sustituyen la curva de PHILLIPS de la NEK-2, en su modelo canónico de dos agentes (TANK) con competencia monopolística (en este caso, los dos agentes son trabajadores y empresas), por una Curva de PHILLIPS más general, a la que denominan kaleckiana, en la que introducen un parámetro determinado exógenamente que afecta a su pendiente y que refleja el grado de poder de negociación relativo entre trabajadores y empresas. Esta modificación implica que, además de la negociación habitual sobre los salarios, existe también una negociación sobre el precio del producto (o sobre las rentas monopolísticas). De ello se sigue que la Curva de PHILLIPS kaleckiana explica por qué las tasas de inflación y desempleo han sido relativamente bajas desde la década de 1990:\footnote{Si se dejan de lado las crisis recurrentes y el episodio inflacionario más reciente, dado que el poder de negociación de los trabajadores ha sido extremadamente limitado
+}
+
+La lucha por la participación en las rentas monopolísticas implica, en este caso, dos canales distintos y opuestos que afectan al nivel de producción y a la NAIRU:
+\begin{lnum}
+    \item Cuando \textbf{Ajuste en cantidades}. Cuando el grado de poder de negociación está aproximadamente equilibrado, pequeños incrementos en el poder de negociación de las empresas tienen un impacto muy positivo sobre la producción y el empleo, ya que aumentan los incentivos a la inversión, de modo que domina el canal de creación de empleo; en cambio,
+    \item \textbf{Ajuste en precios}. Cuando el poder de negociación de las empresas es especialmente elevado, estas prefieren aumentar sus beneficios eligiendo el mark-up más alto a costa de la producción y de la creación de empleo; en este caso domina el canal del mark-up. 
+\end{lnum}
+
+
+
+Sin embargo, dentro del modelo no hay razón para que el grado de poder de negociación varíe a lo largo del tiempo, ya que se trata de un parámetro exógeno. Así, bajo los supuestos estándar DSGE de expectativas racionales, una caída sostenida del poder de negociación de los trabajadores queda sin explicación (y es, en cierto sentido, irracional) desde el punto de vista de los sindicatos, dado que va claramente en contra de los intereses de los trabajadores.
+
+Por otro lado, los autores comparan la curva de Phillips kaleckiana con la de la NEK-2 ante un shock positivo de demanda. Los resultados difieren porque, en el primer caso, la pendiente de la curva varía con el grado de poder de negociación entre empresas y trabajadores, mientras que en el segundo permanece constante con independencia de dicho poder. Ello se debe a que en ambos modelos existe negociación salarial, pero en el caso kaleckiano también hay negociación sobre el mark-up y el precio del producto. Como resultado, un shock positivo de demanda en el modelo kaleckiano amplificaría su impacto sobre la inflación y reduciría su efecto sobre el empleo.
+
+\subsection{¿Es la inflación una medida objetiva? Limitaciones}
+
+
+\subsubsection{Limitaciones objetivas: Heterogeneidad}
+
+Directly associated with the concept of rational expectations is the so-called Goodhart’s Law, named after Charles Goodhart who wrote in the 1970s that the moment any economic aggregate is targeted as a policy instrument (for example the inflation rate itself), it ceases to be a valid gauge of economic theory. Imagine the central bank trying to guarantee a specific rate of inflation. Economic agents then anticipate the central bank’s policy and behave accordingly when inflation starts to divert from the central bank’s target. In other words, the supposedly neutral metric of inflation becomes warped by its being dragged into the centre of attention (physicists might think of Werner Heisenberg’s uncertainty principle here).
+
+
+\subsubsection{Limitaciones metodológicas: Medidas y datos}
+it is elementary to recognise that the very measurement of inflation, i.e. the determination of the basket of goods and services whose prices are taken into account as much as the very production of the statistic itself, is a selective, theory-driven and, indeed, political choice already - there is no such thing as objective inflation. Here again, A. TOOZE (2021) delivers a memorable clarification:
+
+Picking a statistical indicator is not just a matter of design - choice of basket etc. Statistical indicators have to be produced. Their production involves capital and labour. It involves technology. Mobilizing those resources and putting them to work involves the exercise of power. To extract the raw material of data involves the exercise of authority, by way of law or other types of persuasion or coercion. Data are business. Data are political. And that is particularly pertinent in the case of inflation, because inflations are contentious. They generate winners and losers. That is why we care about inflation. Winners may not want to have their gains documented. Losers will want to documenting [sic.] their losses so as to seek redress. Inflation numbers are not merely descriptive. They are part of the political economy of the process they describe. When it comes to inflation there are, as H. GARFINKEL the great ethnomethodologist might have put it, good reasons for bad data.
+
+
+\clearpage
+\section{Inflación: Situaciones polares}
+\puntosclave{
+    La deflación surge de una modificación de las preferencias intertemporales de los agentes que, paradójicamente, prefieren el consumo futuro al presente, lo que lleva a los precios aexperimentar caídas. Se trata por tanto de un fenómeno de demanda depresiva, que Políticas Monetarias que busquen afectar las expectativas de los agentes.
+    
+    La hiperinflación surge también por cambios en las expectativas de los agentes y genera movimientos no convergentes en los niveles generales de precios.
+}
+
+Una vez hemos revisado diferentes vertientes teóricas que tratan tanto establecer su naturaleza y causas como su posible cuantificación (previsión). Pasemos a analizar dos situaciones polares que incidirán directamente en la salud y situación de una economía: la deflación y la hiperinflación.
+
+\subsection{Deflación}
+\textbf{Definición.-} La deflación (o inflación negativa) es el fenómeno contrario a la inflación, es decir, una caída general y continuada de los precios de la economía. La deflación puede generar un círculo vicioso en la economía, ya que puede provocar una reducción del gasto y la inversión, lo que supondría un menor crecimiento económico y un aumento en el desempleo.\footnote{Veamos cómo funciona la deflación: si pensamos que el precio de un producto - por ejemplo, un coche o una televisión - va a bajar, pospondremos nuestra decisión de compra para cuando el precio baje. Si la creencia de que los precios van a bajar se mantiene en el tiempo y todos los consumidores posponen sus decisiones de compra, las empresas tendrán que bajar los precios de sus productos por la falta de ventas. Además, como los precios han caído, las empresas tendrán menos beneficios y tendrán que reducir costes, por lo que tenderán a bajar los salarios de sus empleados o, incluso, reducir plantilla de trabajadores, provocando un aumento del desempleo.
+
+Tradicionalmente el análisis de la deflación se ha hecho por analogía con la inflación. Al igual que le inflación positiva, la deflación puede tener causas de oferta y de demanda. Entre las primeras estarían shocks de oferta (como una mayor productividad) que son en principio positivos. Entre las segundas estarían shocks de demanda negativos y crisis financieras que generan espirales recesivas y deflacionistas comenzando por un ajuste en los precios de los activos. 
+}  
+
+La visión tradicional keynesiana y monetarista plantea que es posible salir de estos contextos deflacionarios con políticas expansivas, aunque KEYNES ya advirtió de los riesgos de caer en la trampa de liquidez. No obstante, el debate se ha avivado ahora, especialmente con el hecho de que numerosas economías avanzadas (algunas incluso desde antes de la crisis, como Japón) no hayan logrado impulsar la inflación pese al recurso a políticas monetarias de tipos de interés bajos y dé relajación cuantitativa. Existe un debate sobre la efectividad de la Política Monetaria en contextos deflacionistas cuando los Tipos nominales ya están bajos, teniendo en cuenta la restricción que pudiera imponer el hecho de que los tipos nominales no deberían en principio bajar por debajo de cero (ZLB) Uno de los análisis recientes que refleja de manera más fidedigna los contextos deflacionistas es el de EGGERTSSON y WOODFORD (2013).
+
+\subsubsection{Modelo NEK-2: ZLB y \textit{forward-guidance}}
+En este modelo, la economía se mueve entre dos estados, en función del valor del Tipo de Interés real natural ($r_t^n$, que recordemos que coincide con la tasa de descuento subjetiva: $r_t^n=\rho_t$): 
+\begin{la}
+    \item \textbf{Estado normal}. Uno de normalidad donde el Tipo de Interés natural es positivo ($r_t^n=\rho_t>0$);
+    \item \textbf{Estado de crisis}. Donde el Tipo de Interés natural es negativo ($r_t^n=\rho_t<0$). Este último contexto resulta paradójico, pues supone que los agentes prefieren el consumo futuro al presente ($\rho_t<0\Rightarrow\beta_t>0$, ya que $\beta_t=\frac{1}{1+\rho_t}$). Pero se puede llegar a ese contexto tras una crisis financiera grave donde los spreads se incrementan súbitamente y desaparecen las oportunidades de gasto a corto plazo.
+\end{la}
+
+La probabilidad de pasar del estado de normalidad al de crisis es muy pequeña, pero, una vez en crisis, existe una probabilidad $\varphi\in(0,1)$ no desdeñable de mantenerse en ese estado. Otros supuestos que añade el modelo son la inexistencia de shocks de oferta ($\varepsilon_{S,t}=0, \forall t$) y el establecimiento de un objetivo del Banco Central de output gap nulo ($x_t^*=0$). Retomamos la curva de Philips de la NEK y la curva IS dinámica, podemos desarrollar esta situación como:
+
+\eqblock{
+\begin{aligned}
+    &\text{NEK-2:}\;
+    \begin{cases}
+        &x_t=E[x_{t+1}\;|\;\Omega_t]-\frac{1}{\sigma}(\overbrace{i_t-E[\pi_{t+1}\;|\;\Omega_t]}^{r_t}-r_t^n)\\[1em]
+        &\pi_t=\beta\;E[\pi_{t+1}\;|\;\Omega_t]+\varepsilon\;x_t\\[1em]
+        &\underset{\text{\scriptsize \textit{ad hoc}, no es original pero se puede utilizar}}{i_t=E[\pi_{t+1}\;|\;\Omega_t]+\delta\;\pi_t}
+    \end{cases}\quad(+)\quad \underset{\text{\scriptsize Autoridad Monetaria}}{\text{Objetivo:}}\quad x_t^*=0\\[2em]
+    &\begin{aligned}
+        &\text{Normalidad:}\quad &&E[\pi_{t+1}\;|\;\Omega_t]=0\;\Rightarrow \;i_t=r_t=\rho_t=r_t^n>0\\[0.5em]
+        &\text{Crisis:}\quad &&\rho_t=r_t^n<0\;\underset{\substack{\text{\scriptsize Si queremos}\\\text{\scriptsize estimular econ.}}}{\Rightarrow}\;\downarrow r_t=i_t-E[\pi_{t+1}\;|\;\Omega_t]\;\underset{\text{\scriptsize pero}}{\Rightarrow}
+        \begin{cases}
+            &\underset{\text{ZLB}}{\downarrow} &&i_t\\[1em]
+            &\overset{\substack{\text{\tiny Díficil activar:}\\\text{\tiny deflación}}}{\uparrow} &&E[\pi_{t+1}\;|\;\Omega_t]
+        \end{cases}\\[1em]
+        &\underset{\substack{\text{\scriptsize equilibrio}\\\text{\scriptsize en crisis}}}{\Longrightarrow}&&E[\pi_{t+1}\;|\;\Omega_t]<0\quad \text{y}\quad x_t<0\qquad \left[(\;\cdot\ll0)\iff(\varphi\gg0\;\wedge\;r_t\ll0)\right]
+    \end{aligned}
+\end{aligned}
+}{Modelo NEK-2: Deflación. Inflación: Situaciones polares}
+
+Por tanto, vemos como en los contextos de normalidad ($\rho_t=r_t^n>0$), el equilibrio se alcanza con un valor nulo para la inflación y su expectativa y con la estabilidad del output gap. Ello permite que el término $i_t-E[\pi_{t+1}\;|\;\Omega_t]-r_t^n=0$ (pueda ser nulo), dado que en equilibrio $E[\pi_{t+1}\;|\;\Omega_t]=0$ el tipo de interés nominal de equilibrio es positivo $i_t=\rho_t=r_t^n>0$ y la ZLB no llega a ser vinculante. 
+
+Sin embargo, en los contextos de crisis ($\rho_t=r_t^n<0$), como muestra la curva IS, si se quiere estimular la economía es preciso lograr rebajar los tipos reales esperados ($r_t=i_t-E[\pi_{t+1}\;|\;\Omega_t]$). Pero en un contexto deflacionista es difícil activar las expectativas de inflación y la rebaja de los tipos nominales se topa con la ZLB, que aquí sí es vinculante. Por tanto, se alcanza un equilibrio donde la expectativa de inflación y del output gap son negativos, tanto más negativos cuanto más elevada sea la probabilidad de mantenerse en la crisis ($\varphi\gg0$) y cuanto más negativo sea el tipo de interés real en crisis ($r_t^n\ll0$), como un indicador de la severidad de la crisis financiera.\footnote{
+¿Por qué en ZLB y crisis no podemos tener $E[\pi_{t+1}\;|\;\Omega_T]>0$ sin \textit{forward guidance}? Es una consecuencia algebraica de las ecuaciones. Veamos paso a paso:
+
+En primer lugar, para la Regla Monetaria tenemos: $i_t=0\;\Rightarrow\;E[\pi_{t+1}\;|\;\Omega_t]=-\delta\pi_t$, esto implica que o bien tenemos expectativas de inflación positivas con inflación presente negativa (\textit{forward guidance}) o bien tenemos expectativas de inflación negativas con inflación presente positiva. Es decir, en la ZLB, las expectativas positivas solo son compatibles con inflación corriente negativa. 
+
+¿Como la situación de crisis se transfiere al output gap (da manera algebraica, teórica ya lo conocemos)? La ecuación IS, dada la restricción de la ZLB, quedaría como $x_t=E[x_{t+1}\;|\;\Omega_t]+\frac{1}{\sigma}(E[\pi_{t+1}\;|\;\Omega_t]+r_t^n)\;\Rightarrow\;E[\pi_{t+1}\;|\;\Omega_t]=-r_t^n$ (para cumplirse el objetivo de igualas el Tipo de interés real al Tipo de interés natural). Ahora bien, para cumplir esa condición, teniendo en cuenta $r_t^n<0$, debe cumplirse que $E[\pi_{t+1}\;|\;\Omega_t]>0$, pero en la Regla Monetaria teníamos $E[\pi_{t+1}\;|\;\Omega_t]=-\delta\pi_t$. Combinando ambas tenemos que: $\pi_t=\frac{r_t^n}{\delta}<0$ (por definición, ya que $r_t^n<0$). Por lo tanto, $E[\pi_{t+1}\;|\;\Omega_t]=-r_t^n\iff\pi_t<0$.
+
+Teniedo las conclusiones anteriores, pasamos a examinar la Curva de PHILLIPS del modelo. Sustituyendo $E[\pi_{t+1}\;|\;\Omega_t]=-\delta\pi_t$, tenemos: $\pi_t=\beta(-\delta\pi_t)+\varepsilon x_t$,  esto es equivalente a $(1+\beta\delta)\pi_t=\varepsilon x_t$. Resolviendo para el output-gap, tenemos $x_t=\frac{(1+\beta\delta)}{\varepsilon}\pi_t$, pero, como sabemos, $\pi_t<0$. Por tanto, el output-gap es, también, negativo.
+}
+
+De este tipo de contextos (más allá de un cambio exógeno que lleve a la economía al estado de normalidad), la salida es dificil. La política monetaria puede tratar de efectuar un \textit{forward guidance} conducente a elevar la expectativa de inflación, señalando que permitirá un overshooting de sus objetivos de inflación y output gap, admitiendo valores positivos de ambos incluso al llegar al contexto de normalidad. Pero también se considera una expansión fiscal como una manera de reconducir el output gap y las expectativas de inflación a valores positivos. 
+
+\paragraph{Costes: Implicaciones de Política Económica}
+Desde el punto de vista de los costes y sus implicaciones de Política Económica, cabe destacar las siguientes conclusiones. 
+
+A priori, la deflación supone un perjuicio para los deudores, pues aumenta el valor real de sus pasivos, y por ende un beneficio para los acreedores. Por tanto, al contrario que la inflación, la deflación hace más difícil hacer frente a las deudas, al aumentar la carga real de las mismas, (es decir, el valor de esas deudas en términos de la cesta de consumo). Esto podría llevar a familias y empresas a no poder hacer frente a sus obligaciones. 
+
+Desde una perspectiva tradicional, cabría esperar que estos efectos redistributivos no tienen importancia macroeconómica, pues a nivel agregado los signos se cancelan.\footnote{Además, si la deflación es esperada, los deudores \textit{negociarán} en sus contratos un menor tipo de interés nominal para protegerse (en cumplimiento de la ecuación de Fisher). 
+} No obstante, el papel de la deflación se ha reconsiderado a la luz de las imperfecciones de los mercados de crédito, en particular, a partir del mecanismo del acelerador financiero (inverso) (BERNANKE y GERTLER, 1989). La información asimétrica en el mercado de crédito (especialmente la selección adversa) hace que los acreedores exijan a los deudores un colateral para proveer financiación. La deflación de activos generaría una pérdida en el valor de ese colateral, con lo que dificultaría el acceso a la financiación, menoscabando asimismo la inversión y disminuyendo el valor del colateral. Generaría por tanto un círculo recesivo y, por ello, tiene una creciente consideración negativa por la posibilidad de contribuir a esta espiral recesiva de la deflación de activos.\footnote{Por el contrario, la inflación de activos permite aumentar el valor de ese colateral, con lo que facilita acceder a financiación, lo que a su vez puede aumentar la inversión, incrementando el valor esperado de ese colateral, generándose una retroalimentación conocida como acelerador financiero. 
+}
+
+Existen también otros aspectos negativos de la deflación por los que, pese a los costes de la inflación, se aconseja mantener una inflación ligeramente positiva:
+\begin{lnum}
+    \item \textbf{Efectividad de la Política Monetaria}. El hecho de alcanzar inflación negativa supone alcanzar la cota cero de los tipos de interés, comprometiendo la efectividad de la política estabilizadora. La inflación nula, aunque implica tipos nominales positivos, supone acercarse peligrosamente a la ZLB; y
+    \item \textit{Rigidez a la baja}. Las rigideces en precios y salarios nominales tienden a ser asimétricas, es decir, estas variables no tienen tanto problema para ajustarse al alza como a la baja. Por ello, los contextos deflacionistas tendrían un coste desproporcionado para la actividad. Así, una inflación positiva es necesaria como lubricante de la economía (\textit{inflation greasing the wheels of markets}).
+\end{lnum}
+
+\subsection{Hiperinflación}
+Desde una perspectiva diametralmente opuesta tenemos los contextos hiperinflacionarios.
+
+\subsubsection{Modelo de CAGAN}
+La modelización de los contextos de hiperinflación debe sus orígenes a CAGAN (1956), por lo que presentaremos brevemente algunas de sus conclusiones y desarrollos. Partimos de una definición canónica del equilibrio en el mercado monetario:
+
+\eqblock{
+\begin{aligned}
+    &\text{Equilibrio en mercado monetario:}\;\left(\frac{M}{P}\right)^s=M^d(\overbrace{Y}^{(+)},\;\overbrace{r_t,\; E[\pi_{t+1}\;|\;\Omega_t]}^{(-)})\\[0.5em]
+    &\underset{\text{Renta y $r_t$ cte.}}{\Longrightarrow}\left(\frac{M}{P}\right)^s=-\alpha\;E[\pi_{t+1}\;|\;\Omega_t]\;\underset{\text{log-linearizando}}{\Longrightarrow}\;\boxed{\overbrace{m_t-p_t}^{\text{\scriptsize $M^s$ real: $\left(\frac{M}{P}\right)^s$}}=\underbrace{-\alpha(\overbrace{E[p_{t+1}\;|\;\Omega_t]-p_t}^{E[\pi_{t+1}\;|\;\Omega_t]})}_{\text{\scriptsize Demanda de dinero: $M^d$}}}\\[1em]
+    &\hspace{20em}\Downarrow\\[2em]
+    &\text{\scriptsize
+    $
+    \left(
+    \begin{aligned}
+        \left.\begin{aligned}
+            &\text{\textbf{(1) Resolvemos para $p_t$:}}\\[0.5em]
+            &m_t-p_t=-\alpha p_{t+1}^e+\alpha p_t\\
+            &\Rightarrow m_t=(1+\alpha)p_t-\alpha p_{t+1}^e\\[0.5em]
+            &\hspace{1em}\Longrightarrow\;\; p_t=\frac{1}{1+\alpha}m_t+\frac{\alpha}{1+\alpha}p_{t+1}^e\\[1em]
+            &\text{\textbf{(2) Iteramos $p_t\to p_{\infty}$:}}\\
+            &\hspace{4em}\underbrace{\text{\scriptsize desde, $\;p_{t+k}=\frac{1}{1+\alpha}m_{t+k}+\frac{\alpha}{1+\alpha}E[p_{t+k+1}\;|\;\Omega_{t+k}]$}}\\[0.5em]
+            &\hspace{2em}\text{\scriptsize $
+            {\begin{aligned}
+                &\hspace{6em}\underset{\text{(aplicamos en $t+1:\;\; \Downarrow$)}}{p_t=\frac{1}{1+\alpha}m_t+\frac{\alpha}{1+\alpha}E[p_{t+1}\;|\;\Omega_t]}\\
+                &\hspace{4.5em}\underset{\text{(tomamos expectativas condicionales en $t:\;\;\Downarrow$)}}{p_{t+1}=\frac{1}{1+\alpha}m_{t+1}+\frac{\alpha}{1+\alpha}E[p_{t+2}\;|\;\Omega_{t+1}]}\\
+                &\hspace{2em}\underset{\text{(sustituimos en la ecuación original $p_t=\dots:\;\;\Downarrow$)}}{E[p_{t+1}\;|\;\Omega_t]=\frac{1}
+                {1+\alpha}E[m_{t+1}\;|\;\Omega_t]+\frac{\alpha}{1+\alpha}E[p_{t+2}\;|\;\Omega_t]}\\
+                &\hspace{0em}{p_t=\underbrace{\frac{1}{1+\alpha}m_t+\frac{\alpha}{(1+\alpha)^2}E[m_{t+1}\;|\;\Omega_t]}_{\text{(se expande a la derecha)}}+\underbrace{\left(\frac{\alpha}{1+\alpha}\right)^2E[p_{t+2}\;|\;\Omega_t]}_{\text{(eleva la potencia del factor $\frac{\alpha}{1+\alpha}$)}}}
+            \end{aligned}}$}\\[0.5em]
+            &\overbrace{\substack{
+            \text{ sustituimos en la última ecuación que hemos obtenido (y así sucesivamente...)}\\
+            \text{(iteramos $n\to\infty$ este proceso: \textit{forward looking})}\\[0.5em]
+            \text{Obtenemos:}\quad p_t=\sum_{s=0}^n\frac{1}{1+\alpha}\left(\frac{\alpha}{1+\alpha}\right)^sE[m_{t+s}\;|\;\Omega_t]+\left(\frac{\alpha}{1+\alpha}\right)E[p_{t+s+1}\;|\;\Omega_t]
+            }}
+        \end{aligned}
+        \hspace{0.5em}\right|\hspace{0.5em}
+        \begin{aligned}
+            &{\text{\textbf{(3) Aplicamos Condición de Transversalidad:}}}\;
+            \left\{\begin{aligned}
+                &0<\frac{\alpha}{1+\alpha}<1\\[0.5em]
+                &\substack{
+                \text{$p^e$ no puede crecer exponencialmente}\\
+                \text{más rápido que $\left(\frac{1+\alpha}{\alpha}\right)^n$}}
+            \end{aligned}\right\}\\[2em]
+            &\lim_{n\to\infty}\left(\frac{\alpha}{1+\alpha}\right)^{n+1}E[p_{t+n+1}\;|\;\Omega_t]=0\quad
+            \left(\substack{
+                \text{Excluye burbujas de precios y}\\
+                \text{selecciona la solución fundamental}
+            }\right)\\[1em]
+            &\underset{\substack{
+            \text{Término final desaparece}\\
+            \left(\frac{1}{1+alpha}\right)^{n+1}E[p_{t+n+1}\;|\;\Omega_t]=0
+            }}{\Longrightarrow}\;\;p_{t}=\sum_{s=0}^\infty\left(\frac{1}{1+\alpha}\right)\left(\frac{1}{1+\alpha}\right)^sE[m_{t+s}\;|\;\Omega_t]
+        \end{aligned}
+    \end{aligned}\right)
+    $
+    }\\[1em]
+    &\hspace{20em}\Downarrow\;\text{(factorizamos)}\\[1em]
+    &\hspace{12em}\boxed{p_t=\frac{1}{1+\alpha}\sum_{s=0}^\infty\left(\frac{\alpha}{1+\alpha}\right)^sE[m_{t+s}\;|\;\Omega_t]}
+\end{aligned}
+}{Modelo de Hiperinflación de CAGAN: Nivel General de Precios en función de expectativas futuras sobre el dinero. Inflación: Casos polares}
+
+Como vemos, a partir del equilibrio en el mercado monetario, considerando la renta y el tipo de interés real de la economía constante (razón por la cual aparece el parámetro $\alpha$ en la ecuación), podemos obtener la ecuación del nivel actual de precios en función de las expectativas presentes sobre el crecimiento o cantidad de dinero en circulación presente y futuro (es decir, de la oferta monetaria). La demanda de dinero depende negativamente de la inflación esperada ($\alpha$), pues, en un entorno \textit{fisheriano}, una mayor inflación esperada supone un mayor tipo de interés nominal (para mantener constante el tipo real), lo que incrementa el coste de oportunidad de mantener dinero en efectivo.\footnote{Manteniendo, la especificación logarítmica y asumiendo el supuesto adicional de que la cantidad de dinero es exógena, entonces podemos expresar una teoría de la determinación del nivel generalde precios, que dependerá obviamente de manera positiva de la inflación esperada. Por tanto la inflación esperada es la variable clave del modelo. Sin embargo, en el momento en el que CAGAN desarrolla su modelo, aún no se había producido la revolución de la hipótesis de las expectativas racionales (HER), lo que llevó a Cagan a plantear su modelo a partir de la hipótesis de las expectativas adaptativas (HEA). 
+} Sobre la ecuación de equilibrio, aplicando una log-linearización, resolviendo para el nivel de precios actual, iterando hacia adelante (\textit{forward-looking}) y en último término aplicando la Condición de Transversalidad, de modo que no se generen equilibrios múltiples y que el dinero se acerca siempre a su valor fundamental, evitando el desarrollo de burbujas (expectativas autocumplidad) ya que no existe una razón para que su \textit{precio} crezca sin límites independientemente de la oferta monetaria (no es un activo que pague dividendos), se acaba obteniendo la ecuación final.
+
+Para obtener una solución definitiva para $p_t$ sería necesario fonnular un modelo macroeconómico completo a partir del cual los agentes toman sus expectativas racionales. Unos agentes racionales utilizarían toda esa infonnación relevante y anticiparían los efectos inflacionistas de determinadas políticas (como una expansión monetaria o fiscal), de forma que aumentarían su expectativa de precios $p_{t+1}^e$, precipitando ya los aumentos de precios al periodo actual $p_t$, incluso aunque las políticas no se hayan adoptado. 
+
+\paragraph{Hiperinflación racional: Ingresos por señoreaje}
+El modelo de CAGAN también sirve para valorar la posibilidad de que existan hiperinflaciones racionales, esto es, contextos donde se alcanza una inflación elevada por el deseo de maximizar los ingresos por señoreaje. Definiendo los beneficios obtenidos del señoreaje ($S$) en función de los siguientes parámetros:
+
+\eqblock{
+\begin{aligned}
+    &\text{RPG: (nominal)}\quad &&\underbrace{(B_t-B_{t-1})}_{\text{\scriptsize Incremento de la Deuda}}=\underbrace{\overbrace{P_tG_t-P_tT_t}^{\text{\scriptsize Déficit primario}}+i_tB_{t-1}}_{\text{\scriptsize Déficit del Sector Público}}-\underbrace{(M_t-M_{t-1})}_{\text{\scriptsize Ingresos por señoreaje}}\\[1em]
+    &\text{RPG: (real)}\underset{(\cdot \;P_t^{-1})}{\Longrightarrow}&&\underbrace{\frac{(B_t-B_{t-1})}{P_t}}_{\downarrow\;\Rightarrow\;\uparrow \pi_t}=G_t-T_t+\underbrace{\frac{i_tB_{t-1}}{P_t}}_{\downarrow\;\Rightarrow\;\uparrow \pi_t}-\underbrace{\frac{(M_t-M_{t-1})}{P_t}}_{\text{\scriptsize La clave del asunto: conexión con anterior}}\\[1em]
+    &\Longrightarrow\text{Gobierno puede $\downarrow$ Déficit (real) $\iff$ $\uparrow\;M^s$}&&\underset{\text{pero,}}{\Longrightarrow}\;\Delta P_t=\frac{1}{1+\alpha}\sum_{s=0}^\infty E[\Delta M_{t+s}\;|\;\Omega_{t+s}]\\[1em]
+    &\text{Trade-off}
+    &&\begin{cases}
+        \text{(+)}\;\uparrow P_t\;\Rightarrow\;\overbrace{\downarrow(B_t-B_{t-1})}^{\text{\scriptsize Coste real de la deuda emitida}}\;+\;\overbrace{\downarrow i_tB_t}^{\text{\scriptsize Coste real de la deuda heredada}}\\[0.5em]
+        \text{(-)}\;\uparrow P_t\;\Rightarrow\;\underbrace{\downarrow\left(\frac{\Delta M}{P_t}\right)}_{\text{\scriptsize Ganancias por señoreaje}}\;+\;\underbrace{\downarrow E\left[\left.\sum_{s=0}^\infty s_{t+s}\;\right|\;\Omega_t\right]}_{\text{\scriptsize Credibilidad de pago del Gobierno}}
+    \end{cases}\\[2em]
+    &\text{\textbf{Función de señoreaje}:}&&\boxed{S=\pi_t\;\cdot\;M^d(Y,\;r,\;\pi_t)}
+\end{aligned}
+}{Hiperinflación racional: Señoreaje. Inflación: Casos polares}
+
+Por tanto, vemos como a partir de la Restricción Presupuestaria del Gobierno en términos reales, podemos ver como el Gobierno puede decidir reducir el volumen nominal de su Deuda Pública mediante el uso del \textit{impuesto inflacionista} (ingresos por señoreaje). Esto es así porque la inflación reducirá la carga real de la inflación heredada (sobre los Tipo de Interés), y la necesidad de financiarse en $t$ con la emisión de deuda. No obstante, esta capacidad tiene su contraparte negativa. La misma capacidad de monetizar el déficit se ve minada por el aumento de los precios (es decir, de la inflación), por lo que a partir de un momento, la capacidad de monetizar el déficit por parte del Gobierno será nulo. Esto se puede ver si relacionamos las conclusiones expuestas con el modelo de CAGAN en relación a la inflación. Si los agentes esperan que el Gobierno aumente desmesuradamente la masa monetaria, el nivel de precios crecerá en consecuencia, lo que reducirá las capacidades de monetización. Además, si lo ponemos en contexto con la Teoría Fiscal del Nivel de Precios, entonces podemos ver como una espiral hiperinflacionaria se puede generar por dos vertientes simultaneas: (i) las expectativas de crecimiento de la masa monetaria; y, (ii) la disminución de los saldos superavitarios reales esperados por los agentes en el momento $t$ (por la combinación, así mismo de la incapacidad de monetiza y de la constricción de Gasto): la \textit{suerte está echada} en este caso. Gráficamente, los ingresos óptimos del impuesto inflaionario se puede representar gráficamente mediante la versión simplificada de la ecuación que proporcionamos al final.
+
+\textbf{INCLUIR GRÁFICO SEÑOREAJE}
+
+Desde este punto de vista, los niveles a la izquierda del óptimo recaudatorio no tendrían porque generar una espiral hiperinflacionaria. La inflación sería elevada pero controlada (mientras los agentes ajusten sus respectivas demandas de dinero y el Gobierno sea capaz de realizar una consolidación fiscal). No obstante, se puede precipitar rápidamente si los ingresos necesarios por señoreaje son superiores al óptimo (incapacidad recaudatorio o de financiación exterior, p.e. Argentina 2002) o si los agentes no se creen que el Gobierno frene las máquinas llegado el momento.
+
+\paragraph{Implicaciones de Política Económica}
+Por tanto, un aumento de la monetización del déficit (impuesto inflacionario) tendrá dos efectos:
+\begin{la}
+    \item \textbf{Medidad \textit{one-off}}. Si el Gobierno es capaz de convencer a la población de que la monetización del Déficit se realizará como medida excepcional y no se repetirá (por ejemplo, prometiendo superávits más elevados o blindando su Política Fiscal de Gasto legalmente), entonces sí será capaz de aumentar sus ingresos provinientes del impuesto inflacionario, monetizar el déficit y reducir la carga real de su deuda; y,
+    \item \textbf{Falta de credibilidad}. Si el Gobierno no es capaz de convencer a los agentes, entonces rápidamente su caapcidad de monetizar el déficit se verá increiblemente mermada, reduciendo los ingresos provinientes del impuesto inflacionario e incidiendo negativamente en la demanda de dinero.
+\end{la}
+
+\clearpage
+\section{Efectos de la Inflación: Análisis normativo}
+\puntosclave{
+    Por un lado, la inflación genera costes de eficiencia (microeconómicos pero con impacto macroeconómico) que genera la volatilidad y la dispersión de precios. La visión neoclásica ha consistido en constatar que si aumenta la inflación, es necesario asumir con más frecuencia el coste que supone transformar los productos de ahorro en el dinero necesario para las transacciones (incurriendo metafóricamente en mayores costes de suela de zapato por ir al banco). La visión neokeynesiana añade el coste que genera la inflación por la mayor dispersión de precios relativos (pues no todas las empresas revisan los precios, dados precios \textit{a la Calvo}, contratos escalonados o costes de menú).
+    
+    Por otro lado, existen costes para la estabilidad macroeconómica asociados a una inflación volátil, que se suelen modelizar con una función de pérdidas sociales donde la desviación de la inflación respecto a su objetivo (normalmente nulo) entra en términos cuadráticos.
+    
+    En la mayoría de desarrollos en el ámbito de inflación, la consideración de la eficiencia y el bienestar recomiendan una inflación nula o incluso negativa, aunque esta visión está sujeta a matices. Ello implica que, en los modelos de estabilización, se utilicen funciones objetivo de la autoridad donde en general se persigue una inflación nula, aunque habría margen para incluir un objetivo de inflación ligeramente positiva.
+}
+
+A lo largo de la exposición nos hemos esforzado en explicar las posibles causas que dan origen a la inflación. Hemos visto que esta puede ser concebida como un fenómeno monetario (estricto o neokeynesiano) o como un fenomeno real, tanto desde la óptica de la demanda como desde la óptica de la oferta. Además, hemos expuesto dos casos polares, deflación e hiperinflación, con la intención de resaltar que, si bien las causas en un contexto normal pueden ser variadas y poco claras (de hecho, la cuantificación de sus aportaciones frecuentemente es errónea), en éstos casos polares un determinante resulta clave, sino esencial, para entender el fenómeno: las expectativas y creencias de los agentes. 
+
+Sin embargo, hemos evitado realizar un análisis normativo de la inflación por dos razones principales:
+\begin{la}
+    \item Como se dijo al principio, inflación no equivale a pérdida de poder adquisitivo, son dos fenómenos distintos que pueden influirse en función de diferentes factores;
+    \item Por otro lado, realizar un análisis normativo de la inflación exige adscribirse a una corriente teórica concreta y analizarlo desde esta óptica.
+\end{la}
+
+No obstante, presentaremos ahora los \textit{efectos} de la inflación, desde una óptica neokeynesiana, tanto sobre la eficiencia económica como sobre el bienestar.
+
+\begin{specialblock}{\textbf{Tema 3.A.42} -- Costes y beneficios de la inflación: Incorporar información y revisar documentación citada}
+    \textcolor{red}{\textbf{COSTES}}
+
+    La inflación puede representar unos costes fácilmente identificables. Por ejemplo, los costes de “suela de zapato” o shoe-leather, los costes en términos de mala asignación de recursos debida a cambios en precios relativos o las distorsiones fiscales como la “rémora fiscal” (fiscal drag) de unos impuestos progresivos diseñados en términos nominales.\footnote{
+    Por ejemplo: (i) por la necesidad de convertir más frecuentemente el ahorro que devenga intereses en dinero para realizar unas mismas compras más caras; (ii) ues no todos los precios se ajustan simultáneamente con la inflación; y/o, (iii) porque unas mayores rentas nominales que solo se ajusten a la inflación serán gravadas por un mayor tipo impositivo marginal, a pesar de no haber aumentado en términos reales. Respectivamente.
+    } Sin embargo, estos costes no parecen lo suficientemente importantes como para explicar la marcada aversión del público y sus gobernantes a la inflación. En consecuencia, los economistas han dedicado un esfuerzo considerable a investigar si la inflación genera costes significativos por otros canales menos inmediatos. En concreto, se han estudiado los costes derivados de una inflación estable y anticipada, así como los derivados del vínculo entre nivel de inflación y su variabilidad.
+
+    En caso de una inflación estable, se han identificado tres candidatos a generar grandes costes de la inflación. En primer lugar, la variabilidad de precios relativos antes descrita puede perturbar gravemente mercados en los que oferentes y demandantes formen relaciones a largo plazo, análisis iniciado por Okun (1975) y Carlton (1982). Sin embargo, la literatura no ha alcanzado un consenso sobre estos efectos de la inflación. En segundo lugar, a los agentes les puede resultar difícil incorporar la inflación en su planificación financiera a largo plazo (Modigliani y Cohn, 1979; Hall, 1984). Finalmente, puede ser que simplemente a la gente le disguste la inflación (Shiller, 1997). En el caso del vínculo entre nivel y variabilidad de la inflación, la inflación es más variable y menos predecible cuando es elevada (Ball y Cecchetti, 1999). Así, con inflaciones bajas se da el consenso de que debería seguir así, de modo que permanece baja y estable, pero cuando es alta no se da el acuerdo sobre la importancia de reducirla y los costes de una inflación ligeramente mayor pueden parecer pequeños, de modo que la inflación termina siendo variable y difícil de reducir. Este efecto de la media sobre la varianza de la inflación implica costes de la inflación adicionales potencialmente importantes. En concreto, esta mayor variabilidad incrementa la incertidumbre, reduciendo la realización de proyectos de inversión a largo plazo o generando desconfianza sobre el funcionamiento del gobierno, reduciendo con ello el bienestar. Aunque empíricamente se han detectado relaciones negativas entre inflación e inversión y entre inflación y crecimiento (Bruno y Easterly, 1998), poco se sabe acerca de si esta relación es causal.
+
+    \textcolor{red}{\textbf{BENEFICIOS}}
+    
+    Por otro lado, la inflación también puede tener beneficios. En primer lugar, la inflación puede, según TOBIN (1972), engrasar las ruedas del mercado laboral en un contexto de salarios nominales rígidos a la baja, al permitir su reducción en términos reales. Aunque empíricamente se observa dicha rigidez, no está claro aún si produce malas asignaciones significativas y si depende fuertemente del nivel de inflación (ELSBY, 2009). Y, en segundo lugar, una mayor inflación media reducirá la frecuencia con la que la política monetaria alcance la cota inferior cero de los tipos de interés nominales, contribuyendo a una producción más estable (KILEY y ROBERTS, 2017). 
+    
+    
+    En conclusión, la investigación académica no ha ofrecido aún ninguna conclusión firme sobre los costes y beneficios de la inflación ni sobre la tasa de inflación óptima, luego economistas y gobernantes deben apoyarse en su propio juicio al ponderar los diferentes elementos de análisis.
+    
+\end{specialblock}
+
+
+\subsubsection{NEK-2: Efectos sobre la Eficiencia y el Bienestar}
+Partimos de los siguientes supuestos: (i) existe un continuo de variedades $i\in[0,1]$ a la DIXIT-STIGLITZ, por lo tanto los mercados son imperfectos, existe competencia monopolítisca en variedades; (ii) cada variedad tiene un precio, $P_t(i)$; (iii) a partir de los precios de cada variedad, se construye el índice de precios agregado, $P_t$; (iv) existen rígideces nominales, por lo que las empresas no podrán modificar sus precios en cada periodo, solo un conjunto $\alpha$ (a la CALVO); y, (v) la dispersión de precios generada por la competencia monopolística y las rigideces nominales da lugar a unos costes por dispersión de precios, $s_t$.\footnote{Con CALVO y DIXIT–STIGLITZ hay una distorsión real: una dispersión en precios. Esa dispersión hace que, para entregar una unidad de consumo agregado $c_t$, se malgasten recursos en producir demasiado de unas variedades y demasiado poco de otras. El resultado será que se necesite producir más output físico para obtener el mismo consumo agregado (que es un índice).
+} Analíticamente:
+
+\eqblock{
+\begin{aligned}
+    &\text{Restricción de factabilidad:}\qquad \underset{
+    \substack{
+        \begin{aligned}
+            &\text{\scriptsize (Eficiencia) Si $s_t=1$, no se desperdicia nada: $F(l_t)=c_t$}\\
+            &\text{\scriptsize (Ineficiencia) Si $s_t>1$, para consumir $c_t$ debemos producir $F(l_t)=c_ts_t$}
+        \end{aligned}
+        }}{F(l_t)=\overbrace{s_t}^{\substack{\text{\scriptsize Costes/pérdida}\\\text{\scriptsize eficiecia}}}\underbrace{c_t}_{\substack{\text{\scriptsize Consumo}\\\text{\scriptsize útil}}}}\\[1em]
+        &
+        \substack{
+        \text{\scriptsize 1er Paso:}\\
+        \text{\scriptsize Sin CALVO}
+        }\begin{cases}
+            \underset{\text{\scriptsize Con $\theta>1$: elasticidad de sustitución. Agregador CES}}{\text{Demanda DIXIT-STIGLITZ:}}\quad c_t(i)=\left(\frac{P_t(i)}{P_t}\right)^{-\theta}c_t\quad
+            \left(\substack{
+            \text{Si $\uparrow \frac{P_t(i)}{P_t}\;\Rightarrow\;\uparrow c_t(i)$}\\
+            \text{Si $\downarrow \frac{P_t(i)}{P_t}\;\Rightarrow\;\downarrow c_t(i)$}
+            }\right)\\[1em]
+            \text{Producción:}\qquad \underset{\text{\scriptsize En el \textit{baseline}, no aquí}}{y_t(i)=c_t(i)}\;\Rightarrow\;\underset{\text{\scriptsize En el \textit{baseline}. Todavía no introducimos costes ($s_t$)}}{Y_t=\int_0^1y_t(i)\;\mathrm{d}i=\int_0^1c_t(i)\mathrm{d}i\;\sim\;Y_t=\int_0^1\left(\frac{P_t(i)}{P_t}\right)^{-\theta}c_t\mathrm{d}i}\;\Rightarrow\;Y_t=c_t\int_0^1\left(\frac{P_t(i)}{P_t}\right)^{-\theta}\;\mathrm{d}i\\[0.5em]
+            \text{Ineficiencias:}\qquad Y_t=F(l_t)=s_tc_t\;\underset{\text{\scriptsize Por definición}}{\Rightarrow}\;{Y_t=c_t\int_0^1\left(\frac{P_t(i)}{P_t}\right)^{-\theta}\;\mathrm{d}i}\;\Rightarrow\;\underset{\substack{\text{Función de Costes:}\\\text{\scriptsize ¿Cuánto $Y_t$ extra por ineficiencias/dispersión de precios?}}}{\boxed{s_t=\int_0^1\left(\frac{P_t(i)}{P_t}\right)^{-\theta}\;\mathrm{d}i}}\\[0.5em]
+        \end{cases}\\[1em]
+        &\underset{\text{\scriptsize Introducimos CALVO}}{\Longrightarrow}s_t=\underset{\text{\scriptsize Cambian precios}}{(1-\alpha)\left(\frac{P_t^*}{P_t}\right)}+\underset{\text{\scriptsize No cambian precios}}{\alpha\int\left(\frac{P_{t-1}(i)}{P_t}\right)}\;\underset{
+        \text{\scriptsize$
+        \left(\frac{P_{t-1}(i)}{P_t}\right)^{-\theta}=(\pi_t)^\theta\left(\frac{P_{t-1}(i)}{P_{t-1}}\right)^{-\theta}
+        $}
+        }{\overset{
+        \left(\text{\scriptsize$
+        \substack{
+        \text{Empresas que no reajustan:}\\[0.5em]
+        P_t=\pi_tP_{t-1}\;\;\uparrow\;\text{(nivel general de precios)}\\[0.5em]
+        \Rightarrow\;\frac{P_{t-1}(i)}{P_t}=\frac{P_{t-1}(i)}{\pi_tP_{t-1}}=\frac{1}{\pi_t}\frac{P_{t-1}(i)}{P_{t-1}}
+        }
+        $}\right)
+        }{\Longrightarrow}}\alpha\int\left(\frac{P_{t-1}(i)}{P_t}\right)^{-\theta}\;\mathrm{d}i=\alpha(\pi_t)^\theta\underbrace{\int\left(\frac{P_{t-1}(i)}{P_{t-1}}\right)^{-\theta}\;\mathrm{d}i}_{\text{Que es igual a: }s_{t-1}}\\[1em]
+        &\Longrightarrow\quad\boxed{
+        s_t=(1-\alpha)\left(\frac{P_t^*}{P_t}\right)^{-\theta}+\alpha\pi_t^\theta s_{t-1}
+        }
+\end{aligned}
+}{Modelo de la NEK-2: Derivación de la ecuación de \textit{costes} derivados de las rigideces. Efectos de la inflación}
+
+Por tanto, vemos como podemos derivar la función de costes por la existencia de rigideces reales y nominales como \textit{sobrecoste} en términos de producción para una misma cantidad de consumo. La última ecuación nos muestra la función de costes como función del grado de rigideces reales, los costes pasados y la inflación experimentada. Pero, ¿qué tiene esto que ver con los efectos de la inflación?
+
+\paragraph{Implicaciones de Política Económica}
+Sabemos que el óptimo, es decir, el valor que máximiza el output habida cuenta de las rigideces se alcanza si y solo si los costes se minimizan. Es decir, se alcanza cuando $s_t=1$. Entonces, ¿cómo podemos alcanzar el óptimo? No podemos variar el grado de las rigideces, es decir, no tenemos control sobre $\beta$ ni sobre $\alpha$, de tal forma que lo que debemos hacer es actuar para que garantizar la estabilidad de precios: $\left(\frac{P_t^*}{P_t}\right)=1$ y $\pi_t=1$ (considerando que se trata de inflación bruta: índexada, esto es, $\pi_t=\frac{P_t}{P_{t-1}}$). De esta forma, sabemos que sucederá (analíticamente) lo siguiente:
+
+$$
+s_t=(1-\alpha)(1^{-\theta})+\alpha (1^\theta) s_{t-1}\Longrightarrow s_t=(1-\alpha)+\alpha s_{t-1}\overset{\substack{\text{\scriptsize Si es creíble,}\\\text{\scriptsize en algún momento $s_{t-1}=1$}}}{\Longrightarrow}\boxed{s_{t\to\infty}=(1-\alpha)+\alpha=1}
+$$
+
+Esto es así porque en una economía con estabilidad de precios, las $1 - \alpha$ empresas que tienen la oportunidad de revisar los precios (reciben luz verde) optarán por elegir un nivel deseado de precios igual al del periodo anterior, pues si los precios son estables ($P_{t-1}=P_t$), la decisión óptima de precios relativos del periodo anterior sigue siendo óptima éste. Es decir, se acabará obteniendo un entorno donde los precios no cambien y la inflación sea igual a la unidad. La estabilidad de precios resulta óptima en el sentido de RAMSEY (porque maximiza el bienestar social) y en el sentido de Pareto (porque no hay ineficiencias). Si la inflación (bruta) no fuese igual a la unidad, en un contexto de inflación positiva las firmas que adapten sus precios perderían ventas en favor de las que no adaptan sus ventas y, en consecuencia, habría una reasignación de mercado ineficiente entre variedades e incrurríamos en mayores costes, dada la restricción de factabilidad, lo mismo ocurriría en caso de deflación pero para las empresas que no ajustaran sus precios.
+
+\subsubsection{Efectos sobre la estabilización}
+El anterior análisis de los costes de la inflación sobre la eficiencia y el bienestar se ha centrado en la economía en su conjunto, desde el punto de vista de un planificador social a la RAMSEY que integra las funciones objetivo de los agentes teniendo en cuenta las restricciones de factibilidad para la economía de manera agregada (integrando las restri cciones presupuestarias y tecnol ógicas de consumidores, empresas y gobierno). No obstante, resulta pertinente analizar la cuestión desde el punto de vista estricto del bienestar del consumidor.
+
+A la hora de examinar los efectos de la inflación sobre la eficiencia y el bienestar, los modelos que tratan de microfundamentar la existencia y la demanda de dinero en la economía se pueden dividir en dos grupos:
+\begin{la}
+    \item Por un lado, estarían los modelos que introducen el dinero en la función de utilidad, como un argumento que da utilidad a los agentes, aunque sin entrar a justificarlo;
+    \item Por otro lado, estarían los modelos de shopping-time, cash-in-advance o costes de transacción, donde el dinero se demanda porque facilita la compra de bienes de consume, que es lo que en último lugar da utilidad. 
+\end{la}
+
+\paragraph{Coste de oportunidad: Motivo transacción}
+Si consideramos que el consumidor demanda dinero por motivo transacción, este enfrenta un coste de oportunidad doble por su tenencia: (i) desde un punto de vista nominal, deja de percibir los rendimientos que le proporcionarían otros activos alternativos al dinero; y, (ii) desde un punto de vista real, en presencia de inflación, este dinero acarrea una pérdida depoder adquisitivo derivada de ésta. 
+
+Por tanto, ¿cómo podemos analizar la pérdida de bienestar del consumidor en este contexto? Considerando una demanda de dinero individual y que este agente demanda dinero en términos reales, la demanda de dinero se representará en el eje horizontal. Sabemos que la curva de demanda de dinero es decreciente en el tipo de interés ya que, como hemos dicho, es precisamente un coste de oportunidad que enfrenta (nominal en este caso), por tanto situamos el tipo de interés en el eje vertical y trazamos la curva de demanda de dinero:
+
+\textbf{INCLUIR GRÁFICO VICTOR}
+
+Mediante la maximización de la utilidad, ya se de manera directa o indirecta, que le proporciona la tenencia de dinero, sujeta al coste de oportunidad que enfrenta ($m_t\cdot i_t$), alcanzamos el primer equilibrio y el excedente del consumidor, o bienestar, queda representado por el area sombreada (integral hasta el punto de los límites superior, la restricción, e inferior, el eje horizontal). Ahora bien, supongamos que aumenta la inflación, esto conduce a un aumento del Tipo de Interés (por parte de la Autoridad Monetaria) y induce unos mayores costes de oportunidad en su demanda de equilibrio inicial (nominal por la subida del Tipo y real por la mayor pérdida de poder adquisitivo). Por lo tanto, re-optimizando, alcanzaremos un nuevo equilibrio de demanda de dinero (real) donde esta será menor. La pérdida de bienestar que supone este nuevo equilibrio frente al otro queda precisamente representado por el area pérdida hasta el punto de equilibrio inicial. 
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Inflación: Efectos}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+\clearpage
+\anexo{Modern Monetary Policy: Introducción}\label{anx:MMT}
+The fundamental distinction of MMT from the New Keynesian theory which has dominated macro policy analyses for nearly three decades lies in its view of the nature of money and what this means for the government's capacity to pursue fiscal policy. Thus, instead of seeing money as a ‘medium of exchange’, MMT economists argue that money derives its fundamental value from being a ‘unit of account’ imposed by the government requiring taxes to be paid in a designated currency.1 Thus, a monetarily sovereign government—being the monopoly issuer of that currency—would never be confronted by a ‘budget constraint’. As long as the government does not attempt to consume more than what is available in the economy (i.e., its consumption does not breach the real resource constraint), it would always be able to finance its own spending by ‘printing’ as much money as needed.
+
+MMT portrays a world in which fiscal activism is possible because the fiscal authority enjoys much more space than mainstream models would predict. If the fiscal authority could never run out of money, this would be a welcome addition to the set of policy instruments available to manage the economy, since fiscal instruments—which generally have strong direct impacts—could be used whenever needed; and fiscal policy is easier to implement in low-interest environments (as in the US and EU post-Crisis), and in economies where monetary transmission remains inefficient (as in most developing economies). The problem of concern to macro-economists, however, is: ‘how can inflation be stabilised if money can be printed freely to finance public deficits?’
+
+According to MMT, inflation is stabilized by taxes. Thus, another key distinction of MMT from conventional monetary theories (such as the New Keynesian theory) lies in the role of taxes. MMT economists argue that, since the government can print as much money as it needs, taxes are no longer needed for financing spending; instead, they are levied by the government, and must be paid in the currency it has issued, for the sole purpose of draining money from circulation; in this way excess money can be ‘burnt’, as an ‘inflation-avoidance manoeuvre’ (Wray, 2019). Thus taxes, which control the supply of money in the MMT world, are an inflation management tool (Armstrong, 2019; Mitchell et al., 2019; Murphy, 2019; Wray, 2019).
+
+The policy regime in the MMT world can therefore be described in the following way: government spending stabilizes output (or employment); money is created to finance such spending at interest rates held down by limiting government borrowing; money thus enters circulation; taxes, which stabilize inflation, are then levied to drain it from the economy so that the quantity in circulation delivers the inflation target in the steady state. MMT claims that this mechanism is in line with what was observed in the post-Crisis era of the US during which public debt continued to swell and quantitative easing (QE) injected a huge amount of money, while inflation remained moderate (Davies, 2019). Wray (2019, p.10) further claims that: ‘This is the way it has worked for the past 4000 years… in spite of the modern procedures adopted’.
+
+However, no MMT contribution has so far spelt out this narrative as a model in a testable form. This prevents MMT from taking its theory beyond blogs and social media posts to convince the profession at large, for which therefore the rosy picture it describes for fiscal activism remains both vague and unconvincing. On the other hand, other economists have so far also not been able to assess MMT formally using standard statistical/modelling methods. Without this analysis, we lack formal evidence on whether the policies advocated by MMT would achieve what it claims.
+
+\anexo{Inflación Importada: ¿Qué es? ¿Cómo se mide? ¿Es un fenómeno insorteable?}\label{anx:inflacion_importada}
+¿Qué efecto tienen los precios de las importaciones sobre la tasa de inflación doméstica? Unos pocos ejemplos deberían convencernos de que esta no es una pregunta bien planteada. Consideremos primero un experimento de política económica que solíamos describir como un aumento plenamente anticipado del 5\% en la tasa de crecimiento de la oferta monetaria doméstica o, en el contexto del modelo del artículo de Lipinska y Millard, un aumento perfectamente anticipado del 5\% en el objetivo de inflación de largo plazo del banco central nacional. En ausencia de fricciones, esto estaría asociado con un aumento del 5\% en los precios en euros de los bienes importados y un aumento del 5\% en la inflación doméstica. En un contexto así, podría afirmarse que el “traspaso” (pass-through) de los precios de importación a la inflación doméstica es uno a uno, aunque en realidad la causalidad verdadera opera en la dirección opuesta. De forma más general, en la medida en que la tasa de inflación doméstica está al menos influida por las decisiones de política monetaria interna, si un banco central preguntara a un economista académico: 
+
+«¿qué efecto tienen los precios de importación sobre la inflación doméstica?», dicho economista podría verse tentado a responder: «el efecto que usted quiera que tengan». 
+
+Si los bancos centrales formulan esta pregunta, debe de existir claramente algún conjunto de supuestos implícitos sobre su propia capacidad o disposición para contrarrestar cualesquiera efectos que pudieran producirse; es decir, debe existir algún escenario de referencia en el que tengamos claro el horizonte temporal considerado y qué entendemos exactamente por \textit{en ausencia de una respuesta del banco central}.
+
+Un segundo ejemplo ilustra algunos escollos adicionales asociados a la pregunta. Supongamos que nuevos temores sobre la estabilidad financiera europea conducen a una depreciación del euro. En igualdad de condiciones, cabría esperar que ello se asociara con un aumento del precio en euros de los bienes importados. Sin embargo, las consecuencias generales de un pánico financiero son predominantemente deflacionarias, y no debería sorprendernos observar que el nivel general de precios domésticos disminuya efectivamente a pesar del aumento del coste de las importaciones. En tal caso, podríamos afirmar que el parámetro de traspaso podría ser incluso un número negativo.
+
+Lo que estos dos ejemplos tienen en común es que el aumento del precio de los bienes importados fue en sí mismo el resultado de una tercera causa independiente. En el primer ejemplo, esta tercera causa fue la expansión monetaria doméstica, y en el segundo, una crisis financiera interna. En cada caso, estos acontecimientos no solo tuvieron implicaciones para los precios de los bienes importados, sino que además tuvieron efectos directos sobre la inflación doméstica que operan a través de canales distintos de los propios precios de importación. Por lo tanto, si formulamos la pregunta «¿cuál es el traspaso de los precios de importación a la inflación doméstica?», la respuesta inevitable es: «depende de qué haya provocado el aumento de los precios de importación en primer lugar».
+
+Supongamos, a efectos de la discusión, que hemos acordado las demás condiciones necesarias para llegar a una pregunta bien planteada; a saber, que buscamos las consecuencias domésticas de un determinado acontecimiento exógeno que se origina fuera de nuestro país, en un horizonte temporal corto especificado y con una respuesta concreta asumida por parte del banco central. ¿Qué herramientas podríamos utilizar para intentar responder a una pregunta de este tipo? Entraríamos aquí en el último posible factor explicativo de la inflación: la oferta.
+
+\end{document}
