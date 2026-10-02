@@ -1,0 +1,1169 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Tema 3.B.11 -- Mecanismos de ajuste de la Balanza de Pagos\\
+\large Especial referencia al enfoque intertemporal de la Balanza de Pagos. Análisis de sostenibilidad del déficit y de la deuda exterior}
+\author{Marcelo Ortega}
+\date{Enero 2026}
+\newcommand{\TemaCode}{3B12}
+
+\oldtitle{Tema 3.B.13 Mecanismos de ajuste de la balanza de pagos. Especial referencia al enfoque intertemporal de Balanza de Pagos. Análisis del déficit y de la deuda exterior
+
+Tema 3.A.28. Determinación de renta, precios e inflación en una economía abierta. Análisis de las Políticas Monetaria y Fiscal.
+}
+\changerationale{Sin cambios. Ante el cambio en el anterior tema A.28, se recomienda hacer referencia en este tema al modelo de Mundell-Fleming.}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     Se hace notar que la cuestión abordada en este tema se corresponde con una rama de la literatura muy rica en modelos importantes. Es imposible cubrirlo todo satisfactoriamente. Por tanto, se opta por incluir en el cuerpo del tema aquéllos que se recomienda incluir en la exposición, pero en los anexos se desarrollan también otros que el opositor debe de conocer. Como en los demás temas de la oposición, es desaconsejable estructurar el cante como una sucesión de numerosos modelos, explicados sólo superficialmente y de manera inconexa. Por el contrario, es preferible desarrollar analíticamente únicamente los más relevantes, y presentar los principales resultados de los demás oralmente (así como junto con los supuestos que garantizan su validez y resultados de su contrastación empírica).
+
+     No se incluye en esta versión del tema el desarrollo analítico de estos modelos al contar ya con una extensión elevada. Sin embargo, seria aconsejable que el opositor complementase la exposición del modelo intenemporal de precios flexibles con la introducción de rigicedes nominales y reales: ésos son los modelos empleados en la actualidad tanto en la literatura como en la práctica de la política económica. No existe un modelo único de referencia pero la explicación del capitulo 10 de Foundations of lnternational Macroeconomics (Obtsfcld, Rogoff 1 996) es clara y útil: alternativamente, el capitulo 9 de Monetary Theory and Policy (Wlash 2015) es también una fuente muy recomendable.
+
+    }
+\vspace{1cm}
+
+\modificaciones{
+    Última Modificación: 27/01/2026
+
+    Falta incluir todo el modelo de sostenibilidad de la Deuda Externa y hacer más atractivo el apartado de Hechos Estilizados.
+
+    Los Hechos Estilizados se deberían usar tanto en el Tema 11 como en el 12.
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+Desde un punto de vista económico (el punto de vista jurídico lo tratamos en el [\authorfont{Ver Tema 3.B.11}]), tres son los componentes de la balanza pagos: (i) la balanza comercial; (ii) la balanza de capitales; y, (iii) las reservas internacionales. 
+
+Así, los modelos económicos han buscado explicar el equilibrio de la balanza de pagos centrándose especialmente en alguno de estos tres: los modelos keynesianos/Síntesis Neoclásica en la balanza comercial, los modelos monetaristas en las variaciones de la masa monetaria (y por tanto en reservas internacionales), la aplicación de la teoría del ciclo real en economía abierta en la balanza de capitales.\footnote{Se hace notar que en esta versión del tema se incluye únicamente la versión básica del modelo intertemporal (es decir, con precios perfectamente flexibles): de cara a siguientes vueltas, el buen opositor deberá complementar el desarrollo analítico dé este modelo incorporando rigideces, para alcanzar la familia de modelos que se aplican hoy en dia en el campo de la macroeconomía abierta.
+} Si bien se ha optado por estructurar el tema por escuelas de pensamiento económico, el opositor podría alternativamente presentarlo por los subcomponentes de la balanza de pagos.
+
+El principal instrumento que se utiliza para analizar los desequilibrios externos es la balanza de pagos, que se define como el documento contable que registra las operaciones que realizan los residentes de un país con el resto del mundo durante un periodo de tiempo. Al utilizar el principio de partida doble, la balanza de pagos estará, por definición, en equilibrio contable, por lo tanto, para analizar los desequilibrios económicos tendremos que analizar el saldo de las sub-balanzas que la componen (su volumen, tendencia y persistencia).
+
+\subsubsection{Relevancia}
+Uno de los grandes debates que ha estado siempre presente en la ciencia económica es el relativo a los desequilibrios externos, el cual se ha intensificado a raíz de la gran oleada de liberalización externa que hemos vivido desde la II Guerra Mundial. En la actualidad nos encontramos como muchos economistas ven en los desequilibrios externos un posible síntoma o incluso causa de la crisis financiera global de 2008-2009, así como de los problemas que ha vivido el euro. En la escena política, también los desequilibrios externos aparecen en el corazón de los discursosproteccionistas/nacionalistas que están proliferando en los últimos años. En cuanto a nuestro país, una de las fortalezas económicas que se destacan es el hecho de que España haya mantenido un superávit por cuenta corriente de fonna ininterrumpida desde que se produjo el ajuste externo durante la crisis de 2008-2012. Todo ello muestr<\ la gran importancia que tiene arrojar algo de luz teórica sobre la naturaleza, causas y consecuencias de estos desequilibrios, así como los instrumentos de política económica disponibles para corregirlos, en caso de que sea necesario.
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+En la exposición seguiremos un orden cronológico, comenzando con los modelos de carácter keynesiano, cuya prioridad es identificar las políticas más eficaces para restaurar el equilibrio interno y externo en una economía con rigideces y paro. Después se expondrá el enfoque de activos que resalta la importancia de los movimientos de capitales en la determinación del equilibrio externo. 
+     
+Finalmente, cerraremos el tema abordando el enfoque intertemporal de la balanza de pagos. A diferencia de las teorías anteriores, que se centran en cómo corregir los desequilibrios de balanza de pagos, esta teoría sostiene que dichos desequilibrios son el resultado de decisiones optimizadoras de los agentes y que por tanto no deben considerarse negativos, siempre y cuando sean sostenibles. Es por ello que dicha teoría se complementa con un análisis de las condiciones de sostenibilidad de la deuda externa.
+
+
+\clearpage
+\section{Desequilibrios por Cuenta Corriente: Enfoque keynesiano}
+\puntosclave{
+    Su objetivo es identificar las políticas económicas más adecuadas para corregir los desequilibrios externos en un contexto de rigideces y paro y centradas en el corto plazo. 
+    
+    Para conseguir simultáneamente los equilibrios interno (reducir paro) y externo (inicialmente centrado en la cuenta corriente) se necesitan dos políticas diferentes. Normalmente una que desvíe el gasto hacia productos nacionales (depreciación/devaluación) y otra de reducción del gasto.
+    
+    Al incorporar movimientos de capital (Mundell-Fleming), las políticas monetaria y fiscal tienen efectos diferentes sobre el tipo de interés. Esto hace posible que una combinación adecuada de ambas permita, por ejemplo, reducir el déficit externo y el paro al mismo tiempo. 
+    
+    Un resultado destacado de M-F: con movilidad de capitales, uno de los principales costes de un tipo de cambio fijo es la renuncia a una política monetaria autónoma.
+}
+
+Con el surgimiento del pensamiento keynesiano y en un contexto de preocupación por el desempleo, comienzan a ponerse en duda los mecanismos de ajuste automático de la balanza de pagos. El propio Keynes ya atribuía el déficit comercial de Inglaterra tras la primera guerra mundial a una libra excesivamente cara.\footnote{En 1717, Reino Unido definió el valor de la Libra Esterlina en oro en vez de plata, por primera vez. De hecho, fue ISAAC NEWTON quien, como \textit{Master of the Mint} tuvo la labor de fijar (sino acutó como promotor) dicho valor en: 4,25 libras por onza de oro troy estándar. 
+
+Este precio duró algo menos de 200 años (hasta su suspensión en 1914) aunque la convertibilidad fue prohibida durante las Guerras Napoleónicas, cuando los pagos en oro fueron suspendidos ya que el Gobierno necesitaba dicho oro para financiar las campañas del Duque de Wellington en la peninsula ibérica (\textit{Peninsula War}). La intermediación para la recaptación masiva de oro que necesitó el Gobierno Británico para financiar dichas campañas fue realizada por Nathan ROTSCHILD, el hermano mayor de la dinastía ROTSCHILD, que jugaría un papel clave en las finanzas Gubernamentales e Internacinoales durante todo el S. XIX.
+} Así, algunos sectores como la minería de carbón, al contar con sindicatos con mucho poder, no podían ajustar sus precios internos a la baja y, por tanto, iban perdiendo competitividad lo que provocaba déficit comercial y desempleo.
+
+Con la Gran Depresión, varios países trator de reactivar su economía mediante devaluaciones sistemáticas del Tipo de Cambio (intentando reactivar el sector exportador mediante políticas de \textit{empobrecimiento del vecino}). No obstante, estas políticas no alcanzaron su objetivo manifiesto y, en consecuencia, el pensamiento keynesiano se populariza aún más, lo que llevó a que se extiendese la idea de que era necesario intervenir la economía para corregir distintos problemas, entre ellos los desequilibrios de la balanza de pagos. De este modo surgen una serie de modelos que estudian las condiciones para que esta intervención sea efectiva desde el punto de vista de la balanza de pagos (en particular, los saldos por Cuenta Corriente). 
+
+Son modelos centrados en el corto plazo, que suponen precios fijos y que pretenden identificar los instrumentos de Política Económica capaces de restablecer el equilibrio económico externo e interno.
+
+\begin{specialblock}{\textbf{Segunda Ronda}.- Otros modelos no incorporados (Víctor sí los tiene)}
+    La literatura incluida en este apartado es muy amplia, y existen modelos de enorme impacto que, si bien probablemente el opositor no podrá desarrollar con detalle en la exposición oral, sí ha de conocer. En especial: 
+    \begin{la}
+        \item El modelo del multiplicador y el modelo de absorción (éste último se emplea a menudo como modelo baseline para el diseño de políticas de estabilización del sector externo, por ejemplo en caso de asistencia financiera del FMI); y,
+        \item El modelo Mundell-Fleming, incorporando la posibilidad de una prima de riesgo, pem1ite hacer un análisis gráfico de una crisis de balanza de pagos típica, como la crisis financiera asiática de 1997. En ese caso, varias economías con tipo de cambio fijo, experimentaron un aumento de su prima de riesgo por la pérdida de confi anza de los inversores. Esto hizo necesaria una política monetaria contractiva para mantener el tipo de cambio fijo, con un coste importante en términos de output y empleo. Cuando esta política económica se volvió económica y políticamente insostenible, por su elevado coste, se dejó flotar el tipo de cambio. La depreciación resultante permitió ganar competitividad y contribuyó a la recuperación económica. 
+    \end{la}
+
+    Se puede ver este análisis gráfi co en lntemational Money and Finance (ninth edition, 2017). Michael Melvin, Stefan Norrbin. Chapter 13 - Toe IS-LM-BP Approach. Pages 251-275. 
+\end{specialblock}
+
+\subsection{Enfoque Elasticidades: Condición MARSHALL-LERNER}
+El punto de partida del enfoque de elasticidades es la condición desarrollada por MARSHALL y LERNER. En base al concepto de equilibrio parcial de flujos de MARSHALL (demanda y oferta se determinan conjuntamente, dando lugar al equilibrio de mercado), estos autores parten de los siguientes supuestos:
+\begin{lnum}
+    \item El mercado de divisas opera en competencia perfecta;\footnote{Los agentes son precio-aceptantes a nivel individual. Sin embargo, a nivel país, existe cierto poder de mercado en el sector exportador, por lo que la demanda de exportaciones no es infinitamente elástica.
+    }
+    \item Los precios son rígidos, de modo que: (i) las fluctuaciones del tipo de cambio nominal se trasladan al tipo de cambio real; (ii) las fluctuaciones del tipo de cambio real dan lugar a las fluctucaciones de la competitividad precio de la economía; y, (iii) la competitividad de la economía incidirá en la cantidad de bienes intercambiados ($\Delta e=\Delta Q$);
+    \item Existen recursos ociosos, de modo que la economía pueda atender a los aumentos de la demanda externa aumentando su producción;
+    \item Consideramos que la balanza comercial está inicialmente en equilibrio, de modo que el valor de las exportaciones es igual al de las importaciones.
+\end{lnum}
+
+Gráficamente podemos representar el equilibrio de la siguiente forma:
+
+\textbf{INTRODUCIR GRÁFICOS}
+
+Supongamos que, en aras de mejorar nuestra balanza comercial, se lleva a cabo una devaluación del 10\% de la moneda nacional. Gráficamente, el nuevo equilibro se situaría en los siguientes puntos de intersección:
+
+\textbf{INCLUIR GRÁFICOS}
+
+Esto devaluación tendrá dos efectos contrapuestos sobre la balanza de pagos: 
+\begin{la}
+    \item \textbf{Efecto cantidad}. La cantidad exportada aumenta ($X_0\to X_1$) y la cantidad importada disminuye ($M_0\to M_1$), lo que tiene un efecto positivo sobre la balanza de pagos dado por el área $(M_0\wedge M_1\wedge E_1\wedge E_0)+ (X_0\wedge X_1\wedge E_1\wedge Y)$ (importaciones más exportaciones); y,
+    \item \textbf{Efecto precio}. El precio obtenido por unidad de exportación, expresado en unidades monetarias extranjeras, disminuye ($P^*_0\to P^*_1$), lo que tiene un efecto negativo sobre la balanza de pagos dado por el área $E_0\wedge P^*_0\wedge P^*_1$ (en exportaciones).
+\end{la}
+
+De este modo, para que la devaluación mejore el saldo de la balanza de pagos, el efecto cantidad debe ser mayor que el efecto precio, es decir, la cantidad demandada de importaciones y exportaciones en conjunto deben reaccionar al precio más que proporcionalmente, lo que nos llevaría a la idea de que la suma del valor absoluto de las elasticidades-precio de las curvas de demanda ha de ser superior a la unidad. Podemos medir analíticamente el efecto de una u otra Política Económica que incida en el Tipo de Cambio mediante la elasticidad MARSHALL-LERNER:
+
+\eqblock{
+\begin{aligned}
+    &\text{BC}=X-e\cdot M_{\text{ext}}\;\Rightarrow\; &&\frac{\partial \text{BC}}{\partial e}=\frac{\partial X}{\partial e}-(M_{\text{ext}}+e\cdot \frac{M_{\text{ext}}}{\partial e})\\[1em]
+    &\underset{\substack{\text{\scriptsize Dividiendo}\\\text{\scriptsize por $M_{\text{ext}}$}}}{\Longrightarrow} 
+    &&\frac{1}{M_{\text{ext}}}\frac{\partial \text{BC}}{\partial e}=\frac{1}{M_{\text{ext}}}\cdot \frac{\partial X}{\partial e}-\left(1+\frac{e}{M_{\text{ext}}}\cdot \frac{M_{\text{ext}}}{\partial e}\right)\;\\[0.5em]
+    &\underset{\substack{\text{\scriptsize En equilibrio:}\\\text{\scriptsize $X=eM_{\text{ext}}\to \frac{1}{M_{\text{ext}}}=\frac{e}{X}$}}}
+    {\Longrightarrow}
+    &&\underbrace{\overset{(+)}{\frac{e}{X}}\cdot\frac{\partial \text{BP}}{\partial e}}_{
+    \substack{
+        \text{\scriptsize Derivada normalizada}\\
+        \text{\scriptsize cambio marginal de BP}\\
+        \text{\scriptsize ante cambio marginal $e$}}}=\;
+    \overbrace{\frac{e}{X}\cdot \frac{\partial X}{\partial e}}^{\substack{
+    \text{\scriptsize Efecto cantidad}\\
+    \text{\scriptsize vía exportaciones}
+    }}-
+    \left(\underbrace{1}_{
+    \substack{
+        \text{\scriptsize Efecto}\\
+        \text{\scriptsize precio puro}}}+
+    \overbrace{\frac{e}{M_{\text{ext}}}\cdot \frac{M_{\text{ext}}}{\partial e}}^{\substack{
+    \text{\scriptsize Efecto cantidad}\\
+    \text{\scriptsize vía importaciones}
+    }}\right)\\[0.5em]
+    &\Longrightarrow &&\frac{\partial \text{BP}}{\partial e}>0\quad\iff\quad \underbrace{\frac{e}{X}\frac{\partial X}{\partial e}}_{\varepsilon_{X,e}>0}-\overbrace{\frac{e}{M_{\text{ext}}}\frac{\partial M_{\text{ext}}}{\partial e}}^{\varepsilon_{M_{\text{ext}, e}}<0}>1\\[2em]
+    &\Longrightarrow&&\boxed{\varepsilon_{X,e}+|\varepsilon_{M,e}|>1}
+\end{aligned}
+}{Elasticidad MARSHALL-LERNER: Derivación analítica. Desequilibrios por Cuenta Corriente}
+
+\paragraph{Implicacioneíticas de Política Económica} 
+La implicación más directa de la condición de Marshall-Lemer es que una devaluación/depreciación (reevaluación/apreciación) mejorará (empeorará) el saldo de la balanza comercial siempre que la demanda de importaciones y exportaciones sean lo suficientemente elásticas al precio. La lógica es que cuando más elásticas sean al precio, mayor será la variación de la cantidad demandada ante un cambio en los precios y, por tanto, más plausible será que el efecto cantidad supere al efecto precio. Estas elasticidades dependen de factores como: • La estructura de mercado en los mercados internacionales de exportación. Cuanta mayor proximidad a la competencia perfecta, mayor elasticidad en la demanda de exportaciones de cada país. • El grado de diferenciación de las exportaciones. Cuanto más diferenciadas, menor elasticidadal precio de la demanda de exportaciones. • La sustituibilidad de las importaciones. Cuanto más fáciles de sustituir por producto nacional, más elástica será la demanda de importaciones. Además, la condición de Marshall-Lerner (M-L) tiene una implicación mucho más amplia, y es que, bajo determinadas condiciones, se trata de una condición de estabilidad de un sistema económico con tipo de cambio flexible. Suponemos una economía que sólo realiza intercambios comerciales y que estando en equilibrio sufre una perturbación que le lleva a un déficit comercial. Al haber un exceso de demanda en el mercado de divisas, el precio de la moneda extranjera tiende a aumentar, es decir, el tipo de cambio se deprecia. Entonces, si se cumple la condición de M-L, al depreciarse el tipo de cambio se corregirá el déficit y el sistema será estable. Pero si no se cumple, el déficit se ampliará, provocando un mayor exceso de demanda en el mercado de divisas aún mayor, lo que provocará una nueva depreciación, repitiéndose el proceso indefinidamente, siendo el sistema inestable (al menos localmente. ya que a medida que el sistema se aleja del equilibrio las elasticidades pueden variar). ac:x Desde un punto de vista de política económica, las principal implicación es que, si se cumple la condición de Marshall-Lemer, un déficit comercial (viceversa para un superávit) se puede corregir a través de una devaluación del tipo de cambio. Sin embargo. el éxito de esta fórmula depende de que el resto del mundo no reaccione, devaluando sus divisas, lo cual no está garantizado, al tratarse de políticas de empobrecimiento del vecino (un ejemplo serían las infectivas "devaluaciones competitivas'' del periodo de entreguerras). Además, es necesario que la variación del tipo de cambio nominal se traslade al tipo de cambio real. Es decir, que una devaluación del tipo de cambio nominal no provoque un aumento de la inflación que compense la mejora de la competitividad inicial. Por otra parte, si no se cumple la condición de Marshall-Lemer, puede ser necesaria cierta intervención estatal en los mercados carnbiarios para garantizar la estabilidad del sistema o encaminarlo hacia un equilibrio estable.
+
+\subsubsection{Limitaciones: Adaptaciones posteriores}
+La clave será comprobar si la evidencia empírica apoya el cumplimiento en la práctica de la condición de M-L. Inicialmente, ante la ineficacia de las devaluaciones durante la Gran Depresión, se comenzó a poner en duda que las elasticidades fuesen lo suficientemente altas corno para cumplir la condición. Los primeros estudios estadísticos situaron las elasticidades entre O y 0,5. Cundió así lo que Fritz Machlup denominó el "pesimismo de las elasticidades", que implica que las devaluaciones no fueran efectivas y además la posibilidad de que el mercado cambiario fuera inestable. Diversos estudios posteriores con técnicas más depuradas concluyeron que las elasticidades eran más altas. Por ejemplo, Artus y Knight, ( 1984) estiman las elasticidades-precio de importaciones y exportaciones de 14 economías desarrolladas a tres plazos distintos (6 meses, 12 meses y largo plazo), encontrando que a 6 meses no se cumple la condición de M-L en muchos de los países, pero a 12 meses ya se cumple en la mayoría y a largo plazo se cumple en todos. Más recientemente, Ducoudre et al. (2019) encuentran que a largo plazo se cumple la condición M-L para las seis economías desarrolladas que evalúan: Francia, Alemania, Italia, España, Reino Unido y Estados Unidos. No obstante, otros análisis empíricos encuentran que la condición de ML solo se cumple para algunos países. Bahmani et al. (2013) hacen una revisión de la literatura y concluyen que la condición M-L se cumple en aproximadamente la mitad de los casos estudiados. En definitiva, la evidencia disponible sugiere que la devaluación puede ayudar a recuperar el equilibrio externo, pero no siempre será eficaz, dependiendo de la situación y características de cada economía. Ante las dudas sobre el cumplimiento de la condición de M-L también hubo una reacción a nivel teóriccr, con varias líneas de trabajo que levantaron los supuestos del modelo inicial para hacer menos restrictiva la condición, de modo que se cumpla para elasticidades más bajas, o bien, para tratar de explicar por qué puede no ser efectiva una devaluación.
+
+\paragraph{Curva de J}
+Si considerásemos la transición desde una perspectiva dinámica, constataríamos que el efecto precio tendría lugar de forma inmediata mientras que el efecto cantidad presentaría varios retardos (que dependerán de la capacidad de la economía de ajustarse a los nuevos precios, dado que por ejemplo los contratos de exportacionese importaciones no pueden variarse de forma instantánea). De este modo, el saldo de la balanza comercial empeorará en el corto plazo para luego recuperarse y mejorar respecto al punto inicial si se cumple la condición de Marshall-Lemer. Gráficamente, el saldo de la balanza comercial respecto al tiempo evoluciona de una forma que recuerda a la letra J:
+
+\textbf{INCLUIR GRÁFICO}
+
+De acuerdo con el estudio de Artus y Knight, ( 1 984) que se ha mencionado antes, en las economías desarrolladas, el segmento en forma de J duraría entre 6 meses y un año. Al año de la devaluación, en general, el saldo exterior ya habría mejorado respecto a la situación inicial.
+
+\paragraph{Impacto Inflacionista}
+También es necesario tener en cuenta el impacto de la devaluación sobre los precios internos. En particular en las economías con inflación elevada, una devaluación puede trasladarse rápidamente a los precios internos, limitando la capacidad para alterar el tipo de cambio real y, por tanto, limitando la eficacia de la devaluación. Si no se deprecia el tipo de cambio real, por muy elásticas que sean las demandas, la devaluación no mejoraría el saldo de la balanza comercial. Estas presiones inflacionistas se producen por dos vías:
+\begin{la}
+    \item \textbf{Vía directa}. Una devaluación aumenta el precio en moneda nacional de los bienes importados. Para valorar en qué medida la devaluación se traslada a los costes de la producción nacional, habría que analizar el grado de interdependencia de los sectores nacionales y, especialmente, de los sectores exportadores, con las importaciones y con el mercado de trabajo. En relación con este análisis, cuanto mayor sea la integración de una economía en las cadenas globales de valor, menor tenderá a ser la eficacia de una devaluación. El efecto más visible es cuando las exportaciones incorporan un alto porcentaje de inputs importados. En ese caso, una devaluación encarecerá los inputs necesarios para elaborar los productos que se exportan, limitando la mejora de la competitividad tras una devaluación;
+    \item \textbf{Vía indirecta} (efectos de segunda vuelta). Al subir los precios al consumo aumentarían las reivindicaciones salariales, lo cual provocaría un aumento de los costes y los precios volverían a presionar al alza, generándose una espiral inflacionista. Desde el punto de vista del saldo exterior, lo importante es qué parte de esta inflación supone un aumento de los precios de la producción nacional y, sobre todo, de los precios de los bienes comerciables.
+\end{la}
+
+\paragraph{Efectos \textit{pass-through}}
+Otro condicionante del efecto de las devaluaciones será si la devaluación se traslada totalmente a los precios de las importaciones en moneda doméstica (grado de \textit{pass-through} del tipo de cambio sobre el precio de las importaciones). 
+
+Una posible explicación de un \textit{pass-through} incompleto, sería la existencia de empresas con poder de mercado que decidan aplicar precios distintos en cada país. Este ajuste puede ser incompleto a corto plazo, pero tenderá a ser total a largo plazo. Si los precios de las importaciones tardan en ajustarse, el efecto negativo inicial de la Curva J se suavizará y prolongará en el tiempo. Por otro parte, también se retrasará el ajuste de los flujos comerciales en cantidades. 
+
+\textbf{En el Anexo 2 puede verse un análisis pormenorizado de los efectos que tienen lugar al producirse una devaluación, realizado por Stephen Magee.}
+
+\subsection{Modelo MUNDELL-FLEMING: Equilibrio General}
+En definitiva, adoptar un enfoque de equilibrio parcial no permite asimilar todos los efectos inducidos que una devaluación (apreciación) tiene sobre la renta a través del incremento (descenso) de las exportaciones netas. En particular, este enfoque (incluido sus desarrollos posteriores: MEADE) prestaba poca atención a los movimientos de capitales, lo que suponía que la Política Monetaria y Fiscal tuvieran efectos similares sobre el equilibrio interno y el externo y, por tanto, no eran considerados instrumentos independientes. Está cuestión sería abordada por MUNDELL y FLEMING a principios de la década de 1960, de forma simultánea, pero por separado.
+
+Los autores complementaron el enfoque keynesiano introduciendo los flujos internacionales de capital privado como uno de los factores fundamentales de su modelo. De esta forma, las Políticas Monetaria y Fiscal afectan al output en el mismo sentido, pero tienen efectos opuestos sobre el tipo de interés (y, gracias a la movilidad de capital, efectos opuestos sobre la Balanza de Pagos), lo que las convierte en instrumentos independientes. El modelo MUNDELL-FLEMING permite estudiar la eficacia relativa de las Políticas Monetaria y Fiscal para contribuir al equilibrio interno y externo bajo distintos regímenes cambiarios (fijo o flexible) y con distintos grados de movilidad internacional de capital e identificar el \textit{policy mix} adecuado para lograr el pleno empleo y el equilibrio de balanza de pagos en el corto plazo.
+
+\eqblock{
+\begin{aligned}
+    &\text{Curva IS:}&&Y=C(Y)+G+I(i,Y)+\underbrace{XN(e,Y, Y^*)}_{\text{Balanza de Comercial}}\\[0.5em]
+    &\text{Curva LM:}&&\frac{M^s}{P}=M^d(i,Y)\\[1em]
+    &\text{Curva BP:}&& BP=\underbrace{XN(e,Y, Y^*)}_{X(Y^*)-eM(Y)}+\overbrace{\beta(i-i^*)}^{\frac{\partial \text{BP}}{\partial i}=\beta\;>\;0}
+\end{aligned}
+}{Modelo IS-LM-BP: Curva IS. Balanza Comercial MUNDELL-FLEMING}
+
+En una economía abierta la condición de equilibrio en el mercado de bienes es que la producción ($Y$) sea igual a la suma de los componentes de la demanda agregada: consumo (depende de la renta), inversión (depende de la renta y del tipo de interés), gasto público neto y exportaciones netas (dependen del tipo de cambio, renta y existencia de recuross ociosos). La pendiente de la curva IS en el espacio (i, Y) será decreciente ya que, a medida que baja el tipo de interés, aumenta la inversión y crece la renta. Por otra parte, si varía el tipo de cambio ($e$), por ejemplo, si se deprecia, las exportaciones netas aumentarán, y con ellas, lo hará la renta ($Y$). De esta fonna, la curva IS se desplazará hacia la derecha. Lo contrario ocurre con una apreciación.
+
+\begin{specialblock}{Curva de la Balanza de Pagos -- Interpretación económica}
+    La interpretación de la Curva de la Balanza de Pagos no es cuestión baladí. Veamos brevemente en que consiste:
+
+    \textbf{Definición.-} La curva BP muestra en qué puntos la balanza de pagos está en equilibrio. En otras palabras, muestra combinaciones de producción y tipos de interés que garanticen que la balanza de pagos está viablemente financiada, lo que significa que el volumen de exportaciones netas que afectan al total de la producción debe ser consistente con el volumen de salida neta de capitales.
+
+    Esto tiene varias implicaciones importantes: (i) la posición de la Balanza de Pagos puede verse alterada únicamente por las variables estructurales que la componen, que son fruto del comportamiento endógeno; (ii) la Balanza de Pagos no sufre ningún tipo de desplazamiento cuando estamos ante un régimen de Tipo de Cambio Fijo (salvo perturbaciones del Tipo de Cambio Efectivo Real, pero son cuestiones ajenas al modelo) pues que la Autoridad Monetaria es la que actúa para mantener el Tipo de Cambio; y, (iii) la Balanza de Pagos puede sufrir desplazamientos en regimen de Tipo de Cambio flexible. 
+    
+    ¿Por qué? Como hemos dicho, se trata de las combinaciones de ($Y,i$) que mantienen la identidad $CC+CK=0$. Esto implica que, cualquier devaluación del Tipo de cambio, conlleva un encarecimiento de las importaciones y, consecuentemente, la necesidad de mayor entrada de capitales extranjeros bien sea a través de un mayor volumen de exportaciones o un aumento del Tipo de Interés (de equilibrio) que garantice un flujo de capitales mayor. Análogamente, una apreciación del Tipo de cambio empobrece el saldo en términos comerciales, y por tanto, un mayor flujo de capitales extranjeros debe garantizarse en un Tipo e Interés de equilibrio mayor. 
+\end{specialblock}
+
+\subsubsection{Dinámica de ajuste: Equilbrio interno $\to$ Equilibrio externo}
+Para que una economía abierta esté en equilibrio, deberá estarlo también la balanza de pagos. La curva BP representa las combinaciones de ($i$, $Y$), con un tipo de cambio dado, para las cuales la balanza de pagos está en equilibrio, entendiendo como tal una situación en la que los saldos de la cuenta corriente y la financiera justo se compensan ($CC+CF=0$), de forma que las reservas de divisas no varían. La economía estará en equilibrio cuando se encuentre en la intersección de las tres curvas IS-LM-BP.
+
+\textbf{INCLUIR EQUILIBRIO GRÁFICO}
+
+La curva BP será creciente porque cuando aumenta el tipo de interés, se atraen más capitales del exterior, dando lugar a un superávit en la Balanza de Pagos, que requiere un aumento de la renta para que se incrementen las importaciones, compensando la mayor entrada de capital. Cuanto menores sean las barreras a los movimientos de capitales, más plana será la BP, ya que hará falta un menor aumento de $i$, para atraer un mismo flujo de entrada de capitales. En el caso extremo de perfecta movilidad, la curva BP será horizontal con $i$ igual al tipo de interés internacional (en la práctica, $i$ puede ser distinto del tipo de interés internacional, porque los activos de cada economía pueden tener primas de riesgo distintas). Como cualquier Política Económica afectará a la Curva IS o a la Curva LM (Política Fiscal o Política Monetaria), el equilibrio alcanzado en la intersección de ambas determinará los pasos a seguir para reequilibrar el sector exterior, de manera que:
+\begin{la}
+    \item \textbf{Superávit}. Cualquier situación de equilibrio interno que quede por encima de la curva BP representa una situación con superávit de balanza de pagos, en la que se necesita una bajada del tipo de interés, para reducir el saldo de cuenta financiera, o un aumento de la renta que genere más importaciones, para reducir el saldo por cuenta corriente y que se reequilibre la balanza de pagos; y, por el contrario,
+    \item \textbf{Déficit}. Cualquier situación de equilibrio interno que quede por debajo de la curva BP representará una situación deficitaria en la Balanza de Pagos que requerirá un aumento del tipo de interés ($i$) para atraer capitales, o una disminución de las importaciones (descenso de la renta). 
+\end{la}
+
+Este modelo sirve para analizar la eficacia de las Políticas Monetaria y Fiscal, tanto con tipo de fijo como flexible, así como con distintos grados de movilidad de capital. Veamos que pasa en una situación de movilidad (cuasi)perfecta de capitales y distintos regímenes cambiarios.
+
+\paragraph{Tipo de Cambio Fijo}
+En una economía con tipo de cambio fijo y con movilidad de capitales imperfecta. Partiendo de una situación de equilibrio interno y externo ($E_0$), si se aplica una Política Monetaria expansiva (aumento de la oferta monetaria), la curva $LM$ se desplazará hacia la derecha hasta $LM'$, situándose la economía en $E_1$, con una renta mayor y un tipo de interés inferiores a los iniciales. 
+
+\textbf{INCLUIR GRÁFICO}
+
+Pero esta situación no es de equilibrio porque está por debajo de la curva BP y, por tanto, habrá un déficit de Balanza de Pagos. La razón es que el aumento de la renta lleva asociado un aumento de las importaciones, con el consecuente deterioro de la balanza comercial y, paralelamente, la bajada del tipo de interés da lugar a una salida de capitales (deterioro de la Cuenta Financiera). Este desequilibrio exterior genera presiones en el Tipo de Cambio y la Autoridad Monetaria tendrá que intervenir en el mercado cambiario vendiendo divisas para mantener su tipo de cambio fijo. De esta forma, se produce una pérdida de reservas internacionales, que se traduce en una reducción en la Oferta Monetaria ($M^s$) hasta que la $LM$ vuelve a su posición inicial y la economía se sitúa de nuevo en $E_0$. 
+
+Cuanto mayor sea la movilidad, menos tiempo podrá la autoridad monetaria mantener la economía en $E_1$ y en el caso extremo de libre movilidad, será imposible mantenerse temporalmente en $E_1$, porque la salida de capitales será tal que agotará inmediatamente las reservas. Esta tendencia automática a volver al equilibrio externo, recuerda mucho al mecanismo de ajuste planteado por HUME. Sin embargo, este ajuste automático no se produce para el equilibrio interno. Por tanto, con un tipo de cambio fijo y movilidad de capitales, la Política Monetaria se vuelve ineficaz, resultado que se conoce como la \textbf{trinidad imposible}: una economía no puede tener simultáneamente un tipo de cambio fijo, libre movilidad de capitales y una política monetaria eficaz.
+
+\textbf{NOTA.-} Por el contrario, la Política Fiscal tiene una eficacia máxima. Una política fiscal expansiva desplazará la curva IS hacia la derecha, ya que para un tipo de interés dado la demanda ahora será mayor ($\uparrow i$). El nuevo equilibrio interno estará por encima de la curva BP y, por tanto, habrá un superávit de balanza de pagos. La autoridad intervendrá para mantener el tipo de cambio, comprando divisas, lo que aumenta la oferta monetaria y desplaza la LM hacia la derecha. El nuevo equilibrio se alcanzará con un tipo de interés superior al inicial y un aumento de renta. En este caso, al efecto expansivo inicial de la política fiscal, se suma otro adicional por la expansión monetaria asociada a la intervención en el mercado cambiario.
+
+\paragraph{Tipo de Cambio Flexible}
+Supngamos ahora que estamos ante un regimen cambiario flexible. Partiendo de una situación de equilibrio, una política monetaria expansiva baja el tipo de interés e induce un aumento de la inversión y de la renta: el nuevo equilibrio se sitúa por debajo de la curva BP (deficitario). 
+
+\textbf{INCLUIR GRÁFICO}
+
+La bajada del tipo de interés provoca una salida neta de capitales hacia el exterior que conduce a una depreciación del Tipo de Cambio. Esta depreciación, al noestar intervenido el Tipo de Cambio, favorece un aumento de las exportaciones (superávit comercial) y, por tanto, un desplazamiento hacia la derecha de la Curva IS. Así, al efecto inicial de la Política Monetaria, se suma ahora otro efecto expansivo adicional gracias a la depreciación cambiaría. De hecho, de forma contraria al caso anterior, este aumento de la renta será mayor cuanto mayor sea la movilidad de capitales (cuanto más plana sea la curva BP).
+
+\textbf{NOTA.-} Por su parte, una expansión fiscal con Tipo de Cambio flexible tiene un efecto positivo sobre la renta y eleva el tipo de interés. No obstante, sus efectos variarán en función de la movilidad de capitales que exista en la economía:
+\begin{la}
+    \item \textbf{Elevada movilidad de capitales}. Una Políica Fiscal expansiva, con régimen flexible y elevada movilidad de capitales, situaría el equilibrio interno de la economía en un nivel superior de renta, Tipo de Interés y situación superavitaria en la Balanza de Pagos. Esta situación superavitaria conduce a una presión al alza de la Moneda nacional (por entrada de capitales), lo que producirá una apreciación del Tipo de Cambio. Esta apreciación del Tipo de Cambio conduce a un deterioramiento del saldo por Cuenta Corriente (desplazamiento de la Curva IS a la izquierda) y, además, la apreciación reduce la cuenta corriente (en términos de la Balanza de Pagos) para cualquier nivel de renta. Para que la Balanza de Pagos represente la combinación tal que la se cumple $CC+CK=0$, el deterioramiento de la Cuenta Corriente requiere de un volumen mayor de entrada de capitales para su equilibrio. Por tanto, el Tipo de Interés que equilibra la Balanza de Pagos es también ligeramente superior, lo que hace que se desplace ligeramente hacia arriba, alcanzando un equilibrio con un Tipo de Interés superior y un nivel de renta también mayor (efecto \textit{crowding-out} parcial). En caso de movilidad perfecta, se produce un \textit{crowding out} total: la política fiscal expansiva induce una apreciación cambiaría que reduce las exportaciones netas hasta compensar el aumento inicial de la demanda por la expansión fiscal.
+    \item \textbf{Reducida movilidad de capitales}. Si la movilidad de capitales fuese muy reducida, la expansión fiscal provocaría un déficit de balanza de pagos. Este déficit de Balanza de Pagos conduce a una depreciación del Tipo de Cambio. Esta depreciación del Tipo de Cambio mejora las condiciones de equilibrio de la Balanza Comercial, por tanto, se requiere menor entrada de capitales para garantizar el cumplimiento de la Balanza de Pagos. Esto se traduce en un desplazamiento de la Curva BP ligeramente a la derecha hasta situarse en el punto de Equilibrio interno. En el equilibrio final, el Tipo de interés habría subido, como también la renta de la economía sin haber conducido a un efecto \textit{crowding out} parcial ni total: plena eficacia de la Política Fiscal. 
+\end{la}
+
+\subsubsection{Limitaciones}
+En primer lugar, el supuesto de que los flujos de capitales son función del diferencial del tipo de interés es poco realista. Eso supondría que, en caso de haber un diferencial constante entre el tipo nacional y el internacional, debería producirse un flujo de capital de forma indefinida; cuestión que fue abordada por el enfoque de activos, como veremos a continuación.\footnote{El propio MUNDELL fue uno de los pioneros del enfoque monetario.
+} 
+
+Tampoco es realista suponer que todos los activos son sustitutivos perfectos. Es decir, lo habitual es que los activos de cada economía tengan primas de riesgo distintas y, si se produce un cambio en la percepción del riesgo que tienen los inversores sobre los activos de una economía, se producirá un desplazamiento de su curva BP (al alza si sube u prima de riesgo, a la baja si se reduce). 
+
+Por último, la definición de equilibrio externo en términos de estabilidad en las reservas internacionales puede tener interés a corto plazo, pero no a largo plazo ya que no parece razonable mantener una balanza de pagos en equilibrio mediante un tipo de interés permanentemente más elevado, que atraiga capital extranjero. Esto provocaría un efecto \textit{crowding out} sobre la inversión nacional y una acumulación de deuda externa. Esta situación terminaría haciéndose insostenible y en algún momento sería necesario recortar el consumo y aumentar el ahorro. Por tanto, cuando lo que nos interesa es el equilibrio a largo plazo, espreferible definir el equil ibrio externo en términos de una senda sostenible para el consumo y la inversión nacionales.
+
+En definitiva, el modelo MUNDELL-FLEMING es útil para analizar el comportam iento de una economía y los efectos de las políticas económicas en el corto plazo, pero no es capaz de relacionar este equilibrio de corto plazo con uno de largo plazo.
+
+\clearpage
+\section{Desequilibrios por Cuenta Financiera: Enfoque de Activos}
+\puntosclave{
+    Lo relevante es el equilibrio de los stocks de activos. Los flujos sirven para reequilibrar los stocks. 
+    
+    La causa de los desequilibrios externos son los desequilibrios en los mercados de activos. El desequilibrio externo tiende a corregirse solo, sin necesidad de intervención pública. Solo se mantiene mientras persista la perturbación o la intervención pública que lo provoca. 
+    
+    Para el enfoque monetario, la causa más común de déficit externo es el exceso de crecimiento del crédito interno. La política monetaria es totalmente ineficaz. No consigue modificar la oferta monetaria, tan solo su composición. 
+    
+    En el modelo de cartera, la sustituibilidad imperfecta de activos hace posible que la Política Monetaria pueda ser eficaz a corto plazo con un tipo de cambio fijo.
+}
+
+Tras la II Guerra Mundial, comienza a darse un fenómeno de apertura a nivel internacional sin precedentes hasta entonces. Si bien la época en la cual el patrón oro estuvo instaurado a nivel internacional fue testigo de una gran apertura comercial, esta segunda fase de liberalización exterior tuvo un carácter más intenso, más global y mucho más amplio, extendiéndose a ámbitos como los movimientos de capitales transfronterizos. De este modo pasamos de una cuenta financiera con escasas anotaciones (sobre todo, variaciones de reservas provocadas por los intercambios comerciales) a una cuenta financiera que recoge nuevos fenómenos y mucho más complejos. Es por ello que los economistas comienzan a centrar su atención en los fenómenos recogidos por esta cuenta y desarrollan el denominado enfoque de activos de la balanza de pagos.\footnote{La idea fundamental que recogen estos modelos es que, en un mundo con libre circulación de capitales, la oferta y demanda de divisas no responden solamente a su uso como medio de cambio a nivel internacional, sino que también responderán a su uso como depósito de valor (bien sea dinero u otros activos). Por tanto, la línea de causalidad que contemplan los modelos anteriores (desequilibrios comerciales causan desequilibrios en la cuenta financiera) deja de ser tan evidente y podría invertirse, ya que un stock de activos o dinero en un determinado país distinto del deseado por los agentes conducirá a un ajuste que se reflejará en un desequilibrio de la cuenta financiera. Este desequilibrio tendrá su contrapartida en otra parte de la cuenta financiera o bien en la cuenta corriente, pero en este caso el desequilibrio corriente es consecuencia y no causa del desequilibro en la cuenta financiera. Por tanto, mientras los agentes no se enfrenten a ninguna restricción a la hora de ajustar sus carteras, el desequilibrio será un fenómeno transitorio, y se corregirá automáticamente a medida que los agentes ajusten su cartera a la composición deseada.
+}
+
+Este nuevo enfoque toma especial relevancia a raíz de la ruptura del Acuerdo de Bretton-Woods (1971), en un contexto de alta variabilidad de los Tipos de Cambio y cada vez mayor movilidad de factores productivos. Distinguimos dos modelos que difieren, principalmente, en el grado de sustituibilidad de activos nacionales y extranjeros: los modelos monetarios (con sustituibilidad perfecta) y el enfoque de cartera (con sustituibilidad imperfecta).
+
+\subsection{Modelo Monetario: Sustituibilidad perfecta}
+El primero de ellos, que cobró importancia durante los años 60's hasta la ruptura de Bretton-Woods, fue desrrollado principalmente en dos escuelas: una ligada al FMI con autores como POLACK y otra a la escuela de Chicago en la que destacan autores como MUNDELL y/o JOHNSON. Estos modelos resaltan el papel del dinero como depósito de valor de modo que el stock de dinero importa y, en consecuencia, una cantidad distinta del stock deseado/requerido provocará desequilibrios en el mercado monetario que se transmitirán a la balanza de pagos, de modo que la balanza de pagos es un fenómeno monetario.
+
+Desarrollemos el enfoque de la Escuela de Chicago. Supongamos que la demanda de dinero deuna economía viene determinada de forma exógena como función de la renta, el nivel general de precios y el tipo de interés. Por su parte, la oferta monetaria se determina de forma endógena como la suma de la cantidad de reservas ($R$) y de dinero crediticio ($CI$) [es decir, la $M^s\sim M_1$]. Accesoriamente, supongamos que: (i) existe pleno empleo de recursos, de modo que el nivel de renta viene determinado por factores reales que consideramos exógenos; (ii) se cumple la ley del precio único a nivel internacional, tanto para activos cómo para mercancías; y, (iii) existe perfecta movilidad de capitales y regimen de Tipo de Cambio fijo.
+
+Partiendo del equilibrio, representado por:
+
+\eqblock{
+\begin{aligned}
+    M^d=M^s=R+CI\;\Longrightarrow\;\boxed{BP=\Delta R=\Delta M^d-\Delta CI}
+\end{aligned}
+}{Enfoque Monetario: Equilibrio y mecanismo de ajuste por reservas. Cuenta Financiera (Banco Central)}
+
+Cualquier cambio/ajuste que deba experimentar la Balanza de Pagos (superávit o déficit) será consecuencia de la variación de la demanda de dinero ($M^d$), que depende de factores exógenos, o del volumen de crédito interno ($CI$) respecto a sus sistuaciones de equilibrio. Será el nivel de reservas el que se ajuste ante shocks que produzcan un desequilibrio en el mercado monetario, apareciendo un desequilibrio en otra parte de la balanza de pagos, que compense esta variación de reservas. Sin embargo, este desequilibrio será transitorio y una vez el nivel de reservas se haya ajustado a las nuevas condiciones monetarias, el desequilibrio desaparecerá. 
+
+Por tanto, la Balanza de Pagos en este modelo nos conduce al \textbf{equilibrio del mercado monetario}. Además, puede presentar un saldo superavitario o deficitario en equilibrio.
+
+\subsubsection{Dinámica: Shocks}
+Analizarnos el ajuste ante distintos shocks.
+
+\paragraph{Shock Monetario: Exceso de saldos monetarios}
+Al aumentar, por ejemplo, el crédito interno ($\Delta CI$), con una demanda de dinero dada, habrá un exceso de saldos monetarios ($M^s>\frac{M^d}{P}$). Dichos saldos monetarios en exceso se pueden emplear en la compra de activos en el extranjero (salida neta de capitales, lo que provocaría un déficit en otra parte de la cuenta financiera) y/o en aumentar la absorción interna (mayor volumen de importaciones: apareciendo un déficit en la cuenta corriente). El desequilibrio de la balanza de pagos provocará una disminución de las reservas, lo que llevaría a que la oferta de dinero se redujese, volviendo a su nivel anterior y desapareciendo los desequilibrios.
+
+\paragraph{Shocks de oferta: Caída de la renta}
+Ante una caída de la renta, se reduce la demanda de dinero ($\downarrow M^d$), apareciendo un exceso de saldos monetarios ($M^s>\frac{M^d}{P}$). Con un razonamiento análogo al anterior aparecería un déficit en otras partes de la balanza que se corregiría automáticamente cuando la caída en las reservas acomode la oferta de dinero a las nuevas condiciones de demanda.
+
+\subsubsection{Implicaciones de Política Económica}
+La principal implicación es que la Balanza de Pagos es un fenómeno monetario, de modo que los desequilibrios en la balanza de pagos son consecuencia (no causa) de desequilibrios en el mercado de dinero, desequilibrios que se corregirán de forma automática vía variaciones de reservas.\footnote{Como vemos, difiere del mecanismo flujo especie en la línea de causalidad ya que en el mecanismo flujo especie son los desequilibrios comerciales los que provocan variaciones del nivel de reservas, lo que a su vez es causa de un desequilibrio en el mercado de dinero que se corrige vía precios, lo cual, al influir en la competitividad de la economía corrige el desequilibrio inicial también automáticamente.
+} 
+
+Desde el punto de vista de política económica, las principales conclusiones son:
+\begin{lnum}
+    \item \textbf{Ineficacia de la Política Monetaria}. Toda expansión del crédito interno queda contrarrestada por una disminución equivalente de las reservas, por lo que ni siquiera se transmitiría a la cantidad de dinero en la economía (únicamente cambiaría su composición). Se da así el fenómeno de la trinidad imposible según la cual no se puede tener a la vez tipo de cambio fijo, libre circulación de capitales y una política monetaria autónoma. El único caso en el que sería necesaria una política monetaria activa es cuando las reservas estén cerca de agotarse. En este caso una política contractiva ayudaría a equilibrar el mercado de dinero, evitando que se lleguen a agotar las reservas y sea imposible mantener el tipo de cambio fijo;
+    \item \textbf{Política Montearia acomodaticia de la demanda de dinero}. La mejor fonna de mantener el equilibrio externo es una política monetaria que acomode el crédito interno a las variaciones en la demanda de dinero. Si consideramos que esta es proporcional a la renta, reglas como la propuesta por PHELPS, según la cual la oferta de dinero crecería al mismo ritmo que la economía, conseguirían mantener el equilibrio externo a la vez que mantienen la estabilidad de precios a nivel interno;\footnote{Sin embargo, para implementar estas reglas, debe tenerse en cuenta que, para controlar la oferta de dinero no basta con el control de la base monetaria, también es necesario el control de la creación de dinero bancario, por ello algunos de sus precursores abogan por la introducción de coeficientes de reservas del 100\%
+    } y,
+    \item \textbf{Política Fiscal activa}. Si se produce una caída transitoria de la demanda externa, que provoca un déficit exterior, no sería razonable responder con una reducción del crédito interno, porque eso debilitaría aún más la demandad agregada y aumentaría el paro. En este caso seria más sensato aplicar una política fiscal expansiva que sostenga la demanda mientras dure el shock negativo. 
+\end{lnum}
+
+El enfoque monetario constituye un modelo teórico interesante, aunque simplifica mucho la realidad económica al centrar todo su análisis en el mercado monetario. Este enfoque puso de relieve que, centrando la atención en el mercado monetario, se puede en muchos casos analizar el impacto sobre la balanza de pagos de distintos shocks. Por otra parte, fue muy importante su contribución a la diferenciación entre flujos y stocks. También se convirtió en un modelo de largo plazo de referencia para otros análisis posteriores que introdujeron supuestos más realistas.
+
+\subsubsection{Críticas y Limitaciones}
+Las críticas a este enfoque se centran en la falta de realismo de sus supuestos:
+\begin{lnum}
+    \item \textbf{Desequilibrios reales}. En la práctica se observan problemas de balanza de pagos de origen real (como la falta de competitividad);
+    \item \textbf{Precio único}. En particular, se critica el supuesto del cumplimiento de la ley del precio único para bienes y activos:
+    \begin{la}
+        \item En el caso de los bienes, existen bienes no comercializables en los que no tienen por qué cumplirse la ley del precio único, por lo que su precio no sería exógeno ni siquiera en el caso de un país pequeño. Sin embargo, cambios en los precios de estos bienes sí que podrían afectar a la cantidad demandada de dinero, por lo que esta no sería totalmente exógena; y,
+        \item En el caso de los activos, el grado de sustituibilidad no es perfecto y esto hace necesario incluir en el análisis otros activos financieros. Esta cuestión se fue haciendo más relevante a medida que los flujos de capitales ganaban peso en la economía internacional. 
+    \end{la}
+\end{lnum}
+
+\subsection{Modelo de Cartera: Sustituibilidad imperfecta}
+El enfoque de cartera analiza qué sucede en el caso de no existir sustituibilidad perfecta entre activos nacionales y extranjeros, intentando solventar una de las críticas vertidas frente al enfoque monetarista clásico. 
+
+\subsubsection{Desarrollo formal: McKINNON y BRANSON}
+Presentemos el modelo propuesto por McKINNON y BRANSON. Supongamos que estamos valorando la situación de una economía pequeña pero abierta, lo que tiene tres implicaciones: (i) el tipo de interés de referencia internacional se fija de manera exógena (nula influencia); (ii) los bonos nacionales no se comercializan a nivel internacional y no son canjeables por bonos extranjeros (por lo que las salidas de capitales vendrán dadas por compras de bonos extranjeros, y viceversa) y un aumento de los bonos extranjeros se compensa reduciendo la cantidad de dinero, no de bonos nacionales. 
+
+Además, supongamos que existen precios rígidos en el corto plazo (rigideces nominales), que el Tipo de Cambio es fijo y que los activos son sustitutos imperfectos entre activos nacionales y extranjeros (fenómeno que se observa en la realidad incluso en países con libre circulación de capitales; por ejemplo, el famoso \textit{home bias} de los bancos de la zona euro respecto a los bonos soberanos).
+
+Definimos dos mercados: el mercado de activos y el mercado de bienes y servicios. 
+
+\paragraph{Mercado de Activos: Cuenta Financiera}
+Los agentes domésticos poseen una riqueza que está distribuida entre dinero, bonos nacionales y bonos extranjeros. Analíticamente:
+
+\eqblock{
+\begin{aligned}
+    &\hspace{2em}\begin{aligned}
+        \boxed{W=M+B+\underbrace{eF}_{\substack{\text{\scriptsize Bonos extranjeros}\\\text{\scriptsize denominados en}\\\text{\scriptsize $M$ nacional}}}}\quad 
+        \begin{cases}
+            M^d=f(\underset{(-)}{r}, \overset{(-)}{r^*})\\[0.5em]
+            B^d=f(\underset{(+)}{r},\overset{(-)}{r^*})\\[0.5em]
+            F^d=f(\underset{(-)}{r},\overset{(+)}{r^*})
+        \end{cases}
+    &\end{aligned}\\[2em]
+    &\begin{cases}
+        &\underset{\text{\scriptsize Restricción Hoja de Balance}}{\text{Agregación de ENGEL:}}\qquad &&\uparrow W\Rightarrow \;\;\uparrow D_{\text{Total}}^{\text{Activos}}\\[0.5em]
+        &\underset{\text{\scriptsize Restricción Aditiva}}{\text{Agregación de COURNOT:}}\qquad &&\uparrow P\underset{\substack{\text{\scriptsize Por ejemplo,}\\\uparrow\; i}}{\Rightarrow} \;\;\not\uparrow D_{\text{Total}}^{\text{Activos}}\;\Rightarrow\;\substack{\text{Recomposición }\\\text{de cartera}}
+    \end{cases}
+\end{aligned}
+}{Mercado de Activos: Enfoque de equilibrio de Cartera. Cuenta Financiera: Desequilibrios}
+
+Por tanto, como vemos, los agentes disponen de tres alternativas de inversión. De hecho, un modelo simplificado podría acabar aquí ya que al repartirse la riqueza totalmente entre los distintos activos contemplados, se puede plantear la condición de vaciado del mercado de activos (Ley de WALRAS).
+
+\begin{specialblock}{Desequilibrio Cuenta Financiera: Enfoque de cartera}
+    $$(M^d-M^s)+(B^d-B^s)+(F^d-F^s)=0$$
+    
+    Si $n - 1$ mercados presentan exceso de oferta, el mercado $n$ presenta exceso de demanda. Por tanto, si los mercados nacionales presentan un desequilibrio, el mercado de bonos extranjeros presentará un desequilibrio compensador que, al irse corrigiendo, conducirá a un desequilibrio por cuenta financiera, con su correspondiente contrapartida en otra parte de la balanza de pagos (por ejemplo, Cuenta Corriente). 
+    
+    Sin embargo, a medida que los mercados de activos vuelven al equilibrio, el desequilibrio externo se irá corrigiendo automáticamente. Por ejemplo, si los mercados nacionales presentan exceso de demanda, esto supone un exceso de oferta en el mercado de activos extranjeros, lo que llevará a que se compren activos extranjeros produciéndose una salida de capitales que tendrá su reflejo en la cuenta financiera, con una anotación de signo contrario en las reservas. A medida que se compran bonos extranjeros, se va eliminando el exceso de oferta en este mercado y los excesos de demanda en los mercados nacionales. 
+    
+    Gráficamente, planteando el equilibrio en cada uno de los mercados en el plano $r-F^d$:\footnote{Cada una de las curvas representadas responde a la siguiente configuración:
+    \begin{lnum}
+        \item \textbf{Curva BB}. La curva BB representa el equilibrio en el mercado de bonos nacionales. Es independientede de la cantidad de bonos extranjeros ya que un aumento de la misma se compensa reduciendola cantidad dinero, no de bonos nacionales. Por tanto, será horizontal en el nivel del tipo de interés de vaciado de activos nacionales;
+        \item \textbf{Curva MM}. La curva MM representa el equilibrio en el mercado de dinero. Cuanta más cantidad de activos extranjeros, menor debe ser la cantidad demandada de dinero para que el mercado permanezca en equilibrio, ya que menor será el nivel de reservas y, por tanto, la oferta monetaria (de este modo las variaciones de reservas están contenidas en la curva MM). Esta necesaria reducción en la cantidad demandada se puede producir vía un aumento en los tipos de interés. De ahí que la pendiente de la curva sea positiva; y, por último,
+        \item \textbf{Curva FF}. La curva FF representa el equilibrio en el mercado de activos extranjeros. Cuanta más cantidad de activos extranjeros, mayor debe ser la cantidad demandada de los mismos para que el mercado se vacíe. La demanda de activos extranjeros aumentará al bajar el tipo deinterés nacional. De ahí que la pendiente de la curva sea negativa.
+    \end{lnum}
+    } 
+    
+    \imagenfit{EquilibrioCartera_Activos.png}{Equilibrio de vaciado de mercado}{Apuntes ICEX-CECO. Tema 3.B.12}
+
+    Una política monetaria expansiva (aumento de la oferta de dinero) generaría un exceso de oferta de dinero en el mercado. Por lo tanto, para que exista equilibrio a igual cantidad de bonos extranjeros, debe bajar el tipo de interés para aumentar la demanda de dinero. De este modo, la curva $MM$ se desplaza hacia abajo. El exceso de oferta en el mercado de dinero implica un exceso de demanda en los mercados de bonos, lo que provocará, a su vez: 
+    \begin{la}
+        \item Un aumento del precio de vaciado del mercado de activos nacionales (bajada del tip de interés de vaciado). Es decir, BB se desplaza hacia abajo; y/o,
+        \item Compras de activos extranjeros, lo que lleva a un desequilibrio de balanza de pagos en forma de salidas dt: capitales, compensado con una caída de las reservas. 
+    \end{la}
+    
+    La intensidad de estos efectos dependerá del grado de sustituibilidad entre activos nacionales y extranjeros. Esta es una diferencia fundamental con el modelo monetario. Si la sustituibilidad fuese perfecta, sólo se daría el segundo efecto y por tanto la expansión monetaria inicial quedaría compensada con una caída equivalente de las reservas, volviendo al punto incial. En este caso con sustituibilidad imperfecta, el nuevo equilibrio se dará a tipos de interés más bajos al darse, al menos parcialmente, también el primer efecto que hemos visto. Vemos así como la política monetaria tiene cierto grado de autonomía, gracias a la sustituibilidad imperfecta. Nuevamente, los desequilibrios se irían corrigiendo automáticamente, desapareciendo el desequilibrio exterior cuando se complete el ajuste del punto al punto final.
+    
+\end{specialblock}
+
+\paragraph{Mercado de Bienes: Cuenta Corriente}
+No obstante, resulta más enriquecedor si lo complementamos definiendo el Mercado de Bienes con el fin de saber que desequilibrios se generan \textit{en otra partes de la Balanza de Pagos} y como se alcanza el nuevo equilibrio.
+
+Definimos estos mercados analíticamente de la siguiente forma:
+\eqblock{
+\begin{aligned}
+    &Y^d=f(\underset{(+)}{W},\overset{(-)}{r})\;\Rightarrow\;\text{Mercado de Bienes ($C,I$) función de la $W$}\\[0.5em]
+    &CC=f(\underset{(-)}{Y^d}(W,r))=\Delta M+\Delta F\;\qquad (CC\perp TC: \;\;\text{ es fijo, no influye})\\[0.5em]
+    &\underset{\text{Entonces, si}}{\Longrightarrow}\;\boxed{CC>0\;\iff\;\uparrow \underset{\text{\scriptsize$B$ no son comerciables}}{W_\text{Activos}^{M,F}}}
+\end{aligned}
+}{Mercado de Bienes: Enfoque de equilibrio de Cartera. Cuenta Financiera: Desequilibrios}
+
+Ahora que tenemos los dos componentes principales de la Balanza de Pagos. Podemos analizar como influirá un shock de diversa índole en nuestro equilibrio de cartera.
+
+\subsubsection{Dinámica: Política Monetaria expansiva}
+Estudiemos, por ejemplo, el impacto que tendría en el equilibrio final una Política Monetaria expansiva. Gráficamente, podemos ver el equilibrio inicial y la transición al equilibrio tras el shock:
+
+\textbf{INCLUIR GRÁFICOS DE DINÁMICA DE TRANSICIÓN VÍCTOR}
+
+¿Por qué es ineficaz esta expansión monetaria? En el equilibrio inicial, la Balanza de Pagos es igual a cero ya que el saldo por cuenta corriente se contrarresta con la composición de la cartera de los agentes (el mercado de activos se vacía). Tras el aumento de la oferta monetaria, se genera una exceso de liquidez (exceso de saldos reales) que conduce a una disminución del Tipo de interés y un incremento de la renta derivado del aumento de la tenencia de bonos extranjeros por parte de ls agentes domésticos (curva $MF$ se desplaza a la derecha). Este nuevo equilibrio de cartera queda por debajo de la curva de saldo por cuenta corriente, lo que implica que existe un déficit comercial para con el exterior. Esto necesariamente tiene que verse compensado con una disminución de la oferta moneraria o una disminución de los bonos extranjeros en posesión de los agentes domésticos. Como no se puede reducir la oferta monetaria (por estar en régimen cambiario fijo), necesariamente debe provocar la disminución de los activos extranjeros de posesión doméstica, desplazando de nuevo la Curva BP hacia la izquierda, al equilibrio inicial. El mercado de bienes vuelve a estar en el equilibrio inicial (saldo por Cuenta Corriente es cero).
+
+\subsubsection{Críticas y Limitaciones}
+El modelo de cartera añade mayor realismo al enfoque de activos, pero las ideas son similares. Los desequilibrios de la balanza de pagos provendrán de un desequilibrio en los mercados financieros que se corregirá automáticamente si no se ponen trabas al reajuste de carteras, aunque en este caso de forma más lenta y dando más margen para la intervención pública que en el caso de los modelos monetarios. 
+
+En general, una crítica al enfoque de activos (monetario y de cartera) es que en la práctica se observan problemas de balanza de pagos de origen real (como la falta de competitividad). Aun así, podemos entender estos modelos como complementarios al modelizar la posibilidad de que los problemas de balanza de pagos tengan origen financiero. 
+
+Una crítica particular al enfoque de cartera es que no muestra la conexión de la riqueza con la parte real de la economía (la riqueza es exógena, no pudiéndose formar a través de un mayor ahorro e inversión).\footnote{Sin embargo, otros modelos de cartera (p.ej. BRANSON) sí introducen esta posibilidad. En ese caso, los excesos de oferta en los mercados financieros nacionales se podrían utilizar para aumentar la absorción interna, provocando un déficit corriente en lugar de salidas de capitales. 
+} Por último, estos modelos llevan implícita la hipótesis de eficiencia de los mercados financieros, sin embargo, en la práctica se ha visto cómo se pueden producir burbujas y otros comportamientos que pueden distorsionar el precio de los activos, dificultando el ajuste automático y condenando a las economías a un ajuste mucho más brusco.
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Desequilibrios dinámicos: Enfoque Intertemporal (Posición de Inversión Internacional)}
+\puntosclave{
+    El saldo por cuenta corriente es el resultado de las decisiones optimizadoras de los agentes sobre consumo e inversión. Por tanto, un déficit por cuenta corriente no tiene implicaciones negativas y no se requiere ninguna intervención pública para corregirlo. 
+    
+    La apertura de los flujos de capitales permite a las economías separar sus decisiones de consumo e inversión, intercambiando consumo presente por futuro, en respuesta a su ventaja comparativa. La economía con un mayor tipo de interés de autarquía atraerá capital exterior, que financiará un mayor consumo e inversión presentes. 
+    
+    Los movimientos en el saldo por cuenta corriente se producen para suavizar el consumo o aprovechar oportunidades de inversión cuando una economía se separa transitoriamente de su situación de largo plazo. 
+    
+    Los flujos de capital predichos por el modelo intertemporal neoclásico no son coherentes con el patrón observado en la práctica. En particular, según el modelo, cabría esperar flujos de capitales netos desde las economías desarrolladas hacia aquellas en desarrollo, pero en la realidad hay muchos casos en los que los flujos van en sentido opuesto. Diversas extensiones del enfoque intertemporal incluyen imperfecciones en los mercados y rigideces de precios para intentar explicar mejor los hechos estilizados.
+
+    En la práctica, el endeudamiento externo no siempre resulta óptimo. Si la posición exterior se vuelve insostenible, puede desencadenar una crisis de balanza de pagos, provocando un ajuste económico brusco y costoso. 
+    
+    La evidencia empírica muestra que una posición exterior negativa aumenta la vulnerabilidad de la economía frente a shocks externos y tendrá un mayor riesgo de sufrir una recesión en el futuro. 
+    
+    La ecuación fundamental de la sostenibilidad nos permite identificar los principales determinantes de la sostenibilidad exterior. Si el tipo de interés es mayor que la tasa de crecimiento del PIB, la economia necesitará un superávit corriente para evitar que aumente el peso de su deuda.
+    
+    En la práctica, la sostenibilidad se evalúa en un contexto de incertidumbre en el que cualquier shock inesperado puede condicionar la sostenibilidad de la deuda. En las economias con acceso a los mercados internacionales, la percepción de los inversores internacionales será un factor muy importante. 
+    
+    Al valorar la posición exterior de una economía, tan importante como analizar su saldo por cuenta corriente, es analizar su posición inversora internacional neta (PIIN).
+}
+
+A partir de los años 80's, con el desarrollo de los modelos DSGE y la revolución metodológica auspciada por la crítica de LUCAS la atención del análisis teórico se centró en dos cuestiones la determinación de la cuenta corriente desde un punto de vista intertemporal. El desarrollo de estos modelos se realiza en un contexto en el que la macroeconomía, incluida en su vertiente internacional, había modificado su formulación y había pasado a incluir la microfundamentación como elemento central de la rama. Por ello, a diferencia de los modelos previos, las condiciones de equilibrio se van a presentar como el resultado de una dinámica optimizadora de los agentes. 
+
+Este elemento tiene dos consecuencias lógicas: (i) se vuelven endógenas las decisiones de consumo y de demanda de activos a partir de la resolución explicita por parte de los agentes de un programa de maximización; y, (ii) al basarse en funciones de utilidad, el modelo va a permitir hacer un análisis de bienestar mucho más exhaustivo que los modelos anteriores.\footnote{Bajo una visión del bienestar social basada en una función de utilidad individual de un agente representativo se va poder juzgar si la sociedad se encuentra en la situación final mejor o peor, y la formulación en un contexto intertemporal va a permitir entender correctamente el significado y las implicaciones del saldo de la cuenta corriente. Por tanto, se dejan atrás los modelos estáticos que habían acompañado a la macroeconomía desde los años 50's y se pasa a definir el saldo de la cuenta corriente como una variable que varía en el tiempo, resultado de la interacción de una serie de variables que pertenecen a más de un periodo (o las expectativas sobre su comportamiento futuro en el caso de que se incluya incertidumbre).
+} 
+
+Como veremos, las principales implicaciones de esta teoría son:
+\begin{lnum}
+    \item \textbf{Défitis optimizadores}. Los déficits por cuenta corriente responden al comportamiento optimizador de los agentes y pueden aumentar el bienestar, lo que justificaría la inactividad de la Política Económica frente a dichos desequilibrios, al contrario que en los modelos keynesianos. De hecho, llegan a postular en algunos casos que las medidas de política económica pueden ser también el origen del desequilibrio externo; y
+    \item \textbf{Sostenibilidad de la deuda}. Todo análisis intertemporal de la balanza de pagos debe venir acompañado de un análisis de sostenibilidad. Esto se debe a que a pesar de que los equilibrios respondan a una dinámica optimizadora, una acumulación continuada de déficits por cuenta corriente puede desembocar en problemas de sostenibilidad de la deuda en la medida en que las obligaciones frente al exterior podrían llegar a ser tan altas que la economía no cuente con los recursos necesarios para satisfacerlas. En la práctica, estas situaciones pueden provocar una crisis de balanza de pagos.
+\end{lnum} 
+
+De esta forma, y por estas razones, he creído conveniente relacionar este apartado con el tercer componente económico relevante de la Contabilidad Internacional (mencionado al principio): la Posición de Inversión Internacional. Hasta ahora hemos analizado los desequilibrios derivados de variables flujo, en un contexto estático y de reequilibrio ulterior. Ahora, la noción es completamente diferente: las variables estado (\textit{stock}) en el análisis dinámico juegan un papel fundamental en la trayectoria de la economía a modelizar. Precisamente por ello cobra aquí sentido, y debe hacerse notar, la importancia que se le atribuye en el 6MBP a la Posición de Inversión Internacional: la situación superavitaria o deficitaria de una economía frente al mundo debe contextualizarse en la trayectoria pasada y esperada de este en el futuro para poder sacar conclusiones relevantes y razonadas en términos de Política Económica.
+
+\subsection{Modelo de OBSTFELD-ROGOFF: Dos periodos}
+Para introducir este nuevo enfoque, presentaremos el modelo de OBSTFELD-ROGOFF (1985), basado en la tradición Neoclásica, y formulado en un horizonte de dos periodos. 
+
+Supongamos que se trata de una economía pequeña, abierta, que se interrelaciona financieramente con el mundo en mercados de capitales completos y perfectos (que operan en competencia perfecta).\footnote{Suponer una economía pequeña que toma el tipo de interés como exógeno tiene una gran ventaja: dado que el país no es capaz de alterar el tipo de interés mundial, las decisiones de los agentes nacionales no tendrán efectos en las decisiones de los agentes de otras economías. Esto evita que se deban tener en cuenta los efectos que sobre la economía nacional tendrían las decisiones de otras economías. En otras palabras, es posible realizar un análisis de equilibrio parcial en lugar de equilibrio general. Por otro lado, en autarquía el tipo de interés es endógeno a la economía.
+
+Además, en una economía sin movilidad de capital y tipos de cambio fijos la balanza de pagos podría ser un problema para las autoridades económicas. En estas circunstancias, la economía (el conjunto de los agentes) se enfrenta a una sucesión de restricciones de liquidez a lo largo del tiempo que limitan el tamaño del déficit comercial al volumen de las reservas disponibles en cada periodo. Un déficit persistente acabaría por hacer inviable el compromiso cambiario adquirido por el Banco Central, mientras que un superávit reiterado terminaría por plantear problemas de inflación.
+} Además, existe un único bien que sirve para el consumo o como inversión de capital productivo y que todo el déficit se financia con deuda. La formulación del agente representativo hace obligatoria la mención a IRVING FISHER, que mostró que en el centro de todo problema intertemporal hay que caracterizar las hipótesis de comportamiento, las preferencias y las restricciones presupuestarias:
+\begin{lnum}
+    \item \textbf{Hipótesis de comportamiento}. El agente representativo racional maximiza su utilidad y tiene perspectivas forward-looking, es decir, en su elección presente tiene en consideración el flujo de renta futura (en este caso, dos períodos). Además, opera en un contexto de previsión perfecta;
+    \item \textbf{Preferencias}. Función de utilidad creciente, cóncava, separable y aditiva, teniendo como argumentos los consumos en los dos períodos. Por simplificar, supongamos un factor de descuento nulo ($\beta=1$);
+    \item \textbf{Tecnología}. Supondremos rendimientos constantes a escala en el capital, de modo que la FPP será lineal; y,
+    \item \textbf{Restricción presupuestaria}. Muestra que el sumatorio de los consumos y la inversión actualizados no puede superar al sumatorio de la renta del agente actualizada. Esto implica que se puede trasladar la renta intertemporalmente únicamente a través de la inversión real. Así, la pendiente de la restricción presupuestaria (autárquica) sería $1+r$.
+\end{lnum}
+
+Con todo, formulamos el problema de maximización del agente representativo considerando que su Función de Utilidad instantánea es isoelástica:
+
+\eqblock{
+\begin{aligned}
+    &\boxed{
+    \begin{aligned}
+            &\max_{c_t,k_t}U(0)=u(c_1)+u(c_2)\\[0.5em]
+        &\text{s.a.}\quad
+        \begin{cases}
+            &y_t=A_tf(k_t)\quad \text{\scriptsize (Función de Producción, reversible)}\\[0.5em]
+            &c_1+i^o_1+\frac{c_2+i^o_2}{1+r}=y_1+\frac{y_2}{1+r}\\[0.5em]
+            &\dot k_{t+1}=\overbrace{(y_t-c_t)}^{i^o_t}+\overbrace{k_t}^{\text{\scriptsize Asumimos $\delta=0$}}
+        \end{cases}
+    \end{aligned}
+    }\\[1em]
+    &\Longrightarrow\;\text{CPO's}\qquad
+    \begin{cases}
+        \frac{\partial c_2}{\partial c_1}=-(1+r)\quad \text{\scriptsize(Condición de EULER)}\\[0.5em]
+        PMg(K)=r\qquad [\frac{\partial c_2}{\partial c_1}=-[1+PMg(k_2)], \;\text{\scriptsize derivada de la FPP}]
+    \end{cases}
+\end{aligned}
+}{Modelo OBSTFELD-ROGOFF: Problema de Optimización Agente (Consumidor-productor). Posición de Inversión Internacional}
+
+Como vemos, las decisiones del agente están restringidas por tres ecuaciones: (i) la restricción presupuestaria intertemporal, de manera que el total consumido e invertido de cada periodo descontado al presente debe ser igual al total de la renta/producción generada globalmente (en los dos periodos), descontada al presente;\footnote{La razón por la cual la Función de Producción es reversible está precisamente aquí. El proceso es reversible porque la inversión del periodo dos será igual al stock de capital del periodo 2 cambiado de signo. 
+} (ii) la función de producción reversible que utiliza un único input: capital, pero recordemos que es precisamente el mismo input/bien que el consumidor puede consumir, por lo tanto aquí está el problema de decisión; y, (iii) la ecuación dinámica del capital (considerando en este caso que la depreciación es negligible), como en todo problema de optimización. 
+
+\subsubsection{Desarrollo gráfico}
+La Frontera de Probabilidades de Producción viene conformada por la ecuación:
+
+$$c_2=y_2-i^o_2\;\Longrightarrow\;\underbrace{c_2=\overbrace{[f(k_2+k_2-c_1)]}^{y_2}+\underbrace{[k_1+f(k_1)-c_1]}_{i^o_2=-k_2}}_{c_2=y_2+k_2\;\Rightarrow\;\frac{\partial c_2}{\partial c_1}=-[1+PMg(k_2)]}$$
+
+A partir de esta ecuación, sabemos que cualquiera de los óptimos debe estar contenido en el interior o frontera de la FPP, gráficamente:
+
+\textbf{Introducir GRÁFICO GENERAL}
+
+Existen dos posibles situaciones que son interesante analizar: la situación de autarquía y la situación de apertura. Empecemos por la primera.
+
+\paragraph{Situación de autarquía}
+Dado que no hay comercio internacional, el nivel de gasto (consumo e inversión) de un país está restringido por el nivel de producción. En un equilibrio descentralizado neoclásico deben convivir todas las voluntades: (i) el consumidor debe maximizar su utilidad sujeto a una restricción presupuestaria; y, (ii) el productor debe operar eficientemente y por tanto situarse en su frontera de posibilidades de producción (FPP). Gráficamente el óptimo se alcanzaría en el punto $A$, alcanzando un nivel de utilidad intertemporal máximo dadas las circunstancias. Las tres curvas (curva de indiferencia que refleje la utilidad, la restricción presupuestaria y la FPP, que refleja la eficiencia técnica) son tangentes.\footnote{Analíticamente. Las preferencias del agente representativo vienen detenninadas por su función de utilidad, que estará sujeta a una restricción presupuestaria. En el caso de una situación de autarquía, la restricción presupuestaria a nivel macroeconómico sería $Y=C+I$ para cada uno de los periodos, ya que al estar la economía cerrada al comercio internacional, no podría prestar o tornar prestado del exterior y por tanto no se podrían producir transferencias de recursos entre los dos periodos. Siguiendo este razonamiento y a diferencia de lo que ocurre tras abrirse al comercio internacional, el tipo de interés se obtiene de fonna endógena. El tipo de interés es el resultado de las decisiones de consumo e inversión, y vendrá detenninado por los elementos habituales (productividad marginal del capital y tasa subjetiva de descuento). Por otro lado, para garantizar la eficiencia técnica incluiríamos como restricción adicional la función de producción y una tercera restricción de acumulación de capital. Por tanto, en el equilibrio se debe producir que la $RMS$, la pendiente de la $FPP$ y el tipo de interés de autarquía sean iguales.
+}
+
+\textbf{INCLUIR GRÁFICO AUTARQUÍA}
+
+
+\paragraph{Apertura exterior: Mercados de capitales perfectos}
+Asumiendo que en autarquía la productividad marginal del capital es distinta de la del resto del mundo y en un contexto neoclásico en el que la productividad marginal es igual a los tipos de interés, los tipos de interés diferirán entre países.\footnote{Concretamente partimos de la premisa neoclásica de que la productividad marginal es decreciente, y por ello está inversamente relacionada con el stock de capital existente en una economía. Aquí se incluye un supuesto adicional que es asumir que las dotaciones previas de capital son distintas y, en nuestro ejemplo, la dotación de capital de la economía nacional es p,enor que en la economía extranjera.
+} 
+
+Por ello, al contar con un menor stock de capital, la productividad marginal será mayor y, en consecuencia, el tipo de interés de autarquía de la economía doméstica es mayor que el tipo de interés internacional ($r_A > r$). Esto equivale a decir que la economía doméstica tiene ventaja comparativa en la transformación de flujos de consumo presente en consumo futuro.\footnote{Intuitivamente se puede entender que una vez producida la apertura internacional, el tipo de interés de referencia para los agentes domésticos será el mundial y no el de autarquía, y será al que los agentes podrán pedir o tomar prestado.
+} Dado el supuesto sobre los diferenciales de productividades marginales (y tipos de interés), en la economía doméstica entrarán fondos del resto del mundo que servirán para financiar consumo e inversión presente y que tendrán que ser devueltos en el periodo dos. Así pues, en el periodo uno se generará un déficit por cuenta corriente que deberá ser compensado con un superávit en el periodo siguiente. Gráficamente se puede observar que las decisiones de consumo y producción serán distintas de las de autarquía:
+
+\textbf{INCLUIR GRÁFICO APERTURA}
+
+Concretamente, al enfrentarse a un tipo de interés distinto, la pendiente de la restricción presupuestaria variará y con ello los niveles de consumo e inversión: 
+\begin{la}
+    \item \textbf{Déficit inicial}. El déficit se mide por la distancia horizontal entre el equilibrio en la producción del el primer periodo (lo que produce) y el equilibrio del consumo en el primer periodo (lo que consume en t1 ) y representa los fondos exteriores que entran en la economía destinados tanto a consumo como a inversión: (i) la distancia horizontal entre el equilibrio en la producción del primer periodo y el equilibrio autárquico representa el incremento de la inversión al abrir la economía; y, (ii) la distancia horizontal entre el equilibrio autárquico y el equilibrio de consumo en el primer periodo representa el incremento del consumo al abrir la economía; y,
+    \item \textbf{Superávit final}. En el segundo periodo, la economía presentará un superávit por cuenta corriente que se medirá por la distancia vertical entre el equilibrio de producción y consumo en el primer periodo.\footnote{En este caso, la definición del superávit se hace en términos del consumo en el periodo dos (eje de ordenadas) en lugar de hacerse en términos del consumo en el periodo uno (eje de abscisas). Por ello la distancia entre B y C no tiene por qué coincidir en ambos ejes. Sí coincidirán las distancias cuando se midan en términos de consumo.
+    }
+\end{la}  
+
+\subsubsection{Implicaciones de Política Económica}
+Un déficit por cuenta corriente es el resultado de una elección racional de los agentes que da lugar a una asignación más eficiente de los recursos y pennite aumentar el bienestar. El país experimenta un aumento de bienestar al no verse limitado su consumo e inversión por su ahorro coniente. Por ello, bajo los supuestos planteados, la intervención activa de la política económica no solo es innecesaria, sino que también indeseable. Todo ello se ve condicionado por el supuesto adicional que hemos incluido sobre diferencias en el stock de capital (y por ello en la productividad marginal y en el tipo de interés), que marca la dirección de los flujos de capital. Por simplicidad se ha incluido un solo argumento en la función de pr?ducción, pero si asumiéramos que el nivel de producción se ve afectado por otros inputs, tecnología, etc ... habría que analizar los efectos que éstos tendrían sobre el tipo de interés para detenninar la intensidad y dirección de los flujos de capital. También un distinto grado de preferencia por el consumo presente podría afectar a estas variables. Sin embargo, esto complicaría innecesariamente el modelo y no modificaría sustancialmente las conclusiones.
+
+Lo anterior no evita que los resultados de estos modelos dependan mucho de algunos de sus supuestos. Por ejemplo, quizás resulte excesivo asumir que el ahorro del país no afecta al tipo de interés internacional o que los agentes tienen un acceso perfecto a los mercados internacionales • de capital. Si consideramos que el país en el que se produce la apertura es un país en desarrollo, obviar el riesgo supone una limitación adicional. Una versión de este modelo con un horizonte temporal infinito permite analizar cuestiones adicionales, que no pueden ser abordadas en un modelo de dos periodos, como la suavización del consumo a lo largo del tiempo, el impacto sobre la cuenta corriente de las fluctuaciones en las variables relevantes, la sostenibilidad de la deuda, etc. (ver Anexo 6). En un modelo de horizonte temporal infinito se puede comprobar que el saldo por cuenta corriente fluctuará cuando las variables determinantes del consumo se desvíen de sus valores permanentes (por ejemplo: una caída temporal del output, unas necesidades de inversión temporalmente más altas o un gasto público inusualmente elevado llevarán asociado un deterioro en el saldo por cuenta corriente). En resumen, los movimientos del saldo por cuenta corriente se explican por las diferencias entre la situación actual de una economía y su situación de largo plazo. La posibilidad de acceder a financiación exterior (y prestar al resto del mundo) da más flexibilidad a la economía y permite ajustar el consumo y la inversión de forma óptima ante shocks temporales.
+
+\subsection{Sostenibilidad de la Deuda Externa: Análisis}
+
+
+
+\subsection{Hechos Estilizados: Evidencia Empírica}
+El modelo intertemporal predice que los flujos netos de capital irán desde las economías con rendimientos del capital más bajos en autarquía hacia aquellas con rendimientos más altos. El tipo de interés de autarquía será mayor, cuanto más escaso sea el capital y cuanto mayores sean las perspectivas de crecimiento económico a largo plazo. Estas son precisamente dos características típicas de las economías en desarrollo que previsiblemente harán que su productividad marginal del capital sea mayor en autarquía. Por tanto, este modelo predice que los flujos de capital se producirán principalmente desde las economías desarrolladas hacia aquellas en desarrollo. Sin embargo, gran parte de los flujos se observan en la realidad van en el senfido contrario. Hasta la crisis de 2008 se consideraba que los flujos de capital desde las principales economías de la zona euro hacia las de la periferia representaban un ejemplo de cumplimiento de las predicciones del modelo intertemporal. Sin embargo, la crisis demostró que esos flujos eran insostenibles. 
+
+A continuación, se presentan una serie observaciones empíricas, para pasar a mencionar brevemente distintos modelos que podrían justificar las tendencias observadas.
+
+\begin{specialblock}{Aplicación práctica por parte del FMI}
+    Para profundizar y ver datos actualizados de estos hechos estilizados es recomendable ver el último External Sector Report disponible del FMI (evolución de los saldos por cuenta corriente y posiciones de inversión neta agregados y por países), así como la web de la \href{https://www.brookings.edu/articles/the-external-wealth-of-nations-database/}{The external wealth of nations database (brooking.edu)} para ver datos actualizados de las posiciones brutas de activos y su composición y evolución. 
+    
+    Varios de los artículos de Cuadernos Económicos de ICE Núm. 103 (2022): \href{https://doi.org/10.32796/cice.2022103}{\textit{Desequilibrios exteriores y crisis de deuda soberana}}, analizan diversos aspectos de los desequilibrios globales.
+\end{specialblock}
+
+Siguiendo a Gourinchas y Rey (2014) podemos señalar cinco hechos estilizados observados en los intercambios exteriores de las principales economías del mundo: 
+
+Desequilibrios globales: el peso de los saldos por cuenta corriente (en valor absoluto) en relación al PIB mundial ha venido creciendo desde mediados de la década de 1 990, coincidiendo con una calda en el tipo de interés real mundial. Destaca el déficit corriente de Estados Unidos. Desde principios de la década de 1 980 la mayor economía y una de las más avanzadas ha sido importadora neta de capital procedente de las economías emergentes que experimentaban altas tasas de crecimiento (ver gráfico en Anexo 7).\footnote{En 1973 EEUU tenia una posición neta positiva equivalente al 5\% de su PIB. En 2020. su posición internacional neta fue negativa y equivalente al 65\% de su PIB.
+} Hasta la crisis financiera de 2008 se consideraba que la ampliación de los desequilibrios globales representaba un riesgo importante para la economía mundial. Estos desequilibrios no fueron el detonante de la crisis, pero sí un claro indicio de que el crecimiento económico de los años previos era insostenible. Esa crisis provocó un ajuste brusco y costoso en muchas economías. Desde entonces, los desequilibrios globales se han reducido en términos de saldos de la cuenta corriente, sin embargo, las posiciones de inversión han continuado creciendo. La crisis provocada por la pandemia ha supuesto un nuevo aumento de estos desequilibrios (cuenta corriente y PIIN). 
+
+La entrada neta de capitales tiende a estar negativamente correlacionada con el crecimiento de la productividad ( allocation pu==le) en los países en desarrollo. La teoría predice una fuerte correlación positiva que no se observa en la práctica para los flujos de capital agregados. Una posible explicación es que los flujos de capital público se guíen por otros criterios y distorsionen esta relación, mientras que los flujos privados sí se verían atraídos por las economías con cuya productividad crezca más. En este mismo sentido, las economías que más rápido han crecido, en muchos casos (China, Este de Asia) se han apoyado solo en su ahorro interno, sin incurrir en déficit corriente. Por tanto, los flujos de capitales no parecen determinar el crecimiento económico. 
+
+Las posiciones brutas internacionales de activos y pasivos se han incrementado masivamente desde 1980 y especialmente en las décadas de 1990 y 2000. El incremento h a sido particularmente pronunciado en las economías avanzadas (ver gráfico en Anexo 7).
+
+Heterogeneidad en los flujos y posiciones brutas: la composición de las hojas de balance externas de los países es heterogénea. Las economías avanzadas tienden a tener posiciones largas en activos de riesgo (la inversión directa y otras inversiones en acciones suponen una parte importante de los activos exteriores de las economías avanzadas), mientras que las economías emergentes tienen posiciones cortas en estos activos (sus activos exteriores se concentran en activos más seguros, como los bonos públicos). 
+
+Creciente importancia del efecto valoración: las ganancias y pérdidas de capital en los activos y pasivos externos cada vez tienen más importancia para la evolución de las posiciones internacionales netas de los países. Destaca el efecto valoración positivo para Estados Unidos. Según señala Fuertes (2022) entre 1 973 y 2020 el efecto valoración ha explicado el 52\% de varianza en la posición de inversión internacional neta de Estados Unidos y este porcentaje ha ido en aumento en los últimos años. Es decir, en el caso de Estados Unidos los cambios en la valoración de activos y pasivos son responsables de más de la mitad de los ajustes en su posición exterior. Siendo el resto explicado por la evolución de su saldo corriente\footnote{Hasta la crisis linanciera global de 2008, Estados Unidos disfrutó de una posición privilegiada como inversor global, al tener un diferencial favorable en el rendimiento de sus activos externos (más rentables que pasivos externos). Sin embargo, esta situación podría estar empezando a cambiar, ya que este diferencial se ha vuelto ligeramente negativo en los últimos años.
+}
+
+
+Por tanto, esto confirma la importancia de fijarse en la posición de inversión internacional, porque si se presta atención solo a la evolución de la cuenta corriente, se tendrá una visión incompleta de la posición exterior. Gourinchas y Rey señalan que estos hechos observados ponen de relieve dos importantes limitaciones empíricas del enfoque intertemporal: No es capaz de explicar el patrón que siguen los flujos netos de capital a largo plazo en la realidad entre economías desarrolladas y en desarrollo. No tiene en consideración que la cuenta corriente es una medida claramente imperfecta de los cambios en la posición exterior neta de una economía, porque no tiene en cuenta el efecto valoración.
+
+\subsubsection{Explicaciones}
+Pero si la evidencia empírica sugiere que los flujos de capital observados no son coherentes con el modelo neoclásico intertemporal y no están guiados por las diferencias en las tasas de crecimiento de la productividad del capital, entonces, ¿qué factores explican esos movimientos de capital?
+
+\paragraph{Paradoja de LUCAS}
+Lucas ya puso de manifiesto esta contradicción (Wf(v doesn 't capital jlow from rich to poor countries?, 1990), planteando lo que se conoce como la paradoja de lucas. Basándose en la estimación de Summers y Heston de que la producción per cápita es 1 5 veces superior en EEUU que en India y asumiendo que ambas economías tienen la misma tecnología (ambos países tienen la misma función de producción, con rendimientos decrecientes del capital) y que la participación del capital en la renta es 0.4 en ambos países, Lucas obtiene que, de acuerdo con el modelo neoclásico la PMgK en la India debería ser 58 veces superior a la PMgK en EEVU. Para otras economías en desarrollo el resultado sería también muy elevado. Sin embargo, el modelo intertemporal neoclásico también predice que cuando las economías permiten la libre movilidad de capitales, las economías con mayor PMgK (y mayor tipo de interés) en autarquía atraerán inversión del exterior hasta que la productividad marginal del capital y el tipo de interés se igualen en todos los países.  Es decir, si esas estimaciones fueran correctas, habría oportunidades de inversión mucho más rentables en las economías en desarrollo y, por tanto, deberían producirse flujos de capital masivos desde Estados Unidos hacia la India y otras economías en desarrollo, pero esto no ocurre. 
+
+Esto nos lleva a planteamos que alguno de los supuestos de Lucas no es realista. En particular, no parece realista pensar que todos los países empleen la misma tecnología o, de forma más precisa, que tengan la misma productividad total de los factores (PTF). La PTF es la parte del output que no es explicada por la cantidad de inputs usados en la producción (en este caso K y L) y refleja la eficiencia e intensidad con la que se usan los inputs disponibles en el proceso de producción. Si la PTF de EEUU es superior a la de la India, como ocurre en la realidad, entonces la diferencia en el output per cápita de ambos países se puede explicar en buena medida por esta diferencia en la eficiencia con que se usan los inputs.\footnote{Este resultado tiene implicaciones importantes para las expectativas de convergencia de las economías en desarrollo. Si todos los países compartieran una misma función de producción, la libre movilidad de capitales llevaría flujos de capital hacia los países con una intensidad de capital más baja hasta igualar PMgK y r. asegurando una convergencia en niveles de renta per cápita. La existencia de diferencias importantes en la PTF supone que la simple acumulación de capital (favorecida por el acceso a financiación exterior) no es suficiente para garantizar la convergencia hacia los niveles de renta per cápita de las economías desarrolladas. Los países en desarrollo necesitarán aumentar su PTF invirtiendo en educación, I+D, mejorando sus instituciones y realizando reformas estructurales. Ver International Economics, Apéndice 2 del capitulo 17, de Feenstra y Taylor.
+} De esta forma habrá una menor diferencia en la intensidad de capital entre EEUU y la India y sus PMgK serán más similares, lo que resolvería la paradoja de Lucas. Diversos estudios empíricos han abordado los factores que pueden determinar esas diferencias en la PTF y destacan los siguientes: diferencias en la educación/ capital humano, en la I+D/capital tecnológico, en la calidad institucional (protección efectiva de los derechos de propiedad, estabilidad política, etc.) o en la existencia de distorsiones en los mercados.\footnote{Algunos autores suponen que existen distorsiones de capital ($z$), que introducen una brecha entre la remuneración privada y social. En este modelo, la nueva condición de óptimo pasaría a ser: $r=PMg_K (1 - z)$. En una economía abierta cabria esperar que la remuneración privada del capital se iguale y por ello las diferencias en las respectivas productividades marginales estarían rellejando diferencias en el factor (z).
+} El propio Lucas apuntó a las diferencias en el capital humano como posible explicación de su paradoja. Cuando se tienen en cuenta estos factores, la productividad marginal del capital y los rendimientos privados del capital son similares entre países. 
+
+Gourinchas y Rey (20 14) concluyen que, en la práctica, los rendimientos privados del capital son similares en distintos países y que esto se explicaría, bien porque persisten diferencias entre países en la PTF, o bien por las distorsiones en el mercado de capital doméstico de las economías en desarrollo (interpretándola en sentido amplio, la PTF también reflejaría estas distorsiones). Además, este resultado sugiere que las barreras a los movimientos internacionales de capitales son moderadas. 
+
+Partiendo de esta base y asumiendo que los flujos de capital internacionales van hacia los países con mayor tipo de interés en autarquía hasta que los rendimientos se igualan, hay una serie de teorías que intentan explicar los flujos de capitales observados identificando algún factor que justificaría que los tipos de interés de autarguía en los países en desarrollo sean menores de lo gue cabría esperar a la vista de su stock de capital. Estas teorías tratan de profundizar en las imperfecciones en el mercado de capital (por ejemplo, por la falta de activos seguros que usar como depósito de valor lo que lleva a una reducción del tipo de interés o por la existencia de riesgos idiosincráticos mayores en las economías en desarrollo que incentivan un ahorro por motivo precautorio). A diferencia de lo expuesto anteriormente en relación a la Paradoja de Lucas, cuando considerábamos que las distorsiones afectaban a la productividad marginal del capital, ahora centran sus efectos en el tipo de interés (r), reduciendo su nivel en autarquía respecto de lo que cabría esperar por sus niveles de capital/output. Entendiendo el tipo de interés de equilibrio como el resultado de las decisiones de ahorro e inversión, se trata de explicar principalmente por qué los países en desarrollo tienen una tasa deseada de ahorro particularmente alta (o una tasa de inversión baja). Estas teorías permitirían explicar tanto los desequilibrios globales observados, como el bajo tipo de interés real. Algunos autores como Bemanke identificaron una serie de elementos concretos que explicarían un aumento del ahorro en los países en desarrollo por su deseo de acumular reservas tras la crisis del sudeste asiático, por factores demográficos o por el incremento del precio del petróleo, que habrían conducido a superávits en la cuenta corriente de los países exportadores de petróleo. Otra posible explicación sería que muchas economías emergentes han seiuido una estrategia de crecimiento basado en la exportación, lo que les ha llevado a mantener sus divisas infravaloradas y a acumular reservas.\footnote{En el Capítulo 11 de Carlin \& Soskice (2015) se hace una explicación sencilla de cómo pueden surgir desequilibrios globales cuando algunos países siguen una estrategia de crecimiento a medio plazo basada en impulsar su demanda (como EEUU. R.Unido o España en los años previos a la crisis de 2008/09) mientras otras buscan un crecimiento basado en las exportaciones (como China y Alemania).
+} (ver Anexo 8 para ampliar estas teorías). 
+
+También hay que tener en cuenta que, en la práctica, las decisiones de inversión se adoptan en un contexto de incertidumbre, de forma que los flujos de capitales no se guían solo por las diferencias en los rendimientos, sino que comparan las combinaciones de rendimiento y riesgo que ofrecen los proyectos de inversión. En la realidad, las economías en desarrollo suelen presentar un riesgo político y regulatorio más elevado que las economías desarrolladas y esto explica que los inversores exijan un rendimiento mayor (prima de riesgo), para compensar ese mayor riesgo. 
+
+En definitiva, las diferencias en la PTF, la existencia de distorsiones en los mercados financieros que introducen un sesgo al alza en el ahorro deseado en las economías emergentes, así como la existencia de distintos niveles de riesgo político y regulatorio suponen la existencia distintos tipos de distorsiones que, al introducirse en un modelo neoclásico intertemporal, ayudan a explicar el sentido de los flujos de capitales observados en la realidad.
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+\end{document}
