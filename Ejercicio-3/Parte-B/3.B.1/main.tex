@@ -1,0 +1,1397 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{La información financiera de las empresas \\
+\large Estados de situación y de circulación. Métodos de análisis económico y financiero de la empresa}
+\author{Marcelo Ortega}
+\date{Marzo 2026}
+\newcommand{\TemaCode}{3B1}
+
+\oldtitle{
+    B.1. La información financiera de las empresas: estados de situación y de circulación. Métodos de análisis económico y financiero de la empresa
+}
+\changerationale{
+    Sin cambios.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+    Primer título del temario que trata sobre Finanzas Corporativas. Estos títulos han de abordarse idealmente cuando se hayan estudiado ya los temas 3B23 a 3B27.\footnote{Para ver la relación de Temas del Bloque: [\authorfont{Ver Anexo \ref{anx:finanzas_corporativas}}]
+    }
+
+    Tradicionalmente en la oposición a TCEE, estos temas han recibido menos respeto del que merecen, siendo frecuente que los propios preparadores se refieran a ellos como temas fáciles. Ante ese tipo de afirmaciones, se recomienda al opositor sospechar: no hay temas fáciles o dificiles, sino temas en los que se ha profundizado más o menos y que se han enfocado con mayor o menor rigor.
+    }
+\vspace{1cm}
+
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+La empresa es uno de los agentes básicos en economía, y su modelización, por imprescindible, se ha abordado desde diferentes ópticas:
+    \begin{lnum}
+        \item Por un lado contamos con la modelización de la empresa como un mero conjunto tecnológico (caja negra) típico de los modelos neoclásicos;
+        \item Por otro lado, contamos con el estudio de la empresa como un encuentro entre distintos actores con diferentes incentivos y en un contexto de asimetrías de información;
+        \item Existen otros enfoques al concepto de empresa relevantes para un economista, de los cuales algunos no se abordan en el temario, en especial el Derecho de sociedades):
+        \item Marketing internacional; y,
+        \item Finalmente, el enfoque de este bloque de temas: \textbf{finanzas corporativas.}\footnote{Este último consiste en entender a la empresa como un conjunto de activos y pasivos, caracterizados todos ellos por diferentes niveles de rentabilidad y riesgo. Es decir, se entiende a la empresa como un portfolio de títulos resumibles en ciertas magnitudes de relevancia financiera. Como tal, dicho portfolio es replicable (del mismo modo que es replicable una cartera de acciones o de bonos concretos). Un paso más: si dos empresas/portfolios con las mismas características tienen valores en mercado diferentes, por la lógica del arbitraje, los inversores se pondrán cortos en una y largos en la otra, resultando así un proceso de pricing análogo al que ocurre en un mercado financiero (ojo, y al que ocurre también en un mercado en competencia perfecta siguiendo la axiomática neoclásica...).
+        }
+    \end{lnum}
+
+En pocas palabras, se estudia la empresa desde los ojos del CFO. O, parafraseando a ROSS et al. (2010): \textit{the central concepts of modern corporate finance are: arbitrage, net present value, efficient markets, agency theory, options, and the trade-off between risk and return.}
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+Este tema se estructurará en dos bloques claramente diferenciados: 
+\begin{lnum}
+    \item \textbf{Enfoque jurídico de la contabilidad}. Veremos la composición de los cinco estados contables que componen las cuentas anuales de la empresa. Utilizaremos la regulación en vigor en Espafla: el Plan General de Contabilidad (Real Decreto 1514/2007). Aqul se presentarán las herramientas típicas de un contable o de un auditor.Cuestiones de normativa contable que debe de conocer un TCEE.\footnote{En este epígrafe, el uso de la pizarra puede ser de gran utilidad, pero hay que tener en cuenta que sólo podemos presentar en la pizarra la estructura básica ya que si no, se agotaría el tiempo y la exposición resultaría muy pesada. Se ha incluido en anexos ejemplos prácticos para que el opositor sea capaz de autoevaluarse (existen numerosos casos prácticos en internet en cualquier caso)
+    } y,
+    \item \textbf{Enfoque pro-forma de la contabilidad: análisis económico y financiero}. A través de una serie de magnitudes y ratios veremos cómo analizar desde un punto de vista económico y financiero la información contenida en las cuentas anuales. Se presentarán las herramientas típicas de un analista de mercado, un gestor de la empresa, o un investigador. Mientras que la contabilidad jurídica es útil (y obligatoria) porque permite una visión homogénea de las empresas que facilita la comunicación de la información a los inversores y agentes externos, en el caso de toma de decisiones como las que se estudian en los Temas 3.B.2, 3.B.3 y sobre todo 3.B.4, los analistas necesitan presentar la información de manera más analítica y específicamente generada para la operación que se plantea. 
+\end{lnum}
+
+
+
+\clearpage
+\section{PGC: aproximación jurídico-formal}
+\puntosclave{
+    En España, la regulación contable general aparece en el PGC que es consistente con las normas internacionales IFRS. Además de las normas específicas, establece criterios generales como son principios, metodologías o criterios de valoración. 
+    
+    El balance de situación y la cuenta de resultados conforman los estados financieros de una empresa. Mientras que el primero provee una visión patrimonial exhaustiva a cierre del ejercicio, el segundo estudia la generación del resultado del ejercicio de manera sistemática vertical. 
+    
+    Las cuentas anuales incorporan otros tres documentos contables que tienen por finalidad complementar la inforn1ación de los estados financieros.
+}
+
+La información financiera debe reunir una serie de características sin las cuales no resultaría de utilidad para los agentes: debe ser fiel, transparente, comprensible y comparable. 
+
+Para ello, existen una serie de normas, tanto a nivel internacional como nacional, que persiguen alcanzar la homogeneidad en la información financiera de las empresas, de tal manera que ésta sea comparable en el tiempo y en el espacio. 
+
+A nivel internacional existen organismos como el International Accounting Standards Board (IASB), antiguo International Accounting Standards Committee (IASC), creado en 1973, que emite una serie de normas contables internacionalmente aceptadas, las Normas Internacionales de Información Financiera (NIIF). 
+
+A nivel europeo se ha producido también un proceso de armonización contable, asumiendo el uso de las NIIF. El Reglamento 1606/2002 define como Normas Internacionales de Contabilidad a las NIIF aprobadas por la UE (NICE) y establece la obligación, para todas las sociedades que se rijan por la Ley de un EM de la UE, de que presenten sus estados financieros consolidados de conformidad con las NICE para todos los ejercicios iniciados a partir del 1 de enero de 2005, si en la fecha de cierre de su balance, sus valores han sido admitidos a cotización en un mercado financiero regulado de cualquier EM. 
+
+A nivel nacional, destaca el Plan General de Contabilidad de 2007 (PGC), que es un conjunto de normas que fijan los procedimientos y métodos a seguir en el registro de la actividad económica de la empresa y que incorpora una serie de novedades respecto al anterior PGC de 1990 (nuevos estados contables como son el Estado de flujos de efectivo y el Estado de cambios en el patrimonio neto, dos grupos de cuentas nuevas referidas a los ingresos y gastos imputados al patrimonio neto, el valor razonable como método de valoración, la primacía del fondo sobre la fonna, entre otros). El PGC recoge los documentos que deben componer las cuentas anuales de una empresa, pudiendo darse dos modelos de cuentas: el general y el abreviado.\footnote{Podrán formular el balance, la memoria y el estado de cambios en el patrimonio neto abreviados las sociedades que durante dos ejercicios consecutivos reúnan, a la fecha de cierre de cada uno de ellos, al menos \textbf{dos} de las siguientes circunstancias:
+\begin{la}
+    \item Que el total de las partidas del activo no supere los 4 millones de euros;
+    \item Que el importe neto de su cifra anual de negocios no supere los 8 millones de euros; y/o,
+    \item Que el número medio de trabajadores empleados durante el ejercicio no sea superior a 50.
+\end{la} 
+En cuanto a la cuenta de pérdidas y ganancias, las sociedades podrán presentarla en su formato abreviado cuando, durante dos ejercicios consecutivos reúnan, a la fecha de cierre de cada uno de ellos, al menos \textbf{dos} de las siguientes circunstancias:
+\begin{la}
+    \item Que el total de las partidas de activo no supere los 11,4 millones de euros;
+    \item Que el importe neto de su cifra anual de negocios no supere los 22,8 millones de euros; y/o,
+    \item Que el número medio de trabajadores empicados durante el ejercicio no sea superior a 250. 
+\end{la}
+No existe un estado de ílujos de electivo en modelo abreviado: las empresas que puedan presentar el balance, la memoria y el estado de cambios en el patrimonio neto abreviados están eximidos de presentar este documento. En cuanto a la obligación de auditar las cuentas anuales. según lo establecido en la Ley 22/2015, de 20 de julio, de Auditoria de Cuentas como regla general, las sociedades que puedan formular balance en modelo abreviado no estarán obligadas a someterse a auditoria contable para los ejercicios iniciados a partir del 1 de enero de 2016. Se recupera así la igualdad de criterios que existía entre la obligación de formular balance no abreviado y la obligación de someter a auditoria las cuentas anuales, que se rompió con la Ley 14/2013 de apoyo a los emprendedores y su internacionalización
+} 
+
+Este último será el que presenten aquellas empresas que no alcancen un determinado umbral respecto al volumen de activos, cifra de negocio, número de trabajadores, entre otros indicadores.
+
+\subsection{Marco conceptual de la Contabilidad} 
+Las Cuentas Anuales se componen de: (i) balance; (ii) PyG; (iii) estado de cambios en el patrimonio neto; (iv) estado de flujos de efectivo; y, (v) memoria. Estos documentos forman \textbf{una unidad}.\footnote{No obstante, el estado de cambios en el patrimonio neto y el estado de flujos de efectivo no serán obligatorios para las empresas que puedan formular balance y memoria abreviados. 
+}
+
+Las cuentas anuales deben redactarse con claridad, de forma que la información suministrada sea comprensible y útil para los usuarios al tomar sus decisiones económicas, debiendo mostrar la imagen fiel del patrimonio, de la situación financiera y de los resultados de la empresa, de conformidad con las disposiciones legales. Para lograr este objetivo, el \textbf{sujeto contable} que informa como persona jurídica individual, lo hará con independencia del grupo de empresas al que pueda pertenecer,\footnote{Sin perjuicio de las normas particulares recogidas en la segunda parte de este Plan y de los desgloses informativos que deban incorporarse en las cuentas anuales. 
+} y con especial atención a la aplicación sistemática y regular de los requisitos, principios y criterios contables que permiten que las cuentas anuales muestren la imagen fiel del patrimonio, de la situación financiera y de los resultados de la empresa cuyo oibjetivo se perigue en el PGC.
+
+\subsubsection{Principios Generales de Contabilidad}
+La contabilidad de la empresa y, en especial, el registro y la valoración de los elementos de las cuentas anuales, se desarrollarán aplicando obligatoriamente los principios contables.
+
+En los casos de conflicto entre principios contables, deberá prevalecer el que mejor conduzca a que las cuentas anuales expresen la imagen fiel del patrimonio, de la situación financiera y de los resultados de la empresa.
+
+\paragraph{Empresa en funcionamiento}
+Se considerará, salvo prueba en contrario, que la gestión de la empresa continuará en un futuro previsible, por lo que la aplicación de los principios y criterios contables no tiene el propósito de determinar el valor del patrimonio neto a efectos de su transmisión global o parcial, ni el importe resultante en caso de liquidación. 
+
+En aquellos casos en que no resulte de aplicación este principio la empresa aplicará las normas de valoración que resulten más adecuadas para reflejar la imagen fiel de las operaciones tendentes a realizar el activo, cancelar las deudas y, en su caso, repartir el patrimonio neto resultante, debiendo suministrar en la memoria de las cuentas anuales toda la información significativa sobre los criterios aplicados. 
+
+\paragraph{Devengo}
+Los efectos de las transacciones o hechos económicos se registrarán cuando ocurran, imputándose al ejercicio al que las cuentas anuales se refieran, los gastos y los ingresos que afecten al mismo, con independencia de la fecha de su pago o de su cobro.
+
+\paragraph{Uniformidad}
+Adoptado un criterio dentro de las alternativas que se permiten, deberá mantenerse en el tiempo y aplicarse de manera uniforme para transacciones, otros eventos y condiciones que sean similares, en tanto no se alteren los supuestos que motivaron su elección. 
+
+De alterarse estos supuestos podrá modificarse el criterio adoptado en su día; en tal caso, estas circunstancias se harán constar en la memoria, indicando la incidencia cuantitativa y cualitativa de la variación sobre las cuentas anuales.
+
+\paragraph{Prudencia}
+Se deberá ser prudente en las estimaciones y valoraciones a realizar en condiciones de incertidumbre. La prudencia no justifica que la valoración de los elementos patrimoniales no responda a la imagen fiel que deben reflejar las cuentas anuales. Asimismo, sin perjuicio de lo dispuesto en el artículo 38 bis del Código de Comercio, únicamente se contabilizarán los beneficios obtenidos hasta la fecha de cierre del ejercicio. 
+
+Por el contrario, se deberán tener en cuenta todos los riesgos, con origen en el ejercicio o en otro anterior, tan pronto sean conocidos, incluso si sólo se conocieran entre la fecha de cierre de las cuentas anuales y la fecha en que éstas se formulen. En tales casos se dará cumplida información en la memoria, sin perjuicio de su reflejo, cuando se haya generado un pasivo y un gasto, en otros documentos integrantes de las cuentas anuales. 
+
+Excepcionalmente, si los riesgos se conocieran entre la formulación y antes de la aprobación de las cuentas anuales y afectaran de forma muy significativa a la imagen fiel, las cuentas anuales deberán ser reformuladas. Deberán tenerse en cuenta las amortizaciones y correcciones de valor por deterioro de los activos, tanto si el ejercicio se salda con beneficio como con pérdida.
+
+\paragraph{No compensación}
+Salvo que una norma disponga de forma expresa lo contrario, no podrán compensarse las partidas del activo y del pasivo o las de gastos e ingresos, y se valorarán separadamente los elementos integrantes de las cuentas anuales.
+
+\paragraph{Importancia relativa: Excepcionalidad}
+Se admitirá la no aplicación estricta de algunos de los principios y criterios contables cuando la importancia relativa en términos cuantitativos o cualitativos de la variación que tal hecho produzca sea escasamente significativa y, en consecuencia, no altere la expresión de la imagen fiel. 
+
+Las partidas o importes cuya importancia relativa sea escasamente significativa podrán aparecer agrupados con otros de similar naturaleza o función. 
+
+\subsection{Asientos contables: Registro y partida doble}
+El registro o reconocimiento contable es el proceso por el que se incorporan al balance, la cuenta de pérdidas y ganancias o el estado de cambios en el patrimonio neto, los diferentes elementos de las cuentas anuales, de acuerdo con lo dispuesto en las normas de registro relativas a cada uno de ellos, incluidas en la segunda parte de este Plan General de Contabilidad. El registro de los elementos procederá cuando, cumpliéndose la definición de los mismos incluida en el apartado anterior, se cumplan los criterios de probabilidad en la obtención o cesión de recursos que incorporen beneficios o rendimientos económicos y su valor pueda determinarse con un adecuado grado de fiabilidad. Cuando el valor debe estimarse, el uso de estimaciones razonables no menoscaba su fiabilidad
+
+Un asiento contable, también conocido como entrada contable o registro contable, es el acto de registrar una transacción o evento financiero en los libros contables de una empresa. Consiste en anotar de manera sistemática y organizada las operaciones económicas que afectan los activos, pasivos, patrimonio, ingresos o gastos de la empresa. El propósito de los asientos contables es mantener un registro preciso y ordenado de todas las transacciones financieras realizadas por la empresa. Estos registros son fundamentales para la elaboración de los estados financieros y para tener un control adecuado sobre las operaciones y el rendimiento económico de la empresa.
+
+Cada asiento contable consta de al menos dos partes: el débito y el crédito. Siguiendo el principio de partida doble, se registran los valores en las cuentas correspondientes, asegurando que la suma de los débitos sea igual a la suma de los créditos. Esto garantiza el equilibrio contable y la integridad de los registros. En otras palabras, la suma de los débitos debe ser igual a la suma de los créditos.
+
+\subsection{Criterios de valoración}
+La determinación de valor es una cuestión controvertida en economía desde el nacimiento de la disciplina. En caso de existir un mercado en el que se intercambie el bien, una solución de minimis pero con fundamentación sólida es emplear el precio de equilibrio. Sin embargo: ( 1 ) en ocasiones no existe tal mercado, (2) en ocasiones el precio de mercado es excesivamente volátil. Dada la relevancia de la valoración de los activos y los pasivos, en especial porque la diferencia entre ambos determinará la riqueza neta de la empresa ("patrimonio neto"), la cuestión de la valoración es capital.
+
+Mediante la valoración asignamos un valor monetario a cada uno de los elementos integrantes de las cuentas anuales. Al margen del detalle jurídico para cada caso, podemos hablar de dos categorías de métodos de valoración:\footnote{
+Existen otras muchos criterios de valoración, pero materialmente se acercan o bien a la valoración por coste histórico o la valoración por valor razonable. Destacamos los siguientes (art. 6º, Primera Parte del PGC -- Marco conceptual): 
+\begin{la}
+    \item Valor neto realizable. Importe que la empresa puede obtener por su enajenación en el mercado en el curso normal de negocio, deduciendo los costes estimados necesarios para llevarla a cabo;
+    \item Valor actual. Importe de los flujos de efectivo a recibir o pagar en el curso normal del negocio, actualizados a un tipo de descuento adecuado;
+    \item Valor en uso. Valor actual de los flujos de efectivo futuros esperados, utilizados en el curso normal del negocio y, en su caso, de su enajenación u otra forma de disposición, teniendo en cuenta su estado actual y actualizados de acuerdo con un criterio financiero a un tipo de interés de mercado. ajustado por los riesgos específicos del activo que no hayan sido tenidos en cuenta al actualizar los tlujos de efectivo;
+    \item Coste amortizado. Importe al que inicialmente fue valorado un activo financiero menos los reembolsos de principal que se hubieran producido; y,
+    \item Valor residual. Importe que la empresa estima que podría obtener en el momento actual por su venta u otra fom1a de disposición, una vez deducidos los costes derivados de la misma.
+\end{la}
+\textbf{OJO!} Estos diferentes criterios de valoración son un ejemplo claro de lo que implica el principio de uniformidad: una vez asumimos un criterio de valoración (sea cual sea), debemos mantener el mismo criterio en la valoración de TODOS nuestros registros. De no hacerlo, no se estaría cumpliendo dicho principio y solo puede eximirse del cumplimiento de éste una excepción que sea debidamente acreditada en la memoria del ejercicio correspondiente.
+}
+\begin{la}
+    \item \textbf{Coste histórico}. Éste consiste en el precio de adquisición o coste de producción de un activo. Para un pasivo, será el valor de la contrapartida recibida a cambio de incurrir en una deuda. Presenta como principales ventajas la simplicidad (tanto en su determinación por el contable, como en su comprobación por el auditor) como su estabilidad en el tiempo. Paradójicamente, lo segundo es también un importante defecto, ya que cambios en el valor de los activos típicamente no se reconocerán en el saldo del balance, lo que pone en riesgo que éste refleje la imagen fiel de la empresa tras el paso de los años.\footnote{Hay que matizar que las pérdidas de valor generalmente se reconocen, en base al principio de prudencia, y que ciertas revalorizaciones también se pueden reconocer, si bien de manera excepcional.
+    }
+    \item \textbf{Valor razonable}. Éste es el concepto más similar al precio de mercado. Se trata del importe por el que puede ser adquirido un activo o liquidado un pasivo, entre partes interesadas y debidamente informadas, que realicen una transacción en condiciones de independencia mutua. Se calculará, con carácter general, con referencia a un valor fiablede mercado. Si no existiese un mercado activo, se utilizarán las transacciones recientes, otros activos sustancialmente iguales o el descuento de flujos futuros estimados. En el caso de no existir un mercado fiable, los elementos se valorarán bien por el criterio anterior minorado de las partidas correctoras correspondientes, bien por el coste amortizado, según corresponda.\footnote{Coste amortizado de un instrumento financiero: Valoración inicial corregida por los reembolsos del principal que se hubieran producido y cualquier deterioro reductor del valor, y teniendo en cuenta también la diferencia entre el importe inicial y el valor de reembolso en el vencnniento calculada mediante el tipo de interés efectivo o tipo de actualización que iguala el valor de un instrumento con los flujos estimados a lo largo de su vida.
+    }
+\end{la}
+
+\subsection{Ciclo de la contabilidad}
+El ciclo de elaboración, aprobación y registro de las cuentas anuales establecido en la Ley de Sociedades de Capital es el siguiente:
+\begin{lnum}
+    \item \textbf{Elaboración}. Se elaborarán con una periodicidad de doce meses, salvo en los casos de constitución, modificación de la fecha de cierre del ejercicio social o disolución de la empresa. Éstas deberán ser formuladas por el empresario o los administradores de la empresa en el plazo máximo de tres meses, a contar desde el cierre del ejercicio y deberán ser firmadas por el empresario, por todos los socios ilimitadamente responsables por las deudas sociales, o por todos los administradores de la sociedad;
+    \item \textbf{Aprobación}. Una vez formuladas las cuentas anuales, se aprobarán por la junta general. La junta general ordinaria, previamente convocada al efecto, se reunirá necesariamente dentro de los seis primeros meses de cada ejercicio, para, en su caso, aprobar la gestión social, las cuentas del ejercicio anterior y resolver sobre la aplicación del resultado. Las cuentas consolidadas habrán de someterse a la aprobación de la junta general ordinaria de la sociedad dominante simultáneamente con las cuentas anuales de esta sociedad;
+    \item \textbf{Registro}. Las cuentas anuales se presentarán en el Registro Mercantil del domicilio social en el plazo de un mes desde su aprobación.
+\end{lnum}
+
+\begin{specialblock}{La Auditoría -- Obligatoriedad, ciclos y conclusiones}
+    La auditoría en España se refiere al proceso de examen y verificación de los registros financieros, operativos y legales de una entidad, realizado por un auditor independiente. 
+    
+    Su objetivo principal es evaluar la fiabilidad, integridad y cumplimiento de la información financiera presentada por la entidad auditada. En España, la auditoría está regulada por la Ley de Auditoría de Cuentas, que establece los requisitos legales y profesionales para la realización de auditorías. Esta ley establece la obligación de auditar las cuentas anuales de ciertas entidades, como sociedades anónimas, sociedades de responsabilidad limitada, entidades de crédito, entre otras.
+
+    El proceso de auditoría en España generalmente implica las siguientes etapas: 
+    \begin{lnum}
+        \item \textbf{Planificación}. El auditor planifica el alcance y la naturaleza del trabajo de auditoría, teniendo en cuenta los riesgos y las características específicas de la entidad auditada;
+        \item \textbf{Obtención de evidencia}. El auditor recopila y analiza pruebas suficientes y adecuadas para respaldar su opinión sobre la información financiera. Esto implica revisar documentos, realizar pruebas de cumplimiento y realizar procedimientos de auditoría selectivos;
+        \item \textbf{Evaluación de controles internos}. El auditor evalúa los controles internos de la entidad para determinar su eficacia y su impacto en la auditoría. Esto ayuda a identificar riesgos y determinar los procedimientos de auditoría adicionales necesarios;
+        \item \textbf{Pruebas sustantivas}. El auditor realiza pruebas detalladas de las transacciones y saldos contables clave para verificar su exactitud y validez. Esto puede incluir reconciliaciones, confirmaciones con terceros y análisis de tendencias;
+        \item \textbf{Conclusiones y emisión del informe}. Con base en los hallazgos de la auditoría, el auditor evalúa si la información financiera es razonable y presenta su opinión en un informe de auditoría. El informe puede ser una opinión \textbf{sin salvedades, una opinión con salvedades, una abstención de opinión o una opinión adversa}, dependiendo de los hallazgos de la auditoría. 
+    \end{lnum}
+
+    Es importante destacar que la auditoría tiene el objetivo de proporcionar una garantía razonable sobre la fiabilidad de la información financiera, pero no puede detectar fraudes o irregularidades con certeza absoluta. Sin embargo, los auditores están obligados a infomrnr cualquier sospecha de fraude o incumplimiento legal que descubran durante el proceso de auditoría.
+\end{specialblock}
+
+\subsection{Balance de situación: Definición y criterios de registro}
+El balance de situación recoge la composición del patrimonio de la empresa en un momento del tiempo. Ofrece información referida a los bienes, derechos y fuentes de financiación de la empresa. 
+
+Para este fin, el balance comprende, con la debida separación, el activo, el pasivo y el patrimonio neto de la empresa, de manera que se cumpla siempre la identidad contable básica:
+
+\eqblock{
+\begin{aligned}
+    \underset{\text{\scriptsize Partidas: Corrientes $+$ No corrientes}}{\text{ACTIVO}}\quad+\quad \underset{\text{\scriptsize Partidas: Corrientes $+$ No corrientes}}{\text{PASIVO}}\quad =\quad\text{PATRIMONIO NETO}
+\end{aligned}
+}{Identidad contable: Balance de Situación.}
+
+Hay que tener en cuenta que la estructura del balance estará condicionada por el negocio al que se dedique la empresa y todo proceso de análisis debe tener en cuenta esta realidad. Resulta curioso que la anterior identidad contable se remonte, de manera consistente, con la primera obra de contabilidad de la que se tiene constancia: FRAY LUCA PACIOLI (s.XV), lo que es muestra de su enorme utilidad.
+
+Tanto el activo como el pasivo encuentran su primera división en la clasificación entre partidas corrientes y no corrientes.
+
+\subsubsection{Activo}
+Los activos constituyen, a priori, todos los bienes, derechos y otros recursos controlados económicamente por la empresa, resultantes de sucesos pasados. No obstante, deben reconocerse en el balance cuando sea probable la obtención a partir de los mismos de beneficios o rendimientos económicos para la empresa en el futuro, y siempre que se puedan valorar con fiabilidad. 
+
+Además, cabe tener siempre en cuenta que el reconocimiento contable de un activo implica también el reconocimiento simultáneo de un pasivo, la disminución de otro activo o el reconocimiento de un ingreso u otros incrementos en el patrimonio neto.
+
+\paragraph{Activo corriente}
+Conforme al PGC, el activo corriente comprenderá todos los activos vinculados al ciclo normal de explotación que la empresa espera vender, consumir o realizar en el transcurso del mismo. Además, de los activos cuyo vencimiento, enajenación o realización se espera que se produzca en el corto plazo, activos financieros mantenidos para negociar (excepto los derivados financieros cuyo plazo de liquidación sea superior a un año) y el efectivo y otros activos líquidos equivalentes, cuya utilización no esté restringida, para ser intercambiados o usados para cancelar un pasivo.
+
+\eqblock{
+\begin{aligned}
+    \substack{\text{Activo}\\\text{Corriente}}:
+    \left\{\begin{aligned}
+        &\text{Deudores: Reales o $\underset{\text{\scriptsize financieros}}{\text{nominales}}$}\\[0.5em]
+        &\text{Existencias}\\[0.5em]
+        &\text{Efectivo y otros activos líquidos ($\sim$)}
+    \end{aligned}\right\}\Leftarrow\quad\underset{(\text{\scriptsize$\sim$ Ciclo normal de explotación})}{\substack{\text{Duración }\\\text{inferiora un año}}}
+\end{aligned}
+}{Activo corriente: Clasificación general (PGC).}
+
+Corresponden al activo corriente, por tanto, todos los que representan la materialización del ciclo de explotación de la empresa que, con carácter general, no excederá de un año. De esta forma, se entiende por ciclo normal de explotación, el periodo de tiempo que transcurre entre la adquisición de los activos que se incorporan al proceso productivo y la realización de los productos en forma de efectivo o equivalentes al efectivo. 
+
+Algunos de los activos más comunes que encontramos ubicados dentro del activo corriente son:
+\begin{lnum}
+    \item \textbf{Activos no corrientes mantenidos para la venta.} Activos cuya recuperación se espera realizar a través de su venta, en lugar de su uso continuado;
+    \item \textbf{Existencias}. Éstas comprenden los materiales propiedad de la compañía destinados a la producción o a la venta del producto final (comerciales, materias primas y otros aprovisionamientos, productos en curso, productos terminados, subproductos, etc.);\footnote{La valoración de las existencias no es cuestión baladí.
+    
+    El PGC establece que se empleará el coste de adquición o el coste de producción. Por tanto, dada la rotación de estos activos, la variabilidad de su precio (o un contexto de elevada inflación) puede afectar sustancialmente al saldo de estas cuentas en el balance. Para ello, y dado que es implanteable en la práctica registrar cada unidad de existencia por separado en el balance por su coste de adquisición individual, la empresa deberá de emplear un método de agregación. 
+    
+    El PGC establece que se adoptará con carácter general el método del precio medio o coste medio ponderado, aunque señala que el método FIFO (\textit{first in first out}) es aceptable y puede adoptarse si la empresa lo considerase más conveniente para su gestión. Ahora bien, se utilizará un único método de asignación de valor para todas las existencias que tengan una naturaleza y uso similares. De acuerdo con el principio de prudencia, en caso de pérdida de valor del producto por cualquier motivo, la empresa deberá dotarse un deterioro: debitado en PyG (Gastos), a crédito en Balance (Activos).
+    }
+    \item \textbf{Deudores comerciales y otras cuentas a cobrar}. Todo tipo de derecho de cobro frente a clientes, deudores varios, personal, activos por impuesto corriente, otros créditos con la Hacienda Pública por razón de devolución de impuestos, etc.;\footnote{\textbf{Valoración y registro}. La valoración inicial (registro) se hará a valor razonable, pero a partir de ese momento a coste amortizado, registrando en PyG los intereses devengados. El registro a coste amortizado implica que, además de descontarse del valor del derecho de cobro cada obligación satisfecha, pueden tener lugar reducciones por deterioro tanto a priori (i.e. cuando haya evidencia de una caída en la calidad crediticia del deudor) o a posteriori (en caso de impagos); de acuerdo al principio de prudencia, ha de aplicarse el deterioro según haya indicios. La contrapartida de dichos deterioros es un gasto en PyG. Cuando estos derechos de cobro sean a largo plazo, se clasificarán como Activo no corriente, y cada año, en función del calendario de amortización, la empresa reclasificará o no la posición. El método de valoración puede diferir- en función de si se clasifica la deuda a corto plazo o a largo plazo (reconocimiento del interés implícito)
+    }
+    \item \textbf{Periodificaciones a corto plazo}. Gastos e intereses pagados por anticipado; y,
+    \item \textbf{Efectivo y otros activos líquidos equivalentes}. Tesorería depositada en caja, depósitos bancarios a la vista y los instrumentos financieros convertibles en efectivo con vencimiento inferior a tres meses: activos financieros a corto plazo de gran liquidez. Su valoración se hace a precio de adquisición. Dada las relaciones existentes entre las diferentes cuentas de caja y bancos, es importante establecer mecanismos periódicos de contraste entre los saldos contables y los salados reales; este ejercicio se denomina \textbf{conciliación}.
+\end{lnum}
+
+
+\paragraph{Activo no corriente}
+El PGC define los activos que deben registrarse en el activo no corriente \textit{sensu contrario}, literalmente: [descritos los activos que se registrarán en activo corriente] \textit{los demás elementos del activo se clasificarán como no corrientes}.
+
+\eqblock{
+\begin{aligned}
+    \text{Si, }\,A\not\in\text{Activo Corriente}\,\Longrightarrow\,A\in\text{Activo no corriente}
+\end{aligned}
+}{Activo no corriente: Clasificación general (PGC).}
+
+Constituye el activo no corriente, por tanto, todos los que responden a la materialización de la capacidad productiva de la empresa. Algunos de los activos que más frecuentemente podemos encontrar categorizados como activos no corrientes son:
+\begin{lnum}
+    \item \textbf{Inmovilizado intangible}. Son activos no monetarios sin apariencia fisica susceptibles de valoración económica. Se caracterizan por: (i) su naturaleza intangible, normalmente es un derecho; (ii) viene originado por un desembolso; (iii) el alto nivel de incertidumbre sobre su capacidad de generar ingresos en el futuro; y, (iv) su duración es superior a un ejercicio económico y no están destinados a la venta.\footnote{
+    Como conceptos específicos existen: (i) gastos de investigación y desarrollo; (ii) concesiones administrativas; (iii) propiedad industrial y propiedad intelectual; (iv) fondo de comercio (en ningún caso se reconocerán marcas, sellos o denominaciones, listas de clientes u otras similares que hayan sido generadas internamente);(v) derechos de traspaso; y, (vi) aplicaciones infonnáticas.
+    
+    La empresa determinará si la vida útil de estos activos es definida o no, lo que afectará a la posibilidad de amortizarlo. Aplicarán las normas generales sobre correcciones valorativas debidas al deterioro.
+    } Su valoración se hará por el coste de adquisición;
+    \item \textbf{Inmovilizado material}. Se trata de un conjunto de elementos patrimoniales tangibles, muebles o inmuebles, destinados a servir de forma duradera en la actividad de la empresa. Su valoración será a coste de adquisición o de producción y, además de los deterioros que puedan (y deban, si así se experimenta) ser contabilizados, serán centrales las correcciones valorativas por amortización;\footnote{Los conceptos fundamentales para entender esta segunda figura son los siguientes:
+    \begin{lnum}
+        \item \textbf{Valor amortizable}. Es el valor por el que están contabilizados los activos inmovilizados depreciables;
+        \item \textbf{Valor residual}. Es el importe que se espera recuperar por la venta del inmovilizado una vez que esté fuera de servicio. Para su cálculo deberá descontarse los costes necesarios para su venta. El importe final no suele ser significativo, por lo que no se suele considerar a efecto de determinación de la base de cálculo sobre la que realiza la amortización;
+        \item \textbf{Base de amortización}. Es el valor amortizable menos el valor residual; y,
+        \item \textbf{Vida útil}. Es el periodo en el que se espera que el bien inmovilizado produzca rendimientos. Se debe de establecer en función de un criterio racional, teniendo en cuenta el uso y desgaste físico esperado, la obsolescencia, los límites legales u otros que afecten al activos, y las condiciones de utilización del mismo (número de turnos, capacitación del personal, etc.).
+    \end{lnum}
+    }
+    \item \textbf{Inversiones inmobiliarias}. Terrenos y construcciones que no se dedican a la actividad principal de la empresa, sino a obtener rentas o plusvalías;
+    \item \textbf{Inversiones en empresas del grupo y asociadas}. Activos del grupo que representan la existencia de una estructura societaria superior a la empresa, tipo matriz-filial. La condición fundamental para hablar de grupo es la existencia de control por parte de una empresa sobre otra.\footnote{En línea con lo establecido en el artículo 42 del Código de Comercio (en dicho artículo se enumeran una lista de circunstancias que se darán por cumplidas o no en función de que se den ciertas presunciones \textit{iuris tantum} o \textit{iure et de iure}).
+    } La valoración se hará a coste de adquisición, y al final de cada ejercicio se comparará éste con el valor recuperable, lo que potencialmente puede dar lugar a deterioros;
+    \item \textbf{Inversiones financieras}.\footnote{En caso de que el vencimiento del titulo sea inferior al año, se clasificará como activo corriente.
+    } Títulos financieros de entidades que no estén vinculadas con la empresa, créditos a terceros a largo plazo, valores representativos de deuda, o derivados, que no cumplan las características previstas para categorizarse como activo corriente;\footnote{En función del motivo por el cual la empresa tiene estos títulos en balance, se clasificarán de una manera u otra, existiendo tres categorías:
+    \begin{lnum}
+        \item \textbf{Inversiones mantenidas hasta el vencimiento}. Valoradas a coste amortizado, porque la empresa no busca aprovechar oscilaciones en los precios del activo; 
+        \item \textbf{Activos financieros mantenidos para negociar}. Valoradas a valor razonable con cambios imputados a PyG, porque el motivo de su tenencia por parte de la empresa es beneficiarse de cambios en el valor, en una lógica de rentabilidad-riesgo; y,
+        \item \textbf{Activos financieros disponibles para la venta}. Valoradas a valor razonable con cambios imputados directamente en el patrimonio neto, se trata de una suerte de gris frente a los dos casos anteriores, por ello se tiene en cuenta el valor de mercado del activo, pero los cambios en los precios nos afectan al resultado del ejercicio
+    \end{lnum}
+    } y,
+    \item \textbf{Activos por impuesto diferido}. Se recogerán entre otros, deducciones y otras ventajas fiscales no utilizadas y derechos a compensar por bases imponibles negativas pendientes de compensación.
+\end{lnum}
+
+
+\begin{specialblock}{Amortización -- Objeto, función y técnicas}
+    
+    \textbf{OJO}! Muy interesante: \href{https://foros.plangeneralcontable.com/viewtopic.php?f=1&t=36492&sid=81e24719cb7a2f45463daab4c4968a3a&start=15}{\textit{Contabilidad España: Es obligatorio amortizar?} (Foro Online)}.
+    \href{https://www.supercontable.com/boletin/D/articulos/no_amortizar_inmovilizados_durante_un_ejercicio_voluntariamente.html}{\textit{¿Puedo dejar de amortizar un inmovilizado voluntariamente (por conveniencia)?} Supercontable.com}
+    
+    La amortización es un concepto tremendamente importante en contabilidad y fiscalidad. Hace referencia al proceso de distribución de gasto en el tiempo de un valor duradero y se aplica tanto al pasivo como al activo. Así puede significar redimir o extinguir el capital de un préstamo o deuda o recuperar o compensar los fondos invertidos. 
+    
+    La amortización es fiscalmente opcional pero, atendiendo a la finalidad de la contabilidad (representar la imagen fiel de la empresa), contablemente \textit{obligatoria}. Esto es así porque constituye una deducción indirecta por costes soportados por la empresa durante el ejercicio (amortización, pérdida/deterioro del valor de la inversión) pero, desde el punto de vista contable, representa una pérdida/deterioro del valor de las inversiones realizadas que debe representar con el fin de proporcionar una imagen fial del activo en posesión de la empresa.
+    
+    Se podrán utilizar aquellos métodos de amortización que, de acuerdo con un criterio técnico económico, distribuyan los costes de la amortización a lo largo de su vida útil atendiendo al criterio de la empresa o, dicho de otro modo, aquel que persiga sus objetivos de la mejor manera. 
+    
+    La empresa deberá ser consistente en el uso del método de amortización que elija para toda la vida útil de sus inmovilizados, dispondiendo a este efecto de los siguiente métodos:
+    \begin{lnum}
+        \item \textbf{Amortización lineal}. Supone que el bien se deprecia de modo homogéneo a lo largo de toda su vida útil;
+        \item \textbf{Amortización decreciente}. Estima que la mayor depreciación se produce en los primeros ejercicios, disminuyendo a lo largo de la vida útil del activo;
+        \item \textbf{Amortización acelerada}. Supone un beneficio fiscal que permite amortizar aceleradamente un bien, aumentando para ese período el gasto deducible y disminuyendo la base imponible en el Impuesto de Sociedades. 
+    \end{lnum}
+
+    Además de las correcciones negativas del valor (amortización), existen dos casos de correcciones al alza: (i) cargas capitalizables (renovación, ampliación y mejora, arrendamientos financieros, entre otras); y, (ii) actualizaciones periódicas por Ley.
+    
+\end{specialblock}
+
+\subsubsection{Pasivo}
+Los pasivos constituyen, a priori, todos las obligaciones actuales surgidas como consecuencia de sucesos pasados, para cuya extinción la empresa espera desprenderse de recursos que puedan producir beneficios o rendimientos económicos en el futuro. A estos efectos, se entienden incluidas las provisiones.
+
+Además, cabe tener siempre en cuenta que el reconocimiento contable de un pasivo implica también el reconocimiento simultáneo de un activo, la disminución de otro pasivo o el reconocimiento de un gasto u otras disminuciones en el patrimonio neto.
+
+\paragraph{Pasivo corriente}
+Conforme al PGC, el pasivo corriente comprenderá todas las obligaciones vinculadas al ciclo de explotación de la empresa. En particular: (i) las obligaciones vinculadas al ciclo normal de explotación señalado para el activo corriente que la empresa espera liquidar en el transcurso del mismo; (ii) las obligaciones cuyo vencimiento o extinción se espera que se produzca en el corto plazo;\footnote{En particular, aquellas obligaciones para las cuales la empresa no disponga de un derecho incondicional a diferir su pago en dicho plazo. En consecuencia, los pasivos no corrientes se reclasificarán en corrientes en la parte que corresponda.
+} y, (iii) los pasivos financieros clasificados como mantenidos para negociar, excepto los derivados financieros cuyo plazo de liquidación sea superior a un año.
+
+\eqblock{
+\begin{aligned}
+    \substack{\text{Pasivo}\\\text{Corriente}}:
+    \left\{\begin{aligned}
+        &\text{Acreedores: Reales o $\underset{\text{\scriptsize financieros}}{\text{nominales}}$}\\[0.5em]
+        &\text{Recalificaciones y periodificaciones ($\sim$)}
+    \end{aligned}\right\}\Leftarrow\quad\underset{(\text{\scriptsize$\sim$ Ciclo normal de explotación})}{\substack{\text{Duración }\\\text{inferiora un año}}}
+\end{aligned}
+}{Pasivo corriente: Clasificación general (PGC).}
+
+Corresponden al pasivo corriente, por tanto, todos los que representan la materialización del ciclo de explotación de la empresa que, con carácter general, no excederá de un año. De esta forma, se entiende por ciclo normal de explotación, el periodo de tiempo que transcurre entre la asunción del pasivo (o la parte que le corresponda, por recalificación largo $\to$ corto plazo) y la amortización/extinción de éste en forma de pago u otras formas de extinción de las obligaciones (ver Código Civil).
+
+\paragraph{Pasivo no corriente}
+El PGC define los activos que deben registrarse en el pasivo no corriente sensu contrario, literalmente: [descritos los pasivos que se registrarán en pasivo corriente] \textit{los demás elementos del pasivo se clasificarán como no corrientes}.
+
+\eqblock{
+\begin{aligned}
+    \text{Si, }\,B\not\in\text{Pasivo Corriente}\,\Longrightarrow\,B\in\text{Pasivo no corriente}
+\end{aligned}
+}{Activo no corriente: Clasificación general (PGC).}
+ 
+En esencia, todas las obligaciones contraidas o razonablemente previstas por el sujeto contable con vencimiento superior a un año. Algunos de los más comunes:
+\begin{lnum}
+    \item \textbf{Provisiones}.\footnote{En caso de que el vencimiento del titulo sea inferior al año, se clasificará como pasivo corriente
+    } La actividad y la situación patrimonial de las empresas se hayan influidas por la incertidumbre y por la existencia de compromisos futuros. En virtud del principio de prudencia, estos hechos han de ser incorporados en la información financiera. Las provisiones son así obligaciones de ocurrencia y cuantía inciertos, que se esperan pueden derivar en pérdidas futuras. Para que una provisión pueda registrarse, deben de cumplirse los siguientes requisitos: (i) obligación presente (legal, contractual, tácita); (ii) alta probabilidad de ocurrencia; y, (ii) puede cuantificarse razonablemente. De no cumplirse estas condiciones, hablaremos de contingencias, que han de aparecer en la memoria, pero no implican la existencia de un pasivo en el balance (es decir, no afectan a la situación patrimonial de la empresa);
+    \item \textbf{Obligaciones contraídad}. Por el valor del capital restante a un periodo superior a un año vista: (i) las contraídas con entidades financieras/crédito; (ii) con empresas del grupo y asociadas a largo plazo; (iii) pasivos por impuesto diferido; (iv) periodificaciones a largo plazo; y, (v) pasivos vinculados con activos no corrientes mantenidos para la venta.
+\end{lnum}
+
+\subsubsection{Patrimonio Neto}
+El Patrimonio Neto de una empresa se corresponde principalmente con los elementos que constituyen la financiación propia de la empresa. Está compuesto principalmente por las aportaciones de los socios, más las reservas que se guardan y los beneficios generados por la empresa, así como de las posibles subvenciones que haya obtenido la entidad.
+
+El Patrimonio Neto también está considerado como el valor que tiene dicha empresa, y se calcula a través de la diferencia de cuentas de activo menos las cuentas de pasivo.
+
+\eqblock{
+\begin{aligned}
+    \text{Patrimonio Neto}=\text{Activo}-\text{Pasivo}
+\end{aligned}
+}{Patrimonio Neto: Financiación propia de la empresa}
+
+Según el PGC PYME RD 1515/2007, el patrimonio neto constituye la parte residual de los activos de la empresa, una vez deducidos todos sus pasivos. Incluye las aportaciones realizadas, ya sea en el momento de su constitución o en otros posteriores, por sus socios o propietarios, que no tengan la consideración de pasivos, así como los resultados acumulados u otras variaciones que le afecten. Por esta razón, las cuentas del patrimonio neto también se denominan como cuentas diferenciales.
+
+Los elementos que, cuando cumplan los criterios de reconocimiento que se establecen posteriormente, se registran en la cuenta de pérdidas y ganancias o, en su caso, directamente en el estado de cambios en el patrimonio neto, son los ingresos y gastos. Las principales cuentas del Patrimonio Neto son las siguientes:
+\begin{lnum}
+    \item \textbf{Fondos propios}. Entre las partidas dedicadas a fondos propios encontramos: (i) el capital social, aportaciones de los accionistas (el capital ha de estar suscrito, pero no necesariamente desembolsado); (ii) las primas de emisión, valor adicional obtenido por una empresa al emitir nuevas acciones por encima de su valor nominal; (iii) reservas, que, aunque se trata de beneficios retenidos de ejercicios anteriores, distinguimos también entre reservas voluntarias y obligatorias;\footnote{Las segundas pueden ser de orden legal (de acuerdo con el Derecho de sociedades español, se destinarán a reservas el 10\% del beneficio del ejercicio hasta que se alcance el 20\% del capital social), pero también estatutarias o especiales. Las primeras son aquéllas que exceden de las obligatorias, y son potestativas por parte de la Junta General de Accionistas
+    } (iv) acciones y participaciones en patrimonio propias, emitidas por una entidad y posteriormente adquiridas por ella misma, que se registran como una disminución de los fondos propios de la entidad, ya que representan una reducción en el capital social o en las reservas disponibles; (v) resultados de ejercicios anteriores; (vi) otras aportaciones de los socios; (vii) dividendos a cuenta, pagos realizados por una empresa a sus accionistas antes de la aprobación de las cuentas anuales y la distribución final de beneficios; y, (viii) otros instrumentos de fondos propios, que pueden incluir, por ejemplo, préstamos participativos, instrumentos de capital híbridos u otros instrumentos financieros que otorgan derechos económicos a sus tenedores.
+    \item \textbf{Otros instrumentos}. Entre los que cabe destacar: (i) ajustes por cambios de valor que resultan de los ya comentados activos financieros disponibles para la venta (ajustes producidos por la valoración a valor razonable de los activos financieros clasificados en la categoría de disponibles para la venta), así como de operaciones de cobertura; y, (ii) subvenciones, donaciones y legados recibidos, que incluirán las subvenciones oficiales de capital, es decir, las concedidas por las Administraciones Públicas, tanto nacionales como internacionales, para el establecimiento o estructura fija de la empresa (activos no corrientes) cuando no sean reintegrables, así como, otras subvenciones, cuando no sean reintegrables, y se encuentren pendientes de imputar al resultado de acuerdo con los criterios establecidos en las normas de registro y valoración (subvenciones concedidas para financiar programas que generarán gastos futuros).
+\end{lnum}
+
+\subsection{Cuenta de Pérdidad y Ganancias}
+El balance es un estado de situación que ofrece una foto fija de la estructura económica y financiera de la empresa. Aunque es de enonne utilidad, conviene completar dicha información con una visión más dinámica como la que ofrece la cuenta de pérdidas y ganancias que nos permite analizar cómo se llega a una de las partidas del balance, el Resultado del Ejercicio.
+
+La cuenta de pérdidas y ganancias recoge el resultado del ejercicio, formado por los ingresos y los gastos del mismo, excepto cuando proceda su imputación directa al patrimonio neto de acuerdo con lo previsto en las normas de registro y valoración. Por tanto, recoge el proceso de generación del resultado del ejercicio y el flujo de los ingresos y gastos que lo han producido. Es importante destacar que tanto los ingresos como los gastos se reconocen en la cuenta PyG cuando se devengan, esto es, cuando se producen, independientemente de que los cobros y los pagos que los generen se lleven a cabo en periodos distintos:
+\begin{la}
+    \item \textbf{Ingreso}. El reconocimiento de un ingreso tiene lugar como consecuencia de un incremento de los recursos de la empresa, y siempre que su cuantía pueda determinarse con fiabilidad. Por lo tanto, conlleva el reconocimiento simultáneo o el incremento de un activo, o la desaparición o disminución de un pasivo y, en ocasiones, el reconocimiento de un gasto; y,
+    \item \textbf{Gasto}. El reconocimiento de un gasto tiene lugar como consecuencia de una disminución de los recursos de la empresa, y siempre que su cuantía pueda valorarse o estimarse con fiabilidad. Por lo tanto, conlleva el reconocimiento simultáneo o el incremento de un pasivo, o la desaparición o disminución de un activo y, en ocasiones, el reconocimiento de un ingreso o de una partida de patrimonio neto.
+\end{la}
+
+El nuevo PGC establece que la cuenta de PyG presentará una estructura vertical o de columna frente a PGC anteriores que recogían una estructura en forma de T. Por otro lado, el modelo oficial que presentan las grandes empresas de su cuenta de pérdidas y ganancias divide sus actividades en dos grandes partidas: operaciones continuadas y operaciones interrumpidas. No obstante, las empresas que utilizan el Plan de PYMES o las que presentan cuentas anuales abreviadas no tienen esta distinción, estableciéndose todos sus resultados, positivos o negativos dentro de las operaciones continuadas.
+
+Por último, el formato obligatorio se basa en una clasificación de los Ingresos y Gastos por naturaleza, existiendo otras formas de presentar la cuenta de PyG, como la cuenta funcional o analítica cuya elaboración puede ser de utilidad para la empresa pero no es obligatoria. 
+
+\subsubsection{Operaciones continuadas}
+Se refiere a lo que conocemos como resultado normal de nuestro ejercicio. Serán las únicas operaciones que se recogen en caso de ser pyme o presentar una cuenta de resultados abreviada y será el primero de los dos grupos en caso de ser gran empresa. A grandes rasgos, se incluyen en este grupo los resultados de las siguientes actividades:
+\begin{lnum}
+    \item \textbf{Resultado de explotación}. Representa la diferencia entre los ingresos propios de la actividad de la empresa y todos los gastos necesarios para poder obtenerlos. Incluye los ingresos de nuestra cifra de negocios, los gastos por aprovisionamientos, las subvenciones recibidas e incorporadas al resultado del ejercicio, los tributos, servicios exteriores, amortizaciones, provisiones, etc;
+    \item \textbf{Resultado financiero}. Representa la diferencia entre los ingresos y gastos de carácter financiero. Estará formado, entre otros, por la diferencia entre los intereses cobrados por las participaciones en instrumentos de patrimonio y otros valores negociables y los intereses pagados por las deudas con terceros;
+    \item \textbf{Resultado antes de impuestos}. Será la suma de los resultados anteriores y el que nos servirá de base a la hora de calcular el impuesto de sociedades;
+    \item \textbf{Resultado del ejercicio procedente de operaciones continuadas}. Es el resultado anterior una vez aplicado el impuesto de sociedades.
+\end{lnum}
+
+\subsubsection{Operaciones interrumpidas}
+Básicamente, son operaciones asociadas a la existencia de activos disponibles para la venta sujetos a un plan de venta previamente diseñado. A continuación se recoge la estructura de la cuenta de pérdidas y ganancias según el PGC.
+
+Imaginémos que una sociedad posee diversas líneas de negocio diferenciadas por su actividad o por su localización geográfica. Es posible que a lo largo del ejercicio económico y por diversos motivos se desprenda o tenga la intención de desprenderse de alguna de ellas. Los resultados que haya producido esta línea de negocio o actividad a lo largo del año no se puede considerar continuados, pues ya no seguirán produciéndose, por lo que se van a separar de aquellas actividades que, en principio, si van a seguir dándose. Es decir, la sociedad debe separar aquellos gastos e ingresos generados por operaciones que van a tener continuidad de aquellos que ha tenido en el ejercicio y que ha dejado o va a dejar de tener, pues su actividad se ve interrumpida. 
+
+Atendiendo al PGC: [Operaciones interrumpidas] \textit{Es todo componente de una empresa que ha sido enajenado o se ha dispuesto de él por otra vía, o bien que ha sido clasificado como mantenido para la venta y:
+\begin{la}
+    \item Represente una línea de negocio o un área geográfica de la explotación, que sea significativa y pueda considerarse separada del resto; 
+    \item Forme de un plan individual y coordinado para enajenar o dispone por otra vía de una línea de negocio o de un área geográfica de la explotación que sea significativa y pueda separarse del resto; o,
+    \item Sea una empresa dependiente adquirida exclusivamente con la finalidad de venderla.
+\end{la}
+A estos efectos, se entiende por componentes de una empresa las actividades o flujos de efectivo que, por estar separados y ser independientes en su funcionamiento o a efectos de información financiera se distinguen claramente del resto de la empresa, tal como una empresa dependiente o un segmento de negocio o geográfico.
+}
+
+\subsubsection{Resultado del ejercicio}
+La cuenta de pérdidas y ganancias es un documento que se utiliza para averiguar cuál es el resultado económico del ejercicio en el que se encuentra la empresa, es decir, si ha obtenido pérdidas o beneficios. Por tanto, el resultado económico será la diferencia entre Ingresos y Gastos producidos durante la actividad económica de la empresa. 
+
+Para obtener este resultado, en la cuentade péridas y ganancias aparecen tres clases de resultados económicos.
+
+\paragraph{Resultado de explotación}
+El resultado de explotación se obtiene estrictamente de las operaciones continuadas del ejercicio. La lógica de obtención es vertical, en tanto que se parte de los ingresos brutos resultado del proceso productivo (cifra de negocios) y progresivamente se van aminorando gastos relacionados con dicho proceso.
+
+Los elementos a tener en cuenta más habituales de este resultado son:\footnote{Algunos otros ingresos son: (i) otros ingresos de explotación; y, (ii) ingresos accesorios, subvenciones de explotación, etc. Respecto a los gastos, algunos otros son: (i) trabajos realizados por la empresa para su activo. Gastos realizados por la empresa para su inmovilizado, utilizando sus equipos y su personal, que se activan; (ii) otros gastos de explotación; (iii) imputación de subvenciones de inmovilizado no financiero y otras, que incluye el importe traspasado al resultado del ejercicio de las subvenciones, donaciones y legados de capital; y, (iv) excesos de provisiones. 
+
+Hay que tener en cuenta que deben llevarse a cabo correcciones valorativas de determinados elementos del balance, y estos se reflejarán también en la cuenta PyG. En particular: (i) amortizaciones del inmovilizado, son la expresión contable de la depreciación sistemática anual efectiva sufrida por el inmovilizado; (ii) deterioro y resultado por enajenaciones de inmovilizado, incluyendo aquí las correcciones valorativas por deterioro o recuperación de valor del inmovilizado intangible, material y en las inversiones inmobiliarias. Asimismo, se incluye el importe de las pérdidas beneficios producidos por enajenación de inmovilizado intangible, material y en las inversiones inmobiliarias.
+}
+\begin{lnum}
+    \item \textbf{Importe neto de la cifra de negocios}. Incluye tanto venta de bienes como prestación de servicios. 
+    \item \textbf{Variación de existencias de productos tenninados y en curso de fabricación}. Con esta cuenta se consigue dar de baja el saldo de existencias iniciales y de alta el saldo, a la fecha de cierre del ejercicio, de las existencias finales, y la variación experimentada es regularizada contra resultados;\footnote{Al regularizar el válor de las existencias aparece contablemente la cuenta de variación de existencias, cuyo saldo será:
+    \begin{la}
+        \item Deudor, si las existencias iniciales son mayores que las existencias finales. Esto significa que el almacén ha disminuido, implicando que el coste de ventas será igual a las compras más esta variación de existencias; o,
+        \item Acreedor si las existencias iniciales son menores que las existencias finales. En este caso, el almacén ha aumentado, indicando que de las compras sólo parte han sido vendidas y, por tanto, el coste de ventas será igual a las compras menos la variación de existencias.
+    \end{la}
+    }
+    \item \textbf{Aprovisionamientos}. Incluye el consumo de mercaderías y materias primas, los trabajos realizados por otras empresas y los deterioros experimentados por aquellas; y,
+    \item \textbf{Gastos de personal}. Sueldos y salarios, cargas sociales, provisiones.
+\end{lnum}
+
+\paragraph{Resultado financiero}
+El resultado financiero se obtiene paralelamente al resultado de explotación. De manera trivial, es esencialmente la diferencia entre ingresos y gastos financieros:\footnote{Otros flujos a tener en cuenta dentro de este grupo son: (i) variación en el valor razonable en instrumentos financieros, que incluye el importe de pérdidas o beneficios por valoración de instrumentos financieros por su valor razonable correspondientes a la cartera de negociación, a instrumentos de cobertura, etc.; (ii) importe de las pérdidas o beneficios correspondientes a baja, enajenación o cancelación de los instrumentos financieros clasificados en la categoría de \textit{Activos fmancieros disponibles para la venta}; (iii) diferencias de cambio, es decir, pérdidas o beneficios generados por fluctuaciones en el tipo de cambio en partidas monetarias denominadas en divisa (o moneda distinta a la funcional); (iv) deterioro y resultado por enajenaciones de instrumentos financieros, es decir, pérdidas por deterioro o reversión de dichos deterioros por correcciones de valor de participaciones y valores representativos de deuda a largo o corto plazo y de créditos a largo o corto plazo, incluyendo también las pérdidas o beneficios por la baja, enajenación o cancelación de valores representativos de deuda e instrumentos de patrimonio.
+}
+\begin{la}
+    \item  \textbf{Ingresos financieros}. Ingresos por acciones y otras participaciones en instrumentos de patrimonio así como, de valores negociables e instrumentos financieros, ya sea de empresas del grupo o de terceros; y,
+    \item \textbf{Gastos financieros}. Intereses de obligaciones y bonos, dividendos de acciones u otros pasivos financieros, intereses por descuento de efectos y operaciones de factoring, intereses de deudas.
+\end{la}
+
+\paragraph{Cómputo global: Obtención del resultado del ejercicio}
+En definitiva, para obtener el resultado del ejercicio, sumaremos el resultado de explotación con el resultado financiero. 
+
+\eqblock{
+\begin{aligned}
+    &\underset{\substack{\text{\scriptsize Resultado}\\\text{\scriptsize del}\\\text{\scriptsize ejercicio}}}{\text{RE}}=\underbrace{(\text{\scriptsize Cifra de negocios}\,\pm\,\text{\scriptsize Existencia})-(\text{\scriptsize Aprovisionamientos}-\text{\scriptsize Personal})}_{\text{Resultado de explotación}}+\overbrace{(\text{\scriptsize Ingresos}-\text{\scriptsize Gastos})}^{\text{Resultado financiero}}\\[2em]
+    &\text{Donde},
+    \left\{\begin{aligned}
+        &\text{Continuadas}:&&\text{RE}^c=\text{BAI}^c\overset{(1-\tau)}{\Longrightarrow}\text{BN}^c\\[0.5em]
+        &\underset{(\text{No para PYMES})}{\text{Interrumpidas}}:&&\text{RE}^i=\text{BAI}^i\underset{(1-\tau)}{\Longrightarrow}\text{BN}^i
+    \end{aligned}\right\}\Longrightarrow\text{RE}=\text{BAI}\overset{(1-\tau)}{\Longrightarrow}\text{BN}
+\end{aligned}
+}{}
+
+Seguidamente, a este beneficio total se le aplica el impuesto sobre sociedades. Sin embargo, se ha de tener en cuenta que así se obtendrá únicamente resultado del ejercicio procedente de las operaciones continuadas. A éste, se la ha de añadir los resultados del ejercicio procedente de operaciones interrumpidas neto de impuestos. 
+
+\subsection{Otros documentos de las Cuentas Anuales}
+Como se ha visto el balance de situación y la cuenta de resultados (es decir, los estados financieros) provén una visión de la situación patrimonial al cierre del ejercicio y de la generación de valor por parte de la empresa respectivamente. Si bien esta información es valiosa, cuestiones como la liquidez (relegada a un segundo plano debido ál principio de devengo), la variación de la riqueza neta de la empresa o la información cualitativa no están recogidas. 
+
+Por ello, las cuentas anuales, además de los estados financieros, contienen tres documentos adicionales, que tienen una naturaleza complementaria (obligatoria) frente a los primeros.
+
+No obstante, cabe tener en cuenta que existen otros dos documentos que, aunque no forman parte de las cuentas anuales, también son obligatorios y aportan información relevante para entender cuál es la situación en la que se encuentra la empresa: el informe de gestión y el informe de auditoría. En cualquier caso, para obtener una información más precisa muchas veces es necesario llevar a cabo un análisis económico y financiero de algunas magnitudes, el uso de ratios será de gran utilidad para alcanzar este propósito.
+
+\subsubsection{Estado de Flujos de Efectivo} 
+El estado de flujos de efectivo es un estado obligatorio introducido por el último PGC que informa sobre el origen y la utilización de los activos monetarios representativos de efectivo y otros activos líquidos equivalentes. En esencia, es un estado dinámico que aporta \textbf{información sobre cómo} las distintas actividades de la empresa han contribuido, a lo largo del ejercicio, a \textbf{generar el efectivo de la empresa}, clasificando los movimientos por actividades e indicando la variación neta de dicha magnitud en el ejercicio.
+
+A estos efectos, se entiende por efectivo y otros activos líquidos equivalentes, los que como tal figuran en el epígrafe B.VII del activo del balance, es decir, la tesorería depositada en la caja de la empresa, los depósitos bancarios a la vista y los instrumentos financieros que sean convertibles en efectivo y que en el momento de su adquisición, su vencimiento no fuera superior a tres meses, siempre que no exista riesgo significativo de cambios de valor y formen parte de la política de gestión normal de la tesorería de la empresa. 
+
+Como es de suponer, el efectivo es fundamental para la operativa diaria de la empresa dado que los proveedores, las entidades financieras que prestan fondos, los acreedores, la Hacienda Pública, etc. requieren pagos, no beneficios. Por eso, las decisiones de los gestores para generar cash flow en el tiempo adecuado son esenciales para la supervivencia de la empresa a largo plazo. 
+
+No obstante, el flujo de efectivo de una empresa no es información suficiente para conocer su situación, por ello cabe distinguir entre diferentes flujos de efectivo.\footnote{Independientemente del grupo/partida a la que corresponda su anotación/registro, los flujos procedentes de transacciones en moneda extranjera se convertirán a la moneda funcional al tipo de cambio vigente en la fecha en que se produjo cada flujo en cuestión, sin perjuicio de poder utilizar una media ponderada representativa del tipo de cambio del periodo en aquellos casos en que exista un volumen elevado de transacciones efectuadas. Si entre el efectivo y otros activos líquidos equivalentes figuran activos denominados en moneda extranjera, se informará en el estado de flujos de efectivo del efecto que en esta rúbrica haya tenido la variación de los tipos de cambio.
+}
+
+\paragraph{Actividades de explotación}
+En primer lugar, los flujos de efectivo procedentes de las actividades de explotación. Estos son fundamentalmente los ocasionados por las actividades que constituyen la principal fuente de ingresos de la empresa, así como por otras actividades que no puedan ser calificadas como de inversión o financiación. 
+
+La variación del flujo de efectivo ocasionada por estas actividades se mostrará por su importe neto, a excepción de los flujos de efectivo correspondientes a intereses, dividendos percibidos e impuestos sobre beneficios, de los que se informará separadamente.
+
+\eqblock{
+\begin{aligned}
+    &\boxed{\text{EFE}=\text{BAI}\pm\text{Ajustes}},\\[1em]
+    &\underset{\text{\scriptsize Tipos de ajuste}}{\text{donde},}
+    \left\{\begin{aligned}
+        &\pm\text{GyI}:\,\,\not\exists\text{Salidas de efectivo}\\[0.5em]
+        &(-)\text{Actividades de inversión o financiación}\\[0.5em]
+        &(-)\text{Resultados financieros}\\[0.5em]
+        &\text{Cambios }(A^c-P^c):
+        \left\{\begin{aligned}
+            &\uparrow A^c\Longrightarrow\text{Ajuste }(-)\\[0.5em]
+            &\downarrow A^c\Longrightarrow\text{Ajuste }(+)\\[0.5em]
+            &\uparrow P^c\Longrightarrow\text{Ajuste }(+)\\[0.5em]
+            &\downarrow P^c\Longrightarrow\text{Ajuste }(-)
+        \end{aligned}\right.
+    \end{aligned}\right.
+\end{aligned}
+}{Estado de Flujos de Efectivo: Efectivo generado por actividades de explotación. Enfoque jurídico de la situación financiera: Cuentas anuales}
+
+Para ello, el resultado del ejercicio antes de impuestos será objeto de corrección para eliminar los gastos e ingresos que no hayan producido un movimiento de efectivo e incorporar las transacciones de ejercicios anteriores cobradas o pagadas en el actual, clasificando separadamente los siguientes conceptos: 
+\begin{la}
+    \item Ajustes para eliminar: (i) correcciones valorativas, tales como amortizaciones, pérdidas por deterioro de valor, o resultados surgidos por la aplicación del valor razonable, así como las variaciones en las provisiones; (ii) operaciones que deban ser clasificadas como actividades de inversión o financiación, tales como resultados por enajenación de inmovilizado o de instrumentos financieros; y, (iii) remuneración de activos financieros y pasivos financieros cuyos flujos de efectivo deban mostrarse separadamente.
+    \item Cambios en el capital corriente (AC-PC), que tengan su origen en una diferencia en el tiempo entre la corriente real de bienes y servicios de las actividades de explotación y su corriente monetaria. Es decir, si el Fondo de Maniobra aumenta esto da lugar a un ajuste negativo, dado que se han aplicado recursos líquidos a actividades inmovilizadas. Si el FdM disminuye hay que hacer un ajuste positivo ya que se liberan recursos más líquidos. Se trata de ajustar las variaciones habidas en el fondo de maniobra como consecuencia de la diferencia entre la corriente real y la corriente monetaria;
+    \item Flujos de efectivo por intereses, incluidos los contabilizados como mayor valor de los activos, y cobros de dividendos; y,
+    \item Los flujos de efectivo por impuesto sobre beneficios.
+\end{la}
+
+\paragraph{Actividades de inversión}
+Por otro lado, tenemos los flujos de efectivo por actividades de inversión. Estos son los pagos que tienen su origen en la adquisición de activos no corrientes y otros activos no incluidos en el efectivo y otros activos líquidos equivalentes, tales como inmovilizados intangibles, materiales, inversiones inmobiliarias o inversiones financieras, así como los cobros procedentes de su enajenación o de su amortización al vencimiento. 
+
+\eqblock{
+\begin{aligned}
+    &\boxed{\text{EFI}=\text{Inversiones}-\text{Desinversiones}}\\[1em]
+\end{aligned}
+}{Estado de Flujos de Efectivo: Efectivo generado por actividades de inversión. Enfoque jurídico de la situación financiera: Cuentas anuales}
+
+Los cobros y pagos procedentes de activos financieros, así como los correspondientes a los pasivos financieros de rotación elevada podrán mostrarse netos, siempre que se informe de ello en la memoria. Se considerará que el periodo de rotación es elevado cuando el plazo entre la fecha de adquisición y la de vencimiento no supere seis meses.
+
+La variación de efectivo y otros activos líquidos equivalentes ocasionada por la adquisición o enajenación de un conjunto de activos y pasivos que conformen un negocio o línea de actividad se incluirá, en su caso, como una única partida en las actividades de inversión: \textit{Unidad de negocio}.
+
+\paragraph{Actividades de financiación}
+Por último, los flujos de efectivo por actividades de financiación. Comprenden los cobros procedentes de la adquisición por terceros de títulos valores emitidos por la empresa o de recursos concedidos por entidades financieras o terceros, en forma de préstamos u otros instrumentos de financiación, así como los pagos realizados por amortización o devolución de las cantidades aportadas por ellos. 
+
+\eqblock{
+\begin{aligned}
+    &\underset{\text{\scriptsize de todas las actividades de financiación, obligaciones contaríadas con terceros}}{\boxed{\text{EFF}=\text{Emisión/Constitución}-\text{Amortización/Devolución}\quad (- \text{Dividendos})}}\\[1em]
+\end{aligned}
+}{Estado de Flujos de Efectivo: Efectivo generado por actividades de financiación. Enfoque jurídico de la situación financiera: Cuentas anuales}
+
+Figurarán también como flujos de efectivo por actividades de financiación los pagos a favor de los accionistas en concepto de dividendos.
+
+\subsubsection{Estado de cambios en el Patrimonio Neto}
+El Estado de cambios en el Patrimonio Neto es un estado contable obligatorio recogido en el PGC 2007 que proporciona una visión más detallada y completa sobre la evolución del patrimonio neto de la empresa conjugando dos variables: los elementos que componen el patrimonio neto y las causas que afectan a su variación. Este estado contable tiene dos partes.
+
+\paragraph{Estado de ingresos y gastos reconocidos}
+La primera, denominada Estado de ingresos y gastos reconocidos, que recoge los cambios en el patrimonio neto derivados de:
+\begin{la}
+    \item El resultado del ejercicio de la cuenta de pérdidas y ganancias;
+    \item Los ingresos y gastos que, según lo requerido por las normas de registro y valoración, que influyan en el Patrimonio Neto y no hayan tenido impacto en la cuenta de resultados en el momento de elaboración del ECPN. Estos ingresos y gastos sí podrán ser imputados a la cuenta de PyG pero en el futuro;\footnote{Para ello, el PGC ha creado dos nuevos grupos de cuentas, el grupo 8 (gastos imputados al patrimonio neto) y el grupo 9 (ingresos imputados al patrimonio neto). Un ejemplo sería el ajuste por modificación del valor razonable de un activo financiero disponible para la venta cuando todavía no se ha materializado la pérdida o el beneficio del mismo.
+    } y,
+    \item Las transferencias realizadas a la cuenta de pérdidas y ganancias según lo dispuesto por este Plan General de Contabilidad.
+\end{la}
+
+\paragraph{Estado total de cambios en el Patrimonio Neto}
+La segunda, denominada Estado total de cambios en el patrimonio neto, que informa de todos los cambios habidos en el patrimonio neto derivados de:
+\begin{la}
+    \item El saldo total de los ingresos y gastos reconocidos;
+    \item Las variaciones originadas en el patrimonio neto por operaciones con los socios o propietarios de la empresa cuando actúen como tales. Es decir, cambios en el patrimonio neto por operaciones como aumentos o reducciones de capital, conversión de pasivos financieros en patrimonio neto, distribución de dividendos, operaciones con acciones o participaciones propias, etc.;\footnote{Estos tambios suelen ser de gran envergadura, pues vienen motivados por decisiones de financiación de la estructura de la empresa, y, si bien no tienen efecto en el resultado anual de la compañía, pueden implicar cambios importantes en la situación societaria de la empresa así como impactar en los flujos de caja de financiación de l a compañía
+    }
+    \item Las restantes variaciones que se produzcan en el patrimonio neto; y,
+    \item También se informará de los ajustes al patrimonio neto debidos a cambios en criterios contables y correcciones de errores. 
+\end{la}
+
+
+\subsubsection{Memoria}
+La memoria completa, amplía y comenta la información contenida en los otros documentos que integran las cuentas anuales. Contendrá información sobre: (i) actividad; (ii) bases de presentación de las cuentas anuales (principios contables, agrupación de partidad, criterios de valoración y registro, etc.); (iii) aplicación de resultado, es decir, información sobre la propuesta de aplicación del resultado del ejercicio; (iv) información económica relevante de la empresa (inmovilizado, inversiones, existencias, situación fiscal, provisiones y contingencias, negocios conjuntos, hechos posteriores al cierre, etc.); y, (v) información relevante, como la distribución del importe neto de la cifra de negicios correspondiente a sus actividades ordinarias, por categorías, así com por mercados geográficos, etc.
+
+No obstante, se formulará siempre atendiendo a los siguientes criterios:  
+\begin{lnum}
+    \item \textbf{Significacia/Relevancia}. El modelo de la memoria recoge la información mínima a cumplimentar; no obstante, en aquellos casos en que la información que se solicita no sea significativa no se cumplimentarán los apartados correspondientes;
+    \item \textbf{Comprensión}. Deberá indicarse cualquier otra información no incluida en el modelo de la memoria que sea necesaria para permitir el conocimiento de la situación y actividad de la empresa en el ejercicio, facilitando la comprensión de las cuentas anuales objeto de presentación, con el fin de que las mismas reflejen la imagen fiel del patrimonio, de la situación financiera y de los resultados de la empresa; en particular, se incluirán datos cualitativos correspondientes a la situación del ejercicio anterior cuando ello sea significativo. Adicionalmente, en la memoria se incorporará cualquier información que otra normativa exija incluir en este documento de las cuentas anuales;
+    \item \textbf{Coherencia temporal}. La información cuantitativa requerida en la memoria deberá referirse al ejercicio al que corresponden las cuentas anuales, así como al ejercicio anterior del que se ofrece información comparativa, salvo que específicamente una norma contable indique lo contrario; y,
+    \item \textbf{Contextualización}. Lo establecido en la memoria en relación con las empresas asociadas deberá entenderse también referido a las empresas multigrupo.
+\end{lnum}
+
+
+\clearpage
+\section{Aproximación analítica a la contabilidad financiera}
+\puntosclave{
+    La regulación contable establece unos criterios homogéneos que resultan insuficientes para realizar un análisis enfocado a la problemática concreta del analista: para ello, es práctica general el empleo de métricas.
+    
+    El análisis económico se orienta hacia la medición de la capacidad de la empresa para crear valor, mientras que el financiero se concentra en los flujos financieros y las condiciones de equilibrio de la estructura patrimonial y financiera.
+    
+    No existe una lista exhaustive de ratios. y el analista habrá de interpretarlos todos ellos de manera conjunta, evitando el recurso a reglas automáticas.
+    
+    En línea con las teorías de finanzas corporativas, la información se reduce en esencia a medir la rentabilidad y su sensibilidad al riesgo empresarial.
+}
+
+La información financiera valorada y clasificada de acuerdo a unos criterios establecidos nos permite obtener los estados financieros. 
+
+Dada esta vertiente descriptiva, se hace necesario el análisis o interpretación de la misma mediante técnicas que hagan más fácil su comprensión y presentación. Recurrir a estas herramientas se convierte en necesario para: (i) poder realizar un análisis enfocado a la cuestión de interés del analista; y, (ii) no verse abrumado por el gran volumen de datos que contienen los estados financieros.
+
+
+Estos procedimientos permiten separar, simplificar e interpretar los datos numéricos que integran los estados financieros con el fin de conocer los puntos débiles y las fortalezas de la empresa analizada, determinando qué los motivó y, con una suerte de consideración forward looking, previendo los aspectos tendentes a corregir las situaciones de desequilibrio. Los métodos de análisis para una empresa dada cuentan con dos vertientes: 
+\begin{la}
+    \item \textbf{Horizontal}. Comparación de partidas del estado financiero entre dos fechas dadas;
+    \item \textbf{Vertical}. Interpretación de las cifras verticalmente, empleando porcentajes analíticos. 
+\end{la}
+
+Permite analizar el peso específico de cada partida según el grupo al que pertenece (porcentajes integrados), y también hallar la correlación entre dos variables (razones o ratios). Los dos enfoques analíticos empleados convencionalmente son: (i) el análisis de márgenes, (ii) los ratios. 
+
+Por motivos de extensión, nos centraremos únicamente en el segundo.\footnote{El análisis de márgenes supone un estudio pro forma de la PyG, enfocándose en conceptos como EBITDA y EBIT (que en este tema llamamos beneficio operacional y BAII respectivamente), OPEX y CAPEX, o neteos de los one-offs. Además del estudio de los márgenes, cuestiones relevantes que trata la industria pero no se incorporan en este tema son el análisis de la empresa en el mercado (mediciones de cuota de mercado, por ejemplo) así como análisis cualitativo (análisis DAFO).
+}
+
+\textbf{¿Qué queremos decir?} Veremos como las diferentes ratios, ampliamente utilizadas en finanzas para realizar el análisis de una empresa, tratan de relacionar una o más variables, básicamente del balance de situación o cuenta de resultados, para obtener información financiera de la empresa. Estas pueden servir de apoyo a la hora de resolver algunos aspectos concretos para la toma de decisiones sobre inversión, financiación, política de dividendos, y grado de riesgo para alcanzar la estabilidad y crecimiento de la empresa en contextos globalizados.\footnote{Además, Son de gran utilidad tanto para un análisis estático inter-empresas, como para un análisis intra-empresa a través de series históricas o previsiones. 
+
+\textbf{NOTA}.- La contabilidad pro forma como instrumento de comparación de empresas sólo tiene sentido dentro de una misma industria, un mismo marco regulatorio y unas mismas condiciones económicas. Por ejemplo, no tiene sentido algunos comparar el ratio de apalancamiento o el ROE de una entidad de crédito con una empresa de extracción de materias primas.
+} No obstante, es necesario entender que los ratios no se aplican de manera automatizada, sino que deben de diseñarse en cada caso concreto e interpretarse en conjunción con otros indicadores y no de manera aislada.\footnote{Algunas de las limitaciones que presentan son que: (i) parten de datos pasados, por lo que toda extrapolación para hacer predicciones requerirá de supuestos fuertes; (ii) en el caso de agentes externos a la empresa, el análisis a menudo se elabora a partir de los datos publicados en las cuentas anuales de la empresa analizada y, como estos datos están agregados, no siempre es posible realizar el análisis deseado; (iii) su naturaleza es generalmente estática; (iv) sólo recogen información de tipo cuantitativo, por tanto sin tener en cuenta aspectos de carácter cualitativo que pueden ser de gran importancia; (v) existen dificultades para comparar varias empresas, por las diferencias existentes entre ellas tanto por el modelo de negocio (incluso dentro de un mismo sector) como especificidades de cada una; y, (vi) son fuertemente sensibles a la discrecionalidad del diseño del analista (p.e.): ¿cómo determinar si un flujo es un one off y por tanto debe eliminarse para el cálculo de un ratio u otro indicador?
+}
+
+Según ACCID, podemos clasificar las ratios generales en seis grupos: las ratios de liquidez, las ratios de endeudamiento, las ratios de gestión de activos, las ratios de plazos, las ratios de rentabilidad y las ratios operativas.
+
+\subsection{Análisis económico: Generación de valor}
+Empecemos por las que corresponderían al análisis económico de la empresa, es decir, a la generación de valor.
+
+Dentro de este enfoque analítico tendríamos las ratios relativas a la rentabilidad, la gestión de activos y las de plazos.
+
+\subsubsection{Ratios de rentabilidad}
+La rentabilidad es el beneficio por unidad de recurso invertida. Podemos diferenciar entre distintos tipos de rentabilidades. Este grupo de ratios es de máxima importancia puesto que da información de la generación de riqueza en base a la inversión necesaria, tanto por la empresa como por los accionistas.
+
+\paragraph{Rentabilidad sobre activos: \textit{Return on Assets}}
+
+a) Rentabilidad económica o sobre activos (ROA o Retum on Assets)\footnote{Una alternativa/extensión al ROA es el ROCE (\textit{Return on capital employed}): $\text{ROCE}=\text{BAII}/\text{Activo utilizado en el proceso productivo}$.
+} ROA = BA/1 / Activos mediosJJ 
+
+Siendo el BAII el beneficio antes de intereses e impuestos (si bien es práctica frecuente multiplicarlo por $1-T$, para recoger algo que sería parecido a un resultado de explotación neto de impuestos). Por tanto, el ROA mide la rentabilidad para los que financian a la empresa, ya sean atcionistas o acreedores. Además, operando, podemos alcanzar otra fórmula del ROA: 
+
+ROA = (BA/1/ Ventas) * (Ventas / Activos medios) = Margen económico sobre ventas * Rotación de activos 
+
+Ésta será tanto mayor, cuanto mayor sea el margen sobre las ventas y cuanto mayor sea la rotación de activos que como veíamos anteriormente está relacionada con la eficiencia en el uso de los activos. Se comprueba que la rentabilidad económica tiene una naturaleza que se puede asociar o extender en dos direcciones. En primer lugar, hacia indicadores de productividad (beneficio por empleado, por planta, etc.). En segundo lugar, hacia la rentabilidad operativa o rentabilidad de las ventas, que representa el potencial de la empresa para generar beneficios a partir de la explotación o actividad propia de la empresa: RO = BA/1 / Ventas netas
+
+
+\paragraph{Rentabilidad financiera: \textit{Return on equity}} 
+Rentabilidad financiera (ROE o return on equity)\footnote{Como en el caso del ROCE frente al ROA, es práctica frecuente en la industria no limitarse a una aplicación automatizada de estas fónnulas y agregar o eli111inar componentes. En el caso del ROE, es frecuente excluir del beneficio neto las pérdidas asociadas a deterioros del fondo de comercio o a ingresos/gastos no recucrrentes.
+}
+
+Es la rentabilidad obtenida por los accionistas (concepto similar pero no igual al coste de oportunidad por invertir en la empresa en lugar de hacerlo en inversiones alternativas de similares riesgos, corno se ve en detalle en el terna 382).\footnote{Como apunta VEMIMMEN, ha de entenderse la diferencia entre el coste del capital (medido por el WACC) y la rentabilidad del capital (medido por otros indicadores como el ROE o el PIE). El primero recoge la rentabilidad exigida y/o esperada de los inversores, mientras que la segunda hace lo propio con rentabilidad realizada. En caso de mercados sin ninguna fricción, ambos conceptos se igualarán gracias al arbitraje, pero conceptualmente son diferentes: mientras que el primero es ex ante, el segundo es ex post. La importancia de esta advertencia radica en la frecuencia con la que analistas empican los segundos indicadores como aproximación del coste de capital, lo que sólo puede tomarse como una aproximación, con riesgo de introducir ruido y sesgo en la estimación.
+} 
+
+Por tanto, a diferencia del ROA, se utiliza el beneficio neto y no el BAII, ya que se mide la capacidad de generar valor total y distribuirlo entre los accionistas. De nuevo, operando podemos encontrar la siguiente fórmula para el ROE: 
+
+ROE = ROA + (Deuda Financiera/ PN) * (ROA - i)) * (l - t) 
+
+Donde, i es el coste de los recursos ajenos o coste efectivo de la deuda y t es el tipo efectivo del impuesto sobre el beneficio. Por tanto, existe una relación entre el ROA y el ROE que se deriva del efecto del apalancamiento financiero sobre la rentabilidad, este efecto puede ser positivo (ROE > ROA) o negativo (ROE < ROA) y dependerá del coste de las deudas respecto a la rentabilidad económica. Si ROA > i -+ Efecto positivo del apalancamiento. si por el contrario, ROA < i-+Efecto negativo del apa lancam iento Es decir, la rentabilidad financiera es igual a la rentabilidad económica + factor del apalancamiento financiero. De aquí podemos concluir que: • La rentabilidad financiera varía en el mismo sentido que la rentabilidad económica. • Cuanto mayor sea la carga impositiva menor será la rentabilidad financiera. • El efecto del apalancamiento será positivo sobre la rentabilidad financiera siempre que la rentabilidad económica supere al coste del endeudamiento. Esto es, siempre que la empresa obtenga una rentabilidad superior por los recursos empleados que el coste de tornar dichos recursos. En caso de no ser así, el efecto del apalancamiento sobre la rentabilidad financiera será negativo.
+
+\subsubsection{Punto muerto: Riesgo y análisis de sensibilidad}
+El punto muerto, punto de equilibrio o umbral de rentabilidad (en inglés break-even point) es el número mínimo de unidades que una empresa necesita vender .para que el beneficio en ese momento sea cero. Es decir, el volumen de ventas que hace que los costes totales se igualen a los ¡ingresos totales por venta.
+
+A partir de este volumen mínimo, el producto será rentable para la empresa. Es decir, a partir de la siguiente unidad producida y vendida, el margen o contribución unitaria, definida como el precio de venta unitario menos el coste variable unitario, se dedica, una vez·cubiertos los costes fijos totales, a generar beneficio, ya que los costes variables unitarios se recuperan con la venta de cada unidad.
+
+La fórmula será la siguiente q* = CF/ ( P - CVU)
+
+Donde, q = volumen de ventas, CF = costes fijos, P = precio de venta y CVU = coste variable unitario, P - CVU = Margen variable unitario
+A la izquierda de q* se producen pérdidas mientras que a la derecha se generan beneficios, siendo q* t;I punto donde los beneficios se hacen cero. El punto muerto da una idea aproximada de las ventas que debe, al menos, alcanzar una empresa. Si bien, se basa en una serie de condiciones como el hecho de que el coste variable unitario pem1anece constante para cualquier volumen de producción que no siempre se cumplen en la realidad. Relacionado con el punto muerto está el apalancamiento operativo, al ser éste la variac1on porcentual del Beneficio Antes de Intereses e Impuestos (BAII) ante variaciones en las ventas. Surge por la existencia de costes fijos, de tal manera que cuanto mayor sean éstos, mayor será el apalancamiento operativo de la empresa. A medida que se vayan vendiendo más unidades se irán reduciendo las pérdidas debido a que el margen variable unitario (P - CVU) pem1itirá ir cubriendo los costes fijos.
+
+\subsubsection{Ratios de gestión del activo}
+Las ratios de gestión de activos dan información sobre la capacidad de las empresas de generar ventas con los activos que tienen. Es importante considerarlos para saber si se están utilizando de manera adecuada o si se puede optimizar su uso para que sean más rentables. Cuanto menos activos se necesiten para generar ventas, más eficiente será la empresa.
+
+Los ratios de gestión de activos (o actividad) miden la eficiencia con la que una empresa utiliza sus recursos para generar ventas, indicando la rapidez con la que los activos se convierten en efectivo. Ratios clave incluyen la rotación de inventarios, cobro a clientes y rotación de activos totales, fundamentales para la liquidez.
+
+\paragraph{Ratios de rotación: formulación general}
+De forma general, los ratios de rotación miden la eficiencia de una empresa en la gestión de sus activos y operaciones, calculando cuántas veces un activo (inventario, cuentas por cobrar, capital, etc.) se renueva en ventas o liquidez en un periodo, siendo generalmente mayor valor igual a mayor eficiencia:
+
+\eqblock{
+\begin{aligned}
+    &\text{Rotación}=\frac{\text{Actividad}}{\text{Saldo medio}}\\[1em]
+    &\underset{\text{\scriptsize por ejemplo}}{\text{donde}},
+    \left\{\begin{aligned}
+        &\text{Partida coste}: &&\text{Rotación stock}=\frac{\text{Coste inputs}}{\text{Existencias (promedio)}}\\[0.5em]
+        &\text{Partida ingreso}:&&\text{Rotación clientes}=\frac{\text{Ventas a crédito}}{\text{Cuentas por cobrar (promedio)}}
+    \end{aligned}\right.
+\end{aligned}
+}{}
+
+Por tanto, como vemos, las ratios de rotación nos permiten ver la eficiencia operativa de una Actividad (término genérico adoptado), medida por el ingreso (coste) total que genera, dividiéndola por su resultado o saldo medio (término genérico adoptado) a lo largo del periodo. Estos ratios se refieren al número de veces que el saldo de una partida corriente se renueva a lo largo del ejercicio. Cuanta mayor sea la rotación, mayor será la eficiencia en el uso de los recursos y por tanto, menor la necesidad de inmovilizar recursos. Destacamos que relaciona una variable flujo con una variable stock.
+
+
+Vamos a calcular el FdM necesario para lo que partimos de los ratios de rotación. Aunque en el caso del ROA calculamos la rotación del total del activo, el analista tendrá interés en hacer un análisis más granular, por partidas (materias primas, clientes, productos en curso, existencias, proveedores, etc.):
+
+Rotación= Actividad / Saldo Medio 
+
+
+
+\paragraph{Periodos medios de maduración: formulación general}
+El período medio de maduración (PMM) es el tiempo promedio, medido en días, que tarda una empresa en recuperar el dinero invertido en su ciclo productivo (desde la compra de materias primas hasta el cobro de la venta). Se compone de la suma de tiempos de almacenamiento, producción, venta y cobro, restando el aplazamiento de pago a proveedores. 
+
+
+Un PMM más corto indica mayor eficiencia financiera.
+
+
+A continuación calcularemos los periodos medios de maduración, es decir, el tiempo que tarda la empresa en convertir en liquidez una unidad monetaria invertida en la empresa a través del proceso productivo.
+
+El periodo medio se calcula con el siguiente cociente: 365/ Rotación de la partida.
+P.M.M. = P.M. Aprovisionamiento+ P.M. Producción + P.M. Venta + P.M. Cobro -
+P.M. Pago a proveedores
+
+Así, se irán calculando los distintos periodos medios:
+
+PMA = 365 / Rotación Materias Primas = 365 • (Saldo medio existencias / Consumo medio de materias primas) PMP = 365 • (Saldo medio de productos en curso / Coste producción terminada) PMV = 365 * (Saldo medio productos terminados / Coste producción terminada) PMC = 365 • (Saldo medio clientes / Coste de las ventas) PMPP = 365 * (Saldo medio proveedores / Coste de las compras)
+
+Una buena gestión financiera marcará unos plazos objetivos relativos a cada subetapa, lo que detenninará las inversiones corrientes resultantes de cumplir con ese ideal. Podemos por tanto calcular el FdM necesario o ideal que se compondrá de la inversión mínima en cada uno de los procesos anteriores. o Inversión mínima en materias primas ejercicio * P.M. Aprovisionamie11to Consumo diario de MMPP en el o Inversión mínima en Producción = Valor diario de productos en curso * P.M. Producción o Inversión mínima en Ventas = Valor diario productos ter111i11ados • P.M. Venta o Inversión mínima en Clientes = Valor diario clientes * P.M.Cobro o Inversión mínima en Proveedores = Valor diario proveedores • P.M.Pago a Proveedores Finalmente, se comparará el FdM existente con el necesario o ideal. • Si el primero supera al segundo esto nos indica que existe un exceso de recursos inmovilizados, lo cual, da seguridad desde el punto de vista financiero pero resta rentabilidad a la empresa al estar financiando un exceso de activos no remunerados con unos pasivos que tienen coste. • Mientras que si por el contrario, el FdM es inferior al ideal puede haber problemas deliquidez. En este caso, algunas medidas correctivas que ayuden a aumentar el FdMpueden ser:.:., Desde el punto del Activo: • Existencias: mantener las existencias tan bajas como fuera posible y lograr una rotación lo más alta que se pueda. Los productos acabados deberían venderse, entregarse y facturarse tan pronto como fuese posible. • Deudores, clientes, etc.: esta partida tiene especial interés en la actualidad y es que, muchas empresas que han estado correctamente financiadas, al encontrarse con impagados se encuentran con dificultades de liquidez disponible: Incremento de liquidez. • Como medida extrema, reducir el Activo No Corriente (ej.: hacer desinversiones) y aumentar el Activo Corriente. Esto por ejemplo es lo que hacen empresas que venden los inmuebles en los que se encuentran para alojarse como arrendatario (menos inmovilizado, más efectivo). 0 Por el lado del Pasivo: • Aumentar el peso de la financiación a largo plazo (ej. Refinanciar préstamos de corto plazo a largo plazo). • Dentro de acreedores a corto plazo: obviamente, hay una ventaja en conseguir plazos de pago alargados a los proveedores. A este respecto no variará el fondo de maniobra el pagar o no dicho importe (si se paga, bajará el efectivo y la deuda a corto plazo), pero sí se consigue con ello tener más efectivo.
+
+\subsection{Análisis financiero: Equilibrio financiero}
+El análisis financiero de la empresa se centra en las condiciones de equilibrio de la estructura patrimonial y financiera de la misma. 
+
+Dentro de este enfoque analítico tendríamos las ratios relativas a la liquidez y el endeudamiento.
+
+\subsubsection{Fondo de Maniobra: Margen operativo}
+El Fondo de Maniobra o working capital es la parte del activo corriente financiada con recursos permanentes, por lo que puede expresarse de la siguiente manera:\footnote{Como se ha comentado, a lo largo de este tema se presentan formulaciones estilizadas y generales que distan por tanto de las empicadas en la industria en la práctica, de mucho más detalle y enfocadas al caso concreto. En el caso del working capital, esta brecha es especialmente grande, ya que, al tratarse de unos de los indicadores más empleados por los analistas, su obtención en la práctica es mucho más compleja y tiene en consideración numerosos factores adicionales. 
+
+En cualquier caso, la formulación más frecuente en la industria a menudo parte de la siguiente formulación: $\text{FdM}=\text{Existencias}+\text{Clientes}-\text{Proveedores}$
+} 
+
+FdM = (PN + PNC) - ANC = AC - PC 
+
+Nos referimos a esta fórmula como Fondo de Maniobra existente, y éste ha de compararse con el Fondo de Maniobra necesario o ideal que serán los recursos permanentes necesarios para estabilizar el funcionamiento del circulante. Es decir, la empresa debe inmovilizar recursos en el activo corriente, pues se requiere de un tiempo para recuperar el dinero a través del proceso productivo. 
+
+
+\subsubsection{Ratios de endeudamiento (o solvencia)} 
+Para conocer la estructura de financiación de la empresa se debe considerar sus fondos propios y el pasivo exigible. Es complicado saber cuál es la estructura óptima de financiación y variará dependiendo de cada empresa, pero en general se debe considerar el coste y la exposición al riesgo, y a la vez que esta estructura ayude a aumentar el valor de la empresa en el mercado.
+
+\paragraph{Coeficiente básico de financiación}
+El Coeficiente Básico de Financiación es una medida del equilibrio económico financiero a largo plazo de la empresa. 
+
+Para que una entidad alcance el equilibrio patrimonial debe existir una relación adecuada entre las diferentes inversiones de la empresa y su financiación, en lo que se refiere a la conversión en liquidez de las primeras y la exigibilidad de la segunda. De tal manera, que: a) Las inversiones permanentes deben estar financiadas con recursos financieros igualmente permanentes, es decir, recursos ajenos a largo plazo o financiación propia. b) El resto de inversiones, circulantes, deben ser soportadas con fuentes financieras a corto plazo. El Coeficiente Básico de Financiación (CBF) se determina como el cociente entre los recursos financieros permanentes y las inversiones permanentes. A tal efecto se consideran inversiones permanentes los activos fijos o inmovilizados y el fondo de rotación o necesidad operativa de fondos. Sin embargo, esta relación no mide realmente el equilibrio económico financiero de la empresa pues, por definición, siempre va a dar la unidad. Para que realmente sea de utilidad es necesario considerar el fondo de maniobra necesario o ideal (FRN).
+
+CBF = (PN + PNC) / (ANC + FdM Necesario) = Recursos Permanentes / Inversiones Permanentes 
+
+Así, el CBF nos sirve para evaluar las posibilidades que tiene la empresa de estar en equilibrio económico-financiero: a) Si el CBF es igual a la unidad, nos indica que la empresa dispone de recursos financieros permanentes suficientes para cubrir su inversión en activo fijo y además invertir en su ciclo de explotación para conseguir su Fondo de Maniobra necesario o ideal. b) Si el CBF es inferior a la unidad, la entidad no está en condiciones de conseguir su equilibrio patrimonial, pues tiene un déficit de recursos propios y ajenos a largo plazo para cubrir las inversiones permanentes existentes y lograr además su Fondo de Maniobra ideal. c) Si el CBF es superior a la unidad, existen recursos financieros más que suficientes para alcanzar el equilibrio económico financiero, si bien esto puede ser perjudicial para la rentabil idad. 
+
+\paragraph{Ratio de solvencia}
+
+Ratio de solvencia = Activo Total / Pasivo Exigible 
+
+Indica el número de veces que los bienes de la empresa cubren las deudas de la misma. Una lim itación del ratio es que, en su fom,ulación más básica, incluye en el numerador todos los activos. tanto los de corto plazo como los de largo plazo (que en algunos casos son de muy d i fícil materialización en liquidez). Igualmente incluye en el denominador todo el pasivo exigible, tanto de largo como de corto plazo; con o sin coste. Debe ser mayor que 1 , en caso contrario, la situación contable es de concurso de acreedores ya que ni siquiera vendiendo todo el activo la empresa tendría suficientes recursos para hacer frente a las deudas. 
+
+\paragraph{Ratio de autofinanciación}
+Expresa que parte de la inversión de la empresa (activos totales) está siendo financiada con recursos propios. El PGC exige que las empresas a través de la reserva legal, mantengan un grado mínimo de autofinanciación para no descapital izarse. No existe un valor específico, siendo necesario que las empresas tengan un razonable grado de autofinanciación, el mismo dependerá del apalancamiento financiero. 
+
+\paragraph{\textbf{REVISAR:} Ratio de cobertura}
+Ratio de coberturll Ratio de Cobertura = Capitales Permanentes / Activo no Corriente Indica si la empresa está financiando su activo no corriente con capitales permanentes, también denominados recursos estables o de largo plazo (Patrimonio Neto + Pasivo no corriente) 
+
+Este ratio ofrece una infom1ación análoga al fondo de maniobra. Normalmente debe ser mayor que 1 . Un ratio de cobertura menor que 1 implicará que el FdM es negativo. 
+
+\paragraph{Nivel de endeudamiento}
+Existen dos posibles ratios de volumen para expresar el grado de endeudamiento de una empresa: 
+
+El endeudamiento medido sobre recursos totales 
+El endeudamiento medido sobre recursos propios. 
+
+Ambos representan perspectivas distintas de la misma realidad. 
+
+El primero de ellos nos indica el peso de los recursos ajenos en la empresa frente a los recursos totales. 
+
+Pasivo Exigible I (Pasivo Exigible + Patrimonio Neto) = (PC + PNC) I (PC + PNC + PN) 
+
+El segundo ratio compara la deuda total con terceros que tiene la empresa (pasivo exigible) con los fondos propios de la misma. Cuando es superior a 1, se considera que la empresa está bastante endeudada. Pasivo Exigible I Patrimonio Neto = (PC + PNC) I PN Más relevante que los ratios de volumen es el ratio de cobertura de intereses. El objetivo de la ratio de cobertura de intereses es' ver la importancia de éstos con respecto a la capacidad de generación de resultados de la empresa. Nos dirá el número de veces que el BAIT contiene los gastos financieros. En ténninos cuantitativos, una cobertura de intereses por debajo de I O supone unos gastos financieros significativos, y por encima de 20 éstos serán marginales, teniendo una importancia media para valores entre I O y 20. De todas formas a la hora de valorar la ratio de cobertura óptima hay que tener en cuenta que ésta debe aumentar con el riesgo. Cobertura de i BAIT = --. - Su principal inconveniente radica en que las cargas financieras no incluyen exclusivamente los intereses, hay que sumarles la devolución del principal. La ratio de cobertura total tendrá en cuenta el peso del beneficio antes de impuestos e intereses sobre el total de la carga financiera: BAIT Cobertura total = (d l . , . . 1. + evo ucw1 n- pt nncipa 1)
+
+\subsubsection{Liquidez}
+Las ratios de liquidez dan información sobre la capacidad de la empresa de transformar su activo en líquido y hacer frente a sus pagos en el corto plazo. Para calcularlas se debe tener en cuenta el activo corriente y el pasivo corriente, es decir, aquello que la empresa tiene en propiedad o derechos de cobro en el corto plazo, y todo aquello que la empresa debe en el corto plazo. Las ratios de liquidez más importantes son las de liquidez global, tesorería, disponibilidad y las de fondos de maniobra.
+
+Para medir la capacidad financiera frente a los vencimientos de deudas y obligaciones a corto plazo se utilizan tres indicadores principalmente: la ratio de liquidez general, el test ácido y la ratio de tesorería. 
+
+\paragraph{Ratio de liquidez general}
+La ratio de liquidez global es la ratio más general y consiste en dividir el activo corriente entre el pasivo corriente. En general, el activo corriente debe ser superior al pasivo corriente, y por lo tanto lo adecuado es que esta ratio sea superior a 1, aunque existen particularidades dependiendo del sector y actividad.
+
+Ratio tle liquidez ge11eral liquidez General = Activo corriente I Pasivo corriente = AC I PC Indica si la empresa puede pagar sus deudas a corto plazo con aquellos activos que se convertirán en dinero en un plazo corto. Normalmente, debe ser mayor que 1 .
+
+\paragraph{Test ácido}
+Si del activo corriente extraemos las existencias, dejando sólo el realizable y el disponible, y lo dividimos por el pasivo corriente, obtenemos la ratio de tesorería (Test ácido). Esta nos da más información sobre la capacidad que tiene la empresa para hacer frente a sus pagos en el corto plazo y debería tender a 1.
+
+Tes/ ácido = (Aclivo corriente - Existencias -Activos no corrienle mantenidos para la
+venia) / Pasim Corriente
+
+Este ratio corrige la limitación principal del ratio de liquidez general, que es la inclusión en el numerador de activos, que si bien son de corto plazo, no tienen una materialización inmediata en . liquidez. Detrae por tanto, del numerador las existencias y también los activos no corrientes mantenidos para la venta (activos que van a ser vendidos en plazo inferior a un año). Con carácter general, conviene que sea cercano a 1.
+
+\paragraph{Ratio de tesorería}
+Por último, si dividimos tan solo el disponible entre el pasivo corriente obtendremos la ratio de disponible, que nos da información sobre la posibilidad de pagar las deudas a corto plazo con aquello que la empresa tiene en caja. En términos generales, un valor adecuado rondaría el 0,2 o 0,3. 
+
+
+Disponibilidad inmediata o Tesorería = (Tesorería + IFT) / Pasivo corriente donde IFT: Inversiones Financieras Temporales 
+
+Este ratio muestra los fondos disponibles tras detraer del activo corriente, además de las existencias y los activos no corrientes disponibles para la venta, las cuentas a cobrar (saldos de clientes y deudores). Representa exclusivamente los fondos que se pueden materializar en liquidez en el muy corto plazo (saldos de caja, bancos e IFT) para hacer frente a las deudas corrientes. Con carácter general, conviene que no disminuya cuando está incrementándose la cifra de ventas.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+\anexo{Bloque de Finanzas Corporativas}\label{anx:finanzas_corporativas}
+Los títulos del temario que pertenecen a este bloque responden a las
+siguientes problemáticas: 
+\begin{lnum}
+    \item Tema 3.B.3. ¿Cómo diseñar de manera óptima la estructura financiera de una empresa? ¿Qué determina el coste de financiación de ésta: su nivel de apalancamiento o su capacidad para generar valor? Teniendo todo esto en cuenta, ¿cuál es la manera óptima de remunerar al capital? 
+    \item Tema 3.B.2. Siguiendo la lógica de las finanzas corporativas, una empresa sólo realizará un proyecto de inversión si con ello consigue crear valor. ¿Debe todo incremento marginal del valor de la empresa llevarse a cabo? ¿Qué herramientas permiten medir la rentabilidad de una inversión y cómo medir el coste de capital para saber si una inversión es deseable o no? ¿Cómo altera estos resultados la introducción de incertidumbre?
+    \item Tema 3.B.4. Alternativamente al crecimiento orgánico (Tema 3.B.2), la empresa puede optar por adquirir otras unidades de negocio/otra empresas para favorecer la creación de valor. ¿Cuáles son los factores a tener en cuenta para realizar estas operaciones? ¿Cómo valorar monetariamente una empresa que se quiere adquirir? 
+    \item Tema 3.B.1. Para realizar todas las operaciones arriba enumeradas, los inversores y los gestores necesitan información. ¿Cómo se presenta ésta? ¿Cómo analizar la situación económico financiera de una empresa?
+\end{lnum}
+
+Como se ve, mientras que los temas 383 y 382 son centrales en el campo de las Finanzas corporativas, el Tema 3.B.1 y 3.B.4 son menos importantes para una primera vuelta. Por otro lado, el Tema 3.B.1 es un tema particular porque, además del enfoque ya explicado para estos temas, contiene también una aproximación jurídica a la empresa. En efecto, la contabilidad son normas societarias, publicadas en el BOE y sobre ellas se debe fundamentar la exposición.
+
+
+
+\end{document}
