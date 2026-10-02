@@ -1,0 +1,1104 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Tema 3.A.37 -- Política Monetaria (II)\\
+\large Los mecanismos de transmisión de la Política Monetaria convencional. Rigideces de precios, rigideces de salarios y fricciones financieras. Los mecanismos de transmisión de la Política Monetaria no convencional}
+\author{Marcelo Ortega}
+\date{Enero 2026}
+\newcommand{\TemaCode}{3A37}
+
+\oldtitle{Tema 3.A.36. Política monetaria (II): los mecanismos de transmisión de la Política Monetaria. Los efectos de la Política Monetaria.}
+\changerationale{Se provee de más detalle acerca de lo que se espera que el opositor desarrolle en su exposición.}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+    Es crucial que el opositor comprenda, y sea capaz de transmitir, las diferencias entre los tipos de interés nominal, real y natural, y como en la versión más sencilla del modelo (que es la que se va a presentar aquí) el objetivo de la política monetaria es conseguir que el tipo de ínterés real replique la senda del tipo de interés natural. En la parte de políticas no convencionales el punto de partida debe ser una explicación del problema de la política monetaria en el nivel cero de tipos de interés (el zero lower bound o ZLB).
+
+    Respecto a los tiempos de presentación, una orientación muy general sería la siguiente:
+    \begin{lnum}
+        \item La introducción puede durar entre 2-3 min. 
+        \item La descripción de los efectos entre 6 y 7 min;
+        \item El modelo neokeynesiano debe describirse con cierto detalle, siendo especialmente importante incidir en los conceptos de output gap y tipo de interés natural, en unos 8-10 min;
+        \item El resto de mecanismos de transmisión de la política monetaria convencional pueden explicarse con menor nivel de detalle en otros 6-7 min; y,
+        \item Los mecanismos de transmisión de la política monetaria no convencional pueden así mismo explicarse más brevemente, aunque es importante explicar el problema del ZLB y representar gráficamente la operativa del forward guidance (6-7 min)
+    \end{lnum}
+    }
+\vspace{1cm}
+
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+
+
+\clearpage
+\section{La Política Monetaria: Hechos estilizados}
+Un análisis de los mecanismos de transmisión de la Política Monetaria exige realizarse una serie de preguntas de manera previa: ¿existe alguno? ¿sobre qué se proyecta: variables nominales y/o reales? ¿es el dinero neutral? Si existen y éste no es neutral, ¿qué efectos/naturaleza tiene la Política Monetaria?
+
+Estas preguntas pueden parecer estúpidad para un observador común dada la naturaleza principal del Tema que se va a presentar. Sin embargo, debe quedar claro en todo momento que estas preguntas no son, ni mucho menos, objeto de consenso en el ámbito científico. De hecho, el papel del dinero es, probablemente, una de las controversias más longevas e importantes a lo largo de la breve historia de nuestra ciencia. Por tanto, recurrimos en primer lugar a la presentación de algunos datos estilizados que se presentan mediante el análisis de la evidencia empírica que puedan ayudar a diluir, que no aclarar, las discrepancias a este respecto, acercando un mínimo las posiciones, contrapuestas, por la fuerza omnipotente y inescable de la verdad: los datos no son (muy) cuestionables.
+
+\subsection{La eficacia de la Política Monetaria: ¿qué nos dice la evidencia empírica?}
+En primer lugar, ¿qué dicen los datos acerca de la eficacia de la Política Monetaria; y, en última instancia, sobre la neutralidad del dinero?
+
+Los trabajos empíricos en este campo han sido numerosos y apuntan a la \textbf{existencia de efectos reales como consecuencia de las perturbaciones monetarias}, en contra de las predicciones de la Teoría del Ciclo Real (máximo exponente teórico de dicha posición, el de la neutralidad/superneutralidad). Algunos de los resultados más importantes de ésta literatura se presentan a continuación.
+
+\begin{specialblock}{Trabajos más influyentes sobre el papel del dinero y la Política Monetaria}
+    A continuación se citan los principales estudios empíricos en relación a la demanda de dinero, el rol que este tiene en la economía y la efectividad (o no) de la Política Monetaria. 
+
+    Se agrupa en un bloque por ser un elemento compartido por los Temas: [\authorfont{Ver Tema 3.A.35, 3.A.36 y 3.A.37}]
+
+    \textbf{\textit{A Monetary History of the United States}. FRIEDMAN y SCHARWZ (1963)}
+    Analizan la relación sistemática entre la tasa de crecimiento del dinero y las fluctuaciones del PIB en un período de casi 100 años. La evidencia aportada muestra que las variaciones en el ciclo vienen sistemáticamente precedidas por variaciones en la oferta monetaria. Al respecto, ambos autores apuntan que la fuerte contracción monetaria que se produjo entre 1929 y 1932, donde M2 cayó un 36\%, fue uno de los determinantes de la severidad de la Gran Depresión.
+    El trabajo clásico de FRIEDMAN y SCHWARTZ (1963) constituye uno de los pilares del monetarismo y del debate moderno sobre el rol del dinero. A partir de una reconstrucción histórica minuciosa de la evolución monetaria de Estados Unidos entre 1867 y 1960, los autores documentan una relación estrecha entre grandes fluctuaciones en la oferta monetaria y episodios de expansión y contracción económica. Su análisis enfatiza que las variaciones monetarias no solo preceden sistemáticamente a los movimientos del producto y del empleo, sino que además tienen efectos reales significativos, especialmente en el corto y medio plazo.\footnote{El caso paradigmático es la Gran Depresión, que Friedman y Schwartz interpretan como el resultado de una política monetaria severamente contractiva y de la inacción de la Reserva Federal ante sucesivas crisis bancarias. 
+} 
+
+    La conclusión central es que el dinero no es neutral en el corto plazo y que la política monetaria puede ser una herramienta extremadamente poderosa, aunque potencialmente desestabilizadora si se gestiona de manera inadecuada.
+
+    \textbf{\textit{Ecuación de St. Louis}. ANDERSEN y JORDAN (1968)}
+    Estos autores estiman un modelo econométrico ARDL para calcular los multiplicadores totales de la política monetaria y la política fiscal. Los autores encuentran una relación mucho más estable y significativa entre dinero y producción que entre el gasto autónomo y producción, lo que indicaría una mayor eficacia de la política monetaria para afectar al ciclo. Se regresa la variación del PIB real respecto a los cambios en el stock de dinero (considerado con varios retardos) y a una tendencia lineal. Los resultados (sumando los coeficientes referidos a los distintos retardos) reflejan un impacto significativo de las variaciones del stock monetario (M2) en la tasa de crecimiento del PIB de 0,25 (i.e. un aumento del 0,25\% en el producto por cada aumento del 1\% en la cantidad de dinero).
+    Este análisis adolece de dos problemas principales:
+    \begin{lnum}
+        \item En primer lugar, la correlación puede no significar causalidad. Las medidas agregadas de la cantidad de dinero pueden verse afectadas por el comportamiento de los agentes productores y consumidores a través de cambios en la demanda de dinero, que a su vez se originan en un mayor crecimiento; y,
+        \item La segunda crítica es más conceptual y está relacionada con el uso de la política monetaria como elemento estabilizador del ciclo. Si la política monetaria tiene efectos reales y su función estabilizadora es eficaz, puede que los cambios en la oferta monetaria no estén asociados a variaciones significativas en el crecimiento de la producción.
+    \end{lnum}
+
+    \textbf{\textit{Causalidad de GRANGER}. SIMS (1972)}
+    Si bien las técnicas estadísticas de los ejemplos c111teriores adolecen de críticas referidas a problemas de endogeneidad en las correlaciones y especificaciones econométricas, Sims, utilizando como instrumental los VAR (Vector AutoRregression) ofrece una prueba mucho más sólida acerca de la relación entre dinero y output. En concreto. Sims demuestra que el dinero causa al output en el sentido de Granger. Esto es, lags de la oferta monetaria son significativos a la hora de predecir valores futuros del PIB, incluso cuando en la regresión incluimos lags del propio PIB.
+
+    \textbf{\textit{Unanticipated Money Growth and Unemployment}. BARRO (1977) \& \textit{Money and the Price Level Under the Gold Standard}. BARRO (1979)}
+    En contraste, los trabajos de BARRO publicados entre 1977 y 1979 representan un giro teórico y empírico importante, al incorporar el supuesto de expectativas racionales en el análisis macroeconómico. 
+    
+    BARRO argumenta que para evaluar correctamente los efectos reales del dinero es necesario distinguir entre componentes anticipados y no anticipados de la política monetaria. Utilizando regresiones que relacionan el output y el desempleo con medidas de sorpresas monetarias, encuentra que solo los cambios no anticipados en la cantidad de dinero tienen efectos transitorios sobre variables reales. La política monetaria sistemática y predecible, en cambio, es completamente neutral, incluso en el corto plazo, ya que los agentes ajustan sus decisiones de manera óptima ante la información disponible. De este modo, Barro concluye que la política monetaria carece de capacidad estabilizadora cuando es conocida de antemano, reforzando la idea de neutralidad del dinero y cuestionando la efectividad de intervenciones discrecionales del banco central.
+
+    \textbf{\textit{Does Monetary Policy matter?} ROMER y ROMER (1989)}
+    Encuentran evidencia sobre la existencia de causalidad entre las innovaciones monetarias y variaciones en la producción. Para ello identifican en el período de posguerra (1945-1985) seis episodios de movimientos en los tipos de interés que no fueron motivados por desarrollos de la economía real sino por deseos de reducir la inflación (p.ej. tras la llegada de P. VOLCKER a la Reserva Federal en 1979). 
+
+    \textbf{\textit{Some Monetary Facts}. MCCANDLESS JR. y WEBER (1995)}
+    Los autores analizaron datos de un largo período de tiempo para un elevado número de países (lo que hace que sus resultados no dependan de los eventos que han podido tener lugar en una región). Hallaron una correlación cercana a 1 entre la inflación y la tasa de crecimiento de la oferta monetaria (entre 0,92 y 0,96 dependiendo de la definición de oferta monetaria utilizada). Esta fuerte correlación es consistente con muchos otros estudios basados en muestras más reducidas o de períodos diferentes. Estos resultados son uno de los principales pilares sobre los que se sustenta la teoría cuantitativa del dinero: un cambio en la tasa de crecimiento del dinero induce un cambio equiproporcional en la tasa de inflación de precios. En cualquier caso, esta elevada correlación no implica causalidad. Si los países siguieron políticas bajo las cuales la tasa de crecimiento de la oferta monetaria está exógenamente determinada, entonces esta correlación podría ser tomada como una prueba de que la tasa de crecimiento de la oferta monetaria causa inflación, con una relación de casi uno-a-uno entre las 2 variables. Pero una posibilidad alternativa, también consistente con el elevado grado de correlación, es que otros factores generan inflación y los bancos centrales permiten que la tasa de crecimiento de la oferta monetaria se ajuste.
+
+    \textbf{\textit{Nominal Rigidities and the Dynamic Effects of a Shock to Mentary Policy}. EVANS y ECHBAUM (2005)}
+    Habida cuenta de lo expuesto, podemos entender la razón por la cual la controversia acerca de la neutralidad o no del dinero persiste. No obstante, existe un grado de consenso más elevado acerca de la no-neutralidad del dinero en el corto plazo como consecuencia de la existencia de rigideces reales y nominales que transforman su papel en la economía real. 
+    
+    El trabajo más influyente al respecto es el de EVANS y EICHENBAUM (2005), que se inscribe en la literatura moderna utilizando modelos VAR estructurales para identificar shocks de política monetaria de manera más creíble. A diferencia de los enfoques anteriores, estos autores incorporan explícitamente la función de reacción del banco central y emplean estrategias de identificación que permiten aislar innovaciones exógenas en la política monetaria. Sus resultados muestran que los shocks monetarios generan respuestas significativas y persistentes del output, el empleo y otras variables reales, en un patrón consistente con la presencia de rigideces nominales. En particular, rechazan la visión según la cual solo las sorpresas monetarias tienen efectos reales, y encuentran que incluso cambios de política bien comunicados pueden influir en la actividad económica. La conclusión es clara: el dinero no es neutral en el corto plazo y la política monetaria es una herramienta efectiva de estabilización macroeconómica.
+
+    Para acabar, cabe destacar algunos datos estilizados (generalizaciones estadísticas sobre la relación del dinero con otras variables):
+    \begin{lnum}
+        \item \textbf{Las rigideces constituyen el canal a través del cual se transmiten los shocks nominales a la economía real en el corto plazo}. Amplía literatura empírica y teórica coincide en que los efectos de la Política Monetaria (y, en consecuencia, de los shocks nominales) se transmiten, o tienen algun efecto sobre la economía real, debido a la existencia de rigideces nominales que impiden la reasignación eficiente de todos los recursos en la economía. Sin estas, es dificil entender las razones por las cuales una variable aparentemente nominal (el dinero) tendría algún tipo de efecto sobre la economía real;
+        \item \textbf{Correlación entre inflación y tasa de crecimiento de la oferta monetaria}. su valor es muy cercano a $1$, entre$ 0,92$ y $0,96$ en función de la definición de dinero que utilicemos. Esta evidencia es consistente con la teoría cuantitativa del dinero reflejando que cambios en la oferta monetaria acaban teniendo un reflejo exclusivo sobre el nivel de precios. LUCAS (1980b), utilizando datos de EEUU entre 1955 y 1975, encuentra una fuerte correlación entre inflación y crecimiento de la oferta monetaria una vez se filtran los datos para eliminar la volatilidad del corto plazo;
+        \item \textbf{Correlación nula en el largo plazo entre PIB y tasa de crecimiento del dinero}. Adicionalmente, algunos trabajos coinciden en que existe una correlación negativa entre inflación y crecimiento real en una base de datos de sección cruzada con distintos países, lo que podría reflejar que altas tasas de inflación generan distorsiones en los precios relativos, lo que acaba erosionando la capacidad productiva de la economía;
+        \item \textbf{Correlación nula en el largo plazo entre desempleo e inflación}. En palabras de John B. Taylor ( 1996) "existe escaso desacuerdo en el hecho de que no exista ningún trade-off en el largo plazo entre inflación y la tasa de desempleo". Adicionalmente, BERENSTEN, MENZIO y WRIGHT (2008) encuentran una relación positiva entre inflación y desempleo en el largo plazo, contradiciendo la intuición básica de la curva de Phillips.
+        \item Tanto la renta como la riqueza se han mostrado generalmente significativas en la función de demanda de dinero, si bien la demanda de dinero es más elástica con respecto a la riqueza que respecto a la renta. 
+        \item La demanda de dinero está inversamente relacionada con los tipos de interés, pero no es muy elástica a éste.
+        \item La trampa de la liquidez keynesiana no se pudo confirmar empíricamente hasta la recesión sufrida por Japón en los años noventa (los nipones mantienen alrededor del 20\% del valor del PIB en dinero en efectivo en depósitos no convencionales, literalmente en carteras o en casa).
+        \item Los parámetros que relacionan las variables independientes con la demanda de dinero se mostraron bastante estables hasta la década de los ochenta, momento en que la innovación financiera (generalización del uso de las tarjetas de crédito, transferencias, giros, etc.) aumentó la velocidad de circulación del dinero e hizo que su demanda fuese más inestable.
+    \end{lnum}
+\end{specialblock}
+
+\begin{specialblock}{\textbf{Problemas de especificación en los estudios monetarios}: Algunas características esenciales}
+    Para entender las discrepancias presentadas es importante comprender los problemas con los que los economistas se enfrentan para analizar los efectos de la política monetaria. Pudiera pensarse que basta con estudiar los efectos tras una intervención monetaria para estimarlos. Es decir, observar qué sucede cuando el banco central reduce (o aumenta) el tipo de interés o reduce (o aumenta) los agregados monetarios. El problema de este enfoque es que normalmente las decisiones del banco central se toman como consecuencia de la situación económica. 
+    
+    Por ejemplo, una bajada en el tipo de interés puede responder al deseo del banco central de intentar estimular la economía ante una recesión económica. En este caso, el analista podría concluir que los efectos asociados con la causa original (la recesión) son consecuenciaprecisamente del remedio a la misma (la estimulación monetaria).\footnote{Por poner un símil, el problema es semejante a analizar el efecto sobre la mortalidad en carretera consecuencia de la circulación de ambulancias. Es cierto que hay mucha correlación entre los muertos en carretera y llegadas de ambulancias, pero esto se debe a que las ambulancias acuden a los accidentes de tráfico, que es precisamente donde se encuentran los heridos, y no a que las ambulancias aumenten la mortalidad en carretera (sino al contrario).
+    } 
+    
+    Por tanto, un análisis de la correlación entre el tipo de interés del banco central y la actividad, la inflación o el desempleo muestra como los tipos de interés descienden en situaciones de recesión y caída en el nivel de precios y aumentan en periodos de expansión e inflación; siendo un grave error inferir de ello que las subidas de tipos de interés son inflacionistas y expansivas. Este resultado es consecuencia del hecho de que los bancos centrales modifican su política monetaria a lo largo del ciclo para intentar evitar los aumentos de la inflación en periodos de bonanza y la deflación durante las crisis. 
+
+    Por todo esto los economistas han tenido que ingeniar métodos alternativos para estudiar los efectos de la política monetaria:
+    \begin{la}
+        \item \textbf{Técnicas VAR estructurales}. La primera de las técnicas de análisis de los efectos de la política monetaria se basa en la identificación de shocks mediante modelos de vectores autoregresivos (VAR). En un VAR, todas las variables se tratan como endógenas y se explican en función de sus propios rezagos y de los rezagos del resto de variables del sistema. Esta flexibilidad permite capturar interacciones dinámicas complejas y estudiar la respuesta de la economía a distintos shocks mediante funciones de impulso–respuesta y descomposiciones de varianza. No obstante, el principal desafío de los VAR es la identificación de shocks estructurales, especialmente en el contexto de política monetaria, donde resulta crucial distinguir innovaciones exógenas del banco central de respuestas endógenas a la evolución de la economía. Para ello se han desarrollado diversas estrategias, como restricciones contemporáneas, de signo o narrativas, aunque los resultados pueden ser sensibles a estas elecciones;
+        \item \textbf{Técnicas narrativas}. Una de las principales limitaciones del enfoque basado en modelos VAR es la identificación de los shocks; pues cambios en el orden de las series, es decir, en el supuesto de cuales reaccionan de forma contemporánea al shock, pueden modificar las conclusiones. Si bien existen diversas estrategias para intentar resolver este problema, una solución es utilizar información adicional para determinar los shocks de política monetaria. Las técnicas narrativas se basan en la identificación de episodios de política económica a partir de información cualitativa proveniente de documentos históricos, actas de bancos centrales, discursos o reconstrucciones cronológicas detalladas. En el contexto monetario, este enfoque busca aislar cambios de política que no respondan directamente a condiciones macroeconómicas contemporáneas, interpretándolos como shocks exógenos. La ventaja principal de estas técnicas es que permiten una identificación más cercana al proceso real de toma de decisiones de la autoridad monetaria y evitan algunos problemas de endogeneidad presentes en métodos puramente estadísticos. Sin embargo, su aplicación depende fuertemente del juicio del investigador y de la disponibilidad y calidad de la información histórica, lo que puede limitar la replicabilidad y generalización de los resultados; y,
+        \item Las técnicas anteriores se basan en métodos estadísticos aplicados a series temporales. Una tercera línea de investigación se basa en la búsqueda de experimentos naturales en la historia que arrojen luz sobre este tema.\footnote{Uno de los principales problemas de la macroeconomía como disciplina científica es la dificultad en realizar experimentos controlados. No es posible escoger una economía, partirla en dos mitades idénticas, y expandir la política monetaria en una mitad mientras se mantiene constante en la otra. No obstante, la historia económica ofrece algunas situaciones que se asemejan a un experimento, y que pueden ser analizadas en detalle para entender los efectos de la política monetaria.
+        } Las técnicas basadas en (cuasi-)experimentos naturales explotan variaciones exógenas generadas por cambios institucionales, reglas de política, eventos inesperados o discontinuidades que afectan a algunos agentes, regiones o periodos y no a otros. Estos enfoques se apoyan en métodos como diferencias en diferencias, regresión discontinua o variables instrumentales, con el objetivo de aproximarse a un entorno experimental en el que la política monetaria o fiscal pueda considerarse exógena. Su principal fortaleza es la credibilidad causal de los resultados, ya que la identificación descansa en fuentes claras de variación exógena. No obstante, suelen analizar efectos locales o contextuales, lo que puede dificultar la extrapolación de los resultados a otros entornos macroeconómicos o periodos históricos.
+    \end{la}
+\end{specialblock}
+
+\clearpage
+\section{Los Mecanismos de Transmisión de la Política Monetaria}
+No obstante, a falta de este consenso, las aproximaciones teóricas, basadas en supuestos válidos (o razonables) ilustra de manera sencilla y didáctica los efectos de la Política Económica sobre la economía. 
+
+Esto es lo que conocemos como los mecanismos o canales de transmisión de la Política Monetaria, y es lo que pasamos ahora a presentar. 
+
+En aras de la brevedad, no distinguiremos entre escuelas de pensamiento, considerando éstos canales como un todo homogeneo mayoritariamente aceptado por la ortodoxia económica actual. No obstante, sí cabe distinguir entre los \textit{convencionales} y los \textbf{no-convencionales}, éstos últimos con una importancia creciente a lo largo de las últimas dos décadas por los límites respecto a los mecanismos convencionales que la Política Monetaria parece haber alcanzado (menoscabando su eficacia).
+
+\subsection{Los canales de transmisión convencionales}
+Presentamos primero los seis canales convencionales considerando que se está realizando una política monetaria expansiva, es decir, de aumento de los agregados monetarios o disminución de los tipos de interés nominal a corto plazo fijados por el Banco Central; y que nos encontramos en condiciones normales, es decir, de inflación controlada (no hiperinflación, pues destruye cualquier relación que pueda haber entre variables reales y nominales).
+
+\subsubsection{Los Tipos de Interés}
+El primer canal, válgase la redundancia, es el canal de los tipos de interés. 
+
+Una política monetaria expansiva trae consigo una disminución de los tipos de interés nominal lo que conduce a una disminución del tipo de interés real de la economía. Esta disminución del tipo de interés real aumenta la demanda interna de la economía (a través de un aumento de la inversión y el consumo de los agentes) lo que lleva aparejado un aumento de la producción/renta total. 
+
+El aumento de la renta (por la ecuación cuantitativa del dinero) conlleva un aumento de la demanda de dinero por parte de los agentes lo que produce dos efectos: (i) empuja los tipos de interés nominal (parcialmente) hacia arriba; y, (ii) un aumento de los precios por el recorte de los saldos en términos reales. 
+
+Analíticamente, la transmisión por este canal puede desagregarse en dos efectos sucesivos:
+
+\eqblock{
+\begin{aligned}
+    &\text{\textbf{Canal} de transmisión de los \textbf{Tipos de Interés}:}\\[0.5em]
+    &\boxed{\underbrace{\uparrow M\;\overset{P_\perp}{\Longrightarrow}\;\downarrow i\;\Longrightarrow\;\downarrow r}_{\text{Efecto Liquidez}}\quad\Longrightarrow\quad
+    \overset{\substack{\text{\tiny (Aumento de la}\\\text{\tiny demanda interna)}}}
+    {\begin{cases}
+        \uparrow C\\[0.5em]
+        \uparrow I
+    \end{cases}}
+    \quad \Longrightarrow\quad 
+    \underbrace{\overset{\text{\scriptsize $\uparrow Y\cdot P\;\Rightarrow \;\uparrow M^d\cdot V$}}{\uparrow Y\;\Longrightarrow\;\uparrow M^d}\;\Longrightarrow\;\overset{\text{\tiny (parcial)}}{\uparrow i}\;\;+\;\;\overset{\substack{\text{\tiny (Recorta}\\{\text{\tiny saldos reales)}}}}{\uparrow P}}_{\text{Efecto Renta}}}\\[2em]
+    &\text{Efecto Liquidez}\quad \Longrightarrow\quad \underbrace{\uparrow(P^e)\Rightarrow
+    \begin{cases}
+        \uparrow i\\[0.5em]
+        \uparrow P
+    \end{cases}}_{\text{Efecto FISCHER}}
+\end{aligned}
+}{Tipos de Interés. Canales convencionales de transmisión}
+
+Como vemos, existe: (i) un Efecto Liquidez\footnote{El Efecto Liquidez es un efecto instrumentalizado a través de los tipos de interés a corto plazo: Dada la estructura temporal de los tipos de interés, los tipos de interés a largo plazo son una medida de los tipos a corto plazo, por lo que su efecto se traslada a las variables reales de Consumo e Inversión.
+} (que puede producir un Efecto FISCHER: efecto a través de expectativas inflacionistas)\footnote{El Efecto FISCHER es un Efecto que reduce la eficacia de este canal de transmisión (no solo éste) y se deduce del hecho que los agentes esperan un aumento de inflación como consecuencia de una Política Monetaria expansiva ($i=r+\pi^e$). En consecuencia, es de esperar que los tipos de interés nominal fijados por los prestamistas aumenten atendiendo a las expectativas inflacionistas que estos tienen, lo que hace que el tipo de interés real permanezca constante.
+} que conduce a un aumento de la renta en la economía a través del estímulo de la demanda interna; y, (ii) un Efecto Renta que reduce su efecto a través de la disminución de los saldos reales. Gráficamente:
+
+\textbf{Incluir Gráfico Tipos de Interés}
+
+\subsubsection{Efectos Riqueza}
+El segundo canal convencional de transmisión se deriva de los Efectos Riqueza que genera una Política Monetaria expansiva. 
+
+Este efecto se puede desagregar en tres que actúan de manera paralela, dos en la misma dirección (positiva) y otro contrario que disminuye la efectividad de ésta. 
+\begin{lnum}
+    \item \textbf{Efecto Pigou o Efecto Renta Directo} (ERD). Un aumento de la base monetaria o una disminución de los tipos de interés aumenta el valor real de los saldos monetarios nominales, en particular, de los salarios. Este aumento del poder adquisitivo (por la existencia de rigideces nominales en los precios) induce un aumento del consumo privado de los hogares y, por tanto, un aumento de la renta canalizado a través de la demanda interna (siempre y cuando haya capacidad de absorción en la economía);
+    \item \textbf{Efecto Riqueza Indirecto o inducido por Tipos de Interés}. Suponiendo que los hogares mantienen parte de su ahorro privado en forma de activos,\footnote{Esto es una suposición que no concuerda con la evidencia empírica. De hecho, la mayor parte del ahorro privado se mantiene en depósitos y activos inmobiliarios. De todas formas, existe un alto grado de heterogeneidad \textit{ad intra} y \textit{ad extra} del nivel nacinoal. Tendiendo, eso sí, los percentiles con más renta de la población a poseer más ahorro en forma de activos financieros alternativos a los bonos.
+    } un aumento de la oferta monetaria disminuye los tipos de interés nominal (el coste de financiarse es menor), lo que tiene un efecto directo sobre el rendimiento de los bonos y los depósitos (se paga menos por ahorrar). La búsuqeda de mayor rendimiento en el ahorro empuja al alza el precio de los activos financieros alternativos, lo que induce un aumento de los precios de los activos , por tanto, de la riqueza de los hogares que ostentan éstos (se sienten/son más ricos por la mayor demanda de los títulos que poseen, que encarece su precio). Este aumento de la riqueza conduce a un aumento del consumo privado, lo que empuja al alza la demanda interna (suponiendo que hay absorción en la economía) y, por tanto, de la renta total de la economía; y, por último,
+    \item \textbf{Efecto Riqueza inducido por el Precio de los Activos}. Pero, ¿todo sería genial entonces, no? No es tan sencillo, en un contexto en el que se hace necesario recurrir a una Política Monetaria expansiva es probable que nos encontremos ante algunas situaciones que menoscan la eficacia en la transmisión a través de los efectos riqueza, en particular: (i) madurez de los activos;\footnote{Se considera que los activos han llegado a un grado de madurez suficiente cuando estos rinden a su máximo potencial. \textit{Grosso modo} puede hablarse de tres fases en la vida de un activo: (i) etapa inicial e intermedia, cuando el activo se está desarrollando y aún no está ejecutándose a su máximo potencial; (ii) madurez, cuando el activo está completamente desarrollado y está rindiendo a su máximo potencial; y, (iii) declive, cuando el activo entra en su etapa final de vida y se espera obtener un rendimiento limitado en el tiempo
+    } (ii) fuertes expectativas de inflación; y/o, (iii) hay un alto grado de incertidumbre/inestabilidad financiera. En estos casos, los efectos riqueza se reducen enormemente: ante un aumento de la base monetaria o una reducción de los tipos, el aumento de la demanda interna empujaría al alza los precios más rápido de lo que se alza el valor de los activos financieros. Esto disminuye el poder adquisitivo de los agentes por un sencillo ajuste relativo: $W^{real}_{Activo}=\frac{P_{activo}}{P}$; si el aumento de los precios es mayor (o más acelerado) que el aumento del valor nominal de los activos, el valor real del activo disminue y, por tanto, también la riqueza de los agentes. Esta disminución de la riqueza real de los agentes (poder adquisitivo) les conduce a consumir menos (por la PMC) y ahorrar más (por ejemplo, ahorro precautorio) y, en consecuencia, reduce la renta/producción agregada de la economía.
+\end{lnum}
+
+Analíticamente, pueden observarse estos tres subcanales o efectos en la transmisión a través del efecto riqueza mediate el siguiente esquema:
+
+\eqblock{
+\begin{aligned}
+    &\text{\textbf{Canal} de transmisión de los \textbf{Efectos Riqueza}:}\qquad 
+    \boxed{\begin{cases}
+        \uparrow M\\[0.5em]
+        \downarrow i
+    \end{cases}\;\Longrightarrow\;\uparrow W\;\Longrightarrow\;\uparrow Y}\\[2em]
+  &\uparrow M\Longrightarrow\;
+  \begin{cases}
+      &\text{(1) Efecto PIGOU.}\quad 
+      &\overset{\text{\tiny $\;\uparrow M\;\Rightarrow\;\uparrow \frac{M}{P}=\omega$}}{\uparrow W} \;\Longrightarrow\;\uparrow C\;\Longrightarrow\;\uparrow Y\quad &\text{(ERD +)}\\[1em]
+      &\text{(2) Efecto inducido por $i$.}\quad 
+      &\downarrow i\;\overset{\text{\scriptsize$\downarrow P_B\;\Rightarrow\;\uparrow P_A$}}{\Longrightarrow}\;\uparrow W_{Activos}^{real}\;\Longrightarrow\;\uparrow W\;\Longrightarrow\;\uparrow C\;\Longrightarrow\;\uparrow Y\quad &\text{(ERI +)}\\[1em]
+      &\text{(3) Efecto inducido por $E[\;\cdot_t\;|\;\Omega_t]$.}\quad 
+      &\uparrow P\;\overset{\text{\tiny $p_t^A-p_t<0$}}{\Longrightarrow}\;\downarrow W^{real}_{Activos}\;\Longrightarrow\;\downarrow W\;\Longrightarrow\;\downarrow C\;\Longrightarrow\;\downarrow Y\quad &\text{(ERI -)}
+  \end{cases}\\[2em]
+  &W\equiv\quad\text{}
+\end{aligned}
+}{Efectos Riqueza. Canales convencionales de transmisión}
+
+Además, vemos como puede también producirse un Efecto Renta a través de la igualdad de la ecuación cuantitativa del dinero: $\uparrow Y\;\Longrightarrow\;\uparrow M^d\;\Longrightarrow\;\uparrow i$.
+
+\subsubsection{Mercados financieros: el precio de los activos}
+Otro de los canales de transmisión, estrechamente relacionado con los Efector Riqueza indirectos estudiados en el apartado anterior se canaliza a través de los mercados financieros, en particular, a través del precio de las acciones.
+
+El canal del precio de las acciones es un canal convencional de la política monetaria que opera fundamentalmente a través de la inversión y no del consumo. Su punto de partida es la existencia de rigideces nominales de precios en el corto plazo, que impiden que el nivel de precios se ajuste inmediatamente tras una expansión monetaria. Un aumento de la base monetaria o una reducción de los tipos de interés nominal, teniendo en cuenta que existen rigideces de precios, provoca un desbalance entre la oferta y la demanda monetaria en términos reales: es lo que se conoce como un \textbf{exceso de saldos reales}.\footnote{Cuando el banco central aumenta la base monetaria o reduce el tipo de interés nominal, el dinero en circulación aumenta, pero como los precios son rígidos, ese aumento se traduce inicialmente en un incremento de los saldos monetarios reales. Es decir, a los agentes les sobra dinero en términos reales respecto a la cantidad que desean mantener para transacciones y precaución. Este desajuste entre la oferta y la demanda de dinero es lo que se denomina un exceso de saldos reales.
+} Este exceso provoca un aumento de la demanda de las acciones, pues proporcionan mayor rentabilidad que los bonos o depósitos y, además, su precio relativo ha disminuido, esto encarece el precio de las acciones (activos financieros) aumentando el cociente o $q_{Tobin}$ de TOBIN\footnote{Mide la relación entre el valor de mercado de las empresas y el coste de reposición de su capital físico.
+} que provoca un aumento de la inversión (aumento de la demanda interna) y por tanto un aumento de la renta/producción agregada de la economía. La secuencia analítica de este canal sería como sigue:
+
+\eqblock{
+\begin{aligned}
+    &\text{\textbf{Canal} de transmisión de los \textbf{Precios de las Acciones}:}\qquad 
+    \boxed{\begin{cases}
+        \uparrow M\\[0.5em]
+        \downarrow i
+    \end{cases}\;\Longrightarrow\;\uparrow P_{Acciones}\;\overset{\text{\scriptsize $\uparrow q_{Tobin}$}}{\Longrightarrow}\;\uparrow Y}\\[2em]
+  &\uparrow M\;\Longrightarrow\;
+  \underbrace{\left(\frac{M}{P}\right)^s>\left(\frac{M}{P}\right)^d}_{\text{\scriptsize Exceso de Saldos Reales}}\;\Longrightarrow\;\uparrow D_{Acciones}\;\Longrightarrow\;\uparrow P_{acciones}\;\Longrightarrow\;\uparrow q_{(Tobin)}\;\Longrightarrow\;\uparrow I\;\Longrightarrow\;\uparrow Y
+\end{aligned}
+}{Precios de las Acciones. Canales convencionales de transmisión}
+
+Como vemos, el exceso de saldos reales conduce a los agentes a tratar de recomponer su cartera de activos. Dado que el dinero ofrece una rentabilidad nula (o muy baja), y que los tipos de interés han descendido, los bonos y los depósitos resultan relativamente menos atractivos. En este contexto, las acciones se convierten en un activo preferente, tanto porque su rentabilidad esperada es mayor como porque su precio relativo resulta bajo en comparación con otros activos financieros. El aumento de los precios subsiguiente no es meramente financiero, sino que tiene consecuencias reales porque afecta a la valoración de las empresas. Cuando el precio de las acciones sube, el precio de mercado de las empresas aumenta mientras que el coste de reposición del capital productivo cambia poco (en el c/p) o bajo relativo al precio de mercado de la empresa.\footnote{Un $q_{Tobin}$ elevado envía una señal clara a las empresas: resulta rentable invertir. Emitir acciones para financiar nuevos proyectos permite obtener recursos en el mercado a un coste relativamente bajo, mientras que el valor que el mercado asigna a las empresas supera el coste de ampliar su capacidad productiva.
+} Como consecuencia, las empresas aumentan el gasto en inversión, lo que incrementa directamente la demanda agregada interna.
+
+Un fenómeno análogo se puede experimentar también en el mercado inmobiliario (considerando la vivienda como un activo) y, por tanto, se incentiva la inversión residencial.
+
+\subsubsection{El Tipo de Cambio}
+En una economía abierta (la mayoría de economías del mundo), la Política Monetaria tiene un canal de transmisión claro a través del Tipo de Cambio. En particular, este mecanismo de transmisión se canalizará a través de incrementos (disminuciones) del Tipo de Cambio Efectivo Real ($e$).
+
+Este canal de transmisión no es fácil de entender, por lo que iremos por pasos. El aumento de la base monetaria o disminución del tipo de interés nominal provoca, en consecuencia, un aumento de las salidad de capitales hacia el extranjero en busca de mayor rentabilidad (suponiendo mercados de capitales (semi-)perfectos o sin barreras notables en la balanza de capital). 
+
+Pero, ¿por qué? (Respuesta desde la óptica de un mercado de divisas descentralizado donde el tipo de cambio nominal relativo se fija en función de la oferta y la demanda: FOREX) Cuando se lleva a cabo una Política Monetaria expansiva esta tiene, como hemos visto, efectos sobre la rentabilidad de los activos. En particular, teniendo en cuenta únicamente el mercado de bonos,\footnote{Este es un supuesto lógico teniendo en cuenta el volumen del mercado y de transacciones que se realizan en éste. Además, por la propia condición de los agentes: Los operadores financieros disponen de más información (Teoría del hábitat preferente) respecto a sus mercados nacionales, por lo que es normal suponer que si éstos operan en el extranjero lo hagan con el objetivo de diversificar su carte pero teniendo en cuenta el menoscabo de información al que se enfrentan. Por lo tanto, lo normal es que estas inversiones se realicen en activos de bajo riesgo, como son los bonos del gobierno.
+} la rentabilidad de éstos bonos bajará en términos relativos, es decir, en comparación con la rentabilidad de éstos en otros mercados extranjeros (los activos domésticos pasan a ser relativamente menos atractivos que los extranjeros). Una particularidad evidente de este tipo de activos es que están denominados en moneda nacional, por lo que la motivación subyacente de la amortización de éstos trae consigo un aumento de la oferta de divisas nacionales y un incremento de la demanda de divisas extranjeras. La interacción de estas dos fuerzas empuja el tipo de cambio nominal ($E$) fijado en el mercado descentralizado hacia abajo, sufriendo una depreciación.
+
+Ahora sabemos las razones por las que la salida de capitales neta interactúa con el tipo de cambio nominal a través de los mercados financieros, en particular, a través de los activos denominados en moneda nacional, pero ¿cómo se traduce la depreciación del tipo de cambio nominal en la economía real? Esta pregunta es mas sencilla de responder. El tipo de cambio nominal (fijado en el mercado descentralizado) está estrechamente relacionado (positivamente) con el Tipo de Cambio Efectivo Real (TCER, $e$): una depreciación del tipo de cambio nominal conduce a una depreciación del TCER. El TCER viene asoaciado a un aumento de la competitividad exterior de la economía, es decir, una mejor posición relativa para aquellos sector enfocados a la exportación; pero, también, con un encarecimiento de las importaciones del país (pérdida de poder adquisitivo de cara al exterior).\footnote{Una depreciación del tipo de cambio fomentaría la inversión de aquellas empresas cuya producción esté orientada al exterior. Al mismo tiempo, esa depreciación encarece los factores productivos importados y en consecuencia reduce los márgenes de beneficio y con ello los planes de inversión. El que predomine uno u otro dependerá de la vocación exportadora del país, por un lado, y de la dependencia de factores provenientes del exterior (el petróleo tendría aquí un papel relevante). 
+}
+
+Analíticamente, podemos describir la secuencia de la siguiente forma:
+
+\eqblock{
+\begin{aligned}
+    &\text{\textbf{Canal} de transmisión del \textbf{Tipo de Cambio}:}\qquad 
+    \boxed{\begin{cases}
+        \uparrow M\\[0.5em]
+        \downarrow i
+    \end{cases}\;\Longrightarrow\;\downarrow E\;\Longrightarrow\;\downarrow e}\\[2em]
+  &\uparrow M\;\Longrightarrow\;\downarrow i\;\Longrightarrow\;\uparrow Saldo\;{CF}\;\overset{\text{\tiny$\downarrow D_E\Rightarrow\downarrow E$}}{\Longrightarrow}\;\uparrow e\\[0.5em]
+  &\hspace{1em}\Longrightarrow
+  \begin{cases}
+      &\text{Desde la óptica de $S$:}\quad 
+      &\uparrow
+       P_M\;\overset{\bar M}{\underset{
+       \substack{
+       \text{\scriptsize $\uparrow E[P_t\;|\;\Omega_t]\Rightarrow$}\\ 
+       \text{\scriptsize $\uparrow$ Presiones $w$}}}{\Longrightarrow}}\;\uparrow W\;\Longrightarrow\;\uparrow CT(q)\;\Longrightarrow \;\downarrow Y\;+\;\uparrow P\\[1em]
+       &\text{Desde la óptica de la $D$:}\quad 
+       &\uparrow X\;+\;\downarrow M\;\Longrightarrow\;\uparrow D_{EXT}\;\Longrightarrow\;\uparrow Y\;\Longrightarrow\;\uparrow M\;\Longrightarrow\;\downarrow D_{EXT}\;\Longrightarrow\;¿Y?
+  \end{cases}
+\end{aligned}
+}{Tipo de Cambio. Canales convencionales de transmisión}
+
+Por tanto, como podemos ver el canal de transmisión del Tipo de Cambio es un mecanismo ambiguo. Si bien es cierto que prevalecerán los efectos positivos a los negativos atendiendo a los siguientes elementos: (i) el poder de absorción que tenga la economía, cuánto mayor sea la capacidad de absorción de la producción nacional mayores serán los efectos reales que tenga una caída del tipo de cambio nominal; (ii) el enfoque exportador que tenga la estructura de la economía, ya que el aumento de las exportaciones (y por tanto, de la demanda externa) podrá contrarrestar los efectos negativos que sobre la demanda tenga una devaluación real de la moneda; y, sobretodo, (iii) el grado de incertidumbre e impacto previsto de la Política Monetaria, puesto que si los tipos de interés nominal ya están bajos y/o la rentabilidad-riesgo que ofrece la economía doméstica es buena, se puede esperar que la Política Monetaria expansivo no tenga efectos significativos sobre el tipo de cambio nominal (poca salida de capitales).
+
+\subsubsection{El Canal Bancario: Crédito}
+Como sabemos, desde los años 80's el Sistema Bancario ha ido ganando especial relevancia en la transmisión de la Política Monetaria (innovación y liberalización financiera); de hecho, algunos académicos hablan de que, hoy en día, en economías desarrolladas se puede hablar de endogeneidad de la Política Monetaria, tanto en términos de dinero en circulación (efectivo, por objetivos de inflación y control mediante tipos) como de los depósitos. Por ello, podemos considerar el canal de transmisión bancario como uno de los mecanismos más importantes en términos de Política Monetaria. 
+
+Las decisiones de éstos intermediarios financieros frente a una Política Monetaria expansiva incidirá directamente sobre los planes de gasto de los agentes por lo que será determinante para valorar la efectividad de dicha política. El origen, o uno de ellos, de este mecanismo de transmisión es la existencia de información asimétrica; y se proyecta a través de dos subcanales a los que debemos prestar especial atención. 
+
+\paragraph{Canal del Crédito en sentido estricto}
+¿Cómo se experimenta una Política Monetaria expansiva desde la perspectiva bancaria? 
+
+Como sabemos, puede instrumentalizarse por dos vías: (i) la compra de activos por parte del banco central (agregados cuantitativos: aumento de la base monetaria); y/o, (ii) reducción de los tipos de interés nominales (que reducen los costes por parte de los bancos y permiten generar rentabilidad adicional: financiarse y prestar con mayor margen). Cualquier sea la vía instrumental de dicha política el resultado contable es claro, una Política Monetaria expansiva conduce a un aumento de las reservas bancarias (o depósitos bancarios). ¿Cómo se traslada este aumento a los agentes y, en consecuencia, a la economía real? Un aumento de las reservas bancarias amplía la capacidad de obtener beneficios por parte de los bancos a través de la concesión de créditos al sector privado. Este aumento del crédito (por abaratamiento de las condiciones de financiación de los agentes privados) conduce a un aumento del gasto por parte de los agentes, tanto en bienes de consumo como de inversión; es decir, la reta agregada real acabará aumentando por un aumento de la demanda interna. Analíticamente, podemos describir la secuencia como:
+
+\eqblock{
+\begin{aligned}
+    &\text{\textbf{Canal} de transmisión \textbf{Bancario}:}\qquad 
+    \boxed{\begin{cases}
+        \uparrow M\\[0.5em]
+        \downarrow i
+    \end{cases}\;\Longrightarrow\;\uparrow \text{Crédito}\;\Longrightarrow\;\uparrow Y}\\[1em]
+  &\begin{cases}
+      \uparrow \underset{\substack{\text{\tiny Compra de Activos}\\\text{\tiny bancarios por el BC}}}{\text{BM}}\\[1em]
+      \downarrow i
+  \end{cases}\;\Longrightarrow\;
+  \overset{
+  \begin{aligned}
+      &\uparrow \text{Balance}\\
+      &\downarrow\text{Coste financiación}\\[0.5em]
+      &
+  \end{aligned}
+  }{\uparrow \underbrace{\text{NIM}}_{\substack{\text{\tiny \textit{Net Interest Margin} o}\\\text{\tiny Margen de Intermediación}}}}
+  \;\Longrightarrow\;\uparrow\text{Crédito}\;\Longrightarrow\;
+  \underbrace{\begin{cases}
+      \uparrow C\\
+      \uparrow I
+  \end{cases}}_{\substack{\text{\scriptsize Principalmente: \textit{bank-dependant}}\\\text{\scriptsize $\equiv$ PYMES y hogares}}}\;\Longrightarrow\; \uparrow \text{Depósitos}\;\Longrightarrow\;
+  \begin{cases}
+      \circlearrowright \;\uparrow \text{NIM}\\
+      \uparrow Y
+  \end{cases}
+\end{aligned}
+}{Bancario (I): Crédito en sentido estricto. Canales convencionales de transmisión}
+
+Por tanto, como vemos este canal directo o canal bancario en sentido estricto se conoce así por el interés que tiene la intermediación financiera de aumentar potencialmente su rentabilidad sobre el capital propio (ROE). Este aumento del crédito es especialmente sensible para lo que se conoce como \textit{bank-dependant agentes}, es decir, agentes dependientes de fuentes tradicionales de financiación como son los bancos (empresas queñas y hogares).
+
+\paragraph{Canal del Crédito en sentido amplio}
+Por otro lado tenemos el canal bancario en sentido amplio. Este supone un efecto adicional asociado a la Política Monetaria y está estrechamente relacionado con los problemas de información asociados a la intermediación financiera.
+
+Como sabemos, los prestadores y prestatarios se ven afectados por problemas de información asimétrica: (i) por un lado, un problema de riesgo moral que reduce o aumenta los incentivos del prestatario a actuar con diligencia \textit{ex post} (es decir, una vez pactados los términos del contrato); y, (ii) problemas de selección adversa asociados a los problemas de señal que enfrentan los prestamistas a la hora de identificar proyectos más o menos arriesgados. La Política Monetaria se canaliza a través del sector bancario disminuyendo (expansiva) o agravando (restrictiva) las fricciones informacionales asociadas a esta acividad. En particular, identificamos dos subcanales o efectos:
+\begin{lnum}
+    \item \textbf{Mitiga problemas informacionales}. Cuando el banco central reduce los tipos de interés o inyecta liquidez: (i) aumenta la demanda de activos alternativos a los bonos/depósitos (canal de precios de las acciones); y, (ii) disminuye el tipo de descuento al que se valoran los flujos futuros de las empresas. Ambas conducen a un aumento del precio de las acciones, no por un efecto especulativo, sino porque los beneficios futuros se capitalizan a una tasa menor. Al mismo tiempo, el coste de financiación externa cae, lo que mejora las expectativas de rentabilidad de los proyectos de inversión y refuerza esa subida bursátil. El aumento del precio de las acciones eleva la $q_{Tobin}$, es decir, el valor de mercado de las empresas crece más que el coste de reposición de su capital, lo que implica una mejora directa del valor neto de las empresas y, por tanto, del colateral (garantía de reembolso) que pueden ofrecer a los bancos. Con más colateral, el prestatario tiene más que perder en caso de impago, lo que reduce el riesgo moral, y además la distribución de proyectos que solicitan financiación se vuelve menos arriesgada por abrirse a proyectos más seguros (como vimos en Temas anteriores), lo que mitiga los problemas de selección adversa; y,
+    \item \textbf{Reduce el servicio de la deuda y aumenta la capacidad de autofinanciación}. En paralelo, la bajada de tipos reduce el servicio/coste de la deuda y aumenta el cash flow de las empresas. Una mayor autofinanciación disminuye la dependencia del crédito externo y refuerza la solvencia percibida del prestatario. Desde el punto de vista del banco, esto reduce la probabilidad de impago y el coste esperado de prestar.
+\end{lnum}
+
+Analíticamente, la secuencia podría expresarse como sigue:
+
+\eqblock{
+\begin{aligned}
+    &\text{\textbf{Canal} de transmisión \textbf{Bancario (II)}:}\qquad 
+    \boxed{\begin{cases}
+        \uparrow M\\[0.5em]
+        \downarrow i
+    \end{cases}\;\Longrightarrow\;\downarrow \text{Problemas de info. asimétrica}\;\Longrightarrow\;\uparrow Crédito\;\Longrightarrow\;\uparrow Y}\\[1em]
+    &\uparrow M\;\Longrightarrow\;
+    \left\{\begin{aligned}
+        &\downarrow\text{Problemas informacionales:}\quad \uparrow P_{Acciones}\;\Longrightarrow\;\underbrace{\uparrow q_{Tobin}}_{\text{\scriptsize $\uparrow V_{Empresa}^{real}$}}\;\Longrightarrow\;\uparrow\text{Valor}_{\text{\tiny Colateral}}\;\Longrightarrow\;
+        \begin{cases}
+            \downarrow \text{SA}\\[0.5em]
+            \downarrow \text{RM}\\[0.5em]
+        \end{cases}\\[1em]
+        &\uparrow \text{Solvencia}:\quad \downarrow i\;\Longrightarrow\;\downarrow \text{Servicio deuda}\;\Longrightarrow\;\uparrow CashFlow_{\text{\tiny AutoFinanciación}}\;\Longrightarrow\;\uparrow P_{Acciones}\;\Longrightarrow\;\downarrow\substack{\text{\scriptsize Problemas}\\\text{\scriptsize informacionales}}
+    \end{aligned}\;\right\}\;\Longrightarrow\;\uparrow\text{Crédito}\;\Longrightarrow\;\uparrow Y
+\end{aligned}
+}{Bancario (II): Crédito en sentido amplio. Canales convencionales de transmisión}
+
+Como vemos, ambos efectos convergen en un mismo resultado: mejoran el balance de los prestatarios. Al mejorar el balance, se atenúan las fricciones de información asociadas al riesgo moral y a la selección adversa. Como consecuencia, los bancos pueden reducir los tipos de interés aplicados, relajar las condiciones crediticias y expandir el volumen de crédito.
+
+En definitiva, bajo una política monetaria expansiva, el aumento del precio de las acciones no es un fenómeno aislado, sino el mecanismo clave que eleva el valor colateral, reduce los problemas de información y amplifica la transmisión de la política monetaria hacia la inversión y el consumo.
+
+\subsubsection{La cuantificación de sus efectos: modelo de la NEK-2}
+Hasta ahora hemos visto los cinco canales convencionales de transmisión de la Política Monetaria desde una perspectiva expansiva y como la interacción con las rigideces nominales (en precios y salarios), reales (en capacidad productiva, preferencias, costes, etc.) y asimetrías informacionales permiten que las actuaciones sobre variables nominales (tipos de interés: remuneración del dinero como depósito de valor; y agregados monetarios: cantida de dinero en circulación) pueden tener efecto sobre las variables reales. Ahora bien, ¿qué hemos sacado en claro? 
+
+Lo primero que salta a la vista es la heterogeneidad, interrelación y mecanismos compensatorios presentes en estos canales; lo que, en linea con lo que decíamos al principio, es una de las razones principales por las que su cuantificación se hace, a día de hoy (con la metodoología y acapacidades actuales), imposible. Pero, ¿eso quiere decir que no podemos hacer nada y todo parece funcionar (o no) por voluntad divina?
+
+No, identificar y cuantificar claramente los efectos de cada canal de transmisión y los efectos agregados es ahora mismo imposible. Pero sí podemos anticipar los efectos esperados de una Política Monetaria a través del uso de modelos macroeconómicos.
+
+Presentaremos, para ilustrar este ejemplo, una de las versiones más sencillas de la gama de modelos macroeconómicos más utilizados en la actualidad: el modelo \textit{baseline} (tres ecuaciones) de la NEK-2. Por la naturaleza matemática de este tipo de metodología, la incorporación de todos los canales de transmisión resulta una tarea ardúa, prácticamente imposible de realizar; por ello, cabe identificar los efectos de qué canales se podrán cuantificar a través de este este modelo, a saber: (i) el canal del tipo de interés; y, (ii) el canal del crédito. No obstante, que no se expliciten no quiere decir que no se incorporen, ya que estos están, de facto, incorporados en el modelo de forma endógena, es decir a través de las variables y el término de error.
+
+El modelo de la NEK-2 de tres ecuaciones se fundamenta sobre los siguientes supuestos:
+\begin{lnum}
+    \item \textit{Hipótesis ergódica}. El sistema posee una estructura estable en el tiempo, de modo que las regularidades observadas no dependen de una historia particular, sino que reflejan propiedades generales del propio sistema (el valor esperado del sistema es igual a su valor a largo plazo). Por tanto, la ergodicidad no es una descripción empírica del mundo, es una hipótesis metodológica que permite tratar la economía como un sistema gobernado por regularidades generales, no como un proceso históricamente singular o dependiente del camino seguido;\footnote{Su rechazo implica aceptar que la historia importa de manera no resumible, que las trayectorias no son intercambiables y que el futuro no está estadísticamente contenido en el pasado
+    }
+    \item \textit{Individualismo metodológico}. Los fenómenos económicos deben explicarse a partir de las acciones, decisiones e interacciones de los individuos, y no mediante entidades colectivas tratadas como agentes autónomos: el comportamiento agregado del sistema debe (y puede) explicarse a través de la agregación de los agentes que lo conforman;\footnote{Desde este enfoque, una explicación económica es satisfactoria solo si muestra cómo las regularidades observadas a nivel agregado emergen de decisiones individuales, tomadas bajo restricciones y con expectativas determinadas. Las variables macroeconómicas no se niegan, pero se consideran legítimas únicamente en la medida en que pueden vincularse, al menos en principio, a mecanismos microeconómicos.
+    } 
+    \item \textbf{Racionalidad}. Los agentes económicos eligen de manera sistemática y coherente entre las alternativas disponibles, utilizando la información que poseen y actuando conforme a un criterio estable de valoración. Las decisiones no se consideran arbitrarias, sino el resultado de un proceso de elección;
+    \item \textbf{Escasez o economía basada en el intercambio}. Los agentes económicos actúan en un entorno en el que los recursos disponibles son limitados en relación con los fines que pueden perseguirse: no es posible satisfacer simultáneamente todos los objetivos deseables. Desde este punto de vista, la escasez no es un hecho empírico contingente, sino una condición estructural del análisis económico ya que, sin escasez no habría costes de oportunidad ni decisiones propiamente económicas. La escasez convierte la elección en el verdadero problema económico, dando a la Teoría Económica su razón última de existir.
+\end{lnum}
+
+Estos modelos son de tipo DSGE y, por su naturales, son además inmunes a la conocida crítica de LUCAS pues se trata de modelos \textbf{microfundamentados}, que utilizan agentes representativos (en este caso: hogar, empresa y autoridad monetaria) con una función de utilidad objeto de maximización. En estos modelos los agentes \textbf{no tienen ilusión monetaria}, forman sus expectativas en base a la HER, existen \textbf{rigideces nominales} (de precios en este caso, pero también extensible a salarios, fijación \textit{à la CALVO}) y \textbf{rigideces reales} (competencia monopolística) e \textbf{información imperfecta}.
+
+Se presentan las tres siguiente ecuaciones, que pueden entenderse como las funciones de reacción de los tres agentes intervinientes en este Equilibrio Dinámico Estocástico General:
+
+\eqblock{
+\begin{aligned}
+    &\text{Curva IS:}\quad &&\boxed{x_t=-\frac{1}{\sigma}\left(\underbrace{i_t-E[\pi_{t+1}\;|\;\Omega_t]}_{r_t}-\overbrace{r_t^n}^{\rho}\right)+E[x_{t+1}\;|\;\Omega_t]}\\[1em]
+    &\underbrace{\text{CP de la NEK-2:}}_{\sim\text{Función de Próducción}}\quad &&\boxed{\pi_t=\beta\;E[\pi_{t+1}\;|\;\Omega_t]+\epsilon\;x_t}\\[1em]
+    &\underbrace{\text{Autoridad Monetaria:}}_{\sim\text{Regla de TAYLOR}}\quad &&\boxed{i_t=\delta\;\pi_t+\underbrace{v_t}_{\text{\scriptsize Shock monetario AR(1)}}}\\[1em]
+\end{aligned}
+}{Modelo de tres ecuaciones de la NEK-2. Canales de transmisión convencionales}
+
+La inspección de las dos primeras ecuaciones permite entender el funcionamiento básico del modelo neokeynesiano o lo que es lo mismo: el canal de transmisión de los tipos de interés nominales a inflación y output. Imagine una economía en la que el tipo de interés real $i_t-E[\pi_{t+1}\;|\;\Omega_t]$ es igual al tipo natural $r_t^n$. En ese caso, y si los agentes esperan que el tipo real continúe replicando al tipo natural en el futuro, el valor del output gap es cero $x_t=0$ y lo mismo sucede con la inflación $\pi_t=0$. Esto implica que una política monetaria que consiga que el tipo real iguale al natural consigue estabilizar tanto la inflación como el output gap, en lo que se conoce como \textbf{divina coincidencia}. 
+
+La tercera ecuación representa la función de reacción de la autoridad monetaria y, como sabemos, en la realidad los bancos centrales no observan ni el tipo de interés natural ni el output gap.\footnote{
+El output gap o la brecha de producción se calcula como la desviación entre el logaritmo del producto $Y_t$ y su nivel natural o eficiente $Y_t^n$, que es aquel que se produciría en ausencia de rigideces nominales ($\theta = 0$). El tipo de interés natural se define así mismo como el tipo de interés que se produciría en ausencia de rigideces nominales.
+
+Tanto el nivel de output eficiente como el tipo natural son independientes de la política monetaria, y sólo dependen de variables estructurales de la economía (tecnología, demografía, etc.). En el modelo, el tipo de interés natural depende de la tasa de descuento (que le sirve como \textit{proxy}, es decir, $\rho=r_t^n$) y del valor esperado de la producción potencial, que, a su vez depende, del valor esperado de la productividad
+} Es por ello que la política monetaria suele realizarse en función de variables observables, en este caso a través de la Regla de TAYLOR, que vincula los tipos de interés nominales con el valor de la inflación.
+
+\paragraph{Las rigideces: adiós a la \textit{divina coincidencia}}
+Ahora bien, como hemos dicho, las tres ecuaciones surgen del problema de optimización de cada uno de sus respectivos agentes. La existencia de rigideces reales aparece en el parámetro $\epsilon$, presente en la Curva de Phillips. De hecho, este parámetro es lo que determina la \textbf{pendiente de la curva} y se determina en función de los parámetros estructurales del modelo que son calibrados en base a la evidencia empírica.\footnote{La pendiente depende del parámetro de descuento, $\beta$, de la inversa de la elasticidad intertemporal de sustitución del consumo, $\sigma$, de la inversa de la elasticidad intertemporal de sustitución del trabajo, $\phi$, del grado de rigidez nominal, $\theta$, de la elasticidad de la producción al trabajo, $(1-\alpha)$, y de la elasticidad de sustitución entre bienes, $\varepsilon$.
+
+Una calibración típica para datos trimestrales es asumir que los precios se mantienen en media constantes tres trimestres, y por lo tanto $\theta=2/3$. Respecto al resto de parámetros, valores típicos son $\beta=0,99$ (tipo de interés a largo plazo del $4\%$), $\sigma=1$ (utilidad logarítmica), $\phi=1$ (elasticidad de FRISCH de la oferta de trabajo unitaria), $\alpha=1/3$ (este es el peso de la remuneración del capital frente al trabajo en la economía norteamericana) y $\varepsilon=6$ (mark-ups del $20\%$).} Una calibración habitual produce una pendiente, $\epsilon=0,127$, es decir, un aumento del $10\%$ por ciento en el output gap se traduce en 1,27 p.p. de inflación.
+
+La existencia de rigideces, representadas a través de la pendiente y por tanto aparición de la curva de PHILLIPS tienen una implicación clara y directa: se \textbf{rompe} la \textbf{divina coincidencia}. Además, la incorporación de rigideces salariales podría tener un efecto a través de la función de reacción de la autoridad monetaria en caso de que el banco central se enfrente a un compromiso entre la estabilización de la inflación y el output gap (que en este caso no se representa). 
+
+\paragraph{Canales de transmisión: Tipos de interés y acelerador financiero}
+Por tanto, una vez que hemos presentado el modelo y vemos como se trata de un sistema de tres ecuaciones con tres incógnitas, estamos en condiciones de valorar/cuantificar los efectos de una Política Monetaria cualquiera.
+
+Supongamos, que el Banco Central lleva a cabo una Política Monetaria contractiva con el fin de mitigar indicios de un posible sobrecalentamiento de la economía (output gap persistententemente positivo).\footnote{En este sentido, el modelo neokeynesiano podría denominarse como neo-wickselliano, debido a que fue el economista sueco WICKSELL el primero en proponer que la política monetaria debería ser tal que el tipo de interés real replicara el tipo natural de la economía y que en caso contario la economía se \textit{recalentaría}, generando inflación y aun aumento de la actividad, o se \textit{enfriaría}, generando deflación y reducción en la actividad.
+} En primer lugar, debemos comprender que en situación de sobrecalentamiento, estaría sucediendo, atendiendo al modelo, lo siguiente: el tipo de interés real ($r_t=i_t-E[\pi_{t+1}\;|\;\Omega_t]$) se encontrará por debajo del natural $r_t<r_t^n$, lo que generará un output gap positivo $x_t>0$ en la ecuación $IS$, o lo que es lo mismo un aumento en el output y el consumo. El output gap positivo producirá, a través de la Curva de Phillips, un aumento en la inflación $\pi_t$ y (posiblemente) del empleo, además, como veníamos diciendo las expectativas de los agentes importan pero la existencia de rigideces reales conduce a que los efectos sean indeterminados y esta dinámica requiera de intervención.
+
+Una intervención contractiva se canalizará a través de:
+\begin{lnum}
+    \item \textbf{Los Tipos de Interés}. Un aumento de los tipos de interés nominal ($i_t$) aumentaría el tipo de interés real de la economía ($r_t=i_t-E[\pi_{t+1}\;|\;\Omega_t]$) lo que se traduciría en una disminución de del output gap ($\downarrow x_t$) y, de forma inmediata por la naturaleza \textit{forward-looking} de las variables, de la inflación ($\downarrow \pi_t$); y,
+    \item \textbf{Acelerador financiero o canal bancario}. Por otro lado, si el tipo de interés de referencia aumenta ($\uparrow i_t$), las empresas se enfrentan a mayores costes de financiación por el aumento de tipos de interés. El aumento de los costes de financiación genera una disminución en los beneficios o incluso la aparición de pérdidas, lo que supone una disminución en sus recursos propios. La caída en los recursos propios pone en marcha dos mecanismos en paralelo:
+    \begin{la}
+        \item \textbf{Coste de la deuda}. Por un lado, el aumento de la prima de financiación para un nivel de capital dado genera aún. mayores pérdidas debido a la necesidad de dedicar más recursos al pago de intereses. 
+        \item \textbf{Descapitalización}. Por otro lado, las empresas comienzan a desapalancarse, es decir, a reducir el volumen de su deuda mediante la venta de activos. El problema es que la venta simultánea de activos de muchas empresas ocasiona una caída en el valor de los mismos, lo que genera pérdidas patrimoniales adicionales a las empresas. Esto es lo que se conoce comofire sales. 
+    \end{la}
+    Estos mecanismos generan un círculo vicioso de pérdidas patrimoniales y quiebras empresariales unidos a ventas de activos y caídas en los precios de los mismos que amplifica el efecto contractivo inicial del shock monetario. Además, los efectos del acelerador financiero se ven amplificados en el caso de rigideces nominales en los contratos de deuda, es decir, cuando las deudas están expresadas en términos nominales y no reales, pues surge un canal de transmisión adicional que se conoce como deuda-deflación (\textit{debt-deflation}) por el que una contracción monetaria que genera caídas en el nivel de precios induce un aumento en el valor real de las deudas (dado que el valor nominal es constante), lo que genera un aumento adicional del apalancamiento. Dicho aumento del apalancamiento pone en marcha el acelerador financiero, con el subsiguiente aumento de la recesión y de la deflación de precios. 
+\end{lnum}
+
+\subsection{Los canales de transmisión no-convencionales}
+Hasta aquí hemos analizado los canales convencionales de transmisión de la Política Monetaria, que han servido como faro teórico a las autoridades monetarias a lo largo de buena parte del siglo XX. De hecho, hemos visto también cómo los modelos de la ortodoxia económica contemporanea aún incorporan y describen como elemento central éstos mecanismos o canales de transmisión permitiendo realizar estimaciones cuantitativas \textit{ex ante}. 
+
+No obstante, existen una serie de canales no convencionales o en límite de lo convencional que merecen tratarse por separado y presetando especial atención por la relevancia que han ido adquiriendo en las economías más desarrolladas. Estos es así porque los mecanismos convencionales garantizaban que dicho control (agregados y tipos), aunque imperfecto y aún no completamente comprendido a nivel teórico, operara de una manera correcta en las décadas de los años 80's, 90's y comienzo de los 2000's, en lo que habitualmente se conoce como la \textbf{Gran Moderación}, al ser un periodo caracterizado por baja volatilidad en las principales variables macroeconómicas y niveles moderados de inflación. 
+
+\subsubsection{Los límites materiales de la Política Monetaria convencional: \textit{zero-lower bound}} 
+No obstante, a consecuencia de los problemas que la economía japonesa ha atravesado desde finales de la década de 1990, se comenzó a discutir cuales eran los límites de la política monetaria  convencional asociados con el problema del nivel cero del tipo de interés (o ZLB por sus siglas en ingles). 
+
+El problema es el siguiente: si los hogares pueden ahorrar en forma de billetes, con un retorno nominal igual a cero, no estarán dispuestos a depositar en el banco sus ahorros si el tipo de interés nominal de sus depósitos es inferior a cero. Por lo tanto, el tipo de interés a corto plazo, que determina el banco central, no puede ser negativo.\footnote{En la realidad los dos tipos de interés, el de depósito y el tipo a corto interbancario, no son idénticos debido a costes operativos y primas por impago, por lo que el tipo del banco central puede ser ligeramente inferior a cero. Así ha sido, por ejemplo, en el caso de la facilidad marginal de depósito del banco central europeo.
+} Esto marca un límite respecto a cuan expansiva puede ser la política monetaria.
+
+La existencia del ZLB abre la puerta a la posibilidad de que la economía quede atrapada en una trampa deflacionista en tanto el tipo natural sea negativo (por ejemplo, por recesión), en la que expectativas de inflación negativa ($E[\pi_{t+1}\;|\;\Omega_t]$) generan tipos reales positivos ($r_t=i_t-(-E[\pi_{t+1}\;|\;\Omega_t])>0$) y por lo tanto un output gap e inflación presente también negativos. 
+
+Este es, de hecho, el problema al que las principales economías desarrolladas, especialmente la europea, se han enfrentado desde la crisis financiera de 2007. Desde entonces los tipos de interés nominales de los bancos centrales se han mantenido cercanos a cero y los niveles de inflación han sido inferiores al objetivo, junto a unas expectativas de inflación futura desancladas a la baja, es decir, sistemáticamente inferiores al objetivo. Para intentar contrarrestar este problema, los bancos centrales han puesto en práctica una batería de medidas de política monetaria no convencionalcon el objetivo de estimular la economía una vez el tipo de interés de referencia alcanza el ZLB y son los canales no convencionales que presentaremos en primer lugar: el papel de las expectativas y la credibilidad (\textit{forward-guidance}) y las compras de activos (\textit{quantitative easing}).
+
+\paragraph{\textit{Forward-guidance}: el papel de las expectativas}
+Respecto a la primera, debemos entender que: \textbf{la clave para conseguir un tipo de interés real negativo cuando el tipo nominal es cero es generar expectativas positivas de inflación futuras}. 
+
+Una manera de conseguirlo es mediante los compromisos sobre la política monetaria futura o \textit{forward-guidance}:
+\begin{la}
+    \item Desde un punto de vista formal (a través del modelo de tres ecuaciones) podemos ver como, suponiendo que el tipo de interés natural se torna positivo en un periodo $T$ futuro, si el banco central se compromete a mantener una política monetaria expansiva en ese momento, es decir, si se compromete a retrasar la subida del tipo de interés nominal una vez la economía salga del ZLB en $T$ hasta $T+1$, esto generará inflación en $T$ que puede ser descontada al presente (en base a la HER) y conseguir expectativas inflacionistas ahora ($E[\pi_{t+1}\;|\;\Omega_t]>0$); y,
+    \item Desde el punto de vista práctico, lo que estamos diciendo es que el banco central debe anunciar al entrar en el ZLB que estará dispuesto a tolerar niveles de inflación positivos una vez la economía haya salido del episodio de ZLB. Si éste tiene una reputación de cumplir sus promesas, los agentes privados deberían creerle e incorporar dichas expectativas de inflación en sus decisiones de consumo e inversión.\footnote{Esto es lo que se conoce habitualmente como \textit{low for longer}, es decir, mantener el tipo de interés bajo durante un tiempo mayor de lo que el ZLB hace necesario. 
+    
+    Es importante destacar que los bancos centrales han conseguido, en las pasadas décadas una reputación anti-inflacionista importante, mientras que en el caso de \textit{low for longer} necesitan una reputación inflacionista. Es lo que en se conoce como \textit{comprometerse a ser irresponsable}. En cualquier caso los principales bancos centrales han mantenido políticas más o menos explícitas de \textit{forward guidance} con el objetivo de estimular al alza las expectativas de inflación. 
+    }
+\end{la}
+
+Existiría, por lo tanto, un \textbf{canal de transmisión de la política monetaria basado en las expectativas}. No obstante, existe diversa evidencia empírica que afirma que los efectos de esta medida no son tan potentes como apunta el análisis básico derivado del modelo neokeynesiano. Esto puede ser debido al hecho de que la sustitución intertemporal capturada por la ecuación IS dinámica no sea tan potente como predice el modelo neokeynesiano. En cualquier caso este es un campo de investigación muy activo en la actualidad.
+
+\paragraph{\textit{Quantitative-easing}: la curva de tipos}
+La efectividad (¿?) de los canales basados en expectativas se han visto acompañadas por programas masivos de compra de activos a largo plazo, tanto públicos como privados, en lo que habitualmente se conoce como \textit{quantitative easing}. 
+
+El objetivo de dichas compras es aumentar el precio de dichos activos o, equivalentemente, deprimir el tipo de interés nominal a largo plazo. La idea es que, si bien el tipo de interés a corto plazo están limitado por el ZLB, el tipo de interés a largo plazo todavía puede disminuir ya que suele ser más alto que el de corto debido a la prima de liquidez. El tipo de interés a largo plazo es, en muchos casos, más relevante que el de corto para las decisiones de consumo e inversión de hogares, empresas y sector público. Por ello, si se consigue reducir se estará consiguiendo una expansión monetaria adicional, incluso si el tipo a corto permanece constante en cero.\footnote{Téngase en cuenta que la compra de activos a largo por parte del banco central supone sustituir en la economía real activos a largo plazo por reservas del banco central, que son activos a corto plazo.
+}
+
+Para entender los mecanismos a través de los que opera el \textit{quantitative easing}, es necesario desviarse del aparato formal de la NEK-2 y comprender tres puntos principales por los que se canaliza dicha política:
+\begin{lnum}
+    \item \textbf{Hábitat preferente}. Una primera razón por la que la compra de activos puede modificar el precio de los mismos es asumir que los inversores sólo pueden operar en ciertos tramos de la curva de tipos, es decir, que hay inversores que por ejemplo sólo pueden poseer bonos de bajo riesgo a largo plazo. Si, como parte de la política monetaria no convencional, el banco central compra dichos bonos, estos inversores no pueden pasar a comprar bonos a corto o bonos a largo de alto riesgo, sino que pujarán a precios más altos por los bonos restantes en el mercado.\footnote{Un ejemplo de este tipo de participantes son los fondos de pensiones, que habitualmente tienen restringido (normativamente) el tipo de activos que pueden adquirir. Este tipo de modelos se conocen como de \textit{hábitat preferente}, ya que los inversores están restringidos a operar en un cierto hábitat o entorno de la curva de tipo.
+    } Por tanto, bajo el supuesto de hábitat preferente el principal canal de transmisión de las compras de activo es el asociado con el \textbf{efecto en el precio de los bonos} del re-equilibrio de las carteras de los inversores dado el aumento de la demanda de activos por el banco central (efecto canalizado a través del efecto riqueza y precio de las acciones: sector privado);
+    \item \textbf{Fricciones del mercado bancario}. Una segunda explicación está relacionada con la existencia de fricciones financieras en los bancos. El papel fundamental de los bancos como intermediadores de crédito entre familias y empresas, están sujetos a diversas restricciones sobre la cantidad máxima de deuda que pueden emitir dado un nivel de recursos propios. Estas restricciones pueden deberse a la regulación (diversos requisitos de capital bancario) o simplemente ser impuestas por los financiadores en forma de \textit{haircuts} a la deuda. Si un banco se encuentra apalancado al máximo de su capacidad, es decir, si no puede adquirir más activos mediante emisión de deuda, entonces la compra de parte de sus activos a largo plazo por parte del banco central liberará capacidad de compra de otros activos, modificando el precio de los mismos. Este canal parece ser más poderoso durante crisis financieras (o similares) que en circunstancias normales, ya que en las primeras los que los bancos se encuentren en situaciones de estrés; y, por último, 
+    \item \textbf{Refuerzo del \textit{forward-guidance}}. Mediante el QE el banco central pasa a operar de forma parecida a un banco convencional realizando una transformación de vencimientos, es decir, posee activos a largo plazo que se financian mediante dinero o reservas bancarias, que son pasivos a corto plazo. Dado que los tipos a largo suelen ser superiores a los tipos a corto esta estrategia es rentable. No obstante, a diferencia de un banco comercial, el banco central controla el tipo a corto plazo. Si este tipo se eleva los activos del banco central sufrirán una caída en su valor, debido a que su precio nocional está relacionado con el descuento de futuros pagos de cupones y el tipo de descuento es el tipo a corto plazo. La lógica es clara a partir de aquí: (i) como los bancos centrales que están realizando programas de compra de activos a largo plazo, se encuentran muy apalancados, estas pérdidas en el valor de su activos pueden llevarles a situaciones de \textit{quiebra técnica};\footnote{Situaciones en las que el valor de los activos es inferior al valor de los pasivos (billetes en circulación y reservas bancarias) o, lo que es lo mismo, a una situación de capital contable negativo (negative equity).
+    } (ii) aunque podría operar perfectamente en situación de quiebra técnica, ya que es capaz de emitir dinero existe un abanico de razones políticas y legales que llevan a pensar que los bancos centrales preferirían evitar entrar en dicha situación; y, en consecuencia, (iii) dichos programas pueden obligar a un banco central a no subir tipos para evitar enfrentarse a pérdidas, al menos durante la vida de los activos de su cartera. De esta fonna el QE puede verse como un mecanismo para reforzar la credibilidad de la estrategia de forward guidance, haciendo ver a los agentes privados que estará dispuesto a mantener los tipos a niveles cercanos a cero durante más tiempo no sólo por su compromiso, sino por su interés propio de evitar pérdidas contables.
+\end{lnum}
+
+\subsubsection{Canal redistributivo: la gran incógnita}
+habiendo presentado los canales no convencionales más relevantes para la Política Monetaria actual en los países más desarrollados, cabe destacar dos canales no-convencionales especialmente relevantes, no solo a raíz de la pandemia del COVID-19 y los límites que presentaron, éstas también; sino también por las fuerte implicaciones que, a nivel redistributivo, parece haber tenido el periodo que antes hemos denominado la \textbf{Gran Moderación}. Cabe destacar, no obstante, que el consenso sobre estos canales/consecuencias es mínimo por lo que se presentan por la relevancia que pueden tener de cara al futuro más que por la importancia que han tenido en los años recientes. 
+
+Empecemos por el segundo: ¿puede tener efectos redistributivos la Política Monetaria? ¿no está esto relegado a la Política Fiscal? Si los tiene, ¿de qué forma y en qué magnitud?
+
+Estas son preguntas que reciben cada vez más atención pues, sorprendentemente, parece sí tener efectos redistributivos y, no, son probablemente muy negativos; en particular en economías desarrolladas donde los tipos han presentado menor volatilidad y se han situado en niveles muy bajos desde hace algunas décadas.
+
+Veníamos diciendo como el canal bancario de la Política Monetaria puede verse enormemente afectado por los efectos deuda-deflación: una contracción monetaria que genera caídads en los precios induce un aumento real del valor de las deudas, no su valor nominal, lo que genera un aumento adicional del apalancamiento. Por tanto, se pone de manifiesto como dicho efecto no se reparten de manera homogénea dentro de la economía: afectan de manera asimétrica a acreedores y deudores de activos nominales. 
+
+De la misma manera, los efectos también serán asimétricos si en la economía conviven activos reales (como acciones o viviendas) con activos nominales (como bonos, no indexados a inflación, o depósitos bancarios). En estos casos, la inflación o deflación genera efectos redistributivos entre estos colectivos que pueden llegar a ser muy importantes.\footnote{La visión tradicional entre los economistas académicos no incidía mucho en estos efectos ya que se consideraba que si las propensiones marginales al consumo no variaban de manera muy significativa entre la población, las redistribuciones tendrian efectos agregados menores.
+} Esto es así porque, como muestra una nueva generación de trabajos empíricos, la diferencia en propensiones marginales al consumo entre la población se debe a dos mecanismos fundamentales:
+\begin{la}
+    \item Por un lado, la existencia de fricciones financieras, discutida anteriormente a nivel de empresas, opera también a nivel de hogares, en muchos casos en forma de límites máximos al endeudamiento. Los hogares más endeudados suelen mostrar mayores propensiones marginales al consumo; y,
+    \item Por otro lado, las diferencias en los niveles de liquidez de los distintos activos hace que algunos hogares, pese a disponer de activos significativos (por ejemplo viviendas) no sean capaces de liquidarlos total o parcialmente para financiar caídas temporales en su renta, mostrando también grandes propensiones marginales al consumo.
+\end{la}
+
+\subsubsection{La Política Fiscal: la compatibilidad de incentivos}
+Otro de los temas ignorados hasta el momento es cómo interacciona la política fiscal, definida como la determinación del nivel de gasto e impuestos de las administraciones públicas, con la política monetaria. Como sabemos, reducciones en el tipo de interés real pueden reducir el valor real del montante de deuda pública y, por lo tanto, el banco central puede colaborar u obstaculizar en los intentos de consolidación fiscal por parte del Tesoro: esto es lo que se conoce como la \textbf{aritmética monetaria desagradable} (\textit{Unpleasant Monetarist Arithmetic}), que analiza dos posible situaciones:
+\begin{la}
+    \item \textbf{Dominancia monetaria}. En la primera, que denominaremos como Dominancia Monetaria, el banco central activamente determina el nivel de precios mediante movimientos en el tipo de interés nominal (o equivalentemente en la cantidad de dinero) mientras que el Tesoro reacciona pasivamente para garantizar la sostenibilidad de la deuda dada la senda de tipos de interés que marca el banco central. Esta situación supone un caso similar al ya analizado en el caso del modelo neokeynesiano estándar, y parece proporcionar una buena descripción de la conducción habitual de la política monetaria;
+    \item \textbf{Dominancia Fiscal}. En la segunda situación, es el Tesoro el que activamente determina la senda del nivel de precios incurriendo en déficits y superávits mientras que el banco central se ve obligado a pasivamente determinar los tipos de interés (o la cantidad de dinero) para evitar una dinámica explosiva de la deuda pública. 
+\end{la}
+
+Este segundo régimen puede emplearse para explicar algunas cuestiones controvertidas pero muy ilustrativas, como por ejemplo: (i) (en un caso extremo) episodios como las hiperinflaciones de los años 1920 en Europa, en los que los bancos centrales se veían obligados a intentar monetizar déficits públicos insostenibles; o, (ii) las razones persistentes para intentar desvincular y otorgar independencia al Banco Central de las autoridades Políticas, con la intención de minimizar los problemas de inconsitencia dinámica y aceleración del gasto público que podrían generarse de otro modo. 
+
+No obstante, cabe preguntarse también si es \textbf{razonable} el \textbf{nivel de independencia} o desvinculación que se ha alcanzado entre las autoridades monetarias y las autoridades políticas. Recordemos que este no es un fenómeno histórico, sino reciente (finales de los años 80's) y que, de igual forma que se pueden mostrar ejemplos muy interesantes sobre los problemas del señoreaje y la monetización de la deuda, también es ilustrativo pensar que las tres décadas inmediatamente anteriores se caracterizan por ser el periodo histórico con mayor crecimiento agregado de la economía y reducción de la desigualdad a nivel global. 
+
+Por tanto, ¿es imprescindible la separación de intereses? Véamos con un ejemplo algunos canales de transmisión de corte \textbf{intermedio} (podríamos decir).
+
+\paragraph{Helicopter money: J. GALÍ}
+Uno de los métodos/instrumentos no-convencionales que más se han comentado en la última década (tanto como posible solución a los problemas surgidos a raíz de la crisis financiera como por el COVID) es lo que se conoce como \textit{helicopter money}: una forma de estímulo macroeconómico en la que el banco central crea dinero para financiar transferencias directas y no reembolsables al sector privado o al gobierno, sin emisión de deuda equivalente. 
+
+A diferencia del \textit{quantitative easing}, no actúa a través de los mercados financieros ni del sistema bancarios sino que incrementa directamente la renta disponible.\footnote{Tras la Gran Recesión y, sobre todo, durante la pandemia, su uso fue intensamente debatido en economías avanzadas como la eurozona, Estados Unidos y Japón, donde los tipos de interés estaban en el límite inferior y los canales tradicionales de la política monetaria mostraban rendimientos decrecientes.
+} Desde el punto de vista de los canales de transmisión, el helicopter money opera fundamentalmente a través del canal directo de la renta y del gasto. Al aumentar de forma inmediata y permanente la renta de hogares o empresas, impulsa el consumo y permite sostener el empleo y la inversión sin depender del crédito, de la evolución de los precios de los activos ni de la disposición de los bancos a prestar. De forma indirecta, también puede estabilizar balances privados al evitar aumentos de endeudamiento (efecto acelerador financiero o canal e crédito en sentido amplio), lo que reduce fricciones financieras y previene efectos amplificadores negativos como quiebras o restricciones crediticias. En este sentido, el \textit{helicopter money} evita deliberadamente los canales financieros convencionales y actúa de manera más rápida y predecible sobre la demanda agregada.
+
+No obstante, usar el helicopter money como instrumento de política monetaria presenta algunos problemas, principalmente institucionales y de incentivos:
+\begin{lnum}
+    \item En primer lugar, existe el riesgo de confusión entre política monetaria y fiscal, ya que el banco central pasa a financiar gasto sin contrapartida, lo que puede percibirse como una pérdida de independencia; y,
+    \item En segundo lugar, si se utiliza de forma recurrente, puede generar un sesgo inflacionista, al debilitar el anclaje de expectativas y alterar el comportamiento de gobiernos y agentes privados. Finalmente, aunque es eficaz en situaciones de emergencia, su aplicación plantea problemas de diseño y credibilidad, ya que debe quedar claro que es una medida excepcional y no un mecanismo permanente de financiación.
+\end{lnum} 
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% --- Anexos ---
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+\clearpage
+\anexo{Bloque Teoría Monetaria: Introducción}\label{anx:historia}
+Con éste tema comienza el apartado del temario dedicado a Teoría monetaria. 
+
+La introducción del dinero en macroeconomía puede entenderse como una extensión (imprescindible), ya que los modelos básicos asumen neutralidad nominal al partir del supuesto de precios perfectamente flexibles; como resultado, obvian la presencia del dinero en los sistemas económicos. Esto es así tanto en los modelos de crecimiento económico, como en los del ciclo real. En relación a los últimos, la evidencia empírica comprueba la existencia de rigideces nominales y reales, y motiva así tanto la introducción del dinero en los modelos, como la actuación de los bancos centrales para afectar a su cantidad en circulación y precio. 
+
+El temario aborda la teoría monetaria de la siguiente manera: 
+\begin{lnum}
+    \item \authorfont{Tema 3.A.35}. El dinero puede entenderse no como un bien de consumo sino como un activo financiero que además genera una rentabilidad negativa (dado el coste de oportunidad de su tenencia). Por tanto, podemos preguntarnos ¿por qué demandarían dinero los agentes económicos? Y, de existir tal función de demanda, ¿cuáles son sus determinantes y con qué magnitud y condicionantes?
+    \item \authorfont{Tema 3.A.37}. ¿Alteran los niveles (precio y cantidad, tipos y agregados, respectivamente) de dinero en una economía el equilibrio agregado? Es decir, ¿tiene el dinero efectos reales? ¿Cómo se transmiten los cambios en estos niveles al resto del sistema? ¿Qué dicen la teoría y la evidencia empírica?
+    \item \authorfont{Tema 3.A.36}. Teniendo en cuenta los resultados de los dos anteriores temas, ¿cómo debe el banco central diseñar su política monetaria? Siendo conscientes de que el banco central no decide directamente la oferta de dinero, ¿cómo implementar esta política?
+    \item \authorfont{Tema 3.A.39} y \authorfont{Tema 3.A.40}. El dinero y la deuda pública están estrechamente relacionados desde múltiples ópticas, ¿qué nos dice la teoría económica al respecto? ¿Y qué métodos empíricos existen para estudiar esta relación?
+    \item \authorfont{Tema 3.A.41}. La política monetaria tiene efectos colaterales... en especial, la inflación;
+    \item \authorfont{Tema 3.B.15} y \authorfont{Tema 3.B.16}. Hasta ahora, se ha estudiado la economía monetaria en un marco de economía cerrada, ¿qué ocurre cuando relajamos ese supuesto e introducimos el resto del mundo? 
+    \item \authorfont{Tema 3.B.43}. ¿Cómo aterriza este cuerpo de conocimiento el BCE en el ejercicio de su mandato para el caso de la Eurozona?
+\end{lnum}
+
+
+\end{document}
