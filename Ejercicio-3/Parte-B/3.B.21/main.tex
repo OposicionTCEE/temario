@@ -1,0 +1,1229 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Sistema económico internacional (II)\\
+\large Desde la desaparición del sistema de Bretton-Woods}
+\author{Marcelo Ortega}
+\date{Marzo 2026}
+\newcommand{\TemaCode}{3B21}
+
+\oldtitle{
+    B.22. El Sistema Económico Internacional desde la desaparición del sistema de Bretton-Woods hasta la actualidad. Propuestas de reforma
+}
+\changerationale{
+    Se acorta el título por considerarse innecesaria la referencia explícita anterior.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     
+    }
+\vspace{1cm}
+
+\modificaciones{
+    No obstante, debe tenerse en cuenta que se trata de un tema extenso y que resulta imprescindible extraer y sintetizar las principales ideas de cada etapa de cara a poder realizar una exposición satisfactoria del mismo. Como tema de Historia económica, una exposición correcta consistirá en: (i) una cobertura completa y rigurosa de los desarrollos históricos de contenido económico; con (ii) una lectura analítica puramente económica (incentivos, fallos del sistema, determinantes del crecimiento y de los flujos comerciales y de factores, etc) de los fenómenos y acontecimientos que se recogen.
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+
+
+
+\clearpage
+\section{La Gran Inflación: 1960's-1982}
+\puntosclave{
+    
+}
+
+Para entender Bretton-Woods es imprescindible tener presente que dependía, en última instancia, del conjunto de Políticas Económicas y rendimiento observado de su principal garante: los Estados Unidos. Más aún, si se pretende exponer las razones y causas que llevaron al colapso del sistema, debemos buscarlas en en la economía estadounidense y sus objetivos políticos internos.
+
+\textbf{¿Qué queremos decir?} Por tanto, expondremos brevemente como el contexto geopolítico, el consenso teórico y los objetivos estadounidenses dieron lugar a lo que se conoce como la Gran Inflación. Cómo y por qué generó la ruptura del Sistema Monetario Internacional, una de las piezas clave en el sostenimiento y estabilidad del Sistema de Bretton-Woods. Y, en último lugar, el largo periodo de agonía en el que se entrelaza la persistencia de la Gran Inflación y la búsqueda de un nuevo Sistema que proporcione estabilidad suficiente.\footnote{La primera y segunda parte de esta sección se ha extraído de: \href{https://www.federalreservehistory.org/essays/great-inflation}{\textit{The Great Inflation}. Federal Reserve History Organization.}
+}
+
+La Gran Inflación fue el acontecimiento macroeconómico definitorio de la segunda mitad del siglo XX. Durante las casi dos décadas que duró, se abandonó el Sistema Monetario Internacional establecido durante la Segunda Guerra Mundial, hubo cuatro recesiones económicas, dos graves crisis energéticas y una aplicación sin precedentes en tiempos de paz de controles salariales y de precios. Fue, según SIEGEL (1994): \textit{el mayor fracaso de la Política Macroeconómica estadounidense en el período de posguerra}.\footnote{En 1964, la inflación se situaba ligeramente por encima del 1\% anual. Había permanecido en torno a ese nivel durante los seis años anteriores. La inflación comenzó a incrementarse gradualmente a mediados de la década de 1960 y superó el 14\% en 1980. Finalmente, descendió hasta promediar solo un 3,5\% en la segunda mitad de los años ochenta.
+}
+
+\subsection{Primer periodo: Paradoja de TRIFFIN y crisis de confianza}
+Aunque los economistas debaten la importancia relativa de los factores que motivaron y perpetuaron la inflación durante más de una década, existe poco desacuerdo sobre su origen. Los orígenes de la Gran Inflación fueron políticas que permitieron un crecimiento excesivo de la oferta monetaria: \textbf{políticas de la Reserva Federal}.
+
+Con esto en cuenta, analizaremos el crucial contexto geopolítico durante el periodo inmediatamente anterior a la quiebra del Sistema Monetario Internacional prestando especial atención a como determinadas consideraciones geopolíticas tuvieron profundas consecuencias económicas.\footnote{Fue en los años setenta cuando economistas y responsables políticos comenzaron a descomponer la inflación en: (i) inflación de demanda (demand-pull inflation), influencia directa de la Política Macroeconómica y, en este caso especialmente, de la Política Monetaria; y, (ii) inflación de costes (cost-push inflation), la inflación también podía aumentar debido a perturbaciones de oferta, especialmente originadas en los mercados de alimentos y energía (GORDON, 1975).
+
+Adoptaremos este enfoque y enraízaremos sus causas en las motivaciones políticas que guiaron las actuaciones de Política Macroeconómica.
+}
+
+\subsubsection{Objetivos nacionales: Demand-pull inflation}
+La primera parte de la historia se remonta a las secuelas de la Gran Depresión. Al finalizar la Segunda Guerra Mundial, el Congreso centró su atención en políticas que esperaba promovieran una mayor estabilidad económica. La más destacada entre las leyes que surgieron fue la \textit{Employment Act} (1946).\footnote{Entre otras cosas, la ley declaraba que era responsabilidad del gobierno federal \textbf{promover el máximo empleo, la producción y el poder adquisitivo} y establecía una mayor coordinación entre las Políticas Fiscal y Monetaria.
+} Esta ley constituye la base fundamental del actual doble mandato de la Reserva Federal de \textbf{mantener el crecimiento a largo plazo de los agregados monetarios y crediticios... de modo que se promuevan eficazmente los objetivos de máximo empleo, estabilidad de precios y tipos de interés moderados a largo plazo} (STEELMAN, 2011).
+
+Todo parecía funcionar relativamente bien hasta finales de los años 60's. Empezaría aquí un periodo turbulento para la economía estadounidenses por el solapamiento de dos objetivos políticos extremadamente ambiciosos por parte del Gobierno Federal: el programa interno \textit{Great Society} y el despliegue de tropas en la Guerra de Vietnam.
+
+\imagenfit{Fig1.png}{Comportamiento de algunos indicadores macroeconómicos: Economía estadounidense (Verde: \textit{Great Society} | Rojo: Ground deployment in Vietnam)}{Fuentes estadísticas oficiales y elaboración propia}
+
+Tenemos que tener dos cosas presentes. En primer lugar, Lyndon B. Johnson fue duramente criticado por sostener el esfuerzo fiscal de ambos programas sin acompañarlo de un aumeto de la presión fiscal; por el contrario, el elevado gasto público se sostuvo mediante la emisión de deuda. En segundo lugar, para evitar acciones de Política Monetaria que pudieran interferir con los planes de financiación del Tesoro, la FED siguió una práctica conocida como políticas de \textit{even-keel}:\footnote{Cuando decimos que alguien está \textit{on an even keel}, queremos expresar que mantiene un estado estable y equilibrado, especialmente en situaciones difíciles. Como muchos modismos, \textit{even keel} tiene sus raíces en el mundo marítimo. En la navegación, el \textit{keel} es la estructura central que estabiliza una embarcación (quilla). Por eso, estar \textit{on an even keel} asegura el equilibrio del barco, evitando que se incline o vuelque. Es decir, haciendo que el barco navega suavemente, sin dejarse afectar por las olas agitadas.
+} no implementaría cambios de política ni modificaría los tipos de interés durante el período comprendido entre el anuncio de una emisión del Tesoro y su colocación en el mercado.\footnote{En condiciones normales, las emisiones del Tesoro eran poco frecuentes y las políticas de \textit{even-keel} no interferían significativamente con la implementación de la Política Monetaria. Pero a medida que las emisiones de deuda se volvieron más frecuentes, la adhesión de la FED a este principio restringió cada vez más la conducción de la Política Monetaria (MELTZER, 2005). 
+} 
+
+El incremento combinado del gasto en defensa y bienestar social entre mediados y finales de los años sesenta, junto con la Política Monetaria estríctamente acomodaticia que siguió la FED, son considerados (en conjunto) los causantes directos del periodo conocido como la Gran Inflación (1965-1985). A continuación se explicarán brevemente ambos programas y su impacto económico. 
+
+\paragraph{Internos: Great Society (Employment Act, 1946)}
+Por un lado, la legislación de la \textit{Great Society} introdujo importantes programas de gasto en una amplia variedad de iniciativas sociales:\footnote{El término fue acuñado por el teórico político Graham Wallas en su obra \textit{The Great Society} (1914), y empleado por Lyndon Johnson durante un discurso en la Universidad de Míchigan en 1964, apenas cuatro meses después de alcanzar la presidencia del país tras el asesinato de su predecesor, John F. Kennedy. Eje central de la política nacional del presidente Johnson, sucesivos discursos y mensajes al Congreso desarrollaron poco a poco su concepción y alcance en los primeros meses de su administración. Pueden ser comprendidos como una continuación de las políticas del \textit{New Deal} del presidente Franklin D. Roosevelt de la década de 1930. Para ver más: \href{https://es.wikipedia.org/wiki/Gran_Sociedad}{\textit{Great Society}. Wikipedia.org}
+} (i) eliminación total de la pobreza; (ii) eliminación de la segregación racial; e, (iii) incrementar la protección al consumidor y al medio ambiente. Estos objetivos tan ambiciosas se persiguieron con instrumentos de Política Fiscal, esencialmente a través del incremento del gasto y el refuerzo de la asistencia en educación, sanidad, ordenación urbana, el medio rural y el transporte y las inversiones en infraestructura, entre otros aspectos. 
+
+\imagenfit{Fig2.png}{Impacto programa: Great Society (1964-1968)}{\href{https://www.usgovernmentspending.com/welfare_spending_history#google_vignette}{US Welfare Spending History from 1900}}
+
+Fueron posibles gracias al clima político especialmente favorable tras la abrumadora victoria del Partido Demócrata en las elecciones de 1964 y una cómoda mayoría en la Cámara de Representantes desde 1965, que trajo a muchos nuevos congresistas de tendencia liberal y progresista.\footnote{Aunque los conservadores, contrarios por razones ideológicas a la expansión de la intervención estatal en la economía y la sociedad, se opusieron en su mayoría a los programas sociales de la Gran Sociedad y criticaron el incremento del gasto gubernamental, estos siguieron vigentes e incluso aumentaron durante las administraciones Nixon y Ford (republicanos). (En las administraciones posteriores algunos programas fueron eliminados o sufrieron reducciones severas de fondos.) De hecho, muchos de los programas continúan vigentes en la actualidad y ocupan lugares destacados en las políticas sociales del gobierno estadounidense, como la Older Americans Act, Medicare, Medicaid y las subvenciones federales al sistema educativo. La mayoría de historiadores y biógrafos de Johnson clasifican la Gran Sociedad como mayormente positiva, ya que los programas produjeron mejoras sostenibles en asuntos sociales. Destacan especialmente los avances en política racial, que condujo a la abolición de la segregación racial y al fortalecimiento de los derechos civiles y electorales de los afroamericanos y otras minorías.
+}
+
+\paragraph{Externos: Guerra Fría}
+Por lo que respecta a sus objetivos externos, el presupuesto del Gobierno Federal veía su posición cada vez más comprometida por su creciente implicación en la Guerra de Vietnam. Se trata, a todos los efectos, de la guerra más larga de la historia estadounidense, cuyos efectos económicos tuvieron gran trascendencia, tanto a nivel interno como internacional.\footnote{\textbf{Breve contexto previo}: Después de la Segunda Guerra Mundial, Estados Unidos experimentó una prosperidad económica sin precedentes gracias al elevado gasto público, la ausencia de competencia extranjera inmediata y la GI Bill, que permitió a millones de veteranos acceder a la universidad. Continuando la dinámica iniciada por el New Deal, el gasto estadounidense durante la Segunda Guerra Mundial estimuló significativamente la economía y generó entre la mayoría de los ciudadanos una opinión positiva de la economía keynesiana. El auge económico de la posguerra estuvo acompañado por una rápida expansión de la clase media, el crecimiento de los suburbios y una ola de consumismo en la que las familias adquirieron televisores, lavadoras, lavavajillas y automóviles. Gracias al auge de la posguerra, los estadounidenses tenían un incentivo económico para apoyar el mantenimiento de unas fuerzas armadas fuertes. Por primera vez, Estados Unidos no desmovilizó rápidamente la mayoría de sus fuerzas tras una guerra. La amenaza de un conflicto con la Unión Soviética comunista, antigua aliada durante la Segunda Guerra Mundial, también favoreció un fuerte apoyo público al elevado gasto militar durante los años cincuenta. La breve pero intensa Guerra de Corea (1950-1953) subrayó la posibilidad de que la Guerra Fría pudiera volverse \textit{caliente} de forma inmediata, lo que significaba que Estados Unidos debía mantener un gran ejército permanente y operativo capaz de responder sin necesidad de esperar a una movilización. La Guerra de Corea fue extremadamente costosa, lo que llevó a un cambio táctico hacia el uso de la Agencia Central de Inteligencia (CIA) para promover golpes de Estado en países con regímenes desfavorables, en lugar de recurrir a operaciones de combate directas. Estados Unidos también desarrolló rápidamente una estrategia de disuasión nuclear, y muchos argumentaban que las armas nucleares eran relativamente menos costosas que mantener enormes arsenales de armamento convencional, aunque esto es muy debatible. Sin embargo, Estados Unidos siguió manteniendo numerosas bases militares en Europa y en la región Asia-Pacífico, lo que implicaba que debía sostener elevados niveles de gasto tanto en armas convencionales como nucleares.
+
+La participación estadounidense en Vietnam comenzó lentamente, siguiendo mucho más el modelo de intervención de la CIA que el modelo de guerra convencional utilizado en Corea. En un primer momento, Estados Unidos se centró en proporcionar ayuda militar al gobierno anticomunista de Vietnam del Sur para ayudarlo a combatir a las fuerzas procomunistas y a Vietnam del Norte. En pocos años, comenzó a enviar asesores militares para asistir a las fuerzas survietnamitas. Sin embargo, el modelo de intervención de la CIA no logró cambiar el curso de la guerra contra Vietnam del Norte y sus aliados comunistas del Viet Cong; ambos contaban con el apoyo de China y de la Unión Soviética. Para evitar la rápida caída de Vietnam del Sur y la consiguiente expansión del comunismo en el Sudeste Asiático, Estados Unidos tuvo que igualar el apoyo soviético y chino.
+}
+
+\imagenfit{Fig3.png}{Indicadores de intesidad: Guerra de Vietnam (1955-1975)}{\href{https://medium.com/@PollsAndVotes/a-statistical-companion-to-the-vietnam-war-7353f1b8abf5}{\textit{A Statistical Companion to The Vietnam War}. FRANKLIN, 2017}}
+
+Entre 1960 y 1968, Estados Unidos incrementó de manera constante su participación en la guerra de Vietnam, alcanzando un máximo de más de 500.000 soldados estadounidenses desplegados en Vietnam del Sur. Desde el punto de vista económico implicó ocho años y medio de economía de guerra tras varios años previos de asesoramiento a Vietnam del Sur. El gasto militar mantuvo elevados los beneficios empresariales y bajo el desempleo (por eso observamos una deflacción notable en la ratio déficit/PIB: la producción se incremento más rápido de lo que aumenta el déficit).\footnote{Desde el punto de vista político, la viabilidad de la Guerra estaba duramente comprometida entre dos frentes: los defensores de una política exterior y de defensa agresiva, cuyos argumentos económicos giraban entorno al impacto que tenía en el nivel de innovación tecnológica; mientras que los más críticos, como hemos visto, sostenían que el mantenimiento de la Guerra contribuía a destruir los programas sociales iniciados a la par.
+}
+
+La participación estadounidense en Vietnam comenzó lentamente, pero al darse cuenta de que el simple apoyo a Vietnam del Sur no bastaría para cambiar el curso de la guerra, Estados Unidos intervino directamente a partir del otoño de 1964. Entre 1965 y 1968, el gasto militar estadounidense en Vietnam se disparó, alcanzando aproximadamente los 85.000 millones de dólares en 1969.\footnote{Esto benefició a los contratistas de defensa, que ya disfrutaban de elevados ingresos gracias al contexto general de la Guerra Fría. Sin embargo, los beneficios se distribuyeron de forma desigual, favoreciendo especialmente a los fabricantes de armas adaptadas a la guerra de Vietnam. Por ejemplo, los productores de helicópteros experimentaron un enorme incremento en los pedidos gubernamentales. El aumento vertiginoso de los beneficios de los contratistas de defensa se convirtió en un punto de conflicto para los manifestantes contra la guerra, muchos de los cuales se oponían a que la investigación y el desarrollo financiados por el gobierno se destinaran a fines militares. Los manifestantes dirigieron sus críticas hacia las empresas que producían armas particularmente controvertidas, como la Dow Chemical Company, responsable de la producción de napalm o el Agente Naranja (un defoliante acusado de causar problemas de salud a largo plazo en quienes estuvieron expuestos a él). También se desarrollaron nuevas armas, especialmente el icónico Bell UH-1 \textit{Huey}, fabricado por Bell Helicopter, o el F-4 Phantom, fabricado por McDonnell Douglas.
+} En definitiva, la era de los programas sociales derivados del \textit{Great Society} junto con la intesificación de la Guerra de Vietnam definió un período de elevada inflación de demanda (demand-pull inflation), en el que los precios aumentaron rápidamete. El impacto económico de estas medidad junto con la agitación provocada por la intesificación de la Guerra, motivaron un cambio de clima político: los votantes moderados fueron atraídos con éxito por el candidato republicano Richard Nixon.\footnote{Tras la elección del presidente Nixon en 1968, la participación militar activa estadounidense en la guerra de Vietnam comenzó a disminuir, introduciéndose paralelamente la doctrina de la vietnamización. Esta alternativa consistía en dejar que Vietnam del Sur asumiera progresivamente una mayor responsabilidad en la conducción de la guerra. Desafortunadamente para la administración Nixon, la vietnamización terminó siendo un fracaso. A pesar del aumento de la ayuda, los esfuerzos militares estadounidenses no se redujeron de manera tan rápida y ordenada como se esperaba. De hecho, Nixon amplió la guerra a Laos y Camboya en 1970 y 1971 en un intento de detener el flujo de combatientes y armas comunistas hacia Vietnam del Sur. Tras la retirada estadounidense de Vietnam en 1973, Estados Unidos entregó miles de millones de dólares en armamento a Vietnam del Sur para que continuara la guerra, llegando la Fuerza Aérea survietnamita a convertirse, en su momento de mayor tamaño, en la cuarta más grande del mundo. Sin embargo, la victoria de Vietnam del Norte en abril de 1975 provocó que entre 2.000 y 5.000 millones de dólares en equipamiento militar estadounidense fueran capturados.
+
+El impacto económico de la vietnamización fue objeto muchísimo debate. Esta doctrina implicaba aumentar la ayuda financiera y militar a Vietnam del Sur mientras se reducía el número de tropas estadounidenses desplegadas en el país. El aumento de la ayuda a un país extranjero, combinado con la reducción del gasto destinado al personal estadounidense y a los contratistas de defensa, provocó una disminución neta de la demanda agregada estadounidense (el gasto total).
+}
+
+La duración de la guerra de Vietnam y el aumento de la supervivencia de los soldados heridos incrementaron sustancialmente el gasto en programas para veteranos, especialmente en atención médica. Aunque el aumento de la supervivencia de los soldados entre la Segunda Guerra Mundial y Vietnam fue altamente deseable, tuvo consecuencias económicas debido a la necesidad de atención médica prolongada. En guerras anteriores, menos soldados sobrevivían a heridas graves sufridas en el campo de batalla. En Vietnam y en guerras posteriores, la capacidad de los médicos militares para evacuar rápidamente a los heridos, por ejemplo mediante helicópteros, generó décadas de atención rehabilitadora.
+
+El presupuesto del Department of Veterans Affairs (VA), ajustado por inflación, alcanzó un máximo en 1976 —poco después de la guerra de Vietnam— que no volvió a alcanzarse hasta 2004, tras el inicio de la guerra de Irak. Después de 1976, el gasto del VA nunca volvió a situarse por debajo de los niveles previos a la guerra de Vietnam, lo que dio lugar a un aumento permanente del gasto público destinado a la atención de veteranos. El rápido incremento del gasto del VA durante las dos últimas décadas, incluida la atención prolongada a los veteranos envejecidos de Vietnam, ha generado tanto elogios por el compromiso con los veteranos de la nación como críticas por los costes a largo plazo de los compromisos militares.
+
+
+\subsubsection{Quiebra práctica del SMI: Nixon Shock (Agosto, 1971)}
+Ahora que conocemos los problemas que se estaban gestando en la economía estadounidense, veamos qué detonante externo condujo finalmente a la quiebra del Sistema Monetario Internacional formalizado en Bretton-Woods: el Nixon Shock (1971). 
+
+\paragraph{Paradoja de TRIFFIN: liquidez necesaria}
+Aunque formalizado en 1944, el sistema monetario de Bretton Woods comenzó a funcionar plenamente después de 1958, cuando los principales países desarrollados hicieron convertibles sus monedas para las transacciones por cuenta corriente. Sin embargo, aproximadamente al mismo tiempo comenzaron a aparecer fallos fundamentales en el sistema. La balanza de pagos de Estados Unidos se estaba deteriorando notablemente:\footnote{Para una revisión completa de los acontecimientos, véase: [\authorfont{Ver Tema 3.B.21}]
+
+Los arquitectos de Bretton Woods fijaron el precio oficial del oro en 35 dólares por onza, el mismo precio establecido por la Ley de Reservas de Oro estadounidense de 1934. Debido a la inflación durante la Segunda Guerra Mundial y en los años inmediatamente posteriores, este precio oficial se volvió demasiado bajo en términos reales para incentivar una producción suficiente de oro que cubriera las crecientes necesidades de reservas (véase BORDO, 1993; JAMES, 1996; MELTZER, 1991). A comienzos de la década de 1950, el precio real del oro era solo la mitad de su valor de 1934. Entre 1948 y 1958, las reservas de oro del mundo libre aumentaron únicamente un 16\%, mientras que sus importaciones crecieron un 68\% (TRIFFIN, 1960, tabla 14, pp. 72-73).
+}
+
+\imagenfit{Fig4.png}{Tendencias de la Balanza de Pagos estadounidense: 1946-1969}{\href{https://www.nber.org/papers/w16946}{\textit{U.S Interventions under Bretton-Woods Era: 1962-1973.} Michael D. Bordo, Owen F. Humpage \& Anna J. Schwartz}}
+
+Las administraciones estadounidenses creían que gran parte de la presión sobre la balanza de pagos era transitoria y estaba relacionada principalmente con la recuperación global posterior a la Segunda Guerra Mundial.\footnote{Sin las reservas internacionales que estos déficits proporcionaban -a lo países superavitarios-, la recuperación del comercio mundial y de la actividad económica global tras la guerra habría sido más lenta, ya que los países que enfrentaran incluso déficits temporales de balanza de pagos habrían necesitado rápidamente deflacionar sus economías, devaluar sus monedas o imponer restricciones comerciales y financieras disruptivas.
+} No obstante, estos déficits de la balanza de pagos estadounidense estuvieron acompañados por una salida de oro:
+
+\imagenfit{Fig5.png}{U.S. Gold Stock: 1951-1976}{\href{https://www.nber.org/papers/w16946}{\textit{U.S Interventions under Bretton-Woods Era: 1962-1973.} Michael D. Bordo, Owen F. Humpage \& Anna J. Schwartz}}
+
+Y, como hemos observado en el apartado anterios, un incremento de la oferta monetaria y los pasivos denominados en dólares. Puesto en conjunto, esto condujo a una situación fácilmente predecible, en la que el total de los pasivos externos denominados en dólares comenzó a superar las reservas de oro de Estados Unidos: el país no podía cumplir su obligación de vender oro al precio oficial. 
+
+\imagenfit{Fig6.png}{Crisis cambiaria de primera generación: Situación de la economía de Estados Unidos a mediados de la década de 1960}{\href{https://www.nber.org/papers/w16946}{\textit{U.S Interventions under Bretton-Woods Era: 1962-1973.} Michael D. Bordo, Owen F. Humpage \& Anna J. Schwartz}}
+
+Esto actúo como incentivó para los Bancos Centrales extranjeros a convertir los dólares no deseados en oro. De esta forma, se desarrolló en la sombra la Paradoja de TRIFFIN (1957, 1960): \textbf{el propio acto de proporcionar la liquidez necesaria estaba creando incertidumbre sobre la viabilidad a largo plazo de la estructura de paridades.}\footnote{
+El caso más célebre es quizás cuando Francia envió una fragata a Estados Unidos para recoger su oro. \href{https://www.oroyfinanzas.com/2015/01/charles-de-gaulle-crisis-dolar-1965-ventajas-oro-video/}{\textit{Charles de Gaulle sobre la crisis del dólar en 1965 y las ventajas del oro – Vídeo}. Online Finanzas}. 
+}
+
+
+\paragraph{Flujos financieros: ¿crisis e confianza?}
+Por sí solo, esto no hubiera necesariamente provocado la ruptura del Sistema.\footnote{Estados Unidos, que poseía el 60\% de las reservas mundiales de oro en 1950, perdió únicamente un promedio de 213 millones de dólares en oro por año entre 1950 y 1957. Sin embargo, entre 1958 y 1960, los déficits de la balanza de pagos estadounidense se ampliaron hasta alcanzar un promedio anual de 3.700 millones de dólares, a medida que los superávits del comercio de bienes y servicios estadounidenses se reducían ligeramente y las salidas de capital a largo plazo aumentaban bruscamente.
+} Necesitábamos un ingrediente adicional.
+
+Y, como en muchas otras ocasiones en la historia, lo encontramos en la confianza y las expectativas de los agentes.\footnote{A pesar de cierto endurecimiento de la Política Monetaria estadounidense, la inflación en Estados Unidos continuó acelerándose durante 1969, alcanzando casi el 6\% al final del año, a pesar del lento crecimiento económico y de una elevada tasa de desempleo. Además, la posición de la balanza de pagos estadounidense continuaba deteriorándose. En vistas al inicio de una recesión, la FED volvió a acomodar las acciones del Gobierno durante 1970 y 1971. Por otro lado, la administración Nixon creía que los principales socios comerciales de Estados Unidos estaban discriminando deliberadamente al país, por lo que, comprometido a perseguir sus objetivos internos adoptó una actitud de \textit{benign neglect} (descuido benigno) respecto al creciente déficit de balanza de pagos y, sobretodo, a los compromisos estadounidenses bajo Bretton Woods (COOMBS, 1976, pp. 204-211). Dicho de otra forma, 
+
+En este contexto político y de laxitud monetaria, en los mercados financieros internacionales se estaba incrementando la tensión. Muchos países europeos estaban endureciendo sus políticas monetarias desde 1969 para contener las presiones inflacionarias. Paralelamente, los tipos de interés en Estados Unidos descendían y, a medida que los bancos estadounidenses reembolsaban préstamos previos obtenidos de sus filiales extranjeras, también cayeron los tipos de interés del mercado eurodólar. Esto patrón de tipos de la FED indujo importantes salidas de capital desde activos denominados en dólares que se volvieron especialmente problemáticos para países como Alemania, Italia, Bélgica, los Países Bajos y Suiza: las entradas de dólares empujaban sus monedas hacia los límites superiores de paridad frente al dólar, obligando a sus bancos centrales a intervenir. El problema es que, al estar luchando contra la entrada de flujos y las presiones inflacionarias, los intentos de endurecer aún más la Política Monetaria (objetivo inflation targeting) agravaba las entradas de capital. De hecho, en muchos casos, la adquisición de reservas en dólares neutralizaba los programas internos de restricción monetaria diseñados para reducir las presiones inflacionarias. 
+} A comienzos de 1971, como señala COOMBS (1976, p. 212), las políticas de lucha contra la inflación en europa y la política acomodaticia que seguía la FED, adquirió una dinámica autorreforzada: \textit{(...) la especulación abierta incrementó aún más el torrente de dólares que fluía hacia los mercados extranjeros}. Para 1970, el mercado percibía el desorden cambiario como una crisis del dólar y no, como anteriormente, un problema de tipos de cambio cruzados insostenibles (SOLOMON, 1982, p. 182). Lo que finalmente ocasionó que, en el verano de 1971, la confianza en la Política Monetaria estadounidense se evaporara rápidamente y comnzará a surgir un ambiente de crisis.\footnote{El 6 de agosto de 1971, una subcomisión del Congreso identificó al dólar como sobrevalorado y pidió un reajuste de los tipos de cambio, incluida una devaluación del dólar. Ese mismo día, el Tesoro estadounidense informó de una pérdida de 1.000 millones de dólares en oro y reservas, principalmente debido a que Reino Unido y Francia intercambiaban dólares para reembolsar deudas con el FMI. Durante la semana siguiente, 3.700 millones de dólares en oro y activos de reserva abandonaron Estados Unidos (COOMBS, 1976, p. 215). El precio del oro alcanzó los 44 dólares por onza en Londres y los flujos especulativos fuera del dólar y hacia los bancos centrales extranjeros se intensificaron.
+}
+
+\imagenfit{Fig7.png}{(Arriba) Posición de Inversión Internacional, azul | Pérdidas cumulativas de Reservas del Tesoro de Estados Unidos, naranja; (Abajo) Flujos Netos de Inversión en cartera, naranja | Flujos netos de inversión en resto (IDE y Otros), azul}{\href{https://www.bea.gov/?_gl=1*12x5zzr*_ga*ODExMDE2MjAyLjE3NzkwNDcyNTA.*_ga_J4698JNNFT*czE3NzkwNDcyNTAkbzEkZzEkdDE3NzkwNDczNjUkajEzJGwwJGgw}{Bureau of Economic Analysis.} Elaboración propia}
+
+Finalmente, \textbf{el 15 de agosto de 1971, el presidente Richard Nixon cerró la ventana del oro}. Actuando bajo la Ley de Estabilización Económica de 1970, ordenó:\footnote{En 1971, antes del cierre de la ventana del oro, la Reserva Federal recurrió con frecuencia a importantes disposiciones sobre líneas swap para evitar que los bancos centrales extranjeros convirtieran reservas excesivas de dólares en oro monetario estadounidense. El 1 de enero de 1971, el Sistema tenía compromisos swap pendientes por valor de 810 millones de dólares. Para julio de 1971, el Sistema había reducido esa cifra a 605 millones de dólares, a menudo con la ayuda de ventas de oro y DEG (Derechos Especiales de Giro) por parte del Tesoro estadounidense, préstamos del FMI y emisiones de títulos denominados en monedas extranjeras.
+
+Sin embargo, a medida que los fondos comenzaron a salir rápidamente hacia el exterior, el Sistema realizó nuevas disposiciones swap por valor de 2.200 millones de dólares para proporcionar cobertura adicional a los bancos centrales hasta el 13 de agosto de 1971 (COOMBS, 1976, p. 217; Bulletin, septiembre de 1971, p. 787).
+}
+\begin{lnum}
+    \item \textbf{Suspensión de la convertibilidad}. En primer lugar, se cerró la ventanilla del oro, suspendiendo la convertibilidad a inversores extranjeros de \$35 por onza de oro e incluso a cualquier otro precio;
+    \item \textbf{Intervención del mercado}. En segundo lugar, una congelación de salarios y precios durante 90 días con el objetivo de frenar la espiral inflacionista y recomendó nuevas medidas fiscales para estimular la inversión y el empleo;
+    \item \textbf{Ajustes en la Balanza Comercial: Política Comercial}. En tercer lugar, el ejecutivo de Nixon fijó un impuesto del 10\% a las importaciones para frenar la salida de dólares de Estados Unidos;
+    \item \textbf{Presión unilateral}. Por último, el presidente de los Estados Unidos presionó a otros países para que reevaluasen sus monedas para garantizar la sostenibilidad del sistema de Bretton Woods, solventando así la pérdida de confianza que estaba sufriendo y evitando que Estados Unido tuviese que devaluar su divisa.
+\end{lnum}
+
+El presidente Nixon comunicó las medidas a SCHWEITZER, Director Ejecutivo del FMI, lo que supuso de facto una cierta perdida de relevancia del Fondo en cuanto a las funciones que desempeñaba para garantizar el buen funcionamiento del Sistema de Bretton Woods. Aunque estas acciones no abolieron formalmente el sistema existente de intercambio financiero internacional de Bretton Woods, la suspensión de uno de sus componentes clave lo dejó efectivamente inoperante.\footnote{Si bien Nixon declaró públicamente su intención de reanudar la convertibilidad directa del dólar después de que se implementaran las reformas al sistema de Bretton Woods, todos los intentos de reforma resultaron infructuosos. Para 1973, el actual régimen basado en monedas fiat (y a su vez fiduciarias) de libre flotación reemplazó de facto el sistema de Bretton Woods por otras monedas globales.
+}
+
+\subsection{Segundo Perido: En búsqueda de una alternativa}
+A partir de este evento, el Sistema Monetario Internacional había quebrado en la práctica e imperaba la búsqueda de una alternativa factible. Ahora bien, como hemos visto, la caída del sistema ocurre en un contexto de presiones crecientes sobre el dolar debido, esencialmente, a: (i) la persecución de objetivos políticos, internos y externos, incompatibles con el compromiso adquirido; y, (ii) el inevitable final anticipado por la Paradoja de TRIFFIN. Por tanto, compatibilizar estos dos problemas era una condición \textit{sine qua non} que debía respetar cualquier alternativa.
+
+Como es normal, este proceso, ni fue directo, ni fue rápido. De hecho, dos administraciones diferentes participaron en su construcción en un periodo que se expande entre 1971 y 1976. Veamos los hitos más significativos en la reconstrucción del sistema.
+
+\subsubsection{Administración Nixon: Acuerdos del Smithsoniano (Diciembre, 1971)}
+El primero de ellos se da cuatro meses después del anuncio de Nixon, tras el cual, con más o menos reticencias, los demás miembros del sistema de Bretton Woods acabaron cediendo. En diciembre de 1971 se firman los Acuerdos del Smithsonian y se acuerdan los siguientes puntos:
+\begin{lnum}
+    \item \textbf{Depreciación del dólar}. En primer lugar, una devaluación del ancla del sistema: el dólar. Se estableción el nuevo valor de paridad en \$38 por onza (8,5\%);\footnote{Los negociadores europeos insistieron en que el dólar se devaluase un 8\% y que fuese acompañada de una revaluación del marco suizo, del marco alemán y del yen japonés.
+    }
+    \item \textbf{Nuevas bandas de fluctuación}. Asimismo, se acordó ampliar la fluctuación del dólar frente al oro de $\pm1\%\to\pm2,5\%$;
+    \item \textbf{Apreciación de las monedad fuertes}. Complementariamente, las monedas fuertes acordaron una apreciación. El yen se revalorizó + 16,9\%; el marco alemán +13,6\%, el franco francés +8,6\%, la libra esterlina +8,6\%, la lira italiana -7,5\%. El efecto neto fue que el dólar se devaluó un 10,7\%;\footnote{Por otro lado, los países europeos establecieron la serpiente en el túnel, donde el margen de flotación de las monedas de dichos países sería del ±2,25\% bilateral respecto al dólar. Sin embargo, el recorrido de la serpiente monetaria fue escaso ya que en 1972 el Reino Unido se salió del acuerdo. Aunque se esforzó interviniendo el mercado y vendiendo monedas europeas (principalmente marcos alemanes) que se habían apreciado un 2,25\% frente a la libra, mientras sus socios europeos compraban libras con sus propias monedas. Lo único que consiguieron fue ralentizar la depreciación de la libra y alejar simultáneamente a las monedas europeas más fuertes de los límites superiores de sus bandas de paridad del Smithsonian. Además, el mecanismo pareció atraer una intensa especulación contra el dólar y contra la libra esterlina. \textit{En este patrón tensionado de tipos de cambio, los mercados pudieron percibir una oportunidad especulativa bidireccional: vender libras y comprar monedas continentales con la esperanza de obtener beneficios en ambos movimientos} (Bulletin, septiembre de 1972, p. 758).
+    }
+    \item \textbf{Ampliación y preponderancia de los DEG's}. Como parte del acuerdo también se tenía previsto estabilizar el sistema monetario utilizando Derechos Especiales de Giro-DEG (Special Drawing Rights-SDR);
+    \item \textbf{¿Reapertura de la ventana? No gracias}. A pesar de estas medidas, la ventana del oro no se reabrío. Esto supuso un cambio radical respecto al antiguo sistema ya que suponía un acuerdo implicito por el cual los Gobiernos se comprometían a intervenir activamente en los mercados de divisas con el fin de garantizar los compromisos adquiridos y las paridades estipuladas. De esta forma, supone en términos prácticos el primer acuerdo en el que los tipos de cambio de las divisas se negociaron directamente y no con referencia al oro.
+\end{lnum}  
+
+A raíz de este acuerdo, aunque la incertidumbre dominó los mercados durante gran parte del año siguiente porque quedaba pendiente de aprobación por parte de los respectivos legislativos y persistían las dudas sobre las restricciones comerciales, la coordinación y cooperación internacional mejoraron sustancialmente. 
+
+No obstante, no terminaba de atajar el importante desequilibrio estructural que adolecía el sistema: el papel preponderante del dólar como moneda de reserva internacional (EICHENGREEN, 2020). Y, cuando hubo de enfrentarse a los vaívenes de la realidad, el que fuera bautizado por Nixon como \textbf{el acuerdo monetario más importante de la historia}, resultó ser una solución incompleta. 
+
+\paragraph{Sentencia de muerte: ataques especulativos y crisis de confianza}
+El primer abandono formal del Sistema fue el 23 de junio de 1972, cuando el Reino Unido suspendió su participación tanto en el acuerdo Smithsonian como en el mecanismo europeo y permitió que la libra flotara libremente.\footnote{\textbf{OJO}. No fue el primero, ya que Canada había adoptado esta misma política en 1968. Sin embargo, sí fue el primer fallo importante por la relevancia económica del Reino Unido en el mercado internacional.
+
+Tras la flotación de la libra, las autoridades monetarias europeas cerraron sus mercados de divisas y convocaron una reunión de ministros de Finanzas de la CEE en Luxemburgo. Dinamarca abandonó la flotación conjunta europea, e Italia recibió autorización para intervenir temporalmente en dólares. \textit{Para el viernes 14 de julio de 1972, la crisis de la libra no solo había generado una fuga de 2.600 millones de dólares desde la libra hacia otras monedas del Mercado Común, sino también flujos adicionales superiores a 6.000 millones de dólares desde el dólar hacia diversas monedas europeas y hacia el yen} (Bulletin, septiembre de 1972, p. 758).
+} No ostante, como a finales de 1972 el dólar se fortaleció temporalmente a medida que la inflación estadounidense se moderaba mientras aumentaban las tasas de inflación en otros países. Aprovechando la ocasión, con el fin de dar margen al Sistema, muchos países europeos (Suiza el primero) vendieron dólares y retiraron liquidez del mercado suizo.\footnote{\textit{En general, las autoridades monetarias europeas consideraron la mejora del dólar como una oportunidad para intensificar su lucha contra una inflación cada vez más virulenta. Así, durante el otoño, la política monetaria en Europa se endureció progresivamente, tanto mediante cambios en los requisitos de reservas como mediante incrementos en las tasas de descuento} (Bulletin, marzo de 1973, p. 143).
+} 
+
+Sin embargo, a pesar de estas Políticas Monetarias restrictivas, la confianza no se había construido lo suficiente y los europeos comenzaron a dudar sobre la disposición estadounidense a actuar con suficiente contundencia para frenar las presiones inflacionarias internas. En consecuencia, a comienzos de 1973 la confianza en el acuerdo Smithsonian volvió a deteriorarse rápidamente. La secuencia de eventos más notables, aunque compleja, puede resumirse en la siguiente: (i) el 20 de enero de 1973, Italia instauró un sistema dual de tipos de cambio y comenzaron a comprar francos suizos para cubrir obligaciones pendientes en moneda extranjera; (ii) esto impulsó al franco suizo (ya cercano a su límite superior de paridad) y obligó al Banco Nacional Suizo a adquirir 270 millones de dólares que, temiendo que nuevas entradas de capital perjudicaran su política antiinflacionaria, cedió y permitió que el franco flotara; (iii) al superar rápidamente la moneda el techo fijado por el Smithsonian, la especulación se desplazó hacia el marco alemán y el país comenzó a acumular reservas haciendo que el marco se apreciara; (iv) esta presión se intensificó tras la publicación de datos comerciales alemanes y comenzó a afectar también al florín neerlandés;\footnote{El 24 de enero de 1973, el Sistema, en coordinación con Alemania, vendió 30 millones de dólares en marcos alemanes en el mercado de Nueva York y, durante los dos días siguientes, realizó nuevas ventas moderadas de marcos, que aparentemente hicieron descender \textit{ligeramente} su cotización (Bulletin, marzo de 1973, p. 144). Estas ventas progresivas por parte del Sistema alcanzaron la cifra neta, en febrero de 1973, de marcos equivalentes a 173,3 millones de dólares. Al agotarse sus reservas de marcos, el Tesoro comenzó a vender marcos desde su propia cuenta.
+ 
+Paralelamente, al comenzar la presión sobre el florín, el Sistema inició también ventas de florines.
+} (v) el 12 de febrero de 1973, con los mercados europeos y japoneses cerrados, Estados Unidos devaluó el dólar un 10\%, que elevó el precio del dólar a 42\$/onza.
+
+Cuando los mercados reabrieron, Japón permitió temporalmente la flotación del yen y el dólar se fortaleció momentáneamente. Sin embargo, desde el punto de vista de las señales enviadas al mercado, estas operaciones resultaron inoportunas. Pese a la devaluación, continuó el flujo de capitales hacia monedas europeas y, el 23 de febrero de 1973, el dólar alcanzó sus límites inferiores frente al marco alemán, el franco francés, el florín neerlandés y el franco belga. Los tenedores de dólares se alarmaron y los flujos hacia Europa se aceleraron. El 1 de marzo de 1973, una cifra sin precedentes de 3.600 millones de dólares ingresó en bancos centrales europeos, obligando a las autoridades a cerrar sus mercados de divisas (COOMBS, 1976, p. 229).\footnote{El Tesoro vendió marcos equivalentes a 46,6 millones de dólares en febrero. Además, el Sistema vendió florines por valor de 20,4 millones de dólares, agotando sus existencias. Las intervenciones continuaron, pero el mercado ya asumía que las paridades del Smithsonian no sobrevivirían. El Bundesbank adquirió 6.000 millones de dólares durante la primera semana de febrero (Bulletin, marzo de 1973, pp. 144-145).
+}
+
+\imagenfit{Fig8.png}{Flujos de inversión neta: Estados Unidos}{\href{https://www.bea.gov/?_gl=1*12x5zzr*_ga*ODExMDE2MjAyLjE3NzkwNDcyNTA.*_ga_J4698JNNFT*czE3NzkwNDcyNTAkbzEkZzEkdDE3NzkwNDczNjUkajEzJGwwJGgw}{Bureau of Economic Analysis.} Elaboración propia}
+
+El 10 de marzo de 1973, Alemania, Francia, Bélgica, los Países Bajos y Dinamarca acordaron mantener tipos de cambio fijos entre sí dentro de una banda del 2,25\% alrededor de una paridad central y flotar conjuntamente frente al dólar. Alemania también devaluó un 3\%. Noruega y Suecia se unieron posteriormente a esta flotación conjunta, mientras que la lira italiana, el franco suizo, la libra esterlina y el yen japonés continuaron flotando de manera independiente. El Sistema Monetario de Bretton Woods había definitvamente muerto.
+
+\subsubsection{Una trasición informal (1973-1976): Shocks y desequilibrios}
+Lo que experimentaron a continuación será una transición paulatina hacia un sistema de flotación, que supuso un reto tanto para las autoridades como para los organismos internacionales encargados de la estabilidad, supervisión y monitorieo del sistema monetario internacional (FMI).
+
+Además, entra en escenea un peligroso compañero que agravará las tensiones económicas que acecharan esta transición.
+
+\paragraph{Conflictos regionales: Cost-push inflation}
+Paralelamente, en enero de 1973, Estados Unidos puso formalmente fin a su participación en la guerra de Vietnam. También eliminó el servicio militar obligatorio, que había sido extremadamente controvertido. Desde el punto de vista económico, el fin del reclutamiento obligatorio fue polémico porque incrementó el coste de reclutar hombres y mujeres jóvenes para las fuerzas armadas totalmente voluntarias de Estados Unidos. Las fuerzas armadas voluntarias se ven afectadas por la situación general de la economía: el ejército estadounidense tiene mayores dificultades para reclutar cuando la economía es fuerte, pero recibe más solicitudes durante las recesiones. Para mejorar tanto el reclutamiento como la permanencia del personal, el ejército ha aumentado la remuneración y los beneficios ofrecidos. Algunos autores han responsabilizado al fin de la conscripción del surgimiento de largas “guerras eternas” como las de Irak y Afganistán. El argumento sostiene que los miembros actuales de las fuerzas armadas se ofrecen voluntariamente y que, por ello, el gobierno tiene menos incentivos para limitar sus intervenciones exteriores. Cuando los jóvenes son reclutados obligatoriamente y no desean necesariamente servir, el gobierno enfrenta un mayor riesgo de escrutinio público. Los presidentes y sus administraciones deben justificar mucho mejor sus compromisos militares ante una opinión pública escéptica. En la actualidad, en comparación con la época de la guerra de Vietnam, solo un pequeño porcentaje de la población estadounidense tiene experiencia en el servicio militar, algo que algunos observadores consideran responsable de numerosas percepciones erróneas sobre la experiencia de la guerra.
+
+Entre el 6 y el 25 de octubre de 1973, una la coalición de países árabes abanderada por Egipto y Siria inicia una ofensiva contra Israel, motivados por recuperar el Sinaí y los Altos del Golán (que habían perdido años antes).
+
+Al final de la guerra, los israelíes habían avanzado a unos 101 kilómetros de la capital egipcia, El Cairo, y ocupaban 1600 kilómetros cuadrados al oeste del canal de Suez. También habían cortado la carretera El Cairo-Suez y cercado la mayor parte del Tercer Ejército egipcio. Ante esta tremenda y humillante derrota, los países arábes respondieron con el arma más potente en su arsenal: el 16 de octubre, la OPEP declara un embargo a toda la exportación de petroleo hacia aquellos países que apoyen o hubiesen apoyado a Israel.\footnote{Antes del embargo, el Occidente industrializado, sobre todo Estados Unidos, solía disponer de petróleo abundante y barato. Las ciudades estadounidenses posteriores a la Segunda Guerra Mundial, muy extendidas, con enormes núcleos urbanos de casas unifamiliares dispersas, dependían del automóvil como principal medio de transporte, de modo que utilizaban combustible de forma masiva. Entre 1945 y finales de los 60, Occidente y Japón consumían más petróleo que nunca. Solo en Estados Unidos, el consumo se había duplicado entre 1945 y 1974. Con un 6\% de la población mundial, Estados Unidos consumía el 33\% de la energía de todo el mundo. Al mismo tiempo, la economía estadounidense mantenía una cuarta parte de la producción industrial mundial, lo cual quiere decir que los trabajadores estadounidenses eran cuatro veces más productivos que la media global, pero a cambio el país consumía cinco veces más energía. El petróleo, sobre todo el procedente de Oriente Medio, se pagaba en dólares estadounidenses, con los precios también fijados en dólares. 
+} Aunque en un principio el embargo afectaba a Canadá, Japón, Países Bajos, Reino Unido y Estados Unidos, posteriormente se extendió a Portugal, Rodesia —actual Zimbabue— y Sudáfrica.
+
+\imagenfit{Fig9.png}{(Arriba)}{}
+
+El embargo generó inflación de costes (\textit{cost-push inflation}) en la econommía estadounidense (y el resto de economías energéticamente dependientes): el brusco paso de la inflación de demanda al que se venía haciendo frente durante el peiodo precdente, se vió acentuado por la inesperada inflación de costes derivada del embargo petrolero. En conjunto, las sucesivas espirales inflacionistas produjeron casi dieciséis años de elevados niveles de precios.
+
+En este contexto, la caída del Sistema Monetario Internacional de Bretton Woods se encontró inmerso en una serie de desequilibrios fundamentales, que dieron lugar a unos primeros años de gran volatilidad en los mercados cambiarios.  
+
+\paragraph{Respuestas de Política Económica: Hetereogeneidad dominante}
+Aunque no son novedosos, pues resultan de la serie de catastróficas coincidencias ya observadas, recapitulemos brevemente las casuas de esta volativilidad cambiaria:
+\begin{lnum}
+    \item \textbf{Movilidad de capitales}. En primer lugar, la creciente movilidad de capitales, unida al desarrollo de los mercados financieros;
+    \item \textbf{Inflación}. Tanto por razones de demanda como de costes, la inflación se cierne sobre todas las economías desarrolladas. Afectando de manera desigual, los Bancos Centrales combaten la inflación atendiendo a muy diversos objetivos internos, causando grandes brechas/gaps en los tipos de referencia y avivando el fuego de los movimientos de capital. Por lo que respecta a la economía estadounidense, aunque el Gobierno de Nixon ya había intentado luchar contra la inflación introduciendo controles salariales y de precios entre 1971 y 1974, estos solo ralentizaron temporalmente el aumento de los precios mientras agravaban la escasez, especialmente de alimentos y energía. La vía adoptada por la administración Ford fue un tanto diferente pero tampoco exitosa;\footnote{Ford declaró a la inflación \textit{enemigo número uno}. El presidente introdujo en 1974 el programa WIN (Whip Inflation Now), basado en medidas voluntarias destinadas a fomentar una mayor austeridad. Fue un fracaso.
+    }
+    \item \textbf{Ajustes externos: Desequilibrios por cuento comercial}. Por último, los persistentes déficits por cuenta comercial no se comprendían de la forma en que lo son ahora. Con una aproximación al más clásico estilo mercantilista, el Gobierno de los Estados Unidos aún veía el superávit por cuenta comercial como un objetivo político necesario para ajustar los problemas internos de la economía estadounidense. Con esto en mente, la Política de la FED mantuvo su persistente política de acompañamiento, dificultando el ajuste requerido.
+\end{lnum}
+
+En este contexto, y para hacer frente a esta mayor volatilidad cambiaria, se observó un clima de cooperación declarada, fragmentación en la práctica. Por un lado, el FMI extablecía el \textit{Comité de los Veinte}, compuesto por veinte países con el objetivo de preparar propuestas que permitieran el retorno a un sistema de tipos de cambios ajustables, con nuevas provisiones de reservas internacionales y medidas para otorgar mayor seguridad jurídica a los potenciales ajustes que tendrían que llevarse a cabo. Por otro lado, destaca el surgimiento de iniciativas regionales para favorecer la estabilidad de los flujos comerciales. En particular, en Europa se constituye el embrión de lo que posteriormente será el Sistema Monetario Europeo (1979) y, de manera menos ambiciosa, entre algunos países africanos.
+
+¿Cuál triunfaría? Como en muchos otros casos, la batuta la llevaban los Estados Unidos. Convencidos de que mantener un régimen de flotación era más favorable a sus intereses (financieros, recordemos, en ese época), en 1974 el Comité de Veinte abandonó el trabajo que se había propuesto y el FMI adoptó un enfoque inevitablemente continuista en linea con los regímenes de flotación.\footnote{Esto se debe a que predomina la búsqueda del equilibrio interno en Estados Unidos, donde la elección de Carter lleva a una expansión fiscal que provocó un repunte de la inflación. Lo cual generó una depreciación del dólar estadounidense, que los americanos esperaban se pudiese compensar con políticas expansivas por parte de los europeos y japoneses. Sin embargo, estos no cumplieron con las expectativas de los estadounidenses, ya que temían los efectos inflacionarios que pudiesen provocar la aplicación de políticas expansivas, incluso aunque estas supusiesen una apreciación de sus monedas.
+}
+
+\subsubsection{Quiebra formal del SMI: Acuerdos de Jamaica (1976)} 
+Esta nueva ortodoxia llegaría a su culmen en los Acuerdos de Jamaica de 1976, que suponen el abandono formal del marco de Bretton Woods.
+
+¿Qué contuvieron? Fueron acuerdo que transformó fundamentalmente cómo se valoran y negocian las monedas a nivel internacional. En primer lugar, se produce la segunda enmienda a los artículos del FMI (que entraría en vigor en 1978), permitiendo todo régimen cambiario incluido la libre flotación, con la excepción de la fijación del tipo de cambio nominal respecto al oro. Podemos resumir sus lineas de impacto en la siguiente tabla:
+
+\begin{center}
+\begin{tabular}{|p{0.30\linewidth}|p{0.30\linewidth}|p{0.30\linewidth}|}
+\hline
+\textbf{Aspecto} & \textbf{Sistema de Bretton-Woods (1958-1973)} & \textbf{Acuerdos de Jamaica (Post-1976)} \\
+\hline
+Régimen de TC & Tipos de cambio fijo; monedas vinculadas al dólar estadounidense & Se amplían los regímenes permitidos: anlca, flexibles y flotantes \\
+\hline
+Rol del dólar estadounidense & Dólar estadounidense convertible en oro a 42\$/onza: dólar es moneda de reserva internacional & Dólar estadounidense no convertible y sujeta a valoración de mercado \\
+\hline
+Activo ancla de la moneda & \textbf{Dinero fiduciario}: dólar con paridad fija al oro; divisas indirectamente ancladas por paridad al dólar &   \textbf{Dinero fiat}: concepción más ajustada a la visión chartalista del dinero \\
+\hline
+Intervenciones en el mercado de divisas & Limitadas y muy controladas por las reglas del FMI & Intervenciones permitidas pero flexibles para estabilizar las monedas \\
+\hline
+Rol del FMI & Monitoreo de los Tipos de Cambio y apoyo a corto plazo por ajustes temporales & Mayor flexibilidad en los préstamos. Enfoque en estabilizar los regímenes de Tipo de Cambio flotante \\
+\hline
+\end{tabular}
+\end{center}
+
+Los acuerdos también establecieron disposiciones para brindar asistencia financiera a los países en desarrollo que representan a los Estados miembros del Grupo de los 77, con el fin de compensar la pérdida de ingresos por la exportación de productos primarios. En 1978 se introdujo una enmienda para permitir la creación de Derechos Especiales de Giro, descritos como una línea de crédito de bajo costo para los países en desarrollo.
+
+\subsection{Tercer periodo: }
+Con todo lo expuesto, hemos visto cómo pasamos del quiebra práctica del Sistema Monetario Internacional, con el \textit{Nixon Shock} (1971) a la quiebra formal del Sistema a raíz de los Acuerdos de Jamaica (1977). En tan solo seis años, el Sistema Monetario construído tras la II Guerra Mundial y que llevaba en pleno funcionamiento desde hacía casi dos décadas se fue a pique. ¿Las razones? Como hemos visto (y espero que quede claro), son extremadamente diversas. Podríamos argumentar que fue una serie de catastróficas coincidencias. Podríamos argumentar también que la razón última de la quiebra se encontraba en su propia formulación (Paradoja de TRIFFIN) y que el desarrollo de estas coincidencias solo hizo que acelerar su debacle. Podríamos, en definitiva, buscar las razones de la quiebra en muchísimas causas, de forma estanca u holística, y tendríamos algo de razón.
+
+Como a mi me gusta verlo, no obstante, es que, aunque el Sistema Monetario Internacional estaba irremediablemente abocado al fracaso (bajo los estrictos términos del Sistema de Bretton-Woods respecto a la paridad frente al oro), el verdadero detonante de todo fueron los cada vez más importantes movimientos internacionales de capital. Estos obligaban a las Autoridades a reaccionar de manera apresurada frente a cualquier desviación del Sistema, restringiendo en último término la capacidad de éstas a valorar, no solo las fragilidades del Sistema y las posibles alternativas de mejora, sino la mismísima idoneidad de estos cuantiosos movimientos desetabilizadores. 
+
+Repasemos brevemente los sucesos más importantes del último periodo que caracteriza la Gran Inflación. 
+
+\subsubsection{Administración Carter (1977-1981): VOLCKER Shock}
+Tras la derrota en la carrera presidencial de Ford en favor de Jimmy Carter, un Gobierno Demócrata volvía a la Casa Blanca después de una década en el exilio. 
+
+La tensión entre responsables de Política Fiscal y Política Monetaria se incrementaron. Carter inició un programa de expansión fiscal notable (aunque no muy diferente a sus predecesores) mientras una nueva oleada de inflación de costes se cernía sobre la economía. En este caso originada con motivo de la \href{https://es.wikipedia.org/wiki/Crisis_del_petróleo_de_1979}{revolucicón iraní de 1979}. Los responsables de la Reserva Federal no ignoraban la inflación que se estaba produciendo y eran plenamente conscientes del doble mandato que exigía calibrar la política monetaria de forma que garantizara simultáneamente pleno empleo y estabilidad de precios. De hecho, la \textit{Employment Act} (1946) fue reformulada en 1978 mediante la Ley de Pleno Empleo y Crecimiento Equilibrado, más conocida como la Ley Humphrey-Hawkins.\footnote{La ley Humphrey-Hawkins encargó explícitamente a la Reserva Federal perseguir el pleno empleo y la estabilidad de precios, exigió que el banco central estableciera objetivos para el crecimiento de diversos agregados monetarios y obligó a presentar un Informe de Política Monetaria semestral al Congreso.
+} Sin embargo, la dimensión del empleo prevaleció cuando entraban en conflicto.\footnote{Como afirmaría posteriormente el presidente de la FED, BURNS, el pleno empleo era la prioridad principal en la mente del público y del gobierno, si no también de la propia FED (Meltzer, 2005). Pero también existía una percepción clara de que afrontar directamente el problema inflacionario habría tenido un coste demasiado elevado para la economía y el empleo.
+}
+
+A finales de los años setenta, el público ya esperaba un sesgo inflacionario en la política monetaria. Y el descontento con la inflación crecía constantemente. Encuesta tras encuesta mostraban un deterioro de la confianza pública en la economía y en la política gubernamental durante la segunda mitad de la década de 1970. Con frecuencia, la inflación era identificada como un mal particularmente grave. Los tipos de interés parecían seguir una tendencia secular ascendente desde 1965 y aumentaron aún más bruscamente al final de los años setenta. 
+
+\imagenfit{Fig10.png}{Política de la FED: 1970-1985}{Elaboración propia. Fuente: \href{https://fred.stlouisfed.org/series/FEDFUNDS}{FED}}
+
+Durante este periodo, tal y como predice la Teoría Económica, se observó una disminución notable de la inversión real. Esto afectó (directa o indirectamente) tanto la productividad como a la balanza comercial estadounidense. La inflación, en definitiva, era ampliamente considerada bien como un factor importante del malestar económico o directamente como su principal causa: había que acabar con ella, a toda costa.\footnote{
+¿Era esta una aproximación adecuada? Sorprendemente (o no), se trata de una inflación y una respuesta de Política Monetaria muy similar a la que experimentamos a raíz de la Guerra de Ucrania. ¿Está quemando el Banco Central Europeo la economía europea (en particular, las regiones del sur) con su agresiva respuesta a una situación de inflación \textbf{de costes}? Se trata de una cuestión muy debatida. 
+
+Tan debatida que, como habremos podido observar, la aproximación de Política Económica adoptada en respuesta al cierre del estrecho de Ormuz e radicalmente diferente, centrándose en una actuación de la Política Fiscal capaz de acomodar el impacto de esta inflación de costes. ¿Mejor? 
+} No obstante, una vez instalada la combinación de alta inflación y elevado desempleo, los responsables políticos enfrentaban un dilema muy desfavorable: combatir el desempleo probablemente elevaría aún más la inflación, mientras que combatir la inflación provocaría casi con certeza un fuerte aumento adicional del desempleo.
+
+\paragraph{Acuerdos de Bonn (1978)}
+Paralelamente, en el escenario monetario internacional, las políticas fiscales expansivas estaban pasando factura en el resto de economías desarrolladas que intentaban, con más o menos éxito, combatir sus propios problemas internos. El considerable aumento del deficit estadounidense, junto con el incremento sostenido de la inflación estaba inundando el resto de economías de dólares indeseados. Este círculo se veía gravamente estimulado por las Políticas Monetarias restrictivas que mantenían algunas de las economías más fuertes del viejo continente (como Alemania) y Japón. ¿Qué problema causaba? Parece ya un mantra, pero para enfatizar aún más, este oleada de dólares indeseados estaba generando una presión alcista sobre las monedas de estos países y perjudicando gravamente tanto su competitividad exterior como la eficacia de sus políticas de ajuste interno. Con esto en mente, se firman los Acuerdos de Bonn en 1978 en el contexto de la Cumbre del G-7. Estados Unidos acuerda reducir su déficit fiscal, subir los precios del petróleo doméstico y contener salarios a nivel interno. En contraprestación Japón y Europa aceptaron llevar a cabo Políticas Fiscales y Monetarias expansivas, limitar la apreciación de sus monedas y contener las entradas de capitales. 
+
+Como suelen decir, del dicho al hecho hay un trecho. Según EICHENGREEN (2019), aunque estos acuerdos pudieron considerarse modestos a efectos de estabilizar los tipos de cambio, es innegable que sin ellos la volatilidad cambiaria habría sido mayor y supusieron un primer paso en las iniciativas de cooperación a nivel cambiario y financiero entre las autoridades de las principales economías desarrollados que caracterizaron los  años por venir.
+
+\paragraph{Cambio de rumbo: \textit{VOLCKER Shock} (1979)}
+Fue en 1979 cuando la situación empezó a cambiar realmente. Ese año, VOLCKER, hasta entonces presidente del Banco de la Reserva Federal de Nueva York, fue nombrado presidente de la Junta de Gobernadores de la Reserva Federal.\footnote{Como sabemos, para esa misma fecha la revolución de la Nueva Macroeconomía Clásica había puesto también en jaque mate una de las convenciones básicas de la aproximación de Política Económica en el contexto de la Síntesis. Por lo que estaba estaba generalmente aceptado que reducir la inflación requería un mayor control sobre el crecimiento de las reservas y, más ampliamente, de la oferta monetaria. El Comité Federal de Mercado Abierto (FOMC) ya había comenzado a establecer objetivos para los agregados monetarios, tal como exigía la Ley Humphrey-Hawkins. 
+
+Además de la importancia de políticas temporalmente consistentes y de la credibilidad de la política económica. Para más información: [\authorfont{Ver Tema 3.A.7}].
+} Da entonces comienzo lo que se conoce como \textit{VOLCKER shock}, un cambio (radical) en la Política Monetaria de la FED y su posición acomodaticia.
+
+Combatir la inflación comenzó entonces a considerarse necesario para alcanzar ambos objetivos del doble mandato, incluso si ello provocaba temporalmente perturbaciones en la actividad económica y un aumento transitorio del desempleo. En octubre de 1979, el FOMC anunció su intención de utilizar el crecimiento de las reservas como instrumento principal de Política Monetaria; y no el tipo de interés de los fondos federales.
+
+
+
+A comienzos de 1980, Volcker declaró: \textit{[M]i filosofía básica es que, a largo plazo, no tenemos otra opción que afrontar la situación inflacionaria porque, con el tiempo, inflación y desempleo terminan yendo juntos.... ¿No es esa la lección de los años setenta?} (MELTZER, 2009, p. 1034). Con el tiempo, el mayor control del crecimiento de las reservas y de la oferta monetaria consiguió reducir la inflación. 
+
+
+Esta política monetaria más restrictiva se complementó con la introducción de controles crediticios a comienzos de 1980 y con la Ley de Control Monetario. Durante 1980, los tipos de interés se dispararon, descendieron brevemente y volvieron a aumentar. La actividad crediticia cayó, el desempleo aumentó y la economía entró en una breve recesión entre enero y julio. La inflación descendió, aunque seguía siendo elevada incluso cuando la economía comenzó a recuperarse durante la segunda mitad de 1980.
+
+Sin embargo, la Fed de Volcker continuó intensificando la lucha contra la inflación mediante una combinación de tipos de interés más altos y un crecimiento aún más lento de las reservas. La economía entró nuevamente en recesión en julio de 1981, y esta resultó ser más severa y prolongada, extendiéndose hasta noviembre de 1982. El desempleo alcanzó casi el 11\%, pero la inflación continuó descendiendo y, al final de la recesión, la inflación interanual ya se situaba por debajo del 5\%. Con el tiempo, a medida que la credibilidad del compromiso de la Reserva Federal con una inflación baja se consolidó, el desempleo retrocedió y la economía entró en un período de crecimiento sostenido y estabilidad. La Gran Inflación había terminado.
+
+\subsubsection{Administración Reagan (1981-1989): Los hamiltonianos llevan la batuta}
+ERIK REINERT (2007) dice lo siguiente acerca de la política estadounidense: \textit{Desde los Padres Fundadores, Estados Unidos ha estado siempre divido entre dos tradiciones: la política activista de Alexander Hamilton (1755-1804) y la máxima de Thomas Jefferson (1755-1826) de que "El mejor Gobierno es el que menos gobierna" (...). Con el tiempo y el acostumbrado paragmatismo estadounidense, esa rivalidad se ha resuelto poniendo a los jefferonianos a cargo de la retórica y a los hamiltonianos a cargo de la política.}
+
+Esta dualidad casi paradójica encuentra su máximo exponente en la Administración Reagan. Abanderado político del fundamentalismo de mercado, el Gobierno Reagan fue un gran traspie para la política estabilizador que venía ejecutando la FED desde la consagración de VOLCKER. Si bien es cierto que intentó recortar el gasto público derivado de muchos de los programas de la Great Society de Johnson en 1983 (aunque fue bloqueado por un Congreso controlado por los demócratas), la vertiente económica del Gobierno Reagan, la Reagonimcs fue cuanto menos controvertida. La elevada inflación que venía frenando la FED, encontró un amigo en las Políticas Fiscales expansivas que llevo a cabo esta administración. En particular, la ejecución de políticas de oferta y demanda combinadas, mediante la disminución de impuestos y el incremento sustancial de gasto en defensa. Aunque controvertido y díficil de justificar entre sus adeptos, sí generó una mejora económica... al coste de aumentar drásticamente la deuda nacional. 
+
+En el plano internacional, la combinación de la Política Monetaria sumamente restrictiva con una Política Fiscal fuertemente expansiva acabó provocando una fuerte apreciación tanto del tipo de cambio nominal como del tipo de cambio real del dólar respecto a las demás monedas de sus principales socios.
+
+
+
+Esta progresiva apreciación, venía también acompañada por un creciente déficit comercial estadounidense en favor de Japón que hizo aumentar las presiones del Congreso para establecer medidas proteccionistas. 
+
+En este contexto se gesta el último conjunto de grandes acuerdos que caracterizaron la reconstrucción del Sistema Monetario Internacional: los Acuerdos del Plaza (1985) y del Louvre (1987).
+
+\paragraph{Acuerdos del Plaza y Louvre: Inicio de la coordinación de Políticas Macroeconómicas}
+Dada la situación, en 1985 se reunieron los Ministros de Finanzas y Gobernadores de los Bancos Centrales del G-5 en el Hotel Plaza en Nueva York. El resultado de la reunión establecía una preciación ordenada del Marco alemán, Franco francés, Libra esterlina y Yen respecto al dólar, sin cambios relevantes en sus Políticas Económicas, debido a que los Estados Unidos había agotado sus reservas y tanto sus rentas primarias como sus exportaciones eran escasas. Tras ello, el dólar sufrió una rápida depreciación ($>40\%$ respecto al máximo anterior). Esto generó una pérdida notable de la competitividad exterior del resto de ecoomías (en particular las europeas y la japonesa) y constató que sin ajuste en las políticas macroeconómicas a ambos lados del Atlántico, no podrían solucionarse las dificultades que atravesaba el Sistema.
+
+Consecuentemente, se celebró en 1987 la reunión entre economías del G-7 que daría lugar a los Acueros del Louvre, donde acordaron acometer reformas de calado para estabilizar el dólar. Japón se comprometió a ejecutar políticas de estímulo, los alemanes a ejecutar bajadas de impuestos y los estadounidenses prometieron ajustes a su Política Monetaria. En efecto, se dió inicio al \textbf{juego de la locomotora}. (De hecho, la FED permitió que los tipos de interés subiesen, porque estaban jugando todos, interrumpiendo la senda descendente iniciada en 1984). 
+
+
+\subsection{Implicaciones de Política Económica: ¿Qué podemos aprender?}
+A lo largo de este primer apartado hemos desarrollado cronológicamente todos los sucesos, causas y efectos que condujeron al colapso del Sistema Monetario Internacional vigente tras los Acuerdos de Bretton Woods como a la construcción de lo que se conocería posteriormente como el No-sistema y la importancia que en el adquiere la Coordinación Internacional de la Política Macroeconómica, que tuvimos que aprender a la fuerza. 
+
+Este desarrollo tan exhaustivo prestende servir tres razones: 
+\begin{lnum}
+    \item \textbf{Una muerte agonizante: El colapso del Sistema Monetario Internacional de Bretton Woods}. En primer lugar, resaltar que la ruptura del Sistema de Bretton-Woods no fue puntual ni puede ser quirurgicamente identificado en el tiempo. Esta aproximación sería, además, una absoluta aberración. El colapso del Sistema Monetario de Bretton-Woods es, por el contrario, un proceso agonizante que debe ser estudiado al detalle. Se trata a la vez de la crónica de una muerte anunciada (Paradoja de TRIFFIN) y de las tensiones que persisten en las relaciones internacionales: ¿objetivos comunes u objetivos internos? ¿economía real o economía monetaria? Solo así pueden entenderse tanto las causas como las motivaciones que guiaron a los decisores políticos;
+    \item \textbf{Análisis económico: sí, pero contextualizada}. También pretende dejar atrás y evidenciar las profundas deficiencias que cualquier aproximación miope al análisis del Sistema Económico Internacional caracterizador de una época tendría. Es imposible comprender la evolución, causas y defectos del Sistema Económico Internacional sin ponerlo en un contexto político y social. El Sistema de Bretton Woods no habría colapsado, de hecho, si no hubiese estado sometido a las presiones que emergen cuando los objetivos políticos (sociales, de seguridad, internos o externos) prevalecen sobre los compromisos adquiridos. Queda a juicio del lector saber si esto debe o no suceder, pero la cuestión es que sucede. Y las causas del colapso están lejos de ser \textit{puramente} ecónomicas (si es que esto tiene, per se, algún tipo de significado u objeto);
+    \item \textbf{Aprender de la historia}. Por último, dejar también muy claro y resaltar que, del colapso del Sistema Monetario Internacional y el desarrollo paralelo de la Gran Inflación, se pueden aprender muchísimas cosas que son de absoluta actualidad. Los fenómenos de inflación de oferta, los fenómenos de inflación de demanda, el impacto de grandes programas sociales o de gasto en defensa impulsados por la Política Fiscal, los límites de la política acomodaticia, etc. Todo esto debe ser estudiado al detalle puesto que, aunque el contexto cambie, el fondo no lo hace.
+\end{lnum}
+
+\subsubsection{}
+Este modelo funcionó razonablemente bien en los años posteriores a la II Guerra Mundial. Sin embargo, con el paso del tiempo con la recuperación del comercio a nivel mundial y la mayor movilidad del capital pusieron de relieve el coste de oportunidad vinculado a adoptar políticas de corte más intervencionistas sobre todo en cuanto a la fijación de precios. 
+
+A esto cabria sumar la captura por parte de grupos de interés de algunas actividades económicas vinculadas al sector industrial en muchos países en desarrollo, mientras el Sector Público en muchos países acumulaba deuda en divisas a una velocidad creciente. En 1983 se produjo un punto de inflexión, los países en desarrollo acumulaban una deuda externade 700.000 millones de dólares, duplicándose respecto a los valores de 1978. 
+
+A esto cabía unir elaumento del coste del servicio de la deuda como consecuencia del Volcker Shock, así como un descenso del precio del petróleo que afectó a algunos países exportadores como por ejemplo México. Precisamente en México se produjo el estallido de la crisis de deuda, ya que a finales de 1982 las Autoridades anunciaron que no disponían de reservas suficientes para hacer el frente al servicio de su deuda externa y suspendieron pagos. De manera gradual se produjo el contagio a otros países debido al temor de que no dispusiesen de reservas suficientes para pagar su deuda externa denominada en dólares. De tal manera que a finales de 1986 más de cuarenta países en desarrollo habían hecho default de su deuda externa o estaban en procesos de renegociación del calendario de repagos. Ante los problemas planteados, los acreedores y distintos organismos internacionales plantearon diferentes soluciones. En primer lugar, se afrontó la cuestión como un problema de liquidez de tal manera que se buscó reestructurar la deuda externa de los países afectados a cambio de un programa de ajuste con el FMI. 
+
+Así en el marco del Club de París se alcanzaron diecisiete acuerdos en el año 1983, estos acuerdos en principio establecían que una vez que se producían una renegociación del vencimiento de la deuda esta no podría revisarse, lo cual no otorgó la flexibilidad que algunos de los países firmantes necesitaban e incluso agravaron los problemas de países como Costa de Marfil, Níger o Madagascar. Asimismo, ante los problemas vinculados a la escasez de fondos, el FMI se vio obligado a ampliar su capacidad financiera, el Club de París accedió a que se pudiese renegociar la deuda ya renegociada en el caso de que el país sufriese episodios de volatilidad en su balanza de pagos y por último se planteó una dificultad más bien de índole estructural, esto es que los bancos comerciales, a pesar de ser acreedores relevantes, no querían participar del proceso de reestructuración de deuda externa. Por ello, en la reunión anual del FMI y del Banco Internacional para la Reconstrucción y Fomento (BIRF) Estados Unidos presentó el Plan Baker, que perseguía una solución involucrando a las distintas partes interesadas,sobre todo teniendo en cuenta que la exposición de los bancos estadounidenses a la deuda de los países en desarrollo era elevada, ya que existían temores vinculados a un posible contagio al sistema financiero estadounidense y en última instancia a su economía. Dicho plan consideraba que el problema era más bien de solvencia, pero buscaba evitar cualquier tipo de quitas y poner más énfasis en el crecimiento a largo plazo. 
+
+
+
+
+
+Dicho esto, veamos que hemos aprendido. En primer lugar, podrían destacarse las dos siguientes consecuencias:
+\begin{lnum}
+    \item En primer lugar, la Política Monetaria se consolidó como instrumento de Política Económica, de tal manera que esta no está supeditada a mantener el tipo de cambio. Por tanto, los Gobiernos pasan a poder utilizar la Política Monetaria libremente para el equilibrio interno;
+    \item En segundo lugar, y relacionado con la consolidación de la Política Monetaria como instrumento de Política Económica aumenta la volatilidad de los tipos de cambio.
+\end{lnum}
+
+En lo que respecta a su proyección práctica, se consolidan los regímenes cambiarios polares: Tipo de Cambio fijo (con divisa ancla) o Tipos de Cambio de libre flotación. ¿Por qué? Considerando positivos los flujos de capital, o inviable políticamente los controles sobre estos (dos caras de diferente moneda), el aumento de los flujos de capital hacían imposible en la práctica las operaciones de intervención necesarias para neutralizar su impacto. De esta forma, economías grandes y relativamente aisladas, como Estados Unidos o Japón, optan por regímenes de libre flotación; mientras que otras economías pequeñas y dependientes del comercio optan por su fijación, como por ejemplo los países de la CEE.
+
+
+Por otro lado, desde una perspectiva institucional el cambio más sustancial fue soportado por el FMI.\footnote{Quizás por esta razón se postularía, poco después, como el candidato a hacer cumplir el orden financiero internacional y la ejecución de estos compromisos adquiridos: estaba ansioso por recuperar su papel.
+} A pesar de que el Fondo debía actuar con el objeto de garantizar una coordinación de las políticas económicas de sus miembros y supervisar sus políticas nacionales, durante estos años el papel que desempeño fue prácticamente residual y supuso un giro radical de los acontecimientos en comparación con su funcionamiento bajo el Sistema de Bretton Woods.
+
+Los países en desarrollo optaron por esta opción también, pero de manera más gradual, ya que este régimen planteaba dificultades dado el escaso desarrollo de sus sistemas financieros. Para países pequeños, en desarrollo e integrados en el sistema comercial escoger regímenes de tipos de cambio flexibles entrañaba ciertas dificultades dada la mayor volatilidad cambiaria, por ello en general buscaron establecer regímenes cambiarios fijos ajustables apoyándose en controles de capitales. 
+
+Esto a su vez dificultó que pudiesen liberalizar sus sistemas financieros, más aún teniendo en cuenta que optaron por llevar a cabo políticas de industrialización por sustitución de importaciones y represión financiera, para canalizar el ahorro doméstico hacia el sector público. Para ello los aranceles y los controles de capitales fueron utilizados para separar transacciones domésticas y extranjeras, mientras que los controles de precios y restricciones financieras eran utilizados para guiar el desarrollo a nivel doméstico. 
+
+
+
+Para ello se retrasó el calendario de pagos para los países participantes\footnote{Diecisiete países participaron en el programa de ajuste vinculado a la propuesta de Brady, entre ellos cabría destacar México, Costa Rica, Filipinas, Brasil o Nigeria
+} a cambio de reformas estructurales en línea con el Consenso de Washington y de manera paralela se instó a las instituciones financieras privadas a que aumentasen su participación en los procesos de renegociación y reestructuración de deuda a través del Club de Londres. 
+
+Sin embargo, eventos como la declaración de Perú de dedicar solo 10\% de sus ingresos externos al pago de la deuda o la moratoria declarada por Brasil en 1987, pusieron de relieve la gravedad de la situación y que los ajustes realizados no estaban teniendo los resultados deseados. Por ello, ya en 1987 en la Cumbre de Toronto por primera vez se puso sobre la mesa la posibilidad de realizar quitas. Esta propuesta se concretó con el Plan Brady, que se lanzó en 1989 donde se trató de eliminar el \textit{debt overhang} al reconocer que la sostenibilidad de la deuda externa de los países en desarrollo pasaba por llevar a cabo quitas. Por ello, el Plan Brady se sustentaba en cuatro ejes fundamentales, en primer lugar se ofrecieron bonos emitidos por los países en dificultades cuya garantía serían bonos cupón cero del Tesoro de Estados Unidos denominados Bonos Brady, en segundo lugar se acordó que los países afectados realizasen ajustes estructurales adicionales,\footnote{Un ejemplo sería México que en 1989 obtuvo financiación del FMI, Banco Mundial y del Gobierno de Japón, a cambio emprendió reformas estructurales, se privatizaron más de 700 empresas públicas y se llevó a cabo una consolidación fiscal, centrada en una reducción del gasto corriente. A ello cabria unir el alivio de deuda que obtuvo a partir de un menú de opciones ofrecidos por los acreedores oficiales, en los términos descritos en el tema.
+} en tercer lugar se ofreció a los acreedores distintas opciones de reestructuración para garantizar la sostenibilidad y por último, se aumentó la financiación ofrecida por el FMI, al abrir nuevas ventanillas como el Servicio Reforzado de Ajuste Estructural o el Servicio de Financiamiento Compensatorio y para Contingencias.\footnote{El Servicio Reforzado de Ajuste Estructural fue creado por el FMI en 1987, buscaba ofrecer asistencia
+concesional a países de bajos ingresos que tenían problemas persistentes en su balanza de pagos. Treinta y tres países participaron en programas de ajuste y el Servicio Reforzado de Ajuste Estructural fue sustituido en 2001 por el Servicio para el Crecimiento y Lucha contra la Pobreza. El Servicio Compensatorio y de Contingencia Financiera ofrecía préstamos a países que se enfrentaban a caídas en sus préstamos como consecuencia de circunstancias imprevistas (por ejemplo, catástrofes naturales), realizándose la devolución del préstamo entre 3 y 5 años.
+} Estas medidas fueron exitosas, ya que se consiguió reestablecer la confianza en los países en desarrollo y gran parte de ellos pudieron volver a acceder a los mercados financieros internacionales a comienzo de la década de los 90.
+
+
+
+
+Los malos datos (o al menos una mala comprensión de los datos) también dificultaron la actuación de los responsables políticos. Revisando la información de la que disponían los responsables políticos antes y durante la Gran Inflación, el economista ORPHANIDES ha mostrado que las estimaciones en tiempo real de la brecha de producción estaban significativamente sobreestimadas y que la estimación de la tasa de desempleo compatible con el pleno empleo estaba significativamente subestimada. En otras palabras, los responsables políticos probablemente también estaban subestimando los efectos inflacionarios de sus políticas. De hecho, la senda de política que seguían simplemente no era viable sin una aceleración de la inflación (ORPHANIDES, 1997; ORPHANIDES, 2002).
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Gran Moderación: Crónica de una muerte anunciada}
+\puntosclave{
+    La Gran Moderación (1978-2007) se caracterizó por ser un periodo de crecimiento económico sólido y continuado, baja inflación y una enorme expansión del comercio internacional.
+    
+    Los episodios de volatilidad cambiaria e inestabilidad financiera afectaron tanto a países desarrollados como emergentes, así como problemas de deuda externa en el caso de estos últimos. 
+    
+    Los fenómenos de integración tanto a nivel multilateral (OMC) como regional fueron un factor determinante detrás de la expansión del comercio internacional durante este periodo.
+}
+
+Si los años que caracterizaron la agonizante quiebra del Sistema Monetario Internacional fueron casi más agonizantes para sus respectivas poblaciones, los años que la sucederían resultarían serlo aún más desde una perspectiva global.
+
+Como hemos visto, trasla quiebra del Sistema los ojos se dirigieron hacia la liberalización total de los mercados cambiarios. Por un lado, las economías desarrolladas adoptaron régimenes de tipos de cambios flotante ante la mayor movilidad de capital, si bien podían mantener bandas de fluctuación entre sí que serían garantizadas por operaciones del Banco Central. Por otro lado, los países en desarrollo no tuvieron más remedio que mantener esa misma linea aunque se les permitió hacerlo de manera más gradual, por el evidente riesgo que suponía dado el desarrollo de sus sistemas financieros (y el comportamiento del especulador).
+
+\textbf{¿Qué queremos decir?} De esta forma, la mejor manera de aproximar este periodo conocido como la Gran Moderación (que se expande entre 1985 y 2007) es descomponiendo los acontecimientos en dos partes. Hablaremos primero del impacto que tuvo sobre los países en desarrollo y la serie de medidas que tuvieron que adptar progresivamente para adecuarse al nuevo no sistema, caracterizado sobre todo por estar fuertemente marcado por el \textit{learning by doing}. Esto nos permitirá analizar esta etapa en los países desarrollados desde un punto de vista menos ortodoxo pero mucho más coherente: lo que experimentamos en la Crisis financiera de 2007 no fue más que un desastre perfectamente predecible; salvo por un único detalle, nuestra incapacidad de aprender de las experiencias pasadas. 
+
+\subsection{Noticiero de vanguardia: Crisis de los años 80's}
+Los primeros eventos traumáticos del nuevo sistema no tardaron en aparecer. Para simplificar al máximo los hechos expuestos, asumiremos que son perfectamente explicables con los Modelos de Crisis Cambiarias de Primera Generación y, por tanto, el resultado de una inconsistencia sistémica del \textit{policy mix}.
+
+\subsubsection{Crisis de deuda: Latinoamerica}
+El primero de ellos fue la crisis de la deuda latinoamericana, que dió lugar a la ínfame: \textit{década perdida de América Latina}. 
+
+\paragraph{Orígenes: Sobreendeudamiento}
+Los orígenes de este suceso, que estallaría en 1983, se remontan poco tiempo atrás, aunque no se preste atención a este hecho.
+
+Durante los años 50's, 60's y principios de los 70's muchos países latinoamericanos, especialmente Argentina, Brasil y México, desarrollaron una política de industrialización basada en sustución de importaciones. Esta política había funcionado en otras economías antes que estas y parecía poder ajustarse al contexto latinoamericano. Además, proporcionaba dos ventajas cruciales bajo el contexto de Bretton Woods: (i) compatibilizaba la industrialización bajo protección a la vez que permitía apertura progresiva de aquellos sectores mejor preparados para el comercio exterior; y, (ii) 
+
+
+
+En pidieron grandes sumas de dinero a acreedores internacionales para llevar a cabo planes de industrialización, especialmente para programas de infraestructura. Estos países tenían economías pujantes en aquel tiempo, por lo que los acreedores estaban dispuestos a seguir concediendo préstamos. Entre 1975 y 1982, la deuda latinoamericana con los bancos comerciales aumentó a una tasa anual acumulativa de 20,4\%. Esto llevó a que Latinoamérica cuadruplicara su deuda externa de 75 mil millones de dólares en 1975 a más de 315 mil millones de dólares en 1983, lo que significaba el 50\% del producto interno bruto (PIB) de la región. 
+
+
+El servicio de la deuda (pago de intereses y de la devolución del principal) creció aún más rápido, alcanzando 66 mil millones de dólares en 1982, frente a los 12 mil millones de dólares en 1975. El crecimiento económico de los años anteriores había permitido situar a los países latinoamericanos en un lugar intermedio entre las economías más industrializadas y el resto del mundo, en vía de desarrollo.
+
+
+
+Esta crisis fue de carácter eminentemente financiero y se desarrolló a inicios de los años 1980, cuando los países latinoamericanos alcanzaron el break point: 
+
+
+
+Esto a su vez dificultó que pudiesen liberalizar sus sistemas financieros, más aún teniendo en cuenta que optaron por llevar a cabo políticas de industrialización por sustitución de importaciones y represión financiera, para canalizar el ahorro doméstico hacia el sector público. Para ello los aranceles y los controles de capitales fueron utilizados para separar transacciones domésticas y extranjeras, mientras que los controles de precios y restricciones financieras eran utilizados para guiar el desarrollo a nivel doméstico. 
+
+
+
+
+
+Este modelo funcionó razonablemente bien en los años posteriores a la II Guerra Mundial, sin embargo, con el paso del tiempo con la recuperación del comercio a nivel mundial y la mayor movilidad del capital pusieron de relieve el coste de oportunidad vinculado a adoptar políticas de corte más intervencionistas sobre todo en cuanto a la fijación de precios. 
+
+A esto cabria sumar la captura por parte de grupos de interés de algunas actividades económicas vinculadas al sector industrial en muchos países en desarrollo, mientras el Sector Público en muchos países acumulaba deuda en divisas a una velocidad creciente. En 1983 se produjo un punto de inflexión, los países en desarrollo acumulaban una deuda externa de 700.000 millones de dólares, duplicándose respecto a los valores de 1978. A esto cabía unir el aumento del coste del servicio de la deuda como consecuencia del Volcker Shock, así como un descenso del precio del petróleo que afectó a algunos países exportadores como por ejemplo México. 
+
+Precisamente en México se produjo el estallido de la crisis de deuda, ya que a finales de 1982 las Autoridades anunciaron que no disponían de reservas suficientes para hacer el frente al servicio de su deuda externa y suspendieron pagos. De manera gradual se produjo el contagio a otros países debido al temor de que no dispusiesen de reservas suficientes para pagar su deuda externa denominada en dólares. De tal manera que a finales de 1986 más de cuarenta países en desarrollo habían hecho default de su deuda externa o estaban en procesos de renegociación del calendario de repagos. Ante los problemas planteados, los acreedores y distintos organismos internacionales plantearon diferentes soluciones. 
+
+En primer lugar, se afrontó la cuestión como un problema de liquidez de tal manera que se buscó reestructurar la deuda externa de los países afectados a cambio de un programa de ajuste con el FMI. Así en el marco del Club de París se alcanzaron diecisiete acuerdos en el año 1983, estos acuerdos en principio establecían que una vez que se producían una renegociación del vencimiento de la deuda esta no podría revisarse, lo cual no otorgó la flexibilidad que algunos de los países firmantes necesitaban e incluso agravaron los problemas de países como Costa de Marfil, Níger o Madagascar. Asimismo, ante los problemas vinculados a la escasez de fondos, el FMI se vio obligado a ampliar su capacidad financiera, el Club de París accedió a que se pudiese renegociar la deuda ya renegociada en el caso de que el país sufriese episodios de volatilidad en su balanza de pagos y por último se planteó una dificultad más bien de índole estructural, esto es que los bancos comerciales, a pesar de ser acreedores relevantes, no querían participar del proceso de reestructuración de deuda externa. Por ello, en la reunión anual del FMI y del Banco Internacional para la Reconstrucción y Fomento (BIRF) Estados Unidos presentó el Plan Baker, que perseguía una solución involucrando a las distintas partes interesadas, sobre todo teniendo en cuenta que la exposición de los bancos estadounidenses a la deuda de los países en desarrollo era elevada, ya que existían temores vinculados a un posible contagio al sistema financiero estadounidense y en última instancia a su economía. Dicho plan consideraba que el problema era más bien de solvencia, pero buscaba evitar cualquier tipo de quitas y poner más énfasis en el crecimiento a largo plazo. Para ello se retrasó el calendario de pagos para los países participantes a cambio de reformas estructurales en línea con el Consenso de Washington y de manera paralela se instó a las instituciones financieras privadas a que aumentasen su participación en los procesos de renegociación y reestructuración de deuda a través del Club de Londres. Sin embargo, eventos como la declaración de Perú de dedicar solo 10\% de sus ingresos externos al pago de la deuda o la moratoria declarada por Brasil en 1987, pusieron de relieve la gravedad de la situación y que los ajustes realizados no estaban teniendo los resultados deseados. Por ello, ya en 1987 en la Cumbre de Toronto por primera vez se puso sobre la mesa la posibilidad  de realizar quitas. Esta propuesta se concretó con el Plan Brady, que se lanzó en 1989 donde strató de eliminar el debt overhang al reconocer que la sostenibilidad de la deuda externa de lospaíses en desarrollo pasaba por llevar a cabo quitas. Por ello, el Plan Brady se sustentaba en cuatro ejes fundamentales, en primer lugar se ofrecieron bonos emitidos por los países en dificultades cuya garantía serían bonos cupón cero del Tesoro de Estados Unidos denominados Bonos Brady, en segundo lugar se acordó que los países afectados realizasen ajustes estructurales adicionales, en tercer lugar se ofreció a los acreedores distintas opciones de reestructuración para garantizar la sostenibilidad y por último, se aumentó la financiación ofrecida por el FMI, al abrir nuevas ventanillas como el Servicio Reforzado de Ajuste Estructural o el Servicio de Financiamiento Compensatorio y para Contingencias.\footnote{Un ejemplo sería México que en 1989 obtuvo financiación del FMI, Banco Mundial y del Gobierno de Japón, a cambio emprendió reformas estructurales, se privatizaron más de 700 empresas públicas y se llevó a cabo una consolidación fiscal, centrada en una reducción del gasto corriente. A ello cabria unir el alivio de deuda que obtuvo a partir de un menú de opciones ofrecidos por los acreedores oficiales, en los términos descritos en el tema.
+
+El Servicio Reforzado de Ajuste Estructural fue creado por el FMI en 1987, buscaba ofrecer asistencia concesional a países de bajos ingresos que tenían problemas persistentes en su balanza de pagos. 33 países participaron en programas de ajuste y el Servicio Reforzado de Ajuste Estructural fue sustituido en 2001 por el Servicio para el Crecimiento y Lucha contra la Pobreza. El Servicio Compensatorio y de Contingencia Financiera ofrecía préstamos a países que se enfrentaban a caídas en sus préstamos como consecuencia de circunstancias imprevistas (por ejemplo, catástrofes naturales), realizándose la devolución del préstamo entre 3 y 5 años.
+} Estas medidas fueron exitosas, ya que se consiguió reestablecer la confianza en los países en desarrollo y gran parte de ellos pudieron volver a acceder a los mercados financieros internacionales a comienzo de la década de los 90.
+
+Dada la inestabilidad del sistema económico mundial y los problemas en el marco multilateral se acentuaron los procesos de integración regionales. El ejemplo más nítido fue Europa, donde la cooperación entre los países del Viejo Continente se produjo no solo en el ámbito institucional con la Comunidad Economica Europea, sino también en el financiero. Tras el abandono de la Serpiente Monetaria en 1978, los franceses buscaron dar un impulso a la cooperación europea en el ámbito cambiario y monetario, para continuar con la inercia generada a favor de este proces por el Informe Werner. Por ello, tras el acuerdo entre Giscard D’Estaing y Helmut Schmidt en la Cumbre de Bremen se crea el Sistema Monetario Europeo, cuyo objetivo era conciliar los anhelos de los franceses por la estabilidad cambiaria con los alemanes que perseguían una mayor disciplina en el ámbito monetario. Este además era un sistema de tipos de cambios fijos ajustables, donde se abandonaron los objetivos respecto al dólar de la serpiente monetaria. El sistema se asentaba en tres pilares, en primer lugar, una moneda de referencia que actuaba como unidad de cuenta, esta era la European Currency Unit (ECU) para liquidar operaciones entre los Bancos Centrales nacionales de los distintos Estados participantes, cumpliendo la misma función que el dólar en el Sistema de Bretton Woods. Se trataba de una cesta de monedas de los participantes en el SME y el peso de dichas monedas dependía de cuestiones como el peso de su Producto Nacional Bruto, su peso en el comercio intracomunitario y la cuota del país en el FECOM. En segundo lugar, se establecieron unas reglas de intervención en función de las parrillas de paridades que venían dadas por el tipo de cambio de cada moneda respecto al ECU y el posterior cruce del tipo de cambio de cada moneda con las demás monedas de los Estados Miembros. Asimismo, se fijaron dos bandas de fluctuación que eran del +/- 2,25 para la mayoría de los países, menos para Reino Unido, Italia y España que era del +/- 6\%. Por último, se establecieron mecanismos de financiación para desequilibrios en la balanza de pagos y para evitar realineamientos frecuentes de los tipos de cambio que se canalizaban a través del Fondo Europeo de Cooperación Monetaria (FECOM). A pesar de que se trató de otorgar credibilidad al Sistema Monetario Europeo a través del marco institucional descrito, la realidad fue que los realineamientos de los tipos de cambios y las intervenciones fueron frecuentes dado que el sistema adolecía de problemas estructurales vinculados a la asimetría en el proceso de ajuste y la falta de coordinación de las políticas monetarias de los Estados Miembros. La integración regional no se circunscribió únicamente al continente europeo, también se produjeron avances en África, con la aparición de la Zona Franco CFA, que a pesar de su fundación en 1945 su funcionamiento y marco institucional ganaron importancia tras la caída de Bretton Woods. En este caso 13 países a través de dos Bancos Centrales buscaron establecer el Franco CFA, que tenía una paridad fija respecto al franco francés1, esta además no se alteró hasta 1994. Por tanto, los Estados Miembros no mantenían únicamente un tipo de cambio fijo entre sí, sino también con Francia. Los países de la Zona Franco CFA sufrieron un deterioro de su relación real de intercambio en la década de los 80 como consecuencia de la caída del precio del cacao y del algodón, que representaban un porcentaje considerable sus exportaciones. A pesar de esta casuística, los Estados Miembros tuvieron tasas de inflación más reducidas en comparación con los países del entorno que tenían sistemas de flotación o flotación sucia, mientras que la actividad económica se expandió a un ritmo similar. La estabilidad de la Zona Franco CFA se sustentó en dos hechos fundamentalmente. El primero de ellos es que los Estados Miembros mantuvieron controles de capitales, lo que contribuyó a que la paridad del franco CFA fuese más creíble. En segundo lugar, la ayuda oficial al desarrollo recibida por los Estados Miembros, así como la garantía por parte de Francia de la plena convertibilidad del franco CFA a la paridad establecida, lo que permitió a los dos Bancos Centrales regionales operar con descubiertos en sus cuentas bilaterales con el Tesoro francés. A diferencia del Sistema Monetario Europeo donde las paridades se ajustaban de manera frecuente, la Zona Franco CFA gozo de estabilidad durante ininterrumpida durante casi medio siglo. Esto se debió principalmente a una cuestión de credibilidad ya que los participantes se comprometían a ajustar la paridad respecto al franco en caso de necesidad, lo que garantizaba que en última instancia las obligaciones financieras de Francia fueran limitadas. El mecanismo era el siguiente, los dos Bancos Centrales de la Zona Franco CFA garantizaban que aplicarían políticas monetarias contractivas cuando tenían descubiertos en sus cuentas con el Tesoro francés, ya que los Estados Miembros del franco CFA no querían poner en peligro las enormes cantidades de ayuda al desarrollo que recibían de Francia.En los años 90 una serie de cuestiones que provocan alteraciones en los mercados cambiarios,sobre todo por la mayor movilidad de capitales y un policy mix incoherente de las autoridades en muchos países, provocó una devaluación del franco CFA. A pesar de los descubiertos que ambos Bancos Centrales de la unión monetaria tenían con el Tesoro francés, ambos titubearon a la hora de aplicar una política monetaria restrictiva, sobre todo por las dificultades que atravesaban sus sistemas financieros, como consecuencia de la caída del precio de las materias primas que exportaban. Asimismo, las bajadas salariales instauradas por el gobierno de Camerún se revirtieron tras las protestas y huelgas por todo el país, que se fueron extendiendo a otros Estados de la Zona Franco CFA. Ante la ausencia de ajustes, el gobierno francés acordó una devaluación del franco CFA del 50\% frente al franco francés en 1994.
+
+
+\subsection{Invasión en territorio nacional: }
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Sistema Económico Internacional}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+\href{https://www.bde.es/f/webbde/SES/Secciones/Publicaciones/PublicacionesBCE/BoletinMensualBCE/10/Fich/bm1005-4.pdf}{\textit{La Gran Inflación: Enseñanzas de Política Monetaria}. BdE (2010)}
+
+\href{https://alphahistory.com/vietnamwar/costs-of-the-vietnam-war/}{\textit{The Costs of the Vietnam War.} Alpha History (2018)}
+
+\href{https://www.federalreservehistory.org/essays/great-inflation}{\textit{The Great Inflation}. Federal Reserve History (2013)}
+
+\href{https://www.economicsandpeace.org/wp-content/uploads/2015/06/The-Economic-Consequences-of-War-on-US-Economy_0.pdf}{\textit{Economic Consequences of War on the US Economy}. Institute for Economics and Peace}
+
+\href{https://www.infobae.com/opinion/2025/02/09/tipo-de-cambio-atrasado-o-de-equilibrio-que-dice-la-historia-y-que-define-el-gobierno/}{\textit{Tipo de cambio atrasado o de equilibrio: ¿qué dice la historia y qué define el Gobierno?} Infobae (2025)}
+
+\href{https://unchartedterritories.tomaspueyo.com/p/why-is-argentina-poor}{\textit{Why Is Argentina Poor?} (2025)}
+
+\href{https://www.ieral.org/images_db/noticias_archivos/12-53877187.pdf}{\textit{Trade and Industrial policies in Argentina since the 1960s}. Fundación Mediterraneo (1998)}
+
+\href{https://www.economicas.uba.ar/extension/vocesenelfenix/liberalizacion-apertura-deuda-y-fuga/}{\textit{LIBERALIZACIÓN, APERTURA, DEUDA Y FUGA} Voces en el Fénix (2017)}
+
+\href{https://cenital.com/eduardo-basualdo-el-19-y-20-de-diciembre-estallo-un-patron-de-acumulacion-de-valorizacion-financiera-y-fuga-de-capitales/?utm_source=chatgpt.com}{\textit{Eduardo Basualdo: “El 19 y 20 de diciembre estalló un patrón de acumulación de valorización financiera y fuga de capitales”} CENITAL (2021)}
+
+\href{https://www.defensa.gob.es/documents/2073105/2383976/la_nueva_globalizacion_y_las_oportunidades_para_iberoamerica_2025_dieeem01.pdf/d961b080-5561-f162-d9c5-4bc91fc9e6ec?t=1739883440165}{\textit{La nueva globalización y las oportunidades para Iberoamérica: friendshoring y nearshoring}. BÉJAR (2025)}
+
+\href{https://www.nber.org/system/files/working_papers/w16946/w16946.pdf}{\textit{US Intervention during the Bretton Woods era: 1962-1975}. BORDO, SCHWARTZ y HUMPAGE (2011)}
+
+\href{https://comunicacion-cientifica.com/wp-content/uploads/2023/07/101.-PDF-Ascenso-y-caida-del-imperio-norteamiricano.pdf}{\textit{Ascenso y caída del Imperio Norte Americano}. PINEDO OSNAYA (2023)}
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
