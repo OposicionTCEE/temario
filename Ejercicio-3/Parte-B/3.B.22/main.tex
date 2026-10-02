@@ -1,0 +1,1396 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+\usepackage{multirow}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{El Fondo Monetario Internacional\\
+\large Estructura y políticas. La prevención y solución de crisis}
+\author{Marcelo Ortega}
+\date{Marzo 2026}
+\newcommand{\TemaCode}{3B22}
+
+\oldtitle{
+    B.23. El Fondo Monetario Internacional. Estructura y políticas. Implicaciones sobre las políticas de estabilización de los países en desarrollo
+}
+\changerationale{
+    Durante la crisis de la Eurozona, el FMI volvió a operar más allá de en las economías en desarrollo.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+    No volverse loco con las lineas de crédito. Actualizar las cuentas y prestarle importancia.
+
+    Fórmula de cálculo de las cuotas del FMI.
+
+    Lo más importante: por qué se crea, funcionamiento institucional, por qué está en crisis, hacia dónde va, tiene capacidad de algo, lo tuvo en algún momento, cómo ha cambiado la visión (controles de capitales, etc.).
+    }
+\vspace{1cm}
+
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+
+
+
+\clearpage
+\section{El Fondo Monetario Internacional: Perspectiva Institucional}
+\puntosclave{
+    Los recursos del FMI ascienden a 1 billón de DEG y provienen de los balances de los bancos centrales y de las reservas de divisas de los países miembros. 
+    
+    Las cuotas del FMI son asimilables al capital de la institución y determinan el poder de voto de cada país. Estados Unidos es el mayor accionista y cuenta con poder de veto para las decisiones esenciales sobre el gobierno de la institución.
+    
+    El personal del FMI (\textit{staff}) es quien negocia y acuerda los programas de asistenciafinanciera con los países miembros y la supervisión de las políticas. Los programas acordados con los países luego tienen que ser aprobados por el Directorio Ejecutivo. 
+    
+    El Directorio Ejecutivo del FMI reside en Washington D.C. (EEUU) y está compuesto por representantes de los países miembros (\textit{sillas}). Es donde se aprueban los programas de asistencia financiera.
+}
+
+El FMI es una institución internacional de cooperación monetaria y financiera. Su origen se puede datar en la firma del Convenio Constitutivo del Fondo, el 22 de julio 1944, que entraría en vigor el día 27 de diciembre de 1945 (BOE n.305, de 22 de diciembre de 1978), en la Conferencia de Bretton Woods, por parte de veintinueve países que representaban el 80 por 100 de las cuotas aceptadas.\footnote{
+Se puede consultar aquí: \href{https://www.imf.org/external/spanish/pubs/ft/aa/aas.pdf}{Convenio Constitutivo (español)}.
+
+El Convenio Constitutivo ha sido enmendado varias veces entrando en vigor éstas en 1969, 1978, 1992 (BOE n.253, de 22 de octubre de 1998, pp. 34926-34928, y BOE n.9, de 22 de enero de 1999, p. 3074).
+} Poco después, el día 8 de marzo de 1946, se celebró la sesión inaugural del Consejo de Gobernadores del Fondo en Savannah (Georgia), y el Fondo comenzó sus operaciones el día 1 de marzo de 1947. En septiembre de 1947, el Acuerdo mediante el cual pasó a ser Organismo Especializado de las Naciones Unidas fue aprobado por el Consejo de Gobernadores, y entró en vigor el 15 de noviembre de 1947 mediante su aprobación por la Asamblea General de las Naciones Unidas. Tiene su sede principal en Washington D.C y cuanta con pequeñas oficinas en París, Bruselas, Nueva York y Ginebra, así como con representantes residentes en países con programas importantes o de larga duración.\footnote{El Convenio Constitutivo establece que la sede del FMI residirá en el país miembro con la mayor cuota. La sede en Washington D.C. está en la calle 19 esquina con Pennsylvania Avenue, a escasa distancia del Tesoro de los Estados Unidos y de la Casa Blanca.
+} 
+
+Para llevar a cabo sus operaciones cuenta con 3.100 empleados (2025) de más de 162 países distintos. Éstas operaciones son financiadas mediante un régimen dual: cuotas y préstamos. Como no se financia en los mercados financieros internacionales, sus recursos provienen de los Balances de los Bancos Centrales (vía cuotas) y de la emisión de Derechos Especiales de Giro como activo reserva (vía préstamos), de forma bilateral o multilateral. Además, se encuentra entre los acreedores preferentes en el orden de prelaión de créditos, aunque de manera no institucionalizada (por no haber un régimen ejecutorio común, es evidente). De hecho, esta es una condición adquirida por costumbre y no prevista. 
+
+Actualmente, cuenta con 191 miembros. Es decir, prácticamente todas las naciones soberanas que son miembros de las Naciones Unidas son también miembros del FMI. ¿Cuáles no? Tengamos en cuenta que Naciones Unidas tiene 193 miembros de pleno derecho por tanto, parecería razonable suponer que los faltantes son Cuba y Corea del Norte. Sin embargo la realidad es más compleja. Por un lado, tanto Mónaco como Liechenstein son mimebros de pleno derecho de las Naciones Unidas pero no lo son del FMI. Por otro lado, tanto Kosovo como Taiwán son miembros del FMI sin ser miembros de las Naciones Unidas. Por tanto, debemos entender algo elemental: cualquier entidad territorial puede ser miembro del Fondo Monetario Internacional mientras los miembros lo acepten, no es necesario ser una entidad territorial soberana a los efectos del DIP. España se adhirió al Fondo en 1958.\footnote{
+Las razones a las que se alude son diversas:
+\begin{la}
+    \item \textbf{Exigencias para la membresía}. En primer lugar, la imposibilidad de desembolsar las cuotas requeridas en divisa fuerte, entendiendo por divisas fuertes aquellas cuyo poder adquisitivo es relativamente estable (por baja inflación en términos relativos) y que son ampliamente aceptadas en pagos internacionales. Por ejemplo, el dólar, la libra esterlina o el yen, y ahora el Euro. El FMI, sin embargo, utiliza el término \textit{divisas de libre uso} para referirse a estas divisas fuertes, tomando como criterios objetivos: (i) que las divisas sean ampliamente utilizadas en el comercio y finanzas internacionales; y, (ii) que existan mercados profundos para la divisa. Una divisa puede ser fuerte y considerada de libre uso aunque no sea libremente convertible -es decir, aunque mantenga determinados controles de capitales-, pero normalmente las monedas fuertes y ampliamente negociadas suelen ser fácilmente convertibles, y estar sometidas a relativamente pocos controles de capitales;
+    \item \textbf{Motivaciones políticas}. También se argumenta que España, y otros países, optaba por la exclusión voluntaria por razones ideológicas (eran países que en la época contaban con modelos autárquicos nacionalistas). Sin embargo, CAVALIERI muestra cómo el gobierno de España intentó sondear discretamente las posibilidades de entrada en las Organizaciones Internacionales al término de la II Guerra Mundial, pero se enfrentó al rechazo de los Estados Unidos e Inglaterra. Por otra parte, YARELA y MUNS explican que cuando se produjeron las iniciativas de apertura a España por parte de Estados Unidos a principios de los 50, se produjo un acercamiento muy gradual. MUNS explica que España intentó antes entrar en la OECE, pero ésta se mostró menos dispuesta que el FMI. De hecho, el jefe de misión para España del FMI, GABRIEL FERRAS, intercedió de forma determinante para facilitar la entrada de España en la OECE.
+\end{la}
+}
+
+\subsection{Estructura Organizativa}
+El FMI es la institución financiera multilateral con más recursos financieros disponibles -como hemos visto, más de un billón de dólares-. Es también la organización que orienta los principales debates de política económica internacional en sus Asambleas bianuales de ministros de economía y finanzas y en las reuniones del G20. Por estas razones, comprender quién gobierna o influye en la institución, y cómo toma sus decisiones, es particularmente importante.\footnote{En las reuniones de Bretton Woods en 1944. las principales características del FMI venían negociadas de antemano entre Estados Unidos y el Reino Unido, y el principal contenido de las discusiones versó sobre las cuotas relativas de cada país en el Fondo, es decir, del reparto de influencia y poder. Las discusiones sobre el reparto de cuotas entre los miembros han sido una tónica desde entonces hasta hoy, y se encuentran entre las más sensibles a nivel político.
+} 
+
+El FMI se suele dividir entre:
+\begin{la}
+    \item \textbf{Órganos políticos}. En la cúspide de la estructura funcional encontramos los órganos de deicisón políticos. En estos, los países mimebros y sus respectivos intereses toman una espeial relevancia. Estan formados, esencialmente, por designaciones que siguen criterios político-técnicos en interés de sus representados. Dentro de estos encontraríamos la Junta de Gobernadores, el Directorio Ejecutivo y los órganos de apoyo a estos organismos; y,
+    \item \textbf{Órganos ejecutivos}. En cuya cúspide se econtraría la Gerencia del FMI. Se encuentra a cargo de todas las decisiones operativas del fondo de forma que permiten alcanzar los objetivos definidos. 
+\end{la}
+
+Una visión general de la estructura organizativa la podemos encontrar en el siguiente esquema:
+
+\imagenfit{Fig1.png}{Diagrama de toma de decisiones del FMI: Estructura organizativa jerárquica}{\href{https://www.imf.org/en/about/factsheets/sheets/2022/how-the-imf-makes-decisions}{IMF: How the IMF makes decisions?}}
+
+Veamos cómo se descomponen los órganos en función de su naturaleza y la razón que persigue.
+
+\subsubsection{Órganos Políticos}
+
+
+\imagenfit{Fig2.png}{}{}
+
+
+
+\paragraph{Junta de Gobernadores}
+El Board of Governors está compuesta por los 1 90 ministros o gobernadores de los bancos centrales ( 1 por país, que elige si lo representa el ministro o el gobernador del Banco Central). Los "Gobernadores ante el FMI" de los países miembros son los Ministros de Economía o Hacienda (Finance Ministers) o los Gobernadores de los Bancos Centrales.\footnote{Cada país decide quién es su Gobernador/a ante el Fondo, como máximo representante formal en la institución. En España en 2023 es su Vicepresidenta y Ministra de Asuntos Económicos y Transformación Digital, pero otros países como Alemania designan al Gobernador de su Banco Central.
+} Teóricamente, los 190 Gobernadores ante el FMI, junto a otros 1 90 Gobernadores alternos, se reúnen una vez al afio en la Asamblea Anual del FMI, pero en la práctica esta reunión es puramente formal, con discursos de la Directora Gerente y algún otro m iembro selecto, sin discusión y sin asistencia dela gran mayoría de los ministros o gobernadores -puesto que organizar un debate entre 380dignatarios de alto nivel sería impracticable-. Los Gobernadores en l a práctica efectúan votaciones a distancia sin discusión. Las funciones principales de la Junta de Gobernadores son el refrendo formal de las decisiones aprobadas en su Directorio Ejecutivo, cuando así lo exige el Convenio Constitutivo. Suele seren materias que afecten a la estructura de la organización, tanto organizativa como financiera.Por ejemplo, las decisiones sobre aumentos de cuotas y asignaciones de Derechos Especiales de Giro, cambios importantes en la estructura organizativa, la remuneración del Directorio, o la admisión de nuevos miembros.
+
+La mayor parte de las decisiones estratégicas que se someten a votación se toman por mayoría reforzada del 85\% de los votos, lo que confiere poder de veto a los Estados Unidos en todos los temas determinantes de la organización. Algunas decisiones de especial calado, como la modificación del Convenio Constitutivo, que es un Tratado Internacional, requieren la ratificación de los parlamentos nacionales. Este proceso puede dilatar la aplicación de algunas decisiones durante más de un año.
+
+\paragraph{Directorio Ejecutivo}
+El Directorio Ejecutivo (la Junta) es responsable de la gestión cotidiana de las actividades del FMI. Está compuesto por 25 directores, que son elegidos por los países miembros o por grupos de países, y por el Director Gerente, que actúa como presidente del órgano. La Junta suele reunirse varias veces por semana. Desarrolla su trabajo principalmente sobre la base de documentos preparados por la dirección y el personal técnico del FMI.
+
+El International Monetary Fund cuenta así con una estructura en la que la Junta de Gobernadores define las grandes orientaciones institucionales, mientras que el Directorio Ejecutivo supervisa la administración y las decisiones operativas diarias del organismo.
+
+
+El Executive Board lo componen 24 representantes de los países miembros, residentes en Washington.\footnote{Existen otras organizaciones internacionales cuyo Directorio es no residente. Suele ser en casos en los que se otorga gran autonomía a la gerencia.
+} 
+
+Hay elecciones cada dos años para que los 190 países, agrupados en \textit{sillas} (constituencies), designan a sus representantes. 
+
+Los Estados Unidos, Japón, China, Alemania, Reino Unido, Francia y Arabia Saudí, como representantes de los principales accionistas de la institución, tienen silla propia que no necesitan compartir con otros países. Otros países como Italia o Brasil cuentan con otros países en sus sillas pero siempre ostentan la Dirección Ejecutiva. Finalmente, países como España y México, cuentan con acuerdos de rotación sobre su silla. 
+
+El Directorio Ejecutivo decide semanalmente el día a día de la institución. Por ejemplo, aprobación sobre programas financieros.\footnote{Una anécdota que reseña MUNS es que ULLASTRES, ministro de Comercio de España, presentó el programa de estabilización de 1959 ante el Directorio Ejecutivo del FMI. 
+} 
+
+Las decisiones se toman por mayoría simple de votos, pero en la práctica se busca alcanzar un amplio consenso. Algunas materias estratégicas se elevan a la Junta de Gobernadores, que suelen requerir mayorías reforzadas.
+
+
+\paragraph{Comité Monetario y Financiero Internacional (CMFI)}
+El CMFI (Comité Monetario y Financiero Internacional) asesora e informa a la Junta de Gobernadores del FMI sobre la supervisión y gestión del sistema monetario y financiero internacional, incluidas las respuestas ante acontecimientos que puedan alterar dicho sistema. También examina propuestas del Directorio Ejecutivo para modificar los Artículos del Convenio Constitutivo y asesora sobre cualquier otra cuestión que le sea remitida por la Junta de Gobernadores. Aunque el CMFI no posee poderes formales de decisión, en la práctica se ha convertido en un instrumento clave para proporcionar orientación estratégica al trabajo y a las políticas del Fondo.
+
+El CMFI suele reunirse dos veces al año, durante las Reuniones Anuales y de Primavera del Banco Mundial y el FMI. Para cada reunión, la Directora Gerente prepara un proyecto de agenda que es debatido por el Directorio Ejecutivo, aprobado por el presidente del CMFI y adoptado formalmente por el Comité durante la reunión. Al finalizar las reuniones, el Comité emite una declaración que resume sus posiciones. Estas declaraciones proporcionan orientación para el programa de trabajo del FMI durante el semestre siguiente, hasta las próximas Reuniones de Primavera o Anuales.
+
+El tamaño y la composición del CMFI reflejan los del Directorio Ejecutivo. El Comité cuenta con 25 miembros, que son gobernadores de bancos centrales, ministros u otros cargos de rango equivalente, normalmente seleccionados entre los gobernadores de los 191 países miembros del FMI, siendo Liechtenstein el miembro más reciente tras incorporarse al FMI en octubre de 2024. Cada país miembro y cada grupo de países miembros que elige a un director ejecutivo designa a un miembro del CMFI.
+
+Actualmente, el grupo está presidido por Mohammed Aljadaan, ministro de Finanzas de Saudi Arabia. Fue seleccionado para dirigir el Comité por un período de tres años a partir del 4 de enero de 2024.
+
+El CMFI opera por consenso, incluida la elección de su presidente. Aunque no existen reglas formales sobre límites de mandato, desde 2007 los presidentes del CMFI son nombrados por períodos de tres años. Varias instituciones internacionales, entre ellas el World Bank Group, participan como observadores en las reuniones del CMFI.
+
+
+El CMFI es una versión ejecutiva de la Junta de Gobernadores al estar compuesta por Ministros y Gobernadores de Bancos Centrales, pero con una composición similar a la del Directorio de 24 sillas. Normalmente, los países miembros establecen reglas de rotación conjunta entre el Directorio y el CMFI. En el CMFI es donde se adoptan las principales líneas estratégicas de trabajo de la institución, plasmadas en sus Comunicados semestrales, que se negocian por los miembros en las Asambleas de Primavera (abril) y Anuales, de Otoño (octubre). El FMI participa también forma��nente en el Comité de Desarrollo junto con el Banco Mundial, pero se suele considerar un foro independiente del FMI. 
+
+Comentario : El CMFI es un foro importante para el diálogo entre ministros de los principales países para discutir los principales problemas económicos internacionales. No obstante, se ha visto desplazado en esta función en gran medida por el G7 y desde 2009 por el G20, y en el plano puramente monetario por el Banco Internacional de Pagos (BIS). La principal razón para esta pérdida de peso fue, en los 80 y 90, la combatividad del bloque de los países en desarrollo, que derivaba en peticiones de trato diferenciado, con el consiguiente desplazamiento de las discusiones clave al G5 y al G7. Con un G20 menos dividido en bloques Norte-Sur (menores peticiones de trato diferenciado que en el CMFI) y con menores inercias en su composición 10 , éste mantiene todavía la condición de 'principal foro de cooperación económica' porque cuenta con la presencia prominente de China.
+
+\paragraph{Distribución de Poder: Principio del accionista}
+El Fondo Monetario Internacional se rige por el principio de accionista: Quien más recursos aporta en forma de cuotas tiene mayor poder de voto. Así, el poder de voto se determina en función de las cuotas de cada país y de unos votos básicos, que son los mismos para cada país y aportan un elemento igualador para los países pequeños, siguiendo la siguiente fórmula:
+
+
+Actualmente los votos básicos ascienden al 5,15\% de todos los votos (1.452 por país). A modo de ilustración, para una cuota como la de España, de 9.535,5 Millones de DEG, los votos ascienden a:
+
+
+
+Esta tabla muestra que los mayores accionistas de la institución son el G7 (con Estados Unidos como claro líder) y China. La capacidad de influencia sobre la institución está relacionada con este poder accionarial, aunque la influencia también se ejerce a través del nombramiento de la gerencia y del personal del Fondo. Para determinar la cuota que le corresponde a cada país, se toma como referencia principal la fórmula de reparto de cuotas, que trata de reflejar las realidades de la economía mundial. Desde 2008 la fórmula de cálculo de las cuotas que le corresponderían a un país \textit{i} es: 
+
+Cuotat = (50\%. P/B Blendt + 30\%.Apertura¡ + 15\%. Varíabilídadt + 5\%. Reservast)º·95 
+
+Las variables PIB, Apertura, Variabilidad y Reservas se miden en porcentajes del total de los miembros del FMI. La principal variable de la fórmula es el PIB, que es la variable más utilizada habitualmente para medir el peso de un país en la economía mundial, y se mide como una mezcla (blend) de: 
+
+PIB Blend = 60\%. PIB en dólares medido a tipos de cambio de mercado + 40\% PIB a Paridad de Poder Adquisitivo. 
+
+El PIB en PPA beneficia más a los países en desarrollo y se introdujo como una concesión a los países que tenían fuertes perspectivas de crecimiento, como China y la India. La Apertura de un país es la suma de sus ingresos y pagos por cuenta corriente en los últimos 5 años. Esta variable tiene gran tradición en el FMI puesto que la institución originalmente financiaba situaciones de desequilibrio comercial y reconoce en positivo la apertura exterior, como recogen los objetivos del Fondo. No obstante, prima mucho a los países desarrollados pequeños muy abiertos. La Variabilidad es la desviación típica de los ingresos por cuenta corriente y de los flujos de capitales en los últimos 3 años. Se introdujo para conceder más cuotas a los países que sufrían más la volatilidad en los flujos comerciales y de cuenta corriente, es decir, los potenciales prestatarios. Las reservas internacionales tienen ahora un peso pequeño, pero anteriom1ente tenían un mayor peso, porque reflejaban la capacidad de contribución mejor que el PIB (salvo para los países que emiten moneda de reserva, que pueden aportar la moneda que crean). Se at1ade también un "factor de compresión" matemático que eleva al 0,95 el resultado de la fórmula, de forma que 'comprime' las cuotas, reduciendo las de los países más grandes y aumentando las de los países pequeños. Junto a los votos básicos, son elementos que tratan de dar más peso a los países con economías más pequeñas, atenuando el principio de accionista.
+
+Las cuotas han sido objeto de intensas negociaciones desde el nacimiento del Fondo. La fómrnla de cuotas ha sido objeto de negociación intensa, puesto que es una de las claves más importantes para el reparto de poder.\footnote{La negociación sobre la fóm1ula es objeto de debate y está en revisión periódica. La fórmula de cuotas actual se acordó en 2008 y existe compromiso de utilizar una nueva fórmula actualizada. En el pasado hubo diversas fórmulas para determinar las cuotas.
+} Pero la fórmula no determina la cuota efectiva de un país de forma automática. Es necesario que los órganos del Fondo aprueben una revisión de cuota (hay revisiones generales cada 4-5 años), y ningún país ha aceptado hasta ahora reducir su cuota nominal (en millones de DEG). Por lo tanto, para realinear las cuotas relativas (en porcentaje del total) es necesario que se aprueben aumentos de cuotas nominales significativos. En las revisiones generales de cuotas, se determinan los niveles de cuotas y su realineamiento. Se han producido diversos realineamientos a lo largo de la historia del Fondo, para reflejar el ascenso de distintos países. Primero fueron los países europeos fundadores de la Comunidad Europea, principalmente Alemania e Italia, y posteriormente Japón. En 2010 se produjo unimportante incremento del peso de los países dinámicos, principalmente países emergentes y en  desarrollo como China, aunque también de España, que sufría graves problemas de infrarrepresentación desde hace décadas en comparación con su peso en la economía m0undial. Algunos países reivindican el análisis en términos de países desarrollados y países en desarrollo, al modo de las Naciones Unidas, y reclaman un trato diferenciado más favorable a los países en desarrollo. Esta dialéctica Norte-Sur ha perjudicado particulannente a países como España, que se han visto excluidos de aumentos de cuota como el de 2006, y perjudicados en 2010, por ser un país desarrollado. El principal problema es que las categorías de países esconden muchasdiferencias y pueden ser arbitrarias. Por ejemplo, China es un país en desarrollo muyinfrarrepresentado porque ha experimentado un crecimiento muy rápido, mucho mayor que el de su cuota. Pero otros países en desarrollo están adecuadamente representados, o incluso sobrerrepresentados en cuotas o en sillas (Argentina, por ejemplo, tiene más presencia en el Directorio que España, siendo una economía mucho más pequeña). Más aún, el problema de definición de país en desarrollo es cada vez mayor, al existir numerosos países que han pasado el umbral de renta alta definido por el Banco Mundial, pero desean seguir contando con el trato favorable conferido a los países en desarrollo.\footnote{La comparación entre varios paises desarrollados del Sur de Europa, infrarrcpresentados, como Portugal y Grecia, y determinados países emergentes y en desarrollo (según la Reforma de Cuotas y Gobierno de 2010) resulta particularmente sangrante. Grecia y Portugal tienen menor PIB en PPA per cápita que Chequia, Corea o el riquísimo Singapur, y un PIB en PPA bastante similar al de Rusia. Todos los paises tienen así incentivos perversos a clasificarse como países en desarrollo. De hecho, es lo que le ocurrió a España en 1978 cuando todavía no se había graduado como país desarrollado. El FMI hizo una distribución de sus beneficios por ventas de oro a los \textit{países en desarrollo}, pero se excluyó a España de la lista de beneficiarios y se cambió la definición de países en desarrollo elegibles. Una linea estratégica tradicional para España es la igualdad de trato de todos los países, y tratar de superar dialécticas Norte-Sur.
+}
+
+
+
+
+
+\subsubsection{Órganos Ejecutivos: Departamento General}
+
+\imagenfit{Fig3.png}{}{}
+
+\paragraph{Gerencia del FMI}
+La Gerencia de la institución la componen los principales puestos ejecutivos. El puesto de Directora Gerente (Managing Director) se ha reservado tradicionalmente a Europa -así como el puesto de Presidente del Banco Mundial se reserva a un estadounidense-, por un mandato de 5 años renovables. En cambio los puestos de Subdirectores Gerentes ( Deputy Managing Directors) se asignan a representantes de otros accionistas principales como Japón o China, o receptores de programas. El que tiene mayor autoridad y capacidad de influencia suele ser el Sub9irector estadounidense, al provenir del mayor accionista, que además ha ej ercido el liderazgo en la institución y en el sistema monetario internacional. El reparto de los cargos e influencia en la institución viene siendo objeto de debate en el IMFC y en otros foros como el G20, y exjste presión, principalmente por parte de los países no europeos y de los emergentes, para que se cambie el acuerdo tácito actual de reparto por nacionalidades.
+
+
+Por debajo de la Gerencia están los puestos de Directores de Departamentos, entre los que podemos destacar al Economista Jefe (Pierre-Olivier Gourinchas), que tiene gran visibilidad pública. Otros departamentos importantes son los de Estrategia, Monetario y Mercados de Capitales, y Finanzas, así como los departamentos regionales para Europa, Américas, Asia, Oriente Medio, África. El personal del FMI (IMF staff) se encuadra en alguno de los diversos departamentos del FMI La institución trata de mantener una diversidad geográfica en su personal, pero mantiene una fuerte homogeneidad en su formación. La gran mayoría del personal economista proviene de las principales universidades de Estados Unidos y Reino Unido 1 1, 'dado que son las de mayor prestigio académico internacional en economía. El personal y la gerencia del FMI cuentan con una gran autonomía y cuentan con la capacidad de iniciativa, que es de gran importancia en la práctica. Las decisiones más importantes se suelen consultar o negociar con los principales Directores antes de presentarse a los órganos formales.
+
+\subsection{Estructura Financiera del FMI (I): Presentación}
+Ahora que conocemos la estructura organizativa del FMI, podemos presentar brevemente su estructura financiera. Para ello, a continuación seguiremos la clasificación que se deriva directamente de su último \href{https://www.imf.org/external/pubs/ft/ar/2025/pdfs/imf-annual-report-2025-financial-statements.pdf}{\textit{IMF Annual Report} - Financial Statements (2025)}. Nos daremos cuenta que, por la definición de sus \textit{cuentas}, parece que estemos ante una organización con características de grupo. No obstante, el FMI no es un grupo en sentido institucional. Se trata de una Organización Internacional jurídica e institucionalmente unitaria, pero que financieramente realiza una distinción contable y operativa interna entre: (i) las cuentas administradas directamente por el Departamento General, que son el núcleo financiero del FMI y donde se registran las operaciones ordinarias financiadas con cuotas; y, (ii) las cuentas administradas por \textit{entidades administratas por el FMI}. No son organizaciones separadas, sino mecanismos jurídicos y financieros administrados por el propio FMI, algunos con personalidad contable diferenciada porque tienen recursos separados, objetivos específicos y reglas propias de financiación y riesgo. (Como veremos más adelante).\footnote{Al preparar los estados financieros, el Departamento General evalúa el control que ejerce sobre otras entidades administradas por el FMI -Fondos Fiduciarios y Departamento de DEG- para determinar si deben consolidarse. Se considera que existe control cuando el Departamento General: (i) tiene poder sobre una entidad; (ii) está expuesto a rendimientos variables derivados de su participación en ella; y, (iii) tiene capacidad para influir sobre dichos rendimientos. La evaluación del control requiere un juicio significativo y la formulación de supuestos mediante una evaluación multifactorial. Una consideración clave es la estructura de gobernanza del International Monetary Fund y las responsabilidades del Directorio Ejecutivo respecto de las distintas entidades. Al dirigir las actividades de una entidad, el Directorio Ejecutivo debe ejercer su autoridad de manera independiente respecto de su influencia sobre otras entidades y proteger los intereses de las partes interesadas de dichas entidades. Además, la evaluación debe tener en cuenta las limitaciones y salvaguardias procedimentales que regulan la gestión de recursos, normalmente definidas en los documentos constitutivos de cada entidad. Otro factor importante es la intención de los países miembros, reflejada en decisiones de política y marcos acordados caso por caso. A 30 de abril de 2025 y de 2024, el Departamento General no ejercía control sobre las entidades administradas por el FMI, cuyos estados financieros se presentan por separado. La evaluación del control del Departamento General sobre otras entidades administradas por el FMI se revisa continuamente a la luz de nueva información y acontecimientos relevantes.
+
+El caso más especial es el Departmento de Derechos Especiales de Giro: jurídicamente forma parte del FMI, pero los Artículos Constitutivos exigen que sus cuentas estén separadas.
+}
+
+Dicho esto, independientemente de la dependencia administrativa, todas se elaboran atendiendo a las Normas Internacionales de Información Contable y, como tal, siguen los mismos criterios básicos: (i) coste histórico, salvo por la revalorización de instrumentos financieros medidos a valor razonable con cambios en resultados; (ii) criterio de operación continuista, operando como empresa en funcionamiento; y, (iii) se presentan en Derechos Especiales de Giro (DEG), que constituyen la unidad de cuenta del FMI. 
+
+\begin{specialblock}{Derechos Especiales de Giro}
+    Los Derechos Especiales de Giro son los activos de reserva monetarios que asigna el FMI a sus miembros. El valor del DEG es determinado diariamente por el FMI sumando cantidades específicas de las monedas que integran la cesta de valoración, convertidas a dólares estadounidenses utilizando los tipos de cambio de mercado. El FMI revisa generalmente la composición de la cesta de valoración del DEG cada cinco años. Estas revisiones abarcan las monedas incluidas en la cesta (junto con los criterios para su selección), determinan los pesos relativos de dichas monedas y evalúan los instrumentos financieros utilizados para calcular la tasa de interés del DEG.
+    
+    Dan derecho a la obtención de divisas fuertes al tipo de cambio fijado por el FMI entre el DEG y las divisas en cuestión. Para fijar este tipo de cambio, el FMI establece la cesta de divisas que componen el DEq, con los siguientes pesos, que se revisan cada cinco años:    
+    
+    
+    La introducción del renminbi (yuan) chino en la cesta del DEG en 2016 con un peso muy significativo supuso un cambio muy importante para las finanz.as del DEG, al introducir la moneda de un país en desarrollo que no circula libremente como las otras cuatro -no es considerada habitualmente como una moneda de reserva-. Su inclusión en la cesta del DEG tenía un componente político para acercar a la institución al gobierno chino, y un componente de perspectivas de futuro, al considerar que el renminbi ganarla en circulación internacional a lo largo del tiempo. A partir de la cesta de divisas del DEG se establece el tipo de cambio con todas las divisas de los miembros. Por ejemplo, a día 8 de marzo de 2023, 1 DEG = 1 ,25 €; 1 DEG = 1 ,33\$. El tipo de interés del DEG, por su parte, es la media ponderada semanal de los tipos de interés de instrumentos a corto plazo representativos (benchmarks) de los mercados monetarios de las divisas que componen la cesta del DEG. Los DEGs asignados a los miembros ascienden a 660.000 millones, y se asignan en proporción a la cuota de cada país en el FMI. Solamente pueden tener DEGs los bancos centrales de losmiembros -no puede haber tenedores privados de DEG-. Las mayores asignaciones de DEG han sido las de 2021 (456.000 millones) y 2009 (161.000 millones), en momentos de crisis internacional, como formas de suministrar reservas internacionales en situaciones de crisis. El uso del DEG: Originalmente, el DEG fue creado en 1969 aspirando a replicar varios elementos del esquema de \textit{bancor} de KEYNES, para evitar recurrir al oro o dólares en transacciones internacionales entre bancos centrales, y establecer una fuente multilateral de generación de activos de reserva. Pero en la práctica su uso ha sido muy limitado. El uso del DEG para obtener divisas implica el pago del tipo de interés del DEG. Se espera que el miembro devuelva en algún momento los DEG que ha usado, pero no se establece plazo ni obligación fonnal. De este modo, el DEG es similar a una línea de crédito incondicional al tipo de interés del DEG, sin plazo de vencimiento ni plazo de devolución. Los principales accionistas del FMI (y principales contribuyentes en divisas) no han querido otorgar un papel significativo al DEG precisamente por su naturaleza incondicional. Han preferido que el uso de los recursos del FMI sea condicional. No obstante, con la voluminosa asignación de 202 1 los miembros del FMI han querido potenciar el uso del DEG. Los principales usuarios del DEG son los países con dificultades de balanza de pagos, que pueden intercambiar sus DEGs por divisas fuertes a través del FMI. Algunos países desarrollados también han utilizado sus DEGs como contribuciones a los fondos para países pobres del FMI como el PRGT o el RST.
+
+    Al 30 de abril de 2025, 1 DEG equivalía a 1,35611 dólares estadounidenses (frente a 1,31793 dólares al 30 de abril de 2024).
+\end{specialblock}
+
+Esta separación de cuentas se efectúa para poder financiar los programas del PRGT en condiciones más favorables (ahora mismo -2023-, a tipo de interés cero) sin necesidad de hacer excepciones a las reglas de funcionamiento de la mayoría de los programas. El PRGT se nutre de préstamos voluntarios de los bancos centrales y de aportaciones fiscales de los países miembros más desarrollados, para financiar el tipo de interés concesional, más bajo que el de mercado.
+
+\subsubsection{Cuentas: Dependiente del Departamento General}
+El FMI lleva a cabo sus operaciones y transacciones a través del Departamento General (Gerencia). Por tanot, los estados financieros del Departamento General comprenden la posición financiera y las actividades de la Cuenta de Recursos Generales (GRA), la Cuenta de Actividades de Inversión (AI) y la Cuenta Especial de Desembolsos (SDA).
+
+Cada cuenta mantiene sus propios registros financieros y desempeña funciones específicas dentro de la arquitectura financiera general del FMI. 
+
+\paragraph{Cuenta de Recursos Generales (GRA)}
+La \textbf{mayor parte} de las finanzas del Fondo Monetario Internacional se produce a través de su \textbf{Cuenta de Recursos Generales}, a través de la cual el Fondo Monetario puede prestar a \textbf{todos sus miembros}. 
+
+Los activos y pasivos de la GRA reflejan el pago de las cuotas de suscripción de los miembros, el uso y reembolso del crédito de la CRA, los préstamos y reembolsos a prestamistas, el cobro de cargos a los prestatarios (países deudores), el pago de remuneraciones sobre las posiciones acreedoras de los miembros y los intereses pagados a los prestamistas. En la terminologla técnica del Fondo, cuando efectúa un programa con un país, en esta cuenta el FMI efectúa compras de las monedas de sus miembros -a cambio de divisas fuertes-, y recompras -cuando los países deudores devuelven esas divisas en el momento en que se producen los vencimientos de los programas-. 
+
+\paragraph{Cuenta de Actividades de Inversión (IA)}
+Paralelamente, la Cuenta de Inversión se mantiene con el fin de destinar desde la Cuenta de Recursos Generales (GRA), invertirlos y ampliar la base de ingresos del FMI.\footnote{Las Reglas y Reglamentos de la IA adoptados por el Directorio Ejecutivo proporcionan el marco para implementar la ampliación de las facultades de inversión autorizadas por la Quinta Enmienda de los Artículos del Convenio Constitutivo del FMI, que entró en vigor en febrero de 2011.
+} La IA comprende dos subcuentas: 
+\begin{la}
+    \item \textbf{Subcuenta de Renta Fija} (\textit{Fixed-Income Subaccount}). La Subcuenta de Renta Fija mantiene recursos transferidos desde la CRA que no están relacionados con beneficios procedentes de ventas de oro. Con el objetivo de generar ingresos al tiempo que se protege el Balance del FMI, el objetivo de inversión de esta subcuenta es obtener, a lo largo del tiempo, \textbf{rendimientos que superen la tasa de interés de los Derechos Especiales de Giro} (DEG) en \textbf{50 puntos básicos}, minimizando simultáneamente la frecuencia y magnitud de rendimientos negativos y de resultados inferiores al objetivo durante un horizonte de inversión de entre tres y cuatro años; y,
+    \item \textbf{Subcuenta Patrimonial} (\textit{Endowment Subaccount}). El objetivo de inversión de la Subcuenta Patrimonial es lograr, en el largo plazo, un rendimiento real del 3\% medido en dólares estadounidenses, con el fin de contribuir a financiar los gastos administrativos del FMI, preservando al mismo tiempo el valor real de largo plazo de estos activos. El FMI acreditó, a la Subcuenta Patrimonial, 4.400 millones de DEG provenientes de beneficios obtenidos por ventas de oro durante los ejercicios financieros 2010 y 2011. 
+\end{la}
+
+\paragraph{Cuentas Especial de Desembolsos (SDA)}
+La última de las cuentas administradas directamente por el Departamente General es la Cuenta Especial de Desembolsos (\textit{Special Disbursement Account}, SDA). Se trata del mecanismo utilizado para recibir los beneficios procedentes de la venta del oro que el FMI mantenía en el momento de la entrada en vigor de la II Enmienda de los Artículos del Convenio Constitutivo del FMI (abril de 1978). 
+
+Los recursos de la SDA pueden utilizarse para diversos fines, incluidos transferencias a la Cuenta de Recursos Generales (GRA) para su uso inmediato en operaciones y transacciones, transferencias a la Cuenta de Inversión (IA), u operaciones y transacciones que no estén autorizadas por otras disposiciones de los Artículos del Convenio Constitutivo pero que sean coherentes con el mandato del FMI, especialmente para proporcionar asistencia de balanza de pagos en condiciones especiales a países miembros de bajos ingresos.
+
+\subsubsection{Cuentas: Entidades Administradas por el FMI}
+El FMI mantiene bajo su paraguas una serie de entidades administrativas independientes del Departamento General. Se trata principalmente de tres: (i) el Departamento de Derechos Especiales de Giro (SDR Department); (ii) los Fondos Fiduciarios para Préstamos Concesionales y Alivio de Deuda; y, (iii) el Fondo Fiduciario para la Resiliencia y la Sostenibilidad (Resilience and Sustainability Trust, RST) (denominados conjuntamente \textit{los fondos fiduciarios} (trusts)).
+
+Dado que el Departamento General no tiene control sobre estas entidades, sus estados financieros se presentan por separado pero dentro del Balance Consolidado del Grupo.
+
+\paragraph{Departamento de DEG}
+Los recursos del Departamento de Derechos Especiales de Giro (DEG) se mantienen separados de los activos de todas las demás cuentas pertenecientes o administradas por el FMI. Estos recursos no pueden utilizarse para cubrir pasivos, obligaciones o pérdidas derivadas de las operaciones del Departamento General (ni viceversa), salvo que los gastos administrativos derivados de la gestión del Departamento de DEG son inicialmente pagados por el Departamento General y posteriormente reembolsados por el propio Departamento de DEG.
+
+\paragraph{Fondos fiduciarios: Crecimiento y Reducción de la Pobreza y Resiliencia y Sostenibilidad}
+Los recursos de los fondos fiduciarios y de las cuentas administradas son aportados por países miembros, otras instituciones financieras o, en algunos casos, por el propio FMI (a través de la \textbf{Cuenta Especial de Desembolsos}). Los activos y pasivos de los fondos fiduciarios y de las cuentas administradas están separados de los activos y pasivos del Departamento General. Los activos de estas entidades no pueden utilizarse para cubrir pasivos, obligaciones o pérdidas derivados de las operaciones del Departamento General. Sin embargo, el Departamento General puede ser reembolsado por los gastos incurridos en la administración de los fondos fiduciarios.
+
+Dentro de los fondos fiduciarios bajo el paraguas del FMI, destacan esencialmente dos:
+\begin{lnum}
+    \item \textbf{Cuenta del Fondo para el Crecimiento y Reducción de la Pobreza} (\textit{Poverty Reduction and Growth Trust}, PRGT). Los países pobres pueden obtener financiación del FMI en términos concesionales (es decir, por debajo de los tipos de mercado) a través de esta cuenta. De este modo, la carga del repago de la deuda de los programas se aligera, y se incentiva que recurran a esta financiación. No obstante, es necesario que los países miembros donantes (normalmente, los países desarrollados) hagan periódicamente aportaciones específicas para préstamos (puesto que las cuotas y los NAB financian los préstamos de la Cuenta de Recursos Generales GRA) y de contribuciones fiscales para financiar los elementos de concesionalidad de los préstamos. La capacidad del PRGT en 2023 es cercana a los 40.000 M de DEG (53.000 M\$);
+    \item \textbf{Cuenta del Fondo para la Resiliencia y la Sostenibilidad} (\textit{Resilience and Sustainability Trust}). En 2022, el FMI creó esta cuenta para suministrar financiación en términos concesionales tanto a los países pobres elegibles para el PRGT como a países de renta media vulnerables, específicamente para apoyar programas que incluyan reformas en materia de cambio climático y pandemias. La financiación bajo esta cuenta también es en ténninos concesionales y requiere aportaciones de los países miembros tanto para préstamos como aportaciones fiscales para financiar los elementos de concesionalidad de los préstamos.
+\end{lnum}
+
+\subsection{Estructura Financiera del FMI (II): Instrumentos}
+
+
+\subsubsection{Pasivos financieros: Recursos}
+El FMI es un Fondo que pone en común para sus miembros recursos monetarios provenientes de los bancos centrales de sus países miembros. El Fondo Monetario Internacional es similar a una coopei:ativa de crédito, en la cual los bancos centrales ponen en común los activos de que disponen (o los que pueden crear, tanto dinero como crédito), entre los cuales destacan sus reservas en divisas. El Fondo obtiene recursos de dos fuentes principales: cuotas y acuerdos de préstamo.
+
+\paragraph{Suscripciones de Cuotas: Pagos obligatorios}
+Las cuotas que los miembros aportan son simÍlares al capital, puesto que determinan el derecho de voto de cada miembro, y su capacidad de control político de la institución 1 5• No obstante, no son exactamente asimilables a capital en su dimensión financiera. Las cuotas de los miembros, cuando se utilizan, se remuneran al tipo de interés del DEG, igual que una línea de crédito. o El 25\% de la cuota de un país en el Fondo se desembolsa en divisas fuertes (ampliamente aceptadas en los mercados). Si un país emite una moneda de reserva, el FMI suele aceptarla, aunque le puede solicitar otra divisa. o El 75\% restante se pone a disposición del FMI en la moneda nacional del país miembro.\footnote{
+Los países que emiten moneda de reserva, como España al ser parte del Sistema Europeo de Bancos Centrales, pueden hacer. por lo tanto. la totalidad de las aportaciones en moneda nacional, salvo que el FMI les solicite una parte de aportación en otra divisa por su previsión de necesidades financieras.
+}
+
+Las suscripciones de cuotas de los países miembros son pasivos financieros que representan los pagos de suscripción realizados por los miembros, incluidos aquellos derivados de aumentos de cuota (véase la Nota 14.1).
+
+Un aumento de cuota para un miembro existente entra en vigor cuando el país miembro: (i) consiente formalmente el aumento de cuota y (ii) efectúa el pago correspondiente, siempre que también se cumplan los demás requisitos necesarios para la efectividad del aumento específico. El incremento se registra en los estados financieros en la fecha de pago.
+
+Normalmente, alrededor de una cuarta parte de la cuota de un miembro —la denominada porción de activo de reserva (reserve asset portion)— se paga en Derechos Especiales de Giro (DEG), en monedas de otros miembros especificadas por el FMI, o en cualquier combinación de DEG y dichas monedas. El resto se paga en la propia moneda del país miembro.
+
+Las suscripciones de cuotas se clasifican como pasivos en los estados de situación financiera porque incorporan una obligación incondicional de reembolso en caso de que un país miembro se retire del International Monetary Fund.
+
+\paragraph{Endeudamiento: Préstamos voluntarios}
+Los endeudamientos son pasivos financieros que representan financiación recibida bajo los distintos acuerdos de préstamo del FMI (véase la Nota 13). Todos los endeudamientos se valoran al costo amortizado después de su reconocimiento inicial y el gasto por intereses asociado se reconoce utilizando el método del tipo de interés efectivo. 
+
+Los préstamos que conceden los miembros. Están los acuerdos permanentes (standing arrangements) y los transitorios: o Permanentes: • Nuevos Acuerdos de Préstamo (NAP o NAB por sus siglas en inglés): 480.000 M\$.17 Se acordaron en 1999, tras la crisis asiática de 1997, como un complemento a las cuotas. Se duplicaron en 2020 para reforzar la capacidad del FMI ante la crisis. • Acuerdos Generales de Préstamo (General Agreements to Borrow, o GAB): se mantienen desde 1982 en 24.000 M\$ (17.000 M DEG), hoy casi residuales. o Transitorios: Los miembros han concedido líneas de crédito a la institución, de duración transitoria, normalmente en situaciones de crisis internacional. Los préstamos bilaterales vigentes en 2023 ascienden a 185.000 M\$.
+
+\begin{specialblock}{Bonos -- ¿Podría utilizarse como instrumento de financiación? ¿Por qué?}
+    El FMI, según su convenio, podría teóricamente emitir bonos para financiarse (como hacen el Banco Mundial o el MEDE), pero en la práctica se financia exclusivamente mediante las cuotas o préstamos que le conceden los bancos centrales de sus países miembros. Por ello decimos que el Fondo se nutre exclusivamente de "recursos monetarios", entendiendo como tales los provenientes de la creación monetaria de los bancos centrales. (Por contraste, el MEDE no cuenta con financiación de los bancos centrales, sino que se financia mediante emisiones de deuda avaladas por el capital aportado por los gobiernos de los países miembros). ¿Cuánto esfuerzo le cuesta a un país aportar recursos al FMI? Principalmente, depende de si su moneda es una divisa fuerte o no. Para un país como los Estados Unidos, que emite dólares, el coste es casi nulo, puesto que en la práctica la Reserva Federal crea los dólares que desembolsa al FMl cuando éste le solicita el importe de sus cuotas, por ejemplo. En cambio, para países con problemas para acumular reservas por la debilidad de su moneda, la aportación del tramo de reservas en divisas fuertes es costosa.
+    
+    Fue la situación de España cuando entró en el FMI en 1958: Esprula disponía de muy pocas reservas de divisas. y tenia problemas en su balanza de pagos, por la sobrevaloración del tipo de cambio y la poca credibilidad de nuestra divisa.
+\end{specialblock}
+
+
+\paragraph{Reservas: Intermediación y tramo de reserva}
+El FMI dispone de una reserva prudencial (en torno a los 24.000 M\$ ( 17.000 M DEG), que ha venido acumulando de los márgenes de intermediación de sus préstamos, para cubrir posibles pérdidas. También existe la posibilidad de distribuir las reservas o los beneficios obtenidos.
+
+Un país miembro adquiere una posición de tramo de reserva (reserve tranche position) en la Cuenta de Recursos Generales a cambio de la porción de activo de reserva correspondiente al pago de su cuota y también como resultado del uso de su moneda en operaciones y transacciones de la GRA.
+
+La GRA paga intereses —denominados remuneración (remuneration)— sobre la parte remunerada de la posición de tramo de reserva del miembro (véase la Nota 17). El gasto por remuneración se reconoce utilizando el método del tipo de interés efectivo.
+
+
+
+\subsubsection{Activos financieros}
+El Fondo Monetario Internacional 
+
+\footnote{Las inversiones son activos financieros que incluyen: (i) títulos de renta variable; (ii) títulos de renta fija; (iii) inversiones de corto plazo (efectivo y equivalentes mantenidos para inversión); (iv) depósitos a plazo; y, (v) activos derivados. Los pasivos derivados se presentan dentro de otros pasivos en los estados de situación financiera. Los ingresos de inversión comprenden: (i) ingresos por intereses de inversiones al costo amortizado; (ii) dividendos e intereses; (iii) ganancias y pérdidas realizadas y no realizadas derivadas de inversiones FVTPL; (iv) y diferencias de valoración cambiaria frente al DEG. Todo ello neto de las comisiones de inversión. Los ingresos por intereses se reconocen utilizando el método del tipo de interés efectivo. Los dividendos se reconocen en la fecha ex-dividend.
+}
+
+Las tenencias de DEG representan los Derechos Especiales de Giro mantenidos por la GRA. Se valoran al costo amortizado. Los intereses sobre DEG se reconocen utilizando el método del tipo de interés efectivo.
+El Fondo es el tercer mayor tenedor mundial oficial de oro, con 2.814 toneladas, tras Estados Unidos y Alemania. Aunque las tenencias no declaradas de China podrían alterar este orden • - su patrimonio, como sus edificios.
+
+\paragraph{Monedas}
+Las monedas son activos financieros que consisten en monedas de los países miembros mantenidas por la Cuenta de Recursos Generales (GRA) en depositarios designados (ya sea en forma de saldos de cuenta o de pagarés no remunerados convertibles a demanda por la GRA). Dentro de toda la cesta de monedas disponibles que supone una organización de tal calibra, el FMI establece la siguiente clasificación de monedas:\footnote{Los saldos monetarios incluidos en los estados de situación financiera comprenden cuentas por cobrar y pagar derivadas de revalorizaciones monetarias.
+
+Además, la Cuenta de Recursos Generales percibe intereses —denominados cargos básicos (basic charges)— sobre el uso del crédito por parte de los miembros. Estos cargos básicos se reconocen utilizando el método del tipo de interés efectivo. También (el crédito) está sujeto a sobretasas basadas en el nivel y la duración del endeudamiento (\textit{level-based} and \textit{time-based surcharges}). Además de estos, existen otros múltiples factores que pueden repercutir en el saldo final, a través de sobrecostes y cargos.
+}
+\begin{la}
+    \item \textbf{Monedas utilizables} (\textit{usable currencies}). Son monedas de países miembros considerados con una posición externa suficientemente sólida como para ser utilizadas en transacciones de la GRA con otros miembros;
+    \item \textbf{Otras monedas} (\textit{other currencies}). Las monedas de miembros que no poseen una posición suficientemente fuerte en términos de balanza de pagos y reservas para ser utilizadas en transacciones de la GRA con otros miembros;
+    \item \textbf{Crédito pendiente} (\textit{credit outstanding}). Las tenencias de monedas de países miembros que representan compras de monedas utilizables o DEG a cambio de sus propias monedas.
+\end{la}
+
+¿Qué significa esta última clasificación? Desde la óptica del FMI, el crédito pendiente es un activo financiero que representa la financiación proporcionada a los países miembros bajo las distintas facilidades financieras de la Cuenta de Recursos Generales: los miembros reciben financiación en esta cuenta comprando DEGs o monedas utilizables a cambio de sus propias monedas y reembolsan el crédito recomprando sus monedas utilizando DEG o monedas utilizables.\footnote{En este contexto, cabría esperar que, al igual que cualquier entidad financiera, también cabría observar minusvaloraciones por deterioros del crédito pendiente. No es así. El Departamento General no ha reconocido pérdidas por deterioro desde su creación y justifica semejante anomalía de la siguiente forma: (i) el FMI mantiene una relación única con sus miembros, todos ellos accionistas de la institución; (ii) la financiación del FMI bajo acuerdos de la GRA está vinculada a revisiones periódicas del desempeño dentro de programas de política económica que el país miembro se compromete a implementar para superar problemas de balanza de pagos, restaurar la viabilidad externa y reembolsar al FMI; (iii) el FMI emplea un amplio conjunto de medidas para mitigar el riesgo de crédito; y, (iv) el FMI también posee un estatus de acreedor preferente de facto, reconocido por la comunidad oficial y generalmente aceptado por los acreedores privados. En conjunto, dice, estos factores reducen significativamente la probabilidad de pérdidas crediticias para el Departamento General.
+}
+
+Tradicionalmente, para preservar su condición de fondo puramente monetario y con recursos disponibles para emergencias, el FMI no puede asumir pérdidas (puesto que serían los bancos centrales de los miembros los que las asumirían), pero ha efectuado condonaciones de deuda en el marco de la iniciativa de Países Pobres Altamente Endeudados (HIPC, por sus siglas en inglés), lanzada en 1999, y reforzada por la Iniciativa de Alivio de Deuda Multilateral (Multilateral Debt Relief lnitiative, MDRJ). Con la MDRJ, el FMI condonó el 100\% de las deudas de los países HIPC que cumplieran losrequisitos de buenas pol íticas alcanzando los denominados Puntos de Decisión (donde se beneficiaban de un alivio interino) y Puntos de Culminación (alivio definitivo). Estas condonaciones de deuda fueron financiadas principalmente por donantes de países desarrollados mediante aportaciones fiscales.\footnote{Se suelen contrastar las aportaciones fiscales (con cargo a los presupuestos de los países miembros. controlados por las Haciendas Públicas) respecto a las aportaciones monetarias. entendidas como las aportaciones de los Bancos Centrales (que no generan déficit ni deuda pública).
+}
+
+
+
+
+
+\clearpage
+\section{El Fondo Monetario Internacional: Visión operativa}
+\puntosclave{
+    La Supervisión del FMI consiste principalmente en revisiones anuales de sus políticas económicas mediante documentos llamados \textbf{consultas del Artículo IV} orientadas a prevenir crisis. 
+    
+    La supervisión financera, mediante Programas de Evaluación del Sector Financiero (FSAP) ha cobrado mayor protagonismo con el tiempo, mientras que la supervisión de tipos de cambio la ha perdido, pese a ser el mandato original de la institución. 
+    
+    La financiación del FMI a países con problemas de balanza de pagos, o crisis en un sentido más amplio, es la función que le confiere mayor importancia a la institución. 
+    
+    Las facilidades financieras del FMI han evolucionado con las circunstancias. Sus elementos clave son el volumen de acceso (expresado en porcentaje de la cuota de cada país en el FMI), el plazo de repago, la condicionalidad y los recargos y comisiones. 
+    
+    Las facilidades más utilizadas son los Acuerdos de Derecho de Giro (Stand-By Arrangements) y los Acuerdos Extendidos (Extended Fund Faci lity). El FMI cuenta con programas precautorios específicos para prevención de crisis. El más importante es la Línea de Crédito Flexible (Flexible Credit Line).
+}
+
+
+
+\subsection{Supervisión: Asesoramiento del FMI}
+Una de las funciones centrales del FMI es realizar una labor de supervisión sobre el sistema monetario y financiero internacional. Esta actividad suele descomponerse en dos: (i) la \textbf{supervisión bilateral} de los miembros; y, (ii) la \textbf{supervisión multilateral} al conjunto de los miembros.\footnote{La labor incinial de supervisión pretendía velar por el cumplimiento de los acuerdos del Fondo Monetario, en particular en materia cambiaria. Dada la pérdida del objeto, ha evolucionado para ser un instrumento orientado a la prevención de crisis, señalando desequilibrios y vulnerabilidades y proporcionando recomendaciones de políticas económicas al respecto. 
+
+No obstante, cabe resaltar que esta actividad de supervisión ya se realizaba antes bajo el mandato del Articulo XIV. De hecho, la primera misión del FMI a España (1959) fue bajo el paraguas del Artículo XIV.
+}
+
+
+
+\subsubsection{Supervisión bilateral: \textit{ex} Art. IV}
+La supervisión bilateral del FMI se articula a través de dos instrumentos: (i) la supervisión de la Política Macroeonómica; y, (ii) la supervisión del Sector Financiero mediante Programas de Evaluación del Sector Financiero (FSAP). 
+
+\paragraph{Desempeño: Políticas Macroprudenciales}
+La primera de ellas viene directamente consagragada en el Convenio Constitutivo, Art. IV; por ello es habitual referirse a este proceso como \textit{llamar el Artículo IV de ...}. Esta labor de supervisión consiste en el envío de misiones anuales (o cada dos años, para países pequeños) del personal del FMI para entablar un diálogo con los países miembros sobre el desempeño de su economía y las posibles recomendaciones de política económica.
+
+Como busca identificar posibles riesgos y recomendar ajustes de política económica adecuados para sustentar el crecimiento económico y promover la estabilidad financiera, podemos identificar (informalmente) tres \textit{corpus} distintos:
+\begin{la}
+    \item \textbf{Políticas Económicas}. Donde se evalua la sostenibilidad de la Política Económica del país miembro bajo una interpretación amplia del Art. IV las decisiones del Directorio Ejecutivo;
+    \item \textbf{Obliaciones cambiarias}. Centrando el objeto en las obligaciones cambiarias contraídas por el estado miembro, que se desprende directamente de la literalidad del Art. IV;
+    \item \textbf{Obligaciones en materia de convertibilidad}. Donde se supervisa la ejecución de las obligaciones contraídas en materia de convertibilidad, suministro de información y cumplimiento de estándares (Art. VIII y XIV del CC);
+    \item \textbf{Supervisión del Sector Financiero}. 
+\end{la}
+
+Las conclusiones quedan plasmadas en un informe (\textit{staff report}), se dicute en el Directorio Ejecutivo y, finalmente, se publica.\footnote{Salvo que un país objete a su publicación. Por ejemplo, Brasil, hasta 2011 no autorizaba la publicación de los informes completos del personal del FMI. Sin embargo, para todos los países se publica una reseña abreviada (\textit{Public Information Notice}) del informe de las consultas, que incluye el cuadro macroeconómico y la valoración del Directorio Ejecutivo.
+} Con el fin de garantizar la comparabilidad entre países, el informe contiene cuadros estandarizados. De esta forma, suele tener un gran impacto en previsiones sobre crecimiento económico y déficit público. Son ampliamente consideradas independientes y están, además, sujetas a contrastación con las respectivas nacionales. Resultan particularmente útiles cuando un país necesite un programa, ya que el trabajo previo permite atender con rapidez y eficacia las solicitudes de asistencia financiera, teniendo identificadas las principales prioridades.
+
+Las recomendaciones formuladas suelen tenerse en cuenta por los Gobiernos. Y, el ámbito técnico, se considera que someterse a una supervisión anual genera incentivos para la recapitulación de datos, internalización de impacto y reflexión sobre la Política Económica. Además, sirven de vehículo para fortalecer y mejorar las relaciones entre el personal del FMI y las autoridades, generando el hábito de trabajar juntos. 
+
+\paragraph{FSAPs y FSSAs: Sector Financiero}
+Esta labor de supervisión era la piedra angular del sistema pero, a raíz de la crisis financiera de 2007, una de las tareas de supervisión más relevante recae sobre el Sector Financiero. Como hemos visto, esta actividad se realiza paralelamente a la supervisión anterior. Sin embargo, también de forma mucho más específica e intensiva mediante los Programas de Evaluación del Sector Financiero (\textit{Financial Sector Assessment Program}, conocidos como FSAPs por sus siglas en inglés), de los que hablaremos brevemente. 
+
+Los programas FSAPs permiten efectuar un diagnóstico en profundidad de los problemas del sector y se ven complementados con el análisis sobre su estabilidad (\textit{Financial Sector Stability Assessment}, FSSA). En conjunto, persigue la mitigación de los riesgos sistémicos, tanto nacionales como internacionales, mediante la identificación de riesgos e implementación de mejoras. 
+
+Si bien los objetivos nobles y loables que persiguen los FSAPs y FSSAs son indiscutibles, los métodos utilizados no están exentos de crítica. Una de sus columnas vertebradoras son los análisis de sensibilidad o \textbf{prueba de tensión} (\textit{stress test}). Estos métodos, excesivamente dependientes de la situación coyuntural, los datos y las hipótesis de partida han sido ampliamente criticados. Especial incidencia se ha hecho sobre la sensibilidad al mercado e intensidad (restricción de hipótesis), puesto que puede conducir a resultados sobredimensionados e impiden realizarlos con elevado frecuencia (por las señales que envía al mercado). 
+
+No obstante, sus limitaciones vienen notablemente compensadas por la fácil interpretación que ofrecen. Por ejemplo, un stress test puede indicarnos elevadas necesidades de capital para un abanico amplio de esceneraios, por lo que debiera haber un esfuerzo de saneamiento por pate de las entidades y, en casos extremos, requerimientos de ayuda financiera. Los FSAPs y FSSAs no se realizan únicamente sobre intermediarios de crédito (sector bancario) si no que también se realizan diagnósticos y recomendaciones dirigidas al sector seguros/reasegurs y, en algunos casos, los mercados financieros. En definitiva, abarcan todo el conjunto de servicios financieros y su exposición/resiliencia ante escenerios adversos. 
+
+Su éxito ha sido tal que muchos países, sobretodo aquellos en los que el sector financiero tenga especial importancia (sistémica, como España), se han comprometido a efectuar FSAPs cada cinco años. Este compromiso se adoptó tras la crisis financiera de 2008, a la vista de la importancia crítica del sector financiero para la supervisión.
+
+\subsubsection{Multilateral: Art. IV}
+Si bien esta actividad de supervisión es, hoy en día, la más relevante y conocida, el mandato legal más fuerte y claro de supervisión del FMI es en materia cambiaria (art. IV): \textbf{firme supervisión sobre los tipos de cambio y sus regímenes}, que los miembros están obligados a declarar junto con la información que solicite el Fondo para este fin. 
+
+No obstante, como ya sabemos, desde 1978 (cuando entró en vigor el Acuerdo de Jamaica, 1976), el FMI permite a sus miembros cualquier régimen cambiario o monetario menos un tipo de cambio fijo con el oro, por lo que, en la práctica, la supervisión cambiaría se ha enfrentado a serias dificultades. 
+
+\paragraph{Supervisión: Informes periódicos}
+Para hacer frente a esta obligación de supervisión dentro del contexto actual el FMI elabora anualmente varios informes de supervisión, siendo el \href{https://www.imf.org/en/publications/sprolls/annual-report-on-exchange-arrangements-and-exchange-restrictions}{Informe Anual sobre Regímenes y Restricciones Cambiarias} el dedicado a esta labora, pues recoge y compila la información proporcionada por los miembros sobre su régimen cambiario.
+
+Pero, como suele decirse, del dicho al hecho hay un trecho... Y, a menudo, los regímenes declarados no coinciden con los observados (\textit{de facto}) o resultan inconsistentes con las intervenciones realizadas por sus Bancos Centrales en los mercados cambiarios.\footnote{El caso más emblemático de este debate fue China. El país declaró un Tipo de Cambio de flotación con bandas hasta 2015, pero en la práctica, se le acusó en reiteradas ocasinoes de intervenir para mantener un Tipo de Cambio fijo respecto al dólar hasta 2009 y permitir únicamente la apreciación gradual de su moneda hasta 2015. 
+} En este contexto, la supervisión del mercado cambiario se limita a la recapitulación de los compromisos decalrados y una lista de movimientos observados en los que los Bancos Centrales parecen actuar \textit{en contra de los compromisos adquiridos}, lo que permite al FMI estimar el régimen de facto de cada moneda y su correspondiente grado de cumplimiento.
+
+Paralelamente, elabora otros informes de supervisión multilateral. Por ejemplo, los informes \href{https://www.imf.org/en/publications/weo}{\textit{Perspectivas Económicas Mundiales}} (\textit{World Economic Outlook}, WEO), de \href{https://www.imf.org/en/publications/gfsr}{Estabilidad Financiera Global} (Global Financia! Stability Report, GFSR), y el \href{https://www.imf.org/en/publications/fm}{Fiscal Monitor}. A menudo tienen un impacto mediático importante y se presentan justo antes de las Asambleas anuales para estimular y dirigir las discusiones de Política Económica.
+
+Uno de los debates más importantes sobre la supervisión del Fondo es si la suma de las políticas dedicadas a objetivos nacionales constituye el óptimo global, o si, por el contrario, pueden existir efectos negativos indeseados derivados de las políticas domésticas. En particular, las políticas monetarias expansivas en países sistémicos pueden generar expansiones de crédito internacionales y flujos de capitales volátiles.\footnote{Tradicionalmente, el Fondo había considerado que las políticas nacionales deben dirigirse solamente a objetivos nacionales.
+
+En el sistema de Bretton Woods se reconocían abiertamente las interdependencias y la responsabilidad de la moneda central de cumplir con reglas (principalmente de cumplir con la convertibilidad en oro), pero la crítica de autores como RUEFF o TRIFFIN era que confería demasiada autonomía a la moneda central del sistema para escapar la disciplina internacional requerida, generando efectos externos sobre el resto de países (un privilegio exorbitante, en palabras de Giscard d'Estaing y De Gaulle).
+} Teniendo esto en cuenta, el FMI, reconociendo que determinadas políticas tienen consecuencias más allá de sus fronteras, intenta reforzar el conocimieto técnico al respecto mediante los informes \href{https://www.imf.org/en/publications/sprolls/spillover-reports}{\textit{Spillover Reports} (última publicación en 2015)}.
+
+\paragraph{Armonización: Estándares y supervisión estadística}
+Además de esta labor de supervisión y asistencia multilateral del FMI, también cabe destacar la labor de armonización de estándares y metodología estadística. El FMI se encuentra a la cabeza de los organismos armonizadores en las siguientes materias:
+\begin{lnum}
+    \item \textbf{Sistema de Cuentas Nacionales: Sector exterior, mercados financieros}. El FMI publica los manuales para la elaboración de las cuentas del sector exterior (\textit{latest}: \href{https://www.imf.org/external/pubs/ft/bop/2007/bopman6.htm}{VI Manual - BPM6}), las \href{https://www.imf.org/external/pubs/ft/gfs/manual/esl/pdf/compils.pdf}{Estadísticas de Finanzas Públicas} (\textit{Government Finance Statistics Manual}) y estadísticas sobre \href{https://www.imf.org/external/pubs/ft/mfs/manual/esl/index.htm}{mercados de valores}:
+    \item \textbf{Estandarización de datos}. El FMI tiene una Iniciativa de Estándares de Datos, que ofrece recomendaciones y un sello a las estadísticas nacionales que cumplan unos parámetros determinados de metodología y de publicidad (lo que se conoce como diseminación). Los niveles de exigencia son: (i) Enhanced Global Data Dissemination Standards (e-GDDS), nivel básico que se limita a recomendaciones metodológicas y publicación de los datos esenciales; (ii) Special Data Dissemination Standards (SDDS), nivel de exigencia bastante por encima del e-GDDS, pensado para países que desean tener acceso a mercados financieros internacionales; y, (iii) Special Data Dissemination Standards Plus (SDDS+), introducido en 2013 tras el examen de las carencias observadas en la crisis financiera global de 2008 y busca un nivel adicional de profundidad en los datos.
+\end{lnum}
+
+Además, el FMI supervisa el cumplimiento de estándares estadísticos tanto propios como los de las Naciones Unidas (Sistema de Cuentas Nacionales 2008, SCN-93 y SCN-68) amparándose de nuevo bajo la cobertura del art. IV, así como en los FSAPs sobre el sector financiero y en ROSCs específicos sobre estadísticas. 
+
+Dejará entonces constancia en el Informe elaborado mediante \textbf{apéndices estadísticos} (\textit{Statistical Issues Appendixes}), en los que emite un juicio sobre la calidad de las estadísticas: (A) adecuados para la supervisión; (B) generalmente adecuados pero con limitaciones; y, (C) inadecuados para la supervisión.
+
+En algunos casos particulannente graves de manipulación estadística detectada en la supervisión, el FMI puede hacer declaraciones públicas de censura o incluso sancionar a un país mediante la suspensión de acceso a Programas del FMI. (In extremis, cabría la expulsión por incumplimiento de las obligaciones del Convenio Constitutivo). Un caso particularmente grave fue el de Argentina en 2013. Sus estadísticas de PIS e IPC recibieron una declaración formal de censura por demostrar gravísimas carencias y de forma persistente. 
+
+Aunque, desde nuestra perspectiva (España), el caso de manipulación más grave, por sus implicaciones y cercanía, bien puede ser el de las estadísticas fiscales de Grecia. Aunque el FMI no llegó a declarar la censura porque se adoptaron medidas drásticas: el déficit público griego inicialmente reportado en 3.7\% del PIB (febrero 2009), fue revisado al 12,5\% y posteriormente a un 15,8\% en menos de un año (finales de 2009). Tanto el FMI como EUROSTAT llevaban tiempo solicitando mejoras en los IE griegos, pero su supervisión demostró ser insuficientemente estricta. (En el Art. IV (2007) figuraba en portada: \textit{Data are adequate for surveillance, but improvements are needed. In particular, the authorities concur that national accounts revisions should be more timely, and, to booster its reputation, that the statistical service should be made independent}).\footnote{El escándalo tenía causas directamente institucionales y trajo consigo graves consecuencias fiscales, generando un efecto desbordamiento a otras economías de la UE, por lo que se cerrí el Servicio Estadístico Griego (Ministerio de Finanzas) y fundó un Instituto Estadístico Independiente, ELSTAT.
+
+El nuevo instituto pasó a ser dirigido por un funcionario del FMI del Departamento de Estadística, A GEORGIU, y sus datos pasaron a ser aceptados como fiables por las instituciones europeas y el FMI. No obstante, en un giro paradójico del destino, un fiscal asociado a los partidos opuestos al rescate mantuvo abierto un proceso judicial contra GEORGIU, acusándolo de traición por inflar los datos de déficit, que se expandió durante dos años (2013-15). Un titular de la prensa canadiense resumió bastante bien la situación: \textit{Greek statistics chief probed 'for not cooking the books'}. Los cargos contra GEORGIU fueron retirados pero el proceso judicial sometió a una dura presión política a ELSTAT.
+} Otros países que han manipulado estadísticas durante la financiación de un programa, por ejemplo, han tenido que adoptar medidas restrictivas adicionales.
+
+
+\subsection{Fortalecimiento de capacidades: Aistencia técnica y capacitación}
+Por último, entre sus funciones principales el FMI proporciona asistencia técnica y capacitación. Es un servicio a disposición de todos los países miembros que lo solicitan y se adapta a las necesidades específicas de cada país. Principalmente, se proporciona de dos maneras: (i) mediante asistencia ténica; y/o, (ii) centros de capacitación.
+
+En conjunto, representan, aproximadamente, una \textbf{tercera parte del gasto anual} del FMI y buscan ayudar a los países a mejorar la recaudación de impuestos y respaldar las finanzas públicas, modernizar las políticas monetaria y cambiaria, establecer ordenamientos jurídicos, reforzar el buen gobierno o, incluso, a la hora de recopilar y divulgar datos para fundamentar la toma de decisiones.
+
+Más de la mitad de las actividades de fortalecimiento de las capacidades del FMI están financiadas por socios externos, en forma de apoyo a los centros regionales de capacitación, fondos temáticos y proyectos bilaterales. Varios países miembros son donantes importantes, como Japón o la Unión Europea, y financian la mitad del presupuesto de asistencia técnica del FMI. Estas donaciones computan como ayuda al desarrollo, puesto que los destinatarios son en su práctica totalidad países en desarrollo -los desarrollados se suelen pagar su fonnación.
+
+\subsubsection{Ad hoc: Asistencia técnica del FMI}
+El primero de los instrumentos/programas, la asistencia ténica, debe ser solicitado por el país miembro y buscar la colaboración/asistencia ténica del FMI en: (i) el diseño práctico y concreto de reformas y políticas económicas; y, (ii) en la formación de los funcionarios de los países receptores (\textit{capacity development}). En cualquier caso, será proporcionada bien por el personal técnico de la sede central del FMI, que puede reunirse con funcionarios públicos del país, ya sea en persona o virtualmente, bien por trabajares en el país en calidad de asesores residente. 
+
+Lo más común es que este tipo de solicitudes se produzcan a raíz de un informe de consultas (ex art. IV). Por ejemplo, si una misión del FMI identifica alguna carencia, junto a la necesidad de emprender alguna reforma. En estas circunstancias, si un país desea reforzar la calidad de sus reformas o mejorar su credibilidad, podría solicitar la asistencia. Dos ejemplos concretos que podemos citar son: 
+\begin{lnum}
+    \item \textbf{España, 2012}. España y varias instituciones europeas recibieron asistencia en julio de 2012, para la supervisión y el diseño del proceso de recapitalización del sector financiero. El FMI contaba con importante información fruto de la supervisión del sector financiero (FSAP) presentada en abril de 2012, donde formuló recomendaciones de refuerzo del sector en profundidad. En esta importante asistencia técnica, el FMI contribuyó al diseño y estrategia de las medidas adoptadas, y elaboró informes trimestrales de seguimiento;\footnote{La Asistencia Técnica suministrada por el FMI en España en 2012 y 2013 para la refoma del sector financiero tuvo un impacto muy positivo: consiguió aportar elementos importantes en la estrategia de refonna, y reforzar la credibilidad de las medidas de recapitalización del sector. Los informes de supervisión elaborados por la asistencia técnica mostraron un cumplimiento rápido y completo de las medidas recomendadas -una buena muestra de apropiación local (ownership) de las recomendaciones.
+    }
+    \item \textbf{Italia, 2012}. La asistencia técnica suministrada a Italia para la orientación estratégica de su reforma fiscal. 
+\end{lnum}
+
+El Fondo suele requerir un diálogo en profundidad, mediante el envio de misiones al país, para adaptar sus recomendaciones a las circunstancias concretas. Además, suele aprovechar su experiencia en la supervisión y asistencia a otros países para recomendar las mejores prácticas. La utilidad para los países suele ser muy alta, pero la asistencia no siempre está disponible por la escasez de recursos humanos y financieros. El FMI suele priorizar el suministro de asistencia técnica a los países éstratégicos y con mayores vulnerabilidades. En esos casos no cobra tarifas.
+
+\subsubsection{Permanente: Centros de Capacitación Regional}
+Por otro lado, y con el mismo objetivo, el FMI mantiene una red global cuasi permanente de centros de capacitación regional, destinada esencialmente a los funcionarios de los países del área de influencia.
+
+\imagenfit{Fig4.png}{Red de Centros de Capacitación Regional}{\href{https://www.imf.org/-/media/files/capacity-developement/brochures/brochure-regional-capacity-development-center-september-2022.pdf}{\textit{Regional Capacity Development Centers}. IMF (2022)}}
+
+En los países en desarrollo, donde la formación de los funcionarios suele tener importantes lagunas, estos cursos son particularmente valiosos. El FMI, en algunos casos de graves carencias institucionales en ámbitos clave de la gestión financiera pública, por ejemplo en la gestión de la deuda pública en países con falta de control de su endeudamiento, suministra tanto los sistemas informáticos y de gestión de la deuda como la formación a los funcionarios. 
+
+La prestación de asistencia técnica mediante la formación de funcionarios es de particular valor en países que han sufrido conflictos o con graves problemas de inestabilidad institucional. En estos países, la rápida reconstrucción de unas estructuras para el buen funcionamiento de la gestión pública es determinante para evitar problemas fiscales. Y el FMI tiene una ventaja comparativa, respecto a los bancos de desarrollo y las agencias de desarrollo en sus ámbitos de especialización, al ser también la institución internacional que genera los estándares. Los programas de formación suelen ser gratuitos salvo para los países desarrollados, que a veces acerrean con el coste. 
+
+
+\subsection{Financiera: Préstamos/Programas del FMI}
+Ahora que conocemos las labores que abarcan el mandato de supervisión que ostenta el FMI, debemos presentar la función financiera que ostenta, que ha sido esencial desde los planes de su creación.\footnote{La experiencia de los años 20's y 30's mostró que los países que no podían financiar sus déficits por cuenta corriente o las presiones sobre sus tipos de cambio recurrían a medidas dañinas para la prosperidad nacional e internacional, como las devaluaciones competitivas desordenadas, los controles de cambios, el proteccionismo comercial y los impagos de sus deudas.
+
+EICHCNGREEN e IRWIN (\textit{The slide to protectionism in the Great Depression: Who succumbed and Why?}) muestran el ciclo que se generó: La devaluación de un país importante provocaba devaluaciones en otros países, o controles de cambios y subidas de aranceles y cuotas de importación. Las medidas proteccionistas eran más intensas en los países que no seguían la devaluación. Los eventos de 1931 son un ejemplo claro: Alemania en los años precedentes había sufrido un parón prolongado en las entradas de crédito exterior y, pese a las salidas de capitales tras la quiebra del Crédit Anstalt austriaco en mayo, y el temor a la extensión del pánico y sin quere devaluar por cuestiones reputacionales, estableció controles de cambios y un impago generalizado de las obligaciones exteriores. En particular de las reparaciones de guerra en julio de 1931. En medio de este shock financiero internacional, el Reino Unido, ante la negativa de los EEUU y Francia a suministrarle financiación exterior, devaluó fuertemente la libra esterlina en septiembre. Tras la devaluación de la libra, que todavía era la moneda central del SMI, los países que no siguieron la senda de la devaluación reforzaron sus medidas proteccionistas. La peor fase de la Gran Depresión comenzó a partir de ese momento. De haber existido entonces un prestamista internacional de última instancia como el FMI, podemos aventurar que las devaluaciones hubieran sido ordenadas y no se habría recurrido a medidas tan proteccionistas. Los impagos de instituciones bancarias grandes (cuando no podían recibir fondos de su banco central) y en particular los impagos de los soberanos demostraron ser mecanismos enormemente nocivos de transmisión de crisis. 
+} El objetivo era claro: los países que sufrieran perturbaciones financieras debían disponer de financiación internacional para mantener sus tipos de cambio (si eran sostenibles) o efectuar ajustes ordenados más suaves sin generar impagos exteriores. 
+
+Tanto el Plan White como el Plan Keynes preveían el establecimiento de un fondo que ejerciera de prestamista de última instancia y garantizara la estabilidad financiera y cambiaria. Pero, como sabemos, diferían tanto en su tamaño como en la condicionalidad de los préstamos:\footnote{Aparte de que diferían en la moneda de los préstamos. El Plan Keynes establecía que los préstamos fueran en bancor, mientras que White quería que fueran en dólares. 
+} KEYNES deseaba un Fondo (o \textit{Clearing Union} en su plan) mayor e incondicional (Era la posición natural de un país muy deudor con el exterior, como el Reino Unido en 1943); mientras que WHITE defendía la condicionalidad, para facilitar ajustes exteriores, y, en consecuencia, un menor tamaño. 
+
+Como nueva potencia mundial, el Plan White venció finalmente y fueron sus condiciones las que prevalecieron. En este contexto, se busca impedir muy en particular la financiación de devaluaciones competitivas. Quizá compense aclarar el ténnino de devaluación competitiva en este contexto. Todas las devaluaciones sirven para ganar competitividad, y el FMI original permitía la devaluación cuando la moneda estaba sobrevalorada. De hecho, típicamente se exige una devaluación cuando una moneda está sobrevalorada. Sin embargo, no se admite que las devaluaciones busquen obtener ventajas competitivas mediante políticas de \textit{empobrecimiento del vecino}. Es decir, excesivas. Como vemos, la valoración contiene un margen muy grande de discrecionalidad.
+
+
+La necesidad de la financiación exterior de emergencia (controlada por la institución) y la obligación de consulta es lo que impide que las devaluaciones sean desordenadas. 
+
+La función financiera del FMI se justifica por la volatilidad de las cuentas corrientes y de los flujos de financiación (por posibles shocks reales o financieros), y la consideración de que la disponibilidad de financiación de un prestamista internacional pennite suministrar confianza en la capacidad de ajuste y mantener un sistema financiero internacional abierto. 
+
+Algunos autores actuales justifican la financiación del FMI por \textbf{fallos de mercado}, pero este razonamiento en concreto no fue el que se produjo en la creación del Fondo ni forma parte del acervo normativo del FMI. Los shocks pueden tener muy diversas causas, y los principales shocks que se querían abordar en el momento de la creación del Fondo provenían de decisiones políticas, generalmente de otros países, como los impagos soberanos o las subidas de aranceles. En los años 40 los flujos oficiales eran predominantes internacionalmente, y las restricciones alos flujos de capitales privados eran la nonna. De hecho, los estatutos del FMI pennitencontroles de capitales (a los flujos de la cuenta financiera), mientras que prohíben los controles de cambios y controles a los pagos por transacciones de la cuenta corriente. Y las dificultades de balanza de pagos que se han financiado tradicionalmente son tanto de cuenta corriente (por problemas 'reales' o desajustes cambiarios) como de cuenta financiera. La volatilidad de los flujos de capitales ha sido elevada tanto en los flujos privados como en los flujos oficiales (incluyendo la Ayuda al Desarrollo).\footnote{En economías de planificación centralizada, la función de prestamista de última instancia también cumple una función para evitar racionamientos ante la volatilidad de los ingresos y pagos por cuenta corriente, y ante la volatilidad de la financiación exterior oficial. Por ejemplo, puede resultar ilustrativo el caso de Cuba: Ha sufrido intensa volatilidad en su cuenta corriente por las oscilaciones de las cosechas agrícolas, y volatilidad en la ayuda en especie y en la financiación exterior que recibía de la Unión Soviética. Por otra parte, los países de la OCÓE que liberalizaron por completo sus movimientos de capitales han sido los que menos recurso han tenido que hacer del FMI, hasta el punto de que el FMI se llegó a considerar como una institución cuya función financiera era exclusivamente para los países en desarrollo.
+} 
+
+Modernamente, en un entorno de liberalización de flujos de capitales, un debate importante ha sido sobre la posible función de aseguramiento del FMI ante la volatilidad de flujos de capitales. Los mayores accionistas del FMI suelen ser reacios a este concepto, puesto que el FMI no protege ante contingencias, sino que facilita ajustes. Y la financiación del FMI se somete a adecuadas salvaguardas para preservar sus recursos, principalmente mediante la condicionalidad. (No obstante, el FMI ha avanzado hacia facilidades financieras similares a seguros mediante sus líneas precautorias como la Línea de Crédito Flexible.) 
+
+En los primeros Stand-By Arrangements, se fueron elaborando las condiciones por las que el FMI iba a conceder financiación, fomentando el ajuste de los países cuando se debiera a un desequilibrio fundamental. 
+
+El debate sobre la condicionalidad es uno de los más importantes y centrales en las políticas del Fondo. El plan original de Keynes era una cooperativa de crédito que suministrara financiación esencialmente incondicional y casi automática, pero el principal acreedor, los Estados Unidos, no se mostró dispuesto a conceder financiación sin garantías suficientes de repago. Por ello la condicionalidad fom1ó parte del diseño del Fondo, y se fue refinando con el tiempo. Una parte de la condicionalidad que se ha asociado al FMI no proviene solamente de sus programas, sino también proviene de las obligaciones estatutarias de los miembros. 
+
+En los años 80 y 90, tanto los países en desarrollo como los países en transición mostraron grandes necesidades de reforma estructural, y solicitaron apoyo al FMI, así como la inclusión en los programas -también como una manera de suavizar los requisitos de ajuste macroeconómico, que como veremos en el modelo, pueden considerarse menores s i las reformas estructurales pem1iten aumentar la oferta lo suficiente. Al mismo tiempo, el FMI fue considerando deseable la inclusión de profundas reformas y el resultado fue un gran aumento del volumen de la condicionalidad. En los años 90 y 2000 a los países de baja renta se les llegó a exigir documentos de "estrategias de reducción de la pobreza'' cuyo diseño era extremadamente complejo, puesto que se les llegaba a requerir extremos como una ·negociación inclusiva' de las medidas con participación de la ·sociedad civir (ONG). Con la reducción de la demanda de los programas del FMI en la década de 2000, los requisitos de reforma estructural se fueron suavizando, e incluso en muchos casos obviando. La práctica desde 2000 ha sido tratar de centrarse en la condicionalidad estructural "macro-crítica" y reducir el número de condiciones a lo más manejable y menos sensible políticamente. No obstante, el Fondo ha reintroducido una mayor condicionalidad estructural en materia de medio ambiente bajo la Facilidad de Resiliencia y Sostenibilidad en 2022. 
+
+El tipo de condicionalidad más fuerte son las actuaciones previas (\textit{prior actions}) que tiene que acometer un país antes de recibir la financiación. Estas condiciones previas pueden ser tanto macroeconómicas como estructurales, en función de lo que valore el personal del Fondo. 
+
+La financiación del Fondo pues se dedica pues a fomentar el ajuste, a facilitar que sea más suave. En su ausencia, el ajuste debería, o bien ser más brusco, o producirse vía racionam iento de cantidades de divisas, mediante controles de cambios y de capitales, medidas que son muy dañinas para la prosperidad nacional e internacional. La necesidad de ajuste no es provocada por el FMl, sino que se debe a problemas preexistentes que el FMI ayuda a gestionar. 
+
+La colaboración con acuerdos financieros regionales es un tema de gran importancia desde la crisis financiera europea. En la crisis de la Zona Euro de 2010-12, el FMI consideró que no contaba con recursos- suficientes para abordar la escala de los problemas, y exigir la cofinanciación por parte de los socios europeos. Éstos montaron la European Financia) Stability Facility (EFSF), que luego fue reforzada y subsumida en el Mecanismo Europeo De Estabilización (MEDE-ESM). El FMI contribuyó con un tercio (o menos, en los programas griegos) de la financiación total. Normalmente el suministro de menor financiación confiere un rol secundario a una institución, pero el FMI tuvo un papel mayor que el de un subordinado, en virtud de su experiencia de gestión de crisis. En todo caso, concedió las decisiones sobre tipos de cambio y método de ajuste a sus socios europeos -que optaron por la devaluación interna en lugar de la salida del euro, que habría sido potencialmente incontrolable-. Pero ha llegado a criticar el esquema de decisiones conjuntas ('troika') entre el FMI, la Comisión Europea y el BCE principalmente por estimar · que el BCE debería haber estado sometido también a condicionalidad, al ser el banco central de los países receptores de programas.
+
+ es proporcionar asistencia financiera a los miembros que experimentan problemas de balanza de pagos reales, previsibles o potenciales
+
+\subsubsection{Directorio General: Cuenta General de Recursos (GRA)}
+En linea con esta responsabilidad central y a petición de un país miembro, el FMI dispone los recursos de la Cuenta Gneral de Recursos, administrada directamente por el Directorio General. para ponerse a disposición mediante un acuerdo de financiación (\textit{financing arrangement}) o en forma de compras directas (\textit{disbursements}). 
+
+Nos contraremos en los acuerdos de financiación instrumentados a través de acuerdos. En este contexto, un acuerdo es una decisión del Directorio Ejecutivo del FMI por la cual se garantiza a un país miembro que el FMI está dispuesto a proporcionarle recursos durante un período determinado y hasta una cantidad específica, conforme a las condiciones del instrumento financiero correspondiente. 
+
+De entre los acueros de financiación disponibles, podemos distinguir tres grandes categorías informales: (i) estandar; (ii) precautorias; y, (iii) de emergencia.
+
+\paragraph{Facilidades estándar: Stand-By Arrangements (SBA)}
+Los acuerdos estándar por excelencia son los \textit{Stand-By Arrangement} (SBA), contemplados desde los inicios del Fondo y diseñados para países miembros con desequilibrios que, se espera, pueda resolver en el corto o mediano plazo. Tienen una duración normal de entre 1 y 2 años, ampliables a 3. 
+
+No obstante, también se cuenta con un programa a más largo plazo: el \textit{Extended Fund Facility} (EFF). Si se considera que el desequilibrio exterior requiere ajustes/reformas estructurales y económicas más amplias,que se prolongaran en el tiempo, este es el mejor acuerdo. Su duración normal es de tres años años, ampliables a cuatro. 
+
+Independientemnte del progama estándar, que será consensuado con el Directorio General, este tendrá un costes: el tipo de interés del DEG (que es variable, y esencialmente es la media ponderada de los tipos de interés de las monedas de la cesta del DEG), más recargos previstos que pueden o no ser aplicables.\footnote{Los recargos que se contemplan son:
+\begin{lnum}
+    \item \textbf{Por importe}. Si supera el 187,5\% sobre la cuota, se aplicará un recargo sobre el interés de \textbf{200 puntos básicos}. Este cut-off puede cambiar a discreción del Directorio Ejecutivo;
+    \item \textbf{Por duración}. Si hay un retraso de más de 51 meses en repagar el monto total, se aplica un recargo de hasta 300 puntos básicos;
+    \item \textbf{Comisión por disposición}. Cuando se produce un desembolso, se aplican 50 puntos básicos;
+    \item \textbf{Comisión por compromiso de fondos}. Cuando se concede la linea de crédito, se aplica una comisión de entre 15 y 60 puntos básicos, en función del nivel de acceso. En el momento en que se produce un desembolso, se sustituye por la comisión por disposición.
+\end{lnum}
+
+} El acceso considerado normal a estas lineas se da por el 145\% sobre la cuota anual, de manera que queda el 435\% acumulado en los años que se estime oportunos (ampliado transitoriamente a 200\% de cuota y 600\%, en 2023).\footnote{
+\textbf{OJO} Existe la posibilidad que el acuerdo tome la forma de \textbf{Marco de Acceso Excepcional}, siempre que se cumplan las condiciones. En este caso, no tienen límite de acceso y pueden ascender hasta 2.000\% o más, sobre la cuota en casos de grave crisis. Las condiciones previstas son bastante estrictas: (i) las presiones actuales o potenciales sobre la cuenta corriente o financiera sean excepcionales; (ii) la deuda sea sostenible con alta probabilidad (este es el criterio más polémico, por su dificil definición); (iii) sea razonable suponer que recuperará el acceso a mercados internacionales; (iv) sea razonable suponer que haya suficiente capacidad política e institucional para hacer el ajuste necesario
+}
+
+
+
+o Pla:o para repagar: entre 3,25 y 5 años, con un periodo de carencia de 3,25 años desde el momento de un desembolso. Es un plazo relativamente corto, pero los países suelen intentar hacer pagos anticipados sin coste, por el estigma que supone deber dinero al FMI. 
+
+Plazo para repagar: entre 4,5 y I O años. El periodo de carencia es de 4,5 años.
+
+Los recursos del SBA y del EFF se desembolsan en tramos sucesivos a medida que el país implementa las políticas y medidas económicas especificadas en el acuerdo, sujetas a revisiones periódicas por parte del Directorio Ejecutivo. Se trata de programas enfocados al ajuste estructural de los países, que requieren una mayor complejidad en su diseño, una condicionalidad estructural más intensa, y plazos más largos de repago. 
+
+
+
+\paragraph{Facilidades precautorias: Flexible Credit Line (FCL)}
+Las facilidades precautorias se diseñaron como instrumento de prevención de crisis, y van orientadas a dar una señalización positiva para un país cuyas políticas son consideradas sólidas. 
+
+La Línea de Crédito Flexible (Flexible Credit Line, FCL) está disponible para países con fundamentos económicos, políticas y antecedentes de implementación de políticas muy sólidos, y está destinada tanto a la prevención como a la resolución de crisis. En la crisis de 2009, el FMI introdujo una novedad importante en su instrumental de préstamo: la FCL, que eliminaba la condicionalidad tradicional (ex post) para conceder financiación esencialmente incondicional a los países que previamente (ex ante) vinieran desarrollando políticas muy sólidas. Estaba pensada para el apoyo a países como México en 2009. Solamente la han tenido México, Polonia, y Colombia. o Duración: 1-2 años, prorrogable.
+
+
+La Línea de Precaución y Liquidez (Precautionary and Liquidity Line, PLL) está disponible para países con fundamentos económicos sólidos pero con ciertas vulnerabilidades remanentes que les impiden cumplir los requisitos de elegibilidad de la FCL y la SLL. Es Una línea precautoria similar a la FCL, pero para países con políticas relativamente sólidas. Marruecos ha sido el beneficiario más significativo.
+
+La Línea de Liquidez de Corto Plazo (Short-term Liquidity Line, SLL) está diseñada para proporcionar apoyo de liquidez y presenta varias características innovadoras, incluido el acceso renovable. Tiene los mismos criterios de elegibilidad que la FCL, pero solo está disponible para países que enfrentan necesidades moderadas y potenciales de balanza de pagos a corto plazo derivadas de presiones sobre la cuenta de capital. Se trata, por tanto, de un instrumento precautorio por un valor máximo del 145\% sobre la cuota. Fue puesto en marcha durante la crisis covid-19 en 2020 y es incondicional ni revisiones periódicas. La fortaleza de las políticas se establece a través de la selección previa: se ofrece solamente a países con políticas muy sólidas, aquellos que pueden acceder a la Línea de Crédito Flexible, y se diferencia de ésta en que tiene menor volumen de acceso, mayor automaticidad y menor coste.
+
+\paragraph{Facilidades de emergencia: Rapid Financig Intrument (RFI)}
+Las facilidades de emergencia se diseñan como herramientas de concesión de financiación más ágiles y casi automáticas, con menos condicionalidad y un nivel de acceso más limitado.
+
+El Instrumento de Financiamiento Rápido (Rapid Financing Instrument, RFI) es un instrumento de financiación mediante desembolso directo, utilizado por países que enfrentan una necesidad urgente de balanza de pagos sin requerir —o sin tener capacidad para implementar— un programa económico completo. En esencia, un país puede solicitar hasta un 150\% sobre la cuota (50\% anual de su cuota) bajo este instrumento de financiación y sin un calendario de condicionalidad (aunque el Fondo puede solicitar alguna actuación previa -prior action). El periodo de repago es de 3,25-5 años. o Una subcategoría es la Ventanilla para emergencias alimentarias (Food Shock Window), bajo la que se puede obtener hasta un 175\% de cuota.
+
+\subsubsection{Entidades administradas por el FMI: Programas específicos}
+
+
+\paragraph{Programas de desigualdad y crecimiento: Poverty Reduction and Growth Trust}
+Se benefician del subsidio a los tipos de interés (en función de las decisiones del Directorio, puede estar entre el 0\% (2016) u otros tipos bajos (tradicionalmente el 0,5\%). En función de los plazos de desembolso y de las necesidades de ajuste, existen las siguientes facilidades: Rapid Credit Facility (RCF), por importes modestos (75\% de cuota en dos años). Es el análogo a la RFI adaptada para países pobres, con coste subsidiado pero también menor nivel de acceso. 
+
+Standby Credit Facility (SCF): para problemas normales de balanza de pagos. El plazo de repago es de 4 a 8 años (periodo de carencia de 8 años). Extended Credit Facility (ECF): para países con problemas prolongados o estructurales. El plazo de repago es de 5,5 a I O años. (Período de carencia de 5,5 años) Los SCF y ECF son esencialmente los equivalentes a los SBA y EFF para países pobres.
+
+\paragraph{Programas para la transición: Resilience and Sustainability Facility (RSF)}
+En 2022 el FMI creó la Resilience and S11stainability Facility (RSF), una facilidad de naturaleza estructural y de muy largo plazo, establecida para apoyar actuaciones en materia de cambio climático y pandemias, principalmente para incentivar la adopción de legislación medioambiental protectiva y restricciones a las emisiones. Para ello suministra financiación con más de diez años de carencia y plazos de repago de 20 años. 
+
+Los países que lo soliciten también reciben un interés con cierto elemento de concesionalidad, que tienen que financiar los países donantes al Fondo para la Resiliencia y Sostenibilidad. El volumen de acceso es moderado, de 150\% de cuota o 1.000 M\$ (la menor de las dos cantidades). También cabe mencionar algunos programas del FMI que no cuentan con financiación, pero permiten dar un cierto 'sello de calidad' a las políticas del país. y dar un impulso a las refonnas cuando el FMI no puede dar financiación (por ejemplo, si un país tiene atrasos) o cuando el país no desea verse asociado al estigma de la asistencia financiera externa: 
+• El más básico y flexible es un Programa Supervisado - Staff Monitored Program (SMP), que puede tener una duración bastante limitada, que puede ser de un año. Se utiliza a veces como método de 'reenganche' de países que han tenido conflictos o problemas institucionales graves. 
+• Para los países pobres que no necesitan financiación pero a los que conviene un cierto sello de calidad, que además puede desbloquear financiación de otros donantes, existe el Instrumento de Apoyo de Políticas-Policy Support lnstrument (PSI), con una duración entre 1 y 4 años.
+
+
+
+\clearpage
+\section{Fondo Monetaria Internacional: Implementación práctica}
+\puntosclave{
+    El Modelo tradicional de programación financiera del FMI está orientado al ajuste de un país con problemas de competitividad exterior, de disciplina fiscal y/o monetaria. 
+    
+    Los prpgramas del FMI han venido incorporando como elementos fundamentales la sostenibilidad de deuda, el equilibrio exterior y la reestructuración del sector financiero.
+    
+    Los principales debates sobre el contenido y enfoque de los programas del FMI residen en la composición y el gradualismo en el ajuste, el volumen de la financiación a suministrar, la propiedad local de los programas, y el contenido de las reformas estructurales asociadas a un programa.
+}
+
+
+En función de las causas por las que se produzca la solicitud de apoyo financiero, el tipo de ajuste será diferente. 
+
+Al mismo tiempo, el FMI adapta sus programas a las circunstancias específicas de cada pais, y sus recomendaciones sobre el tipo de ajuste evolucionan a la par que la teoría económica, la disponibilidad de asistencia financiera por parte de otras fuentes, y las preferencias políticas de cada país receptor. 
+
+
+En este apartado vamos a desarrollar los elementos importantes de la programación financiera del FMI. 
+
+En primer lugar analizamos el marco analítico y el sustrato teórico de la programación financiera del Fondo, que es necesario para entender su fundamentación. Posteriormente analizaremos en detalle algunas de las herramientas clave de los programas del FMI: los análisis de sostenibilidad de deuda, el equilibrio del sector exterior y la reestructuración del sector financiero. El último apartado analiza las consecuencias habituales de los programas del FMI, y cómo influyen algunas decisiones clave de diseño y aplicación sobre los resultados.
+
+\subsection{Modelo de Programación Financiera: Marco Teoríco}
+El modelo de programación financiera del FMI tiene sus orígenes en los trabajos de POLAK (1957) y aplica, entre otros, el modelo absorción (ALEXANDER, 1952) y el enfoque monetario de la Balanza de Pagos. 
+
+¿Por dónde empezamos? Lo más sencillo será imaginar que somos técnicos del FMI y se nos solicita, por parte de un país en dificultades, la evaluación de la situación para formalizar un programa de asistencia financiera.
+
+\subsubsection{Primera etapa: Diagnóstico}
+Lo primero que deberemos hacer será ejecutar un diagnóstico. Lo más habitual es que una misión del FMI se dirija al país para llevar a cabo labores de diligencia debida (\textit{due diligence}) y verificar los datos, su calidad y metodología.\footnote{Por ejemplo, en el caso de Ucrania en 1996-98, la visita de ta misión del FMI al país permitió descubrir que las reservas internacionales utilizables (300 M\$) eran menos de ta mitad de las reportadas oficialmente (700 M\$ de los casi 1.000 M\$ de reservas declarados eran ilíquidos). Es un ejemplo, entre muchos, de cómo la diligencia debida o auditoría de las variables estadísticas claves revela aspectos fundamentales. Otro ejemplo dramático de diligencia debida en el diseño de un programa, aunque algo riguroso, fue la reclasificación de la deuda pública de Portugal en su programa con el FMI de 2011 por sus Partenariados Público-Privados (PPPs, por ejemplo, concesiones de hospitales y autopistas) y empresas públicas, que incrementó la deuda pública portuguesa en 10 puntos de PIB.
+
+La práctica de la diligencia debida requiere gran experiencia y olfato para detectar dónde se producen las ocultaciones o manipulaciones de datos (por parte de las mismas autoridades que solicitan ayuda). 
+} Esto se hará en todo caso manteniendo un diálogo constante con las autoridades y con otros actores económicos y políticos pues, además de necesario, nos permite obtener más y mejores pistas sobre el fondo del asunto. En definitiva, el diálogo revela preferencias políticas por distintos tipos de actuación, pero también puede revelar deficiencias institucionales y dónde residen las principales resistencias políticas.
+
+Con esto, estaremos en disposición de formular el cuadro macroeconómico, indentificar los desequilibrios y fijar los objetivos del programa.
+
+\paragraph{Objetivos: Identificación y contraste}
+¿Cómo podemos identificar los objetivos que debería tener un programa? Esta labor no es sencilla y está sujeta a constante cambio. Podemos decir, sin pérdida de generalidad, que en el diagnóstico podemos llegar a obtener suficiencite información como para poder identificar los objetivos adecuados para el programa dada la naturaleza de los desequilibrios observados; siendo los más clásicos: (i) restaurar la competitividad exterior; (ii) restaurar la disciplina monetaria y fiscal (incluyendo problemas de deuda); (iii) reducir la inflación; y, (iv) restaurar el crecimiento.
+
+Una vez identificados los objetivos debemos proceder a contrastarlos y verificar que estos son adecuados. Esto, como podemos suponer, resulta aún más complicado de realizar. No obstante, podemos considerar el arquetipo de contrastación con la siguiente lógica:\footnote{No obstante, el FMI también se reserva la potestad de, una vez identificados los objetivos generales e instrumentos, traducirlos a un marco estandarizado de objetivos cuantitativos (\textit{quantitative performance criteria}):
+\begin{la}
+    \item \textbf{Objetivos mínimos de Reservas Internacionales Netas} (Net lnternational Reserves, NIR). Es decir, la estabilización de las reservas del país;
+    \item \textbf{Objetivos máximos de Activos Domésticos Netos}, del Banco Central o de las entidades de depósito (Net Domestic Assets). Es decir, limitar el crecimiento de los agregados monetarios para estabilizar la cuenta corriente y la inflación;
+    \item \textbf{Objetivos máximos de Déficit}. Generalmente, establecer techos de déficit público (generalmente déficit primario, antes del pago de intereses) o de gasto público primario.
+\end{la}
+
+Para conseguir alcanzar estos grandes objetivos, se establecen otros objetivos intermedios típicos importantes como la limitación en la masa salarial pública, de atrasos en los pagos del sector público (\textit{domestic arrears of the public sector}) para restaurar la confianza en los contratos y el funcionamiento del sistema de pagos, o restaurar la viabilidad del sector energético (es muy habitual que, en países con problemas fiscales, los precios de la energía como la gasolina, electricidad o gas estén muy por debajo del valor internacional de mercado). 
+}
+\begin{lnum}
+    \item \textbf{Construcción del cuadro macroeconómico}. En primer lugar, el FMI desarrolla el cuadro macroeconómico del país sobre la base de cuatro sectores principales y sus interrelaciones: (i) Sector Real; (ii) Sector Fiscal; (iii) Sector Monetario; y, (iv) Sector Exterior;
+    \item \textbf{Escenarios: proyección}. Una vez tenemos el cuadro elaborado, el FMI proyecta escenarios de diferente tomando como calibración el cuadro macroeconómico elaborado. Un ejemplo básico sería la proyección de dos escenarios polares: (i) un escenario \textbf{sin cambio} en las políticas actuales (\textit{no policy change scenario}); y, (ii) un escenario base (\textit{baseline scenario} o \textit{program scenario}) con la aplicación de todos los cambios adecuadamente implementados, dados los desequilibrios observados. 
+\end{lnum} 
+
+\paragraph{Instrumentos: ¿Cuáles utilizar?}
+Una vez identificados los objetivos y contrastada su adecuidad surge otro problema:: ¿Cómo alcanzarlos? Como sabemos, existe una amplia gama de medidas/instrumentos que permitirían alcanzar objetivos de Política Económica; por tanto, ¿cuál deberíamos escoger? Para soretar estas dificultades, los instrumentos son inicialmente acotados a aquellos que se consideran: controlables de forma directa o indirecta por las autoridades del país, lo que se denominan \textbf{variables de política} (\textit{policy variables}). Por ejemplo, las variables fiscales primarias (antes del pago de intereses) son más controlables que los pagos de intereses, que en muchos casos dependen de los tipos de interés internacionales. Una vez tenemos este subconjunto, es normal tener especial consideración a las variables/instrumentos/medidas preferidas por las autoridades del país, puesto que serán estas las que deban implementarlas y podemos, de esta forma, garantizar o suponer mayor compromiso: cada medida tendrá consecuencias (económicas, políticas, sociales, etc.) diferentes y algunas serán menos adecuadas que otras dado el contexto nacional, que conocen las autoridades del país. 
+
+\paragraph{Condicionalidad: Acceso a las facilidades}
+Es frecuente que se introduzcan también objetivos de reformas estructurales (\textit{structural benchmarks}), que pueden afectar a las previsiones. Estos objetivos son, en realidad, criterios de condicionalidad estructural y no objetivos económicos para remediar la situación observada. De esta forma, se encuentran fuertemente personalizados a las situaciones de cada país y contienen mucho (quizás excesivo) grado de discrecionalidad por parte de la misión.
+
+\subsubsection{Segunda etapa: Implementación y evaluación}
+
+
+
+Ahora que conocemos el marco teórico que guía la definición, valuración e implementación de los programas del FMI, veamos cómo se ejecutan de manera más realista atendiendo a tres de los grandes objetivos que suele perseguir cualquier programa del FMI. 
+La ayuda financiera del FMI se produce por tres tipos de motivos:
+• presiones sobre la cuenta exterior (sobre las reservas y tipo de cambio),
+• crisis macroeconómica (inflacionaria o fiscal) y
+• crisis en el sector financiero.
+En muchos casos se combinan los tipos de crisis, con problemas simultáneos de reservas, inflación, fiscales y del sector financiero. En este apartado vamos a examinar el modelo de referencia utilizado por el Fondo para el ajuste macroeconómico y exterior. 
+
+
+\subsection{Objetivo específico (I): Desequilibrios por deuda}
+El Fondo define la sostenibilidad de la deuda como la \textbf{capacidad de mantener el servicio de la deuda sin una corrección excesiva y poco realista de ingresos o gastos}. Como vemos, es una definición algo distinta de la condición matemática de sostenibilidad, pues tiene en cuenta tanto el nivel de la deuda como la \textbf{viabilidad del ajuste}.\footnote{Permite una comprensión sofisticada de las dinámicas de la deuda de un país y sus vulnerabilidades. Sin embargo, sigue siendo una aproximación puesto que todo el análisis depende de proyecciones sobre el comportamiento futuro de las variables clave y, en consecuencia, existe un elemento discrecional muy importante.
+}
+
+En los programas del Fondo, los desequilibrios por deuda juegan un papel cada vez más importante dado el grado de movilidad de capitales alcanzado. Por eso, cuando un país solicita un programa del FMI, es necesario identificar, con mucho rigor, si dentro de los objetivos del programa debemos o no establecer la reestructuración o no de la deuda, decisión de mucha trascendencia e impacto económico, político y administrativo.\footnote{¿Por qué? Como sabemos, los contratos de deuda pública sirven de referencia básica para el sistema financiero de un país, por lo que cualquier incumplimiento o modificación puede enviar señales al mercado muy negativos y considerarse un evento de primera magnitud, equivalente a una bancarrota de escala nacional.
+} 
+
+En este contexto, ¿cómo puede el FMI identificar este desequilibrio y establecer los objetivos estríctamente necesarios? Es decir, ¿cómo puedo el FMI establecer idóneamente sus objetivos respecto a la deuda?
+
+\subsubsection{Enfoque adoptado: Nivel de desarrollo}
+Lo primero importante será adecuar el análisis al contexto del país: ¿país desarrollado o país en vías de desarrollo? Las razones para adaptar el enfoque son varias, pero resultan especialmente relavantes dos:
+\begin{la}
+    \item \textbf{Tolerancia}. En primer lugar, se considera un hecho contrastado que los países con mayor renta suelen tener capacidad de asumir niveles mayores de deuda sin sufrir una crisis, lo que se conoce como mayor \textbf{tolerancia al endeudamiento} (REINHART, ROGOFF y SAVASTANO, 2003). Esta mayor tolerancia puede deberse a múltiples factores (instituciones más sólidas, mayor capacidad de recaudación fiscal, mercados financieros más profundos, mayor capital doméstico acumulado, etc.) pero es muy importante a la hora de ajustar las recomendaciones a este hecho: sin pasarnos de frenada;
+    \item \textbf{Exposición externa}. En segundo lugar, los países de baja renta suelen presentar mucha mayor exposición exterior debido a la volatilidad de sus ingresos por exportaciones (muy dependientes de las materias primas, en muchos casos). Por el contrario, la deuda externa suele ser de cuantía relativamente inferior en los países más desarrollados, dado que pueden financiarse emitiendo en sus mercados y en su moneda. De esta forma, mientras que los análisis de sostenibilidad sostenibilidad de la deuda (pública y privada) para países en vías de desarrollo suele centrarse en la deuda externa y tomando en especial consideración el papel del tipo de cambio; para los países con mercados financieros más desarrollados, el foco del análisis se suele centrar en la deuda pública. 
+\end{la}
+
+Una vez hemos centrado el marco de análisis, se procede a evaluar la posición y sostenibilidad de las variables objetivos.
+
+\subsubsection{Metodología: Test de sensibilidad}
+La metodología por excelencia para llevar a cabo esta evaluación es el Test de Sensibilidad o \textit{stress test}. Identificando el escenario base y las interrelaciones presentes, y proyectando diferentes escenarios alternativos (\textit{shocks} y \textit{booms}) de las variables flujos. Las variables flujo más comunes son el PIB, el saldo primario, la inflación y los tipos de interés:\footnote{Por ejemplo, escenarios con menor crecimiento, con desviación fiscal respecto a las previsiones, con aumentos del tipo de interés, con depreciación del tipo de cambio, con afloramiento de pasivos contingentes, o con una combinación de ellos. El shock que suele tener un impacto mayor es el de pasivos contingentes, puesto que suele ser voluminoso (el estándar es en tomo al 10\% del PIB) y el personal del FMI lo suele combinar con un escenario macro desfavorable, aumiendo que la pérdida de credibilidad por pasivos contingentes implica un deterioro de las expectativas.
+} 
+
+\begin{center}
+\begin{tabular}{|p{0.3\linewidth}|p{0.6\linewidth}|}
+\hline
+\multirow{2}{*}{\textbf{Proyecciones macroeconómicas}} &  {\scriptsize PIB real y nominal} \\
+\cline{2-2}
+ & {\scriptsize Deflactor del PIB y tipos de interés} \\
+\hline
+\multirow{2}{*}{\textbf{Saldo Primario}} &  {\scriptsize Ingresos fiscales primarios} \\
+\cline{2-2}
+ & {\scriptsize Gasto primario} \\
+\hline
+\multirow{2}{*}{\textbf{Dinámica automática de la deuda}} &  {\scriptsize Diferencia tipos de interés - Crecimiento del PIB} \\
+\cline{2-2}
+ & {\scriptsize Tipos de cambio y nivel de precios} \\
+\hline
+\multirow{2}{*}{\textbf{Otros flujos generadores de deuda}} &  {\scriptsize Pasivos contingentes (recapitalización bancaria, PPs)} \\
+\cline{2-2}
+ & {\scriptsize Privatizaciones (reduce deuda)} \\
+\hline
+\end{tabular}
+\end{center}
+
+En aras de la verificación, también suelen compararse con las medias históricas de las variables flujo utilizadas (últimos 10 años), para ilustrar si las proyecciones son optimistas o no. En definitiva, el objetivo de este análisis es identificar si en presencia de los escenarios proyectados, la trayectoria de la deuda deviene explosiva (insostenible) o supera con holgura los umbrales de riesgo.
+
+\subsubsection{Conclusiones: Acceso a programas y condicionalidad}
+Una vez realizadas las proyecciones y el test de sensibilidad, el \textit{staff} tomará sus conclusiones en base a los umbrales definidos por el FMI. Estos son estándares que se consideran razonables y adecuados para evitar desequilibrios por deuda que acaben menoscabando el rendimiento de la economíca en otras areas. Si son o no coherentes, consistentes o verdaderamente fundadoa, es otro tema. Se trata de convenciones generalmente aceptadas y con poco consenso teórico. Simplemente es la costumbre. 
+
+El FMI justifica la evaluzación de estos riesgos en base a sus estimaciones empíricas, distribuciones de probabilidad de crisis y niveles de deuda.
+Los umbrales son sustancialmente diferentes en función de si se trata de un pais desarrollado o un país en vías de desarrollo:\footnote{En muchos casos, para países de baja renta, los umbrales de riesgo se determinan en función de su capacidad institucional: Marco de Sostenibilidad de Deuda, \textit{Debt Sustainability Framework} (DSF). Una característica particular de este marco alternativo es que una parte importante de su deuda es en términos concesionales (intereses por debajo del mercado y plazos muy largos, con periodos de carencia), por lo tanto el indicador realmente importante sobre la capacidad de asumirla es el VAN  los servicio de la deuda.
+}
+
+\begin{center}
+\begin{tabular}{|p{0.3\linewidth}|p{0.15\linewidth}|p{0.15\linewidth}|p{0.15\linewidth}|p{0.15\linewidth}|}
+\hline
+ & \multicolumn{2}{c|}{Umbrales de \textbf{alto escrutinio}} & \multicolumn{2}{c|}{Umbrales de \textbf{riesgo alto}} \\
+\hline
+\textit{Indicadores} & Países desarrollados & Países emergentes & Países desarrollados & Países emergentes \\
+\hline
+\textbf{\% Deuda} (Valor nominal/PIB) & 60 & 50 & 85 & 50 \\
+\hline
+\textbf{\% Financiación} (Necesidades brutas de financiación/PIB) & 15 & 10 & 25 & 15 \\
+\hline
+\end{tabular}
+\end{center}
+
+No obstante, como vemos los umbrales distan mucho de lo que observamos en la práctica. ¿Qué implicaciones tiene esta evaluación? El dictamen de un país respecto a la sostenibilidad de su deuda tendrá implicaciones muy fuertes en la condicionalidad de la financiación y los objetivos que persiga el programa:
+\begin{la}
+    \item \textbf{Reestructuración}. Cuando la trayectoria de la deuda supera los niveles de riesgo de forma persistente es probable que se exstablezca como objetivo una reestructuración de la deuda. Ahora bien, condicionar a un país desarrollado a algo tan grave ha hecho que los umbrales de riesgo en la práctica se sitúen en niveles en torno al 120\% del PIB. Para los países de renta baja, la reestructuración de deuda es menos traumática ya que los tenedores suelen ser acreedores oficiales, que se coordinan en el Club de París, y otorgar tratamientos de deuda de forma rápida y bastante flexible (coordinada con el FMI);\footnote{De hecho, muchos de estos países han recibido alivios de su deuda en la Iniciativa de Países Pobres Altamente Endeudados (HIPC, por sus siglas en inglés).
+    
+    No obstante, un nuevo reto para los países de baja renta es que su principal acreedor actual es China, que no forma parte del Club de París (y ha anunciado que no lo acepta como foro de negociación). Este país ha anunciado que por ser país en desarrollo no puede efectuar alivios de deuda de la misma forma que d Club los ha realizado en el pasado.
+    } 
+    \item \textbf{Límites de endeudamiento exterior}. Si la situación no es tan grave pero sigue siendo problemática, el FMI puede establecer como objetivo limitar el endeudamiento exterior, en particular al endeudamiento en términos no concesionales, a los países menos desorrollados. En caso de un país desarrollado, no se establecería ningún objetivo concreto.
+\end{la}
+
+En general, el establecimiento de estos objetivos pretende reducir la exposición del propio FMI, no prestando si la deuda es insostenible. Además, debe tenerse en cuenta que el FMI no emite \textit{rating} de riesgo, sino que se trata de una evaluación interna totalmente condicionada a la solicitud de un programa.\footnote{No obstante, sí lo hará si el programa solicitado es de una cuantía importante. En esas circunstancias, la evaluación se rige por la Política de Acceso Excepcional, 2003/mod. 2016:
+\begin{la}
+    \item \textbf{Sostenible con alta probabilidad} (zona verde). En esta circunstancia no se le exigirá una reestructuración;
+    \item \textbf{Sostenible, pero no alta probabilidad} (zona gris). Se le puede pedir una reestructuración de sus vencimientos a corto plazo (re-profiling) salvo que cuente con financiación de otros países u otro tipo de involucración del sector privado;
+    \item \textbf{Deuda insostenible} (zona roja). Se le exigirá una reestructuración para acceder a la financiación del FMI 
+\end{la}
+}
+
+\subsection{Objetivo específico (II): Desequilirbios exteriores}
+Como hemos visto, una de las situaciones típicas en las que un país solicita apoyo financiero al FMI es una situación de falta de competitividad exterior. 
+
+\subsubsection{Metodología EBA: Tipo de Cambio}
+En estas circunstancias, para orientar las recomendaciones sobre tipos de cambio y competitividad, el FMI utiliza su metodología EBA, complementada por las valoraciones de los economistas encargados del país en cuestión (country desk) que suelen tener en cuenta otros indicadores más informales. 
+
+El \href{https://www.imf.org/external/np/res/eba/pdf/080913.pdf}{Enfoque de Balance Externo} (EBA), desarrollado por el Fondo Monetario Internacional (FMI), es una metodología analítica utilizada para evaluar las posiciones externas de un país (como la cuenta corriente y el tipo de cambio real). Su objetivo principal es identificar si estas variables están alineadas con los fundamentos económicos a mediano plazo y si las políticas internas son adecuadas.
+
+Una versión simplificada de esta metodología aplicada a un caso real se puede encontrar aquí: \href{https://www.bccr.fi.cr/investigaciones-economicas/DocIE/2017-DT-03.pdf}{\textit{Enfoque de Balance Externo (EBA) para aproximar un tipo de cambio real}. Banco Central de Costa Rica (2017)}
+
+\paragraph{Conclusiones: Menú de opciones (Política Monetaria)}
+Esta metodología suministra una orientación sobre las necesidades de devaluación del tipo de cambio real y del tipo de cambio nominal. 
+
+
+
+Para los países con divisa propia y tipo de cambio fijo ajustable, existen diversas estrategias: una devaluación calculada (utilizando las estimaciones EBA y otros indicadores cambiarios), o bien dejar flotar la moneda durante un período de descubrimiento de precios para posteriormente estabilizarla una vez que el mercado ha dejado de ejercer presiones depreciatorias -típicamente mediante el uso de un ancla nominal (como la fijación al dólar o euro) o, en los países con capacidad institucional media y alta, mediante la adopción de un régimen de objetivos de inflación combinado con garantías de independencia para el banco central. 
+
+El FMI suele ofrecer un menú de opciones internamente consistentes a los gobiernos sobre tipo de cambio, que eligen en función de sus preferencias políticas. 
+
+Pero en general, en países con tipos de cambio sobrevalorados, suele exigir una devaluación suficiente como condición previa al suministro de financiación. En los países que forman parte de una unión monetaria, están dolarizados, o no quieren  abandonar su tipo de cambio fijo, las estimaciones de sobrevaloración del tipo de cambio son importantes para orientar las medidas estructurales para tratar de efectuar una devaluación interna que permita reducciones de precios y salarios domésticos, que tienen alto coste político, y coste económico, sobre todo si en el país hay importantes rigideces en precios y salarios (baja competencia, negociación colectiva a nivel sectorial, contratos difíciles de renegociar) y la deuda es elevada (el esfuerzo de servicio relativo de la deuda aumenta puesto que el valor nominal de la deuda se mantiene y el valor nominal de ingresos para repagarla disminuye).
+
+\subsection{Objetivo específico (III): Desequilibrios financieros}
+Sin ánimo de exhaustividad, también es necesario conocer los elementos básicos de una estrategia de saneamiento del sector financiero. 
+
+Muchos programas han tenido su epicentro en el sector financiero, con necesidades importantes de reestructuración. La desconfianza sobre la salud del sector financiero ha influido sobre las variables macroeconómicas, por ejemplo, generando presiones depreciatorias sobre los tipos de cambio o presiones sobre el mercado de deuda pública.\footnote{Fue el caso de Ecuador en los arlos 97-99, con una gravísima crisis financiera que implicó el bloqueo de los depósitos (un 'corralito bancario') durante I ano. Los problemas macroeconómicos interactuaron con los problemas del sector financiero. Trás varios rescates bancarios, el desencadenante final del pánico fue el establecimiento de un impuesto a las transacciones financieras por importe de un 1\% de cada transacción, que motivó peticiones masivas deretirada de fondos para eludir el impuesto.
+}
+
+De nuevo, es fundamental partir de un diagnóstico bien informado de la situación del sistema financiero, mediante una due diligence en el país, en colaboración con el supervisor nacional. En algunos casos en los cuales se ha producido una pérdida de credibilidad de la supervisión manifestada en una desconfianza de los mercados, y el equipo del FMI para el país (que suele estar compuesto de un máximo de 15 personas) se revela insuficiente para un diagnóstico adecuado en profundidad, el personal del Fondo puede recomendar una auditoría o diagnóstico a una agencia extema.\footnote{En el caso de los programas de Irlanda y Grecia, se encargó la valoración del diagnóstico a la fimia pr ivada BlackRock. A Portugal le asesoró la consultora Oliver Wyman. En el MOU de rccapitalización del sector financiero (en el cual el FMI suministró as istencia técnica), España contrató a las consultoras Oliver Wyman y Roland Berger, así como a las principales auditoras, con la colaboración de otras instituciones internacionales públicas como el BCE e incluso otros supervisores europeos.
+} 
+
+Esta externalización permite ganancias de credibilidad pero requiere vigilancia por posibles conflictos de interés de la agencia externa. El diagnóstico inicial debe hacer estimaciones sólidas de los posibles activos dañados o fallidos (morosidad), así como de las posiciones de liquidez.\footnote{Un problema habitual es la infravaloración de los problemas de morosidad por la ocultación por parte de los bancos con problemas En el momento en el que desvelen la extensión de su morosidad corren el riesgo de ser vendidos, nacionalizados o declarados en resolución o concurso de acreedores.
+} capital y rentabilidad, normalmente mediante análisis de escenarios (stress test) que sean suficientemente creíbles. También es necesario examinar los controles de riesgo y operativos del sistema.\footnote{Un caso significativo es el de Moldavia en 2014, cuando se produjo la desaparición de 1.000M\$ (un 12.5\% del PIB) del sistema bancario. por diversos fraudes que explotaron las carencias de sistemas de control y las deficiencias institucionales de los bancos locales. Las diferencias entre el país y el FMI sobre qué hacer con los bancos afectados (reformarlos o resolverlos) imposibilitaron el acuerdo para un programa de ayuda financiera que habría podido estabilizar la situación económica del país.
+} Una de las recomendaciones del FMI respecto a los stress tests es que para ser creíbles requieren estar respaldados por recursos financieros suficientes para la recapitalización, resolución y garantía de depósitos. El apoyo financiero del FMI o de acuerdos regionales puede ser detem1inante para obtener esa credibilidad. 
+
+\subsubsection{Metodología: Test de sensibilidad}
+Los objetivos a corto plazo de una estrategia de reestructuración del sector financiero en los programas del FMI suelen ser, a corto plazo: 
+
+• Recuperación de la estabilidad del sistema: solvencia, liquidez y continuidad de la intermediación financiera • Rapidez en las actuaciones, para evitar el contagio a otras partes del sistema, o a otros países. 
+• Restablecer la confianza y prevenir salidas de depósitos o de capitales (pánicos bancarios o financieros). Que se complementan con objetivos a largo plazo, que se suelen introducir también en el programa: 
+• Refuerzo del gobierno de las instituciones financieras y del supervisor\footnote{Es común que las instituciones financieras de países con problemas sufran intervenciones políticas que instalen o mantengan a gestores inadecuados. Este tipo de problemas también se pueden producir en el supervisor.
+} 
+• Mejora del marco legal y de la infraestructura financiera;\footnote{Una ilustración de problemas en el marco legal es el caso del programa de Chipre (2013). El saneamiento del sistema financiero se hacia imposible por la persistencia de una morosidad a niveles estratosféricos (60\% de los préstamos brutos y 1 50\% del PIB en 201 5). Un impedimento clave para la reducción de la morosidad era la imposibilidad de efectuar desahucios o ejecuciones de garantías, que provocaban impagos estratégicos. La aprobación de la ley para remediar el problema fue impopular y se produjo con retrasos, al final del programa.
+}
+• Introducción de competencia, muchas veces mediante la autorización de inversiones extranjeras en el sector financiero
+• Mantener el acceso a los servicios financieros por parte de la población
+
+
+\paragraph{Conclusiones: Recomendaciones de Política Económica}
+Las principales herramientas para una estrategia del sector bancario son:
+
+• Identificación de los activos dañados actuales y potenciales, y en su caso segregación de los mismos en vehículos específicos de gestión de activos dañados ('Bancos malos', Asset Management Companies) que compran los activos con descuento y permiten aflorar las pérdidas.
+
+• Recapitalizaciones bancarias siguiendo el diagnóstico de un stress test, que pueden ser privadas (recomendaciones de ampliaciones de capital) o públicas 
+
+• Resolución o venta de las entidades no viables, incluyendo mediante la posibilidad de 'bancos puente' (bridge banks), que reciben los activos y pasivos de la entidad en resolución y cumplen con sus compromisos para evitar contagios por el incumplimiento de contratos o la incertidumbre sobre la posibilidad de incumplimientos 
+
+• Suministro de liquidez a las entidades solventes o recapitalizadas por parte del banco central o del fondo de garantía de depósitos 
+
+• En su caso, aplicar pérdidas (\textit{bail-in}) a los distintos tenedores de pasivos de una entidad financiera dañada, en primer lugar los accionistas, seguidos de los tenedores de deuda senior, de deuda subordinada, y finalmente, en los casos más graves, los depositantes. La decisión sobre la aplicación de pérdidas a los acreedores es una de las más delicadas, puesto que puede haber una importante masa de perdedores, e incluso contagio sobre otras partes del sistema. Por otra parte, el bail-in tiene la ventaja de que puede ahorrar costes fiscales al contribuyente. 
+
+• En casos extremos de incertidumbre o de gravedad de la situación y cuando los fondos públicos y externos disponibles son escasos, una opción es gestionar unos controles a las salidas de capitales para parar el pánico. Los controles pueden ser de distinta intensidad.\footnote{Dos casos imponantes de controles de capitales bajo programas del FMI conjuntos con Europa han sido los controles de capitales en Chipre en 2013, que duraron dos arios aunque se fueron liberalizando rápidamente. y Grecia en 2015. Los controles de capitales en Chipre se establecieron a la par que un bail-in muy duro a los depositantes de más de 1 00.000€. En Grecia en julio de 2015 se establecieron controles de capitales ante la incertidumbre sobre la continuidad de un programa. los unpagos del Estado griego al FMI. y la permanencia del país en el euro. El control de capitales fue duro. con limitaciones severas a la retirada de efectivo y la prohibición total de transferencias al exterior. Pero no estableció restricciones para los pagos domésticos con tarjeta -puesto que los pagos se mantenían dentro del sistema bancario nacional-. Esta característica pem1itió que las distorsiones a la economía derivadas de los controles de capitales no fueran dramáticas. en un contexto ya deprimido. de alta incertidumbre y de baja inversión desde la recaída económica de finales de 2014.
+} Los más suaves son impuestos a las salidas, y los más duros son la restricción total a las retiradas de depósitos o transferencias al exterior ('corralitos'). Estas medidas son las más impopulares de todas, y las más distorsionantes para la economía, aunque pueden ser inevitables si la situación está fuera de control. El objetivo es diseñar las medidas para que sean temporales y limitadas, y con una estrategia de salida
+
+
+\subsection{Las intervenciones del Fondo Monetario Internacional: ¿cómo son valoradas? ¿qué consecuencias tienen?}
+Las consecuencias sobre los países receptores de un programa con el FMl dependen del tipo de programa solicitado, de las circunstancias y de las elecciones efectuadas por las autoridades y por el personal del Fondo. El efecto típico de un programa de ajuste tradicional del FMl puede ser el siguiente:
+
+A corto plazo (fase de ajuste):
+• Reducción del crecimiento del PIB por la reducción de la absorción interna derivada del ajuste fiscal y la contracción del crédito interno
+• Aumento de la ratio Deuda / PIB, por el reconocimiento de pasivos ocultos o contingentes, así como por el efecto de la reducción del crecimiento.
+• Reducción de la inflación
+• Reducción del déficit primario y de los atrasos del sector público con otros agentes
+• Mejora de la cuenta corriente por la reducción del crédito interno y la absorción
+• Depreciación / devaluación del tipo de cambio a niveles más cercanos al equilibrio, que suele ser de forrna previa o inmediatamente posterior a la firma de un programa. En cuanto se ha producido la devaluación inicial, el tipo de cambio suele estabilizarse rápidamente por la disponibilidad de la financiación exterior del FMI.
+
+A medio plazo (fase de estabilización, al cabo de 6 meses o 2 años, en función de la senda de ajuste)
+• Recuperación del crecimiento
+• Estabilización de la inflación en niveles menores
+• Aumento de reservas
+• Reducción del déficit público y estabilización progresiva de la senda de la deuda pública
+
+Las variables más importantes que determinan los efectos de un programa son:
+• El gradualismo en el ajuste: Si el ajuste se concentra al principio del programa (front/o aded adjustment, 'shock therapy '), el efecto de la fase de ajuste es más intenso y rápido.\footnote{El Banco de España describía en ténninos similares su Informe correspondiente a 1959 ,el efecto inicial del exitoso y muy importante programa de España con el FMI en ese ailo. (Como detalla MUNS en su libro \textit{Historia de las relaciones entre España y el FMI 1958-1982}. página 37).
+} El coste político y económico a corto plazo suele ser más evidente y hay menos tiempo para el diseño de las medidas, pero el programa gana en credibilidad. La alternativa es un ajuste espaciado y gradual o incluso retardado (backlo aded), que permite suavizar los efectos de la fase de ajuste y suministrar un tiempo de adaptación a los agentes. En circunstancias en las que el ajuste necesario es muy voluminoso o complejo, puede ser casi imposible concentrarlo al principio del programa. Pero tiene el principal inconveniente de que pierde credibilidad y que puede generarse 'fatiga en el ajuste'. En términos de economía política, puede resultar poco viable administrar dosis continuas de medidas impopulares o mantener el capital político para superar la presiónde los grupos de interés contrarios a las reformas. Por eso el FMI ha establecido una limitación tradicional de la duración máxima de sus programas estándar (los SBA) a 3 años, que ya es una duración elevada para un ajuste si el ciclo electoral es de 4 años, por ejemplo.
+• El volumen de la financiación: o Un programa de gran volumen permite suministrar w1 'muro de dinero' (wall of money) para disuadir la especulación cuando los problemas son de liquidez y la necesidad de ajuste es limitada, pero requiere de buenas políticas previas o una cond•i cionalidad reforzada para evitar el riesgo moral. Un problema que se ha apreciado en programas muy grandes es el temor a la subordinación de su deuda por parte de los acreedores privados. Siendo el FMI un acreedor preferente que no acepta quitas, en caso de una reestructuración de la deuda del país con programa, tanto mayor deberá ser la quita para los tenedores privados de deuda. o Por otra parte, programas pequeños del FMI suministran menores garantías de que un país va a estar suficientemente financiado pero suelen darse en condiciones de gran propiedad local de la reforma, que además permiten reforzar el "papel cata/ític:o " de la financiación del Fondo. En esas condiciones, el FMI suele tener que hacer esfuerzos informales para que otros agentes suministren financiación (países amigos, o bancos forzados por las circunstancias a refinanciar al país para evitar una quiebra desordenada). 
+• Propiedad local de un programa ('ownership '): Los programas solicitados sin convicción interna de la necesidad de ajuste o reforma y sin la conciencia de que el papel del Fondo es esencialmente de apoyo, suelen tener mayores índices de fracaso. Un programa del FMI como el que concedió a España en 1959 es un ejemplo de muy elevada propiedad local, tanta que los libros de historia suelen considerar el Plan de Estabilización corno una iniciativa interna e incluso omitir el papel fundamental del FMI en un programa típico de la institución. La propiedad local se produjo sobre todo en la adopción de numerosas medidas de reforma estructural. En general, la propiedad local permite reducir los riesgos de reversión de reformas o de ajustes incompletos e ineficaces.
+o Un aspecto interesante es el de la condición de "chivo expiatorio" del Fondo respecto a las reformas. Para justificar ajustes o reformas, los gobiernos suelen argumentar que les vienen 'impuestos' por el FMI -incluso en casos en los que los consideren necesarios. Para los acreedores o financiadores, la condicionalidad independiente del FMI permite reducir el desgaste político bilateral.\footnote{A este respecto, resulta interesante comprobar como China ha considerado útil la condicionalidad del FMI en la creación de nuevas instituciones multilaterales. El Acuerdo de Reservas Contingentes (CRA) de los BRICS condiciona los préstamos de un tamrulo mínimo a que el país cuente con un programa del FMI. Esta condición se estableció por exigencia de China. que es el mayor tinanciador del CRA
+} No obstante, el uso de esta función de 'chivo expiatorio' conlleva un fuerte desgaste reputacional para la institución y reduce la propiedad local.
+• Contenido de reforma estructural: La introducción de reformas estructurales en los programas del FMI ha cumplido varias funciones. Por un lado, en los años 80 y 90, los programas fueron muy intensivos en condicionalidad estructural como sustitutiva del ajuste macroeconómico, que se consideraba más impopular. No obstante, lacondicionalidad estructural también se enfrenta a grupos de interés y también puede ser impopular. El FMI en los últimos años ha tendido a reducir el volumen de la condicionalidad estructural para permitir a los gobiernos concentrarse en las refonnas estructurales críticas (o 'macro-críticas' en la terminología actual del Fondo). Por otra parte, en términos de economía política, en las situaciones de crisis los grupos de interés tienen menos fuerza porque existe una conciencia general de la necesidad de reforma. Por eso suele tener interés incorporar las reformas estructurales más difíciles dentro de los programas de ajuste.
+• La inclusión de reestructuración de deuda: Este punto es posiblemente el más difícil y delicado en el diseño de un programa. Una reestructuración puede ser necesaria si un país está en una situación de clara insostenibilidad de deuda, y prolongar una situación insostenible es costoso y contraproducente. En esas circunstancias, es deseable una reestructuración temprana, ordenada y suficientemente profunda. No obstante, en la mayoría de las situaciones en que se · solicita apoyo financiero un país está en una  situación de frontera. El suministro de una 'segunda oportunidad' para así evitar una traumática quiebra e incumplimiento de las obligaciones de deuda y el contagio internacional es precisamente una de las funciones que cumple el FMI. Si, como pretenden algunos accionistas del FMI que desean minimizar el volumen de los préstamos del Fondo, las políticas de préstamo pasan a exigir el recurso sistemático a lareestructuración de deuda, la implicación del Fondo puede ser asociada a un duro estigma en los mercados financieros de deuda, y evitada con mayor intensidad por los gobiernos.
+• La con:iposición de los ajustes: Idealmente, los ajustes de gasto público deberían efectuarse principalmente sobre los gastos más ineficientes o innecesarios, con criterios de eficiencia y equidad. Algo similar debería ocurrir con eventuales aumentos impositivos. No obstante, en condiciones de crisis y máxima tensión es difícil identificar el ajuste óptimo, en muchos casos por el limitado tiempo disponible, los limitados recursós· humanos en el país receptor y en el FMI, y la limitada información. La situación ideal es que un país tenga preparado un plan de contingencia y de reforma diseñado con anticipación y que pueda aplicar, pero normalmente existen carencias institucionales y dificultad de previsión que hacen que sea poco frecuente. El arreglo más efectivo es la intemalización de los grandes objetivos del programa por el receptor, y su desarrollo y adaptación por la administración nacional a las circunstancias para garantizar eficacia, equidad y solidez técnica a nivel económico y legal de las medidas de un programa. En definitiva, de nuevo la propiedad local.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+\end{document}
