@@ -1,0 +1,1147 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Tema 3.A.8 -- Teoría de la demanda del consumidor (I)\\
+\large Axiomas sobre preferencias, función de utilidad y función de demanda marshalliana. La Teoría de la prefrencia revelada. Precios hedónicos}
+\author{Marcelo Ortega}
+\date{Noviembre 2025}
+\newcommand{\TemaCode}{3A08}
+
+\oldtitle{Tema 3.A.6. Teoría de la demanda del consumidor. Otros desarrollos de la teoría de la demanda, en especial, la teoría de la preferencia revelada y la teoría de la demanda de características}
+\changerationale{
+    Si bien el enfoque es similar, se ha optado por sustituir la teoría de la demanda de características por las técnicas de estimación de precios hedónicos para abordar desde el punto de vista empírico el valor de los bienes para los consumidores como función de sus características.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+    }
+\vspace{1cm}
+
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}\label{intro}
+ALFRED MARSHALL, en sus Principios de Economía (1890) define la economía como la ciencia de la vida diaria en lo que respecta a las acciones humanas tomadas para alcanzar un nivel máximo de bienestar.
+Esta definición nos muestra cómo uno de los principios subyacentes a la reflexión económica, pero particularmente enfatizado en la teoría neoclásica, es el del individualismo metodológico.\footnote{El individualismo metodológico es un método ampliamente utilizado en las ciencias sociales. Sostiene que todos los fenómenos sociales —estructura y cambios— son en principio explicables por elementos individuales, es decir, por las propiedades de los individuos, como pueden ser sus metas, sus creencias y sus acciones. Sus defensores lo ven como una filosofía-método destinada a la explicación y comprensión amplia de la evolución de toda la sociedad como el agregado de las decisiones de los particulares. En principio es un reduccionismo, es decir, una reducción de la explicación de todas las grandes entidades con referencias en las más pequeñas.
+} Se contempla el objeto de la teoría como una realidad social compuesta de individuos que se interrelacionan en economías descentralizadas.
+En su objetivo fundamental de comprender y predecir el funcionamiento de los mercados, la microeconomía examina el comportamiento de dos agentes fundamentales: consumidores y productores.\footnote{La microeconomía es la parte de la teoría económica que describe la actividad económica al nivel de los agentes individuales que conforman la economía. Esta rama de la teoría económica trata el comportamiento de los mercados tanto desde la óptica del equilibrio parcial [Tema 3.A.16] como del equilibrio general [Tema 3.A.21]. Para ello, necesitamos estudiar primero los agentes que intervienen en un mercado, consumidores (demanda) y empresas (oferta) y a continuación la forma como interaccionan en un mercado (equilibrio parcial) o el conjunto de mercados que conforma una economía (equilibrio general).
+Además, la microeconomía también estudia a otros agentes como las instituciones financieras o el Estado.
+
+No hay que olvidar que la microeconomía contemporánea contempla esta separación estricta entre consumidores y productores como “una hipersimplificación del proceso por el que los bienes se compran y se consumen” (EKELUND y HÉBERT, 2013). Ejemplos que muestran el desdibujado de esta frontera son las “tecnologías del consumo”, es decir, la aplicación de la teoría de la producción a las decisiones de consumo, como son el enfoque de características de KEVIN LANCASTER, la economía doméstica de GARY BECKER, la producción doméstica de REUBEN GRONAU o la economía de la información de GEORGE J. STIGLER (la información sobre los bienes de consumo, como bien económico o costoso, obliga a un proceso de búsqueda que debe combinarse con el bien de consumo físico).Además, la microeconomía también estudia a otros agentes como las instituciones financieras o el Estado.}
+En la teoría de la demanda del consumidor, los individuos objeto de estudio son los consumidores.\footnote{Los consumidores son aquellos agentes que actúan típicamente como demandantes de bienes en los mercados de productos y como oferentes en los mercados de factores productivos.
+} Se asume que estos se comportan de manera optimizadora y quedan caracterizados por su deseo de consumir ciertos bienes sometidos a una restricción presupuestaria. 
+En esta exposición, estudiaremos el rol de los hogares en los mercados de bienes y:
+1.	Buscaremos modelizar las decisiones de los hogares para explicar el comportamiento de los consumidores en el mercado;
+2.	Revisaremos la teoría de la demanda del consumidor, que busca descrbibir y explicar las elecciones de cestas de consumo observadas.
+
+\subsection{Contextualización}\label{context}
+Desde un punto de vista histórico, el estudio de la modelización del comportamiento de los consumidores tiene su origen en el concepto de utilidad, acuñado por autores como BENTHAM, BERNOULLI y GOSSEN. La utilidad se define como la capacidad de los bienes de satisfacer necesidades.\footnote{Los economistas clásicos desarrollaron una teoría objetiva del valor. Frente a esto, los economistas neoclásicos desarrollaran una teoría subjetiva del valor, al afirmar que el valor de los bienes y servicios depende de su capacidad para satisfacer necesidades.
+}
+
+\subsubsection{Relevancia}\label{importance}
+El análisis de la demanda del consumidor es útil, tanto por la trascendencia del consumo en la demanda agregada y en el PIB, como a nivel teórico, para la determinación del equilibrio de mercado.
+Además, debemos destacar la contribución de la definición de las preferencias (dejando al margen los axiomas impuestos por este enfoque) puesto que, literalmente, si no fuera por las preferencias no existiría economía.
+
+Esta cuestión es de gran relevancia, tanto a nivel microeconómico como a nivel macroeconómico:
+1.	A nivel microeconómico, supone un paso previo para la determinación del equilibrio de mercado.
+2.	A nivel macroeconómico, conocer cómo se comportan los consumidores es un paso previo a conocer cómo se comporta el consumo en términos agregados, por lo que el estudio de la demanda del consumidor tiene gran interés si tenemos en cuenta la teoría macroeconómica y la trascendencia del consumo en la demanda agregada.
+
+
+\subsubsection{Historia}\label{history}
+Ya en el siglo XVIII, DANIEL BERNOULLI realizó cálculos analíticos y gráficos sobre la utilidad marginal. Este autor efectúa el primer análisis riguroso de la toma de decisiones en ausencia de certidumbre, aplicando de forma pionera el concepto de utilidad marginal para dar respuesta a la conocida paradoja de San Petersburgo [Tema 3.A.10] que no parecía resolverse aplicando el criterio de la ganancia esperada.
+En 1844, JULES DUPUIT relaciona la demanda con la utilidad del consumidor e introduce el concepto de excedente del consumidor.
+En 1854, HERMANN HEINRICH GOSSEN formuló lo que se conocen como las tres leyes de Gossen:
+1.	Ley de la saturación de necesidades. “La utilidad de un bien disminuye conforme aumenta la cantidad disponible de ese bien, hasta llegar a la saciedad”. La utilidad marginal es decreciente.
+2.	Ley de igualdad de la utilidad marginal. “Una persona distribuye su ingreso entre los distintos bienes de modo que el grado final de utilidad de cada bien sea el mismo”.
+3.	Ley de la escasez. “Un bien tiene valor únicamente cuando su demanda excede a su oferta”. La escasez es una condición previa para el valor económico. La escasez se refleja en el problema del consumidor al introducir unos precios estrictamente positivos, pues sin escasez todo sería gratis (la oferta siempre superaría la demanda).
+Más tarde, con la Revolución Marginalista (1870s), autores como LÉON WALRAS (1874) o ALFRED MARSHALL (1890) siguen a GOSSEN y se basan en el análisis marginal, por el cual el consumidor maximiza una función de utilidad sujeta a una restricción presupuestaria y donde se obtiene que el consumidor distribuye su renta entre los distintos bienes hasta que el cociente de las utilidades marginales entre sus propios precios se iguala (es decir se cumple la segunda Ley de Gossen). Este resultado nos permite construir una función de demanda, que relaciona las variaciones en el propio precio con la cantidad deseada por el consumidor.
+Estos autores (ALFRED MARSHALL y LÉON WALRAS) recurren a una concepción cardinal de la utilidad, que permitía comparar entre niveles de utilidad y no solamente ordenar las distintas cestas de consumo.
+Aunque FRANCIS YSIDRO EDGEWORTH (1881)\footnote{El nombre de “Ysidro” se debe a que la madre de EDGEWORTH, Rosa Florentina Eroles, pertenecía a una familia de carlistas catalanes exiliados en Londres. Una de las pocas apariciones de España en la historia del pensamiento económico.
+} ya había descrito la utilidad como función genérica de las cantidades de todos los bienes y había ideado las curvas de indiferencia, serían IRVING FISHER (1892) y VILFREDO PARETO (1896) los primeros en recurrir a una visión ordinal de la utilidad  y en reconocer que cualquier transformación creciente arbitraria de la función de utilidad no tenía efecto alguno sobre la demanda. Hoy en día se acepta ampliamente en teoría de la demanda que solo la utilidad ordinal importa.\footnote{JEVONS no distinguió explícitamente entre mediciones cardinales u ordinales de utilidad, pero fue más bien precursor del método ordinal. Su utilitarismo entendido como maximización de la utilidad era relativo.
+} Es decir, una función de utilidad sirve meramente como instrumento conveniente para representar una relación de preferencia, y cualquier transformación creciente de la misma servirá también a este propósito.
+Sin embargo, no fue hasta los años 30’s cuando JOHN HICKS y ROY ALLEN (1934) introducen el concepto de preferencias, que daba generalidad a la teoría.\footnote{Cabe mencionar además la contribución de GÉRARD DEBREU (1959) en cuanto a la axiomática que dota de una mayor formalidad a esta teoría.
+}
+Por otro lado, el ingeniero italiano GIOVANNI B. ANTONELLI (1886) daría origen a lo que hoy se conoce como teoría de la dualidad, al hacer el camino en sentido contrario: construir curvas de indiferencia y una función de utilidad a partir de funciones de demanda inversas.\footnote{En palabras del matemático MICHAEL ATIYAH (2007), la dualidad no es un teorema, sino un “principio”.
+
+Aunque la formalización matemática de esta teoría se debe a VON NEUMANN, que realizó grandes contribuciones a la programación lineal (campo de las matemáticas, en concreto del análisis, que se dedica a dichos problemas de optimización).
+} Para esta recuperación de la función de utilidad se han seguido dos vías:
+a)	Por un lado, la vía de la preferencia revelada de PAUL A. SAMUELSON (1947) y HENDRIK S. HOUTHAKKER (1950); y
+b)	Por otro lado, la resolución del denominado problema de la Integrabilidad de la mano de LEONID HURWICZ y HIROFUMI UZAWA (1971), buscando ciertas propiedades de las funciones de demanda como las referidas a la matriz de Slutsky.
+
+Serían KIHLSTROM, MAS-COLELL y SONNENSCHEIN (1976) quienes unificarían ambos enfoques relacionando los axiomas de la preferencia revelada con las propiedades de la matriz de Slutsky.
+
+\subsubsection{Problemática}\label{problem} 
+Po tanto, la teoría de la demanda del consumidor pretende explicar a través de la función de demanda del mercado: las siguientes preguntas:
+1.	¿Cómo modeliza la teoría neoclásica lademanda del consumidor? ¿Qué bienes y qué cantidades adquirirá el consumidor? ¿Cómo varía la decisión cuando varían los parámetros?
+2.	¿Qué formas alternativas de modelizar esta decisión existen?
+Es importante destacar, antes de continuar, que nos econtraremos en todo momento ante un mercado competitivo, con información perfecta y consumidores precio-aceptantes.
+
+
+\subsection{Estructura de la exposición}\label{structure}
+
+
+\clearpage
+\section{Teoría neoclásica de la demanda}
+La teoría neoclásica ordinal de la demanda del consumidor parte de dos herramientas:
+\begin{lnum}
+    \item \textbf{Preferencias}. Por una parte las preferencias, con las que se hallará una función de utilidad;\footnote{En la práctica, contar con una función de utilidad permite aplicar las herramientas del cálculo diferencial (y por lo tanto plantear y resolver un problema de optimización).
+    } y,
+    \item \textbf{Restricción}. Por otra parte, la restricción presupuestaria, con la que se determina el conjunto factible.
+\end{lnum}
+
+De este modo completaríamos el problema económico al que se enfrenta el consumidor: el problema de elección entre todos los subconjuntos que quedan dentro del conjunto factible. Pasemos a estudiar cada uno de sus componentes.
+
+\subsection{Función de Utilidad: Desarrollo formal}
+En este primer primer enfoque de la demanda del consumidor seguiremos un proceso deductivo, por lo que nos apoyaremos en conjunto axiomático que define el comportamiento del consumidor que luego utilizaremos para modelizar su bienestar a través de una función de utilidad, intentando maximizar éste con sujeción a una retricción presupuestaria.
+
+\subsubsection{Definición y axiomas de las preferencias del del consumidor}
+
+Dicho consumidor especifica sus preferencias sobre un conjunto de elección no vacío, convexo y cerrado formado por distintos vectores de k mercancías o cestas de consumo.
+[PLANTEAR MATEÁTICAMENTE DICHO CONJUNTO]
+El consumidor ordena las distintas cestas en función de su deseabilidad y, para ello, llevará a cabo una comparación por pares, fijando relaciones de indiferencia ($\sim$), preferencia débil ($\succcurlyeq$) o preferencia estricta ($\succ$), lo que reflejará la deseabilidad relativa entre dos cestas. Esto da lugar a los dos axiomas iniciales, que conocemos como de racionalidad:
+	[Todas las cestas de consumo posibles se hayan comparado] Completitud
+Al comparar las diferentes cestas de consumo, existen tres únicos outputs posibles: indiferencia, prefrencia débil y/o prefrencia fuerte/estricta. 
+
+[INSERTAR MATES]
+
+	… [Sin embargo, esto no impedirá que existan contradicciones lógicas dentro de la ordenación de las preferencias, por lo que debemos añadir el segundo axioma de racionalidad:]  Transitividad. 
+Requisito de consistencia en la toma de decisiones del consumidor. Si las preferencias no tuvieran esta propiedad, habría grupos de cestas para los que no existiría la cesta más preferida. Posteriormente, como veremos, estoimplicará que dos curvas de indiferencia cualesquiera no pueden pasar por un mismo punto. 
+
+[INSERTAR MATES]
+
+Cabe destacar que, aunque todos los agentes tengan preferencias transitivas, las preferencias sociales derivadas de la agregación de las individuales pueden no serlo. Esto es lo que se conoce como la Paradoja de Condorcet.\footnote{
+La paradoja de CONDORCET, o paradoja de la votación es una situación señalada por el MARQUÉS DE CONDORCET a finales del siglo XVIII en el que las preferencias colectivas son cíclicas (intransitivas o no transitivas) aunque las preferencias individuales no lo sean. Lo anterior es paradójico porque implica que la voluntad de mayorías entran en conflictos entre sí, en otras palabras es posible que un procedimiento de elección falle el criterio “siempre-un-ganador”. Cuando esto ocurre, usualmente se debe a que las mayorías en conflicto están formadas por diferentes grupos de individuos. Se puede ilustrar de manera muy simple con el siguiente ejemplo: Si en una elección hay tres candidatos A, B y C y hay tres votantes cuyas preferencias son:
+a)	Votante 1: A, B, C
+b)	Votante 2: B, C, A
+c)	Votante 3: C, A, B
+Si se declara vencedor al candidato A, Se puede argumentar que en realidad debía ganar C porque: 1) dos votantes (el 2 y el 3) piensan que C es un mejor candidato que A; 2) solo un votante (el 1) prefiere el candidato A sobre el C. Pero el argumento descrito también muestra que B es preferido por una mayoría de votantes sobre C, por lo que C no puede declararse vencedor. Y nuevamente, el argumento implica que B no puede ser el ganador de la elección porque una mayoría de votantes prefiere al candidato A sobre el B. Por tanto, el requisito de la regla de mayoría no produce un ganador en esta situación.
+
+}
+Corolario.- El cumplimiento los axiomas de orden convierte al ejercicio de comparación en una relación de orden débil porque: (1) permite efectuar una ordenación completa de las cestas del conjunto de elección de más a menos preferidas; (2) y débil porque admite la indiferencia entre las cestas.\footnote{Algunos textos incluyen el axioma de reflexividad de las preferencias, pero este no es más que una consecuencia de los dos aximoas mencionados.
+} 
+Bien, ahora que hemos definido lo que otorga la condición de racionalidad a las preferencias del consumidor. Es recomendable, y por ello lo haremos, imponer dos condiciones adicionales para que, cuando más adelante introduzcamos la Función de Utilidad, se pueda representar sin problemas adicionales. Estas condiciones (o axiomas) son:  
+
+Deseabilidad.
+Dada una cesta de consumo cualquiera, existe para cualquier entorno mayor que cero una cesta alternativa que es estríctamente preferida a ésta. Por tanto, establece establece una relación entre las cantidades de los bienes de la cesta y su lugar en la ordenación de preferencias. Existen distintos grados de exigencia de esta axioma: (i) no saturación (no hay bliss points), (ii) insaciabilidad local, (iii) estricta monotonía. Este axioma excluye por tanto la incorporación directa de "males" al problema. No obstante, éstos pueden ser transformados en bienes a través de su descripción en términos de ausencia males (basura, ausencia de basura). Para lo que sigue, consideraremos que de este axioma se desprenden dos implicaciones sobre las preferencias del consumidor.
+
+[INSERTAR MATES]
+
+Convexidad. 
+Dadas dos cestas de consumo factibles. Dado un punto $x_1$ estríctamente más preferido $x_2$ y, sea $x_3$ un punto tal que la norma de $x_1$ a $x_3$ sea menor a epsilon, para todo epsilon mayor que cero, entonces $x_3$ será también estríctamente preferido a $x_2$.\footnote{Hay una importante razón técnica para incluir este axioma: dado que el conjunto asequible será convexo, el equilibrio alcanzado por el consumidor será un óptimo local único y, por tanto, global. Además, representa la inclinación de los agentes por la diversificación.
+}
+
+[INSERTAR MATES]
+
+
+\subsubsection{Función de Utilidad}
+Teorema.- Dado un consumidor cuyas preferencias sean completas, transitivas y monótonas en sentido fuerte,\footnote{Axioma de continuidad y de no saturación
+} existe una función de utilidad, de tipo ordinal, continua f_U:R_+^K⟶ R_+ que representa esas preferencias.\footnote{Además, si a estos supuestos le añadimos el axioma de independencia (independencia de alternativas irrelevantes), entonces, podremos asegurar que dicha función de utilidad tendrá forma de \href{https://es.wikipedia.org/wiki/Teoría_de_la_utilidad_esperada}{utilidad esperada}.
+} Es decir, las preferencias del consumidor puedan ser representadas a través de una función de utilidad, la cuál atribuye un número real a cada conjunto de indiferencia, permitiendo una representación numérica del orden de preferencias (inyectiva, no biyectiva). Repasaremos esto más adelante.
+Sobre ésta podemos decir:
+	La función de utilidad es una aplicación matemática que va del conjunto elección K a la recta real. En particular, su dominio son los subconjuntos de cestas de consumo factibles (cantidades de cada bien) y su recorrido el valor de los reales positivos (sin incluir el 0),\footnote{Ya que no es posible la cesta nula ni tampoco forman parte del conjunto de elección los males, que únicamente pueden ser introducidos como bienes $\sim$ ausencia de males
+    } de tal forma que a cada cesta se le asigna un número real, preservando el orden de preferencia de esa relación binaria: 
+f_U:R_+^K⟶ R_+
+(Q_1,Q_2…,Q_i )⟼ U= f_U (Q_1,Q_2,…,Q_k ); 
+∀i=1,2,…,k y k≤dim⁡〖(K)〗
+
+	Precisamente porque esta función sólo se utiliza para establecer un orden sobre las cestas, cualquier transformación monotónica y positiva seguirá representando la misma ordenación, por lo que unas mismas preferencias pueden ser representadas a través de distintas funciones de utilidad.\footnote{Esta condición se conoce también como “linealidad”. Esto es muy importante ya que, al ser imposible saber la ordenación de preferencias de forma segura, el investigador deberá recurrir a sus “conocimientos o intuiciones” para construir esta función de utilidad
+    }
+	La función de utilidad es monótona y creciente.
+	La función de utilidad es estrictamente cuasi-cóncava (si las preferencias son estríctamente convexas).\footnote{Es cuasicóncava y no cóncava porque las transformaciones monótonas positivas preservan la ordenación de preferencias pero alteran la forma.
+    } Es decir:
+{X^',X^'' }∈K∶ X^'≠X^''  y ∀λ∈(0,1)
+si
+f_U (X^' )> f_U (X^'' )⟹ f_U (〖λX〗^'+(1-λ)X'')> f_U (X^'' )  
+Es decir, que dada una cesta que reporta una mayor utilidad que otra, cualquier combinación lineal de ambas reportará más utilidad que la que menos utilidad aporte. Esta propiedad nos permite establecer que la maximización de U(X) es equivalente a elegir la cesta que reporta más utilidad. 
+Una propiedad adicional que suele añadirse para facilitar el análisis es el de:
+	Diferenciabilidad.
+La diferenciabildiad de la misma facilita la obtención de la cesta óptima de los agentes y a su vez, permite estudiar conceptos de gran relevancia dentro de la teoría económica.
+
+\subsubsection{Las curvas de indiferencia}
+Si las preferencias del consumidor y la función de utilidad permiten ordenar las cestas de consumo y asignarles un valor de “utilidad”, las curvas de indiferencia  se definen como los conjuntos de nivel de dicha función. Es decir, cada curva de indiferencia está formada por todas las cestas de consumo que proporcionan al consumidor el mismo nivel de utilidad.\footnote{La teoría de las curvas de indiferencia fue desarrollada por EDGEWORTH (1881) en su libro “Mathematical Psychics: an Essay on the Application of Mathematics to the Moral Sciences”. Sin embargo, fue VILFREDO PARETO (1906) quien las dibujó por primera vez en su libro "Manuale di economia politica con una introduzione alla scienza sociale".
+}
+Las curvas de indiferencia tienen una serie de propiedades: (i) existen infinitas curvas de indiferencia, (ii) cuanto más alejadas estén (distancia euclidiana al origen, i.e. la norma del vector), mayor nivel de utilidad representan, (iii) las curvas de indiferencia son continuas y no se cortan, (iii) son (dadas las preferencias del caso descrito anteriormente) estrictamente convexas y con pendiente negativa, lo que representa la preferencia por la variedad por parte de los consumidores.\footnote{Existen discrepancias entre autores sobre si la continuidad, derivabilidad y convexidad de dichas curvas están garantizadas y ello tiene fuertes implicaciones en la discusión sobre la existencia o no de puntos de equilibrio. Desde un punto de vista matemático la discusión implica el axioma de elección.
+}
+Analíticamente, se definen a través de la diferenciación total de la función de utilidad:
+du(x_(1 ),x_2 )=0⟶(∂U/(∂x_1 ))·dx_1+(∂U/(∂x_2 ))·dx_2
+
+\paragraph{Relación Marginal de Sustitución}
+Llamaremos Relación Marginal de Sustitución a la pendiente de la curva de indiferencia, que expresa la tasa a la que el consumidor está dispuesta a renunciar a x_2 a cambio de una unidad adicional del bien x_1. El valor absoluto de la RMS es decreciente en x_1, lo que implica que, a medida que el bien x_2 se hace relativamente más escaso, el consumidor está dispuesto a renunciar a cada vez menos cantidad de éste a cambio de una unidad adicional de x_1.\footnote{La RMS es la misma, independientemente de la función de utilidad utilizada para representar unas mismas preferencias. Es la ordenación de preferencias la que determina la RMS.
+}
+Por tanto, la RMS mide el grado de sustituibilidad entre dos bienes. Diferentes funciones de utilidad representan distintos grados de sustituibilidad. Para ilustrar brevemente esta condición, podemos representar las siguiente relaciones de sustitución.
+Levantando los supuestos de (1) diferenciabilidad continua y (2) convexidad de las preferencias, tenemos:
+	Las funciones de utilidad lineales representan preferencias sobre bienes sustitutivos perfectos, por lo que la RMS mantendrá un valor constante de sustictución.
+[ILUSTRAR GRÁFICAMENTE]
+	Las funciones de utilidad de coeficientes fijos o funciones de Leontieff representan preferencias sobre bienes complementarios perfectos. 
+[ILUSTRAR GRÁFICAMENTE]
+Volviendo a imponer estas propiedades, y variando el grado de convexidad, tendríamos:
+	Las funciones de utilidad Cobb-Douglas (las más clásicas por ser muy fáciles de analizar) representan preferencias sobre bienes con un grado de sustituibilidad limitado.\footnote{O, de la misma forma, sus diferentes transformaciones logarítmicas.
+    }
+[ILUSTRAR GRÁFICAMENTE]
+	Las funciones cuasilineales representan preferencias cuasilineales, cuyas curvas de indiferencia son translaciones verticales unas de las otras.
+[ILUSTRAR GRÁFICAMENTE]
+
+\subsection{Restricción presupuestaria}
+Introduzcamos ahora el segundo ingrediente del problema de elección (tercera Ley de Gossen y Ley de Walras).
+
+\subsubsection{El conjunto presupuestario}
+Supongamos que el consumidor parte con una dotación monetaria M que puede utilizar para comprar bienes en un mercado competitivo (el consumidor es precio-aceptante, los precios son parámetros).
+Definimos el conjunto presupuestario como aquél que satisfaga:
+m= ∑_(i=1)^k▒〖p_i x_i≤M〗
+El sumatorio de todos los bienes por su precio debe ser igual o inferior a la cota superior de este conjunto.
+Este conjunto tendrá, entonces, las siguientes propiedades: (i) es un conjunto acotado por la recta presupuestaria y la no negatividad de bienes, (ii) es cerrado, por lo que cualquier combinación de bienes sobre sus límites es asequible, (iii) es convexo, por lo que cualquier combinación lineal de bienes pertenece al conjunto y (iv) es un conjunto no vacío. Por lo que, en ningún caso, la renta dada puede ser igual o inferior a cero.
+
+\subsubsection{Hiperplano presupuestario}
+El hiperplano presupuestario es la frontera superior del conjunto presupuestario. En el caso de dos bienes, hablamos de la recta presupuestaria que tiene la siguiente forma:
+p_1 x_1+p_2 x_2=M
+La pendiente de esta recta es -p_1/p_2, lo que representa la tasa de intercambio objetitva del mercado entre los bienes x_1 y x_2: al reducir el consumo de x_1 en una unidad se libera una porción p_1 del presupuesto, lo que permite adquirir p_1/p_2 unidades del bien x_2.
+
+\subsection{El problema del consumidor}
+Una vez definidos los dos ingredientes principales del modelo podemos pasar a caracterizar la solución al problema de elección de la cesta óptima del consumidor, dadas unas preferencias, unos precios del mercado y una dotación monetaria inicial. 
+Se trata, por tanto, de un problema de maximización condicionada de la función de utilidad sujeta a la restricción presupuestaria:\footnote{Los problemas de este tipo son, en su definición formal, relativamente recientes. Se trata de un problema deprogramación lineal clásico cuyo desarrollo inicial se remonta a la II Guerra Mundial: La programación lineal se plantea como un modelo matemático desarrollado durante la Segunda Guerra Mundial para planificar los gastos y los retornos, a fin de reducir los costos al ejército y aumentar las pérdidas del enemigo. Se mantuvo en secreto hasta 1947. En la posguerra, muchas industrias lo usaron en su planificación diaria.
+}
+[DEFINIR EL PLANTEAMIENTO MATEMÁTICO]
+En aras de la brevedad, podemos decir simplemente que (dadas las condiciones impuestas al principio), en este caso, el conjunto presupuestario es convexo (en este caso lineal) y la función de utilidad estrictamente cuasi-cóncava, por lo que podemos asegurar que el equilibrio es único y que estamos ante un máximo global.\footnote{Podemos utiizar el método de los Multiplicadores de Lagrange para resolver este problema de optimización. Las condiciones necesarias (KHUN-TUCKER) se extraen de las CPO’s, y las condiciones suficientes de la matriz Hessiana de segundas derivadas. Solo hará falta obtener las CPO’s e igualarlas a λ, que es el precio sombra representa la ratio a la que la función objetivo incrementa su valor cuando la restricción se relaja (incremento de la dotación monetaria). En este caso, representa la UMg del dinero, es decir, cuánto se incrementa la utilidad cuando la dotación aumenta marginalmente:  λ=(∂U^*)/∂M=〖UMg〗_M. Más al respecto en el [Anexo].
+}
+[GRAFICAR SOLUCIÓN AL PROBLEMA Y ÓPTIMO]
+Llegaremos a esta conclusión mediante la formulación y desarrollo de la ecuación de Lagrange, que, aunque no resolveremos, si cabe destacar la importancia contextual del multiplicador de Lagrange (lamda) ya que este constituye lo que conocemos como “precio sombra” de la economía, esto es, dada la configuración tridimensional de este problema, el multiplicador nos proporcionará información acerca de la Utilidad Marginal de la riqueza, en palabras, cuánta Utilidad obtendríamos al disminuir la restricción presupuestaria marginalmente, o viceversa.
+
+\subsubsection{La solución interior}
+La solución queda determinada por la condición de tangencia, que indica que la cesta óptima permite alcanzar la curva de indiferencia más alta compatible con la restricción presupuestaria dada.
+En el óptimo, la RMS es igual al cociente de precios (segunda Ley de Gossen), que podemos interpretar como que la tasa de intercambio subjetiva del consumidor se iguala a la tasa de intercambio objetiva del mercado. Por tanto, el consumidor demanda tanto de cada bien hasta que es indiferente entre consumir una unidad adicional de cualquiera de los dos bienes.
+
+
+
+
+\subsubsection{Otros tipos de solución}
+
+
+\paragraph{Solución de esquina}
+Donde, la condición de optimalidad implica que, o bien la UMg del bien i ponderada por el precio se iguala al precio sombra, o bien la cantidad consumida del mismo es igual a 0. Esto es porque, en el óptimo, el consumidor estaría dispuesto a consumir una cantidad negativa de x_2 a cambio de una cantidad superior de x_1. La restricción de no negatividad impone la solución esquina. (Incluir gráfico)
+
+
+
+\paragraph{Solución de saciedad}
+
+Existen otro tipo de soluciones que no trataremos por no ser posibles dada la especificación del conjunto aximoático pero que sí podríamos ver con la relajación de alguna de sus restricciones, por ejemplo, la solución de saciedad. 
+
+
+
+\subsection{Función de Demanda}
+
+
+\subsubsection{Función de Demanda Individual: Demanda Marshalliana}
+Como hemos visto la solución al problema de maximización de la utilidad es una cesta de bienes que permite obtener la mayor utilidad posible dados unos precios y un presupuesto. En términos formales es.
+[EXPRESAR MATEMÁTICAMENTE LA FUNCIÓN DE DEMANDA WALRASIANA]
+
+\subsubsection{Función de Demanda Individual: Sistema Completo de Ecuaciones de Demanda Marshallianas}
+Levantando algunas restricciones a nuestro planteamiento inicial (en particular, la estricta convexidad de las preferencias) podemos obtener una generalización de esta Función de Demanda Walrasiana o Marshalliana, puesto que, en este caso, la Función de Utilidad no sería estríctamente cuasi-cóncava, dando lugar a posibles soluciones óptimas diferentes que deben expresarse como colección o vector de cantidades demandadas óptimas (y el valor del multiplicador en este óptimo)
+[EXPRESAR MATEMÁTICAMENTE EL SCEDM]
+(■(x_1^*@⋮@x_i^* ))=(■(x_1 (p_1,p_2,⋯,p_i,i)@⋮@x_i (p_1,p_2,⋯,p_i,i)))
+Este vector de soluciones, al igual que su versión restringida (donde el equilibrio da lugar a un óptima local y global), presenta las siguientes propiedades:
+	Por el Teorema de la Función Implícita , sabemos que el el SCEDM existe y es único para cada combinación presupuestaria.
+	Por el Teorema del Máximo , sabemos que las funciones de demanda son continuas en (p,M).
+	Las funciones de demanda son homogéneas de grado cero en (p,m). Cuando se incrementa la recta presupuestaria y los precios en la misma proporción, la demanda no varía. Por tanto, los agentes no adolecen de ilusión monetaria, lo que permite prescindir de la referencia al dinero.
+	Se cumple la Ley de Walras, esto es, en el óptimo la restricción presupuestaria siempre se satura (se cumple con igualdad estricta), lo que se traduce en que el consumidor siempre agota su riqueza disponible, pues no sería razonable dejar riqueza sin gastar debido al axioma de deseabilidad.\footnote{Se la denomina así por la Ley de Walras, que se obtiene en equilibrio general, cuya demostración matemática revela que este producto de precios por excesos de demanda no es sino la agregación de las restricciones presupuestarias de todos los consumidores de la economía, y en el agregado también deben agotarse todos los recursos disponibles. 
+    }
+El SCEDM es, con cierta generalidad, diferenciable.
+
+
+
+
+
+
+\subsubsection{Agregación: La curva de Demanda de Mercado}
+Por último cabe destacar que podremos obtener la curva de demanda de mercado a través de la suma horizontal de las curvas de demanda individuales:
+X=∑_(i=1)^k▒x_i 
+Si conseguimos obtener la demanda de mercado de esta manera, tendremos la certeza de que las propiedades de las funciones agregadas encuentran un sólido fundamento en el plano de los agentes individuales y no son formulaciones ad-hoc.
+A pesar de esto, cabe señalar que para poder agregar las demandas individuales es necesario imponer unas condiciones restrictivas adicionales:
+	Los consumidores toman el precio como dado y sus acciones individuales no lo modifican perceptiblemente.
+	Los efectos renta son nulos para cualquier nivel de riqueza y para cualquier individuo (preferencias cuasilineales).
+	Independencia de las demandas individuales.
+Una condición necesaria y suficiente sería que la Función Indirecta de Utilidad de todos los agentes de la economía tenga una representación  de la forma polar de Gorman.\footnote{En ausencia de incertidumbre, transformaciones monótonas crecientes de la utilidad o de la función indirecta de utilidad no tienen efectos sobre el comportamiento, de modo que únicamente se requiere que exista una transformación monótona de la función indirecta de utilidad que tome la forma polar de GORMAN.
+
+Consideremos una economía con un conjunto de ℋ hogares. Supongamos que las preferencias de cada hogar h∈ℋ pueden ser representadas por una función indirecta de utilidad de la forma:
+[ESCRIBIR FUNCIÓN INDIRECTA DE UTILIDAD: FORMA DE POLAR DE GORMAN]
+y que cada hogar tiene una demanda positiva para cada bien. Entonces, estas preferencias pueden ser agregadas y representadas por aquellas de un hogar representativo, con función indirecta de utilidad:
+[ESCRIBIR FUNCIÓN INDIRECTA DE UTILIDAD AGREGADA: FORMA DE POLAR DE GORMAN]
+
+Estas preferencias son convenientes porque conducen a curvas de ENGEL lineares y se garantiza que las curvas de Engel de todos los hogares para cada bien tienen la misma pendiente que la del resto de los hogares.}
+Las preferencias que originan una FIU de tipo Gorman vienen, entre otras, de preferencias cuasilineales y homotéticas. Por lo tanto, trabajar con funciones CES, permite la agregación de las funciones de demanda individuales.
+
+\clearpage
+\section{Éstatica comparativa}
+A través de la resolución del problema del consumidor hemos conseguido responder a la primera de las preguntas: ¿Qué bienes y qué cantidades consumirá el consumidor? 
+No obstante, inicialmente nos planteamos una segunda, a saber: ¿Cómo varía la decisión adoptada cuando varían los parámetros del problema?
+Vamos a intenatr ahora dar respuesta a ésta segunda dentro del marco de esta Teoría planteada, que gracias a la estática comparativa, nos permite estudiar las variaciones en la demanda ante variaciones en los parámetros del modelo, en particular:
+1.	Ante variaciones en renta; y/o,
+2.	Ante variaciones en precio.
+
+\subsection{Variaciones en renta}
+Un incremento en la renta se representa gráficamente a través de una translación paralela de la restricción presupuestaria. Su translación implica (por la Ley de Walras) que el consumidor elegirá ahora una nueva cesta que permita alcanzar un mayor nivel de utilidad.
+
+
+
+\subsubsection{Curva Renta Consumo: CRC}
+Si desplazamos hacia arriba la recta de balance en incrementos sucesivos, se obtendrá una sucesión de nuevos óptimos, a través de los cuales podremos obtener la CRC. La curva de renta consumo (CRC) o senda de expansión de la renta se define como el lugar geométrico de los puntos de equilibrio correspondientes a todos los niveles de renta con precios constantes y con unas preferencias del consumidor determinadas.\footnote{La forma de ésta variará por tanto atendiendo al tipo de relación y el tipo de bienes que sean. La más simple es la relación derivada de unas preferencias homotéticas: la CRC es una linea recta.
+}
+
+
+\subsubsection{Curva de Engel: CDR}
+De esta curva se puede obtener la Curva de ENGEL (1857), que relaciona la cantidad consumida de un bien con la renta. La pendiente de ésta nos informará de si el bien en cuestión es un bien normal o si es un bien inferior.\footnote{Un bien normal se define como aquel bien cuyo consumo aumenta cuando la renta aumenta: (∂x_i (p,M))/∂M>0
+
+Un bien inferior se define como aquel bien cuyo consumo disminuye cuando la renta aumenta: (∂x_i (p,M))/∂M<0. Ahora bien, no todos los bienes pueden ser inferiores, ya que de ser así se estaría violando el axioma de transitividad.
+}
+[INCLUIR GRÁFICOS Y FORULACIONES MATEMÁTICAS BÁSICAS = MUY IMPORTANTE]
+No obstante, se podría también dar que la pendiente tenga distintas pendientes en distintos tramos, de forma que, por ejemplo, la pendiente sea positiva hasta un determinado nivel de renta y negatia a partir de ese nivel (sería el caso de bienes normales que pasan a ser inferiores a partir de un determinado nivel de riqueza, por ejemplo la comida rápida o las marcas blancas).
+
+
+\subsubsection{Análisis de elasticidades}
+Continuando con el análisis de variaciones,\footnote{El análisis de elasticidades (concepto procedente del campo de la física) fue desarrollado de forma pionera por ALFRED MARSHALL. https://es.wikipedia.org/wiki/Elasticidad_(econom%C3%ADa).
+} MARSHALL introduce el concepto de elasticidades. Este pretende ser una medida de la sensibilidad de la demanda ante variaciones en la renta: i.e. la elasticidad-renta, que se define como el cambio porcentual en la cantidad demandada del bien x ante un cambio porcentual en la renta M:\footnote{En función de su valor, podremos distinguir entre distintos tipos de bienes:ε_(x_i,M)<0 ⟹Bien inferior	ε_(x_i,M)>0 ⟹Bien normal	ε_(x_i,M)>1 ⟹Bien de lujo
+}
+ε_(x_i,M)=(∂x_i)/∂M·  M/x_i        
+Este introduce a u vez la posibilidad de clasificar los diferentes bienes en función de su elasticidad. A saber,
+[DEFINIR MATEMÁTICAMENTE: BIEN NORMAL, BIEN INDEPENDIENTE Y BIEN INFERIOR]
+Una vez más, es relevante recalcar que hemos asumido por simplicidad que la elasticidad-renta es constante para caracterizar los distintos tipos de bienes según su comportamiento con respecto a la renta. No obstante, en puridad, la elasticidad podría depender del nivel de renta de partida, y por lo tanto un bien puede ser normal para ciertos niveles de renta e inferior para otros.
+La principal implicación de ambas conclusiones (complementarias) es que ante un cambio en la renta, el gasto total varía en una cantidad igual a la variación de la renta. 
+Esto implica que no todos los bienes pueden ser inferiores (ni siquiera frontera). Es decir, si se incrementa la renta, el exceso de renta debe ser gastado en los bienes de acuerdo con sus elasticidades renta, no pudiendo darse el caso de que el consumidor comprase menos cantidad de todos los bienes, pues se incumpliría el axioma de deseabilidad.
+
+\subsection{Variaciones en precios}
+Cambiando el enfoque, también cabría preguntarnos cómo varía el consumo ante cambios en los precios. La reducción del precio de uno de los bienes se representa mediante la pivotación de la restricción presupuestaria con respecto del punto de intersección sobre el eje del bien cuyo precio se mantiene constante.
+
+\subsubsection{Curva Precio-Consumo}
+La curva precio consumo (CPC) se define como el lugar concéntrico de los puntos de equilibrio que surgen al ir variando el precio de un bien, ceteris paribus.
+
+\subsubsection{Curva Inversa de Demanda}
+La información que ofrece esa curva se puede utilizar para derivar la curva de demanda como se observa en el siguiente gráfico:
+[INTRODUCIR GRÁFICO COMPLEMENTARIEDAD DE LA CURVA PRECIO-CONSUMO Y LA CURVA PRECIO-DEMANDA]
+
+\subsubsection{Análisis de elasticidades}
+Además, tal y como hicimos para la renta [Apartado 3.1.4.], analíticamente podemos obtener una medida de la sensibilidad de la demanda ante variaciones en los precios: la elasticidad-precio propio y la elasticidad-precio cruzado.
+
+\paragraph{Elasticidad precio-propio}
+La elasticidad-precio propio mide la variación porcentual en la cantidad demandada de un bien ante una variación porcentual de su precio:
+Se puede medir la sensibilidad de la demanda del bien x_i ante variaciones en p_i a través de la elasticidad precio:\footnote{En función de su valor, podremos también distinguir entre distintos tipos de bienes:
+ε_(x_i,p_i )<0⟹Bien ordinario	ε_(x_i,p_i )=0⟹Bien independiente del precio	ε_(x_i,p_i )>0⟹Bien de G o V
+Los bienes Giffen son siempre bienes inferiores. Por el contrario, los bienes inferiores pueden ser a su vez bienes ordinarios o bienes Giffen, el determinante es el tamaño del Efecto Renta, i.e. |ER|>|ES|⟹Bien Giffen
+Para entender los bienes Giffen se puede ilustrar con el siguiente ejemplo. Supongamos un consumidor que consume carne (bien más caro) y patatas (más barato). Ante un aumento del precio de las patatas se encarece su cesta de consumo y podría darse el caso de que debido al aumento del precio decida consumir más patatas para poder seguir alimentándose ya que si decide consumir menos patatas para no reducir excesivamente el consumo de carne podría no consumir suficiente. En este caso se verifica que el efecto renta domina al efecto sustitución. No existen bienes Giffen per se, pero sí que han existido bienes que, en un determinado momento, han verificado la paradoja Giffen.
+Los bienes Veblen son bienes de lujo (p.ej. automóviles o relojes de lujo), cuyo consumo se asocia al prestigio, el status o la exclusividad. Se puede señalar que se podría hablar de comportamientos más que de bienes en puridad, pues la pendiente positiva será propia de ciertos tramos. Nuevamente, la elasticidad depende del nivel de precio en este caso.
+}
+ε_(x_i,p_i )=(∂x_i)/(∂p_i )·  p_i/x_i        
+Una vez más, es relevante recalcar que hemos asumido por simplicidad que la elasticidad-precio propio es constante para caracterizar los distintos tipos de bienes según su comportamiento con respecto a su precio. No obstante, en puridad la elasticidad podría depender del nivel de precios de partida, y por lo tanto un bien puede ser ordinario para ciertos niveles de precios y a partir de un nivel de precios podría ser un bien Veblen.
+
+\paragraph{Elasticidad percio-cruzado}
+Por otro lado, la elasticidad-precio cruzado mide la variación porcentual en la cantidad demandada de un bien ante una variación porcentual del precio de otro bien:\footnote{En función de su valor, podremos también distinguir entre distintos tipos de bienes:
+ε_(x_i,p_j )<0⟹Bien ocomplementario bruto	ε_(x_i,p_j )=0⟹Bienes independientes	ε_(x_i,p_j )>0⟹Bien sustitutivo bruto
+}
+ε_(x_i,p_j )=(∂x_i)/(∂p_j )·  p_j/x_i        
+
+
+\subsection{Ecuación de SLUTSKY}
+Dicho esto, todo cambio de la demanda que se ocasione debido a una variación en precios  puede ser descompuesta en dos efectos independientes y esto es gracias a la ecuación de Slutsky  que, por ser objeto de desarrollo extenso en otro tema [ver Tema 3.A.9], nos centraremos solo en sus consecuencias.\footnote{En realidad, la ecuación de Slutsky describe cambios en la Demanda Marshalliana (construida sobre la base de Utilidad) en relación con la Demanda Hicksiana (construida sobre la base de Gasto). Pero, como esto sera objeto principal en el [Tema 3.A.9] obviaremos su definición completa.
+
+Recibe su nombre del matemático, estadístico y economista Ucraniano YEVGUENI SLUTSKY (1880-1948). Es un método para determinar la derivación de la función de demanda Hicksiana fundamentalmente inobservable para el precio de la demanda Marshalliana potencialmente observable; la ecuación resultante es la ecuación de Slutsky. 
+}
+
+ 
+\subsubsection{Variación precio-propio}
+Por un lado, ante variaciones del precio propio, la demanda de los productos se ve modificada a través de dos efectos, recogidos en la ecuación de Slutsky:
+ 
+1.	Efecto sustitución: Mide la variación en el consumo de un bien debido a la variación del precio de ese bien manteniendo la utilidad constante (siguiendo la interpretación de HICKS). 
+
+Es decir, ante un aumento del precio de ese bien, aumenta el precio relativo de ese bien, lo que conduce al consumidor a sustituir el bien más caro (en términos relativos) por el bien más barato (en términos relativos). De este modo, el efecto sustitución es siempre no positivo, pudiendo ser menor o igual a cero
+
+2.	Efecto renta: Estudia la variación en el consumo de un bien por la variación que cambios en el precio inducen en el poder adquisitivo del consumidor. El efecto renta puede ser positivo o negativo. 
+
+Ante un aumento en el precio, cae el poder adquisitivo y el efecto renta será negativo en el caso de un bien normal y positivo en el caso de un bien inferior.
+ 
+MIRAR:
+https://www.youtube.com/watch?v=J0PSPX2B5FI
+ https://policonomics.com/es/video-a10-demandas-marshalliana-hicksiana/
+ 
+Gráficamente, suponiendo que la reducción en el precio del bien x1 causa que el consumidor se desplace del punto inicial (óptimo) hasta el nuevo óptimo (condición de tangencia) podemos dividir el efecto total en dos efectos:
+[GRAFICAR UN EJEMPLO CON BIENES SUSTITUTIVOS BRUTOS/ IMPERFECTOS. SE PUEDE TAMBIÉN INCLUIR SU TRASLACIÓN A LA RECTA PRECIO-DEMANDA]
+1.	Efecto sustitución: Inicialmente, al cambiar los precios relativos, cambia la pendiente de la renta presupuestaria. Trazando una paralela (a la nueva recta presupuestaria) que mantenga la utilidad inicial constante, obtenemos la condición de tangencia que daría al consumidor la utilidad incial dada la nueva restricción. En este nuevo punto podemos ver el efecto sustitución como la diferencia entre la distribución entre bienes de la cesta óptima inicial respecto a la distribución de la cesta en este punto auxiliar de equilibrio.
+2.	Efecto renta: El efecto renta se puede medir, de la misma forma, como la diferencia entre la distribución de bienes en la cesta en este punto auxiliar, respecto a la distribución entre bienes de la cesta en el óptimo final, donde el consumidor consume más de algún bien o de los dos.
+
+\subsubsection{Variación precio-cruzado}
+Por otro lado, la ecuación de Slutsky permite también descomponer los efectos sustitución y renta a través:
+ 
+En función del resultado de esta ecuación, cuantificando el Efecto total cruzado podríamos distinguir los bienes entre:
+1.	Sustitutivos brutos: Cuando el Efecto Total es mayor que cero;
+2.	Independientes brutos: Cuando el Efecto Total sea igual a cero; o,
+3.	Complementario brutos: Cuando el Efecto Total sea menor que cero.
+[SI HAY TIEMPO, SE PUEDE GRAFICAR ALGUNO O TODOS DE ESTOS EJEMPLOS]
+
+
+\subsection{Restricciones de la Función de Demanda}
+Como punto de cierre a este desarrollo de la estática comparativa podemos destacar otras dos conclusiones que son interesantes.\footnote{Además, el SCEDM debe cumplirlas para cualquier demanda.. 
+} Ambas encuentran su fundamento, y en cierto modo, reflejan, el axioma de deseabilidad de las preferencias y, especialmente, la Ley de Walras.
+
+\subsubsection{Agregación de ENGEL}
+Por un lado, la Agregación de ENGEL, que nos dice como varía el consumo de los dos bienes cuando varía la renta para que el individuo siga gastando toda su renta.
+Aunque esta se obtiene a través de la restricción presupuestario y sucesivas derivaciones y sustituciones, podemos sintetizar el resultado como:
+ 
+[DESCRIBIR A PIE DE PÁGINA LOS PASOS SEGUIDOS PARA OBTENER DICHO SUMATORIO]
+El sumatorio de las Elasticidades-renta de cada bien, ponderadas por sus participaciones en la cesta óptima de bienes debe ser igual a uno. 
+Su implicación directa es que, ante un cambio en la renta, el gasto total varía en una cantidad igual a la variación de la renta, por lo que no todos los bienes pueden ser inferiores (ni siquiera frontera) ya que, sino, el SCEDM incumpliría incumpliría la Ley de Walras.\footnote{Si se incrementa la renta, el exceso de renta debe ser gastado en los bienes de acuerdo con sus elasticidades renta, no pudiendo darse el caso de que el consumidor comprase menos cantidad de todos los bienes, pues se incumpliría el axioma de monotonía.
+}
+
+\subsubsection{Agregación de COURNOT}
+Y, por otro lado, ligeramente diferente, la Agregación de COURNOT nos dice cómo varía la distribución del consumo entre los bienes cuando varía el precio de un Bien, de tal forma que se siga cumpliendo la Ley de Walras. Esto es:
+ 
+El sumatorio de las Elasticidades-precio-cruzado, ponderadas por la participación en la renta del Bien 1, debe ser igual a la participación en la renta del Bien j cambiado de signo.\footnote{Esto implica que ante un aumento del precio del Bien 1 (por haber escogido su precio en este ejemplo), el consumo del Bien 2 debe aumentar en una proporción que va en función de las participaciones de dichos bienes que dan lugar al agotamiento de la renta.
+} Su implicación directa, y quizás más intuitiva, es que no todos los bienes pueden ser complementarios puesto que, para el agotamiento de la renta, se requiere una cierta sustituibilidad. Alguno al menos debe ser sustitutivo con respecto a otro.\footnote{Esto implica que en el caso de una economía con solo 2 bienes, ambos deben ser sustitutivos (nótese que las relaciones netas son simétricas por la simetría de la matriz de Slutsky).
+}
+
+\clearpage
+\section{Teoría de la Preferencia Revelada}
+la teoría neoclásica de la demanda permite conocer la función de demanda individual de un bien, y por agregación, la demanda de mercado de un bien. No obstante, se tienen que imponer condiciones muy restrictivas para conocer las características de la demanda; por ello, se complementa el análisis de la teoría de la demanda marshalliana con la teoría de la dualidad.
+La teoría de la demanda tiene, entre otras, las siguientes críticas:
+1.	Es un enfoque estático que no tiene en cuenta la influencia del tiempo;
+2.	En la práctica existe incertidumbre e información asimétrica, lo que altera el análisis;
+3.	La función de utilidad y las curvas de indiferencia no son observables (esta crítica se solventará acudiendo a la teoría de la preferencia revelada); y,
+4.	No permite explicar ciertos comportamientos observados en la realidad, como por ejemplo la fidelidad a la marca o el uso de publicidad (esta crítica se solventará acudiendo a la teoría de la demanda de características).
+
+Empezaremos con la Teoría de la Preferencia Revelada, redescubierta por PAUL SAMUELSON  (1947). Esta parte de un enfoque inductivo a través del cual recuperaremos  “las preferencias del consumidor” a partir de la observación de las combinaciones de bienes que efectivamente se consumen.\footnote{De ahí su nombre. En la Teoría de la Preferencia Revelada nos preguntaremos que nos revela la combinación de bienes elegida por el consumidor sobre sus preferencias. 
+}
+
+\subsection{Supuestos del modelo}
+La teoría de la preferencia revelada realiza una serie de supuestos:
+[Ilustrar gráficamente el conjunto de elección, los subconjuntos de bienes factibles y por otro lado la renta económica y los diferentes niveles de renta (recta R). Relación de inyectividad (de la inversa) entre subconjuntos de K y niveles de renta.]
+	Ante un vector de precios p=(p_1,p_2,…,p_k ) y una dotación de renta M, el consumidor gasta toda su renta en la compra de bienes y servicios, i.e. ∑_(i=1)^n▒x_i  p_i=M.
+	Existe sólo un vector de precios p=(p_1,p_2,…,p_k ) y una dotación monetaria M_i  en donde cada cesta óptima es escogida, i.e. no puede haber una cesta óptima que sea escogida en distintas ocasiones. 
+	Sólo una cesta de bienes X_i es escogida para cada nivel de renta M_i y vector de precios. Es decir, sólo hay una cesta óptima en cada ocasión. Estas dos últimas consistituyen una restricción adicional sobre la Función de Utilidad, sobre la que ahora se impone condición de biyectividad (lo que comporta asumir que las preferencias son estríctamente convexas).
+Para hacer de las preferencias del consumidor, unas preferencias consistentes, éste enfoque propone dos axiomas supletorios (en el sentido de que los de racionalidad ya van implícitos en el Teorema).
+
+\subsubsection{Axioma débil}
+Proposición.- Si, dado p^0, un consumidor elige la cesta x^0 estando también disponible la cesta x^1. Entonces, cuando el consumidor elige la cesta x^1 es porque se ha producido un cambio de precios p^0→ p^1 (inobservado) y en éste, x^0 no está disponible. Es decir, si p^0 x^0≽p^0 x^1, entonces 〖⟹p〗^1 x^1<p^1 x^0 (Nivel de renta menor porque el consumidor consume toda su renta).
+ 
+El cumplimiento de este axioma tiene 2 importantes implicaciones:
+	La función de demanda marshalliana es homogénea de grado cero en precios y renta.\footnote{Para demostrarlo partimos de:
+ 
+Demostrando que se trata de cestas distintas llegamos a una contradicción.. 
+
+}
+	El efecto sustitución tendrá un signo negativo: ante una bajada del precio del Bien 1, si compensamos la renta en el sentido de SLUTSKY (disminuimos la renta tal que podamos consumir la cesta inicial con los nuevos precios), observamos que el consumidor deberá situarse en un punto a la derecha de la cesta óptima final, ya que los puntos a la izquierda estaban dentro del conjunto presupuestario original cuyas cestas no fueron elegidas en un primer momento.
+
+\subsubsection{Axioma fuerte}
+El axioma fuerte de preferencia revelada impone la transitividad, o coherencia, de las preferencias.\footnote{Teorema de HOUTHAKKER (1950), “Revealed preference and the utility function”. Si la elección del consumidor cumple el axioma fuerte, entonces hay un orden racional de preferencias que puede haber generado esa elección. 
+
+La transitividad asegura que la relación de preferencias que podemos formar a partir de la ordenación de preferencias reveladas sea transitiva, lo que permite comparar cestas y encontrar una cesta intermedia que permita ordenar las preferencias. Es decir, habrá una relación directa de preferencias (revelada) y una relación indirecta de preferencias (no revelada). Entre estas dos relaciones, la diferencia es que:
+a)	La relación directa corresponde a una elección real;
+b)	Mientras que la segunda no, ya que sólo hay una relación de preferencias directa (observada) entre “a y b”, y “b y c”.
+Es decir, a diferencia del ADPR, el AFPR parte de que no se pueden comparar todas las cestas pues al menos alguna no es asequible cuando el consumidor elige la otra.
+} Podríamos describir este axioma como: en la situación (hipotética) en que se pudiesesn dar y observar una secuencia de cambios consecutivos en el vector de precios, se podría establecer un orden en la deseabilidad de las cestas óptimas de consumo en función de las cestas que estuvieran disponibles a cada nivel de precios y la cesta óptima finalmente elegida en cada uno de éstos.
+Dadas tres cestas de bienes {x^0,x^1,x^2}, no comparables entre sí a un mismo nivel de precios, se puede establecer un orden de preferencia a través de la relación indirecta de preferencia revelada entre las distintas cestas.
+	x^0 se revela preferida a x^1;
+	x^1 se revela preferida a x^2;
+	Por tanto, el orden de preferencias (indirectamente revelado) de cestas será: x^0≻x^1≻x^2.
+ 
+El axioma fuerte es, por tanto, una consecuencia necesaria de una conducta optimizadora: si el consumidor elige lo mejor que puede pagar, entonces su conducta debe satisfacer el axioma fuerte y, de manera análoga, si la elección del consumidor cumple el axioma fuerte, hay un orden racional de preferencias que puede haber generado esa elección.\footnote{El AFPR constituye una condición necesaria y suficiente para que las elecciones observadas sean compatibles con la existencia e una función de utilidad que dé lugar a una función de demanda.
+}
+Por lo tanto, HOUTHAKKER (1950) reconcilia, por decirlo de alguna forma, la Teoría de las preferencias reveladas de SAMUELSON (1947) con la aproximación neoclásica de la demanda del consumidor, en su enfoque deductivo. Puesto que, una teoría de la demanda en la que la elección respeta el axioma fuerte, es esencialmente equivalente a la teoría de la demanda basada en las preferencias.
+En conclusión, si se cumplen ambos axiomas se puede obtener una representación de las preferencias (que además son consistentes con las de la teoría ordinal neoclásica) que conduzcan a un comportamiento consistente con la conducta realmente observada.
+Como extensión interesante de este planteamiento cabe destacar dos aportaciones: la recuperabilidad de las preferencias y una adaptación formal del análisis de estática comparativa (Efecto Renta y Efecto Sustitución).
+
+Valiéndonos de estos axiomas y de la observación de sucesivos elecciones, podemos obtener:
+
+\subsubsection{Obtención de las Curvas de Indiferencia}
+Por un lado, las curvas de indiferencia convexas que modelan las preferencias subyacentes de las elecciones observadas. 
+Un ejemplo de como deberíamos proceder para obtenerlas es el siguiente:
+1.	Dada una restricción presupuestaria M, el consumidor elige la cesta x_0, es decir ésta se revela directamente preferida a todas las que están en la zona gris.
+
+ 
+2.	Supongamos que cambian los precios y que la restricción rota sobre la cesta x_0 adquiriendo una mayor pendiente. En este caso el consumidor adquiere la cesta x_1. El consumidor elige una combinación de bienes a la izquierda de x0, ya que las cestas a la derecha de x_0 ya estaban disponibles a los precios iniciales. Así, estando x_0 disponible, si el consumidor escoge x_1, podemos señalar que esta nueva cesta se revela directamente preferida a la inicial.
+3.	Se puede observar que entre la cesta x_1 y las cestas de bienes situadas en la recta vertical con la misma cantidad del bien x_1 debe existir una cesta x_3 tal que el consumidor es indiferente entre ésta y la cesta x_0, es decir, los puntos x_0 y x_3 forman parte de una misma curva de indiferencia.
+4.	Repitiendo este proceso para sucesivos precios y uniendo las cestas entre las que el consumidor se muestra indiferente obtenemos las curvas de indiferencia. Además se comprueba que las curvas de indiferencia, recuperadas, son convexas.
+
+\subsection{Aplicaciones}
+la Teoría de la Preferencia revelada otorga una mayor robustez a la teoría neoclásica ya que, además de llegar a las mismas conclusiones siguiendo un camino inverso, nos muestra que ésta sigue siendo válida con unos supuestos mucho más laxos. 
+Además, la Teoría de la Preferencia Revelada nos permite, entreotras cosas:
+1.	Obtener una función de demanda sin necesidad de utilizar el concepto de utilidad; y,
+2.	Construir numerosos índices del coste de la vida y aplicarlos al análisis del bienestar.
+
+\subsubsection{Índice de Precios}
+Por añadidura, a partir de la teoría de la preferencia revelada, podemos construir índices de precios (p.ej. índice de Paasche, de Laspeyres o de la renta) que nos permiten comparar la utilidad de los agentes ante variaciones en los precios, aunque éstos son objetos de un mayor desarrollo en el Tema siguiente [ver tema 3.A.9].
+Supongamos una economía de dos bienes, puesto que será entonces condición necesaria y suficiente el axioma débil. Dado un vector de precios p^0=(p_1^0,p_2^0 ) y un nivel de renta M_i, la cesta X^0 se revela directamente preferida a todos los puntos a lo largo y por debajo de la recta. 
+Incluir secuencia de cambios/iteraciones
+Cambiando ahora a un vector distinto de precios y renta, p^1=(p_1^0,p_2^0+h),  que haga X^0 asequible, pero para el que la cesta elegida sea X^1, X^1 se revelaría ahora ciertamente preferida a X^0.
+Esto sería una representación gráfica de la recuperación de las preferencias subyacentes a la elección observada del consumidor que predice el Teorema de Houthakker.
+
+\subsubsection{Ecuación de SLUTSKY}
+Por otro lado, comentaremos también las aplicaciones que tienen las aportaciones de Slutsky para el cálculo del Efecto Renta y Sustitución en la Teoría de las Preferencias Reveladas. 
+Restringiremos el conjunto a dos bienes por comodidad. En la teoría de la preferencia revelada no podremos apoyarnos sobre las curvas de indiferencia para calcular la variación compensatoria y así hallar el Efecto Sustitución en términos de Hicks. Nos serviremos de la definición de Slutsky de renta real, por lo que la variación compensatoria se calculará mediante la realización de un ajuste sobre la recta presupuestaria (positivo o negativo, según la naturaleza del cambio en precios) con el fin de volver a tener disponible la cesta óptima inicial. Tras esto, habremos hayado la cesta inicial (x^0), la cesta final (x^1) y la cesta intermedia (x^*).
+Esta cesta intermedia podría ubicarse, a priori, a la izquierda de la cesta inicial x^0, a la derecha o ser exactamente igual que x^0. No obstante, 
+	El axioma débil de preferencia revelada establece que a la izquierda no puede encontrarse ya que esa cesta hubiese estado disponible al nivel de precios inicial y, sin embargo, no había sido elegida;
+	x^0 tampoco puede ser la cesta intermedia, ya que una misma cesta no puede ser óptima para dos niveles de precios distintos;
+	Por tanto, x^* se encuentra necesariamente a la derecha de x^0.
+Por tanto, el Efecto Sustitución, al igual que en el modelo neoclásico, tiene un efecto opuesto a la dirección a la que se mueve el precio. Como el precio cae p^1=(p_1^0,p_2^0,…,p_i^0-h,…,p_n^0 ), se demanda más del bien x_i.
+x^0-x^*  : representa el Efecto Sustitución.
+x^1-x^* : representa el Efecto Renta.
+x^1-x^0 : representa el Efecto Total.
+En conclusión, el axioma débil puede ser utilizada para descomponer los efectos que produce una variación de precios sobre la demanda del consumidor. 
+
+
+
+
+\clearpage
+\section{Precios Hedónicas}
+Para finalizar correctamente esta exposición debemos tratar brevemente los problemas que nos ocasiona un enfoque de la demanda medido únicmente en función de las cantidades demandas.
+A lo largo de esta exposición, hemos dado por supuesto que la utilidad de un consumidor se podía reducir, de forma simplista, a la cantidad de bienes que este podía recibir optimizando sus recursos. Esto es, hemos considerado que los bienes eran, homogeneos . 
+Esto ha sido así, porque así fue en la Teoría de la demanda hasta los años 30, momento hasta el cual los bienes se diferenciaban entre ellos únicamente por el precio y la utilidad que deriva el consumidor de ellos. 
+Sin embargo, como bien sabemos los bienes no se diferencian entre ellos únicamente por los precios sino que existen una serie de características que el consumidor valora. Este enfoque, incialmente propuesto por LANCASTER (1966) parte por tanto del supuesto de que los bienes son: heterogeneos y, de hecho, existe para cada tipo (genérico) de bien una serie de variedades que el consumidor no valora de la misma forma: la distribución de la utilidad debepende, ahora también, de la variedad que se vaya a consmir de éste bien.
+
+
+El primer índice de precios hedónicos fue estimado por ANDREW COURT (1939), pero su primera versión moderna se debe a GRILICHES (1961).
+
+\subsection{Función Hedónica}
+Como un índice de precios hedónicos es cualquier índice que utilice una función hedónica,\footnote{Los ínidices hedónicos se pueden computar de varias maneras. Una función hedónica es una relación entre los precios de diferentes variedades/modelos de un producto y la cantidad de características que estos tienen.
+} la definición de ésta constituye el paso previo a la derivación de éste. Esta teoría parte de la proposición de que las características son las variables que los compradores del producto quieren, y que las características del producto cuesta producirlas.\footnote{Las variables están expresadas en logarítmos, forma funcional frecuente en este análisis, aunque no la única. Nos dice que el logaritmo del precio del modelo/variedad de x_i en el momento t depende del logaritmo de sus diferentes “características” (a escoger cúales y cuántas nos convienen) y un término de error (ε_it).
+}
+ln⁡〖P_it 〗= α_0+α_1  ln⁡〖C_(1,i) 〗+α_2  ln⁡〖C_(2,i) 〗+⋯+ε_it   
+Es decir, podemos considerar que los bienes se pueden descomponer en las características que poseen y el precio de un bien puede ser descompuesto en función de sus diferentes atributos o, de forma equivalente, la diferencia de precio entre variedades puede explicarse como la diferencia entre sus características. Así, el valor de los bienes dependerá del valor de sus características.\footnote{Esto es, los consumidores demandan variedades “mejores” en alguna cataerística (ceteris paribus), y la mejora de dichas variedades cuesta producirlas, dada una tecnología de producción. Por tanto, una implicación de la teoría es que variables que no tengan a la vez “valor de uso” y “coste de producción” no encajan en las funciones hedónicas.
+} En la ecuación formulada, los coeficientes de regresión valoran estas características.\footnote{A menudo se les denomina “precios implícitos” o “precio de las características”, porque indican los precios cobrados y pagados por cada unidad adicional de las características. También serán determinados por la oferta y la demanda. En la ecuación que nos sirve de ejemplo, al estar las variables en logaritmos, los coeficientes son el logaritmo de los precios de las características, por tanto debemos realizar el siguiente cálculo para obtener el precio ln⁡(p_(C_1 ) )=α_1⟶p_(C_1 )=e^(α_1 ).
+}
+
+\subsection{Métodos de estimación: Función hedónica}
+Hay cuatro métodos para estimar índices de precios hedónicos, cada uno de los cuales utiliza una información distinta de la función hedónica. 
+Nos referiremos únicamente al primero, por ser el utilizado por GRILICHES, y al último, por ser generalmente preferido en la actualidad. 
+
+\subsubsection{Directos}
+Los dos primeros, conocidos como “métodos directos”   son:
+1.	Método de la dummy temporal
+2.	Método del índice de precios de características
+Y requieren la estimación de una función hedónica para cada periodo para el que se necesite un ínidice de precios. 
+
+\paragraph{Dummy temporal}
+Supongamos que se quiere calcular un ínidice de precios de ordenadores para tres periodos y ver su evolución a lo largo del tiempo. Queremos separar en la evolución temporal del precio la parte del crecimiento que se debe a la inflación propia del sector, de la parte quese debe a la mejora de la calidad (definida por las características propias del producto). Una vez hecha la regresión, la parte del aumento de precios achacable a la calidad deberá deducirsedel aumento total del precio e imputarse como (si fuera) aumento de cantidad producida de producto.
+Construimos la regresión lineal:
+ln⁡〖P_it 〗= α_0+α_1  ln⁡〖C_(1,i) 〗+α_2  ln⁡〖C_(2,i) 〗+⋯+b_1 (D_(t+1) )+b_2 (D_(t+2) )+ε_it
+Los regresores {α_1,α_2,…,α_i} capturan el aumento del precio debido a la mayor calidad. Por su parte, los regresores {b_1,b_2} capturan el efecto inflancionista en el sector, en los periodos t+1 y t+2 (segundo y tercero). Ambas variables, {D_(t+1),D_(t+2) } son categóricas y toman el valor 1 cuando el precio de la variante del bien i corresponde al de su periodo y 0 en caso contrario.\footnote{Si P_it=P_(i,t+1)⟹D_(t+1)=1, 0 en caso contrario.
+}
+El coeficiente de regresión de la primera dummy, b_1,\footnote{Más concretamente, su antilogaritmo, i.e. el antilogaritmo de base a de y es el número x tal que log_a⁡〖(x)=y〗, en el caso del logaritmo neperiano, la función exponencial de base e.
+} es la tasa porcentual de crecimiento de los precios de los productos, menteniendo contantes las características de éstos. Es el crecimiento “puro” de los precios de los productos entre t y t+1, no está asociado a sus características. Y de forma análoga para la segunda dummy. 
+Por ese procedimiento se pueden separar los incrementos puros de precios (que se integran en el correspondiente índice de precios) y los incrementos de precios debidos a la mayor calidad (que se integran en los correspondientes índices de cantidades).
+
+\subsubsection{Indirectos}
+Los otros dos, conocidos como “métodos indirectos” :
+3.	Método de la imputación hedónica de precios
+4.	Método del ajuste hedónico de calidad
+Estos, fusionan dos fuentes de información: (1) recogida por el investigador, sobre los precios y características de los productos; y (2) muestras de precios provenientes de fuentes oficiales.
+
+\paragraph{Ajuste hedónico de calidad}
+Si un nueva nueva variedad de producto, x_n, tiene un porcentaje mayor de caracterñisticas cualesquiera [10\% más de C_1 y un 15\% más de C_2 (cualesquiera)] que otra variedad, x_m, de la misma gama, al que sustituye en el índice de precios, nos podemos servir de nuestra función hedónica para calcular el ajuste hedónico de calidad A(h).\footnote{Es la expansión de: A(h)=exp⁡{α_1  ln⁡〖[(C_(1,x_n ))/(C_(1,x_m ))]〗+ α_2  ln⁡〖[(C_(2,x_n ))/(C_(2,x_m ))]〗}.}
+A(h)=exp⁡{α_1  ln⁡(1.1)+ α_2  ln⁡〖(1.15)  〗}  
+Por lo tanto, el ajuste de calidad será la suma de ambos antilogaritmos (separando la función exponencial). El incremento total debe aplicarse al correspondiente ínidce de cantidades, y sustraerse de la subida total de precios (recogida por la oficina de estadísticas) para obtener la “auténtica” subida del índice de precios de estos bienes. 
+Por tanto, el método de los precios hedónicos, desde su formulación, parte de la premisa de que el valor de los bienes dependerá del valor de sus características, especialmente cuando se pretenda “comparar” el precio de bienes semejantes: existen numerosas aplicaciones desde el punto de vista de la empresa; o estimar el crecimiento en cantidades producidas de un bien teniendo en cuenta la transformación tecnológica de éste.\footnote{Este modelo introduce varias aplicaciones desde el punto de vista de la empresa:
+•	Estrategia de segmentación: cuando las preferencias del individuo no se ajustan a la combinación de características que ofrecen las marcas (el equilibrio se sitúa en la frontera de posibilidades de consumo entre los dos vectores), puede aparecer otra marca que satisfaga mejor la demanda (lo que implicaría un nuevo vector entre los dos iniciales).
+•	Estrategia de nicho: una empresa puede entrar en el mercado con una marca específica que satisfaga la demanda de un sector concreto, sería el caso de un vector muy horizontal o vertical que satisface una demanda concreta.
+•	Estrategia de publicidad: mediante el incremento de la publicidad podemos influir en la posición de las curvas de indiferencia a favor de nuestra marca.
+}
+
+
+
+\clearpage
+\section{Conclusión} 
+En esta exposición hemos analizado un lado del mercado: la demanda. Se trata de contribuciones realizadas por economistas neoclásicos que aplican el principio del margen y desarrollan una teoría subjetiva del valor, lo que supone el análisis germinal de la teoría microeconómica actual.
+Hemos revisado la axiomática de las preferencias, el problema de elección del consumidor y otros desarrollos de la teoría de la demanda.
+Sin embargo, el cuerpo teórico dista de ser suficiente para el estudio de la elección del consumidor.
+
+\subsection{Extensiones y relación con otras partes del Temario}
+No obstante, presenta carencias como las mencionadas en los apartados anteriores a las que se le añaden otras, como por ejemplo la no consideración de riesgo e incertidumbre [ver tema 3.A.10] o las decisiones intertemporales [ver tema 3.A.29]. En este sentido, la teoría neoclásica es completada por otras aportaciones que sí que tienen estos aspectos en cuenta.
+
+\subsection{Opinión}
+La teoría de la utilidad es una de las partes más elaboradas y mejor construidas, desde el punto de vista lógico, de toda la teoría económica. La pieza básica de todo el análisis de la utilidad es la teoría neoclásica de la demanda. Esta pieza constituye un arquetipo de teoría, en la medida en que es una construcción perfectamente coherente en la que no falta ni sobra nada: uno puede derivar las funciones de demanda a partir de las preferencias, pero también puede inferir de las funciones de demanda las preferencias que las generaron, o, en caso de optar por el enfoque de la preferencia revelada, puede pasar de los axiomas de la preferencia revelada a las funciones de demanda, y de ahí a las preferencias del sujeto; luego, de las preferencias individuales se pueden inferir los axiomas de la preferencia revelada. Se trata de un edificio (casi) perfectamente autocontenido, sin ningún “agujero lógico”. Muy pocas teorías científicas pueden exhibir un palmarés semejante.
+A pesar de todo, si el conocimiento científico tiene como fin principal el descubrimiento de nuevas verdades acerca del “mundo real”, el status de la teoría de la utilidad tiene que ser rebajado. En otras palabras: el status empírico de la teoría de la utilidad es bastante decepcionante. La hipótesis central de dicha teoría, la idea de que los seres humanos maximizan su utilidad en las distintas esferas de la vida y, de modo especial, cuando compran o venden en algún mercado, no puede considerarse ni mucho menos, como una verdad empírica.
+Existe, desde luego, alguna evidencia indirecta a favor de la hipótesis de la racionalidad –entendida como comportamiento maximizador de la utilidad–. Por ejemplo, sabemos que las funciones de demanda tienen, casi universalmente, pendiente negativa: cuando sube el precio de una mercancía, se reduce la cantidad demandada. Y este hecho se puede explicar muy bien a partir del supuesto anterior de racionalidad. Pero no podemos descartar la posibilidad de que funciones de demanda estén generadas por conductas rutinarias, más o menos “irreflexivas” o “irracionales”. Lo único que podemos decir es que la gente se comporta en muchas situaciones como si fuese racional (como si maximizara la utilidad), pero no sabemos si en realidad lo es.
+
+
+\subsubsection{Idea final (Salida o cierra)}
+En definitiva, la teoría de la demanda supone un análisis germinal del comportamiento del consumidor y nos permite conocer la función de demanda individual de un mercado y por agregación la demanda de mercado, lo que es un paso previo para la determinación del equilibrio de mercado.
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+\MyBibItem{Autor}{Título}{Año}{DOI -- LINK}
+https://es.wikipedia.org/wiki/Función_de_utilidad
+
+https://es.wikipedia.org/wiki/Curva_de_indiferencia
+
+https://en.wikipedia.org/wiki/Hendrik_S._Houthakker
+
+https://economipedia.com/definiciones/elasticidad-cruzada.html
+
+https://es.wikipedia.org/wiki/Poder_adquisitivo
+
+https://en.wikipedia.org/wiki/Revealed_preference#Completeness_and_Strong_axiom
+
+
+%% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+\end{document}
