@@ -1,0 +1,1407 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+\usepackage{multirow} 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Análisis de los instrumentos financieros de renta fija\\
+\large Determinación del precio y rendimiento de los bonos. La estructura temporal de los tipos de interés. Valoración del riesgo y del rendimiento de los bonos: duración y convexidad}
+\author{Marcelo Ortega}
+\date{Marzo 2026}
+\newcommand{\TemaCode}{3B24}
+
+\oldtitle{
+    B.26. Análisis de los instrumentos financieros de renta fija. Determinación del precio y rendimiento de los bonos. La estructura temporal de los tipos de interés. Valoración del riesgo y del rendimiento de los bonos: duración y convexidad
+}
+\changerationale{
+    Sin cambios.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     De cara a siguientes vueltas, se recomienda al opositor profundizar en lo que se refiere a las estrategias de gestión de carteras de renta fija, cuya cobertura en este tema es muy superficial.
+
+     Este tema enfoca el análisis de los instrumentos de renta fija desde un punto de vista esencialmente teórico pero sin olvidar las prácticas y la realidad del mercado. \textbf{Dar un enfoque práctico al conocimiento teórico puede suponer una diferenciación para el opositor} en este bloque de temas financieros. Esto es aún más pertinente para el tema que nos ocupa, en la medida en que podemos encontrar miembros del tribunal con experiencia en el ámbito de la deuda pública.
+
+     El opositor debe tener en mente que la valoración de todos los instrumentos financieros se basa en dos principios básicos por complejo que sea el aparato matemático necesario: el \textbf{descuento} a valor presente de flujos de caja futuros, obtenidos con mayor o menor incertidumbre y el principio de \textbf{no-arbitraje} entre instrumentos con flujos de caja iguales
+    }
+\vspace{1cm}
+
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+Se inicia el primer apartado con una descripción de conceptos habituales que se manejan en finanzas y, en particular, en los mercados de renta fija; posteriormente, en el segundo apartado, se desarrollan métodos de valoración del precio y rendimiento de un instrumento de renta fija, con especial hincapié en un apartado posterior, en los conceptos de duración y convexidad; finalmente, el último apartado se dedica a las teorías relativas a la estructura temporal de intereses.
+
+
+
+
+
+\clearpage
+\section{Mercados de deuda: Perspectiva jurídica}
+\puntosclave{
+    Los elementos principales de un bono son su vencimiento, cupón, valor nominal, precio y rendimiento exigido. 
+    
+    Entre los tipos de bonos destacan los bonos ordinarios con cupón y los bonos cupón cero, emitidos al descuento y con un papel muy relevante en los mercados financieros y en la valoración del resto de productos de renta fija. 
+    
+    La liquidez de los mercados de renta fija está condicionada por el elevado número de referencias que puede tener un mismo emisor (frente a la renta variable). 
+    
+    Los mercados de renta fija se encuentran segmentados en diversas categorías con una dinámica propia. Dentro de esta segmentación destaca la existente entre bonos soberanos y bonos corporativos, entre bonos con grado de inversión (rating BBB o superior) y bonos especulativos o high yield, y entre productos de corto plazo (mercado monetario) y de largo plazo.
+    
+    Los riesgos más importantes de un bono son el riesgo de crédito, el riesgo de tipo de interés (por su impacto en el precio) y el riesgo de liquidez
+}
+
+Dentro de los mercados financieros, se encuentran los mercados de renta fija, que son, a nivel global, el medio predominante para obtener capital. Un título de renta fija es un instrumento financiero que permite a gobiernos, empresas y otros emisores obtener liquidez de inversores. En sus diversas modalidades, son instrumentos de crédito contra la entidad emisora. No conllevan derechos de propiedad y el emisor del título está obligado a realizar unos pagos al inversor, con independencia de su situación financiera (en contraste con la renta variable). El rendimiento exigido por el inversor puede descomponerse en dos elementos principales: el tipo de interés libre de riesgo, que ejerce de base, y el tipo adicional por el riesgo inherente al cobro de los intereses y el principal del bono.
+
+El número y heterogeneidad de los instrumentos de renta fija presenta dificultades prácticas a la hora de valorarlos y negociarlos en los mercados. Mientras que habitualmente existe una única clase de acciones de una compañía, pueden existir decenas de emisiones de renta fija del mismo emisor. Esto hace clave el estudio de las características propias de cada instrumento, con implicaciones en el rendimiento y el riesgo.
+
+En los capítulos anteriores sobre las relaciones entre riesgo y rentabilidad, tratamos los títulos financieros a un alto nivel de abstracción. Supusimos implícitamente que ya se había realizado un análisis detallado previo de cada título y que sus características de riesgo y rentabilidad ya habían sido evaluadas.
+
+Ahora nos centramos en análisis específicos de mercados concretos de valores financieros. Examinaremos los principios de valoración, los determinantes del riesgo y del rendimiento, y las estrategias de cartera comúnmente utilizadas tanto dentro de cada mercado como entre distintos mercados.
+
+Un título de deuda es un derecho sobre una corriente periódica específica de ingresos. Los títulos de deuda suelen denominarse valores de renta fija porque prometen una corriente de ingresos fija o determinada conforme a una fórmula específica. Estos instrumentos tienen la ventaja de ser relativamente fáciles de comprender, ya que las fórmulas de pago se especifican de antemano. La incertidumbre respecto a sus flujos de caja es mínima siempre que el emisor del título posea suficiente solvencia crediticia. Esto convierte a estos instrumentos en un punto de partida conveniente para nuestro análisis del universo de posibles vehículos de inversión. 
+
+\textbf{¿Qué queremos decir?} El bono constituye el instrumento básico de deuda, por tanto, centraremos nuestro desarrollo expositivo en este instrumento teniendo siempre en cuenta que todo lo expuesto puede ser generalizable a cualquier otro instrumento negociado en estos mercados. Abordaremos la valoración de bonos, mostrando cómo los precios de los bonos se determinan de acuerdo con los tipos de interés de mercado y por qué los precios de los bonos cambian cuando cambian dichos tipos de interés. 
+
+\subsection{Marco dispositivo: Escritura de emisión}
+Empecemos presentando los conceptos básicos de este negocio jurídico. Podemos intuir, de primeras, que un bono es un título financiero emitido en el contexto de un acuerdo de endeudamiento. Por tanto, el prestatario emite (es decir, vende) un bono al prestamista a cambio de una determinada cantidad de dinero; el bono constituye el \textbf{reconocimiento de deuda} (IOU, \textit{I owe you}) del prestatario. 
+
+Los instrumentos de renta fija se pueden definir como aquellos en los que el emisor se compromete a reembolsar el nominal al vencimiento. La remuneración no está ligada contractualmente a la evolución económico-financiera del emisor, y nace con un plan preestablecido de amortización. Un bono es la parte alícuota de un empréstito emitido por una entidad privada/pública.
+
+Ahora bien, aunque este es el objeto principal del contrato, esta clase de instrumentos tiene multitud de componentes accesorios que deben ser comprendidos. La tasa cupón, la fecha de vencimiento y el valor nominal forman parte de la \textbf{escritura de emisión} (\textit{bond indenture}), que es el contrato entre el emisor y el tenedor del bono.
+
+\subsubsection{Objeto económico: Relación con las partes}
+El negocio jurídico obliga de forma diferente a las partes del contrato. 
+
+\paragraph{Capital: Valor nominal (facial, par)}
+En primer lugar, para que se constituya el negocio una de las partes debe comprometer el capital. Es decir, el acreedor deberá entregar el capital prestado a la entidad emisora del bono. ¿Cómo? Este proceso, conocido como \textbf{colocación} de títulos tiene lugar en el mercado primario y puede realizarse de dos formas:
+\begin{la}
+    \item \textbf{Subasta competitiva}. En primer lugar, mediante subasta competitiva, método habitual utilizado por los Tesoros públicos para financiación;\footnote{Dos modalidades: a tipo único u holandesa (todos a precio marginal) o mejor y . de tipo múltiple o americana (se asignan al precio ofertado por cada entidad). Es habitual combinar aspectos de ambos tipos de subasta. 
+    } y,
+    \item \textbf{Sindicación}. Por otro lado, mediante sindicación. En este caso, el emisor busca apoyo de terceros (principalmente, instituciones de intermediación financiera) para la colocación de los títulos. Los participantes del sindicato pueden asegurar la colocación de la emisión a un precio determinado (\textit{underwriters}), o por el contrario pueden limitarse simplemente a su colocación al mejor precio (\textit{best efforts}). 
+\end{la}
+
+Es común llamar \textbf{valor nominal}, \textbf{facial} o \textbf{valor par} a la cuantía comprometida por el acreedor. Aunque se trata de términos equivalentes que hacen referencia al mismo objeto: el \textbf{capital adeudado}. En este sentido, su relación para con las partes es doble: (i) desde la perspectiva del acreedor (suscriptor), consiste en el capital comprometido/prestado; y, (ii) desde la perspectiva del emisor (deudor), consiste en la cuantía total de la obligación, el capital del préstamo. Cuando el bono vence, el emisor reembolsa la deuda pagando el valor nominal del bono (par value o face value). 
+
+Por ejemplo, un bono con valor nominal de 1.000 dólares y una tasa cupón del 8\% podría venderse por 1.000 dólares. El tenedor del bono tendría entonces derecho a recibir el 8\% de 1.000 dólares, es decir, 80 dólares anuales, durante la vida establecida del bono, por ejemplo, 30 años. Habitualmente, esos 80 dólares se pagan en dos cuotas semestrales de 40 dólares cada una. Al final de los 30 años, el emisor también paga al tenedor el valor nominal de 1.000 dólares.
+
+\paragraph{Tipo de Interés: Cupón y periodicidad}
+En segundo lugar, tendríamos el interés del préstamo. Este es un concepto particularmente importante en el caso de los instrumentos de deuda, como veremos, y, en consecuencia debemos entenderlo bien. Por ello, merece la pena exponerlo de manera general al principio para concretar posteriormente en cada caso particular. 
+
+Cuando una persona presta dinero a otros espera ser compensado por ello. Es decir, lo común es prestar una cuantía determinada (capital) con la expectativa de que sea devuelto con una cantidad superior. Esta remuneración adicional por el dinero comrometido, independientemente de la razón por la que trae causa, es lo que se conoce como \textbf{interés de la deuda} o \textbf{rendimiento del capital}. Nótese que se ha querido dar ambos conceptos porque son equivalentes: la única diferencia que existe entre ambos es la perspectiva que utilicemos al referirnos a éstos. Habitualmente hablamos de interés del préstamo cuando nos ponemos en la situación del deudor, pues consiste en la cuantía adicional que debe remunerarse en virtud de los intereses de nuestro acreedor; mientra que, si la óptica que adoptamos es la del acreedor, hablaremos de rendimiento pues es la cuantía que recibimos por el capital comprometido (como cualquier otra inversión, real o financiera): \textbf{son equivalentes}.\footnote{Se cree que el crédito precedió a la existencia de la moneda en varios miles de años. El primer caso registrado de crédito es una colección de antiguos documentos sumerios del año 3000 a. C. que muestran el uso sistemático del crédito para prestar grano y metales. [7] El surgimiento del interés como concepto es desconocido, aunque su uso en Sumeria argumenta que estaba bien establecido como concepto en el año 3000 a. C. si no antes, y los historiadores creen que el concepto en su sentido moderno puede haber surgido del arrendamiento de animales o semillas con fines productivos.[8] El argumento de que las semillas y los animales adquiridos podían reproducirse por sí mismos se utilizaba para justificar el interés, pero las antiguas prohibiciones religiosas judías contra la usura (נשך NeSheKh) representaban un "punto de vista diferente". [9]
+
+La primera evidencia escrita del interés compuesto data aproximadamente del año 2400 a. C. El tipo de interés anual era aproximadamente del 20\%. El interés compuesto era necesario para el desarrollo de la agricultura e importante para la urbanización.
+}
+
+En la jerga de los intrumentos de deuda, es el cupón (\textit{coupon}) la que determina el importe de estos pagos en concepto de interés; y, de la misma manera, llamamos tasa del cupón (\textit{coupon rate}) a la ratio o porcentaje que resulta de dividir el cupón (valor nominal de los intereses del préstamo) entre el capital (valor nominal total del préstamo).\footnote{Estos pagos se denominan cupón porque en las antiguas emisiones, antes de la era informática, la mayoría de los bonos incluían cupones físicos que los bonistas recortaban y presentaban para cobrar los intereses correspondientes. El acreedor debia acudir con el cupón para cobrar la renta. 
+}
+
+Esto es así independientemente de la \textbf{periodicidad} con la que se paguen estos cupones o intereses del préstamo. Es decir, el cupón se abona con la periodicidad estipulada por el emisor, periódicamente hasta su vencimiento. Los desembolsos del cupón pueden ser anuales, semestrales, trimestrales o mensuales. En muchas ocasiones, la frecuencia/periodicidad del pago no responde a otra cosa que a las convenciones correspondientes al mercado donde se emiten. Así pues, en el caso de los bonos emitidos en el mercado en dólares, la frecuencia más común es semestral para los bonos de cupón fijo y variable, mientras que en el mercado en euros, la convención más común es la frecuencia anual para los bonos de cupón fijo y trimestral para los bonos de cupón variable.
+
+\subsubsection{Duración: Vencimiento y redención}
+Surge entonces una pregunta crucial, ¿durante cuánto tiempo se expande el pago de estos cupones? O, dicho de otra forma, ¿cuánto tiempo pasa desde la emisión del título hasta que el deudor debe redimir la obligación contraída?
+
+Este periodo de tiempo que transcurre hasta que el título vence, es decir, hasta que se producen todos los pagos de intereses y se devuelve el principal de la deuda viene dterminado por la \textbf{fecha de vencimiento} estipulada en la emisión del título. El periodo entre la emisión y el vencimiento permite distinguir entre mercado monetario y mercado de capitales. De todas formas, no hay un marco temporal común que delimite ambos mercados, por lo que habrá que recurrir a la naturaleza de cada mercado para saber en cuál nos encontramos dado un título con unas características concretas.\footnote{Nótese que el plazo es una variable que depende de la calidad del emisor, la liquidez en el mercado y la estabilidad del sistema financiero. ¿Por qué? Es razonable suponer que emisores de mayor calidad tengan la posibilidad de emitir a mayores plazos; también en condiciones de mercado de abundante liquidez, los plazos tienden a alargarse en búsqueda de una mayor rentabilidad; y/o, que en periodos de inestabilidad de mercado o especial volatilidad, los plazos tiendan a acortarse para todos los emisores.
+}
+
+\paragraph{Mercado monetario: Letras}
+Se considera que los mercados monetarios son aquellos en los que se reasignan los recursos financieros a corto plazo. 
+
+En el caso de España, por ejemplo, se considera que los instrumentos de deuda pública negociados en los mercados monetarios son las Letras del Tesoro.\footnote{Son valores de renta fija a corto plazo representados exclusivamente mediante anotaciones en cuenta. Se crearon en junio de 1987, cuando se puso en funcionamiento el Mercado de Deuda Pública en Anotaciones.
+} Actualmente el Tesoro emite Letras del Tesoro con los siguientes plazos: (i) Letras del Tesoro a 3 meses; (ii) Letras del Tesoro a 6 meses; (iii) Letras del Tesoro a 9 meses; y, (iv) Letras del Tesoro a 12 meses.
+
+No obstante, en el caso de Estados Unidos, los mercados monetarios se expanden en un periodo mucho mayor, siendo las Treasury Notes las que caracterizan dichos mercados y que pueden ser emitidas con un plazo de vencimiento de hasta 10 años.
+
+Además de estos intrumentos de deuda pública, en los mercados monetarios de deuda se negocian pagarés o certificados de depósito. Estos mercados se caracterizan por ser muy líquidos, de bajo riesgo, baja remuneración y con mercados secundarios de alta actividad y presencia de mayoristas; aunque son características que veremos más adelante. La costumbre también dicta que en estos mercados los títulos de deuda remuneren el interés a vencimiento, no con pagos periódicos.
+
+\paragraph{Mercado de capitales (deuda): Bonos}
+Sensu contrario, los mercados de capitales serán aquellos donde se reasignen los recursos financieros no ceñidos o comprometidos a corto plazo. 
+
+En España, por ejemplo, en estos mercados se negocian tanto los Bonos del Tesoro (plazo entre dos y cinco años) como las Obligaciones del Tesoro (más de cinco años). Por el contrario, en Estados Unidos los mercados financieros de deuda vienen caracterizados por los Bonos del Tesoro, emitidos con fechas de vencimiento superior a diez años.
+
+En estos mercados la costumbre dicta que los intereses se remuneren de forma periódica. 
+
+\subsection{Categorización: Tipos de Bonos}
+Ahora que conocemos el marco dispositivo que rige los títulos de deuda y sus elementos/objetos principales y accesorios, podemos pasar a ver algunos ejemplos concretos para tener una idea más aterrizada de los títulos que se negocian en la prática. Existen multitud de tipos de bonos, por lo que vamos a centramos en los principales.
+
+\subsubsection{Remunerados: Pagos periódicos de intereses}
+En primer lugar tendríamos los bonos que pagan un rendimiento o interés periódico. De entre estos, destacan.
+
+\paragraph{Títulos de deuda simples: \textit{plain vanilla}}
+Los títulos de deuda simples o \textit{plain vanilla}, que son instrumentos con interés fijo. Es decir, la cuantía del cupón no varía a lo largo del periodo de vigencia. 
+
+Son, evidentemente, los más habituales en los mercados.\footnote{De ahí la definición de \textit{plain vanilla}, precisamente porque, haciendo el símil con el mundo de los helados, el helado simple de vainilla es el más consumido del mundo.
+} Las razones de esto son las ventajas que ofrecen:
+\begin{lnum}
+    \item \textbf{Información}. En primer lugar, porque los agentes están plenamente informados de la rentabilidad ofrecida a priori, por lo que para carteras que se mantienen hasta el vencimiento es un plus muy valioso que sólo se ve condicionado a que no se materialice el riesgo de default o impago; y,
+    \item \textbf{Exposición}. En segundo lugar, porque los bonos de cupón fijo tienen unas características de sensibilidad a los tipos de interés muy definidas, que veremos más adelante. Estas sensibilidades calculables, definidas y claras, permiten a los tenedores de los bonos calibrar fácilmente la exposición deseada a los tipos de interés.
+\end{lnum}
+
+\paragraph{Títulos de deuda de tasa flotante: \textit{floating rate}}
+También podemos encontrar títulos de deuda que presentan un interés variable, fijando un interés de referencia y añadiendo un diferencial o \textit{spread}. 
+
+El tipo de referencia ha sido tradicionalmente el London Interbank Offered Rate (LIBOR). No obstante, con la eliminación del LIBOR entre 2021 y 2023, el mercado está en proceso de transición hacia nuevas referencias.\footnote{La convención de mercado apunta al SOFR en el mercado americano y al EURIBOR en euros.
+} Por otro lado, el diferencial suele ser fijo, expresado en puntos básicos y depender (su cuantía) de variables no contempladas explícitamente en el contrato pero sí importantes para las partes, como por ejemplo la calidad crediticia del emisor. 
+
+Por ejemplo, la tasa puede ajustarse anualmente al rendimiento actual de las letras del Tesoro (T-bills) más un 2\%. Si la tasa de las letras del Tesoro a un año en la fecha de ajuste es del 4\%, entonces la tasa cupón del bono durante el año siguiente sería del 6\%. Este mecanismo implica que el bono paga siempre aproximadamente los tipos de interés vigentes en el mercado.\footnote{El principal riesgo asociado a los bonos flotantes está relacionado con cambios en la solidez financiera de la empresa emisora. El diferencial de rendimiento (yield spread) permanece fijo durante toda la vida del título, que puede extenderse durante muchos años. Si la situación financiera de la empresa empeora, los inversores exigirán una prima de rendimiento mayor que la ofrecida por el bono. En ese caso, el precio del bono caerá.
+}
+
+\paragraph{Títulos de deuda con interés indexado}
+Una variante introducida recientemente sería los títulos de deuda con interés indexado. 
+
+Se trata de títulos emitidos (habitualmente) por los gobiernos que se actualizan de acuerdo con la evolución de un indice de precios. Es decir, realizan pagos vinculados a un índice especificado de antemano, como por ejemplo el CPI o el precio de una materia prima.\footnote{Por ejemplo, México ha emitido bonos cuyos pagos dependen del precio del petróleo. El Tesoro de Estados Unidos comenzó a emitir este tipo de bonos indexados a la inflación en enero de 1997. Se denominan Treasury Inflation-Protected Securities. Al vincular el valor nominal del bono al nivel general de precios, tanto los pagos de cupón como el reembolso final del principal aumentan proporcionalmente al Índice de Precios al Consumidor (Consumer Price Index, CPI). Por tanto, el tipo de interés de estos bonos constituye una tasa real libre de riesgo.
+} Su objetivo principal es diversificar la base inversora, proporcionando un instrumento de protección contra la inflación o de mayor capacidad de pago de los Gobiernos. 
+
+La estructura de estos, no obstante, dista mucho de ser fácilmente comprensible. Existe mucha diversidad de tipos, pero lo más habitual es indexar el valor nominal (capital) a un índice de precios de consumo, manteniendo el tipo de interés constante. Es decir, si la inflación en el periodo $t$ se registra en el 2\%, el valor nominal del préstamo en el periodo $t$ se incrementará en un 2\%, por lo que el cupón vendrá determinado por el producto del tipo de interés o tasa del cupón y el valor nominal actualizado del capital. Podemos ver como, además, es particularmente interesante cando están indexados a la inflación puesto que, en puridad, están libres de riesgo. Es decir, la rentabilidad se considera el tipo de interés real y los flujos de caja pagados por el bono permanecen constantes en términos reales. 
+
+Por otro lado, sirven para determinar el \textbf{breakeven rate}: la diferencia entre el tipo de interés de los bonos convencionales frente a los bonos indexados, emitidos por un mismo Tesoro. Esto es muy importante pues nos sirve para obtener las expectativas de inflación de los agntes. No obstante, se trata de un indicador cuya fiabilidad depende del mercado: en Estados Unidos hay un volumen suficiente para la existencia de un mercado líquido mientras que en Europa hay fragmentación de mercado, con Francia, Italia y Alemania a la cabeza, seguidos de España.
+
+\subsubsection{No remunerados: Cupón cero}
+Hasta aquí los títulos de deuda más frecuentemente utilizados: los emitidos con tasas cupón fijadas justo al nivel necesario para inducir a los inversores a pagar el valor nominal del bono, sea cual sea esta. Sin embargo, en ocasiones se emiten bonos cupón cero (zero-coupon bonds), que no realizan pagos periódicos de intereses. 
+
+Estos bonos, al no proporcionar interés periódicamente, se emiten con descuento. Es decir, el incentivo económico del acreedor se origina en la diferencia, en términos absolutos, que existe entre el capital desembolsado (precio pagado por el bono) y el valor nominal del título que será reembolsado a vencimiento. De este modo, los intereses son implícitos e iguales a la diferencia entre el valor nominal del bono y su coste de adquisición. 
+
+Son el estándar en el mercado de renta fija junto con los bonos simples con cupón: el segundo de naturaleza financiera y este de naturaleza más bien monetaria.
+
+\subsubsection{Con colateral: Constitución de garantía}
+Por último, existen otros instrumentos de deuda que, aunque pueden diferir más o menos en la mayoría de sus características (vencimiento, periodicidad, etc.), comparten una característica única común: la constitución de una garantía.
+
+Se trata de títulos de deuda colaterizados y, aunque poco comunes en los títulos de deuda pública, son bastante comunes en los títulos de deuda privada/corporativa.
+
+\paragraph{Títulos de deuda con colateral: Titulización}
+Entres estos, destaca en primer lugar la titulización o securitization. Se trata de un mecanismo de obtención de liquidez mediante la emisión de bonos cuyos pagos dependen fundamentalmente de los flujos financieros generados por los activos incluidos en el conjunto de activos subyacentes. 
+
+Por lo general, los bonos de titulización de activos son emitidos por un vehículo de inversión creado expresamente para este fin, que ha adquirido el conjunto de activos financieros del originador/vendedor. Los activos subyacentes agrupados en un bono de titulización suelen ser de naturaleza homogénea y pueden incluir créditos hipotecarios, préstamos para automóviles, deuda de tarjetas de crédito u otros tipos de activos financieros que puedan ser agrupados. Los bonos garantizados (covered bonds) cuentan con algún activo como colateral, reforzando la garantía corporativa del emisor, pero sin que estos se transfieran a un vehículo separado para su titulización. Es el caso de las cédulas hipotecarias en España
+
+\paragraph{Híbridos y/o convertibles}
+Ofrecen un cupón y ofrecen posibilidad al emisor de convertir el nominal en acciones a un precio predeterminado en ciertas ventanas temporales. Durante los últimos años destacan los bonos convertibles contingentes (Cocos) emitidos por las entidades financieras. 
+
+Son instrumentos de deuda con características de cuasi-capital ya que son convertidos obligatoriamente en acciones ordinarias, incluso contra el deseo de sus tenedores y emisores, si el nivel de recursos propios de la entidad emisora desciende por debajo de cierto nivel objetivo. El objetivo es recapitalizar a la entidad emisora (\textit{bail-in}) de manera automática.
+
+\paragraph{Con opciones implícitas}
+La emisión de bonos con algún tipo de opción para el emisor o para el tenedor del bono es una práctica habitual en el mercado de renta fija corporativa (sociedades no financieras). Busca ofrecer un mayor atractivo para el inversor y/o permitir una mayor flexibilidad para adaptar la estructura de capital de la compañía. 
+
+De entre estos, detacan dos tipos:
+\begin{la}
+    \item \textbf{Callable bonds}. Algunos bonos corporativos se emiten con cláusulas de rescate anticipado (call provisions) que permiten al emisor recomprar el bono a un precio de rescate específico (call price) antes de la fecha de vencimiento. Por ejemplo, si una empresa emite un bono con una tasa cupón elevada en un momento en que los tipos de interés de mercado son altos y posteriormente dichos tipos disminuyen, la empresa puede desear retirar esa deuda de alto cupón y emitir nuevos bonos con una tasa cupón más baja para reducir sus pagos de intereses. Este proceso se denomina refinanciación (refunding). Los bonos rescatables (callable bonds) suelen incluir un período de protección contra rescate (call protection), es decir, un período inicial durante el cual el bono no puede ser rescatado anticipadamente. Estos bonos se denominan bonos rescatables diferidos (deferred callable bonds); y,
+    \item \textbf{Putable bonds}. Por otro lado, existen bonos con la opción inversa. Mientras que el bono rescatable (callable bond) otorga al emisor la opción de extender o amortizar el bono en la fecha de rescate (call date), el bono extensible o con opción de venta (extendable bond o put bond) concede esa opción al tenedor del bono. Es decir, capacitan al acreedor para exigir la recompra del bono por parte del emisor en una serie de ventanas temporales predefinidas y por un valor nominal determinado. Estos bonos buscan proteger al inversor de las subidas de tipos y, al deudor, emitir a un menor coste (asume la posición vendedora de la opción put, cobrando implícitamente una prima por este riesgo). Por ejemplo, si la tasa cupón del bono excede los rendimientos corrientes de mercado, el tenedor optará por extender la vida del bono. En cambio, si la tasa cupón es demasiado baja, será óptimo no extender el bono; en ese caso, el inversor recuperará el principal, que podrá reinvertir a los tipos de interés vigentes en el mercado.
+\end{la}
+
+La opción de rescatar el bono tiene valor para la empresa porque le permite recomprar los bonos y refinanciarse a tipos de interés más bajos cuando los tipos de mercado disminuyen. Naturalmente, el beneficio para la empresa constituye un coste para el tenedor del bono. Los inversores cuyos bonos son rescatados deben entregarlos a cambio del precio de rescate, perdiendo así la atractiva tasa cupón de su inversión original. Para compensar a los inversores por este riesgo, los bonos rescatables suelen emitirse con cupones más altos y con rendimientos prometidos al vencimiento superiores a los de bonos equivalentes no rescatables.
+
+
+\subsection{Categorización: Mercados de de deuda}
+Ahora que conocemos las particularidades de los instrumentos a título particula, cabe también mencionar y explicar brevemente algunos de los conceptos utilizados al hablar de \textit{mercados de deuda} en su conjunto. 
+
+Esto es así porque las innovaciones financieras, como gusta llamarlas, no se han limitado al desarrollo de nuevos instrumentos financieros que permitan ofrecer un amplío abanico de posibilidades a través de las cuales una entidad puede obtener capital con diseños casi a medida; sino que también se han extendido a los mercados como tal donde estos intstrumentos operan. 
+
+Debemos tener presente que el mercado de renta fija es el segundo mercado financiero más importante en volumen de operaciones, únicamente superado por el mercado cambiario o FOREX. Su valor global al cierre de 2024 era de 146B USD:
+
+\imagenfit{Fig1.png}{Global Fixed Income Outstanding: Comparación 2014-2024.}{\href{https://www.sifma.org/wp-content/uploads/2024/07/2025-SIFMA-Capital-Markets-Factbook.pdf}{SIFMA. Capital Markets Fact Book (2025)}}
+
+Como vemos, está dominado por las emisiones del Sector Público. El resto corresponde a las emisiones corporativas, donde dominan las instituciones financieras (50\% del valor). Además, otra importancia fundamental radica en que los mercados de deuda soberana ejercen de referencia en la valoración de los demás instrumentos de renta fija.
+
+\subsubsection{Mercados: Primarios y secundarios}
+En primer lugar, debemos diferecias entre mercados primarios y mercados secundarios. Hasta aquí, por habernos centrado en los títulos de deuda desde una perspectiva estríctamente jurídica, hemos visto el funcionamiento de los mercados primarios de deuda. Es decir, los mercados en los que se forma el contrato que vincula a las partes. 
+
+Ahora bien, cualquiera que tenga una mínima noción de cómo funcionan los mercados de deuda (por ejemplo, pública), puede intuir que no es este al que estamos acostumbrados. Por el contrario, lo más habitual es hablar de y sobre los mercados secundarios de deuda.
+
+Y, ¿qué son y cómo se caracterizan estos mercados? Muy sencillo, si los títulos son emitidos en el mercado primario para la captación de nueva financiación, en el mercado secundario será donde se negocien y transfieran estos títulos entre tenedores y potenciales compradores. Lo que vendría a ser un mercado de segunda mano o reventa. 
+
+La función del mercado secundario es capital. Aunque lo veremos con detenimiento más adelante, constituyen la referencia sobre la que deben y pueden operar los mercados primarios. Por tanto, es la gallina la que hace el huevo en este caso. ¿Por qué? En primer lugar, porque proporcionan liquidez a los títulos ya emitidos, lo que supone incrementar el nivel de aceptación de éstos por parte de los ahorradores: los inversores serían más reacios a adquirir en el mercado primario valores que no pudieran transferir fácilmente cuando anden cortos de liquidez. Además, porque el mercado secundario actúa de referente para el emisor: la cotización de los títulos aporta información sobre la valoración que le otorga el mercado y esto condiciona sus decisiones de financiación. Esto segundo lo analizaremos en detalle en el último apartado.
+
+\textcolor{red}{\textbf{Depurar.-} A pesar de que existen mercados regulados u oficiales, la mayor parte de la negociac1on (especialmente en la renta fija privada) se produce en el mercado OTC, en plataformas como Bloomberg)9. Frente a otros mercados financieros, la renta fija se caracteriza por su baja liquidez en muchas referencias debido a la ausencia de contrapartida cont inua. Los creadores de mercado mantienen inventarios en sus balances para ofrecer precios de compra/venta en los bonos con mayor interés. Esta liquidez se explica por el elevado número de em1s1ones. 
+
+Cada emisión presenta unas características diferenciadas que influyen en su valoración y riesgo; y un solo emisor puede tener decenas de bonos (frente a una sola clase de acciones). En general la negociación continua se concentra en el mercado de deuda pública y a su vez en ciertas referencias. Uno de los fenómenos más comunes es la concentración de la liquidez en las emisiones denominadas on-the-run, emitidas recientemente y cuyo vencimiento coincide con algún plazo relevante para los inversores (10 años, por ejemplo), frente a las emisiones off-the-run. Por todo ello los tesoros recompran emisiones, realizan canjes y re-emiten referencias demandadas en los mercados secundarios En cuan to al mercado de bonos corpora t ivos, tanto el mercado pr imar io como el secundar io se encuen tra segmen tado a n ivel domést ico e in ternac ional en dos categorías princ ipales, según el n ivel de riesgo, atend iendo a la calificación otorgada por las princ ipales agencias de cal ificación: Inves tmen t grade (grado de invers ión): hasta 888- según S\&P o Fitch. High y ield (grado especula tivo): 88 y menos}
+
+\begin{specialblock}{Aspectos legales y fiscales}
+    La compraventa de un bono supone un acuerdo contractual entre el emisor y el tenedor del título. Los inversores, por tanto, tienen que tener en cuenta los aspectos legales y el tratamiento fiscal a la hora de valorar la idoneidad de la inversión. En la escritura de emisión del título se detennina las características del bono, las obl igaciones del emisor y los derechos del tenedor. En estos documentos contractuales revistan mucha importancia las cláusulas que determinan lo que puede y lo que no puede hacer el emisor y que se denominan "covenants ". Estas cláusulas se negocian y determinan el tipo de interés o precio de colocación del bono en la emisión. Algunas de las cláusulas más comunes son: • Cláusulas put y cal! sobre el bono. El bono puede tener cláusulas que otorgan el derecho, pero no la obligación, para una de las partes (emisor o inversor) de forzar el vencimiento anticipado del bono. En el caso concreto de los bonos callable el emisor puede solicitar el vencimiento anticipado del bono a un precio de ejercicio determinado, que además establece un techo al precio al que pueden cotizar estos bonos, ya que si los tipos de interés bajan demasiado o el precio sube demasiado, el emisor obtendría una ventaja económica de amortizar el bono y volver a emitir otro en las nuevas condiciones6. Sensu contrario, los bonos putable penniten al inversor solicitar la cancelación del bono a un precio de ejercicio convenido, ofreciendo por lo tanto un suelo al precio de cotización de estos bonos. Los bonos callable se verán con más detalle más adelante. • Cláusula ·'pari pass u ". Esta cláusula establecen que no se puede cualquier mejora crediticia alguna a un tercer prestamista sin que se conceda mejora crediticia similar a los tenedores de los bonos. • Cláusula "negative pledge". Es una variante de la anterior más específica. Establece la prohibición de ofrecer garantías adicionales (nonnalrnente de activos financieros o bienes reales) a terceros prestamistas. • Cláusula "rating trigger". Una cláusula rating trigger permite al inversor solicitar la cancelación anticipada del bono antes del vencimiento cuando sucede un evento de bajada de rating hasta un nivel pactado por parte de una o varias agencias de rating prestablecidas. Estos bonos ofrecen una protección o límite al riesgo de crédito por parte del inversor. • Sinking fund provision. Con el fin de reforzar la calidad crediticia del bono y con el propósito de evitar el riesgo que supone concentrar la obligación de pago de una sola vez al vencimiento, algunos bonos ·establecen en paralelo la obligación por parte del emisor de constituir un fondo "sinking fund" con apo1taciones periódicas del emisor gestionado por un fiduciario "trustee" que recompra bonos al valor7 par o por debajo de la par en el mercado secundario.
+
+    Garantías adicionales. Muchos bonos corporativos están respaldados con algún tipo de activo real o financiero, con el fin de abaratar los costes de emisión y reforzar la calidad crediticia del bono. El ejemplo en España más notorio de esta tipología de bonos son las cédulas hipotecarias, que se encuentran respaldadas por una cartera de hipotecas, sobre las que el inversor puede acceder a la propiedad directa en caso de impago o default del emisor. Otro tipo común de bonos con garantías subyacentes son los propios bonos de titulización, los cuales además vinculan las obligaciones de pago a la propia generación de flujos de caja por parte de los activos subyacentes. Finalmente, en bonos procedentes de agencies, así como de filiales de corporaciones supranacionales, es común emitir con algún tipo de aval por parte de un tercero con mayor calidad crediticia con el fin de mejorar el atractivo del bono. En lo relativo a la fiscalidad, generalmente los rendimientos provenientes de la tenencia de un bono son gravables como rendimiento del capital mobiliario por el impuesto sobre la renta. Una excepción se encuentra en los bonos que están exentos del gravamen.\footnote{
+    El Informe Anual de la CNMV sobre los mercados de valores y su actuación es un documento muy interesante para analizar la segmentación entre el mercado nacional y los euromercados para el caso del mercado primario entre mercados regulados y OTC ·en el mercado secundario y
+    } Además de los rendimientos por capital mobiliario, una inversión en bonos puede generar ganancias o pérdidas de capital si el precio al que se vende es diferente del precio al que se compró. Aunque suele estar incluido dentro del impuesto sobre la renta, generalmente tiene un tratamiento fiscal diferenciado e incluso se suele distinguir entre las variaciones de capital generadas a corto plazo y las generadas a largo plazo.
+\end{specialblock}
+
+
+\subsubsection{Mercado geográfico: ¿dónde se emite el título?}
+Por último, algo muy habitual al hablar de los mercados de deuda es la categorización de los títulos en función de la relación que existe entre la nacionalidad del emisor y el mercado en el que se emite.
+
+Esto es particularmente importante a los efectos de valorar la legislación aplicable, en el caso de deuda corporativa, y/o la liquidez y ahorro presente en el mercado para el caso de la deuda pública.
+
+\paragraph{Mercados domésticos}
+En primer lugar, y el más habitual históricamente, es el mercado doméstico de títulos de deuda. En este caso hablamos de títulos emitidos por una entidad residente, en el país en el que lo emite y con denominación local. Es decir, con todos los valores expresados en moneda nacional.
+
+
+\paragraph{Mercados extranjeros}
+En segundo lugar tendríamos los mercados de deuda bajo el nombre de \textbf{extranjeros}. Será este el caso cuando estemos ante un título emitido por un prestatario residente en un país diferente a aquél donde el título se vende. El título estará denominado en la moneda del país en el que se comercialice. Por ejemplo, si una empresa alemana vende un bono corporativo denominado en dólares en Estados Unidos, dicho bono se considera un bono extranjero y la legislación aplicable será la de Estados Unidos. 
+
+Estos bonos reciben nombres característicos según el país donde se comercializan. Por ejemplo, los bonos extranjeros vendidos en Estados Unidos se denominan Yankee bonds. Al igual que otros bonos vendidos en Estados Unidos, están registrados ante la U.S. Securities and Exchange Commission (SEC). Los bonos denominados en yenes vendidos en Japón por emisores no japoneses se llaman Samurai bonds. Los bonos extranjeros denominados en libras esterlinas y vendidos en el Reino Unido se conocen como bulldog bonds.
+
+\paragraph{Mercado de Eurobonos: Mercados offshore}
+En contraste con los bonos extranjeros, en el mercado de eurobonos los títulos están denominados en una moneda (generalmente la del emisor) pero se venden en mercados nacionales distintos del país de esa moneda. Por ejemplo, el mercado de eurodólares (Eurodollar market) hace referencia a bonos denominados en dólares vendidos fuera de Estados Unidos (y no únicamente en Europa), aunque Londres constituye el principal mercado para estos bonos. Por lo general no tienen restricciones impositivas y permiten el acceso a un mayor número de inversores institucionales. 
+
+Dado que el mercado de eurodólares queda fuera de la jurisdicción estadounidense, estos bonos no están regulados por organismos federales de Estados Unidos. De manera análoga, los Euroyen son bonos denominados en yenes vendidos fuera de Japón, los Eurosterling son eurobonos denominados en libras esterlinas vendidos fuera del Reino Unido, y así sucesivamente. En esencia, se denomina de forma genérica euromercado a los mercados \textit{offshore} (fuera de la jurisdicción nacional). De esta forma, la legislación aplicable suele tener carácter dispositivo, siendo la más habitual la británica (o la de Hong Kong, según el área de influencia) y siguen procesos de emisión similares, normalmente por sindicación. 
+
+Por ejemplo, en España en torno a la mitad de la emisión de deuda corporativa se produce \textit{offshore} (informes anuales CNMV). La mayoría de las emisiones están denominadas en dólares, pero existe un peso creciente de las emisiones denominadas en euros. Los países emergentes son un emisor recurrente en estos mercados.
+
+
+
+\clearpage
+\section{Mercados de deuda: Perspectiva económica}
+\puntosclave{
+    El precio de un bono se determina de manera análoga a la fórmula del valor actual neto, descontando los flujos de caja futuros (cupones y nominal) a la tasa de descuento correspondiente. 
+    
+    La tasa de rendimiento al vencimiento (Yield to Maturity o TIR) es la medida de rentabilidad más utilizada en la práctica. Es la rentabilidad exigida por el mercado, derivando el precio a pagar por el bono a partir de la misma. 
+    
+    Existe una relación inversa entre el precio del bono y su rentabilidad. Esta relación no es lineal sino convexa positiva. Implica que los precios de los bonos suben más rápido de lo que bajan ante cambios en la rentabilidad.
+    
+    El riesgo de un bono se mide a través de dos variables pincipales: la duración y la convexidad. 
+    
+    La duración modificada proporciona una estimación lineal de la variación del precio del bono ante pequeños cambios en la rentabilidad exigida. Permite valorar el riesgo de tipo de interés. La convexidad a su vez es una medida de segundo orden (muestra cambios en la duración ante cambios en la rentabilidad).
+}
+
+Conocemos ya el entorno jurídico-conceptual en el que nos movemos al hablar de los mercados de instrumentos de renta fija o, equivalentemente, mercados de deuda. Vemos como se trata de un grupo muy heterogeneo de instrumentos y mercados cuya mínimo común denominador es, verdaderamente, el nucleo del negocio: la \textbf{deuda}. En estos mercados, y a través de estos títulos, lo que se emite, negocia, compra y vende son obligaciones que contraen deudores (emisor) para con sus acreedores (tenedor o bonista), independientemente del conjunto de características accesorias que revista el contrato.
+
+Esto nos es útil por dos razones. En primer lugar, porque nos proporciona una herramienta fácil y directa para conocer si se trata o no de un instrumento característico de estos mercados. Y, en segundo lugar, como veremos ahora, porque nos permite adentrarnos en el análisis económico de estos instrumentos desde una perspectiva general (por falta de tiempo) sabiendo que, a pesar de esto, no perdemos generalidad ni rigor, puesto que nos centraremos en los conceptos cruciales que hemos visto comparten todos estos instrumentos.
+
+\textbf{¿Qué queremos decir?} Por tanto, abordamos ahora estos instrumentos desde una perspectiva económica. Es decir, veremos cómo y por qué se determina el precio de un bono y su rentabilidad. También veremos de dónde surge y qué impacto tiene el riesgo, puediendo este ser de diferente naturaleza. Y, en último lugar, veremos brevemente cómo se debe gestionar una cartera de activos de este tipo, sus ventajas e inconvenientes. 
+
+\subsection{Objeto económico: Valor nominal e interés}
+Empecemos primero con el precio y rendimiento de un título de deuda. Como podemos intuir, estos conceptos económicos están estrechamente relacionados a los ya vistos: valor nominal e interés. No obstante, su cuantía difiere sustancialmente por una razón: el \textbf{tiempo}. Hemos visto que un título de deuda establece la obligación al deudor de reembolsar al acreedor la cuantía adeudada (valor nominal) en la fecha de vencimiento del bono; que puede ir acompañada de la obligación de pagar, periódicamente, una cuantía determinada que remunere al acreedor por el capital comprometido. 
+
+Imaginemos que se ha emitido un título de deuda, con vencimiento a tres años y un pago anual de intereses por valor del 6\% del capital (valor nominal). ¿Qué pasará entre la emisión y el vencimiento del título? Lo más normal, como ya hemos dicho, es que este negocio este sujeto a innumerables novaciones que sucederán en el mercado secundario. Es decir, un conjunto de sucesivas transferencias del derecho contenido en el título entre diferentes agentes. Y, más aún, es razonable suponer que esta transferencia no se realice siempre al mismo precio (al valor nominal), sino que vaya variando en función de las condiciones del mercado. 
+
+\subsubsection{Valor presente: Precio de cotización}
+Esto es, precisamente lo primero que veremos: el precio del título. 
+
+Dado que los pagos de cupón y el reembolso del principal de un bono ocurren meses o años en el futuro, el precio que un inversor estaría dispuesto a pagar por el derecho a recibir esos pagos depende del valor de los dólares que se recibirán en el futuro en comparación con los dólares disponibles hoy. Este cálculo de \textbf{valor presente} (precio) depende, a su vez, de los tipos de interés de mercado.
+
+\paragraph{VAN: Valor presente (precio)}
+¿Cómo podemos, entonces, determinar el valor presente de un título? ¿Qué herramienta nos permite cuantificar el valor de un activos, que proporcione o no rendimientos periódicos, centrándonos en el valor intertemporal del dinero? Precisamente, la valoración por flujos de caja descontados o VAN (Valor Actual Neto) es la herramienta matemática fundamental en estas situaciones.
+
+Para simplificar, supongamos que existe un único tipo de interés apropiado para descontar flujos de caja de cualquier vencimiento.\footnote{En la práctica, comom veremos más adelante, existen diferentes tasas de descuento para flujos de caja correspondientes a distintos períodos temporales. Por el momento, sin embargo, ignoraremos esta refinación.
+} Entonces, para valorar un título financiero, descontamos sus flujos de caja esperados utilizando la tasa de descuento apropiada; que, en el caso de un título de deuda consisten en pagos de cupón hasta la fecha de vencimiento más el pago final del valor nominal:
+
+\eqblock{
+\begin{aligned}
+    &\text{Valor del bono} = \text{Valor presente de los cupones} + \text{Valor presente del valor nominal}\\[1em]
+    &\text{Valor del bono}:\hspace{4em}\boxed{\sum_{t=1}^{T}\frac{\text{Cup\'on}}{(1+r)^t}+\frac{\text{Valor nominal}}{(1+r)^T}}
+\end{aligned}
+}{}
+
+El primer término del lado derecho de la ecuación representa el valor presente de una anualidad. El segundo término representa el valor presente de una cantidad única: el pago final del valor nominal del bono.
+
+Por tanto, vemos sencillamente como las fluctuaciones que experimentará el valor presente de un bono (el precio al que cotiza), se corresponde con la valoración actualizada y descontanda al presente del importe del capital y los flujos correspondiente al pago de intereses. 
+
+\subsubsection{Rendimiento (\textit{yield}): ¿Cómo varía el \textit{rendimiento}?}
+Pero, ¿por qué debería de cambiar? Es decir, perfectamente podríamos suponer que no hay razones que justifiquen que el precio de cotización varíe del valor nominal o precio pagado por el título en primer lugar; o, como máximo, que esta diferencia se deba al ajuste llevado para tener en cuenta la inflación. Sin embargo, esto dista mucho de lo que se observa en la realidad, donde los precios de cotización de los títulos pueden variar significativamente en función de factores muy diversos. 
+
+¿Por qué es este el caso? Hay dos factores que entran en juego y permiten explicar este fenómeno: (i) la tasa de descuento; y, (ii) el rendimiento de un bono. Aunque, en realidad, son las dos caras de una misma moneda. Veamos por qué.
+\begin{la}
+    \item \textbf{Tasa de descuento}. La tasa de descuento nos permite calcular el valor presente de una cantidad determinada de flujos futuros de dinero, descontando una determinada porción de la cantidad futura que se va a percibir con motivo del coste de oportunidad de mantener ese capital dispuesto en primer lugar. Dicho de otra forma, se trata de proyectarse hacia el futuro y preguntarse a uno mismo: ¿cuánto tendrían que ofrecerme en un año para renunciar a un determinado valor hoy? Por ejemplo, si desembolsamos 1.000€ para hacernos con un título de deuda pública en el mercado primario, con vencimiento a cinco años que ofrece un cupón anual de 100€, estaríamos descontando el futuro a una tasa  $10\%$; y,
+    \item \textbf{Rendimiento del bono}. Por otro lado estaría el rendimiento. La rentabilidad de un bono es la capacidad que este tiene de generar intereses dada la cantidad de capital que debemos comprometer para hacernos con el título. Por ejemplo, si nos hacemos con un título de deuda pública en el mercado primario con valor nominal de 1.000, vencimiento a cinco años y cupón anual de 100€, el rendimiento que proporciona dicho título es del 10\%. Por tanto, estamos dispuestos a comprar dicho título porque el rendimiento nos parece suficiente dado el capital que debemos comprometer.
+\end{la}
+
+Aunque es dificil de observar, podemos desarrollarlo en conjunto para obtener el verdadero significado de estas dos definiciones equivalentes. Supongamos que un inversor español adquiere dicho título en el mercado primario mediante subasta.\footnote{Nótese que, ya de primaras, ¿qué es lo que está sucediendo? Que el Estado está subastando los títulos con el objetivo de obtener el mayor desembolso nominal para un tipo de interés y valor facial predefinido, es decir: está rebajando todo lo posible el rendimiento desde la óptica del inversor, para obtener un beneficio adicional dadas las preferencias del mercado.
+} Dicho título trae consigo un valor nominal/facial de 1.000€, cupón anual de 100€ y plazo de vencimiento en cinco años: 31/12/2031 (31/12/2026).
+
+Poco después, el inversor decide deshacerse del título porque, a cinco años, el VAN de dicho bono ha disminuido y es de 900€. ¿La razón? Podríamos suponer que las expectativas a futuro de este inversor se han deteriorado considerablemente y valora mucho más que antes el dinero líquido, el efectivo. Es decir, ha aumentado su tasa de descuento.
+
+Por otro lado, un inversor alemán, al que su homólogo español le ha recomendado que invierta en nuestro mercado, desea comprar este título de deuda. Una razón, perfectamente válida, podría ser obtener un mayor interés del que ofrecen los Bunds, los cuales llevan asignados un cupón de 50€ (es decir, 5\%). Ahora bien, el inversor alemán es amigo de su homólogo español y, en vez de pagar el valor facial que tiene el título, cierran el trato por 900€. ¿Cuál es el rendimiento que obtiene ahora de este título? Evidentemente, ha aumentado puesto que bloqueando/asignando una mayor porción de capital, sigue obteniendo la misma cuantía en forma de interés: 100€ anuales ($+$ un valor facial de 1000€ a vencimiento). Pero, ¿en cuánto ha aumentado el rendimiento respecto al que obtenía el inversor español? Aquí está el quid de la cuestión: el rendimiento desde la óptica del nuevo tenedor ha aumentado en una cuantía igual al que ha aumentado la tasa de descuento del primer tenedor del título. Es decir, el primer inversor valora más el dinero en mano, por lo que está dispuesto a disminuir el precio por transmitir el título y, en consecuencia, el nuevo tenedor, que está dispuesto a bloquear el capital en el activo, obtiene un mayor rendimiento; o viceversa. (Es decir, el mercado no tiene porque ser creado por la oferta sino perfectamente fluctuar en función del rendimiento exigido por los potenciales tenedores para adquirir el título de aquellos que quieren amortizarlo).\footnote{Aquí hay una trampa que debe evitarse. No debe confundirse la tasa cupón del bono —que determina los intereses pagados al tenedor del bono— con el tipo de interés de mercado. Una vez emitido el bono, su tasa cupón queda fijada. Cuando el tipo de interés de mercado aumenta, los inversores descuentan los pagos fijos utilizando una tasa de descuento más alta, lo que implica que los valores presentes y, por tanto, los precios de los bonos disminuyen.
+}
+
+Evidentemente, este ejemplo se basa en la buena voluntad del transmitente español. Sin embargo, si hay un número suficiente de tenedores y potenciales inversores (mercado atomizado), o de forma equivalente, un número suficientemente elevado de títulos que negociar; es perfectamente razonable suponer que el precio de cotización sea aquel que iguale la tasa de descuento menor de entre todos los que han transmitido su título con el rendimiento exigido mayor de entre todos los adquirentes de estos títulos transferidos. En términos más rigurosos: \textbf{el rendimiento exigido por el mercado determina la tasa de descuento utilizada para valorar el bono}, y esta compatibilidad emerge en el equilibrio con el precio de cotización del título.
+
+¿Qué nos interesará entonces a nosotros? Evidentemente, calcular lo atrofiado que está el telescopio a través del cual los agentes miran el futuro y descuento el dinero no realizado es una labor díficil y poco realista. Por tanto, teniendo en cuenta esta dualidad que existe en el equilibrio, lo que observaremos y calcularemos será el \textbf{rendimiento exigido por el mercado}. 
+
+Existen diferentes formas de calcular el rendimiento de un título de deuda, veremos a continuación las más comunes.
+
+\paragraph{Rendimiento al vencimiento}
+El primero de ellos, y más utilizado, es el \textbf{rendimiento al vencimiento} (yield to maturity, YTM). A un inversor no se le comunica directamente una tasa prometida de rentabilidad sino que, utilizando el precio del bono, su fecha de vencimiento y los pagos de cupón, infiere la rentabilidad del título y decide realizar o no dicha inversión. Por tanto, el rendimiento al vencimiento será el que iguala el valor presente de todos los pagos del bono con su precio de cotización, equivalente a la TIR:
+
+\eqblock{
+\begin{aligned}
+    P=\sum_{t=1}^{T}\frac{\text{Cup\'on}}{(1+y)^t}+\frac{\text{Valor nominal}}{(1+y)^T}
+\end{aligned}
+}{}
+
+Suele interpretarse como una medida de la tasa media de rentabilidad que obtendrá un inversor si compra el bono hoy y lo mantiene hasta su vencimiento, reinvirtiendo todos los flujos de caja a la misma tasa de rentabilidad. Como se ha dicho, el YTM es ampliamente aceptado y utilizado; permite valorar bonos de características similares, comparados a través de esta medida estándar.
+
+\imagenfit{Fig3.png}{Curva de rendimiento. Bonos Gobierno Federal Alemania (Mayo 2026)}{\href{https://www.bloomberg.com/markets/rates-bonds/government-bonds/germany}{Bloomberg.com}}
+
+Otros aspectos e intuiciones relevantes son: (i) si el precio del bono es igual al par, eso quiere decir que el cupón es igual a la rentabilidad o YTM exigido; y, (ii) efecto pull-to-par, si el rendimiento de un bono no varía a lo largo de su vida, entonces su prima o descuento con respecto al par ira desapareciendo.
+
+\paragraph{Rendimiento corriente}
+Paralelamente, es común utilizar otro instrumento mucho más sencillo que permite la valoración inmediata sin descontar los valores futuros: \textbf{el rendimiento corriente} (\textit{current yield}) de un bono. Este rendimiento se define como el pago anual de cupón dividido por el precio del bono:
+
+\eqblock{
+\begin{aligned}
+    \text{Current Yield}=\frac{\text{Cup\'on anual}}{\text{Precio del bono}}  
+\end{aligned}
+}{}
+
+Sólo tiene en cuenta una de las tres fuentes de rentabilidad de un bono (el cupón), obviando las ganancias de capital de revenderlo en el mercado secundario y las rentas de la reinversión de los cupones. Además no tiene en cuenta el valor del dinero en el tiempo.
+
+Ninguno de los dos métodos está exento de fallas. Este último proporciona información muy limitada del rendimiento del título a largo plazo y, en consecuencia, será muy poco útil más allá de la conocer superficialmente la rentabilidad que nos ofrece el pago de un(os) cupon(es). Mientras que el primero, que funciona como una \textbf{rentabilidad exigida} por el mercado, está basado en un conjunto de hipótesis bastante restrictivas: (i) no se dan impagos ni dilaciones; y, (ii) se reinvierten los flujos de caja a la misma TIR (algo no habitual, ya que la estructura de tipos de interés sería plana de forma implícita).
+
+Por último, aunque ya se dejó caer al principio, es interesante destacar que dada la estructura de estos rendimiento existe:
+\begin{lnum}
+    \item \textbf{Rentabilidad-Precio}. Una relación inversa entre el precio y la rentabilidad del bono. Manteniendo constante el valor nominal del bono, la tasa del cupón, el número de periodos y el número de cupones al año: cuando el precio del bono sube, la rentabilidad baja; y viceversa. Volveremos más adelante a ello; y,
+    \item \textbf{Relación entre rentabilidades}. Una relación entre las diferentes tasas de rentabilidad disponible. Es decir, existe una regla general que define que, para bonos con prima ($P>\text{Valor facial}$): $\text{Tasa cupón} > \text{Current Yield} > \text{YTM}$; e invertidas si el título se vende a descuento ($P<\text{Valor facial}$).
+\end{lnum}
+
+Cuando las personas hablan informalmente del rendimiento de un bono, casi siempre se están refiriendo al rendimiento al vencimiento (yield to maturity). Implica que el precio de los bonos sube más rápido de lo que bajan ante cambios en la rentabilidad. Con bajadas de rentabilidad el precio aumenta a tasas crecientes y con subidas de rentabilidad, el precio disminuye a tasas decrecientes. Esta variante ofrece una medida más precisa del rendimiento de un bono, y está directamente relacionada con la ecuación mostrada para la determinación del valor actual neto de un bono. 
+
+\subsection{Riesgo: ¿Por qué varía el \textit{rendimieto}?}
+Sabemos cómo calcular las diferentes rentabilidades de un título, las más habituales al menos, y, sobretodo, qué relación guardan estas con el precio de cotización de los bonos: constituye una propiedad que emerge del equilibrio en el mercado y se ve reflejada en el precio. Sin embargo, no sabemos por qué varían estas rentabilidades. Es decir, aparte del posible ajuste que se lleva a cabo por inflación imprevista, ¿por qué debería variar el rendimiento de los título entre sí? ¿Por qué las rentabilidades no son todas ellas uniformes? Al fin y al cabo, se está negociando con el mismo objeto: la deuda. 
+
+Esto no tiene una respuesta sencilla ya que existen muchos motivos. Sin embargo, podemos empezar por fragmentar el problema y abordarlo por partes. Supongamos que cualquier rentabilidad observada puede descomponerse en: (i) una rentabilidad real básica, exigida por los inversores como, por ejemplo, remuneración del capital (tipo de interés real); y, (ii) una \textbf{prima}. Esta prima puede traer muchas razones por causa pero supongamos que, para un activo cualquiera, responde únicamente a la inflación esperada. De esta forma, podríamos decir que el rendimiento exigido observado para este título es exactamente el tipo de interés real de referencia, ya que remunera exclusivamente el capital comprometido a su \textbf{justo precio} presente y futuro. Entonces, un paso más sería preguntarnos, ¿qué podría explicar la diferecia entre el rendimiento observado para este título y los observados para otros (todos) con características originarias iguales (o muy similares)? El factor causante es uno: el \textbf{riesgo}. 
+
+Esta manera simplificada y sencilla nos permite entender una de las caracterísicas más importantes del mercado de deuda: la tasa de descuento (rendimiento) que aplica un inversor cualquiera responde a su estructura intertemporal y categórica de preferencias. Es decir, no solo percibe el futuro diferente al presente y quiere adecuar su exposición a el, sino que también percibe diferentes títulos de manera diferente y desea ajustarlos a sus preferencias.
+
+De esta forma podemos descomponer el rendimiento observado de un título en dos partes: (i) el rendimiento exigido para un \textit{benchmark} de referencia, que tenga características originarias iguales y sea considerado activo \textit{libre de riesgo} (remuneración real del capital, únicamente);\footnote{Ningún título está, naturalmente, libre de riesgo. Sin embargo, si podemos considerar que el activo con \textit{menor riesgo} refleja el riesgo inherente y, en consecuencia, está, en términos relativos: \textbf{libre de riesgo}. De esta forma, los inversores pueden distinguir o descomponer las señales del mercado (el precio, que aglutina todas ellas) entre: (i) factores generales que afectan a la valoración del conjunto del mercado de renta fija; y, (ii) factores específicos del título en cuestión, de entre los que destaca el riesgo de impago.
+} y, (ii) el \textit{spread}, en puntos básicos, desde el \textit{benchmark} hasta el rendimiento exigido para el título en cuestión (la \textit{prima de riesgo}).
+
+\subsubsection{Fuentes de riesgo: Principales}
+Para analizar los factores que determinan la \textbf{amplitud del spread}, la literatura económica ha identificado diversas fuentes de riesgo, de entre los que se pueden destacar los siguientes.\footnote{Otros riesgos, de carácter más secundario, a los que se suele hacer referencia en el mercado de bonos son: 
+\begin{lnum}
+    \item \textbf{Riesgo de reinversión}. Riesgo asociado a la reinversión de los flujos de caja ya recibidos por la compra de un título. Este riesgo de reinversión es mayor cuanto más largo sea el periodo de tenencia del título y cuanto mayores y más próximos sean los flujos de caja obtenidos. Cabe destacar que el riesgo de reinversión y el riesgo de tipo de interés operan en direcciones opuestas, de tal modo que una subida de los tipos de interés de mercado incrementa el riesgo de mercado pero favorece la reinversión de los flujos;
+    \item \textbf{Riesgo cambiario}. La variación del tipo de cambio puede afectar al valor de un bono, si este es emitido en una divisa extranjera;
+    \item \textbf{Riesgo inflacionario}. La inflación afecta al valor actual de los flujos de caja futuros en términos de poder de compra. En este sentido la inflación esperada es incorporada en el tipo nominal exigido, siendo el verdadero riesgo los cambios inesperados en la inflación. El riesgo inflacionario es realmente la incertidumbre sobre la inflación a lo largo de la vida del bono. Los bonos ligados a la inflación mitigan este riesgo al asegurar una corriente de flujos en términos reales;
+    \item \textbf{Riesgo legal o político}. Asociado a la inseguridad jurídica del país que regula el bono; y,
+    \item \textbf{Riesgo de suceso o \textit{event risk}}. Asociado a sucesos extraordinarios que pueden afectar a la rentabilidad del riesgo: fusiones entre empresas, terremotos o atentados.
+\end{lnum}
+}
+
+\paragraph{Riesgo de impago: Información incompleta} 
+La primera, y más natural por ser un título de deuda, es la calidad creticia del deudor: la posibilidad de que no pueda cumplir sus obligaciones en los términos inicialmente estipulados. Es decir, el \textbf{riesgo de default o impago}. 
+
+Este riesgo emerge de uno de los fallos de mercado más característicos: la \textbf{información incompleta}.El acreedor que busque mitigar por completo este riesgo debe disponer de una cantidad de información tal que sería inasumible. Además, como esto depende de la información que el deudor esté dispuesto a facilitar, puede verse acentuado por las asimetrías informativas que existen en dicha relación. Es natural que este fallo de mercado haya hallado una solución parcial mediante técnicas de mercado: la \textbf{calificación}. (Díficilmente la intervención regulatoria podría llegar a mitigar este riesgo). 
+
+Las agencias de calificación (de entre las que destacan Moody's, Standard \& Poort y Fitch) ofrecen ratings o señales de riesgo con el objetivo de que los acreedores fundamenten sus expectativas de impago en base a estos. Estas señales informativas han evolucionado a lo largo del tiempo hasta aquirir un lenguaje estandarizado ampliamente utilizado. No obstante los ratings son opiniones que emiten las agencias (privadas) en base a registros históricos e información facilitada por los solicitantes/clientes, los deudores.\footnote{Los ratings están tan incorporados al propio funcionamiento de los mercados financieros que los propios Bancos Centrales lo emplean en el ejercicio de su política monetaria, en especial en la política de colaterales para el ejercicio de operaciones de mercado abierto. En función del rating y el plazo del activo entregado como colateral, el BCE podrá entregar un volumen distinto de liquidez (véase la tabla de \textit{haircuts} del BCE para el ejercicio de la política monetaria).
+} Además, es un error pensar que las consecuencias de este riesgo se verán refejadas en función de si llega o no a materializarse, pues las señales de las agencias de calificación inciden en los precios de cotización directamente, por la la percepción crediticia del título: a peor calidad, mayor rentabilidad exigida.
+
+\imagenfit{Fig2.png}{Evolución del spread de crédito de los bonos BBB en Estados Unidos: 2023-2026}{\href{https://fred.stlouisfed.org/series/BAMLC0A4CBBB#}{FED. St Louis}}
+
+En este sentido, la literatura financiera ha desarrollado medidas secundarias de riesgo que se desprenden del riesgo de impago. Destaca, por ejemplo, el \textit{riesgo de transición de rating crediticio}, entendido como el riesgo de alteración en el rating aunque ello no implique un impago. O, particularmente importante, la denominada \textbf{prima de riesgo}.\footnote{En el caso de España, cuyos bonos soberanos no se consideran exentos de riesgo de crédito se habla de prima de riesgo como el diferencial entre la rentabilidad del título español y el análogo alemán, normalmente en el plazo de los 10 años.
+}  Estas primas de riesgo cambian en función de la coyuntura económica y de la evolución de la percepción del riesgo en los mercados financicieros. El spread de los bonos BBB incluye diversos riesgos pero principalmente refleja la prima exigida por el riesgo de default.
+
+\paragraph{Riesgo de liquidez: Mercados incompletos}
+Otra fuente, asociada a la ausencia de mercados (mercados incompletos), sería el riesgo de no poder materializar la venta cuando el inversor desee hacerlo, independientemente de las condiciones que en el momento tenga el mercado. Este riesgo se conoce como \textbf{riesgo de liquidez} y responde a la incapacidad de vender el título en el mercado secundario o tener que asumir pérdidas únicamente atribuibles a la presencia de pocos compradores (poder de monopsonio). 
+
+Aunque parezca baladí, no es en absoluto desdeñable. Títulos con idéntica calificación crediticia y características, pueden tener una amplitud de spread elevada únicamente por la menor liquidez de sus mercados. Es lo que se denomina: \textit{prima de liquidez}.\footnote{El concepto es menos etéreo de lo que pudiera parecer. Por ejemplo, bonos del Instituto de Crédito Oficial con idéntico plazo que otros emitidos por otras PANAPs, ofrecen una rentabilidad superior a pesar de estar avalados por la misma entidad política y, por tanto, compartir riesgo de crédito. La razón es que los bonos del ICO tienen menor liquidez que los bonos del Tesoro y cuesta más encontrar contrapartida en caso de venta.
+} En estos casos se habla de \textbf{mercado estrecho}, mercados que no son lo suficientemente líquidos. 
+
+Una buena medida de la estrechez del mercado es el diferencial (spread) entre los precios de oferta (\textit{ask price}) y los precios de demanda (\textit{bid price}); o, también, con el volumen diario de negociación en el mercado. Los títulos de deuda soberana suelen ser los más líquidos. Esto es así porque cuentan con un emisor (Estado), con un programa estable periódicamente, con títulos estandarizados, cuantioso en términos absolutos y, además, suelen ser de buena calidad crediticia. En el otro extremo tendríamos los títulos de deuda titularizada y los títulos de deuda corporativa, que suelen tener características diseñadas ad-hoc. (Normalmente, cualquier mercado poco estandarizado tendrá problemas de liquidez). 
+
+\paragraph{Riesgo de mercado: Condiciones crediticas del mercado} 
+Por último, encontramos el riesgo derivado de la variación en las condiciones básicas del mercado. 
+
+Este riesgo no es particularizable, sino que se trata de un tipo de riesgo sistémico que afecta también a los títulos libres de riesgo. ¿Por qué? Se trata de un riesgo que, en resumidas cuentas, afecta a las condiciones de crédito del mercado y, en consecuencia, todo activo nominal está sujeto a el. Por ejemplo, si el tipo de interés sube y las condiciones crediticas se restringen, el mercado exigirá (per se) mayor rentabilidad en los títulos negociados por tener otras alternativas de inversión que ofrezcan mayor rentabilidad; sin ir más lejos, aquellos de nueva emisión. Por tanto, en dicha situación el precio de cotización caerá y aumentará la rentabilidad exigida/ofrecida por estos. El riesgo asociado a las condiciones crediticias del mercado es uno de los más importantes, sino el que más. La razón es sencilla:
+\begin{la}
+    \item \textbf{Mercado nacional: efecto vertical}. Cuando analizamos un mercado concreto, en términos geográficos, el riesgo asociado a las condiciones crediticas será el único que afectará al título de referencia de ese mercado: el título de deuda soberana. De esta forma, aunque el spread del resto de títulos de deuda de ese mercado pueda mantenerse igual, la rentabilidad exigida/ofrecida en su conjunto será mayor y los precios de cotización de los títulos en circulación (de nuevo en conjunto) disminuirán; y,
+    \item \textbf{Mercado internacional: efecto horizontal}. Desde una perspectiva global, es el segundo riesgo más importante. Esto es así porque, además de ocasionar los efectos ya mencionados en el ámbito local (una subida al unísono de las rentabilidades), solo se ve superado (en impacto) por los posibles riesgos de impago de los mercados desde una óptica horizontal (mismos títulos, internacional). Pudiendo traer causa en múltiples efectos, como el contagio, las Política Monetaria llevada a cabo en un mercado concreto, etc.
+\end{la}
+
+\subsubsection{¿Podemos cuantificar el riesgo?: Algunos estimadores}
+Sabemos ahora, no solo dónde podemos observar la diferente percepción que tienen los inversores respecto a los diferentes títulos negociados (spread), sino también por qué razón existe esta diferencia. Es decir, por qué los agentes perciben de manera diferente la variedad de títulos que se observan en el mercado. Además, hemos visto cómo esto afecta al precio de cotización del bono, aumentando o disminuyendo el rendimiento exigido por los inversores y permitiendo un fenómeno un tanto particular de los mercados de deuda: la cotización con prima o descuento de los títulos. 
+
+Pensemos que significa esto: en los mercados de deuda los títulos rara vez cotizan al valor facial que ostentan (ajustado a la inflación). Es decir, en uno de los mercados (sino el único) donde de manera más clara y sencilla se podría calcular el valor fundamental de un activo/título, estos rara vez cotizan a este precio. Es verdaderamente asombroso. 
+
+Reflexiones aparte, la pregunta natural que nos surgirá llegado este punto es: ¿podemos cuantificar el riesgo? Sabemos dónde se observa y por qué emerge en primer lugar, pero ¿podemos calcular su valor para un título concreto? Esta manera de cerrar el círculo, que resulta muy natural, ha sido también ampliamente estudiada en la literatura a través de los conceptos complementarios de duración y convexidad.
+
+Ahora bien, cabe aclarar que no todos los riesgos son cuantificables en sentido estricto. Difilmente podríamos saber con exactitud cuánto riesgo asumido se deriva de la calidad creditica de nuestro deudor. Tampoco es fácil saber cuánto riesgo asumimos al adquirir un título de deuda negociado en un mercado estrecho, puesto que bien podríamos tener suerte y encontrar un comprador en el momento oportuno. Por tanto, nos centraremos en cuantificar el riesgo derivado de las condiciones crediticas del mercado, lo que también se conoce como \textbf{riesgo del tipo de interés}. Sabemos ya que es una de las fuentes de riesgo más relevantes en el mercado de renta fija; pero esque también presentala particularidad de estar indisolublemente relacionado con este mercado, como veremos más adelante: \textbf{el propio concepto de tipo de interés nominal está indisolublemente ligado al precio de los bonos soberanos en las zonas de poco o nulo riesgo crediticio}.\footnote{Otras medidas de duración (muy habituales en gestión de carteras): 
+\begin{lnum}
+    \item Duración en unidades monetarias: es el producto de la duración modificada (expresada en tanto por uno), el rendimiento y el precio del bono. e indica cuánto varía el precio del bono cuando el rendimiento varía 1 00 puntos básicos:D € = P.O · ra · DM. Si se multiplica por el número de bonos (o el nominal) en cartera, permite reflejar en unidades monetarias el impacto aproximado sobre la cartera de una variación de los tipos de interés. Es habitual dividir la duración en unidades monetarias para reflejar el denominado valor del punto básico. Es decir el impacto en el valor del bono de un movimiento del 0,01\% en el tipo exigido;
+    \item Duración parcial o ·'key duration: Mide la sensibilidad a cambios en el tipo de interés de un determinado plazo. Rompe con el supuesto implícito de que la curva de tipos se mueve de forma paralela.
+\end{lnum}
+}
+
+\paragraph{Duración: MACAULAY (1938)}
+La duración de un bono es un concepto desarrollo inicialmente por MACAULAY en 1938. Surge de una pregunta muy natural: ¿cuánto tiempo tarda realmente un inversor en recuperar el valor económico de un título? 
+
+La intuición inicial podría llevarnos a pensar que la respuesta es simplemente el vencimiento del título. Sin embargo, esto no es correcto salvo en un caso muy particular: un título de cupón cero. En la mayoría de los títulos, el inversor recibe pagos intermedios antes del vencimiento final, de modo que parte del capital comprometido se recupera gradualmente a lo largo de la vida del activo. La duración intenta precisamente medir ese \textbf{tiempo económico medio de recuperación}. Supongamos un título que promete una secuencia de flujos monetarios futuros ($CF_1,CF_2, \dots, CF_T$), y cada flujo se recibe en un instante distinto del tiempo. 
+
+Como ya sabemos, un euro recibido mañana no tiene el mismo valor que un euro recibido dentro de diez años. Por ello, no podemos promediar simplemente las fechas de pago; debemos ponderarlas por el valor económico actual de cada flujo. Esto es exactamente lo que definimos cuando presentamos el precio/valor de un título de deuda: el valor de un activo es el valor presente de sus flujos esperados descontados a la tasa de descuento ($P=\sum_{t=1}^{T} \frac{\text{Cup\'on}_t}{(1+r)^t}$, consideremos que el último cupón es igual al calor facial más, si le corresponde, un cupón adicional, por simplificar).
+
+En la ecuación, cada término representa el valor actual de un flujo futuro. La idea central de Macaulay consiste en interpretar esos valores presentes como pesos relativos dentro del precio total del bono. Analíticamente:
+
+\eqblock{
+\begin{aligned}
+    &\underset{\text{\scriptsize Cupón como peso relativo del precio}}{\text{Peso relativo}}:&&\omega_t= \frac{\frac{\text{Cup\'on}_t}{(1+y)^t}}{P}\iff\sum_{t=1}^T \omega_t=1\\[1em]
+    &\underset{\text{\scriptsize Media temporal ponderada de los momentos de cobro}}{\text{Duración de MACAULAY}:}&&D_M=\sum_{t=1}^T t\,\omega_t\quad\overset{\text{\scriptsize Sustituimos $\omega_t$}}{\Longrightarrow}\quad D_M=\frac{\sum_{t=1}^Tt\frac{\text{Cup\'on}_t}{(1+y)^t}}{\sum_{t=1}^T\frac{\text{Cup\'on}_t}{(1+y)^t}}
+\end{aligned}
+}{Desarrollo: Duración de MACAULAY (1939). }
+
+Como vemos, los pesos tienen una interpretación importante: representan la proporción del precio total del título que viene explicada por cada flujo percibido en el futuro descontado a valor presente. Es decir, constituyen una distribución de pesos en el cronograma. Desde aqui, la obtención de la duración de MACAULAY es sencillamente una media temporal ponderada de los momentos de cobro. Conceptualmente, la fórmula es simplemente una esperanza matemática. Los instantes temporales $t$ actúan como valores posibles, mientras que los pesos derivados del valor presente actúan como probabilidades normalizadas. En consecuencia, la duración puede interpretarse como el tiempo medio ponderado al que el inversor recupera el valor económico del bono.
+
+La duración de MACAULAY mide, por tanto, el plazo efectivo para recuperar el precio pagado por el título. De esta forma, podemos saber que, manteniendo todos los factores constantes, la duración de un bono será mayor:
+\begin{lnum}
+    \item \textbf{Vencimiento}. Cuanto mayor sea su vencimiento;
+    \item \textbf{Cupón}. Cuanto menor sea su cupón, pues mayor es el peso relativo del flujo de caja obtenido a vencimiento; y,
+    \item \textbf{Tasa de descuento}. Cuanto menor sea su tasa de descuento, pues el valor presente de todos los flujos de caja aumenta, pero el de los flujos lejanos aumenta más en términos relativos, porque al estar más lejos, se ven más influidos por la tasa de descuento. 
+\end{lnum}
+
+Y esto último nos puede resultar particularmente interesante. Si sabemos que la tasa de descuento incide directamente en el tiempo promedio que tardamos en recuperar el capital comprometido, ¿no es esta una buena medida para calcular nuestra exposición a las condiciones crediticias del mercado? Precisamente MACAULAY introdujo esta medida para resolver un problema de inmunización financiera: construir carteras de bonos cuya sensibilidad temporal coincidiera con la estructura temporal de las obligaciones futuras. 
+
+Si recordamos que la tasa de descuento, tipos de interés y rendimiento son conceptos análogos en la condición de equilibrio de mercado: cuando disminuyen los tipos, se felexibilizan las condiciones crediticas del mercado, la duración de los títulos en posesión incrementará, porque los flujos más lejanos tendrán una contribución relativamente superior en terminos de valor presente. Dicho de otro modo, las condiciones crediticias del mercado afectan a la duración de un título porque los flujos más lejanos son más sensibles al descuento financiero. Por ello, un título con duración elevada es más sensible a variaciones de tipos de interés. En términos económicos, \textbf{cuanto más tarde recupera el inversor el capital comprometido, mayor es la exposición al riesgo de las condiciones crediticas del mercado} (riesgo de reinversión y al riesgo de valoración).
+
+Ahora bien, esta aproximación no es completamente perfecta, porque lo que nos proporcionará será una medida de mayor/menor exposición temporal y no una cuantía absoluta de la sensibilidad del título a las condiciones crediticias del mercado. 
+
+\paragraph{Duración: HICKS (1939)}
+Por eso, tan solo un año más tarde HICKS (1939) presentó una versión modificada del concepto de duración que proporcionara directamente una medida de la sensibilidad a los tipos de interés. ¿Cómo? Multiplicando la duración de MACAULAY por el cociente del rendimiento del título:
+
+\eqblock{
+\begin{aligned}
+    &\underset{\text{\scriptsize Media temporal ponderada de los momentos de cobro}}{\text{Duración modificada}:}&&D_H=\frac{1}{1+r}\frac{\sum_{t=1}^Tt\frac{\text{Cup\'on}_t}{(1+y)^t}}{\sum_{t=1}^T\frac{\text{Cup\'on}_t}{(1+y)^t}}\quad\sim\quad D_H=\frac{D_M}{(1+y)}
+\end{aligned}
+}{Desarrollo: Duración de HICKS (1939).}
+
+Con esta simple moficiación, la duración de HICKS, a diferencia de la duración de MACAULAY, proporciona una medida de sensibilidad, fácilmente expresada en porcentaje, que nos indica la variación que se produce en el precio de mercado de un activo financiero por cada punto de variación en los tipos de interés. Muy similar a las propiedades de MACAULAY, la duración de HICKS:
+\begin{lnum}
+    \item A igual vencimiento y tipos de interés, la duración disminuye cuanto mayor sea el pago del cupón;
+    \item La duración es un buen medidor de la sensibilidad del bono a variaciones de tipos de interés, no obstante, la precisión de la duración como indicador de sensibilidad a los tipos de interés disminuye cuanto más nos alejamos de los tipos actuales. La Duración Modificada será mayor cuanto menor sea la rentabilidad exigida, y cuanto menor sea el cupón. 
+\end{lnum}
+
+Como podemos intuir, se trata de una herramienta fundamental para la gestión del riesgo de carteras de renta fija y la inmunización de carteras que busca igualar la duración de activos y pasivos para neutralizar en la medida de lo posible el riesgo de tipo de interés.\footnote{Ejemplo: un bono con vencimiento a 10 años y una duración modificada de 6,8; refleja que un movimiento de I p.p. al alza o la baja en el rendimiento exigido supone de manera aproximada un cambio del 6,8\% en el precio del bono. 
+} 
+
+\paragraph{Convexidad: ¿Cómo se relaciona el par rentabilidad-precio?}
+¿Podemos comprobar la veracidad de dichas estimaciones? Parece extraño hacerse esta pregunta, puesto que, como sabemos, cuando los tipos suben, los precios de los bonos generalmente bajan, y viceversa. 
+
+Por tanto parece obvio que estas medidas de cuantificación del riesgo crediticio son ciertas. Y así lo son, pero únicamente en determinadas circunstancias. La razón es que estas medidas reaccionan linealmente en ambos sentidos. Es decir, cuando los tipos suben, los precios bajan (y viceversa), pero siempre en la misma proporción. Por lo que, reformulando la pregunta, no sería extraño querer corroborar si esta reacción es lineal o no. 
+
+Para comprobarlo, partimos de la ecuación de cambio que proporciona la Duración de HICKS:
+
+\eqblock{
+\begin{aligned}
+    &\text{Primer orden}:&&\frac{\mathrm dP}{\mathrm dy}=-\underset{\equiv D_M}{\sum_{t=1}^Tt\frac{\text{Cup\'on}_t}{(1+y)^{t+1}}}\quad\overset{\cdot \frac{1}{P}}{\Longrightarrow}\quad -\frac{1}{P}\frac{\mathrm dP}{\mathrm dy}=D_H\\[1em]
+    &&&\Longrightarrow\text{Local}:\boxed{\frac{\mathrm dP}{P} \approx - D_{H}\,\mathrm dy}.
+\end{aligned}
+}{}
+
+Si esto fuese así, la segunda derivada de dicha recta sería cero ya que la pendiente permanecería igual a lo largo de toda la función y, en consecuencia, la derivada de dicha pendiente sería igual a cero. Para comprobarlo, simplemente debemos realizar los cálculos:
+
+\eqblock{
+\begin{aligned}
+    &\text{Segundo orden}:&&\frac{\mathrm d^2P}{\mathrm d^2y}=\sum_{t=1}^Tt(t+1)\frac{\text{Cup\'on}_t}{(1+y)^{(t+2)}}\quad\overset{\cdot \frac{1}{P}}{\Longrightarrow}\quad \mathcal C=\frac{1}{P}\frac{\mathrm d^2P}{\mathrm d^2y}\neq 0\\[1em]
+    &&&\Longrightarrow\text{Global}:\underset{\text{\scriptsize por aproximación de TAYLOR}}{\boxed{\frac{\Delta P}{P} \approx - D_{H}\,\Delta y+\frac{1}{2}\mathcal C(\Delta y)^2}}.
+\end{aligned}
+}{}
+
+Como vemos, la aproximación de primer orden solo es local, puesto que la segunda derivada de la relación que nos interesa no es cero. En consecuencia, aparece una curvatura que debemos incorporar cuando queremos ajustar adecuadamente los cambios en precios ante grandes variaciones en los tipos. Este indicador se conoce como \textbf{convexidad}: muestra la variación de la pendiente de la duración ante cambios (grandes) en la rentabilidad y/o el precio.
+
+\textbf{INTRODUCIR GRAFICO}
+
+Presenta algunas propiedades características. Principalmente, la convexidad de un título será mayor:
+\begin{la}
+    \item \textbf{Dispersión de los flujos}. Cuanto mayor sea la dispersión de los flujos, mayor será la convexidad. Por eso cuanto más grandes sean los cupones, menor convexidad. Los bonos cupones cero presentan una mayor convexidad. Los flujos de caja a largo plazo soportan progresivamente una mayor cantidad de convexidad;
+    \item \textbf{Vencimiento}. Cuanto mayor sea el vencimiento, mayor será la duración de MACAULAY y mayor la convexidad; y,
+    \item \textbf{Rendimiento}. Cuanto menor sea el rendimiento mayor será la convexidad, ya que los flujos de caja más lejanos tienen más impacto, incrementando la dispersión en valor presente.
+\end{la}
+
+En definitiva, la convexidad es una medida que complementa la duración en el análisis de bonos y otros instrumentos de renta fija. Mientras que la duración estima la sensibilidad del precio de un bono ante pequeños cambios en los tipos de interés, la convexidad ajusta esta estimación para tener en cuenta que la relación entre el precio del bono y los tipos de interés no es lineal. Es decir, ante grandes cambios la duración sobreestima (subestima) la sensibilidad del precio ante condiciones de restricción (expansión) creditica, por lo que debe ser ajustada y complementada con la convexidad. Esta puede ser:
+\begin{la}
+    \item \textbf{Convexidad positiva}. Indica que a medida que los tipos de interés bajan, el precio del bono aumenta a un ritmo creciente, y cuando los tipos suben, el precio del bono disminuye a un ritmo decreciente. Esto es generalmente favorable para el inversor, ya que significa que la ganancia en precio por una caída en los tipos de interés es mayor que la pérdida por una subida equivalente;
+    \item \textbf{Convexidad negativa}. En algunos bonos, como los que incluyen opciones de venta o reembolso anticipado, la convexidad puede ser negativa, lo que implica que el precio del bono aumenta a un ritmo decreciente cuando los tipos de interés bajan y disminuye a un ritmo creciente cuando los tipos de interés suben.
+\end{la}
+
+\imagenfit{Fig7.png}{Representación gráfica: Convexidad positiva/negativa}{}
+
+La convexidad aborda la limitación de la duración al ajustar la medida para reflejar la naturaleza no lineal de la relación entre el precio del bono y los tipos de interés; y es útil para evaluar cómo cambia la duración misma cuando los tipos de interés fluctúan, proporcionando una medida más precisa de la sensibilidad del precio frente a cambios grandes en los tipos de interés.
+
+
+
+\subsection{Carteras de renta fija: Gestión y valoración}
+Las carteras de renta fija engloban un universo inversor muy amplio pero los mandatos de inversión pueden clasificarse en dos tipos principales: 
+
+1 ) Gestión de pasivos o de balance (ALM o Asset-Liability Management) 2) Total Return - obtención de rentabilidad (cupones y capital) a través de estrategias activas o pasivas 
+
+ALM: Los mandatos basados en la gestión de pasivos tienen en cuenta las obligaciones futuras del inversor y suponen el grueso de la base inversora en renta fija. Es el enfoque utilizado por aseguradoras de vida, bancos o fondos de pensiones de prestación definida. El objetivo de esta gestión de carteras es garantizar que los activos permitan cubrir un pasivo o una corriente de pasivos con el menor riesgo posible. Por ello, el concepto principal que guía esta gestión es la inmunización de la cartera El enfoque principal para la inmunización de la cartera se basa en la duración de los activos y pasivos. Idealmente, la cartera de pasivos y la cartera de activos (la cartera de bonos) deberían verse afectadas de manera similar por una variación de los tipos de interés. Es decir, se busca igualar la duración de ambos flujos y por lo tanto la sensibilidad a los tipos de interés. La inmunización de la duración requiere un proceso continuo de reajuste de las carteras. Para ello los gestores de renta fija, además de la rotación entre bonos con diferentes características, suelen recurrir al uso de derivados financieros. En el ámbito de la renta fija se utilizan principalmente dos: los futuros sobre bonos y los swaps de tipos interés. Los futuros se cotizan en base a un bono nocional con un cupón ficticio. Su principal función es ofrecer un producto estándar cuyo precio responda a los cambios en los tipos de interés. En la zona euro, el Schatz (futuro sobre bono alemán a 2 años), Bobl (5 años) y Bund ( 1 O años), ofrecen una gama de futuros a distintos plazos para poder ajustar la duración de las carteras mediante posiciones largas o cortas en los mismos. Los swaps de tipos también permiten ajustar esta duración con esquemas estándar o más a la medida del inversor (a un mayor coste en este caso). En general un swap tiene duración negativa para quien paga la pata fija (una bajada de tipos de interés supone una pérdida de valor), pero duración positiva para la contrapartida que la recibe. Total Return - Rentabilidad total Los mandatos de rentabilidad total buscan obtener la mayor rentabilidad ajustada al riesgo y se articulan a través de dos estrategias principales: activas y pasivas. Ambos tipos de estrategias utilizan de benchmark o referencia algún índice de renta fija como el Bloomberg Barclays Global Aggregate Bond lndex. La construcción de estos índices de renta fija es un proceso complejo, particularmente frente a los índices de renta variable. Los bonos no cotizan en mercados tan líquidos y transparentes como las acciones y las referencias van cambiando constantemente (por vencimientos y nuevas emisiones). Las estrategias pasivas buscan replicar el comportamiento exacto de un índice de renta fija. Se trata por lo tanto de una indexación pura, que intenta replicar un indice de bonos lo más fielmente posible. A veces se denomina "réplica completa". El objetivo es obtener una rentabilidad y asumir un riesgo iguales al índice. minimizando el "tracking error" (diferencias entre la cartera real y el índice). En la práctica, la rentabilidad de la cartera casi siempre será inferior a la rentabilidad del índice correspondiente debido a los costes de negociación y a las comisiones de gestión. Frente a la renta variable, es habitual una mayor diferencia con respecto al índice en el caso de las estrategias pasivas de renta fija. La complejidad en la construcción de los índices también se traduce en una mayor dificultad para la construcción y rotación de carteras indexadas. Entre las estrategias pasivas y activas, podemos encontrar el enfoque de "indexación mejorada", que mantiene un estrecho vínculo con el ú1dice de referencia, pero busca generar un rendimiento superior al del índice de referencia. La indexación mejorada permite pequeños cambios con respecto al índice de referencia, pero siguiendo muy de cerca la exposición a los principales factores de riesgo del mismo (en particular, la duración). Por último, la gestión activa pretende aprovechar las oportunidades potenciales en entornos de mercado cambiantes. Esto se puede traducir en distintas exposiciones sectoriales, geográficas o al riesgo de tipo de interés en distintos plazos de la curva. Los índices solo ejercen de referencia para poder comparar el riesgo y la rentabilidad.
+
+Conclusión
+La construcción y gestión de carteras de renta fija depende en última instancia de los objetivos del inversor y de su tolerancia al riesgo. A la hora de comparar entre índices y carteras, se deben utilizar todos los parámetros estudiados con anterioridad: Características básicas rentab il idad/riesgo: vencimiento medio/ duración modificada/ YTM media/ convexidad Calificación crediticia:\% de la cartera por ratings Vencimientos: \% de la cartera por cada rango temporal de vencimientos (0-3 años/ 3- 5 años / 5-1 O años / + 1 O años) Expos ición geográfica, por país o por divisa
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Visión de conjunto: Estructura Temporal de los Tipos de Interés?}
+\puntosclave{
+    La estructura temporal de los tipos de interés (ETTI) ejerce de referencia para el sistema financiero y es un elemento básico para la valorac ión de instrumentos financ ieros. 
+    
+    No es estát ica, reacciona a las condiciones macroeconómicas, financieras y a la orientación de la política monetaria. A lo largo del tiempo predominan las curvas de t ipos con pendiente ascendente (tipos de largo plazo super iores a los de corto). 
+    
+    Se han han formulado d iversas teorías para explicar la forma de la ETTI (expectativas puras, háb itat preferido, segmentación del mercado). Ninguna de ellas t iene capac idad por sí misma para explicar la evidencia empírica pero describen fuerzas del mercado que actuánde manera simúltanea.
+}
+
+Con lo presentado hasta el momento, podemos decir que conocemos las bases jurídicas y económicas de los mercados de renta fija. Conocemos su objeto, su valoración, las fluctucaciones que experimenta y la razón de estas. Por tanto, conocemos bien los títulos que se negocian en el mercado de deuda. Esto, indudablemente, nos es de gran utilidad en la praxis diaria de la Política Económica puesto que, entre otras cosas, una parte sustancial de los Presupuestos de la mayoría de los Estados similares al nuestro se financian mediante la emisión de deuda.\footnote{Curiosamente, otros lo hacen no por necesidad sino por presencia. Véase el caso de Noruega.
+}
+
+Sin embargo, hay algo que parece escaparse. Mucho se habla, y se ha comentado suscitamente en esta exposición, de la relación casi natural que existe entre el mercado de deuda (renta fija), en especial los rendimientos de determinados activos, y los tipos de interés de la economía. De hecho, es una relación tan abrumadoramente conocida que casi ni se especifica de lo que se habla ni se entra al análisis en detalle de lo que uno está verdaderamente diciendo. (Con toda la ceguera intelectual que eso trae consigo, desgraciadamente).
+
+Para intentar arrojar algo de luz sobre lo que significa esto, sobre la relación \textbf{divina} que parecen mostrar el rendimiento de títulos de renta fija y los tipos de interés de la economía, debemos interiorizar todo lo expuesto hasta ahora a título particular (cada título que se negociaría) y abstraernos para ver la visión en conjunto del mercado de deuda. 
+
+\textbf{¿Qué queremos decir?} Haciendo esto, y no con poca confusión, podremos hablar de lo que se conoce como la estructura temporal de los tipos de interés, que pretende analizar la relación existente entre los tipos de interés y el tiempo. Presentaremos ahora brevemente qué es esto, cómo se alcanza y qué implicaciones tiene. Aunque....
+
+
+Por ejemplo, puede verse la influencia de la política monetaria y de la evolución macroeconómica. En 2022 la curva se encuentra invertida tras las subidas de tipos de interés llevadas a cabo por la Reserva Federal para combatir la inflación. Estas subidas afectan con fuerza a las rentabilidades exigidas en el corto plazo pero en menor medida a las de largo plazo. Influyen factores como la credibilidad del banco central en el control de la inflación (descontando una bajada de tipos cuando esto se produzca) y otros aspectos macroeconómicos fundamentales ligados a la evolución de la economía a largo plazo. En ese sentido, los tipos de largo plazo son más cercanos a tipos de equilibrio, menos sensibles a la orientación de la política monetaria.
+
+\imagenfit{Fig5.png}{ETTI en Estados Unidos: Comparación Guerra en Irán}{\href{https://www.ustreasuryyieldcurve.com}{US Treasuries Yield Curve} (web)}
+
+\imagenfit{Fig6.png}{ETTI en Estados Unidos: COVID-19}{\href{https://www.ustreasuryyieldcurve.com}{US Treasuries Yield Curve} (web)}
+
+
+\subsection{Tipo de Interés: ¿Qué es?}
+Para empezar, hablar sobre la Estructura Temporal de los Tipos de Interés exige aceptar una definición concreta de tipos de interés en una economía. Entendemos por tipo de interés la compensación por el paso del tiempo o el coste de oportunidad de consumir mañana en lugar de hoy. En otras palabras: \textbf{el valor intertemporal del dinero}. Y, en consecuencia, nuestro tipo de interés de referencia será el menor coste de oportunidad o tipo de interés observado en el mercado para un marco temporal objetivo, puesto que, al estar siendo negociado, asumiremos que los agentes toman este como referencia y buscan en otros la posibilidad de obtener un mayor rendimiento a expensas de un mayor riesgo.
+
+Una vez tenemos nuestro tipo de interés de referencia (que, como habremos intuido, son los títulos de deuda pública), debemos formar la curva temporal de estos costes de oportunidad. 
+
+La razón es simple, hasta ahora hemos supuesto, por simplicidad, que un mismo tipo de interés constante se utiliza para descontar flujos de caja de cualquier periodo de vencimiento. Es decir, que la curva de tipos era plana y común para todos los títulos negociados (ajustando por riesgo, etc.). Sin embargo, en el mundo real esto rara vez ocurre. Periodos de vencimiento diferentes suelen ofrecer rendimientos diferentes que no pueden explicarse por factores de riesgo.
+
+De esta forma, existe una percepción generalizada de que los agentes valoran diferentes marcos temporales de diferente forma. Identificar los factores que explican dicha estructura permite construir la estructura temporal de los tipos de interés y determinar qué información puede extraerse de ella (term structure of interest rates), es decir, la estructura de tasas de interés utilizada para descontar flujos de caja con diferentes horizontes temporales.
+
+\subsubsection{Curva de Tipos: ¿Cómo se construye?}
+Cómo podemos entonces empezar a construir esta curva. Evidenmente, lo ideal sería disponer de títulos cupón cero para todos los plazos posibles. Así se podría directamente construir una relación temporal directa para cada par rentabilidad-vencimiento. 
+
+No obstante, en el mundo real, sólo los productos monetarios presentan estas características, el resto ofrecen un cupón regular que, a priori, podríamos decir que relaja dicha rentabilidad exigida. Por ello, la construcción de la curva de tipos de interés obliga a deducir el tipo de interés para cada periodo a partir de las características de los títulos negociados
+
+\paragraph{Bootstrapping}
+Una de las formas que permite ajustar los rendimientos por cupón para los periodos de vencimientomás largos es la técnica de \textbf{bootstrapping}. Basada en el principio de no arbitraje entre activos, nos permite limpiar la incidencia de dichos cupones y extraer la rentabilidad que el mercado debería exigir a cambio de comprometer los mismos recursos en ausencia de estos flujos intermedios por un número determinado de periodos. Simplificando al máximo, si queremos limpiar un título de deuda soberana con cupon anual y vencimiento a dos años: 
+
+\eqblock{
+\begin{aligned}
+    P=\frac{\text{Cup\'on}_1}{(1+i_{01})}+\frac{\text{Cup\'on}_2}{(1+i_{02})^2}
+\end{aligned}
+}{}
+
+Si nos fíjamos, la única incógnita de la ecuación es $i_{02}$. ¿Por qué? Porque los cupones y el valor nominal son conocidos; y, además, también lo son el precio de cotización y el tipo de interés a un año (ya que hay títulos cupón cero para este periodo). De esta forma, despejando y resolviendo obtendríamos el valor de $i_{01}$, que llamaremos \textbf{tipo spot de la curva a dos años}. Podemos entonces operar iterando con diferentes títulos a mayor vencimiento y alcanzaremos, construyendo progresivamente dicha curva, el último periodo de vencimiento presente en el mercado.
+
+Es decir, mediante bootstrapping obtenenemos, sencilla pero tediosamente, toda la información no observable a partir de la información observable en el mercado. Esta curva spot (la ETTI) tiene una importante función como benchmark e instrumento de valoración de otros activos financieros.
+
+\paragraph{Forma: Preferencia por el presente}
+Lo más normal es que, al construir esta curva spot, nos demos cuenta que la Etructura Temporal de los Tipos de Interés viene sesgada hacia el presente y presenta una forma sustancialmente diferente a la que asumimos en los apartados anterior. No resulta extraño, pues los acreedores tienden a preferir la liquidez de su capital y no hay nada más líquido que el efectivo. Por tanto, para invertir en títulos de mayor vencimiento tenderán a exigir mayor rentabilida.
+
+\textbf{INTRODUCIR GRÁFICO}
+
+Ahora bien, esta no es la única situación que podemos encontrar al calcularla. De hecho, la ETTI no tiene porque ser si quiera creciente. Sin entrar a valorar las diferentes formas que puede presentar, todo lo que se ha explicado no se ha validado. Y esto es peligroso. ¿Por qué no es plana (ajustada por el riesgo)? ¿Por qué \textit{suele} ser creciente? ¿Por qué puede se \textbf{negativa}?
+
+Estas preguntas, como muchasotras, no solo son válidas sino que son cruciales puesto que es información que debemos extraer si queremos, de alguna forma, influir y guiar la economía hacia sus \textit{mejores situaciones} (de encontrarlas).
+
+\subsection{ETTI: ¿Por qué? ¿Cómo podemos explicar cada situación?}
+Por esta razón la literatura se ha empeñado en proporcionar diferentes teorías explicativas que permitan entender la información proporcionada por la Estructura Temporal de los Tipos de Interés. (Aunque, avanzamos, no muy concluyente).
+
+En general, cualquier cuerpo teórico que intente explicar la ETTI tiene que tener en cuenta los siguientes hechos empíricos:
+\begin{lnum}
+    \item La curva de rentabilidad suele ser creciente. Cuanto mayor es el vencimiento del instrumento de renta fija, mayor es el tipo de interés;
+    \item Los tipos de interés a corto y largo plazo suelen desplazarse en el mismo sentido. Es decir, están correlacionados positivamente;
+    \item La probabilidad de encontrarse con una curva de rentabilidad no creciente aumenta con tipos de interés a corto plazo relativamente altos, y viceversa.
+\end{lnum}
+
+Nótese que los anteriores hechos empíricos son una regularidad estadística, no una verdad absoluta. En efecto, a lo largo de la historia y en no pocos países, algunos de estos hechos empíricos no se han cumplido. La curva de tipos de interés ha tenido en ocasiones pendiente negativa o bien porque el soberano sobre la que se construye tiene un mayor riesgo de default a corto que a largo o bien porque se ha instaurado un programa creíble de desinflación en la economía que presiona a la baja los tipos de interés nominales a largo plazo (tal fue el caso en los años anteriores a la entrada de España dentro de la zona euro). 
+
+Existen tres principales teorías que intentan dar sentido a la información que proporciona la ETTI.
+
+\subsubsection{Teoría del hábitat preferido} 
+La primera, y fundamental pues constituye la base de las otras dos, es la Teoría del hábitat preferido. Esta sugiere que, en el mercado de deuda pública, los agentes tienen distintas preferencias sobre las características de cada títulos. Por un lado, los acreedores preferirán títulos a corto plazo; por otro lado, los deudores preferirán los títulos a mayor plazo. (Las razones son obvias).
+
+El mercado casará por la compatibilidad de preferencias entre deudores y acreedores: el mayor rendimiento ofrecido por los títulos a largo plazo atraerá acreedores en busca de una mayor rentabilidad; mientras que los tipos de interés relativamente bajos de los bonos a corto plazo hará que los deudores consideren esta opción. Rápidamente, suponiendo un horizonte de $n$ periodos, el tipo de interés exigido para cada periodo sería el producto del tipo de interés actual (a un periodo de vencimiento) y las expectativas que los agentes tienen sobre los rendimientos en los periodos sucesivos (para cada uno, vencimiento a siguiente periodo), más una prima de liquidez exigida común para los $n$ periodos. Analíticamente:
+
+\eqblock{
+\begin{aligned}
+    (1+i_{nt})^n=(1+i_{11})\prod_{t=2}^n(1+\mathbb E_1[i_{1t}])+I_{n1}
+\end{aligned}
+}{}
+
+Aunque parece que no, la teoría del hábitat preferido permite explicar cualquier estructura de tipos de interés. Sin embargo, es especialmente adecuada para explicar curvas con pendiente positiva, donde ésta se puede explicar convenientemente como resultado de la prima de liquidez.
+
+\subsubsection{Teoría de las Expectativas puras}
+Una variante alternativa es la Teoría de las Expectativas puras. Sostiene que los tipos de interés a largo plazo son una función de los tipos de interés esperados a corto plazo. Es decir, que el tipo de interés a largo plazo se construye mediante composición de los tipo a corto plazo mediante una previsión forward looking. Rápidamente, si suponemos un escenario de $n$ periodos:
+
+
+\eqblock{
+\begin{aligned}
+    (1+i_{n1})^n=(1+i_{11})\prod_{t=2}^n(1+\mathbb E_1[i_{1t}])
+\end{aligned}
+}
+
+Como vemos, es una expresión análoga a la propuesta por la Teoría del hábitat preferido pero parte del supuesto de que los títulos a diferente vencimiento son perfectamente substituibles, por tanto los inversores no exigen ninguna prima de liquidez. Por tanto, se ajusta mejor a formas \textit{extrañas} de la curva de tipos pues será creciente cuando cuando haya expectativas de tipos de interés a corto plazo crecientes, y tendrá otra forma cuando no. 
+
+Esta resulta especialmente útil porque permite deducir las expectativas a futuro de los agentes sobre diferentes factores (en especial la inflación). De esta forma, si asumimos válida la ecuación de FISHER y establecemos una serie de supuestos sobre el tipo de interés real, podemos evaluar la credibilidad de la Política Monetaria: la ETTI se puede utilizar como proxy de las expectativas de inflación de la economía a partir de la ecuación de FISHER.
+
+
+\subsubsection{Teoría de las segmetación de mercado}
+Por último, tenemos la Teoría de la segmentación de mercado. Parte de la premisa de que los mercados de deuda están segmentados por periodos de vencimientos, bien sea por por causas legales y/o económicas. Por ejemplo, los fondos del mercado de dinero invierten solo a corto plazo. 
+
+Bajo esta premisa, existen costes de transacción que impiden tanto a acreedores como a deudores alternar entre periodos vencimiento y, en consecuencia, cada mercado es completamente independiente. Con esto, la EETTI reflejará los distintos puntos de equilibrio de cada mercado y su forma dependerá de las preferencias en cada uno de los mercados, no interrelacionados. Por tanto, evidentemente, y al margen de la credibilidad de sus supuestos, permite explicar cualquier forma posible para la curva de tipos de interés.
+
+
+\subsection{Implicaciones de Política Económica: Haciendo que los supuestos se cumplan}
+ ha pensado que existe algún tipo de relación entre la forma de la ETTI y el comportamiento futuro de la actividad económica de tal manera que dicha forma sirva para predecir esta última. 
+
+Una curva invertida suele ser entendida como un anticipo de una recesión económica. Las teorías antes presentadas nos pueden dar argumentos teóricos. La teoría de las expectativas diría que se espera que en el futuro los tipos de interés a corto sean menores, lo que podría estar causado porque se espera que vaya a haber una política monetaria expansiva que baje tipos ante una contracción de la actividad real. 
+
+Esta capacidad predictiva de la ETTI ha sido extensamente estudiada por la literatura económica. Así, según un informe del BDE publicado en el año 2018, su capacidad de predicción es elevada: usando el diferencial entre el tipo a 2 años y a 10 años el documento destaca que desde 1960 Estados Unidos ha entrado en recesión 8 veces, y en todas ellas se había producido previamente una inversión de la curva de tipos. Solo en 1966 se produjo una inversión sin que se llegase a recesión económica. 
+
+Por su parte, el FMI publicó en agosto de 2019 un relevante artículo en el que explicaba las implicaciones que esta inversión de curva tenía en sus modelos de estimación del crecimiento futuro. Los autores destacaban que cuando se incorporaba la inversión de ETTI, las probabilidades de crecimiento cambiaban de manera drástica, reduciéndose la media e incrementando las probabilidades de la cola izquierda de la distribución, es decir, de las menores tasas de crecimiento. 
+
+No obstante, esta herramienta no es infalible. Tal y como apuntan Bujales y Algaba la inversión de la curva de tipos en Estados Unidos parece predecir de forma correcta las recesiones económicas, pero si nos centramos en otras economías desarrolladas la fiabilidad cae de manera estrepitosa, de forma que más de la mitad de las recesiones en su muestra no iban precedidas de una inversión en la curva de tipos.
+¿Significa esto que la ETTI carezca de capacidad predictiva? En absoluto. Los autores destacan este hecho para recalcar que aunque la ETTI no predecía recesiones, sí que lograba predecir cambios en el ritmo de crecimiento, de manera que en la práctica totalidad de los países analizados cuando la ETTI se aplanaba el crecimiento económico se desaceleraba, y cuando la ETTI adquiría mayor pendiente el crecimiento se incrementaba
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+\clearpage
+\anexo{Mercados Financieros Internacionales de Renta Fija: Desarrollo histórico}\label{anx:historia_rentafija}
+
+
+$$\text{\textbf{1.- Mercados segmentados}}$$
+Durante esta etapa podían distinguirse con nitidez tres segmentos distintos en los mercados de renta fija: el mercado doméstico o local, el segmento extranjero de los mercados nacionales y el denominado Euromercado. Sus características fundamentales pueden resumirse en el siguiente cuadro:
+
+\begin{center}
+\begin{tabular}{|p{0.16\linewidth}|p{0.16\linewidth}|p{0.16\linewidth}|p{0.16\linewidth}|p{0.16\linewidth}|p{0.16\linewidth}|}
+\hline
+\multicolumn{2}{c|}{\textbf{Segmento}} & \textbf{Moneda de denominación} & \textbf{Emisores} & \textbf{Inversores principales} & \textbf{Legislación aplicable}  \\
+\hline
+ \multicolumn{2}{c|}{\textbf{Domésticos}} & Moneda & Nacionales & Nacionales & Nacional \\
+\hline
+\multirow{2}{*}{\textbf{Internacionales}} & Segmento extranjero de mercado nacional & Moneda & Extranjeros (incluidos supranacionales) & Nacionales & Nacional \\
+\cline{2-6}
+    & Euromercado & Cualquiera (salvo en caso de oposición de su BC) & Internacionales & Internacionales & Dispositiva (normalmente, UK) \\
+\hline
+\end{tabular}
+\end{center}
+
+Mercados domésticos En el mercado nacional, las emisiones eran realizadas por emisores nacionales en divisa local. Todo ello, sin perjuicio de que, junto a los inversores nacionales, también hubiera inversión extranjera en valores nacionales. Segmento extranjero de mercados nacionales La presencia en la mayoría de los países de controles de cambio y restricciones a los movimientos de capital heredados del período bélico y, en especial, el temor a que las emisiones de bonos por emisores extranjeros entrañaran grandes salidas de capital que desequilibraran la balanza de pagos del país de emisión y debilitaran el tipo de cambio de su divisa, hizo que durante muchos años sólo dos países aceptaran emisiones de bonos por emisores extranjeros: Suiza y Estados Unidos. Con el paso del tiempo, no obstante, otros países fueron autorizando, con limitaciones, la emisión de bonos por emisores extranjeros, especialmente organismos financieros internacionales, como el Banco Mundial. Las emisiones quedaban sujetas a las mismas obligaciones (p.ej. registro de folleto ante las autoridades bursátiles locales) que las emisiones domésticas. Estos segmentos extranjeros de los mercados nacionales eran conocidos -y algunos todavía siguen siéndolo- con nombres de símbolos nacionales del país en cuestión: • Yankee bonds: emitidos en Estados Unidos.
+
+Bonos bu/ldog: emitidos en el mercado local británico. • Bonos samurai: emitidos en el mercado japonés. Otros muchos países europeos (Alemania, Francia, Holanda ... ) procedieron también a la apertura de sus mercados nacionales a emisores supra-nacionales y extranjeros. De igual forma, en España a finales de los 80 se abrió el mercado de emisiones en pesetas a emisores supra-nacionales, mercado que se dio en llamar "mercado matador".\footnote{En puridad. el mercado ·'malador" fue un mercado de ·'eurobonos" en peselas. porque las emisiones no eran ·obje10 de regis1ro en la Comisión Nacional del Mercado de Valores (CNMV).
+} 
+
+Euromercado: origen y evolución Las expresiones "euromercado" y mercado del "eurodólar" surgieron históricamente para describir la actividad bancaria de intermediación financiera en dólares llevadas a cabo por bancos establecidos en Europa (fundamentalmente en Londres), incluidas las sucursales y filiales de bancos americanos. El desarrollo del mercado del "eurodólar" fue posible por la actitud tolerante de las autoridades americanas, que aceptaron el principio jurídico de la territorialidad de la legislación financiera americana y del uso del dólar fuera de Estados Unidos y no adoptaron medidas de persuasión moral o restrictivas contra los bancos activos en dicho mercado.\footnote{Las autoridades alemanas y suizas. por el conlrario, siempre fueron hos1ilcs a que se desarrollara un mercado ac1ivo en marcos alemanes y francos suizos con base en Londres, ajeno a sus direclrices. Los bancos internacionales. 1emcrosos de encmis1arse con el Bundcsbank y el Banco Nacional Suizo, se abstuvieron de crear un mercado ac1ivo en "euromarcos'' o "curofrancos suizos"
+}\textsuperscript{,}\footnote{A principios de los arlos 80 la legislación americana creo la figura de las ln1erna1ional Banking Facilities. para evitar un desplazamiento de ac1ividad finandcra hacia Londres, lo que exigió aplicar ,1 las entidades reglas más benignas en materia de coeficiente de caja, nivel de recursos propios. límites a los lipos de interés y régimen impositivo. No obstante, para que la aclividad del mercado nacional norteamericar10 no emigrase hacia ellas se impusieron algunas reslriccioncs, cnlre ellas, que no pudieran operar con residen1es y empresas americanas.
+}
+
+Mercado de depósitos bancarios en los años 50  
+La actividad inicial del euromercado surgió en los años 50 -en tiempos de la "guerra fría"- y se centró en los depósitos bancarios. El auge de los eurodepósitos se debió, entre otros, a los siguientes factores: • Algunas ins��ituciones soviéticas y de Países del Este comenzaron a abrir depósitos en dólares en oficinas y sucursales bancarias establecidas en París y Londres para evitar el riesgo de que sus depósitos en dólares en Estados Unidos fuesen confiscados por las autoridades americanas. Para enmascarar estos depósitos, dichas entidades comenzaron a realizar depósitos a corto plazo en otros bancos europeos, y estos en otros y así • sucesivamente. Por otro lado, la debilidad de la balanza de pagos británica y las sucesivas crisis de la libra esterlina llevaron a las autoridades británicas a restringir el uso internacional de la libra, lo que hizo que los bancos establecidos en Londres desarrollaran sus actividades en • d,ólares, una moneda no sujeta a tales limitaciones. La exigua regulación del mercado del eurodólar permitió a las entidades bancarias ofrecer a sus depositantes condiciones financieras más atractivas, en la medida en que los depósitos no estaban sujetos a medidas regulatorias tales como los coeficientes de caja ola Regulation Q, que l im itaba en Estados Un idos el n ivel máx imo de los tipos de interés de los depós itos bancar ios. Mercado de préstamos sindicados La ex istenc ia de esa crec iente base de depósitos perm it ió que se af ianzara en Londres un pujante mercado internac ional de préstamos en dólares, a tipo de interés var iable. Para aumentar la cuantía potencial de los préstamos y, sin embargo, l im itar el riesgo soportado por cada banco partic ipante, el mercado ut ilizó la técn ica de los "préstamos sindicados". En los préstamos sind icados ex iste una ent idad d irectora (/ead manager) que coord ina la actuación de un conjunto más ampl io de ent idades bancar ias, integrado por c ierto grupo de entidades co-directoras (co-/ead managers) y por otras entidades part ic ipantes. El grupo d irector puede llevar a cabo la s ind icac ión en tres modal idades: • Préstamo totalmente asegurado (ful/y underwritten), de forma que las entidades d irectoras intentarán consegu ir un sind icato amplio de ent idades, pero se comprometen de antemano a desembolsar el importe total del préstamo, aunque poster iormente no sean capaces de • s ind icarlo. Club loan, en el que la totalidad del préstamo es conced ido por los co-d irectores, sin • s ind icac ión ulterior. Best-efforts basis, se trata de un préstamo s indicado cuya cuantía final no está garant izada de antemano por la entidad d irectora. La gran mayoría de préstamos se configuraron a t ipo de interés var iable, como suma de un tipo base de referenc ia (normalmente, el tipo de interés de los préstamos inter-bancar ios en Londres en la correspondiente moneda, o LIBOR) y un margen o spread. Además del t ipo de interés del préstamo, las operac iones ocas ionan diversas com is iones y gastos: • Com is ión in icial (up-front fee), que incluye la com isión de aseguramiento y d irecc ión, • así como la com isión in ic ial percib ida por el resto de ent idades financ ieras. Com is ión de comprom iso o d isponib il idad (committmentfee): es la com isión que deberá pagar el deudor por la dispon ibil idad de los fondos, s i decide no sol ic itar de inme�� iato su • desembolso. Com is ión de agenc ia (agency fee): es la percib ida por la entidad bancar ia des ignada como agente de pagos, esto es, la que rec ib irá los intereses del prestatario y los transmit irá a los • acreedores. Gastos legales de formal izac ión.El mercado de los euro-préstamos en dólares jugó un papel destacado en la década de los 70, tras las dos cr isis del petróleo, porque s irv ió para llevar a cabo el "reciclaje de los petrodólares", es dec ir, el otorgam iento de préstamos a los países más afectados por el encarecim iento del pe tróleo con cargo a las reservas de dólares acumuladas por los países productores. Ese gran aumento de la act ividad credit ic ia llevaría, s in embargo, en 1982 a la primera gran crisis de deuda de los países emergentes, inic iada por el impago de Méx ico. La renegoc iac ión y restructurac ión de la deuda a la que d io p ie fue prolongada y compleja. No obstante, el hecho de que la deuda estuv iera esencialmente representada por préstamos sindicados (y no por emisiones de títulos, como en crisis posteriores) facilitó las negociaciones entre el país deudor y el sindicato de bancos acreedores.
+
+Mercado de eurobonos
+Aunque en sus inicios el euromercado se concentró en instrumentos bancarios clásicos (depósitos, préstamos ... ), pronto se desarrolló un mercado de emisiones de bonos, que se dieron en llamar "eurobonos". La no sujeción a la legislación nacional de los emisores hizo que los eurobonos tuvieran ciertas características clásicas: • Naturaleza al portador (bearer). • No retención fiscal en la fuente sobre los intereses ( witholding tat). • Cotización (más teórica que real) en la bolsa de Luxemburgo, con el fin de tener la consideración de "valores cotizados" y ser susceptibles de adquisición por ciertos inversores institucionales. La innovación financiera hizo que la gama de instrumentos emitidos en este mercado se fuera enriqueciendo. Cabe distinguir varios segmentos: • Bonos a tipo de interés fijo. • Floating Rate Notes (FRN), emisiones a largo plazo, muy similares a los préstamos sindicados, pero instrumentados mediante valores negociables. • Euronote facilities y Medium Term Notes (MTN): programas de emisión de valores a medio o largo plazo en los que la emisión no se hace de una sola vez, sino con carácter esporádico, de acuerdo con las necesidades de liquidez del emisor o las necesidades de inversión de algunos grandes inversores. • Eurocommercial paper: programas de emisión de valores a corto plazo, con renovación periódica (roll-over) de los vencimientos. Para evitar el riesgo de que el emisor no pueda refinanciar los vencimientos por inesperadas tensiones en los mercados, los emisores suelen contratar con los bancos ''líneas de crédito de respaldo" (back-up facilities). La última crisis financiera ha puesto de maní tiesto que los bancos no calibraron bien el riesgo que asumían al conceder esas líneas de crédito, que les obligaba a conceder financiación en momentos dificiles en los que ellos mismos podían enfrentarse a condiciones difíciles de financiación.
+
+$$\text{\textbf{2.- Globalización financiera, innovación y expansión}}$$
+El importante desarrollo y las innovaciones acaecidas en los años 70 e inicios de los 80 (swaps, eurobonos ... ) siguen, en gran medida, vigentes a día de hoy y forman parte de la estructura actual de los mercados. No obstante, a partir de segunda mitad de los 80 y en los 90 tiene lugar un gran auge de los mercados financieros que cabe atribuir a varios factores. Entre los factores desencadenantes de esta importante expansión cabe destacar:
+• La supresión de los controles de cambios en muchos países y la liberalización de los movimientos de capital. Ese proceso ha ido acompai'iado de cierto grado de desregulación de los mercados financieros -especialmente, de los segmentos profesionales o "mayoristas''-, con la confianza de que los mercados financieros son eficientes y los • profesionales que actúan en ellos sabrían gestionar riesgos de fonna adecuada. El proceso de integración monetaria en algunas zonas del mundo -y, muy en especial, en la Unión Europea-, que ha roto la tradicional vinculación entre moneda nacional y mercado financiero nacional. Esa integración monetaria no ha entrañado, sin embargo, de fonna automática la plena integración en un mercado financiero único de todos los • mercados financieros pertenecientes al área monetaria. El proceso de expansión internacional y concentración de los grandes bancos de inversión americanos, con frecuencia mediante la adquisición de entidades financieras locales. Ese proceso ha estado caracterizado por tres grandes rasgos generales: • Globalización e interconexión entre mercados, con atenuación de la segmentación entre mercados propia de otras épocas. Eso ha llevado, en particular: o A la emisión y colocación de los llamados global bonds, comercializados simultáneamente en una multiplicidad de mercados, con sujeción a los requisitos de emisión en cada uno de ellos, lo que ha difuminado las fronteras entre el segmento extranjero de los mercados y los "euromercados". o A las operaciones de colocación global de acciones, con un tramo en el mercado nacional de la compaf\ía emisora y otro internacional, colocado en mercados • extranjeros. Predominio de los mercados de valores e instrumentos financieros negociables, frente a los tradicionales instrumentos no negociables, como depósitos y préstamos.\footnote{Una manifestación temprana de este fenómeno fue la fórmula utilizada para solventar la crisis de deuda de países en desarrollo iniciada en 1982. En efecto, en 1982, cuando tras varios años de negociaciones infructuosas los países acreedores consideraron inevitable aceptar una resestructuración de las condiciones financieras de los préstamos (con alargamiento de plazos y una mezcla de reducción del principal y de intereses) y aprobaron el \textit{Plan Brady}, la solución se encontró en el canje de los antiguos préstamos por unos nuevos bonos a largo plazo (llamados Bonos Brady) que constituían deudas de los países prestatarios (Argentina, México, Brasil, Rusia, Polonia, etc.), pero cuyo vencimiento futuro de principal tenían afecto en garantía cierto volumen de bonos emitidos por Estados Unidos y otros países industrializados.
+} La expansión de la intennediación financiera a través de los mercados financieros, en vez de mediante la intennediación bancaria tradicional, se vio también favorecida, de fonna involuntaria e imprevista, por los Acuerdos de Basilea 1, adoptados inicialmente en 1988 por los supervisores bancarios con el fin de exigir mayor capital y nivel de solvencia a los grandes bancos que estaban ampliando sus operaciones en los mercados internacionales. La experiencia posterior ha demostrado que, sin pretenderlo, los Acuerdos de Basilea: o Minusvaloraron el "riesgo de crédito" propio de los instrumentos financieros negociables, al atribuirles sólo "riesgo de mercado'' y vincular a éste una menores exigencias de recursos propios. o Minusvaloraron los riesgos inherentes a las líneas de crédito no dispuestas (backup credit fines). o Minusvaloraron el "riesgo de liquidez" que pesa sobre las entidades financieras con mucho endeudamiento a corto plazo. o Permitieron a las entidades financieras sortear las exigencias de recursos propios y lograr un "arbitraje regulatorio", especialmente mediante el patrocinio de special investment vehicles, conduits y, en general, otras técnicas de teórica "desintermediación financiera" que, sin embargo, llegada la crisis no resultaron tales. Un corolario del auge de los mercados financieros ha sido la importancia adquirida por las agencias de rating y el papel decisivo que sus calificaciones han tenido como guía de las decisiones de inversión. Como se verá más adelante, uno de los motivos de la última crisis financiera fueron los errores metodológicos que las agencias cometieron al calificar productos financieros estructurados. • Innovación financiera, proceso que, entendido en un sentido amplio, se ha manifestado en dos grandes ámbitos: de un lado la creación y desarrollo de nuevos instrumentos financieros y, de otro, la aparición de nuevas categorías de inversores.
+
+$$\text{\textbf{3.- Tras la crisis financiera}}$$
+La crisis financiera -especialmente tras la caída de Lehman Brothers en septiembre de 2008- produjo una parálisis general en los mercados interbancarios y financieros que exigió medidas extraordinarias de los Bancos Centrales y de los Gobiernos, entre las que destacaron: • Las medidas de provisión extraordinaria de liquidez por los Bancos Centrales. • El ofrecimiento por los Gobiernos de garantías públicas a las emisiones de deuda por entidades financieras. • Otras medidas de apoyo a la solvencia y recapitalización de entidades financieras. Más allá de esas medidas extraordinarias de política económica, desde el estallido de la crisis financiera han sido perceptibles ciertas tenaencias en los mercados financieros internacionales, con especial incidencia en los mercados de renta fija: Comportamiento de los emisores. Emisores públicos Uso de procedimientos de sindicación Muchos Estados, han venido utilizando procedimientos de sindicación para colocar emisiones de deuda a largo plazo incluso en su propia moneda, como complemento de la técnica habitual de las subastas. Las ventajas atribuidas a la sindicación son: • Permite a los emisores públicos llevar a cabo emisiones de mayor volumen, cuya liquidez y cuantía queda garantizada de antemano, y evita el riesgo de que las peticiones en una subasta no alcancen la cuantía máxima ofrecida, como le ocurrió a varios emisores públicos en 2009.\footnote{En una subasta los inversores no tienen seguridad de cuántos bonos se colocarán y corren el riesgo de que su oferta sea aceptada. pero que la colocación lotal sea escasa y la emisión resulte poco líquida. Por eso. pueden preferir comprar valores si saben de antemano que el banco director fijará un precio para la emisión que garantice su éxito.
+} • Permite a los emisores públicos controlar mejor-y, en su caso, diversificar- la colocación geográfica de sus emisiones, gracias a la labor de venta de los bancos colocadores, que salen en busca de compradores en otros mercados si los habituales se considera que están saturados. No obstante, el pago de comisiones al sindicato colocador hace que, en principio, las emisiones sindicadas resulten más caras para el emisor. Pero también se ha seilalado que el carácter más ordenado de la colocación y el menor riesgo de volatilidad para los inversores que adquieren los valores emitidos puede hacer que éstos puedan emi tirse a un rendimien to menor, lo que podría llevar a que el "a/1-in cost" (teniendo en cuenta todas las comisiones) de una emisión asegurada pudiera ser inferior al resul tante de una subas ta.
+
+Aumento de las emisiones de bonos indiciados a la inflación 
+La magnitud de los estímulos monetarios y de las emisiones de deuda también ha suscitado temores a posibles rebrotes inflacionistas, lo que ha aumentado el ape tito de ciertos inversores (por ejemplo, fondos de pensiones) por bonos indiciados al nivel de precios -conocidos en Estados Unidos como Treasu,y-!njlation-Protected Securities o TIPs y en la UE como indexlinked bonds o, coloquialmente, linkers-. En Europa son especialmente activos el Tesoro francés, el italiano y el alemán. Aumento de las emisiones en divisas (especialmente en dólares) con posterior swap a la propia divisa Muchos emisores soberanos han efectuado emisiones en dólares - aprovechando, además, los bajos tipos de interés- para diversificar sus fuen tes de financiación y, tras la correspondien te permuta de divisas, conseguir financiación en la moneda propia. Entidades financieras: emisiones significativas de covered bonds La crisis financiera parece haber corroborado que los covered bonds (Pfandbriefe, cédulas ... ) tienen ventajas fren te a los valores derivados de la mera titulización de préstamos hipotecarios para vivienda (Residential Mortgage-backed securities o RMBS), pues evitan el riesgo típico de baja calidad de las hipo tecas que puede provocar el modelo "origina/e to distribute".\footnote{Si una entidad puede sacar de su balance los préstamos concedidos y. de este modo. deshacerse del riesgo asociado a estos préstamos. sus incentivos a la prudencia en la concesión de crédito se ven reducidos. generándose así un problema de riesgo moral .
+} Además, es te mercado se ha visto favorecido por otros factores: • • Los diversos programas de compra de estos activos por par te del Banco Central Europeo. La Directiva de Resolución de En tidades de Crédito (conocida como BRRD) ha calificado a estos instrumen tos como "no bailinables", lo que significa que, en caso de resolución de una entidad de crédito estos títulos no tendrán que absorber pérdidas ni ser convertidos en capital.\footnote{Directiva 201 4/59/UE del Parlamento y del Consejo. de 1 5 de mayo de 2014, por la que se establece un marco para la reestructuración y la resolución de entidades de crédito y empresas de servicios de inversión, y por la que se modifican la Directiva 82/891/CEE del Consejo. y las Directivas 2001/24/CE, 2002/47/CE, 2004/25/CE. 2005/56/CE,
+}
+
+No obstante, el importante volumen emitido de covered bonds podría desembocar en un problema de exceso de activos comprometidos (asset encumbrance), esto es, una situación en la que los acreedores ordinarios, en caso de que se produzca la insolvencia de la entidad, verían sus derechos sobre una porción significativa de los activos de la entidad subordinados a los de los tenedores de covered bonds. Entidades no financieras: sustitución de crédito bancario por emisiones Las entidades de crédito se enfrentaban al inicio de la crisis a un doble problema: un problema de liquidez derivado de la desconfianza sobre la calidad de los activos que mantenían en su balance y un problema de solvencia cuando tales sospechas estaban perfectamente fundadas. En este contexto, la capacidad de las entidades de crédito para conceder financiación a la economía real era muy limitada. Es por ello que países cuyos sectores financieros estaban más bancarizados (v.g. España) han sufrido en mayor medida los envites de la crisis financiera. Ante esta situación, muchas empresas -especialmente las mayores y más conocidas- comenzaron a apelar a los mercados financieros para obtener financiación. En muchas ocasiones esa financiación se ha conseguido mediante la colocación privada de bonos a medida, en el marco de programas de Medium Term Notes (MTN). En el caso de EE.UU., este aumento de las emisiones se ha podido ver favorecido por las políticas monetarias no ortodoxas de la Fed. Además, en muchos países se ha tratado de promover el acceso de empresas de menor dimensión a los mercados de capitales mediante la creación de mercados con unas exigencias de información más reducidas. Así, por ejemplo, en el año 2013 nació en España el Mercado Alternativo de Renta Fija (MARF).
+
+
+
+
+\end{document}
