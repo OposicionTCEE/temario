@@ -1,0 +1,1193 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Análisis de los instrumentos y de los mercados de derivados\\
+\large }
+\author{Marcelo Ortega}
+\date{Marzo 2026}
+\newcommand{\TemaCode}{3B25}
+
+\oldtitle{
+    B.27. Análisis de los instrumentos y de los mercados de derivados
+}
+\changerationale{
+    Sin cambios.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     Este tema es el más financiero del temario. y muy probablemente haya varios miembros del tribunal que no sean expertos sobre derivados. Por tanto, es importante que el opositor sea capaz de combinar una exposición solvente desde el punto de vista técnico con no perder a los miembros del tribunal. Para ello es fundamental insistir en el primer apartado, que demuestra la importancia del tema y ayuda a situar la exposición.
+
+     Una posibilidad es mencionar alguna corno gancho para intentar que el tribunal pregunte sobre ella en el tumo de pn:guntas y respuestas.Los ganchos, de hecho, en este tema tan largo pueden ser muy útiles, pero ojo con lanzar ganchos que luego no se sepan explicar con claridad. Esto aplica para todos los temas, pero en este tema aún más ya que en las explicaciones no se puede dar nada por supuesto (siempre hay que estar preparado para responder a la pregunta ¿Por qué? ... ).
+
+     En la conclusión proponemos explicar el caso de Liberbank y la prohibición de las posiciones cortas. Sin embargo, ello es solo una propuesta, y el opositor podría centrarse en otra cuestión, como en la importancia de los derivados (CDS) en la crisis soberana de la zona euro. Sin embargo, recomendamos huir de conclusiones que se limiten a recapitular lo ya expuesto en el tema (para ello ya están las recapitulaciones al final de cada apartado de unos 30 segundos) ya que no aportan valor añadido y son una oportunidad perdida para dar un gancho o captar la atención del tribunal para que quede con buen sabor de boca.
+
+     Se recomienda no caer en la tentación de tratar de realizar todos los desarrollos. incrementando la velocidad en la exposición: como se menciona anteriormente, es muy probable que el tribunal no esté familiarizado con algunos desarrollos y, por tanto, si se explican demasiado rápido no añadirían ningún valor. La recomendación es escoger aquellos desarrollos que mejor se adapten al perfil del opositor y, sobre todo, nunca exponer nada que no se entienda, ya que, en este caso, hay contenido de sobra y no hay necesidad meterse en terreno pantanoso sin conocerlo.
+    }
+\vspace{1cm}
+
+\modificaciones{
+    \textcolor{red}{\textbf{OJO!} El modelo de valoración de opciones reales (BLACK-SCHOLES) Juan Luis Cordero} está muy bien explicado.
+
+    \textcolor{red}{\textbf{La pregunta esencial es:}} ¿Por qué un instrumento pensado para proporcionar mayor flexibilidad y capacidad de moldear la realidad futura a nuestras preferencias puede convertirse en un instrumento tan desestabilizador? ¿Qué es lo que provoca lo segunda? ¿Es su propia naturaleza? -> Los instrumentos derivados son simplemente un instrumento. No son buenos ni malos \textit{per se} (¿o si?), sino que son una herramienta más disponible para adoptar las posiciones que más se adapten a nuestras necesidades.a lo largo de la exposición se debe evitar emitir juicios de valor simplistas sobre estos instrumentos. Es cierto y se debe reconocer que el regulador y el supervisor deben estar especialmente atentos a su evolución para reducir los riesgos sistémicos que se pueden derivar del uso irresponsable de los mismos, pero lo mismo se puede deducir de otros instrumentos (como la concesión excesiva e irresponsable de crédito).
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+\textcolor{red}{\textbf{EJEMPLO.-}} CASINO ROYALE -- Banquero pierde dinero con una operación financiera: había cerrado una posición con la intención de obtener un beneficio debido a la creencia de que, durante el transcurso de este tiempo (entre el cierre de una operación y su liquidación) los eventos le serían favorables. Esta es la esencia de un derivado: independientemente de su naturaleza, estamos actuando sobre la base de creencias que se materializarán (o no) a lo largo del tiempo. Tienn, por tanto, tres elementos característicos: activo subyacente, tiempo y riesgo.
+
+
+\subsection{Contextualización}
+
+
+
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+
+
+
+
+\clearpage
+\section{Derivados: Desgranando conceptos}
+\puntosclave{
+    
+}
+
+
+\textbf{¿Qué queremos decir?} A continuación vamos a explicar la utilidad que presentan estos tipos de contratos así como algunos de sus elementos principales, adoptando un enfoque estríctamente económico. También veremos brevemente cómo se proyectan las diferencias, aparentemente técnicas, entre contratos y sus implicaciones valorativas y funcionales. Debemos tener claro en todo momento que los desarrollos teóricos que ahora se presentaran parten de supuestos restrictivos que limitan enormemente, no solo su validación empírica, sino su misma validez conceptual. No obstante, constituyen piezas fundamentales para entender la lógica económica que subyace en este tipo de contratos.   
+
+\textbf{¿Qué queremos decir?}
+
+
+
+\subsection{Terminología: Elementos comunes}
+
+
+
+
+
+
+
+
+\subsubsection{Posición: ¿Quién es tu aliado?}
+
+
+
+
+
+
+
+
+\subsubsection{Valoración de un derivado: Teorema de GIRSANOV}
+
+
+
+
+
+
+
+
+
+\subsubsection{Activo subyacente: Interés real}
+Un derivado financiero es aquel cuyo valor se deriva del precio de una activo subyacente. 
+
+
+
+
+\subsection{Contratos a plazo: Un seguro financiero}
+Empecemos en primer lugar con los contratos a plazo, conocidos en el ámbito estríctamente financiero como futuros o \textit{forward}. Constituyen obligaciones sinalagmáticas.\footnote{Una obligación sinalagmática (o bilateral) es un acuerdo en el que ambas partes se comprometen mutuamente, convirtiéndose de forma simultánea en deudores y acreedores. Cada prestación depende de la otra, estableciendo una relación de interdependencia y equivalencia, como ocurre en los contratos de compraventa o alquiler.
+} Conceptualmente se trata de un compromiso que adquieren ambas partes de intercambiar un objeto económico a futuro, obligándose \textit{ab initio} a las condiciones en las que se ejecutará dicha redención/extinción de la obligación. Es decir, las prestaciones se ejecutarán o liquidarán en las condiciones pactadas. HULL define este tipo de obligaciones como: un acuerdo para comprar o vender un activo en una fecha futura a un precio fijado hoy. Jurídicamente, el núcleo del contrato es, por ello, una obligación recíproca y correlativa: obligación bilateral de intercambio futuro bajo condiciones predeterminadas.
+
+Como sabemos, existen dos subclases de contrato dentro de esta definición genérica: los contratos de \textbf{futuros} y los contratos \textit{\textbf{forward}}, cuyas diferencias se pueden ver de forma simplificada en la siguiente tabla:
+
+\begin{center}
+\begin{tabular}{|p{0.33\linewidth}|p{0.33\linewidth}|p{0.3\linewidth}|}
+\hline
+ & \textbf{FORWARD} & \textbf{FUTURO} \\
+\hline
+\textbf{Mercado} & OTC (privado) & Mercado organizado \\
+\hline
+\textbf{Contrato} & Dispositivo/Personalizado & Estandarizado \\
+\hline
+\textbf{Cámara de Compensación} & No & Sí \\
+\hline
+\textbf{Riesgo de contraparte} & Alto & Muy bajo \\
+\hline
+\textbf{Liquidación} & Normalmente a vencimiento & Ajuste diario (\textit{mark-to-market}) \\
+\hline
+\textbf{Garantías} & Negociadas entre partes & Márgenes obligatorios \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsubsection{El Juego: ¿Quién gana y quién pierde?}
+En cualquier contrato a plazo existe una simetría total entre las posiciones de comprador y vendedor. ¿Qué quiere decir? En esencia, que los contratos a plazo son \textbf{juegos de suma cero}: uno gana lo que pierde el otro. La parte que ostente la posición larga ganará en caso de aumento del precio del activo subyacente. Y, esta ganancia, se traduce en una pérdida igual en valor para la parte que ostente la posición corta. 
+
+\imagenfit{Fig1.png}{Ganancias: Posición larga vs. Posición corta}{Apuntes ICEX-CECO. Tema 3.B.25}
+
+El comprador tiene pérdidas limitadas (por el precio actual del activo subyacente) pero ganancias potencialmente ilimitadas (no existe a priori un precio límite para unactivo). El vendedor tiene pérdidas potencialmente ilimitadas pero ganancias limitadas.
+
+\subsubsection{Utilidad económica del contrato a plazo: ¿Por qué jugar?}
+Ahora que conocemos cómo funciona este tipo de juego o contratos, podemos ver cómo empieza a tener significado económico. Resulta díficil, no obstante, porque, a pesar de apreciarlo de manera indirecta en el gráfico, es posible que nuestras ideas no acaben de asentarse. 
+
+Para resolverlo, vamos a ir un paso más allá y preguntarnos lo siguiente: ¿por qué jugar? Existen dos razones fundamentales para constituir un contrato a plazo.
+
+\paragraph{Reasignación del riesgo: Cobertura}
+La primera es extremedamente intuitiva: la reasignación del riesgo. Mediante un contrato a plazo, la posición larga busca realizar una operación de cobertura que le permita sortear los posibles escenarios adversos que se pueden presentar en el futuro. Además, y como consecuencia, le permite planificar sobre un base más sólida y estable, dadas sus preferencias de riesgo. 
+
+Por el otro lado, su contraparte está dispuesta a acpetar el compromiso bien sea por motivos reales (estabilidad de producción, imaginemos un productor de petroleo), que le aseguren un flujo de ingresos futuros, estables y predecibles, o por motivos nominales: el riesgo al que se expone vale menos desde su óptica, por lo que está dispuesto a soportar dicho riesgo y comprometer su posición futura. 
+
+\paragraph{Apalancamiento: Músculo financiero}
+Pero, además, una razón económica muy sútil y profundamente importante de los contratos de futuro es el apalancamiento. Esto se debe a que ambas partes comprometen solo una parte de la cuantía negociada del contrato: el \textit{margen}. Por lo que, en realidad, les permite adquirir compromisos futuros por una cuantía mucho menor (y, consecuentemente, un coste intertemporal menor) a la que soportarían teniendo que mantener el valor precio pactado durante el transcurso del contrato.\footnote{Otra ventaja es que reduce el riesgo cambiario en el caso de activos denominados en divisa: lo limita a las potenciales pérdidas y ganancias, sin afectar al nominal de la operación. 
+}
+
+\subsubsection{¿Qué valor tiene un contrato a plazo? El valor intertemporal del dinero}
+Al iniciarse un contrato a plazo, su valor es cero independientemente del tipo de contrato. 
+
+En el caso de los contratos forward, existe riesgo de crédito, ya que se asume el riesgo de que la contraparte no pueda pagar en caso de incurrir en pérdidas. Normalmente, no se produce un pago al finnar el contrato (a diferencia de los futuros, donde las partes tienen que desembolsar el margen inicial corno garantía para la cámara de contrapartida). El precio del forward es aquel que, en un mercado perfecto, no permitiría la existencia de beneficios derivados del arbitraje sin riesgo.
+
+
+
+En caso de que no se cumpla dicha igualdad, es posible alcanzar ganancias sin riesgo por arbitraje. Por ejemplo, en caso de que el contrato forward esté demasiado caro, lo ideal sería pedir prestado dinero al tipo Rf, comprar el activo subyacente, y ponerse corto en el forward (estrategia de arbitraje cash and carry)
+
+Nos hemos referido con anterioridad a los acuerdos de interés futuro o forward rate agreement (FRA). Son uno de los instrumentos derivados más conocidos y utilizados a nivel mundial, por lo que conviene conocer su funcionamiento más a fondo. A mediados de 20 1 7, tenían un volumen de 68 billones de euros (58 veces el PIB de España en 2017).En los FRAs, la parte con una posición larga es la que pide prestado el dinero. En caso de que el tipo de interés variable al expirar el contrato sea superior al tipo de interés acordado en el FRA, la posición larga tiene derecho a pedir prestado por debajo del interés variable de mercado (porque cobra de la posición corta la diferencia entre el interés de mercado y el interés acordado en el contrato FRA). Los contratos FRA son liquidados a través de pago de la diferencia por la parte perdedora.
+
+
+El valor de un contrato de futuros, igual que en el caso de los forward, es cero al iniciarse el contrato. Sin embargo, ambos difiere n en que el futuro, a diferencia del forward, n o acumula valor por variaciones en el precio del activo subyacente con el paso del tiempo. Ello es porque el futuro es liquidado diariamente en la cámara de contrapartida, por lo que su valor es siempre cero una vez se han aj ustado los márgen es depositados tras tener en cuenta las ga nancias y pérdidas de ambas partes. El precio del futuro es el precio que hace que el valor de un nuevo contrato sea cero. El val or solo es no nulo durante el periodo de intercambios que se produce entre l iquidación y liquidación.
+
+Valor del futuro = precio actual del futuro - precio del futuro tras la última liquidación El precio del futuro se detennina igual que el del forward, el precio de no arbitraje Precio del futuro = S0 (1 + Rfl Sin embargo, con unas mismas condiciones, el precio del futuro y el del forward pueden diferir. Así, cuando el activo subyacente es tal que existe una relación positiva entre su precio y los intereses, el precio del futuro es superior al del forward (por la liquidación diaria del futuro). Por ejemplo, cuando el activo subyacente es una bono de renta fija, cuyo precio está negativamente correlacionado con los intereses, el precio del futuro es inferior al del forward. Ello está por ejemplo relacionado con los intereses a los que se pueden reinvertir los beneficios obtenidos. En caso de que existan costes (de almacenaje por ejemplo) y beneficios asociados a la posesión del activo subyacente que no existen con el futuro, Precio del futuro = S0(1 + Rf)7 + valor futuro de los costes netos de posesión del activo De ello se deriva lo siguiente:
+• Backwardation: cuando existen beneficios netos por posesión del activo subyacente. Implica que el precio del futuro es inferior al precio del activo. 
+• Contango: cuando existen costes netos por posesión del activo subyacente. Implica que el precio del futuro es superior al precio del activo.
+
+
+Como en el caso de otros instmmentos derivados, los futuros se utilizan sobre múltiples posibilidades de activo subyacente. Destacamos: 
+• Futuros sobre Letras/Bonos soberanos. En este caso se establece un futuro sobre un bono nocional (no existe) y, en el momento de la venta, el vendedor del futuro entregará una cantidad de bonos elegibles sobre una cesta de entregables. Inicialmente, se detennina la cantidad de cada bono que se debe entregar por cada futuro, en función de la relación entre el precio del bono nocional y el bono entregable, a esta relación se le conoce como factor de conversión.\footnote{Si el precio del nocional es de 150\% y el entregable de 100\%, habrá que entregar 1.5 entregables por cada futuro.
+}
+• Sin embargo, en función de la evolución del mercado, uno de los bonos entregables acabará siendo más barato: a este bono se le conoce como el cheapest to deliver (CTD). La opción de elegir el CTD la disfruta el vendedor de futuros y, por ello, debe estarimplícita en el precio.\footnote{Por ello. para determinar el precio del futuro. no se utiliza el tipo repo (que se puede considerar el tipo libre de riesgo en este mercado): habrá que restarle unos puntos para compensar al comprador. El diferencial entre el tipo repo y el tipo del futuro refleja el valor de la opcionalidad en la entrega. Esto suele ser un reflejo del funcionamiento del mercado de bonos: en un mercado que funciona bien. los entregables. que normalmente tendrán un vencimiento similar. conservarán sus valores relativos. por lo que la opcionalidad vale poco.
+} 
+• Futuros sobre acciones. En caso de que las acciones paguen dividendos que compensen el tipo de interés libre de riesgo. el precio del futuro es inferior al precio de la acción (backwardation). • Futuros sobre indices bursátiles. Se tienen en cuenta los dividendos, pero se incluyen en la fórmula con pagos continuos (en vez de discretos como en el caso de futuros sobre acciones)
+• Futuros sobre divisas. 
+• Futuros sobre tipos de interés: son similares a los FRAs, pero en lugar de cotizar un tipo de interés, la convención es cotizar un precio.
+
+En definitiva, la compra de un futuro es la síntesis de una compra del subyacente financiada al tipo de interés libre de riesgo y, por tanto, a priori tiene las mismas ventajas (apalancamiento, acceso a financiación al tipo libre de riesgo) e inconvenientes (pago del tipo de interés) que dichas operaciones. A posteriori. optar por una vía u otra ya dependerá de las características de cada inversor y de cada mercado.
+
+\subsection{Contratos contingentes: Derecho potestativo}
+Conocemos la función económica de los contratos a plazo. Estos contratos pueden ser vistos como primos hermanos de los contratos de seguro y, si hubiese la opción, no es de extrañar que se utilizaran indistintamente. Al fin y al cabo, cumplen una función de cobertura. Veamos ahora otro tipo de derivado: la opción o contrato contingente. 
+
+Lo primero que debemos destacar es que existe un diferencia estructural profunda entre el contrato contingente y el contrato a plazo: un contrato contingente otorga a una parte el derecho, pero no la obligación, de comprar o vender el activo subyacente en determinadas condiciones pactadas \textit{ab initio}. Por tanto, \textbf{la opción es un derecho potestativo que permite a una parte modificar unilateralmente la situación jurídica de la otra}; a diferencia del contrato a plazo que constituye una obligación jurídica sinalagmática (recíproca), con vencimiento cierto y obligatorio. Es obvio, entonces, que se trata de contratos asimétricos. 
+
+Estos contratos, u opciones, comparten una serie de disposiciones comunes: \textbf{periodo de vigencia} (tiempo), \textbf{activo subyacente} (valores, préstamos o depósitos, índices, futuros u otros instrumentos), \textbf{características del ejercicio} del derecho (a vencimiento, europeas, o no, americanas y mixtas; así como el precio de ejercicio, que puede ser determinado o determinable) y \textbf{prima} (compensación entregada por la constitución del derecho). En esencia, comparten dichas disposiciones pero, como es evidente, proporcionan suficiente felexibilidad como para que los contratos negociados lleguen a parecer radicalmente diferentes. Por ello, debemos identificar un elemento que nos permite, al menos, realizar un clasificación básica. Por su importancia en el contrato y las implicaciones jurídicas de las partes, recurriremos al derecho que se ostenta como principal herramienta de clasificación y, con esto en mente, distinguiremos entre: 
+\begin{la}
+    \item \textbf{Opción \textit{call}}. Contratos en los que una parte (vendedor) ofrece su compromiso a vender el activo subyacente y su contraparte (comprador) adquiere el derecho a \textbf{comprar} dicho activo; y,
+    \item \textbf{Opción \textit{put}}. Contratos en los que una parte (vendedor) ofrece su compromiso a adquirir el activo subyacente y su contraparte (comprador) adquiere el derecho \textbf{vender} dicho activo.
+\end{la}
+
+\subsubsection{El Juego: ¿Quién gana y quién pierde?}
+Entonces, ¿cómo funciona el juego? Lo primero destacable, y bastante fácil de intuir, es que se trata de otro juego de suma cero. Igual que antes, las ganancias de una parte equivalen a las pérdidas de su contraparte, independientemente del tipo de opción del que se trate. ¿Cómo podemos verlo? Lo más sencillo es considerar opciones exigibles a vencimiento, con precio pactado \textit{ab initio} y sin flujos de ingresos generados en el transcurso. En este escenario tan simplificaco, el resultado del juego (beneficio neto de las partes) puede expresarse como:
+
+\eqblock{
+\begin{aligned}
+    \left.\begin{aligned}
+        \text{Opción call}:
+        \left\{\begin{aligned}
+            &\Pi_\text{Comprador}&&=(P_M-P_c)^+-\text{Prima}\\[1em]
+            &\Pi_\text{Vendedor}&&=-(P_M-P_c)^++\text{Prima}
+        \end{aligned}\right.\\[2em]
+        \text{Opción put}:
+        \left\{\begin{aligned}
+            &\Pi_\text{Comprador}&&=(P_c-P_M)^+-\text{Prima}\\[1em]
+            &\Pi_\text{Vendedor}&&=-(P_c-P_M)^++\text{Prima}
+        \end{aligned}\right.
+    \end{aligned}\right\}\qquad \text{donde},\,\,\text{Payoff}\equiv\underset{\text{\scriptsize Valor intrínseco}}{x^+=\max\{x,0\}}
+\end{aligned}
+}{}
+
+Indepdendientemente de la opción, si el comprador ejerce la opción obtendrá un beneficio neto equivalente a la diferencia entre el payoff (valor intrínseco), y la prima que pago para poseerla. Y, además, será equivalente e inverso al beneficio neto obtenido por el vendedor. Por otro lado, si no la ejerce, el beneficio neto de las partes se ve claramente como es equivalente y contrario, pues equivale únicamente a la prima. Otro punto a destacar es que, como se ve, el payoff es una medida clave que determina el resultado del contrato: solo ejercerá la opción en caso de que este payoff sea positivo. Además, el payoff (o su estructura, más bien), depende de si tratamos una opción pull o una opción call. ¿Por qué? La razón estriba del derecho que se ostenta: en el caso de una opción call, el comprador la ejercerá (y comprará el activo subyacente) siempre y cuando el precio de mercado del activo sea superior al precio pactado por contrato; por el contrario, en una opción put el comprador ecercerá su derecho (venderá la acción) siempre y cuando el precio de mercado del activo subyacente sea inferior al precio pactado por contrato. En cualquier de los dos casos, de darse una situación inversa, el resultado del ejercicio no tendría sentido económico: el valor intrínseco sería negativo. 
+
+Estos resultados del juego pueden expresarse gráficamente de la siguiente manera:
+
+\imagenfit{Fig2.png}{Representación gráfica: Opciones (IM/OM) y ejercicio}{Elaboración propia}
+
+Tal y como se muestra en el gráfico:
+\begin{la}
+    \item \textbf{Opciones call} (compra). Ante una opción call, los beneficios potenciales del comprador son ilimitadas, puesto que estarán directamente relacionadas con el precio del activo subyacente: cuánto mayor sea la diferencia entre el precio spot del activo subyacente y el precio pactado de transmisión, mayor beneficio se obtendrá del diferencial. De forma equivalente e inversa, las pérdidas del vendedor será ilimitadas, puesto que cuánto mayor sea la diferencia entre el precio spot del subyacente respecto al precio pactado, mayores pérdidas enfrentará con su venta. Por el otro lado, las pérdidas del comprador están acotadas, puesto que se reducen a la prima entregada por el derecho. Y, de forma también equivalente e inversa, las ganancias del vendedor estarán limitadas a la prima percibida; y,
+    \item \textbf{Opciones put} (venta). Por otro lado, en las opciones put, tanto los beneficios como las pérdidas de ambas partes están limitadas. ¿La razón? Pensemos que la put otorga un derecho de venta. De esta forma, por mucho beneficio que pueda obtener el comprador de la put (el potencial vendedor del activo subyacente) al precio pactado, la brecha queda acotada por el \textbf{límite de precio cero} que puede alcanzar un activo.
+\end{la}
+
+En definitiva, tanto por el gráfico como por las expresiones matemáticas que hemos presentado antes podemos ver un elemento fundamental del valor de una opción: el payoff o valor intrínseco (valor de ejercicio). Este valor es simplemente el valor atribuible a la opción si se ejerce in the money, por lo que habrá que esperar a vencimiento (o, en caso de dercho continuo, al momento de ejecución), para cuantificar el valor intrínseco de la opción, estrechamente asociado al beneficio neto obtenido por la operación.
+
+\subsubsection{Utilidad económica del contrato: ¿Por qué jugar?}
+A priori, parece dificil ver la utilidad del juego, por ello, vamos intentar ver por qué los jugadores decidirían entrar a jugar en un primer instante. No obstante, intentaremos abstraernos de la praxis diaria para demostrar que la utilidad económica es muy clara, y muy antigua. 
+
+Preguntémonos una cosa muy sencilla: (dejando, evidentemente, al margen cualquier razón especulativa) ¿cuál es la razón por la que pueden surgir en primer lugar estos contratos? Las razones son dos. 
+
+\paragraph{Apalancamiento: Músculo financiero}
+Imaginemos, en primer lugar, una persona que desea acceder a capital para aumentar el valor de una activo subyacente que ya ostenta.\footnote{Aquí se plantea la hipótesis de que el vendedor no puede obtener financiación mediante ningún otro canal. De esta forma, su capacidad de apalancamiento se circunscribe a la oferta de rendimiento ex post a cambio de capital ex ante.
+} Es decir, desea buscar financiación para una inversión. ¿Qué tipo de opción se ajusta más a este escenario? Suponiendo que no puede acceder a fuentes alternativas de crédito y que lo único que ostenta es la posesión de un activo, lo más adecuado parece ser recurrir a una opción put. ¿Por qué? Es fácil, este sujeto es capaz de obtener financiación \textit{ex ante} (prima) a cambio del compromiso de vender dicho activo (o parte de el) a su contraparte, en caso de que esta ejerza su derecho. 
+
+De esta forma, accede a mayor músculo financiero a cambio de renunciar a sus derechos en un subconjunto de estados contingentes que le resulten favorables. Está claro que es muy parecido a una ronda de financiación convencional, salvo que los derechos de adquisición se prolongan en el tiempo y no necesariamente se ejecutan ex ante (por ejemplo, limitando la responsabilidad de los inversores). 
+
+\paragraph{Reasignación del riesgo: cobertura}
+Por otro lado, imaginemos una persona con un grado de aversión al riesgo razonable. Por ejemplo, imaginemos una persona que desea adquirir un seguro del hogar. ¿Qué está buscando \textit{realmente} esta persona? Si nos abstraemos lo suficiente, está claro que este sujeto lo que busca es compartir los riesgos que comporta tener un hogar. Más aún, lo que busca es la posibilidad real de \textbf{vender su situación} a otra, en caso de que suceda un hecho contingente. Desde la otra perspectiva, la contraparte (compañía de seguros) está buscando agentes dispuestos a pagarle una prima por la obligación de compartir el riesgo. 
+
+¿Vemos ya la lógica? En esencia, una opción put permite que nuestro sujeto tenga la capacidad de vender su situación contingente futura a la compañía de seguros a cambios de una prima. De hecho, una seguro es esencialmente una opción put, lo único es que nos da la impresión de que el agente es la fuerza motriz del contrato. Sin embargo, si nos paramos a pensar, las ofertas de seguros \textbf{están ahí}, no se crean a demanda, sino que están abiertas en el mercado dispuestas a ser adquiridas por otros.
+
+\subsubsection{¿Qué valor tiene la opción? Distribución truncada: dos fuentes de valor}
+Con estas dos utilidades económicas debemos llegar a una conclusión elemental: aunque se quiera pretender que tienen un carácter exclusivamente especulativo, las opciones, en virtud de la función económica que sirven, no lo tienen. De hecho, nada más lejos de la verdad. Permiten reducir las imperfecciones del mercado, en particular la presencia de mercados incompletos, y alcanzar situaciones más eficientes y dinámicamente estables para los agentes. 
+
+Dicho esto, ahora que conocemos el juego y su utilidad económica, ¿cómo podemos valorar una opción? ¿podemos, de base, atribuirle un valor a este derecho? Recordemos el valor de un contrato a plazo y la fórmula que, como hemos dicho, condicionaba las decisiones del tenedor de un derecho de opción: 
+
+\eqblock{
+\begin{aligned}
+    &\text{Payoff (futuro)}: &&P_s-P_c&&|&&\text{Payoff (opción)}:&&\max\{P_s-P_c, 0\}
+\end{aligned}
+}{}
+
+¿Vemos la diferencia? Puede parecer sutil, pero la diferencia no es para nada despreciable: mientras el valor del contrato a plazo puede ser tanto negativo como positivo, y dependerá directamente de la brecha observada en el periodo de vencimiento del contrato; el \textbf{valor de una opción es siempre positivo}, puesto que si la brecha observada, en la ventana temporal en la que se puede ejercer el derecho, es negativa, el tenedor/comprador del derecho simplemente no lo ejercerá. Es decir, por ser una capacidad discrecional del tenedor/comprador, este no se verá obligado a ejecturlo en condiciones negativas, pudiendo renunciar a el o ejecutarlo según le convenga. En términos estadísticos/rigurosos, diremos que la distribución de las ganancias de una opción está \textbf{truncada en cero}. Por esta razón el valor de una opción no es igual a su valor intrínseco, sino que tiene un componente adicional:
+
+\eqblock{
+\begin{aligned}
+    \mathbf{\text{Valor temporal}}=\text{Precio de la opción}-\text{Valor intrínseco}
+\end{aligned}
+}{}
+
+Cuanto la opción expira, su valor temporal es cero por lo que su precio equivale a su valor intrínseco (cero o positivo si ·1a opción está in the money). La diferencia entre el valor intrínseco de la opción y su matriz de pagos es la prima que se paga a cambio de comprar la opción. El siguiente gráfico refleja los tres conceptos:
+
+¿Qué es este valor temporal? Realmente, el valor temporal no tiene una definición precisa y consensuada, pero no es necesario para entenderlo. Pensemos una cosa: si el titular participa en los movimientos favorables del activo subyacente, pero puede renunciar a los desfavorables simplemente no ejerciendo. ¿No tiene sentido que la existencia de incertidumbre futura sobre los precios tenga algún valor? Por supuesto. Cuanto más volátil sea el activo subyacente, más movimiento fuertes experimentará. Como el comprador solo participa de los favorables, cuánto más probable sea que varíe enormemente el precio, más valor tendrá mi opción. Resumiendo, identificamos dos valores en una opción:\footnote{La explicación más rigurosa procede de la teoría de valoración de opciones desarrollada por Fischer Black, Myron Scholes y Robert C. Merton, y se encuentra expuesta de forma estándar en Options, Futures, and Other Derivatives y Derivatives Markets.
+}
+\begin{la}
+    \item \textbf{Valor temporal}. Representa el valor económico de la posibilidad de esperar antes de decidir si ejercer o no el derecho incorporado en la opción. De esta forma, cuanto mayor sea la volatilidad esperada del subyacente y cuanto mayor sea el tiempo restante hasta el vencimiento, mayor será, en general, el valor temporal de la opción; y,
+    \item \textbf{Valor intrínseco}. Es el valor que tendría la opción si se ejerciera inmediatamente. Representa el beneficio económico obtenido al comparar el precio de ejercicio con el precio actual del activo subyacente. 
+\end{la}
+
+Desde la teoría de valoración de opciones, el valor temporal depende principalmente de la volatilidad esperada del subyacente y del tiempo restante hasta el vencimiento. Cuanto mayor sea la volatilidad esperada, mayor será la probabilidad de que la opción alcance situaciones muy favorables para su titular; del mismo modo, cuanto más tiempo reste hasta el vencimiento, más oportunidades existirán para que tales movimientos ocurran. Además, también influyen variables como el tipo de interés libre de riesgo y los flujos generados por el activo subyacente (dividendos, cupones o rentas), ya que afectan a la conveniencia económica de posponer la compra o venta efectiva del activo. Estos factores suelen tener una importancia secundaria frente a la volatilidad y el tiempo, aunque en determinadas circunstancias pueden resultar relevantes.
+
+\paragraph{Modelo BLACK-SCHOLES: Determinantes de valor}
+Debemos presentar brevemente uno de los modelos más reconocidos en el ámbito de las opciones, aunque con ello nos distanciemos ligeramente del propósito principal de esta primera sección (explicar por qué surgen y qué función cumplen los instrumentos derivados), su importancia e impliciaciones en el ámbito de la valoración de opciones hacen imperativa una breve mención. Se trata del Modelo BLACK-SCHOLES. 
+
+En particular, queremos presentar las principales características de este modelo y, en consecuencia, sus implicaciones/conclusiones. El Modelo BLACK-SCHOLES parte de unas premisas muy sencillas:\footnote{
+Todo el resto de hipótesis son secundarias y, como suele suceder, falsas y/o irrelevantas: (i) tipo de interés libre de riesgo conocido y constante; (ii) ausencia de costes de transacción; y, (iii) activo subyacente sin rendimiento temporal (no Flujos de Caja). Si se quiere ver el desarrollo completo de este modelo, está en el [\authorfont{Ver Anexo \ref{anx:black_scholes}}]
+}
+\begin{lnum}
+    \item \textbf{Distribución conocida}. La distribución probabilística del precio del activo subyacente es conocida y estable en el tiempo. Es decir, el tipo/forma de la distribución no es estado dependiente. Además, por simplicidad se supone una distribución normal, pero valdría cualquier distribución de probabilidad; y,
+    \item \textbf{Ausencia de inercias}. Además de la hipótesis anterior y, en cierto modo, agravandola, se asume que no solo la forma de la distribución es estado independiente, sino también que los parámetros que la definen lo son. Es decir, que no existen inercias, retrasos, que reubiquen la distribución, sino que la esperanza de la distribución es igual para todos los periodos, así como su varianza/desviación estándar.
+\end{lnum}
+
+Bajo estos supuestos, el desarrollo el desarrollo analítico del modelo nos permite alcanzar la siguiente definición sobre el valor/precio de una acción:
+
+\eqblock{
+\begin{aligned}
+    &\underset{\scriptsize\text{(Precio)}}{\text{Valor de la opción}:}&&\underset{\scriptsize{\text{(Valor de posponer)}}-\scriptsize{\text{(Coste de posponer)}}}{\boxed{{S_0\,N(d_1)}-X\,e^{-(r\,t)} N(d_2)}}\\[0.5em]
+\end{aligned}
+}{Valoración de opciones: Modelo BLACK-SCHOLES. Derivados: Desgranando conceptos}
+
+En definitiva, de acuerdo con el modelo de valoración de BLACK-SCHOLES-MERTON (BSM) y, de forma más general, con la teoría moderna de valoración de opciones, el precio de una opción depende fundamentalmente de seis variables:\footnote{Véase: \textit{Options, Futures, and Other Derivatives} de HULL; \textit{Derivatives Markets}, McDONALD; y \textit{The Concepts and Practice of Mathematical Finance} JOSHI.
+}
+\begin{lnum}
+    \item \textbf{Precio del activo subyacente ($S$).} El precio actual del subyacente importa porque la opción es un derecho contingente sobre dicho activo. Es decir, en términos económicos, $S$ determina la posición inicial de la opción respecto al dinero: \textit{in the money}, \textit{at the money} u \textit{out of the money}. En una call (compra), cuanto más alto sea el precio actual del subyacente en relación con el precio de ejercicio, mayor será el valor económico de ese derecho. En una put (venta) ocurrirá lo contrario, resultará más valioso cuanto menor sea el precio actual del subyacente;
+    \item \textbf{Precio de ejercicio ($K$).} El precio de ejercicio importa porque fija el precio contractual al que podrá realizarse la operación futura. En una call (compra), un menor precio de ejercicio hace más valioso el derecho de compra, porque permite adquirir el activo en condiciones más favorables. En una put (venta), un mayor precio de ejercicio hace más valioso el derecho de venta, porque permite vender el activo a un precio superior;
+    \item \textbf{Tipo de interés libre de riesgo ($r$).} La opción incorpora pagos futuros que deben valorarse en términos actuales. En una call europea, el precio de ejercicio se pagaría en el futuro si la opción se ejerce; por ello, un mayor tipo de interés reduce el valor actual de ese pago futuro y tiende a aumentar el valor de la call. En una put, el titular recibiría efectivamente el precio de ejercicio en caso de ejercicio; al descontarse ese cobro futuro a un tipo mayor, su valor actual disminuye y la put tiende a valer menos. En términos de valoración neutral al riesgo, $r$ no representa una prima por riesgo del subyacente, sino la tasa de descuento y de capitalización coherente con la ausencia de arbitraje;
+    \item \textbf{Volatilidad del activo subyacente ($\sigma$).} La volatilidad importa porque mide la dispersión esperada de los precios futuros del subyacente. La opción tiene un payoff asimétrico: el comprador participa en los escenarios favorables, pero su pérdida está limitada a la prima pagada. Por ello, una mayor dispersión de los precios futuros aumenta el valor esperado del payoff convexo de la opción. Esta es una de las intuiciones centrales de la teoría de opciones: manteniendo constantes el resto de variables, la convexidad del payoff hace que la incertidumbre tenga valor para el titular de la opción;\footnote{\textbf{NOTA.-} Esto, además, hace de las opciones un producto interesante para el análisis de mercado. Como decimos, en su valor/precio, los agentes le atribuyen un grado esperado de volatilidad, implícito. 
+    
+    La excepción a esta ventaja serían las opciones put (venta) europeas que, además, estén muy in the money. Es decir, cuyo valor intrínseco sea muy alto e igual al precio, siendo en consecuencia nulo o muy próximo a cero su valor temporal. ¿Qué pasaría en esta situación? La distribución truncada no sería favorable al tenedor, porque podría sufrir la pérdida de la diferencia entre precio de ejercicio y el precio spot, mientras que solo tendría una ganancia potencial equivalente a la diferencia entre el mínimo spot, $0$, y el precio spot actual (que, como decimos, está próximo a $0$). Por ejemplo, imaginemos el caso de una opción put (venta) con un precio de ejercicio de 20 euros y el precio del activo subyacente ha bajado a 1 euro. En esta situación, hay ya poco recorrido para aumentar el valor de la opción y mucho para perderlo.
+    }
+    \item \textbf{Tiempo restante hasta el vencimiento ($T$).} El tiempo importa porque una opción no solo concede un derecho, sino también la posibilidad de esperar antes de decidir si ejercerlo. Cuanto mayor sea el plazo hasta el vencimiento, mayor será el conjunto de estados futuros posibles que pueden hacer valiosa la opción;\footnote{Sin embargo, el efecto del tiempo no debe interpretarse de manera mecánica: en opciones europeas, especialmente cuando existen dividendos, costes de carry o tipos de interés relevantes, el aumento del plazo también altera el valor actual del precio de ejercicio y de los flujos asociados al subyacente. Por ello, aunque normalmente un mayor vencimiento incrementa el valor temporal de la opción, el signo final puede depender del tipo de opción y de los flujos del activo
+    } y,
+    \item \textbf{Flujos generados por el activo subyacente ($q$).} Los dividendos, cupones, rentas o costes de almacenamiento importan porque modifican el coste de mantener el activo frente a mantener la opción. Si el subyacente paga dividendos, quien posee una call no recibe esos pagos mientras no ejerza; por ello, los dividendos reducen el atractivo relativo de la call. En cambio, esos mismos pagos tienden a aumentar el valor de una put, porque reducen el precio esperado del subyacente y hacen más valioso el derecho a venderlo a un precio fijo. De forma más general, estos flujos afectan al precio forward del subyacente y, por tanto, al valor presente del payoff contingente de la opción;
+\end{lnum}
+
+Cada uno de estos fundamentos/determinantes tiene su propia denominación dentro del marco BMS, pero no cambian su significado economico. En este sentido, la sensibilidad del valor de la opción a cada uno de los determinantes sería: precio subyacente (delta, $\delta$), precio de ejercicio (gamma, $\gamma$), volatilidad (vega, $\nu$), tiempo (theta, $\theta$) y tipo de interés (rho, $\rho$). Además, podemos mencionar los puntes débiles que presenta el marco BSM, al margen de la restrictividad de otros de los supuestos no mencionados (que son descartables). Estas debilidades no son más que implicaciones lógicas de las dos hipótesis de partida presentadas: la distribución del precio no es estado-independiente, sino que varía y es diferente atendiendo al estado contingente que se nos presente, y que la distribución del precio es histórico-dependiente, es decir, la esperanza y varianza de la distribución dependen de los estados pasados, de forma que si hay ciertas \textit{tendencias} en las variables que definitorios de la distribución (esperanza, varianza). (También que no necesariamente siguen una normal, aunque eso no pasa nada porque no es una restricción, per se; podemos perfectamente cambiar la distribución).
+
+Salvar estas críticas no es tarea fácil. No obstante, algunas herramientas estadísticas nos permiten incluir inercias y tendencias. En particular, para tener en cuenta las inercias/dependencias históricas se podría introducir una tendencia sobre la desviación típica/volatilidad, creciente/decreciente en el tiempo; y, respecto a la distribución estado-dependiente, características como la heterocedasticidad nos permitiría alternancia entre periodos de estabilidad y periodos de mayor volatilidad que, además, pueden ser conformados mediante HER, creando una estructura temporal de la distribución asociado a otros marcos de modelaje (DSGE).
+
+\subsection{Contratos de permuta: Obligación continuada}
+Conocemos ya dos de los instrumentos derivados más conocidos/populares. No obstante, es necesario hacer referencia a un último instrumento, probablemente menos conocido, pero mucho más relevante en el ámbito financiero. Los contratos de permuta (financiera), o \textit{swaps} (como gusta llamarlos), son el instrumento más usado y cuya cuantía nominal de negociación excede con creces a la del resto de instrumentos. Incluso, en algunos años, ¡mayor que el agregado! 
+
+¿En qué consiste un contrato de permuta financiera? Aunque, evidentemente, la diversidad del mercado se tal que pueda parecer que no existen similitudes entre esta clase de contratos genéricos (ya que tanto las condiciones principales como las accesorias de cada contrato pueden ser muy flexibles), la realidad es que la esencia de todos los contratos sigue inmutable: consisten en una obligación sinalagmática, continuada, de intercambio de objetos/prestaciones periódicas. Empecemos por el principio.
+
+\subsubsection{El Juego: ¿Quién gana y quién pierde?}
+Imaginemos dos mercaderes, con productos diferentes y de territorios muy distantes (Portugal y China). Estos mercaderes, coinciden casualmente en el mercado del Cairo, vendiendo sus respectivos productos. Ambos coinciden en que el producto del otro podría resultar tremendamente atractivo en su propio país y por ello, acuerdan intercambiar sus productos directamente, valorando estos al precio de mercado del Cairo. ¿La situación resultante? Exactamente el nucleo de este instrumento: un contrato de permuta, en el que la diferencia en tasación es compensada por la parte correspondiente (aquella cuya mercancia tiene un valor de mercado inferior). 
+
+Pocos meses después, de vuelta en este mercado intermedio, estos dos mercaderes vuelven a coincidir. Dado el éxito de su anterior operación, deciden entablar una relación comercial más estrecha. ¿Qué pueden hacer? Podrían llevar a cabo el mismo contrato, pero no les convence a ninguno. Tras hablarlo, y entre cervezas, se acaban llevando bien y forjan una relación de confianza. Deciden lo siguiente: cada uno se establecerá en su mercado y, cada mes, realizará un envío de su mercancia directamente al país del otro. Al margen de lo relativo a incumplimiento, los puntos más importantes son: (i) que esta relación comercial tendrá una duración de tres años (36 meses, envíos), tras lo cual se reunirán en el Cairo para renegociar; (ii) que cada las respectivas mercancias se liquidarán a coste (más envío); y, (iii) para evitar enviar tanto dinero, designarán una persona de confianza en el cairo encargada de recibir las compensaciones correspondientes (si las hubiere). Esto es un contrato de permuta continuada o \textit{swap}. 
+
+\subsubsection{Utilidad económica del contrato de permuta: ¿Por qué jugar?}
+Como vemos, el juego es muy sencillo. Sin embargo la diferencia respecto a los otros instrumentos es más sútil y, a su vez, tremendamente beneficioso para las partes: no es un juego de suma cero. Es decir, las ganancias de uno ya no equivalen a las pérdidas del otro, sino que permite que la operación sea beneficiosa para abos en virtud de la ventaja comparativa que cada uno ostenta en su mercado. 
+
+\paragraph{Ventaja comparativa}
+Al margen de este ejemplo, que ilustra la función económica que perfectamente podría cumplir originariamente el \textit{swap}, en el mundo financiero, y en particular, en el ámbito de mayor uso de este tipo de instrumentos, el objeto principal de los swaps son las divisas y los tipos de interés. Es decir, mediante contratos de permuta las partes suelen explotar su ventaja comparativa en el ámbito cambiario y de financiación, permitiendo que, vía arbitraje, las partes comprometidas obtengan mejores condiciones de las que hubiesen conseguido \textit{yendo directamente a comprar el objeto principal del swap}. 
+
+De hecho, destaca este instrumento por el plazo de sus operaciones. Es decir, aunque dichas posiciones pueden construirse mediante usos conjuntos de otros instrumentos, los contratos de permuta permiten tomar posiciones mucho más largas (en años) que el resto lo cual, en realidad, es otro ejemplo más de la función estabilizadora que cumplen.
+
+\paragraph{Reasignación del riesgo: Operación de cobertura}
+Pero no solo se entra en un contrato de permuta para obtener ganancias derivadas de la ventaja comparativa. De hecho, esto constituye en el mundo financiero un elemento que favorece el uso de swaps a expensas de los otros instrumentos presentados, pero no es \textbf{la razón principal por la que se utilizan}. El objetivo o razón económica principal por lo que los contratos de permuta se utilizan es porque constituyen una herramienta fundamental de \textbf{gestión del riesgo}: permiten modificar la naturaleza de una exposición financiera sin necesidad de alterar el activo o pasivo subyacente que la origina.
+
+Desde esta perspectiva, la función económica del swap consiste en aislar determinadas fuentes de incertidumbre y transferirlas a otras contrapartes más dispuestas o mejor capacitadas para asumirlas. Por ejemplo, una empresa puede (o debe) mantener y soportar riesgos derivados de su actividad productiva, comercial o de inversión, pero no desear soportar su exposición a riesgos cambiarios asociados indirectamente a su actividad (exportadora/importadora). De esta forma, mediante un contrato de permuta financiera puede reasignar esa exposición a su contraparte y concentrar su riesgo en aquellas variables que, considera, forman parte de su negocio principal.
+
+Así, una empresa endeudada a tipo variable puede intercambiar sus flujos financieros por otros a tipo fijo y eliminar la incertidumbre derivada de futuras variaciones de las condiciones crediticias. Del mismo modo, una empresa que genera ingresos en una divisa distinta de aquella en la que incurre en sus costes puede utilizar un swap de divisas para neutralizar el riesgo cambiario asociado a su actividad. En ambos casos, \textbf{el riesgo no desaparece}, sino que \textbf{es transferido} a otra contraparte dispuesta a asumirlo. Esta es la fuente última de valor de los swaps: la capacidad para redistribuir riesgos entre agentes con preferencias y necesidades distintas, al permitir que cada agente mantenga únicamente las exposiciones que desea conservar. Generando una asignación más eficiente y facilitando la planificación.
+
+\subsubsection{¿Qué valor tiene un contrato de permuta? Reasignación del riesgo}
+Con esto en mente, ¿cómo podemos cuantificar el valor de un contrato de permuta? En primer lugar, sabemos que procede de dos fuentes distintas, la reasignación eficiente de recursos y la reasignación eficiente del riesgo, entonces ¿podemos expresarlo de una manera sencilla? Veamos cómo.
+
+Si una fuente de valor emerge de su capacidad para transformar una estructura de pagos (o flujos financieros) en otra. El compromiso es claro: cada parte se compromete a entregar una serie de pagos y a recibir otra serie distinta. Y, en consecuencia, también lo es la cuantificación de este valor emergente:
+
+\eqblock{
+\begin{aligned}
+    V_{\text{swap}}=VA(\text{flujos a recibir})-VA(\text{flujos a pagar}).
+\end{aligned}
+}{}
+
+Es decir, como el swap puede entenderse como el intercambio de dos conjuntos de flujos de caja: una \textit{pata} que se paga y una \textit{pata} que se recibe, desde el punto de vista económico, el principio de valoración es directo: \textbf{el valor de un swap es la diferencia entre el valor actual de los flujos que se recibirán y el valor actual de los flujos que se pagarán}. Así, un swap tendrá valor positivo para una parte cuando, valorados a precios de mercado actuales, los pagos que tiene derecho a recibir valgan más que los pagos que está obligada a realizar, y viceversa. Ahora bien, ya sea por suponer la condición de no arbitraje o, más en general, la condición de agentes no estúpidos (quizás más acertada pero, a menudo, igual de ilusoria), se suele asumir que los términos fijados por el contrato de permuta hacen que su valor inicial sea cero (o muy próximo a cero).\footnote{\textbf{OJO}.- A menudo se dice que el valor inicial del swap es cero. Esto es mentira. Se asume que es cero porque se considera \textit{razonable} pensar que, al fijar las condiciones del \textit{swap}, nadie obtiene una ganancia económica \textit{grauita} sin riesgo. De hecho, más aún, no solo sin riesgo sino reduciendo su exposición a un riesgo que le es menos agradable que otro. Este razonamiento es, por supuesto, aceptable; pero no es, ni por asomo, una Ley natural que se cumple. Perfectamente un swap podría tener un valor inicial positivo para una parte y negativo para otra. ¿Incluso positivo para ambas? Esto requiere demostración.
+} Lo que, a su vez, no significa que el contrato carezca de \textbf{utilidad} económica, sino que ninguna de las partes recibe gratuitamente una posición con valor financiero positivo. La utilidad del swap aparece porque cada parte obtiene una estructura de pagos más conveniente para sus necesidades de financiación, cobertura o gestión del riesgo.
+
+Ahora bien, después de la contratación, el valor del swap cambia. ¿Por qué? La explicación directa es porque cambian las variables de mercado que determinan los flujos intercambiados o su descuento: tipos de interés, tipos de cambio, diferenciales de crédito u otros precios de referencia. Sin embargo, lo que verdaderamente motiva el cambio es la evolución de la variable de riesgo cuya exposición se está intercambiando, esto sí es el núcleo principal del contrato de permuta. Por tanto, sí tiene un valor que puede ser no nulo y determinará su evolución y atractivo:
+
+\eqblock{
+\begin{aligned}
+    V_t=VA_t(\text{flujos a recibir})-VA_t(\text{flujos a pagar})\neq 0_{(\exists t)}
+\end{aligned}
+}{}
+
+Por ejemplo, en un swap de tipos de interés, si una parte paga fijo y recibe variable, ganará valor cuando suban los tipos de interés de mercado, porque los pagos variables esperados aumentan en relación con el tipo fijo pactado. Es decir, cuando la evolución del parámetro de riesgo cuya exposición se adquiere le sea favorable. Del mismo modo, en un swap de divisas, el valor de la posición evolucionará en función de las variaciones del tipo de cambio relevante. Una empresa española con obligaciones futuras en dólares puede utilizar un swap para transformar dichos pagos en euros. Si posteriormente el dólar se aprecia frente al euro, el valor de la cobertura aumentará, pues la posición adquirida mediante el swap compensa el encarecimiento de las obligaciones denominadas en dólares.
+
+En definitiva, el valor de una posición en un swap aumenta cuando la evolución de la variable de riesgo subyacente hace más favorables los flujos que la parte recibirá o menos gravosos los que deberá entregar.
+
+
+
+\clearpage
+\section{¿Innovación financiera?: Perversión financiera}
+Con todo lo expuesto hasta ahora deberíamos haber llegado a una conclusión: los derivados son instrumentos profundamente interesantes y de gran utilidad económica. Si es así, habremos logrado nuestro objetivo. Además, deberíamos haber apreciado que, aunque se argumente lo contrario, los instrumentos derivados distan muchísimo de ser innovaciones financieras del siglo XX. Todo lo contrario. El origen de los seguros, en sentido moderno, suele situarse en torno al siglo XVIII, en Escocia. Y este fuente de utilidad, reasignación explícita y directa de las contigencias futuras, sería la más \textit{actual}. Otras fuentes de utilidad, como el apalancamiento, el beneficio de dilatar ciertas decisiones en el tiempo o, incluso más aún, la utilidad derivada de la capacidad de previsión y planificación probablemente sean imposibles de datar por la vinculación casi innata que guarda con nuestra forma de observar nuestra vinculación con el futuro.
+
+\textbf{¿Qué queremos decir?} Esto es importante para analizar una cuestión fundamental del tema: ¿por qué instrumentos tan potentes, y realmente comunes en el tráfico jurídico-económico (aunque con otros nombres), están tan estigmatizados? O, dicho de otra forma, ¿tiende, inevitablemente, este tipo de instrumentos a la especulación y su consiguiente inestabilidad? 
+
+\subsection{Derivados: Recapitualando lo esencial}
+Para responder a estas cuestiones hablaremos brevemente de las Implicaciones de Política Económica de los derivados, sus beneficios y sus costes genéricos, y veremos cómo y por qué pueden convertirse en caballos de troya en nuestra economía.
+
+\subsubsection{Beneficios transverales: Utilidad económica}
+Los beneficios económicos de los instrumentos derivados están estrechamente vinculados a la utilidad económica que cumplen. Esto es así porque, independientemente del valor que ostentan en cada momento de su vigencia, incluso el inicial, su utilidad económica es siempre positiva y se deriva de fundamentos básicos:
+\begin{la}
+    \item En primer lugar, los derivados reducen el riesgo soportado por cada agente individual y lo reasignan hacia quienes tienen mayor tolerancia, mejor información o una cobertura natural frente a él. Dicho de otra forma, ningún derivado crea riqueza porque hace desaparecer el riesgo, sino porque permite que cada agente soporte únicamente aquellos riesgos (o fuentes de riesgo) para los que ostenta ventaja comparativa o un conjunto de preferencias en virtud de las cuales expone su cartera. Esto tiene una importante implicación: un derivado no elimina riesgo, sino que lo transforma en una estructura (vector de activos) de pagos contingentes; y,
+    \item En segundo lugar, los derivados cumplen una función real y operativa. Los agentes derivan utilidad de la capacidad que ofrecen para planificar los escenarios contingentes, comprometiendo solo parcialmente su posición actual. En consecuencia, no podemos únicamente considerar que el valor inicial de los instrumentos es nulo, sino que aún siéndolo, es positivo por permitir un apalancamiento inicial respecto a una situación futura que se ajusta irremediablemente a sus preferecias respecto a la incertidumbre que enfrenta. 
+\end{la}
+
+En definitiva, los instrumentos derivados generan riqueza no por la eliminación de riesgo, sino por constituir una herramienta para distribuirlo de manera más eficiente.
+
+\subsubsection{Riesgos (costes transversales): Nada es gratis}
+Ahora bien, esta utilidad económica tiene, como es natural, alguna factor desfavorable. Para entender el porque pensemos en cualquier transacción que enfrentemos. Por muy beneficiosa que sea, paralelamente estamos generando un riesgo derivado de la transacción, bien sea por lo que nos compromete ante una eventual contingencia futura, bien sea por las asimetrías informativas respecto al objeto de la transacción o la otra parte implicada. 
+
+Visto así, es natural llegar a la conclusión de que un instrumento derivado \textbf{genera nuevos riesgos} que, aunque pueda parecer mínimo (incluso no realizado, si la relación se desarrolla adecuadamente), debe ser tenido en cuenta. La clave, entonces, será identificar: ¿qué riesgo emerge de un instrumento derivado y qué implicaciones tienen?
+
+\paragraph{Activo subyacente: Incertidumbre de mercado}
+El primero, y más evidente, es el llamado \textbf{riesgo de mercado}. Este riesgo deriva de la posibilidad de que varíe el valor de mercado del instrumento como consecuencia de cambios en la variable económica subyacente: precio de una acción, tipo de interés, tipo de cambio, precio de una materia prima o diferencial de crédito.
+
+Ahora bien, esta afirmación exige una precisión conceptual porque sino, cualquiera podría incluso pensar que es absurda. ¿No estamos contabilizando doblemente el \textit{riesgo}? (como beneficio -utilidad- y como coste -riesgo-). ¿No resulta paradójico? ¿No son, precisamente los instrumentos derivados, una manera adecuada para reasignar el riesgo de mercado de manera que se alcance una asignación más eficicente? Y esta confusión es muy habitual, de nuevo por la asombrosa e incomprensible determinación de los académicos por crear confusión.
+
+La paradoja desaparece al comprender que el derivado permite reasignar exposiciones contingentes, pero esa reasignación no elimina la incertidumbre sobre los estados futuros de la economía. Es decir, no elimina la incertidumbre asociada al subyacente, sino que la transforma en una estructura contractual de pagos contingentes: cambia de forma, de titularidad y de localización dentro del sistema financiero.\footnote{Esta lógica está en ARROW, cuando define los valores como instrumentos para la asignación óptima de la asunción de riesgo; en DEBREU, mediante bienes contingentes a estados de la naturaleza; y en DUFFIE/MERTON, cuando la valoración de activos se construye explícitamente sobre precios de estados, martingalas y flujos contingentes bajo incertidumbre.
+} Esto tiene fuertes implicaciones. 
+
+Más aún, teniendo en cuenta lo expuesto. Por ejemplo, un caso ejemplificador sería el Teorema de GIRSANOV: ¿hasta dónde podemos sostener que se cumplirá? ¿cómo puede existir un precio de mercado único aunque los agentes tengan valoraciones subjetivas distintas? ¿Es el precio inicial de un contrato de permuta cero? O, por el contrario, ¿cada parte está simultaneamente pensado que \textbf{sale ganando}? La realidad es otra: los modelos de valoración no eliminan la incertidumbre económica; la traducen a una estructura de precios bajo supuestos fuertes.
+
+Son preguntas muy difíciles de contestar pero que debemos tener siempre presentes para abordar su análisis de manera rigurosa. 
+
+\paragraph{Incumplimiento: Riesgo de contrapartida}
+En segundo lugar, como materialización de la incertidumbre de mercado y común en cualquier tipo de obligación recíproca: el \textbf{riesgo de incumplimento}. ¿Qué sucede cuando, efectivamente, se pierde o gana? ¿Está nuestra contraparte en condiciones para cumplir sus obligaciones? 
+
+En el ámbito financiero este riesgo se conoce como \textbf{riesgo de contrapartida}. Se trata, en esencia, de la exposición que asumimos ante un incumplimiento de la otra parte, involucrada en cualquier transacción económica y/o financiera. Es decir, se refiere al riesgo de que una de las partes no entregue el activo pactado, no pague intereses o no devuelva el capital en una operación financiera. 
+
+\subsubsection{¿Cómo potencias su función económica?}
+Llegados a este punto lo razonable sería preguntarnos: ¿cómo podemos maximizar los beneficios económicos (utilidad), minimizando, si es remotamente posible, los riesgos emergentes? Si la fuente útlima de estos riesgos es la propia incertidumbre del mercado, ¿resulta si quiera posible?
+
+Para contestar a estas preguntas debemos presentar dos conceptos fundamentales en el ámbito de los derivados que han sido deliberadamente excluidos de la exposición por preservar un enfoque eminentemente conceptual. No obstante, constituyen los dos vértices, casi antagónicos, de la gestión del riesgo en las operaciones con derivados y, aunque frecuentemente se presentan como complementarios, veremos como en realidad, son sustitutos perfectos. Hablamos de: la gestión del riesgo mediante instrumentos de mercado y la gestión del riesgo mediante mercados institucionalizados. 
+
+\subsection{Gestión del riesgo (I): Instrumentos de mercado}
+Si le preguntaramos a cualquier trader de derivados sobre la posibilidad de minimizar el riesgo asociado a sus operaciones, la respuesta que obtendríamos sería enérgica y tremendamente optimista. El razonamiento sería algo así. (Algo más elaborado de lo que cabría esperar).
+
+Una vez abierta una posición en derivados, la gestión del riesgo no consiste en eliminar la incertidumbre económica que afecta al subyacente, sino en modificar la forma en que dicha incertidumbre incide sobre el valor de la posición, que puede entenderse como una función de un conjunto de factores de riesgo:
+
+\eqblock{
+\begin{aligned}
+    V_t = V(t,X_{1t},X_{2t},\ldots,X_{nt})
+\end{aligned}
+}{}
+
+Como vemos, la exposición (par valor-riesgo) de cualquier posición responde a una intuición común: una vez celebrado un derivado, el problema consiste en medir cómo cambia su valor cuando cambia el mundo. Por eso, si $V_t$ es el valor de mercado de la posición en el momento $t$, ese valor puede escribirse como una función de un vector de factores de riesgo.
+
+De esta formulación, se desprende una sencilla conclusión: una posición se gestiona atendiendo a su sensibilidad frente a factores de riesgo. Es decir, la gestión del riesgo depende y varía atendiendo a sus sensibilidades frente a dichos factores: delta respecto al subyacente, vega respecto a la volatilidad, rho respecto a los tipos de interés, gamma respecto a la convexidad, o medidas análogas en instrumentos de renta fija, divisas o crédito. Pero también tantos otros como se quiera.\footnote{HULL presenta esta lógica mediante las griegas y la cobertura dinámica; HARRISON-PLISKA y DUFFIE la formalizan mediante procesos estocásticos, martingalas y carteras autofinanciadas; JORION la operacionaliza en gestión de riesgos mediante VaR, factor mapping y aproximaciones delta/delta-gamma.  
+} Entonces, ¿cómo deberíamos gestionar el riesgo? 
+
+\subsubsection{Sensibilidades: Linealidad o No-linealidad}
+En esencia, la cobertura consistiría en incorporar nuevas posiciones financieras cuya sensibilidad compense, total o parcialmente, la sensibilidad de la posición original. Esta lógica es general y puede aplicarse a opciones, futuros, swaps, CDS o carteras completas de derivados.
+
+Para verlo en acción, supongamos que $X_i$ refleja el precio del subyacente, un tipo de interés, un tipo de cambio, una volatilidad implícita, un spread crediticio o cualquier variable de mercado relevante. Gestionar el riesgo de mercado significa entonces estudiar y modificar la exposición de $V_t$ a variaciones de esos factores. Una primera aproximación analítica:
+
+\eqblock{
+\begin{aligned}
+    \mathrm dV \simeq \sum_{i=1}^{n}\frac{\partial V}{\partial X_i}\mathrm dX_i.
+\end{aligned}
+}{}
+
+Si los factores de riesgo cambian poco, la variación del valor puede aproximarse por esta expresión:\footnote{Nótese que aquí aparece la delta en sentido amplio: la sensibilidad de primer orden del valor de la posición respecto de un factor de riesgo. En una opción sobre una acción, la delta suele referirse a $\partial V/\partial S$. Pero en una cartera más general puede haber delta respecto a un tipo de cambio, a un punto de la curva de tipos, al precio de un bono o a un índice.
+
+HULL y la literatura de VaR explican precisamente esta agregación de deltas por factor de riesgo.  
+} todo empieza por una descomposición en sensibilidades frente a factores de riesgo. Ahora bien, ¿toda variación puede aproximarse de esta forma? La respuesta directa es que no. Solo las posiciones lineales mantienen esta aproximación lineal ante cambios. Cuando la posición es no lineal, como ocurre con opciones, swaps con opcionalidad, estructuras exóticas o carteras grandes, la aproximación lineal puede ser insuficiente.\footnote{
+¿Qué es una posición/instrumento lineal y qué no lo es? Un instrumento lineal es aquel cuyo valor cambia aproximadamente de forma proporcional al cambio del factor de riesgo relevante. Formalmente, si $V(X)=a+bX$, entonces: $\frac{\partial V}{\partial X}=b$, $\frac{\partial^2 V}{\partial X^2}=0$. ¿Por qué sería lineal un instrumento? La linealidad surge de la esencia misma del instrumento: solo los futuros, forward y spots son instrumentos lineales. ¿Por qué? Porque su rendimiento/payoff se deriva linealmente del precio spot del subyacente: ganar una unidad adicional del subyacente produce siempre el mismo cambio marginal de valor. Esto implica que su delta es constante (o casi constante), y su gamma es nula o despreciable.
+
+Y, ¿qué es un instrumento no lineal? Un instrumento no lineal es aquel cuyo valor marginal \textbf{depende del nivel del factor de riesgo}. Una opción es el ejemplo canónico porque su payoff contiene un operador máximo. Para el caso de una call: $V_T=\max(0, S_T-X)$. De esta forma, la pendiente del rendimiento/payoff no es constante: cuando la opción está out of the money, no responde como el subyacente; cuando está in the money, sí. Antes del vencimiento, esa no linealidad se suaviza por el valor temporal, pero no desaparece: delta cambia con $S$, con el tiempo, con la volatilidad y con los tipos. De ahí surgen el resto de griegas: gamma, vega, theta y rho. La no linealidad, por tanto, nace de la esencia misma del contrato, los derechos contingentes, opcionalidad, barreras, caps, floors, conversión, default, calls embebidas o dependencia de volatilidad/correlación. HULL trata esta estructura mediante las griegas; Black-Scholes-Merton la formalizan mediante replicación dinámica en mercados idealizados.
+} Entonces debemos incorporar la convexidad (o segunda derivada):
+
+\eqblock{
+\begin{aligned}
+    \mathrm dV \simeq \sum_{i=1}^{n}\frac{\partial V}{\partial X_i}\mathrm dX_i+\frac{1}{2}\sum_{i=1}^{n}\sum_{j=1}^{n}\frac{\partial^2 V}{\partial X_i\partial X_j}\mathrm dX_i \mathrm dX_j.
+\end{aligned}
+}{}
+
+Esta es la lógica delta-gamma. La delta captura la exposición direccional; la gamma captura la curvatura. En opciones, además, aparecen vega, rho y theta, que miden sensibilidad a volatilidad, tipos de interés y paso del tiempo. Esta es la razón por la cual una cartera puede estar \textbf{delta neutral} y seguir teniendo mucho riesgo: puede estar expuesta a volatilidad, convexidad, tipos o correlaciones. La literatura de gestión de riesgo de carteras no lineales, especialmente en VaR delta-gamma, desarrolla exactamente este punto.  
+
+\subsubsection{Construcción de la cartera delta-neutral}
+La gestión mediante derivados consiste entonces en construir una posición adicional $H_t$ tal que \textbf{la sensibilidad conjunta de la cartera original y la cobertura sea menor que la sensibilidad original}. Esto no debe entenderse como una cartera sin riesgo, sino como una solución de optimización condicionada. En términos generales, el problema práctico es
+
+\eqblock{
+\begin{aligned}
+    &\min_{\omega}\ \mathcal{R}\left(V+\sum_k \omega_k h_k\right)\\[1em]
+    &\text{s.a.} \qquad{\scriptsize\text{Costes, liquidez, disponibilidad instrumentos, etc.}}
+\end{aligned}
+}{}
+
+Es decir, consiste en minimizar $\mathcal{R}$, que puede ser cualquier parámetro de interés que proporcione resultados adveros (volatilidad, pérdida bajo escenarios, tracking error de griegas, etc.), sujeto a restricciones de coste, liquidez, límites regulatorios, colateral, margen, concentración, disponibilidad de instrumentos, tolerancia al error de cobertura o cualquier otro factor que condicione nuestro conjunto factible. 
+
+Ahora bien, ¿cómo construir materialmente esta posición? La forma más general puede formularse como sigue. Dada una cartera inicial $V(X)$, se añaden $m$ instrumentos de cobertura $h_1,\ldots,h_m$, con posiciones $\omega_1,\ldots,\omega_m$. Estos instrumentos de cobertura tienen sus propias sensibilidades respecto a los factores ($X$) de sensibilidad de la cartera inicial ($V$). La esencia de la cobertura es alcanzar un conjunto de instrumentos tal que, dada la matriz conjunto de sensibilidades de estos instrumentos de cobertura ($A$), se cumpla lo que conocemos como \textbf{neutralidad delta}:
+
+\eqblock{
+\begin{aligned}
+    &\text{Neutralidad delta}:\qquad \boxed{A\omega=-g}\qquad\Longrightarrow
+    \left\{\begin{aligned}
+        &\text{Cobertura exacta}\\[1em]
+        &\text{Sobredeterminación}
+    \end{aligned}\right.\\[2em]
+    &\text{donde,}\left\{\begin{aligned}
+        &g=\nabla_X V&&\equiv\text{Vector de sensibilidades de $V(X)$}\\[0.5em]
+        &A&&\equiv\underset{{\scriptsize\text{(Filas = Instrumentos cobertura | Columna = Sensibilidades para cada factor)}}}{\text{Matriz de sensibilidades de inst. cobertura}}\\[0.5em]
+        &\omega&&\equiv\text{Posiciones para cada inst. cobertura}
+    \end{aligned}\right.
+\end{aligned}
+}{}
+
+En esta situación habrá dos resultados posibles: (i) si $A$ es cuadrada e invertible, existe cobertura exacta local: $\omega=-A^{-1}g$; o, (ii) si hay más factores que instrumentos, el sistema está sobredeterminado y se usa una cobertura aproximada, por ejemplo mínimos cuadrados: $\omega^\ast=\arg\min_{\omega}\|g+A\omega\|^2_W$, donde $W$ pondera la importancia de cada factor.\footnote{Esta es la lógica detrás del factor mapping y de la gestión por sensibilidades en VaR: la cartera se proyecta sobre un conjunto finito de factores de riesgo y se neutraliza, o reduce, su exposición a ellos. JORION desarrolla esta operacionalización mediante VaR, mapping de factores y aproximaciones delta/delta-gamma; AMMANN muestra que, para activos no lineales, la aproximación delta-gamma es una extensión natural frente a la delta-normal.
+} Es evidente que se trata del caso más sencillo: si una opción tiene sensibilidad ($\Delta$) al precio del subyacente, se puede tomar una posición contraria ($-\Delta$) en el subyacente para neutralizar la exposición local al precio. Ese es el \textbf{principio de la cobertura delta de BLACK-SCHOLES-MERTON}. 
+
+No obstante, esto no es suficiente para cubrir posiciones no lineales. La cobertura no lineal añade una segunda capa: si la cartera tiene curvatura, neutralizar solo $g$ no basta (neutralidad delta), sino que necesitamos además conseguir \textbf{neutralidad-gamma}. Analíticamente:
+
+\eqblock{
+\begin{aligned}
+    \text{Cobertura no lineal:}\left\{\begin{aligned}
+        &\textbf{Neutralidad delta}:&&g+A\omega=0\\[1em]
+        &\hspace{8em}+\\[1em]
+        &\textbf{Neutralidad gamma}: &&\Gamma_V+\sum_{k=1}^{m}\omega_k\Gamma_{h_k}=0
+    \end{aligned}\right.
+\end{aligned}
+}{}
+
+Porque para movimientos suficietemente grandes, aparece convexidad que debe ser tenida adecuadamente en cuenta. Démonos cuenta que esta segunda condición es mucho más exigente: $\Gamma$ es una matriz $n\times n$, por lo que neutralizar todas las curvaturas propias y cruzadas requiere muchos instrumentos con curvaturas suficientemente independientes. Por eso, en la práctica, las coberturas gamma, vega o cross-gamma suelen ser parciales: se neutralizan los factores dominantes, los vencimientos más relevantes o los buckets de mayor riesgo. Hull explica precisamente que la delta puede ajustarse con el subyacente, pero que la gamma o la vega requieren opciones u otros derivados; Black-Scholes y Merton fundamentan esta lógica en la replicación dinámica de opciones. 
+
+\paragraph{Implicaciones de Política Económica}
+En definitiva, en mercados completos, friccionales nulas y negociación continua, puede existir replicación perfecta. Pero en mercados incompletos, discretos o con costes de transacción, la cobertura exacta deja de existir o deja de ser económicamente óptima. 
+
+Las ventajas de esta construcción son claras. Primero, traduce el riesgo de una cartera compleja en exposiciones mensurables. Segundo, permite separar riesgos: dirección, curvatura, volatilidad, tipos, crédito, divisa, liquidez. Tercero, permite decidir qué se cubre y qué se conserva. Cuarto, convierte la gestión del riesgo en un problema explícito de asignación de instrumentos: qué cobertura usar, cuánto, con qué coste y bajo qué escenario.
+
+Pero \textbf{sus limitaciones son estructurales}. La primera es localismo: \textbf{delta y gamma son derivadas locales}. Funcionan alrededor del punto actual, no necesariamente ante saltos, crisis o movimientos grandes. La segunda es \textbf{error de modelo}: las griegas dependen del modelo de valoración. Si la volatilidad implícita, la correlación, la curva de tipos o la intensidad de default están mal especificadas, la cobertura puede ser formalmente correcta y económicamente errónea. La tercera es \textbf{incompletitud}: no todos los factores son negociables. Puede cubrirse el precio del subyacente, pero no siempre la volatilidad futura, la correlación, la liquidez o el jump risk. La cuarta es \textbf{discretización}: la replicación continua de BLACK-SCHOLES-MERTON es un ideal; en la práctica se rebalancea en fechas discretas, con bid-ask spread, costes, margen y límites de balance.
+
+Tampoco hay que perder de vista los límites institucionales y aquellos impuestos por el sistema de incentivos. Una cobertura puede reducir VaR regulatorio sin reducir pérdidas extremas;\footnote{
+El VaR, o Valor en Riesgo, es una medida de riesgo introducida formalmente por el Comité de Basilea (\href{https://es.wikipedia.org/wiki/Valor_en_riesgo}{Valor en Riesgo}). Es una medida de riesgo ampliamente utilizada del riesgo de mercado en una cartera de inversiones de activos financieros. Imaginemos un portafolio, un horizonte de tiempo y una probabilidad $p$ dados, el $p$-VaR puede ser definido informalmente como la máxima pérdida posible durante un tiempo después de excluir todos los peores resultados cuya probabilidad es a lo más $p$ (asumiendo mercados normales y que no se produce negociación en el portafolio). Por ejemplo, si un portafolio de acciones tiene un VaR a un día del $5\%$ sobre \$$1$ millón, existe una probabilidad del $0.05$ de que el portafolio caiga en valor por más de \$$1$ millón en un período de un día si no existe trading. Informalmente, una pérdida de \$$1$ millón o más en esta cartera se espera que sea de $1$ día entre $20$. Una pérdida que excede el umbral del VaR se denomina \textit{\textbf{VaR break}}. El VaR tiene cinco usos principales en finanzas: gestión del riesgo, medida del riesgo, control financiero, reporte financiero y cálculo del capital regulatorio.
+\imagenfit{Fig3.png}{Medida utilizada en el mercado, gestiona el riesgo financiero.}{\href{https://es.wikipedia.org/wiki/Valor_en_riesgo}{Valor en Riesgo}}
+} puede \textbf{transferir riesgo de mercado a riesgo de liquidez o de contraparte}; \textbf{puede inducir ventas procíclicas si muchos agentes rebalancean en la misma dirección}; y puede \textbf{generar falsa seguridad si la neutralidad se mide solo con griegas de primer orden}. La cartera delta-neutral sigue expuesta a gamma, vega, theta, correlación, saltos, financiación, margen y cambios de régimen. Por tanto, la neutralidad relevante no es una propiedad absoluta de la cartera, sino una propiedad relativa al modelo, al conjunto de factores, al horizonte temporal y a los instrumentos disponibles.
+
+En síntesis, construir la posición adicional $H_t$ equivale a resolver un sistema —exacto o aproximado— de neutralización de sensibilidades: no se gestiona el derivado en abstracto; se gestionan las sensibilidades de su valor. Teóricamente, la cobertura perfecta requiere mercados completos, negociación continua, ausencia de fricciones y modelo correcto. Fuera de ese mundo, la cobertura es una decisión de optimización bajo restricciones, no una eliminación del riesgo.
+
+\subsection{Gestión del riesgo (II): Mercados institucionalizados}
+Esta situación nos conduce a una bifurcación de caminos: (i) seguir por el camino de mercado y considerar estos instrumentos de gestión individual del riesgo un mecanismo aceptable para garantizar un mínimode estabilidad al sistema, evitando cualquier intervención regulatoria sobre la base de que nos conducirá a una situación necesariamente más ineficiente; o, (ii) considerar que estos instrumentos de gestión son necesarios pero insuficientes para minimizar los riesgos sistémicos a niveles socialmente deseables. Tomar uno u otro es resultado del sistema de creencias que contamine el pensamiento del que se ponga en esta tesitura. Por eso es interesante y necesario presentar las alternativas que se nos presentan por el segundo: ¿qué más podemos hacer?
+
+Empecemos evidenciando un hecho: hasta hora no hemos tenido en cuenta el \textit{tipo} de mercado a través del cual se relacionan las partes. Esta característica ausente es precisamente la que vamos a entrar a valorar. 
+
+Cabe precisar, no obstante, que lo que ahora vamos a presentar no mitiga cualquier riesgo. Ni mucho menos podría considerarse análogos a los intrumentos de gestión de mercado (salvo, eso sí, que estos sí funcionan). Por el contrario, los marcos institucionales a través de los cuales se pueden llevar a cabo este tipo de relaciones, difieren en las posibilidades que ofrecen para mitigar dos de las más importantes fuentes de riesgo en este tipo de contratos: (i) el riesgo de contrapartida; y, (ii) la transparencia o, equivalentemente, presencia de información asimétrica.
+
+Hablaremos en particular de dos marcos operativos: las operaciones \textbf{OTC} y las operaciones mediadas por \textbf{Cámara de Compensación}. Los contratos de derivados se negocian de dos formas: en mercados organizados o en mercados personalizados. 
+
+\subsubsection{Mercados personalizados: Over The Counter}
+Los mercados Over The Counter (OTC) son mercados extrabursátiles donde se negocian distintos instrumentos financieros (bonos, acciones, divisas, derivados, etc.) directamente entre dos partes, sin pasar por una bolsa o mercado organizado. Para ello se utilizan los contratos OTC, en los que las partes acuerdan las condiciones de liquidación del instrumento. Los contratos OTC pueden formalizarse entre un banco de inversión y un cliente (habitualmente una empresa que necesita financiación) o directamente entre entidades financieras. Cuando se negocian entre estas últimas, suelen regirse por contratos marco estandarizados como los de la International Swaps and Derivatives Association (ISDA), el marco de referencia internacional para este tipo de operaciones.
+
+Como se puede ver, esencialmente son transacciones financieras que se negocian directamente entre las partes, configurando el propio instrumento a medida, en lugar de partir de productos estandarizados. Por tanto, con frecuencia se asimila el mercado OTC con un mercado bilateral, aunque se pueden distinguir dos alternativas:
+\begin{la}
+    \item \textbf{Negociación bilateral}. Los creadores de mercado (dealers) publican precios de compra y venta a través de teléfono o pantallas, y todas las operaciones se ejecutan contra su propia cuenta, actuando como contrapartida directa del cliente (principal); y,
+    \item \textbf{Negociación multilateral}. Existe una plataforma operada por uno o varios intermediarios (brokers) a través de la cual las operaciones se ejecutan entre terceros, sin que el intermediario actúe como contrapartida (agency).
+\end{la}
+
+La tendencia del mercado OTC es desplazar un número creciente de operaciones hacia sistemas electrónicos, reservando la negociación telefónica para contratos más complejos y con menor grado de estandarización. 
+
+Los mercados OTC están actualmente sujetos a un marco regulatorio amplio y coordinado a nivel europeo, que pivota sobre dos grandes pilares: por un lado, \textbf{MiFID II} y el \textbf{Reglamento MiFIR}, que establecen normas de transparencia, organización de mercados y reporte de operaciones; por otro, el \textbf{Reglamento EMIR} (European Market Infrastructure Regulation), que regula específicamente los derivados OTC e introduce obligaciones como la compensación central de determinados contratos, el reporte a registros de operaciones (trade repositories) y medidas de gestión del riesgo de contrapartida. En España, este marco se complementa con el \textbf{Texto Refundido de la Ley del Mercado de Valores} (Real Decreto Legislativo 4/2015), que atribuye a la CNMV las funciones de supervisión, control e inspección sobre los participantes y las operaciones en los mercados financieros.\footnote{La legislación española ha sido especialmente ambiciosa en este ámbito, ampliando considerablemente las competencias de la CNMV y dotándola de los datos necesarios para realizar análisis de riesgos casi en tiempo real, si bien el volumen y la complejidad de la información siguen suponiendo un reto operativo para los supervisores.
+}
+
+Ahora bien, ¿es esto suficiente? ¿responde esta necesaria flexibilidad (tal y como defienden) a una realidad incuestionable? La mayoría de los contratos derivados se negocian en mercados OTC, están dominados por muy pocos actores. Una de las consecuencias de la Dodd-Frank Act es precisamente el intento de mover todo lo que se refiere a la negociación de estos contratos OTC a mercados organizados. El propósito es precisamente dotar a estos productos de mayor transparencia y estabilidad. Ante esta situación, los grandes operadores internacionales son reacios precisamente a transferir el volumen de negociación de los mercados OTC a los mercados centralizados. El motivo nada tiene que ver con el valor económico de que estas transacciones ocurran en los mercados OTC. No, la sospecha gira entorno, precisamente, a las actividades colusorias que puede generar la presencia de tan pocos actores.
+
+\subsubsection{Mercados organizados: Cámaras de Compesación}
+Frente a esta situación están los mercados organizados, que son aquellos donde las transacciones están centralizadas en un sola entidad encargada de la negociación del contrato en cuestión.\footnote{Por ejemplo, en nuestro país se negocian opciones sobre el futuro del IBEX35 en el MEFF, el mercado de derivados español. Muchos de estos mercados ofrecen también servicios de contrapartida para centralizar toda la compensación. Por ejemplo el MEFF ofrece servicios de cámara de contrapartida central para los pactos de recompra (repos) sobre deuda soberana española.
+} Bajo este marco, las cámaras de compensación, permite dotar de transparencia a las transacciones a la vez que, en no pocas ocasiones, reducen el riesgo de contraparte y el riesgo sistémico asociado al incumplimiento bilateral mediante novación, la institucionalización de la exposición, el establecimiento de márgenes iniciales y liquidaciones diarias y la gestión del default. Es decir, aunque no reducen primariamente el riesgo de mercado, son una forma de gestionar los riesgos institucionales y crediticios de mantener posiciones abiertas, mediante la reducción de asimetrías informativas y la transparencia, control y estandarización de los contratos.
+
+Bajo este marco, hay dos cosas que pueden (y deben) transferirse del mercado OTC a los mercados organizados: lo que se refiere a la negociación en si (y en particular el que los precios sean públicos, como lo son en los mercado organizados) y todo lo que se refiere a la compensación (establecimiento de márgenes, los depósitos que las partes en el contrato han de hacer efectivo para garantizar el cumplimiento de sus obligaciones, y liquidación de estos contratos). 
+
+\paragraph{Transferencia de la negociación: Transparencia}
+La transferencia de la negociación de este tipo de contratos a mercados organizados sería muy beneficioso. Y ello por varios motivos. Primero lo fundamental de los mercados financieros debe ser la transparencia y ahora mismo los mercados OTC son menos transparentes de lo que deberían ser. Ello facilitaría la entrada de otros operadores y facilitaría la gestión de riesgo. 
+
+Además, serviría de depósito de información sobre las exposiciones al riesgo de los distintos agentes en situaciones de crisis. Recuérdese que una de las preocupaciones fundamentales durante la crisis (2008) era precisamente que no se sabía lo que, por ejemplo, la quiebra de Lehman o la posible de AIG supondría para la solvencia de los distintos operadores. Ello dejó al Tesoro y la Reserva Federal imaginado escenarios dantescos, animados por los propios operadores interesados en el rescate de AIG para evitar perdidas en los contratos CDS que con tanta alegría había emitido la aseguradora a través de AIG Financial Products. El acceso a la información en estas cámaras de compensación darían de forma casi instantánea a las autoridades una fotografía de las perdidas que sufrirían los distintos operadores, así como los dueños de dichas cámaras de compensación, en caso de insolvencia de un agente activo en este tipo de contratos.
+
+\paragraph{Compensación: Riesgo de contraparte}
+Por otro lado, la centralización de todos los servicios de compensación y liquidación en un numero reducido, pero competitivo, de cámaras de compensación.\footnote{Un motivo de preocupación puede ser que las cámaras de compensación sean fuente de riesgo sistémico, dada que tienen una exposición en caso de insolvencia de uno de sus miembros. Esto puede acentuarse si las distintas cámaras compiten en márgenes. Es posible establecer condiciones bajo las cuales la competencia entre las distintas cámaras de compensación pueden llevar al establecimiento de márgenes por encima o por debajo del optimo restringido: \href{https://web.archive.org/web/20050125215944id_/http://www-1.gsb.columbia.edu:80/faculty/jsantos/exclusivity-aer.pdf}{\textit{Financial Intermediation without Exclusivity}. SANTOS y SCHEINKMAN (2001)}
+Pero lo mas importante es que si una cámara de compensación tiene problemas de solvencia, como fue el caso durante el crash de 1987 en Chicago, puede ser absorbida por otras evitando problemas a los miembros de la cámara en dificultades o simplemente si las autoridades económicas lo estiman conveniente pueden recapitalizarlas con el conocimiento absoluto del perfil de riesgo de los miembros.
+}
+
+
+\paragraph{Control de acceso: ¿Todo el mundo debe poder operar?}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+La Comisión Europea inició en 2011 una investigación para determinar si los grandes operadores en el mercado CDS y la compañía por ellos controlada, Markit, que es la compañía fundamental en lo que se refiere a toda la información sobre estos mercados, coluden y mantienen una posición anticompetitiva para mantener el control de dicha información y así evitar que los mercados organizados compitan con los mercados OTC por el control de la negociación de este tipo de derivados (había mas cosas en la investigación lanzada por la Comisión, pero para otro día.)
+
+Pues bien recientemente la Comisión ha informado a una serie de bancos así como Markit y la International Swap Dealers Association (ISDA) de sus conclusiones, preliminares eso sí, que sus actuaciones en le mercado de derivados son contrarias a las leyes sobre competencia de la Unión Europea. Los bancos son Bank of America Merril Lynch, HSBC, Citigroup, Goldman Sachs, Morgan Stanley, Credit Suisse, UBS, Bear Sterns (¿), JPMorgan, BNP Paribas, Barclays, Royal Bank of Scotland and Deutschbank. Lo interesante es que cuando parecía que el impulso inicial de Dodd-Frank en lo que a esta materia se refiere se estaban diluyendo (los esfuerzos de Gary Gensler, presidente de la CFTC estadounidense encargada de estas cosas por ahora no han tenido éxito), la Comisión ha dotado a este proceso de una muy de agradecer energía renovada.
+
+
+
+
+
+
+
+
+
+
+
+distinguirse esta gestión del riesgo de mercado de los mecanismos institucionales de reducción del riesgo de contraparte. Las cámaras de compensación, los márgenes, la colateralización y el netting no eliminan la exposición económica al factor de riesgo subyacente, pero reducen la probabilidad y el impacto de que una contraparte incumpla sus obligaciones cuando la posición tiene valor positivo para la otra parte.
+
+Por eso, tu planteamiento es correcto si lo formulas así: una posición derivada abierta genera una exposición de mercado porque su valor es contingente a factores inciertos; esa exposición puede reducirse mediante nuevas posiciones financieras que compensen sus sensibilidades relevantes. Esta es la “gestión de riesgo mediante derivados” en sentido genérico. No exige valorar un derivado concreto desde cero; exige identificar factores de riesgo, medir sensibilidades y construir una cartera de cobertura.
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+\end{document}
