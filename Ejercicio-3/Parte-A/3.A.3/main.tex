@@ -1,0 +1,1110 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}   % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+ \begin{tcolorbox}[
+ colframe=black,
+ title={Puntos clave},
+ before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+ ]
+ #1
+ \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+ \begin{tcolorbox}[
+ colback=white,
+ colframe=red,
+ title={Modificaciones a realizar},
+ before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+ ]
+ #1
+ \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+ % --- Lista alfabética ---
+ \newenvironment{la}
+ {\begin{list}{\alph{alphaitem})}{%
+  \usecounter{alphaitem}%
+  \setlength{\leftmargin}{1cm}%
+  \setlength{\parskip}{3pt}% 
+  \setlength{\itemsep}{0pt}% ← espacio entre ítems
+  \setlength{\parsep}{0pt}% ← párrafos dentro de un ítem
+ }}
+ {\end{list}}
+ 
+ % --- Lista numérica ---
+ \newenvironment{lnum}
+ {\begin{list}{\arabic{numitem}.}{%
+  \usecounter{numitem}%
+  \setlength{\leftmargin}{1cm}%
+  \setlength{\parskip}{3pt}% 
+  \setlength{\itemsep}{0pt}% ← espacio entre ítems
+  \setlength{\parsep}{0pt}% ← párrafos dentro de un ítem
+ }}
+ {\end{list}}
+ 
+% ------------------- Imágenes----------------------%
+ \graphicspath{{Img/}}% Rutas por defecto 
+ % --- Imagen adaptativa ---
+ % Registros de dimensión definidos una sola vez
+ \newdimen\imgcap
+ \newdimen\imgmin
+ \newdimen\imgmax
+ \newdimen\imgremain
+ \newdimen\imgh
+ \newdimen\imgneed
+ 
+ \newcommand{\imagenfit}[3]{%
+ \addvspace{10pt}% separación antes
+ \par\begingroup
+ % Parámetros de composición (asignaciones, no \newdimen)
+ \imgcap=1\baselineskip  % alto estimado de título+fuente
+ \imgmin=0.15\textheight
+ \imgmax=0.15\textheight
+ \imgremain=\pagegoal
+ \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+ \advance\imgremain by -\pagetotal
+ \advance\imgremain by -\imgcap
+ % Decisión de altura destino
+ \ifdim\imgremain<\imgmin
+  \newpage
+  \imgh=0.20\textheight
+ \else
+  \imgh=\imgremain
+  \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+ \fi
+ % Reservar espacio para evitar cortes del bloque completo
+ \imgneed=\imgh \advance\imgneed by \imgcap
+ \Needspace{\imgneed}
+ % Cuerpo
+ \noindent\begin{minipage}{\textwidth}
+  \centering
+  \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+  \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+  \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+ \end{minipage}%
+ \endgroup
+ \par\addvspace{10pt}%
+ }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+ \newenvironment{specialblock}[1]{%
+ \begin{quote} % crea sangría a izquierda y derecha
+ \small % texto más pequeño
+ \noindent\textbf{#1}\\[-0.3em] % título en negrita
+ \rule{\linewidth}{0.4pt}\\[0.6em]}{
+ \end{quote}}
+ 
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+ \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+ \makeatletter
+ \newcounter{anexo}
+ \renewcommand{\theanexo}{\Roman{anexo}}
+ \newcommand{\anexo}[1]{%
+ \clearpage
+ \phantomsection
+ \refstepcounter{anexo}%
+ \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+ \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+ }
+ \makeatother
+
+ %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+ \clearpage
+ \phantomsection
+ {\centering\bfseries\Large Índice de figuras\par}%
+ \medskip
+ % Entrada en nuestro índice de contenido (stc)
+ \addcontentsline{stc}{section}{Índice de figuras}%
+ % Recuperación del listado (sin cabecera propia)
+ \begingroup
+ \parindent=0pt\parskip=2pt
+ \@starttoc{lof}%
+ \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+ \clearpage
+ \phantomsection
+ {\centering\bfseries\Large Bibliografía y referencias\par}%
+ \medskip
+ \addcontentsline{stc}{section}{Bibliografía y referencias}%
+ \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+ \refstepcounter{myref}%
+ \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+ \setcounter{tocdepth}{4} 
+ \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+ %--------- Interlineado Global --------%
+ \edef\GlobalBaseLineStretch{\baselinestretch}
+ 
+ %--------- Espaciado de seccinones --------%
+ \renewcommand\section{\@startsection{section}
+ {1}{\z@}
+ {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+ {1.5ex \@plus .2ex}  % espacio después
+ {\normalfont\Large\bfseries} % formato del título
+ }
+ \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+ {3ex \@plus 0.8ex \@minus .2ex}
+ {1.5ex \@plus .2ex}
+ {\normalfont\large\bfseries}
+ }
+ \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+ {3ex \@plus 0.5ex \@minus .2ex}
+ {1ex \@plus .2ex}
+ {\normalfont\normalsize\bfseries}
+ }
+ \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+ {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+ {0.8ex \@plus .2ex}% espacio después
+ {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+ %--------- Ecuaciones --------% 
+ % Variables globales para almacenar títulos y notas
+ \gdef\leq@current@section{}%
+ \gdef\leq@current@subsection{}%
+ \gdef\leq@last@printed@section{}%
+ \gdef\leq@last@printed@subsection{}%
+ 
+ % Comando para añadir nota (invisible en el cuerpo)
+ \newcommand{\eqnote}[1]{%
+ \addcontentsline{leq}{leqnote}{#1}%
+ }
+ 
+ % Comando para ecuaciones
+ \newcommand{\eqblock}[2]{%
+ % Verificar si necesitamos imprimir el título de sección
+ \ifx\leq@current@section\leq@last@printed@section\else
+ \addcontentsline{leq}{leqsection}{\leq@current@section}%
+ \global\let\leq@last@printed@section\leq@current@section
+ \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+ \fi
+ % Verificar si necesitamos imprimir el título de subsección
+ \ifx\leq@current@subsection\leq@last@printed@subsection\else
+ \ifx\leq@current@subsection\@empty\else
+  \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+  \global\let\leq@last@printed@subsection\leq@current@subsection
+ \fi
+ \fi
+ % Ecuación
+ \refstepcounter{eqnum}%
+ \begin{equation*}
+ #1\tag{E.\theeqnum}
+ \end{equation*}%
+ \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+ \addcontentsline{leq}{leqm}{#1}%
+ }
+ 
+ %%% ----- Índice de ecuaciones ----------%%%
+ % Tamaño para []
+ \newcommand{\leqIndexFont}{\normalsize}
+ \newcommand{\leqTitleFont}{\tiny}
+ \newcommand{\leqNoteFont}{\tiny}
+ % Cabecera de sección 
+ \newcommand*\l@leqsection[2]{%
+ \addvspace{25pt}% Mayor separación antes de nueva sección
+ \noindent\leqIndexFont
+ \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{ \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+ \par\vspace{-10pt}
+ }
+ % Cabecera de subsección 
+ \newcommand*\l@leqsubsection[2]{%
+ \par\addvspace{15pt}%
+ \noindent\leqIndexFont #1
+ \par\vspace{-7pt}
+ }
+ % Título de ecuación 
+ \newcommand*\l@leqt[2]{%
+ \par\addvspace{10pt}%
+ \par\noindent\leqTitleFont #1\par
+ }
+ % Miniatura de ecuación
+ \newcommand*\l@leqm[2]{%
+ \vspace{0.3\baselineskip}%
+ \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+ }
+ % Nota de ecuación 
+ \newcommand*\l@leqnote[2]{%
+ \vspace{0.2\baselineskip}%
+ \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+ }
+ % Generación del índice
+ \newcommand{\mylistofequations}{%
+ \clearpage
+ \phantomsection
+ % Título visual de la lista (ajústalo a tu gusto):
+ {\centering\bfseries\Large Índice de ecuaciones\par}
+ % Entrada en nuestro índice 'stc':
+ \addcontentsline{stc}{section}{Índice de ecuaciones}%
+ % Llamada a tu lista real (usa el nombre exacto de tu macro):
+ \@starttoc{leq}%
+ }
+ 
+ %--------- Captura de títulos de sección --------%
+ \let\leq@original@section\section
+ \let\leq@original@subsection\subsection
+ % Flag para saber si estamos en una sección asterisco
+ \newif\ifLeqStarSection
+ \LeqStarSectionfalse
+ 
+ % Redefinir \section CON CONTROL DE ASTERISCO
+ \renewcommand{\section}{%
+ \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+ }
+ \def\leq@section@star#1{%
+ \global\LeqStarSectiontrue
+ \gdef\leq@current@section{#1}%
+ \gdef\leq@current@subsection{}%
+ \leq@original@section*{#1}%
+ \global\LeqStarSectionfalse
+ }
+ \def\leq@section@nostar[#1]#2{%
+ \global\LeqStarSectionfalse
+ \gdef\leq@current@section{#2}%
+ \gdef\leq@current@subsection{}%
+ \leq@original@section[#1]{#2}%
+ }
+ % Redefinir \subsection
+ \renewcommand{\subsection}{%
+ \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+ }
+ \def\leq@subsection@star#1{%
+ \global\LeqStarSectiontrue
+ \gdef\leq@current@subsection{#1}%
+ \leq@original@subsection*{#1}%
+ \global\LeqStarSectionfalse
+ }
+ \def\leq@subsection@nostar[#1]#2{%
+ \global\LeqStarSectionfalse
+ \gdef\leq@current@subsection{#2}%
+ \leq@original@subsection[#1]{#2}%
+ }
+
+ % ----- Restauración de valores Globales de estilo ----------%
+ % Flags
+ \newif\ifInFootnote
+ \InFootnotefalse
+ \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+ \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+ % Profundidad de listas (soporta anidadas)
+ \newcount\MyListDepth \MyListDepth=0
+ \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+ \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+ \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+ \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+ \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+ \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+ \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+ \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+ % Restauración diferida: hazlo al INICIO del próximo párrafo real
+ \newif\if@pendingRestore
+ \@pendingRestorefalse
+ \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+ \everypar{%
+ \if@pendingRestore
+ \global\@pendingRestorefalse
+ \ifInFootnote\else
+  \ifnum\MyListDepth=0
+  \setlength{\parskip}{\GlobalParskip}%
+  \setstretch{\GlobalBaseLineStretch}%
+  \fi
+ \fi
+ \fi
+ }
+ % Al final de bloques:
+ \AfterEndEnvironment{equation}{\RequestRestore}
+ \AfterEndEnvironment{equation*}{\RequestRestore}
+ \AfterEndEnvironment{la}{\RequestRestore}
+ \AfterEndEnvironment{lnum}{\RequestRestore}
+ % Al final de macros:
+ \apptocmd{\eqblock}{\RequestRestore}{}{}
+ \apptocmd{\imagenfit}{\RequestRestore}{}{}
+ 
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+ \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+ \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+ \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+ % Escribimos también nuestra línea al .stc (texto con \numberline)
+ \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+ \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+ \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+ \MyTOC@orig@subsection[{#1}]{#2}%
+ \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+ \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+ \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+ \MyTOC@orig@subsubsection[{#1}]{#2}%
+ \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+ \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+ \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+ \MyTOC@orig@paragraph[{#1}]{#2}%
+ % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+ \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+ \par\bigskip
+ {\centering\bfseries\Large Índice de contenido\par}%
+ \medskip
+ \begingroup
+ \parindent=0pt\parskip=2pt
+ \@starttoc{stc}%
+ \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Tema 3.A.3 -- Los economistas neoclásicos\\
+\large }
+\author{Marcelo Ortega}
+\date{Noviembre 2025}
+\newcommand{\TemaCode}{3A11}
+
+
+\oldtitle{Tema 3.A.3. Los economistas neoclásicos}
+\changerationale{SIn cambio en el título del tema}
+
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+ }
+\vspace{1cm}
+
+\modificaciones{
+    Es muy importante \textbf{INTRODUCIR A HAYEK} dentro de la Escuela Austríaca, aún no exceder le marco temporal analizado, por ser el máximo exponente de esta y no tener lugar en ninguna otra parte del temario
+ }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}\label{intro}
+En primer lugar, podríamos preguntarnos porque es importante estudiar \textbf{X} desde un punto de vista histórico. 
+
+Para responder a esta pregunta puede resultar muy ilustrativo el Premio Nobel de Economía de 2024, en particular, el concepto de \textit{destrucción creativa}. Un autor, o autores, puede encuadrarse en una época, resultar ser el contorno entre épocas o precisamente las ideas germinales de cambio que motivan el nacimiento de otra época, pero lo que es innegable es que ese autor es fruto del conocimiento previo que la ciencia ha alcanzado.
+
+\imagenfit{DestruccionCreativa.png}{Ilustración: Destrucción creativa}{\href{https://www.nobelprize.org/prizes/economic-sciences/2025/press-release/}{Nobel Prize Outreach 2025. Nov 2025.}}
+
+Si visualizamos el conocemiento económico como una escalera que se ha ido desarrollando a lo largo de su breve historia, es imprescindible conocer en que momento (peldaño) nos encontramos, es decir, cuál es la frontera del conocimiento, para poder avanzar, pero no por ello es menos importante entender y conocer el camino que nos ha traído hasta aquí, puesto que este conocimiento previo es condición necesaria para la innovación.
+
+\imagenfit{PrescriptiveKnowledgeVSPropositionalKnowledge.png}{Ilustración: Conocimiento Prescriptivo y Conocimiento Proposicional}{\href{https://www.nobelprize.org/prizes/economic-sciences/2025/press-release/}{Nobel Prize Outreach 2025. Nov 2025.}}
+
+\subsection{Contextualización}\label{context}
+Para realizar este análisis necesitamos remontarnos a cómo era el estado de la ciencia económica por aquel entonces. Los economistas clásicos (1776-1850) habían conseguido otorgar un tratamiento más sistematizado a los fenómenos económicos [\authorfont{Ver Tema 3.A.2}]. De hecho, se considera que la economía nace como disciplina científica e independiente con estos autores.
+
+Sin embargo, un defecto de esta escuela consiste en la incapacidad de desarrollar una explicación a la teoría de determinación de los precios (la teoría del valor trabajo objetivo de estos autores no explicaba los precios observados en el mercado). La solución a esta cuestión llegará con la aplicación del principio del margen por los economistas neoclásicos y la consideración de la teoría del valor subjetivo (que será el detonante de lo que se conoce como “revolución marginalista” y, con ello, a lo que VEBLEN (1990)\footnote{THORSTEIN VEBLEN fue un sociólogo y economista estadounidense fundador de la escuela institucionalista norteamericana y, más en general de la corriente institucionalista de las ciencias sociales. Utilizó el término economía neoclásica para hacer referencia al conjunto de teorías y herramientas de la obra de ALFRED MARSHALL. STIGLER y HICKS utilizan el término para hacer referencia a un sistema teórico del cual la obra de MARSHALL es una parte y que agrupa un conjunto más amplio de conceptos y teorías. El término neoclásico fue posteriormente utilizado de manera idiosincrática por autores como KEYNES, y en la actualidad en ocasiones para hacer referencia a la ciencia económica no heterodoxa. En esta exposición asumimos la definición de STIGLER y HICKS por ser la más habitual en la historia del pensamiento económico.} denominó como economía neoclásica).
+
+\subsubsection{Relevancia}\label{importance}
+
+
+\subsubsection{Historia}\label{history}
+
+
+\subsubsection{Problemática}\label{problem}
+En este exposición trataremos de dar respuesta a las siguientes preguntas:
+\begin{lnum}
+ \item ¿Quiénes fueron los economistas neoclásicos?
+ \item ¿Cuáles fueron sus aportaciones principales?
+ \item ¿Qué trayectoria intelectual siguieron?
+ \item ¿Quiénes los influenciaron?
+ \item ¿A quiénes influenciaron?
+\end{lnum}
+
+\subsection{Estructura de la exposición}\label{structure}
+
+
+\clearpage
+\section{Breve referencia al contexto histórico}
+Entre el final de 1870 y mediados de 1890, Europa, Estados Unidos y Japón reforzaron las barreras proteccionistas y se produjo una segunda revolución industrial basada en innovaciones como la electricidad y los derivados del carbón. Los movimientos sindicales tuvieron una intensa actividad y hubo gran difusión de la educación y ciencia.
+
+\subsection{Fase precientífica: Marginalismo y Utilitarismo}
+El estudio de la modelización del comportamiento de los consumidores tiene su origen en el concepto de utilidad y el cálculo marginal (diferencial), acuñado por autores como BENTHAM, BERNOULLI y GOSSEN.\footnote{Por su parte, LLOYD es uno de los primeros que distingue explícitamente entre utilidad total y marginal, pero no lo aplica a problemas económicos y BENTHAM también es pionero en definir el carácter decreciente de la utilidad marginal.} 
+
+\paragraph{Marginalismo}
+Ya en el siglo XVIII, DANIEL BERNOULLI realizó cálculos analíticos y gráficos sobre la ganancia marginal. Este autor efectúa el primer análisis riguroso de la toma de decisiones en ausencia de certidumbre, aplicando de forma pionera el concepto de utilidad marginal para dar respuesta a la conocida paradoja de San Petersburgo [\authorfont{Ver Tema 3.A.10}] que no parecía resolverse aplicando el criterio de la ganancia esperada.
+
+En el campo económico, a pesar de algunas tentativas anteriores de matematizar la economía —por ejemplo, el trabajo de PETTY— se considera que el primer intento exitoso de introducir métodos matemáticos a la economía provino del matemático Antoine Augustin Cournot, quien utilizó el cálculo para explicar la conducta de consumidores y empresas y definió el concepto de costo marginal e ingreso marginal. En 1838, COURNOT fue el usa un diagrama para explicar cómo se forman los precios a través de la intersección de una curva de demanda con pendiente negativa (de este modo, COURNOT ya estaba defendiendo la ley de la demanda, según la cual la cantidad demandada es una función inversa del precio) y una curva de oferta con pendiente positiva.\footnote{Hoy sabemos que la cantidad demandada depende también de otros factores (renta, precios de otros bienes, etc.), pero estos se toman como exógenos, de modo que el análisis de COURNOT es correcto desde esta perspectiva. \\
+    Sin embargo, COURNOT no usa el concepto de utilidad como fundamento de la función de demanda, sino que opta por un enfoque empírico (es decir, construyó la función de demanda a través del cálculo de relaciones cantidad-precio basadas en la observación de datos).}
+
+\paragraph{Utilitarismo}
+La utilidad se define como la capacidad de los bienes de satisfacer necesidades. Como sostiene Bruni (2007), estamos ante el proyecto metodológico de BENTHAM (1789), autor que suele ser habitualmente considerado como el fundador del utilitarismo, corriente ética y económica que ha sido, y todavía es, referencia para muchos economistas. Sea cual sea la decisión que tomar (individual o colectiva), según BENTHAM, debemos preocuparnos exclusivamente de perseguir \textit{la máxima felicidad para el mayor número de personas}. La felicidad y la psicología, en la segunda mitad del siglo XIX, habían entrado de lleno en el análisis económico . 
+
+El llamado marginalismo-utilitarista (económico) aparece en la segunda mitad del siglo XIX en un contexto de relativa estabilidad del pensamiento clásico combinada con la aparición de conceptos novedosos con potencial para transformar el método de formalización:\footnote{Algunos elementos de los clásicos influirán notablemente en la obra de los marginalistas (por ejemplo, los rendimientos decrecientes que mencionó TURGOT, el método deductivo de DAVID RICARDO o la consideración de unos mercados en libre competencia). Una serie de autores que ya hablaban de algún modo de la utilidad marginal, si bien sus teorías en este ámbito eran incompletas o imprecisas.}
+\begin{lnum}
+    \item En 1844, JULES DUPUIT relaciona la demanda con la utilidad del consumidor e introduce el concepto de excedente del consumidor.
+    \item VON THÜNEN, considerado el primer economista moderno en utilizar el cálculo diferencial en la modelización económica, es uno de los primeros en señalar que los factores productivos deberán ser remunerados de acuerdo a su productividad marginal.\footnote{Tras los acontecimientos revolucionarios de la primavera de 1848, VON THÜNEN puso en marcha un proyecto de participación en beneficios de las empresas para los obreros de Tellow, el cual anticipó los principios establecidos más tarde por BISMARCK en el imperio alemán. Publicó en 1850 la segunda parte de su obra en la cual presentó su teoría del \textit{salario natural}, expresada en una ecuación que se grabó en su lápida a Prebberede-Belitz cerca de Teterow.};
+    \item Pero el momento revelador, auténtico precursor de la revolución marginalista es en 1854, cuando HERMANN HEINRICH GOSSEN formuló lo que se conocen como las tres leyes de Gossen:
+    \begin{lnum}
+     \item \textit{Ley de la saturación de necesidades}. La utilidad de un bien disminuye conforme aumenta la cantidad disponible de ese bien, hasta llegar a la saciedad.
+     \item \textit{Ley de igualdad de la utilidad marginal}. Una persona distribuye su ingreso entre los distintos bienes de modo que el grado final de utilidad de cada bien sea el mismo.
+     \item \textit{Ley de la escasez}. Un bien tiene valor únicamente cuando su demanda excede a su oferta.\footnote{La escasez es una condición previa para el valor económico. La escasez se refleja en el problema del consumidor en que se enfrenta a unos precios estrictamente positivos, pues sin escasez todo sería gratis (la oferta siempre superaría la demanda).}
+    \end{lnum}
+\end{lnum}
+
+"On the following pages I submit to public judgement the result of twenty years of meditation. What a Copernicus succeeded in explaining of the relationships of worlds in space, that I believe I have performed for the explanations of men on earth."
+
+(Hermann Heinrich Gossen, Development of the Laws of Exchange among Men 1854: p.1)
+
+\subsection{Nuevo Paradigma científico: Revolución marginalista}
+Se trata de contribuciones simultáneas en el tiempo pero independientes entre sí, con las siguientes ideas en común:
+\begin{lnum}
+ \item \textit{Teoría del valor subjetivo}. Rompen con la Teoría del Valor-Trabajo y concuerdan en que el valor de un bien está determinado por la importancia que un individuo le da a dicho bien para satisfacer sus objetivos o deseos. Es decir, el valor se establece en el intercambio entre oferentes y demandantes en un mercado de libre circulación. Los productos valen lo que los intercambiantes acuerden.
+ \item \textit{La Utilidad Marginal} (ligada a la escasez) es el elemento clave de la determinación del valor observable. Aplican el análisis marginal, en concreto a la teoría de la demanda.\footnote{Sin embargo, no obvian por completo la oferta:
+ \begin{la}
+ \item MENGER y JEVONS se centran en la relación entre precios y costes y defienden una relación inversa de precios-costes: el precio de los factores depende del precio de los bienes (que marca la utilidad de la producción). \href{https://www.youtube.com/watch?v=78z1t0eKlOE}{\textit{Los costes no determinan los precios - Escuela Austriaca} (Youtube)}
+ \item WALRAS incorpora la oferta en su modelo de equilibrio general.
+ \end{la}}
+ \item \textit{La Utilidad cardinal} (es medible, en términos monetarios). El individuo es capaz de realizar comparaciones interpersonales de utilidad.\footnote{Sólo JEVONS matiza que las comparaciones interpersonales de utilidad no son posibles por la distinta distribución de la renta (aunque realmente termina haciéndolas al aseverar que una cantidad adicional de renta a una persona de renta alta, generaba menos utilidad marginal que cuando se entregaba a una persona de renta baja).}
+ \item Aceptan las Leyes de Gossen (1854).
+\end{lnum}
+
+En efecto, mientras que para los economistas clásicos el valor de un bien provenía de la cantidad de trabajo socialmente necesario para producirlo, para los neoclásicos el valor de un bien va a pasar a depender de la satisfacción/utilidad/felicidad que procure a quien lo posea o consuma. Por tanto, antes de entrar en el análisis doctrinal de las diferentes escuelas podemos observar una primera clarificación de términos altamente discutidos por los clásicos:\footnote{En este contexto, la mensurabilidad de la utilidad, en la segunda mitad del siglo XIX, pasó a ser un asunto de especial relevancia. El advenimiento del análisis marginalista supuso que la ciencia económica pasara de ocuparse de la riqueza, un concepto objetivo, a ocuparse de la utilidad, un concepto subjetivo, de connotaciones psicológicas, conectado con la idea de la satisfacción de necesidades humanas. La utilidad, para estos economistas neoclásicos de la segunda mitad del siglo XIX, era hedonista y medible:
+\begin{lnum}
+    \item Hedonista, del griego “hedone”, significa placer. En esta aproximación neoclásica primigenia se considera a la utilidad como una realidad psíquica, como un sentimiento introspectivo y como causa del valor, con independencia de cualquier observación externa; esto es, no inferible de los hechos externamente observables de comporta-miento en el mercado. Economistas hedonistas destacados fueron Jevons y Edgeworth en Ingla-terra, así como Pantaleoni en Italia, quienes principalmente canalizaron la introducción de una versión simplificada del utilitarismo de Bentham dentro de la corriente principal de la economía;
+    \item Medible, lo que está relacionado con el punto anterior, pues la filosofía utilitarista del compor-tamiento humano asume que los individuos per-siguen maximizar su propia felicidad. Así, el concepto de utilidad, concebido por los econo-mistas utilitaristas, era de tipo cardinal, es decir, medible y comparable, como lo es la longitud.
+\end{lnum}}
+\begin{lnum}
+ \item El valor puro (o natural, como los clásicos lo denominaban) de los bienes ya no depende de las \textit{cosas}, sino que se hace depender de las valoraciones subjetivas que los individuos tienen sobre éstas; y,
+ \item El valor observable (precio) de los bienes no dependerá de dinámicas sociales ni de la distribución de las rentas, sino que dependerá de la utilidad correspondiente al último bien que el individuo está dispuesto a adquirir (Utilidad Marginal), pues:
+ \begin{lnum}
+ \item Los seres humanos tienen una escala de necesidades priorizadas, según la satisfacción que generan;
+ \item Las necesidades son infinitas, mientras que los recursos o medios para alcanzarlas son finitos; y,
+ \item Debe haber mecanismos que establecen una relación ordenada entre medios y fines para alcanzar la máxima utilidad.\footnote{En su obra \textit{Principios de la doctrina de la economía política} (1871), MENGER desarrolla su métodología matemática-deductiva sobre la Utilidad y la Utilidad Marginal subjetiva. Parte de los principios de que:
+ \begin{lnum}
+  \item Nuestras diversas necesidades tienen para nosotros importancia desigual;
+  \item Cualquier necesidad es más o menos intensa según el grado de satisfacción que haya recibido.
+ \end{lnum}
+ A partir de estos dos principios, desarrolla lo que se concoe como la Tabla de Menger.\\ 
+ “(...) \textit{es un hecho de la más común experiencia que los hombre suelen atribuir la máxima importancia a la satisfacción de aquellas necesidades de las que depende la conservación de la vida que la medida de la significación de las restantes satisfacciones responde al grado del bienestar que se alcanza con ellas}” Dada esa clasificación el individuo atribuirá una mayor significación o un mayor valor a la unidad de un bien que satisface la primera necesidad. Una unidad adicional de ese bien que satisface la segunda necesidad tendrá para nuestro individuo un valor menor y así sucesivamente.\href{http://luisguillermovelezalvarez.blogspot.com/2013/01/pensamiento-ii-leccion-i-menger.html}{Desarrollo de la Tabla de Menger -- Blog}}
+ \end{lnum}
+\end{lnum}
+
+En definitiva, refundan la ciencia económica tomando como base el individuo hedonista-benthamismo resucitado, armado con mejor técnica (análisis matemáico: marginalismo), que trata de maximizar su placer, felicidad o utilidad.\footnote{Por esta razón, siguiendo a Luigino Bruni, cabe afirmar que “no es correcto decir que la felicidad no es central en la Economía Neoclásica”; pero lo que no hay que perder de vista es que resulta una felicidad simplificada que se trataría de maximizar, es decir, adquirir placer con el menor coste posible.} Así, se concebía la utilidad (felicidad) como una experiencia que le sucede a los individuos y no como un concepto teórico.
+
+A partir de este marco común, las diferentes escuelas divergen radicalmente, como se observará, en función del método seguido para llegar a conclusiones más generalmente aplicables. Mientras la Escuela de Cambridge y la Escuela de Lausanne, aproximarán mediante un método inductivo el comportamiento de la economía en su conjunto (con diferente grado de abstracción matemática); la Escuela de Viena se opondrá radicalmente a éste, utilizando, como venían haciendo los clásicos, el método hipotético-deductivo como base.
+
+\clearpage
+\section{La escuela de Cambridge}
+
+\subsection{Método}
+La Escuela de Cambridge seguirá una metodología mixta, aunque predominará el método inductivo en su análisis, jugando las matemáticas un papel mixto.
+
+Ya desde la obra de JEVONS destaca su idea de que el método apropiado para la economía debía ser el matemático. Esto se manifestó principalmente en dos aspectos:
+\begin{lnum}
+ \item \textit{Utilidad Marginal}. Que este expresa como $\partial U/\partial x$; y,
+ \item \textit{Relación Marginal de Sustitución.} Aunque no la formula de manera explícita tal y como lo hacemos ahora, JEVONS aplica también el análisis matemático a la teoría del intercambio para concluir que el intercambio entre dos individuos se produce hasta que los cocientes de Utilidades Marginales de ambos se iguales (es decir, hasta que las $RMS$ de cada individuo se igualen).\footnote{JEVONS elabora una teoría del intercambio basada en la teoría de la utilidad. Supone dos bienes y dos individuos (un individuo posee el primer bien y el otro individuo el segundo bien). La posición final de intercambio viene caracterizada por la igualdad entre las utilidades marginales relativas (lo que se conoció posteriormente como Relación Marginal de Sustitución). Posteriormente, EDGEWORTH, a través de las curvas de indiferencia y las curvas de contrato, mostrará que no hay un punto de equilibrio sino infinitos en el intercambio (i.e. todos los puntos que componen la curva de contrato).}
+\end{lnum}
+
+Sucesor de su obra, MARSHALL sigue un método parecido en su aproximación metodológica. Éste utiliza a menudo las matemáticas para expresar conceptos especialmente relevantes (y concretos), pero prefiere en general los métodos verbales (en lo general) y recomienda utilizar las matemáticas sólo en la medida en que sean superiores a la palabra para transmitir un concepto. Es, por tanto, más conservador a la hora de modelizar la economía y evita los modelos excesivamente complejos o las abstracciones demasiado alejadas de la realidad.
+
+\subsection{Principales líneas de investigación}
+
+\subsubsection{Equilibrio parcial}
+
+La teoría de la utilidad marginal de MARSHALL sirve también como fundamento de su teoría de los períodos de mercado y del valor \textit{normal} de los bienes:
+
+“(..) la utilidad marginal de una cosa disminuye para un individuo a cada aumento de cantidad que él ya posee de esa cosa”
+
+En su formulación del equilibrio, MARSHALL distingue entre período presente, corto y largo plazo:
+\begin{lnum}
+ \item En el periodo presente, todos los costes son hundidos y el único objetivo de la empresa es vender una producción cuya cuantía es fija. Por ello:
+ \begin{la}
+ \item En los mercados de bienes perecederos es la demanda el factor que determina el precio; y,
+ \item En los mercados de bienes duraderos, entran en juego consideraciones intertemporales ya que la empresa puede efectivamente restringir la demanda.
+ \end{la}
+ \item En el corto plazo, la producción está restringida pero es variable dados unos factores de producción aplicables en cuantías fijas tan sólo de forma parcial; y,
+ \item En el largo plazo, todos los factores son variables y nuevas empresas pueden entrar en el mercado, por lo que las empresas minimizarán costes y los precios de venta se verán determinados por el coste de producción.
+\end{lnum}
+
+MARSHALL define así el valor de mercado (precio de intercambio) como el precio en un momento determinado y el valor normal (puro), el valor real propio de la Teoría del Valor Marginalista, como el precio cuando todas las fuerzas de mercado y todos los procesos de optimización han tenido lugar:\footnote{El beneficio normal corresponde en estos casos con el coste de oportunidad y se iguala al beneficio mínimo necesario para mantener la actividad. Hasta que se alcanza este nivel de beneficio normal, existe la posibilidad de extraer beneficios extraordinarios que MARSHALL denomina cuasirrentas por su carácter temporal.\\
+El concepto de renta es para MARSHALL idéntico al concepto de renta ricardiana en tanto que remuneración por encima de la productividad marginal que corresponde al beneficio extraíble de la escasez.}
+
+“el valor de cambio de cualquier elemento de riqueza (…) representa exactamente lo que esta riqueza acrecienta la felicidad o el bienestar”
+
+Ilustremos esto con un ejemplo.
+
+\begin{specialblock}{Equilibrio temporal y normal. El mercado de pescado de ALFRED MARSHALL}
+
+ Para comprender mejor el concepto de equilibrio supongamos el siguiente ejercicio de estática comparativa. Estudiamos el mercado de pescado, y partimos de un estado de equilibrio inicial $A$. 
+ 
+ Distinguimos 3 curvas:
+ \begin{lnum}
+ \item Curva de oferta normal (con pendiente negativa, debido a las cuestiones que hemos comentado);
+ \item Curva de oferta de mercado (perfectamente inelástica/vertical – por la naturaleza perecedera del pescado); y,
+ \item Curva de demanda (suponemos que coinciden la normal y la de mercado).
+ \end{lnum}
+
+ \imagenfit{MercadoPescado_Marshall.png}{Equilibrio temporal y normal de ALFRED MARSHALL}{(Original) DE VROEY (2016), \textit{A history of macroeconomics from Keynes to Lucas and beyond. Cambridge}. (Estraído) Apuntes Vítor Gutiérrez, Repositorio TCEE}
+
+ Supongamos una perturbación que aumenta la demanda de pescado. Esto desplaza hacia arriba la curva de demanda. En un primer momento la oferta de pescado puede estar fija ($MS$), trasladando a la economía del equilibrio inicial $A$ al punto $B$ en lo que se conoce como equilibrio temporal. En este caso, la flexibilidad de precios hace que el mercado se vacíe\footnote{Es importante remarcar que el mercado de pescado se vacía en todo momento, incluso en el período de ajuste porque la oferta de mercado coincide con la demanda de mercado.} con un nivel de precios superior.\footnote{En este período temporal, se pueden dar cuasirrentas, que son remuneraciones obtenidas por un factor en el corto plazo cuando dicho factor es fijo.\\ A corto plazo si existe un aumento de la demanda pueden existir rentas excepcionales porque se trata de una situación especial de mercado donde la renta no puede aumentar como se desea al existir factores productivos fijos. En el mercado de factores, por tanto, tiene lugar un aumento de la demanda del factor mientras que existe una oferta rígida. Ello hace aumentar el precio que se le paga al factor (i.e. se obtiene una cuasirrenta, llamada así porque es una renta que desaparece en el largo plazo cuando todos los factores sean variables).} Sin embargo, en lo que MARSHALL llama período normal, la oferta de pescado de mercado ($MS$) puede variar (ajuste en cantidades) y el mercado de pescado tiende a $C$, que es el nuevo equilibrio normal del mercado de pescado –estado de reposo (\textit{state of rest})– y las fuerzas de mercado gravitan hacia él, por lo que será un equilibrio estable y eficiente. Por tanto, el mercado de pescado siempre se vacía.\footnote{Otra vez, aunque exista un período de tiempo hasta que se forme el equilibrio normal, el mercado se vacía en cada momento (se consigue siempre un equilibrio de mercado en el que se iguala la oferta con la demanda). Por ello, el aparato teórico marshalliano no concibe desempleo de recursos.} 
+ 
+ La clave es que la flexibilidad de precios garantiza el pleno empleo de recursos. La excepción sería lógicamente que se interviniese en el mercado, ya que, por ejemplo, si se fija un precio mínimo superior al precio de equilibrio de mercado, estaremos en una situación donde la oferta de pescado sería mayor a la demanda y por lo tanto dominaría el lado corto (lado de la demanda) y se daría una situación con exceso de oferta. En resumen, tanto la cantidad como el precio vienen determinados tanto por la oferta como por la demanda. De ahí la metáfora de las tijeras de MARSHALL (1890): 
+
+ \begin{adjustwidth}{1cm}{0pt}
+ \raggedright
+ \textit{Discutir acerca de si el valor está determinado por la utilidad o por el coste de producción sería lo mismo que discutir acerca de si es la lámina inferior de unas tijeras o la superior la que corta un trozo de papel. Es cierto que, cuando se mantiene una lámina fija y se corta moviendo la otra, puede decirse al pronto que es la segunda la que corta, pero la afirmación no es estrictamente exacta, y sólo puede disculparse si pretende ser meramente una explicación popular de lo que ocurre y no una afirmación estrictamente científica.}\\
+ \raggedleft{\authorfont{A. MARSHALL}, “\textit{Principios de Economía}”, 1890}
+ \end{adjustwidth}
+\end{specialblock}
+
+\subsubsection{Economía del bienestar}
+Las aportaciones de la Escuela de Cambridge a la Economía del Bienestar se pueden reducir a dos, cuya importancia sigue hoy vigente en el estudio y análisis económico:
+
+\paragraph{Excedente del Consumidor: MARSHALL}
+Por otra parte, MARSHALL planteó una manera de medir la utilidad a través del excedente del consumidor. Si consideramos listas de precios y cantidades, podremos hacer un área bajo la curva de demanda hasta el precio. Ésta sería, pues, la utilidad total, que es mucho mayor que la marginal.\footnote{Eso se debe a la teoría de la indiferencia de JEVONS, es decir, el consumidor está dispuesto a pagar por cada unidad del bien una cantidad mayor que la que realmente paga, que es el precio único.\\En principio, MARSHALL plantea esta curva para un solo consumidor, pero finalmente, generaliza a muchos consumidores, de manera que necesita hacer comparaciones interpersonales de utilidad, lo que supone, por otra parte, que hay una curva continua y por tanto una igualdad de la renta entre los individuos, que valoran el dinero de la misma manera.} Gracias a la medida del excedente del consumidor, Marshall puede analizar el efecto de los cambios en la demanda u oferta en la satisfacción.
+
+\paragraph{Curvas de Indiferencia y Curva de Contrato: EDGEWORTH}
+EDGEWORTH introduce el concepto de curva de indiferencia para abordar tres problemas del modelo de JEVONS: la indeterminación del precio, la dependencia del resultado respecto a la dotación de factores, y por tanto del coste de producción, y la necesidad de hacer comparaciones interpersonales de utilidad.\footnote{Igual que MARSHALL, EDGEWORTH intentó resolver los problemas que planteaba la teoría de JEVONS creando nuevos instrumentos analíticos que serán la base de la microeconomía: las curvas de indiferencia. EDGEWORTH dice que los \textit{cuerpos comerciales} de JEVONS suponen un monopolio bilateral, que no generaría un precio determinado. Para resolver el problema, plantea un modelo en el que se maximiza una utilidad que es medible y comparable y en el que estudia tanto la competencia perfecta, donde el precio está determinado, como el monopolio bilateral, como los casos intermedios. 
+
+Distingue entre el cambio marginal y medio en un factor variable en la producción. Si no es posible variar todos los insumos, los rendimientos decrecientes se darán según el cociente en que se utilizan los factores. Las sucesivas dosis de capital y trabajo producen una producción total, marginal y media, siendo la marginal la diferencia entre la producción total en $L$ y la de $L+1$, es decir el diferencial de la producción según la cantidad de factor, y la media la división entre la productividad total y la cantidad del factor.} 
+
+Dibuja EDGEWORTH dos mapas completos de curvas de indiferencia, que en este caso se dan en el mundo aislado de Robinson Crusoe y su esclavo Viernes. Estos intercambian dos bienes, pero esos bienes son males para el otro: dinero (Viernes se vuelve asalariado) y trabajo (Viernes es el único que trabaja). El dinero es un bien para Viernes, que lo recibe, y un mal para Crusoe, que lo paga, y el trabajo es un bien para Crusoe que lo recibe y un mal para Viernes que lo paga.
+
+\imagenfit{CI_EDGEWORTH.png}{Curvas de Indiferencia de una Economía de dos agentes: Robinson y Viernes}{\textbf{Importante poner FUENTE}}
+
+Siendo $Y$ el trabajo y $X$ el dinero, lo que se deriva es un mapa de curvas de indiferencia de Robinson ($R$) y de Viernes ($F$); es decir, puntos a los que uno de ellos le es indiferente estar:
+\begin{la}
+ \item A medida que aumenta el salario que Robinson paga a Viernes, le cuesta más desprenderse de las nuevas unidades de salario y pide más que proporcionalmente de trabajo (utilidad marginal decreciente); y,
+ \item Lo contrario le sucede a Viernes, a medida que aumenta la cantidad de trabajo proporcionada y, por tanto, el ingreso, menos satisfacción le proporciona una unidad más de dinero (sería la base para la formalización del Modelo Ocio-Consumo).
+\end{la} 
+
+Los puntos de equilibrio serían todos aquellos en los que las curvas de indiferencia son tangentes, es decir, una línea que pasaría por $D$ y $C$, la curva de contrato. En $C$, por ejemplo, no hay posibilidad de mejora de Robinson sin que Viernes empeore.\footnote{Si estamos la curva de contrato, uno de ellos puede mejorar sin que otro empeore. Esta línea estaría dentro de la lente que se ve en el gráfico porque no tendría mucho sentido que Robinson diera dinero a Viernes sin recibir trabajo, o que Viernes diera trabajo sin recibir dinero (si el intercambio es libre).}
+
+\paragraph{Coste Social y Coste Privado: PIGOU}
+ARTHUR CECIL PIGOU fue el sucesor de MARSHALL en Cambridge. Destacó por sus contribuciones pioneras a la economía del bienestar. Su contribución principal, fruto de su extensivo análisis de lo que ahora se conoce como \textit{fallos de mercado}, fue la introducción de dos conceptos clave (en \textit{The Economics of Welfare}, 1920):
+\begin{lnum}
+ \item Producto Privado Marginal Neto (PPMN). El beneficio marginal que recibe el individuo o empresa por utilizar un recurso, que incluye solo beneficios y costos privados; y,
+ \item Producto Social Marginal Neto (PSMN). El beneficio marginal para la sociedad en su conjunto por utilizar ese recurso, que incluye beneficios y costos privados + beneficios y costos externos (externalidades).
+\end{lnum}
+
+PIGOU establece que el Producto Social Marginal Neto (definido como el rendimiento neto total del incremento marginal de un recurso, independientemente de quien sea el que lo recibe) debe ser igual que al Producto Privado Marginal Neto, ya que sino, esta divergencia impedirá que se alcance una producción óptima ideal, es decir, una Renta Nacional máxima:
+\begin{lnum}
+ \item El Producto Social Marginal Neto tendrá que ser igual para todos los empleos de un recurso, ya que, en caso contrario, la transferencia de un recurso de un uso que dé un producto social marginal neto menor, a uno en que este producto sea mayor, elevaría la producción total; y,
+ \item La segunda condición requiere que el Producto Social Marginal Neto sea igual al Producto Privado Marginal Neto. Esto significará que el inversionista privado recibirá todas las ganancias procedentes de su inversión y que tendrá que sufragar todos sus costes. En caso contrario, cuando el Producto Social Marginal Neto sea mayor que el Producto Privado Marginal Neto, se dedicarán a un empleo determinado unas cantidades de recursos menores del óptimo, mientras que en los casos en que los costes no sean sufragados por el inversionista, se invertirá una cantidad mayor que la óptima.
+\end{lnum} 
+
+Como se puede observar, estos conceptos estaban destinados a aclarar ciertas situaciones en las que una empresa privada no fuera la receptora de todas las ganancias procedentes de sus operaciones o en las que incurriera en costes que no fueran sufragados por ella en su totalidad. En este tipo de situaciones, la prosecución del interés privado no optimizaría el bienestar de la sociedad, se invertiría demasiado en los ejemplos del segundo tipo y demasiado poco en los ejemplos del primero.\footnote{Casos de uno u otro tipo serían los del arrendatario agrícola contrario a invertir dinero en mejoras que, según la ley, pasarían a ser propiedad del dueño de la tierra, el del que invirtiera en un bosque, ya que no sería compensado por los beneficios climáticos conseguidos por la protección de suelo contra la erosión, ni por el disfrute futuro de la comunidad, el de la compañía de ferrocarril o la fábrica cuyas operaciones impusieran costes a la vecindad por haberla cubierto de hollín o el del establecimiento de bebidas alcohólicas, cuyos clientes necesitaran la atención de unas fuerzas de policía adicionales.} La extensa obra de PIGOU tenía como fin el poner de manifiesto ejemplos en los que la búsqueda de la ganancia privada no redundara en bienestar para la sociedad.\footnote{Ofrecía, de hecho, un tratamiento sistemático de dichos ejemplos, muchos de los cuales, si bien en forma aislada, habían sido ya examinados por otros escritores anteriores, que los habían señalado como excepciones específicas de la doctrina del laissez faire de los intereses armónicos.} Su transformó lo que hasta entonces habían sido excepciones aisladas, en un sistema integrado y que representaba por ello una rotura más pronunciada con la doctrina de la armonía. Abriendo un amplio campo de oportunidades para la política pública y constituyendo un primer intento de desarrollar una teoría razonada de dicha política.\footnote{La economía del bienestar de PIGOU, con su apoyo de una mayor difusión de la renta, tiene su imagen en el estado de bienestar social o estado nodriza, que proporciona seguridad social y da oportunidades para un consumo casi uniforme en sectores como la educación, la vivienda y la sanidad. En la Inglaterra natal de PIGOU, las instituciones del estado de bienestar llegaron a equipararse a las medidas socialistas que habían dado por resultado la nacionalización de importantes sectores de la industria. PIGOU, a diferencia de MARSHALL, no rechazó dichas medidas, sino que estuvo a favor de muchos de los objetivos de los socialistas, aunque oponiéndose a la empresa pública. En su \textit{Socialismo versus capitalismo}, publicado en 1937, PIGOU adoptó en realidad una posición muy parecida a la de los socialistas fabianos. Sugirió que en las nuevas y cambiantes circunstancias y con la aparición de las corporaciones públicas, MARSHALL hubiera quizá cambiado de opinión.}
+
+\imagenfit{Externalidad_Consumo.png}{Externalidades en el lado del consumo de un bien}{\href{https://www.youtube.com/watch?v=xIJtLGbqDNI}{(Youtube) Gráficos externalidades consumo}}
+
+\imagenfit{Externalidades_Producción.png}{Externalidades en el lado de la producción de un bien}{\href{https://www.youtube.com/watch?v=lt4f-xmiLHw}{(Youtube) Gráficos externalidades producción}}
+
+Entre otros muchos temas, examinó también el equilibrio competitivo de largo plazo, postulando la curva de costes medios en forma de U y el equilibrio en la escala eficiente.\footnote{La síntesis que PIGOU hizo del neoclasicismo económico sirvió a KEYNES como objetivo de su crítica frontal a la existencia de fuerzas autoestabilizadoras que empujaban a las economías hacia equilibrio de plena utilización de su capacidad productiva.}
+
+\subsubsection{Teoría del dinero}
+Los autores de ésta escuela desarrollan el llamado enfoque de Cambridge en relación al dinero. Estos economistas adoptan un enfoque microeconómico de análisis y tratan de establecer los factores que explican la decisión del individuo de mantener dinero (la utilidad que le proporciona). 
+
+Consideran que la velocidad de circulación del dinero va a depender de las preferencias individuales y que, además el dinero tiene un papel de reserva de valor, por lo que la demanda dependerá del nivel de riqueza y de los tipos de interés. PIGOU asume los tipos de interés como constantes y aproxima la riqueza por la renta nominal, $Y$, de modo que, la demanda de dinero individual sería proporcional a la renta nominal:
+
+$$M=k\;\cdot\;p\;\cdot\;Y$$
+
+\clearpage
+\section{La escuela de Lausana}
+La Escuela de Lausana de economía,\footnote{El término Escuela de Lausana fue acuñado por primera vez por el matemático HERMANN LAURENT en su artículo \textit{Petit traité d’économie politique mathématique}.} a veces llamada la Escuela Matemática, se refiere a la corriente de pensamiento de la economía neoclásica que gira en torno a LÉON WALRAS. Su nombre proviene de la Universidad de Lausana, donde WALRAS enseñó entre 1870 y 1892, y donde lo sucedió su principal discípulo, VILFREDO PARETO, quien promovió la utilización de curvas de indiferencia y cuya noción de Pareto-eficiencia contribuyó profundamente al desarrollo de la teoría de juegos y a la economía del bienestar posteriormente. La Escuela se desintegró los años que siguieron a la muerte de PARETO (1923). 
+
+\subsection{Método}
+La Escuela de Lausana hacía hincapié en la utilización de las matemáticas de las ciencias económicas e influenció la teoría moderna del equilibrio general.\footnote{En 1936, ABRAHAM WALD, miembro del coloquio de Viena en torno a KARL MENGER (Escuela de Viena), aportó la primera prueba rigurosa de la existencia del equilibrio general. Después de la Segunda Guerra Mundial, los neo-walrasianos desarrollaron demostraciones más generales y completas, en particular DEBREU y ARROW.} Por ello, se distingue del trabajo de la Escuela de Cambridge por la manera en que sostiene la necesidad de considerar la interacción de todas las partes de la economía de forma simultánea, de modo que pueda entenderse el comportamiento que se produce en cualquiera de sus partes.\footnote{Los de Cambridge (MARSHALL, ne particular), por el contrario, preferían resolver los problemas económicos utilizando las matemáticas como instrumento, con el teórico extrayendo conclusiones en lugar de obtener soluciones mediante el proceso de razonamiento verbal.}
+
+\subsection{Principales líneas de investigación}
+
+\subsubsection{Equilibrio General}
+WALRAS introduce el modelo de equilibrio general como una representación abstracta de todas las interacciones que afectan a una economía y resultan relevantes para caracterizar un fenómeno [\authorfont{Ver Tema 3.A.21}].
+
+En ese contexto, una economía es un conjunto de mercados interconectados a través de las restricciones presupuestarias a las que están sujetos los agentes que participan en la economía. El equilibrio walrasiano se define como el conjunto de cantidades y precios que maximizan las preferencias de todos los participantes, respetando todas las restricciones presupuestarias y eliminando todas las diferencias entre oferta y demanda en diferentes mercados.
+
+WALRAS caracterizó las condiciones de existencia y estabilidad del equilibrio.\footnote{Aunque la caracterización de la existencia de equilibrio de WALRAS es errónea y una formulación correcta no apareció hasta el siglo XX, su examen del problema sentó las bases de los desarrollos posteriores.} En cuanto a la estabilidad del equilibrio, WALRAS trataba de describir la tendencia (o falta de ella) espontánea de una economía hacia ese equilibrio cuando los agentes intercambian voluntaria y libremente los bienes en cuestión. 
+
+WALRAS describió un mecanismo que podría llevar a ese equilibrio y lo denominó \textit{tâtonnement}.\footnote{En realidad, WALRAS utilizó varias veces en su obra \textit{Éléments d’économie politique pure, ou théorie de la richesse sociale} (1874) la palabra \textit{tâtonnement} (tanteo), ya que el equilibrio se alcanzaría mediante un proceso de ensayo y error, pero en su obra no habla explícitamente del subastador walrasiano, sino que utiliza el pronombre francés \textit{on}, fueron autores posteriores los que utilizaron dicha la metáfora del subastador walrasiano.
+
+\begin{adjustwidth}{2cm}{0pt}
+\raggedright
+\textit{[…] supposons qu’on y crie $m\cdot(m-1)$ prix des $m$ marchandises les unes en les autres. Ces prix peuvent être criés au hasard ; pour mieux dire, ils ne peuvent être criés qu’au hasard. Et toutefois il est certain qu’on peut faire en sorte qu’il y en ait parmi eux $(m-1)∙(m-1)=m∙(m-1)-(m-1)$ qui soient liés aux $m-1$ autres par la condition d’équilibre général. A ces prix, ainsi criés, chaque échangeur détermine sa demanda ou offre de ($A$), ($B$), ($C$), ($D$) (...). Cela se fait après réflexion, sans calcul, mais exactement comme cela se ferait par le calcul en vertu du système des équations d’équivalence des quantités demandées et offertes et de satisfaction maximum complété par la restriction convenue. Il s’agit de fonder sur le fait de cette détermination sans calcul une méthode de résolution par tâtonnement des équations d’égalité de l’offre et de la demande totales.}\\
+\raggedleft{\authorfont{LEON WALRAS}, “\textit{Éléments d’économie politique pure, ou théorie de la richesse sociale}”, 1874}
+\end{adjustwidth}
+
+La idea del tâtonnement no era nueva. De hecho, ya se puede encontrar en \textit{La riqueza de las naciones} de SMITH, quien discute la gravitación de los precios de mercado a los precios naturales. Para SMITH, la realización de los precios naturales resulta de la corrección de un estado de desequilibrio en el que los precios efectivos difieren de los precios naturales. Que el comercio tiene lugar a precios de desequilibrio era obvio para SMITH, lo que importaba era la existencia de un mecanismo de reequilibrado. WALRAS pretendía que su noción de tâtonnement recogiera esta idea.} Éste consiste en el intercambio de cantidades a precios que varían en función de los excesos de demanda: excesos de demanda positivos inducen subidas de precios y viceversa, hasta que se obtiene una asignación de equilibrio.
+
+\subsubsection{Teoría del Valor}
+
+\paragraph{El intercambio: WALRAS}
+Lo presentado es, precisamente lo que caracteriza la Teoría del valor de intercambio de la Escuela de Lausanne y hacia la cual MARSHALL dirige su principal crítica: el precio (o valor de intercambio) se establece, para los de Lausanne, a través de la dinámica de comparación relativa entre los bienes, de manera que el precio observado (el de mercado):
+
+\begin{adjustwidth}{2cm}{0pt}
+\raggedright
+\textit{[…] equilibrio general se produce si los productos, uno a otro, es igual a la relación entre el precio de una y otra a un tercero.}\\
+\raggedleft{\authorfont{LEON WALRAS}, “\textit{Éléments d’économie politique pure, ou théorie de la richesse sociale}”, 1874}
+\end{adjustwidth}
+
+Esto implica que el comercio a \textit{precios falsos} es central en su construcción teórica. Desde la perspectiva de WALRAS, el proceso de tâtonnement era una formalización natural de la forma en que cualquier precio competitivo opera en la realidad para establecer un equilibrio competitivo. Esto suscitó evidentes críticas, y tras un intento de reconciliación,\footnote{Tras las críticas de BERTRAND y EDGEWORTH (que afirmaban que al haber intercambio fuera del equilibrio la riqueza de los agentes cambiaba tras cada ronda de negociación), WALRAS admitió en la 4\textsuperscript{a} edición que la única salida era basar su análisis en el supuesto de \textit{ausencia de comercio fuera del equilibrio}\\
+\href{https://www.youtube.com/watch?v=z8Gsj72nYg8}{HET II Walras Part 1 (Youtube)}} siguió utilizando la noción de tâtonnement que pasó a significar el proceso virtual que ocurre en tiempo lógico (es decir, eliminando todo tipo de comportamiento fuera del equilibrio). De hecho, su sucesor en la cátedra llego a afirmar (tras una extensa reconfiguración de la Teoría del Valor, como veremos después):
+
+\begin{adjustwidth}{2cm}{0pt}
+\raggedright
+\textit{[…] el precio o valor de cambio es determinado al mismo tiempo que el equilibrio económico.}\\
+\raggedleft{\authorfont{VILFREDO PARETO}, “\textit{Manual de Economía Política}”, 1909}
+\end{adjustwidth}
+
+\paragraph{Punto de ruptura: la Teoría de la Elección (PARETO)}
+Pareto supone una contribución esencial a la economía, sobre todo en lo que respecta a la Teoría del Valor. Si bien no rechazó la existencia de una utilidad que indicara el bienestar de las personas, consideró su medición imposible.\footnote{Antes de analizar la ruptura que la obra de Pareto supuso en la teoría de la utilidad, hay que hacer referencia a la obra de IRVING FISHER (1892) en la que plasmó cierto escepticismo sobre la posibilidad práctica de medir la utilidad.} Pero el giro crucial se produjo en torno a 1900.\footnote{Con anterioridad al giro de 1900, PARETO aceptaba la teoría de la utilidad marginal en su forma walrasiana. A partir de dicho giro, fue muy convincente en su idea de que los individuos pueden comparar, sin medirlas, las satisfacciones que esperan de la posesión de diferentes conjuntos de bienes, o sea, que los individuos son capaces de disponer dichos conjuntos según la escala de preferencias. Es lo que la profesión económica ha entendido por \textit{utilidad ordinal}.} En ese momento (comienzo de la época paretiana clave), PARETO se separa de la primera generación de marginalistas-hedonistas, y lo hace persiguiendo dos objetivos distintos, que van a ser considerados su principal legado a la ciencia económica contemporánea:
+\begin{la}
+ \item \textit{El paso de una función de utilidad cardinal a una ordinal}. Para llevar a cabo este objetivo, transformó las curvas de indiferencia cardinalistas de EDGEWORTH en unas ordinales. PARETO asignó a las funciones-índice la tarea que tenía la función de utilidad en la teoría del valor, basada en la utilidad cardinal. En realidad, podemos decir que las funciones-índice son funciones de utilidad que obvian la medición.
+ \item La interpretación de la ofelimidad,\footnote{Este término viene del griego es un concepto económico introducido por el economista Vilfredo Pareto (1848-1923), como una medida para indicar la capacidad que tienen los bienes y servicios económicos para satisfacer los deseos y las necesidades humanas individuales.\\Esta palabra la trae Pareto (1909, p. 102) al lenguaje económico en el siguiente párrafo: 
+ 
+ \begin{adjustwidth}{2cm}{0pt}
+ \raggedright
+ \textit{La palabra utilidad se ha usado en Economía política con un significado totalmente distinto de lo que puede significar en el lenguaje corriente. Así, la morfina no es útil, en el sentido corriente de la palabra, porque es perjudi-cial para el morfinómano; pero, al contrario, es útil económicamente, puesto que satisface una de sus nece-sidades, aunque al mismo tiempo sea malsana. Aunque os antiguos economistas ya habían mencionado este equívoco, a veces se le seguía olvidando; por eso es in-dispensable no utilizar la misma palabra para indicar cosas tan diferentes [...] hemos propuesto designar la utilidad económica con la palabra ofelimidad}\\
+ \raggedleft{\authorfont{VILFREDO PARETO}, “\textit{Manual de Economía Política}”, 1909}
+ \end{adjustwidth}} como un índice de preferencias, con la intención de emancipar del hedonismo a su teoría de la elección y el equilibrio.\footnote{Este es el principal objetivo de PARETO, que no haya inconsistencias y que se pueda salvar de las posibles críticas.\\
+ El objetivo de PARETO al sustituir la palabra utilidad por ofelimidad es escapar de las connotaciones hedonistas de la primera. Pero aquí ya encontramos ambigüedades, pues PARETO, refiriéndose a una cantidad consumida, afirma: “Cuando esta cantidad puede utilizarse como medida del placer, es la ofelimidad”. En la misma página llega a reconocer: “Todos estos nom-bres importan poco”. Lo que sí está claro es que Pareto no trabaja con el constructo \textit{felicidad}. La utilidad ordinal está directamente relacionada con la elección.}
+\end{la}
+
+La lógica de la elección que, gracias a PARETO, sirvió para refundar la ciencia económica y que, en gran medida, sigue en el núcleo de la teoría económica contemporánea, establecía:
+\begin{la}
+ \item La teoría económica puede explicar los hechos sin necesidad de recurrir a conceptos como placer o motivaciones (egoístas o altruistas). El economista teórico puede sacar todos los datos que necesita observando las elecciones que se hacen en el mercado. No hay necesidad de hedonismo o utilitarismo.
+ \item Desde el punto de vista analítico, la teoría del equilibrio general puede ser escrita tomando como punto de partida las curvas de indiferencia ordinales, porque estas representan hechos, experiencias directas.\footnote{Por lo tanto, PARETO se desprende de los conceptos hedonistas de utilidad, tanto total como marginal.}
+ \item La información proveniente de la psicología no es necesaria para la ciencia económica; \textbf{la elección es suficiente}.
+\end{la}
+
+He aquí su gran ruptura respecto a la Teoría del Valor: la transformación de la teoría del valor en una teoría de la elección racional; esto es, \textit{La utilidad no existe más que como orden de preferencias.} (PARETO, 1906). Su impacto fue tal que LANDRETH y COLANDER (2006) aclaran la diferencia entre economía neoclásica (que, en su versión inicial, aceptaba el utilitarismo) y el análisis económico moderno, que todavía muestra recelos respecto a la noción de utilidad cardinal y comparable. 
+
+\subsubsection{Economía del bienestar: Óptimalidad de Pareto}
+Las aportaciones de la Escuela de Lausanne a la Economía del Bienestar provienen, principalmente, de las aportaciones de VILFREDO PARETO.\footnote{Como se ha dicho, VILFREDO PARETO fue el sucesor de WALRAS en Lausana. Desarrolló algunos de sus temas gracias a su formación matemática, y su obra fue fundamental para estabilizar el modelo neoclásico de la demanda. Demostró que al cardinalidad de la utilidad no es necesaria y que se puede representar la demanda de un agente racional a partir de relaciones de preferencia y funciones de utilidad ordinales. En el campo de la sociología realizó también contribuciones relevantes, relacionando los métodos cuantitativos cada vez más habituales en economía con el estudio de la organización en sociedad.} 
+
+Sobre su reconfiguración de la Teoría del Valor, orientada sobre la elección y no sobre la satisfacción, hizo que Pareto diera la siguiente respuesta a la cuestión de la evaluación de la eficiencia de la asignación de los recursos: un cambio de la asignación de los recursos mejora el bienestar si es posible mejorar el bienestar de una persona sin empeorar el de ninguna otra.\footnote{En palabras del propio Pareto (1909, p. 420):
+\begin{adjustwidth}{2cm}{0pt}
+ \raggedright
+ \textit{Estas consideraciones conducen a definir como posición de máxima ofelimidad aquella en que es imposible desviarse ligeramente de forma que las ofelimidades disfrutadas por los individuos, salvo aquellas que permanezcan constantes, experimenten todas un aumento o una disminución}\\
+ \raggedleft{\authorfont{VILFREDO PARETO}, “\textit{Manual de Economía Política}”, 1909}
+ \end{adjustwidth}} Así, un óptimo de Pareto es aquella distribución en la que es imposible mejorar el bienestar de alguna persona sin empeorar el de ninguna otra.\footnote{Pero es evidente que cualquier medida económica beneficia a unas personas y perjudica a otras; por tanto, si los economistas sólo van a emitir juicios favorables sobre las medidas económicas que se ajustan a los criterios óptimos de Pareto, deben alejar su análisis del mundo real.El propio Pareto (1916), en su fase “sociológica”, reconoció que este concepto de optimalidad no tenía especial relevancia para los problemas del mundo real; y también reconoció la necesidad de realizar compara-ciones interpersonales en el análisis del bienestar del mundo real. Pero, como ya hemos comentado, el giro sociológico de Pareto no ha tenido ninguna influencia en el análisis económico. El óptimo de Pareto sigue apareciendo en los principales manuales actuales de economía.}. Para ilustrar esta condición, PARETO recupera la metodología gráfica de EDGEWORTH e idea la famosa \textit{caja de EDGEWORTH}.
+
+\begin{specialblock}{Optimalidad Paretiana}
+    Las dotaciones de $x$ e $y$ determinan el punto en el que se encuentra la curva de contrato entre dos consumidores, uno representado por las coordenadas con punto inicial $O_S$ y otro por unas coordenadas invertidas con punto inicial $O_J$.
+
+    \imagenfit{PARETO_CajaEDGEWORTH.png}{La Caja de EDGEWORTH. Curva de Contrato}{\textbf{IMportante poner FUENTE}}
+    
+    La cantidad intercambiada sería cualquiera de las que se encuentran en la curva de contrato.
+\end{specialblock}
+
+Es importante tener en cuenta que, como es comprensible, todos los autores que se han constituido en pilares del pensamiento económico muestran fisuras en el edificio intelectual que han creado. El propio Pareto lo tenía muy claro: 
+
+\begin{adjustwidth}{2cm}{0pt}
+ \raggedright
+ \textit{Jamás olvidaremos que una teoría solo puede aceptarse temporalmente; la que ten-gamos hoy por verdadera deberemos abandonarla ma-ñana, si se descubre otra que se aproxime más a la realidad. La ciencia está en perpetuo devenir}\\
+ \raggedleft{\authorfont{VILFREDO PARETO}, “\textit{Manual de Economía Política}”, 1909}
+\end{adjustwidth}
+
+\subsubsection{Teoría del dinero}
+Para estos autores, el dinero será esencialmente neutral, un numerario (unidad de cuenta) que no necesariamente circula,\footnote{WALRAS intenta introducir una teoría pura del dinero compatible con el equilibrio general.} pues consideran que:
+\begin{lnum}
+    \item El dinero puede ser tratado como un bien más, con oferta, demanda y precio;
+    \item El equilibrio general funciona incluso sin dinero.
+\end{lnum}
+
+
+\clearpage
+\section{La escuela de Viena: Escuela Austríaca}
+El libro de 1871 de Carl Menger, \textit{Principios de economía política} es generalmente considerado el fundador de la Escuela Austríaca.\footnote{La escuela debe su nombre a los miembros de la Escuela historicista alemana, quienes criticaron a los austriacos durante la \textit{Methodenstreit} (debate metodológico), en el cual los austriacos defendieron la confianza que tienen los economistas clásicos en la lógica deductiva.}
+
+\subsection{Método}
+La metodología es donde la escuela austriaca difiere más significativamente de las otras escuelas de pensamiento económico debido al énfasis de ésta en las reflexiones sobre filosofía de la economía (economía política).\footnote{
+En 1981, MACHLUP enumeró los puntos de vista típicos del pensamiento económico austriaco:
+\begin{lnum}
+ \item \textit{Individualismo metodológico}. En la explicación de los fenómenos económicos, tenemos que volver a las acciones (o inacción) de los individuos; los grupos o colectivos no pueden actuar excepto a través de las acciones de los miembros individuales. Los grupos no piensan; la gente piensa.
+ \item \textit{Subjetivismo metodológico}. En la explicación de los fenómenos económicos, tenemos que volver a los juicios y elecciones hechos por los individuos sobre la base de cualquier conocimiento que tengan o crean que tienen y las expectativas que tienen con respecto a los desarrollos externos y, especialmente, las consecuencias percibidas de sus acciones previstas;
+ \item \textit{Gustos y preferencias}. Las valoraciones subjetivas de bienes y servicios determinan la demanda de los mismos, por lo que sus precios están influenciados por los consumidores (reales y potenciales);
+ \item \textit{Costos de oportunidad}. Los costos que los productores y otros actores económicos enfrentan reflejan las oportunidades alternativas que deben abandonarse. Como los servicios productivos se emplean para un propósito, todos los usos alternativos deben ser sacrificados;
+ \item \textit{Marginalismo}. En todos los diseños económicos, los valores, los costos, los ingresos, la productividad, etc. están determinados por la importancia de la última unidad agregada o restada del total.
+ \item \textit{Estructura temporal de la producción y el consumo}. Las decisiones de ahorro reflejan \textit{preferencias temporales} con respecto al consumo en el futuro inmediato, distante o indefinido, y se realizan inversiones en vista de los mayores resultados que se esperan obtener si se realizan más procesos de producción que requieran más tiempo.
+\end{lnum}
+Incluyó dos principios adicionales sostenidos por la rama de economía austriaca de MISES:
+\begin{lnum}
+ \item \textit{Soberanía del consumidor}. La influencia que los consumidores tienen en la demanda efectiva de bienes y servicios y a través de los precios que dan como resultado mercados libres y competitivos, en los planes de producción de los productores e inversionistas, no es solo un hecho difícil sino también un objetivo importante, que solo puede alcanzar evitando por completo la interferencia gubernamental en los mercados y las restricciones a la libertad de vendedores y compradores para seguir su propio juicio con respecto a las cantidades, calidades y precios de los productos y servicios.
+ \item \textit{Individualismo político}. Solo cuando los individuos tengan plena libertad económica será posible asegurar la libertad política y moral. Las restricciones a la libertad económica conducen, tarde o temprano, a una extensión de las actividades coercitivas del estado al dominio político, socavando y eventualmente destruyendo las libertades individuales esenciales que las sociedades capitalistas pudieron lograr en el siglo XIX.
+\end{lnum}}
+
+Estos arguyen que las elecciones subjetivas de los individuos, incluyendo el conocimiento individual, el tiempo, las expectativas y otros factores subjetivos causan todos los fenómenos económicos. Por tanto, buscan entender la economía mediante el examen de las ramificaciones sociales de la elección individual. Estos autores sostendrán, por tanto, que la inducción no garantiza la seguridad como lo hace la deducción, ya que los datos económicos del mundo real son intrínsecamente ambiguos y sujetos a una multitud de influencias que no pueden ser separadas ni cuantificadas, una causa o la correlación con otra.\footnote{Las escuelas ortodoxas (se dice ortodoxo de algo: \textit{Conforme con hábitos o prácticas generalmente admitidos}. RAE) adoptaron métodos empíricos, matemáticos y estadísticos y se centraron en la inducción para construir y probar teorías. Los economistas austriacos rechazaron los métodos estadísticos, los experimentos naturales y los experimentos construidos empíricos, para construir y probar teorías, y solo los aceptaron para ilustrar las teorías, al argumentar que, si bien esos métodos son apropiados para las ciencias naturales donde se pueden aislar factores en condiciones de laboratorio, las acciones de los seres humanos son demasiado complejas para este tipo de tratamiento porque las personas no son sujetos pasivos y no adaptables.} Por tanto, se diferencia, en consecuencia también, de otras escuelas de pensamiento económico en que se han centrado en variables agregadas, análisis de equilibrio y grupos sociales en lugar de individuos (rechazan la construcción microeconómica del comportamiento del consumidor, como mínimo la génesis de esta escuela). 
+
+\subsection{Principales lineas de investigación}
+Si bien existen diferentes puntos de vista sobre política económica que pueden tener los austriacos, ésta tiende a autodefinirse como \textit{la ciencia económica del libre mercado}.
+
+\subsubsection{Teoría del Valor}
+En su obra Principios de Economía (1871), MENGER distingue entre bienes de orden inferior (i.e. los que son capaces de satisfacer necesidades humanas directamente) y bienes de orden superior (i.e. factores de producción, que satisfacen necesidades humanas de forma indirecta: contribuyendo a la producción de bienes de orden inferior).
+Respecto a los bienes de orden superior, MENGER señala que se caracterizan por su complementariedad y su imputación:
+\begin{la}
+    \item \textit{Complementariedad.} Los bienes de orden superior no tienen carácter de “bien” por sí solos, sino que necesitan complementarse con otros bienes de orden superior (pues si el productor no cuenta con un factor productivo que sea imprescindible en el proceso, el resto de factores productivos pierde su utilidad).
+    \item \textit{Imputación.} Los bienes de orden superior perderán su condición de bienes si los bienes de orden inferior que producen pierden también su condición de bienes (p.ej. si la gente deja de demandar el bien de orden inferior que producen).
+\end{la}
+
+Aunque es inevitable aplicar el término, MENGER rechaza la idea de que los agentes reciben unidades de utilidad que cuantifican su bienestar a la manera de los utilitaristas, y se limita a conceder un mero valor expositivo a la cuantificación del principio equimarginal.
+
+MENGER rechaza categóricamente la Teoría Valor-Trabajo y resuelve así la paradoja del agua y los diamantes de SMITH a partir de la demanda como factor determinante.\footnote{
+\begin{adjustwidth}{2cm}{0pt}
+ \raggedright
+ \textit{The Neoclassical answer to the famous \textit{water-diamond} paradox is that diamonds are naturally more valuable than water not because diamonds are costlier to produce (the Classical answer), but rather because diamonds are more scarce than water. Some may object to this distinction: if diamonds are very costly to produce, then one should expect to see somewhat less of them around, thus the cost-of-production and rarity arguments seem to boil down to the same thing. Adam Smith seems to imply this when he writes:
+"[T]he value of [precious] metals has, in all ages and nations, arisen chiefly from their scarcity, and that their scarcity has arisen from the very small quantities of them which nature has any where deposited in one place, from the hard and intractable substance with which she has almost every where surrounded those small quantities, and consequently from the labour and expence [sic] which are every where necessary in order to penetrate and get at them." (A. Smith, 1776: p.563).
+But this is not quite true for Neoclassicals. The Neoclassical notion of scarcity is not merely that something is "rare", but rather that it is perceived as rare by consumers. To take Lionel Robbins's (1932: p.46) famous example, bad eggs may be "rare", but if people do not desire bad eggs, then even one bad egg is already "too many" in their eyes and thus will not have much value. In contrast, if people's desire for diamonds is very great indeed, then in their perception, even a large number of diamonds may be "too few" in their eyes, thus they will have a high price. Consequently, the Neoclassical concept of scarcity is quite distinct from the Classical notion: the subjective element of desire is an integral part of the story.
+There are thus two essential ingredients of Neoclassical value theory: (1) that the relative values of things arise from their relative scarcity and (2) that subjective desires are an integral part in determining the relative scarcity. Both of these notions have an old history predating 1871-4, but they were not always wedded together. Some economists believed that rarity gave rise to value without thinking too hard about whether rarity was a subjective or objective thing; in contrast, others have thought that subjective notions such as utility and demand were important in determining price, but did not really connect it to scarcity.}\\
+ \raggedleft{\href{https://www.hetwebsite.net/het/essays/margrev/phases.htm}{Phases of the Marginalist Revolution (HET)}}
+\end{adjustwidth}}
+
+En conclusión, de nuevo se rompe con la idea de los clásicos de que el trabajo incorporado (i.e. bienes de orden superior) determina el valor del bien de orden inferior. Según MENGER, es la utilidad marginal la que determina el valor de un bien de orden inferior.
+
+La teoría del valor de MENGER es así una teoría subjetiva,\footnote{MENGER (y sus discípulos de la escuela austríaca) llevarán al extremo su teoría subjetiva del valor.} de modo que:
+Rechazarán las comparaciones interpersonales de utilidad.
+Negaran cualquier papel del coste de producción en la determinación de los precios.
+
+Además, la teoría del valor de MENGER muestra el intercambio como un proceso capaz de generar valor para todos los intervinientes. 
+
+\subsubsection{Capital e interés}
+La teoría austriaca de capital e interés fue desarrollada por primera vez por E.B VON BAWERK.\footnote{Se debe a la aplicación de las teorías de EUGEN VON BÖHM-BAWERK, en su conocida monografía \textit{La conclusión del sistema marxiano}, la refutación de la teoría marxista del valor-trabajo y el concepto de plusvalía, ante una evidente contradicción que se producía en su aplicación cuando la llamada tasa de ganancia no cumplía la predicción de MARX en su tendencia decreciente, sino que por el contrario, se incrementaba. Dicha contradicción fue reconocida por MARX (implícitamente) en el tercer volumen de su compleja obra \textit{El capital} cuado introduce la Ley del Valor (que afirma que las mercancías se intercambian por su valor), que ya no ha de cumplirse en cada caso individual, sino a escala general considerando el sistema económico en su conjunto. BÖHM-BAWERK constató que estos casos puntuales eran en realidad prácticamente todos, y que la explicación de los precios en función de la medida media del valor del trabajo socialmente necesario se remitía nuevamente a los precios mismos volviendo al método marxista una petición de principio y dando lugar a lo que se conoce como \href{https://es.wikipedia.org/wiki/Problema_de_la_transformación}{\textit{Problema de la transformación}}. La obra ha hecho famoso a BÖHM-BAWERK, y mostrado los rasgos deliberadamente críticos de la escuela austriaca.} Afirmó que las tasas de interés y las ganancias están determinadas por dos factores, a saber, la oferta y la demanda en el mercado de bienes finales y la preferencia temporal.
+
+La teoría de Böhm-Bawerk compara la intensidad de capital con el grado de rodeos («roundaboutness») de los procesos de producción. Böhm-Bawerk también argumentó que la ley de utilidad marginal implica necesariamente la ley clásica de costos.
+
+\subsubsection{Dinero y política económica}
+
+MENGER analizó también la aparición del dinero como sustitutivo del trueque y, la caracteriza como un fenómeno espontáneo que aporta bienestar a la sociedad por la posibilidad de realizar intercambios sin tener que encontrar contrapartidas que demanden exactamente el bien que son capaces de ofrecer. 
+
+Así, el dinero es según MENGER una institución que permite intermediar entre agentes con diferentes capacidades y necesidades reduciendo sustancialmente los costes de transacción, generando por tanto una ganancia para la sociedad. En consecuencia, para la tradición austríaca primigénia el dinero surge evolutivamente como mercancía que facilita el intercambio, y como tal se demanda en el mercado.
+
+\subsubsection{Comportamiento dinámico}
+(Esta parte es posterior a las contribuciones originales de formación de la Escuela, en particular, se desarrolla de la mano de HAYEK y MISES) Esta visión del dinero como una mercancia más que participa y se ve influida por las dinámicas de mercado da lugar a lo que hoy se conoce como la teoría austriaca del ciclo económico (TACE). Estos autores, sostendrán que una expansión artificial del crédito, es decir, no respaldada por ahorro voluntario previo y mediante la manipulación a la baja del tipo de interés:
+\begin{lnum}
+    \item Tiende a aumentar la inversión y a crear un falso auge económico, dado que los precios relativos han sido distorsionados por la mayor masa de dinero circulante en la economía;\footnote{El fundamento de la teoría austriaca es que el capital, el dinero y las monedas están sujetas a las leyes de la oferta y la demanda como cualquier otro bien. Por lo tanto su precio refleja una realidad de mercado y transmite información. La tasa de interés, concretamente, transmite las preferencias temporales de los ahorradores, la oferta de capital disponible y la urgencia de los inversores por disponer de él.\\
+La banca de reserva fraccionaria en sus inicios, y más recientemente los bancos centrales y su monopolio de creación monetaria (básicamente en un esquema de economía de planificación centralizada) manipulan el precio del dinero mediante los tipos de interés, transmitiendo información falsa a los inversores. Generalmente los tipos de interés demasiados bajos estimulan la inversión por encima de lo justificado por el capital disponible. A medida que los inversores y las empresas, cargados de liquidez, pujan al alza los recursos productivos disponibles en la economía, suben los precios nominales hasta igualar la cantidad de dinero. A la vez, los prestamistas exigen una compensación por la pérdida en poder adquisitivo del dinero prestado, elevando las tasas de interés. Estas subidas descubren la mentira, revelan la ilusión monetaria y demuestran que dichas inversiones no eran rentables. En este momento sólo una nueva inyección monetaria puede evitar que explote la burbuja, prolongando la especulación y empeorando la mala asignación de los recursos, agravando las consecuencias de la inevitable crisis.}
+    \item Estas inversiones, que no hubieran sido emprendidas de no ser por la mencionada distorsión, sobreutilizan los bienes de capital acumulados, desviándolos a proyectos no rentables (si hubiera imperado el tipo de interés de mercado) y tarde o temprano producirán sobrevaloraciones en algún o algunos activos. Tales burbujas inevitablemente acaban estallando; y,
+    \item Cuando la emisión de nuevos medios fiduciarios cesa, las tasas de interés artificialmente bajas se acomodan en su verdadero nivel de mercado, generalmente muy superior al establecido por los bancos centrales dada la escasez de bienes de capital. Esto corta abruptamente el flujo de crédito barato, y las inversiones que parecían rentables con precios inflados ahora dejan de serlo: la crisis estalla y se efectúa la natural liquidación de las inversiones erróneas.\footnote{Para la teoría austriaca la crisis es un periodo de liquidación de inversiones improductivas, deuda impagable y reasignación de los recursos hacia usos más racionales, es decir más adecuados a las verdaderas preferencias del mercado. Es un periodo traumático, ya que en la liquidación inevitablemente se pierde valor, pero necesario. El ajuste sienta las bases de un nuevo crecimiento más sostenible y productivo, basado en el ahorro y la acumulación de capital.\\Una nueva inyección de liquidez, sin embargo, puede rescatar temporalmente a los inversores marginales, postergando la corrección y empeorando los desequilibrios de la estructura de capital, impidiendo además la liquidación de la deuda y el desapalancamiento.}
+\end{lnum}
+
+\subsection{Sucesores}
+En los siglos XX y XXI, los economistas con un linaje metodológico a la escuela austriaca temprana desarrollaron muchos enfoques diversos y orientaciones teóricas. Por ejemplo, LUDWIG VON MISES organizó su versión del enfoque subjetivista, al que llamó \textit{praxeología} (filosofía de la acción humana), en un libro publicado en español como \textit{La acción humana} (1949). En él, MISES declaró que la praxeología podía usarse a nivel epistemológico para deducir las verdades económicas teóricas a priori (en el sentido kantiano de juicio sintético a priori) y los experimentos mentales económicos deductivos podrían arrojar conclusiones que se derivan irrefutablemente de los supuestos subyacentes. Escribió que no se podían inferir de la observación empírica o del análisis estadístico y argumentó en contra del uso de probabilidades en los modelos económicos para construir y probar teorías. El método praxeológico se basa en el uso intensivo de la deducción lógica de lo que ellos argumentan que es innegable: los axiomas evidentes por sí mismos o hechos irrefutables sobre la existencia humana. La praxeología ha servido de base axiomático-deductiva no solo para la teoría económica sino también para hacer teoría sociológica que toma de la escuela austriaca su individualismo metodológico.
+
+El economista austriaco JEFFREY HERBENER ha afirmado que no existen características estadísticas en el comportamiento humano. Es decidido al azar y variable antes que constante. Los austriacos praxeólogos o misesianos argumentan que, más bien, se debe aislar el proceso lógico de la acción humana. De acuerdo con los austriacos misesianos, la deducción es preferible a la inducción en la interpretación de la evolución económica, ya que si se realiza correctamente, conduce a ciertas conclusiones e inferencias que deben ser verdaderas si las suposiciones subyacentes son exactas. 
+
+El filósofo HANS-HERMANN HOPPE, formado previamente en la teoría de la comunicación y el lenguaje del filósofo KARL-OTTO APEL, ha enfatizado la compatibilidad de los fundamentos metodológicos racionalistas de la escuela austriaca misesiana con las observaciones más contemporáneas en favor del apriorismo en la epistemología y la filosofía de la ciencia. HOPPE sostiene que el racionalismo kantiano, que es un elemento de la praxeología, aporta pocas pero más sólidas certezas a la ciencia económica que las metodologías de la llamada economía ortodoxa que, según HOPPE tiene puntos de vista relativistas en la definición de conocimiento y economía positiva (descriptiva).
+
+Desde la época de Mises, mientras algunos pensadores austriacos han aceptado su enfoque praxeológico, otros han adoptado metodologías alternativas. Por ejemplo, FRITZ MACHLUP, FRIEDRICH HAYEK y otros no tomaron este enfoque. LUDWIG LACHMANN, un subjetivista radical, también rechazó en gran medida la formulación de la praxeología de MISES a favor del \textit{verstehende Methode} (método interpretativo) articulado por MAX WEBER. Algunos austriacos tienen un punto de vista intermedio en el que apelan a hipótesis auxiliares intermedias no necesariamente derivadas de la praxeología y preservan la praxeología como núcleo central de la teoría económica.
+
+En el siglo XX, varios austriacos incorporaron modelos y matemáticas en su análisis. El economista austriaco STEVEN HORWITZ argumentó en el año 2000 que la metodología austriaca es consistente con la macroeconomía y que la macroeconomía austriaca puede expresarse en términos de fundamentos microeconómicos. El economista austriaco ROGER GARRISON escribe que la teoría macroeconómica austriaca se puede expresar correctamente en términos de modelos diagramáticos. En 1944, el economista austriaco MORGENSTERN presentó una esquematización rigurosa de una función de utilidad ordinal (el teorema de utilidad de Von Neumann-Morgenstern) en Theory of Games and Economic Behavior.
+
+
+
+\clearpage
+
+
+
+
+\section{Conclusión}
+
+\subsection{Recapitulación}
+
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+\MyBibItem{Autor}{Título}{Año}{DOI -- LINK}
+
+
+% --- Anexos (no aparecen en el índice) ---
+\clearpage\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+\clearpage
+\anexo{Aportaciones de P.H. WICKSTEED al marco Neoclásico}{\label{anx:wicksteed}}
+PHILIP HENRY WICKSTEED, en su \textit{An Essay on the Co-ordination of the Laws of Distribution} (1894), desarrolló la primera representación analítica de la función de producción y formalizó la idea del agotamiento del producto de MENGER.\footnote{Posteriormente, en su obra \textit{The Common Sense of Political Economy} (1910), estudió también las condiciones necesarias para la eficiencia económica desde un punto de vista moral, introduciendo la idea del no-tuísmo\footnote{\href{https://oll.libertyfund.org/quote/philip-wicksteed-on-non-tuism-in-economic-relations-1910}{Philip Wicksteed on “non-tuism” in economic relations (1910)}} frente al egoísmo para la eficiencia.}
+
+\textsc{Agotamiento del producto}
+
+WICKSTEED se ocupa de las condiciones que garantizan el agotamiento del producto\footnote{CLARK había afirmado previamente que si se pagara a cada factor su producto marginal, se agotaría el producto total, pero no demostró esta observación.}. Por tanto, tratará de demostrar las condiciones para que la suma de las rentas obtenidas por los propietarios de los factores de producción equivale al producto total. Partirá de dos supuestos:
+\begin{lnum}
+    \item Función de producción como una función homogénea de grado uno (rendimientos constantes a escala, i.e. si se incrementan todos los factores productivos en la misma proporción la producción total aumenta en la misma proporción);\footnote{Una función de producción homogénea de grado mayor que uno muestra rendimientos crecientes a escala y costes medios decrecientes. Los costes medios decrecientes implican que los costes marginales son menores a los costes medios. Si una empresa con costes medios decrecientes se comportara competitivamente y fijara el precio igual al coste marginal obtendría pérdidas (i.e. los costes totales serían más altos que el ingreso total). De este modo, con rendimientos crecientes a escala el producto marginal de un factor será mayor que su producto medio y los pagos a los factores serán mayores que la producción total.\\
+Por su parte, una función de producción homogénea de grado menor que uno muestra rendimientos decrecientes a escala y costes medios crecientes. En este caso, los costes marginales son mayores que los costes medios y el producto marginal de un factor es menor que su producto medio. Una empresa que se comporte competitivamente igualará el coste marginal y el precio y con ese nivel de producción obtendrá beneficios. Eso implica que cuando todos los factores reciben el valor de su producto marginal, los pagos a los factores son menores que el producto total. En estas circunstancias, el ingreso es mayor que los costes totales y la empresa obtiene beneficios.} y,
+    \item Competencia perfecta en los mercados de bienes y de factores.
+\end{lnum}
+
+En este contexto, razona que, por el teorema de Euler: (i) el producto se puede expresar como la suma del capital y el trabajo ponderados por sus productividades marginales; (ii) como la condición de competencia perfecta en los mercados de bienes y factores lleva a que la remuneración de cada factor sea igual al valor de su productividad marginal; por tanto, (iii) obtenemos que toda la producción se dedica a remunerar a los factores productivos. 
+
+En otras palabras, los factores remunerados a producto marginal agotan efectivamente el producto de la economía y los beneficios son nulos.
+
+\clearpage
+\anexo{Aportaciones de K. WICKSELL al marco Neoclásico}{\label{anx:wicksell}}
+
+WICKSELL era seguidor de la teoría de LÉON WALRAS (Escuela de Lausana), EUGEN VON BÖHM-BAWERK (Escuela austriaca, fuertemente influenciado por MENGER) y DAVID RICARDO (Escuela clásica), y construyó una síntesis de las tres visiones teóricas de la economía. El trabajo de WICKSELL de crear una teoría económica sintética le hizo ganar la reputación de \textit{economista de economistas}. Por ejemplo, aunque la teoría de la productividad marginal (la idea de que los pagos de los factores de producción tienden a igualarse a su productividad marginal) ya había sido propuesta por otros, como J.B CLARK, WICKSELL presentó una demostración de dicho principio mucho más sencilla y robusta. Mostró que, en un sistema competitivo, los factores de producción recibirán ingresos iguales a sus productividad marginal y que la suma de esas montos será igual al producto total de la empresa. Motivado por resolver los problemas de la pobreza derivados de la desigualdad de ingreso producto de esa distribución marginalista, WICKSELL planteó una teoría del gasto público o fiscal que lo ha transformado en el padre de la economía mixta.
+
+\textsc{Teoría del interés}
+
+Entre su obra destaca Interest and Prices (1898). Además de sintetizar las aportaciones de otros neoclásicos y exponer los puntos débiles de otras teorías, su aportación más destacada es su análisis del tipo de interés. WICKSELL definió el tipo de interés natural como aquella tasa que implica una inflación estable:
+\begin{la}
+    \item Cuando el tipo predominante es más alto que el natural, la actividad económica se contrae por debajo de su capacidad; y,
+    \item Cuando éste es más bajo, la actividad económica recibe un estímulo que impulsa el producto por encima de su valor normal\footnote{\textit{An increase in the interest rate above its natural rate contracts economic activity and leads to lower prices, while a decline relative to the natural rate has the opposite effect. The problem is that the natural rate is fundamentally unobservable.}}.
+\end{la}
+
+Esta forma de entender el interés es el origen de los usos posteriores del adjetivo natural que subyacen a la idea de la NAIRU o el output gap. 
+
+\textsc{Teoría de la producción}
+
+WICKSELL señaló que podrían existir rendimientos mixtos a escala, es decir, para todo nivel de producción, es posible que la empresa pudiera pasar por los tres rendimientos. Una determinada empresa podía experimentar las tres fases de los rendimientos a escala: al principio de la expansión serían crecientes (por extensión reducción de costes medios), pero a medida que aumenta la producción se tornaría decrecientes (aumento de los costes medios) y en el punto de inflexión serían constantes. 
+
+WICKSELL dio pie por tanto, al concepto de curva de costes medios a largo plazo en forma de U para una empresa. Matizó, sin embargo, que no era estrictamente necesario que la función de producción fuera homogénea de grado uno para que se agotara el producto: si las empresas producen en el nivel correspondiente al punto mínimo de la curva de costes medios a largo plazo, los beneficios son cero y el producto se agota. WICKSELL argumentó que los mercados perfectamente competitivos producen estos resultados ya que la competencia lleva a cada empresa a producir en el coste mínimo y a obtener unos beneficios nulos.
+
+\clearpage
+\anexo{Aportaciones de J.B. CLARK al marco Neoclásico}{\label{anx:clarks}}
+JOHN BATES CLARK fue el introductor del neoclasicismo en Estados Unidos, a pesar de estar influenciado por los historicistas alemanes. Su obra influenció fuertemente a FISHER, a la incipiente teoría de la organización industrial y a los economistas americanos de la época. 
+
+Estudió cómo se determinan tanto los salarios como las ganancias de las empresas y llegó a la conclusión de que se deben a la productividad marginal del trabajo y las máquinas, respectivamente.
+
+\textsc{Productividad Marginal}
+
+Su obra \textit{La Distribución de la Riqueza} (1899) recoge sus principales aportaciones al área que da título al libro:
+\begin{lnum}
+    \item Examina los determinantes de la distribución del producto y concluye que todo ingreso puede reducirse a un pago por trabajo;
+    \item El beneficio es el pago al trabajo del empresario, el retorno del capital es debido al ahorro derivado del trabajo. La renta, sin embargo, es un ingreso espurio derivado de la escasez\footnote{Para CLARK, al igual que para MARSHALL la constatación de que pueden existir beneficios positivos sería una situación meramente temporal resultante de los cambios dinámicos de la economía.}
+\end{lnum}
+
+Por todo ello, CLARK se opone a la concepción marxista de que la organización social en clases determina la distribución y formaliza la idea de que la remuneración depende de la productividad marginal.\footnote{El hijo de J.B. CLARK señala que estas afirmaciones éticas se interpretan como una refutación sin matices a la teoría marxista de la explotación.} 
+
+\textsc{Reflexiones sobre la competencia}
+
+CLARK era consciente del poder de mercado de algunas empresas y llegó a la conclusión de que éste le obligaba a repensar sus conclusiones éticas sobre la distribución de la renta. Sin embargo, CLARK pensaba que la mayoría de mercados eran competitivos y por tanto sus conclusiones no se alteraban. ‒ Por otro lado, CLARK examina la importancia de la estructura de los mercados de factores sobre la distribución. Así, concluye que la competencia y la movilidad de factores garantizan que los retornos del capital y el trabajo tenderán a igualarse.
+
+
+\clearpage
+\anexo{Aportaciones de IRVING FISHER al marco Neoclásico}{\label{anx:fisher}}
+
+Su primera contribución teórica a la economía se encuentra en su tesis doctoral de 1892, \textit{Mathematical Investigations in the Theory for Value and Prices}, que contiene una completa exposición de la teoría del equilibrio económico general de LÉON WALRAS, aunque, y esto es lo sorprendente, en el prefacio declaró que no conocía la obra de Walras. Sus principales puntos de referencia hay que buscarlos en JEVONS, AUSPITZ y LIEBEN. Debido a su extraordinario conocimiento matemático (el gran físico de la termodinámica Gibbs fue su mentor), Fisher dio formulaciones muy modernas para su época: fue el inventor de los índices económicos y un pionero de la econometría. Sus intereses en economía fueron muy similares a JOHN BATES CLARK (1847-1938). Sin embargo, sus planteamientos fueron distintos, Fisher estaba menos preocupado por la búsqueda de un fundamento ético del mercado y más por la validez de las hipótesis y la corrección de los razonamientos.
+
+\textsc{El interés: Teorema de la Separabilidad}
+
+La gran obra de IRVING FISHER es \textit{La Teoría del Interés} (1907) en sus diferentes ediciones, donde introduce la modelización explícita y formalizada del tiempo como dimensión relevante de la decisión de agentes económicos. Para éste autor, esperar para consumir es costoso y por ello los agentes exigen una compensación por ahorrar. Así, el interés surge de la impaciencia y no de la abstinencia como factor de producción postulada por BÖHM-BAWERK. Además, el interés está determinado por el coste de oportunidad del capital, de tal manera que las inversiones tienden a remunerarse a la tasa correspondiente a inversiones similares. 
+
+Sobre esto, introduce el descuento de flujos de caja y la valoración de inversiones como diferencia entre flujos positivos y negativos descontados al presente dando lugar a el Teorema de la Separación\footnote{El teorema de la separación de FISHER precede al teorema de MODIGLIANI-MILLER.}. 
+
+Éste muestra que si los mercados de capitales son perfectos, las decisiones de inversión y financiación de una empresa son independientes, de tal manera que una empresa debe centrarse en maximizar el valor presente de sus inversiones de forma independiente de los instrumentos que utilice para financiarlas, en ese contexto idealizado.\footnote{El teorema de la separabilidad establece que una firma puede asegurarse de que sus propietarios alcancen su posición óptima en términos de oportunidades del mercado, financiando su inversión con una determinada proporción de crédito y fondos propios obtenidos internamente.}
+
+\textsc{Ecuación de FISHER}
+
+Éste autor también realiza aportaciones duraderas en el ámbito de la teoría monetaria, principalmente sobre el papel del dinero en la determinación de las condiciones económicas, considerándolo fundamental. Para ello, reformula la ecuación cuantitativa del dinero\footnote{Formulada por la Escuela de Cambridge}, explicitando su carácter de condición de equilibrio frente a la mera identidad y afirmando que los precios son el elemento pasivo de la ecuación pero que tardan en ajustarse y ello provoca fluctuaciones en la economía real.\footnote{FISHER pone énfasis en la dinámica como ajuste hacia el equilibrio: afirma que las economías están en desequilibrio de forma natural y el objetivo de la economía debe consistir en entender ese ajuste hacia el equilibrio.}
+
+La ecuación formulada, que lleva su nombre, relaciona el tipo de interés nominal con el tipo de interés real y la inflación:
+
+$$i=(1+r)(1+\pi)-1$$
+
+Donde, $i\equiv$ la tasa de interés nominal; $r\equiv$ la tasa de interés real; $\pi\equiv$ la tasa de inflación.\footnote{La hipótesis de Fisher considera que la tasa de interés real es independiente de las medidas monetarias y no está determinada por la tasa nominal.} Aunque ex-post se trate de una identidad que define el tipo de interés real, desde un punto de vista ex-ante puede entenderse como una condición de equilibrio a la que tienden las economías. FISHER afirma que el ajuste del tipo de interés nominal es lento e imperfecto en el corto plazo. Así, un estímulo nominal que aumente la inflación supone una bajada del tipo de interés real y con ello, un estímulo a la inversión.\footnote{FISHER utiliza este resultado para teorizar sobre las fluctuaciones cíclicas de la economía. Por ejemplo, afirma que un factor determinante de la Gran Depresión fue la subida brusca del tipo de interés real.}
+
+\clearpage
+\anexo{Aportaciones de G. CASSEL al marco Neoclásico}{\label{anx:cassel}}
+
+
+\end{document}
