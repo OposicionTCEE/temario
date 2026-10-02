@@ -1,0 +1,1081 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Tema 3.A.27 -- Determinación de salarios\\
+\large Modelos de negociación, salarios de eficiencia y contratos implícitos.}
+\author{Marcelo Ortega}
+\date{Noviembre 2025}
+\newcommand{\TemaCode}{3A27}
+
+\oldtitle{Tema 3.A.20. Determinación de salarios: negociación, salarios de eficiencia y contratos implícitos}
+\changerationale{Sin cambio.}
+
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+    Sin cambios en el Temario; Apuntes CECO -- 39 págs
+
+    }
+\vspace{1cm}
+
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}\label{intro}
+
+
+\subsection{Contextualización}\label{context}
+
+\subsubsection{Relevancia}\label{importance}
+
+
+\subsubsection{Historia}\label{history}
+
+
+\subsubsection{Problemática}\label{problem}
+En el presente Tema intentaremos dar respuesta a la siguiente cuestión:
+\begin{lnum}
+    \item ¿Qué teorías explican la observación empírica por la cual los trabajadores están
+generalmente remunerados por encima de su desutilidad marginal de trabajar, incluso en
+presencia de desempleo involuntario?
+\end{lnum}
+
+\subsection{Estructura de la exposición}\label{structure}
+
+\clearpage
+
+
+
+
+\section{Breve referencia a la curva salarial}
+
+\subsection{Evidencia empírica}
+
+
+
+
+
+
+
+
+\clearpage
+\section{Salarios de eficiencia}
+El concepto central de la teoría de salarios de eficiencia se basa en que las empresas no sólo obtienen un beneficio de ofrecer un salario real $w$ bajo sino que también existe un coste para la empresa asociado a que el salario real sea reducido. 
+
+Por ello, las empresas establecen límites mínimos al salario real que están dispuestos a pagar para una cantidad de trabajo demandada, lo que supone rigidez real a la baja de los salarios (causada por las empresas) y, por tanto, puede explicar el desempleo involuntario. 
+
+El motivo de que las empresas estén dispuestas a subir los salarios de sus trabajadores es que pueden así conseguir un aumento de su productividad, y, de esta forma, aunque el salario sea más alto, reducen sus costes salariales por unidad efectiva de trabajo.\footnote{ROMES identifica varios motivos que justifican la existencia de salarios de eficiencia:
+\begin{lnum}
+    \item Motivos fisiológicos o de salud de los trabajadores (LIEBENSTEIN). Los trabajadores mejor remunerados tienen una mejor salud, por lo que su productividad puede ser más alta. Esto puede sucederespecialmente en empresas de países menos desarrollados, en los cuales la nutricióndeficiente es un problema habitual.
+    \item El esfuerzo o incentivo de los trabajadores ([X]). Se paga un salario superior al de equilibrio para inducir a los trabajadores a que se esfuercen más, dados los costes que tienen las empresas al controlar y supervisar el rendimiento de los trabajadores.
+    \item La rotación laboral (MILGRAM). Si se pagan salarios superiores, se reduce la probabilidad de que los trabajadores abandonen las empresas, lo que conlleva unos costes de contratación y formación importantes para las empresas (Teoría de los Costes e Ajustes, [\authorfont{Ver Tema 3.A.26}]). Si se reduce la rotación, la productividad media del trabajo se incrementa.
+    \item La calidad de los trabajadores. Si los mejores trabajadores tienen un salario de reserva elevado, elevar el salario implica quedarse con trabajadores de mayor calidad.
+\end{lnum}
+Existen también otros motivos, AKERLOF, como evitar la venganza, la búsqueda de sabotaje o la deslealtad derivados de un salario real considerado demasiado bajo, aunque éste sea el de mercado.}
+
+A continuación, explicaremos los dos modelos más habituales a la hora de fundamentar la teoría de los salarios de eficiencia y aunque su principal diferencia radica en la presencia o no de información incompleta en la determinación de los contratos ofrecidos (fijación del salario), comparten un marco común a la hora de introducir esta ineficiencia en forma de costes para la empres:
+
+\textit{El nivel de esfuerzo $e$ desempeñado por el Agente afectará a la productividad de éste y por tanto, condicionará los beneficios/costes de la Empresa}
+
+Por tanto: (i) el nivel de esfuerzo será una variable endógena que afecte positivamente a la empresa y enegativamente al empleado 
+(recordar modelos de Principal-Agente en el marco de la Economía de la Información [\authorfont{Ver Tema 3.A.10}]); y, (ii) existe una relación positiva entre el salario ofrecido (salario real fijado por la empresa) y el nivel de esfuerzo que el trabajo empeña en su labor.
+
+\subsection{Trabajo germinal: \authorfont{SOLOW}}
+En el marco de referencia, asumiremos que:
+\begin{lnum}
+  \item Nos movemos en elcorto plazo, por lo que el capital ($K$) está dado;
+  \item Existe un número muy grande de empresas;
+  \item Los trabajadores son idénticos y ofrecen inelasticamente una unidad de trabajo;
+  \item Los agentes son precio-aceptantes por lo que respecta a la producción/consumo;
+  \item Respecto a los agentes:
+  \begin{la}
+    \item El trabajador tiene una función de esfuerzo $e=e(w)$ que depende positivamente del salario, si bien $\exists w^*:\;e''(w^*)=0$\footnote{Cabeceraon el fin de que pueda existir un equilibrio, debe crecer más que porporcionalmente que el salario para niveles bajos, pero luego presentar un crecimiento desacelerado, tal que crece menos que proporcionalmente que éste.}
+    \item Por otro lado, la empresa Dado que no observa perfectamente el grado de cumplimiento de cada trabajador, debe incentivar el esfuerzo a través del salario.
+  \end{la}
+  \item El esfuerzo de los trabajadores es observado por el empresario, pero éste depende positivamente del salario.\footnote{Por tanto, aumentar el salario tiene un efecto negativo sobre los beneficios vía costes, pero un efecto positivo en la producción, teniendo la empresa que valorar este trade-off.}
+\end{lnum}
+
+Por ello, el problema del empresario es elegir el salario y la demanda de trabajo que le permita maximizar sus beneficios.
+
+\eqblock{
+\begin{aligned}
+  &\text{Problema de la empresa (c/p):}\quad \max_{\{L,w\}}{F(e(w)\cdot L)-w\cdot L}\\[1em]
+  \text{CPO's:}
+  &\begin{cases}
+    &\text{(1)}\quad F'(e(w)\cdot L)\cdot e(w)-w=0 \quad \Longrightarrow\quad \underbrace{F'(e(w)\cdot L)\cdot e(w)=w}_{\text{\scriptsize Salario depende del esfuerzo}}\\[0.5em]
+    &\text{(2)}\quad F'(e(w)\cdot L)\cdot e'(w)\cdot L-L=0\quad \Longrightarrow\quad \underbrace{F'(e(w)\cdot L)\cdot e'(w)=1}_{\text{\scriptsize Supone $e$ y $PMg_L$ son ctes.}}
+  \end{cases}\\[1em]
+  &\hspace{2em}\underbrace{\Longrightarrow}_{\text{\scriptsize Dividiendo una condición por otra}}\frac{1}{e'(w)}=\frac{w}{e(w)}\underbrace{\Rightarrow}_{\text{\scriptsize Óptimo}}\underbrace{\boxed{\frac{e'(w)w}{e(w)}=1}}_{\text{$\epsilon_e^w$ unitaria}}
+\end{aligned}
+}{Modelo SOLOW. Equilibrio: Elasticidad esfuerzo-salario unitaria}
+
+Gráficamente, las líneas rectas discontinuas representan puntos con una ratio determinada ratio
+entre esfuerzo y salario, $e(w)/w$. La empresa debe seleccionar un salario que produzca un mayor valor
+de dicha ratio, dada la relación entre esfuerzo y salario, $e(w)$. En el punto donde la curva $e(w)$
+es tangent a la ratio del esfuerzo-salario, ocurre esto y a elasticidad será 
+igual a la unidad.
+
+\textbf{introducir gráfico curva esfuerzo-salario (SOLOW)}
+
+\imagenfit{SOLOW_EsfuerzoSalario.png}{Salario de equilibrio. Tangente de la razón $e(w)/w$ y la curva de esfuerzo, $e(w)$}{Apuntes ICEX-CECO. Tema 3.A.27}
+ 
+
+\subsubsection{Valoración y limitaciones}
+Este modelo presenta numerosas ventajas respecto al Marco Neoclásico, sin embargo, también enfrenta algunas limitaciones:
+\begin{la}
+  \item Sus ventajas respecto al Marco Neoclásico son evidentes:
+  \begin{lnum}
+    \item Las empresas son racionales y conocen que existe un
+    comportamiento improductivo por parte de los trabajadores, y podrían tratar de establecer otros
+    mecanismos de incentivos para inducir un mayor esfuerzo.
+  \end{lnum}
+  \item Sus limitaciones:
+  \begin{lnum}
+    \item El salario real es completamente independiente al equilibrio entre la oferta y la demanda de trabajo;\footnote{La existencia de esta relación directa entre el salario recibido y el esfuerzo que realizan los
+    trabajadores, hace que el salario real de equilibrio $w^*$ dependa de la forma de la función que
+    relaciona el esfuerzo con el salario real, $e (w)$}
+    \item Por tanto, no se ajusta con los cambios de la oferta y la demanda de trabajo
+    por lo que es rígido a corto y a largo plazo;\footnote{El modelo supone además que
+    la rigidez real es permanente, cuando a largo plazo no tendría por qué ser así.}
+    \item Tampoco tiene en cuento las consecuencias (para involuntario) que generaría uin exceso de oferta o un exceso de demanda.\footnote{En este análisis no se tiene en cuenta la oferta laboral, que podría ser superior a la demanda generando
+    paro involuntario. \\Por el contrario, si la demanda de trabajo excediese a la oferta, las empresas no
+    podrían fijar el salario de eficiencia, y fijarían en ese caso uno inferior, de modo que se alcanzaría
+    el equilibrio del mercado.}
+  \end{lnum}
+\end{la}
+
+
+\subsubsection{Extensión: IMV}
+El modelo anterior que hemos visto presentaba una función de esfuerzo exógena, 
+si suponemos además que el trabajador espere una renta ex-ante para un nivel de esfuerzo nulo (subsidios por desempleo o Ingreso Mínimo Vital) y que la 
+empresa conoce que existe una renta salarial mínima que garantiza cierto nivel
+de esfuerzo del trabajador, lpodremos estudiar la fijación de salarios cuando ésta tenga en cuenta la renta ex ante.
+Gráficamente se puede representar como:
+
+\imagenfit{IMV.png}{Curva de esfuerzo, $e(w)$, en presencia de un subsidio para $e=0$}{Apuntes ICEX-CECO. Tema 3.A.27}
+
+Con este pequeño cambio, con su resolución analítica\footnote{Que sigue grosso modo la metodología del Modelo de SOLOW, con la introducción 
+de la renta ex-ante como parte del problema de maximización de la Empresa a la hora de maximizar su beneficio, 
+[\authorfont{Ver Apuntes ICEX-CECO. Tema 3.A.27}]}, observaremos que:
+\begin{lnum}
+  \item La relación entre la renta $v$ y la probabilidad de estar parado,
+  $u$, es negativa ($\partial v/\partial u<0$) es decir, cuando aumenta la tasa de paro, la renta ex-ante disminuye.
+  \item La relación entre el salario real y el empleo es positiva ($\partial w/\partial L>0$). Esto se debe a que
+  un incremento en el nivel de empleo da lugar a una reducción del paro, lo que genera un
+  incremento de la renta ex-ante, el cual las empresas suelen trasladar al salario real para conseguir
+  un incremento del esfuerzo de los trabajadores.
+  \item Las empresas, teniendo en cuenta la renta ex-ante, trasladan este hecho al salario consiguen un incremento
+  de la productividad de los trabajadores.
+\end{lnum}
+
+Este modelo caracteriza con mayor rigor los niveles de
+empleo, salario real y producción teniendo en cuenta la renta salarial que garantiza cierto nivel de
+esfuerzo del trabajo.
+
+\subsection{Modelo de referencia: \authorfont{SHAPIRO-STIGLITZ}}
+Como se ha comentado, en los modelos anteriores se asume que el esfuerzo depende del salario,
+pero este esfuerzo es observable. Sin embargo, las empresas difícilmente pueden monitorizar el esfuerzo de los trabajadores, sólo sorprenderles si
+no trabajan con una cierta probabilidad de modo que existe un problema de información
+asimétrica. Pero estos autores no se detienen aquí, se apoyan en dos argumentos adicionales 
+que determinarán los salarios de eficiencia. 
+\begin{lnum}
+  \item En primer lugar, estos autores cuestionan el hecho de que
+  la remuneración del trabajo sea acorde con la productividad marginal del trabajador dado que ésta
+  es difícil de medir y para hacerlo se incurre en costes muy altos;
+  \item En segundo lugar, aluden al
+  problema del riesgo moral que se provoca puesto que los trabajadores temerán que la empresa los
+  acuse de estar realizando un menor esfuerzo al exigido para despedirlos (estos son aversos al riesgo).
+\end{lnum} 
+
+De esta forma, el modelo analiza cómo la empresa va a diseñar un 
+contrato que reduzca el conflicto de intereses (trabajo - escaqueo), asumiendo ésta todo 
+el riesgo (es neutral) y pagando un salario superior al de vaciado, a fin de inducir un mayor
+esfuerzo a los trabajadores. 
+
+La empresa determinará este salario, que sin duda será mayor que el de vaciado,
+de manera que la mejor alternativa posible para el trabajado sea la de trabajar y esforzarse\footnote{El salario mínimo que garantice que trabajar y esforzarse 
+es la mejor alternativa del trabajador se conoce como condición de no-escaqueo, 
+que nos establece de qué depende 
+el salario que la empresa tiene que pagar para incentivar al trabajador a 
+esforzarse en el nivel alto.},
+enfrentándose por tanto a una restricción de participación y de compatibilidad de incentivos.
+
+Además, la fijación por encima del salario de vaciado afecta positivamente a la empresa,
+pues constituye una amenaza (sui generis) al trabajador: si 
+la empresa le pilla ganduleando le despedirá y, además de renunciar a un 
+salario alto, habrá desempleo (y por tanto, dificultad para encontrar un empleo), 
+ya que el salario real es superior al de vaciado que ha fijado la empresa. 
+
+
+Por tanto, la relación esfuerzo-salario en este modelo viene del problema 
+de riesgo moral: $\uparrow\;w \to\;\downarrow$ gandulear ($S$) $\to \;\uparrow E$. 
+ 
+\eqblock{
+  \begin{aligned}
+    \text{$\exists$ tres estados del trabajador}
+    \begin{cases}
+      \text{(1)}\quad &(E, \text{employed})\Longrightarrow u(t)=w(t)-\bar e\\
+      \text{(1)}\quad &(S, \text{shirking})\Longrightarrow u(t)=w(t)\\
+      \text{(1)}\quad &(U, \text{unemployed})\Longrightarrow u(t)=0
+    \end{cases}\\
+    \text{\text{\scriptsize Donde, $E\equiv$ "esforzándose", $S\equiv$ "escaqueandose", $\exists!$ Nivel de esfuerzo $\equiv \bar e$}}\\
+    \text{Transiciones posibles:}
+    \begin{cases}
+      &(S, \text{shirking})\to (U, \text{unemployed}) \quad \underbrace{P[U | S]=q}_{\text{\scriptsize Prob de ser sorprendido}}>0\\
+      &(E, \text{employed})\to (U, \text{unemployed}) \quad \underbrace{P[U | E]=b}_{\text{\scriptsize Tasa de abandono}}>0\\
+      &(U, \text{unemployed})\to (E, \text{employed}) \quad \underbrace{P[E | U]=a}_{\text{\scriptsize Prob de encontrar un empleo}}>0\\
+    \end{cases}
+  \end{aligned}
+}{Modelo SHAPIRO-STIGLITZ. Estados y transiciones}
+
+La empresa contrata trabajadores mientras que el valor para ellos de estar trabajando y
+esforzándose, $E$, sea mayor que el valor de estar trabajando y no esforzándose, $S$, es decir, 
+$V_{Ei}\ge V_{Si}$. Además, tendrá en cuenta que las probabilidades relativas de abandonar o encontrar al
+desempleo viene dada por la proporción siguiente:
+
+\imagenfit{MercadoSOLOW_STIGLITZ.png}{Modelo SHAPIRO-STIGLITZ. Flujos del Mercado de Trabajo}{Apuntes ICEX-CECO. Tema 3.A.27}
+
+En el límite, contratará trabajadores de manera que: $V_{Ei}=V_{Si}$.
+
+\subsubsection{Equilibrio: Condición de no-escaqueo}
+Esto es precisamente lo que se conoce como condición de "no-escaqueo" y es lo que determina 
+el equilibrio en el Modelo. La empresa tomará dado un salario agregado ($w$, que viene dado por el 
+salario de vaciamiento del mercado) y determinará un salario óptimo, $w^*$,
+tal que el trabajador tenga incentivos para cumplir su contrato, es decir, para que se cumpla la
+restricción de incentivos: $V_{Ei}= V_{Si}$. Esta condición de no escaqueo o salario de no-escaqueo puede expresarse como:
+
+\eqblock{
+  \begin{aligned}
+    \boxed{w(q,b,a,r,\bar e)}=\bar e\left(1+\frac{r+b+a}{q}\right)
+    \underbrace{\Longrightarrow}_{a=\frac{N/L}{1-N/L}b}
+    \bar e\left(1+\frac{r+b+\frac{N/L}{1-N/L}b}{q}\right)=
+    \boxed{w(q,b,N,L,r,\bar e)}
+  \end{aligned}
+}{Modelo SHAPIRO-STIGLITZ. Equilibrio. Condición de no-escaqueo}
+
+Es decir, el salario es una función creciente del número de trabajadores empleados ($N/L$):
+
+\imagenfit{Eq_SHAPIRO_STIGLITZ.png}{Modelo SHAPIRO-STIGLITZ. Equilibrio: Condición de no-escaqueo}{Apuntes ICEX-CECO. Tema 3.A.27}
+
+La demanda de trabajo, $N^d$, viene dada por su productividad
+marginal y la oferta, $N^s$, es horizontal en en el nivel de esfuerzo $\bar e$, ya que si el salario fuese inferior
+el trabajador no tendría utilidad positiva, y vertical cuando se alcanza el pleno empleo. 
+
+Lo que hay que tener en cuenta es que $N^d$ corta a $N^s$ por encima del tramo horizontal de ésta, lo que representaría
+la demanda de empleo de la $i$-ésima empresa cuando se emplean todos los trabajadores
+(). A partir de este gráfico, se pueden observar que la oferta y la demanda de empleo determinan
+dos equilibrios: E ... , que sería el equilibrio en el caso en el que hay supervisión perfecta y la
+probabilidad de ser sorprendido no esforzándose es igual a 1 (q= /), y E, que sería el equilibrio en
+el caso en el que la supervisión no es perfecta (q< /).
+
+
+
+
+\subsection{Valoración: Enfoque eficiencia} 
+Las teorías de los salarios de eficiencia tienen varias implicaciones importantes en el análisis del mercado de trabajo. Una de ellas es la posible existencia de un desempleo permanente en condiciones de equilibrio en el mercado de trabajo. Los salarios de eficiencia son superiores a los que vacían el mercado, y pueden contribuir a generar un desempleo permanente. Si se piensa en la oferta y la demanda de trabajo, el salario real w1 sería el salario de equilibrio fijado por la interacción de ambas funciones. Si se fija un salario w2 , tal que w2>w1 , puede aumentar la eficiencia de los trabajadores y, por tanto, la demanda de trabajo, desplazando ésta última a la derecha, y minimizando el coste salarial de la empresa por unidad efectiva de trabajo. Aunque el nuevo salario w2 es de equilibrio, no es un salario que vacíe el mercado. A ese salario w2. dado que es mayor, habría más gente dispuesta a trabajar que empresas interesadas en contratar estos trabajadores. La diferencia entre la cantidad de trabajo ofrecida y demandada al salario w2 es el desempleo que se generaría. Otra implicación importante es que la existencia de desempleo es el factor por el que existe una relación entre salario y productividad. El miedo de perder un puesto de trabajo bien remunerado y de pasar al desempleo es un mecanismo que disuade a los trabajadores de escaquearse y los anima a esforzarse más y aumentar su rendimiento. Si no hubiera desempleo en el nuevo equilibrio resultante a un salario mayor que el que vacía el mercado, haría que la demanda de trabajo no aumentara en respuesta a una subida del salario. Las críticas a la teoría de los salarios de eficiencia se centran en la existencia de mecanismos alternativos para incentivar a los trabajadores en caso de que su supervisión sea cara. Existen planes de incentivos o remuneraciones variables basadas en el rendimiento, por ejemplo, con ese objetivo. También algunos autores piensan que otro mecanismo es que la empresa se asegure frente al hecho de que el trabajador se escaquee usando algún tipo de fianza, que los trabajadores perderían en caso de ser sorprendidos. Por último, las empresas también pueden establecer otros sistemas que dilaten en el tiempo una parte de la remuneración a modo de renta pospuesta. Así, los trabajadores se esforzarían también por intentar conservar el empleo. Estos mecanismos podrían reducir el problema del principal y el agente sin tener que recurrir a unos salarios superiores a los que vacían el mercado.
+
+
+
+\clearpage
+\section{Salarios de negociación} 
+
+\textbf{Importante -> Relacionar lo anterior con este apartado: Crear gancho}
+
+Para comprender el proceso de fijación salarial en la empresa, es necesario plantear, en primer lugar, los fundamentos microeconómicos del proceso de negociación que se estudian en la teoría de la negociación.\footnote{La teoría de la negociación parte del trabajo desarrollado por HICKS, y se basa en el enfoque axiomático de negociación de NASH (1950) y en el enfoque estratégico de Rubinstein (1982), basado en la Teoría de Juegos cooperativos. En segundo lugar, es necesario abordar el proceso de negociación entre los representantes de la empresa (patronal) y de los trabajadores (sindicatos).}
+
+No es dificil suponer, con cierto grado de certeza, que la negociación salarial entre empleados y empleadores puede representarse en función de sus poderes de negociación (o resistencia a los instrumentos negociadores que posee el otro). Uno de los primeros derechos colectivos adquiridos en las economías desarrolladas fue precisamente el Derecho a Huelga, un instrumento de presión que incrementa el poder negociador del empleado frente al empleador. Este modelo se puede representar gráficamente situando el salario en el eje de ordenadas y la duración de la huelga en el eje de abscisas. Se supone que la capacidad de resistencia de los trabajadores decrece con el tiempo y por tanto estarán dispuestos a aceptar menores salarios y que el grado de concesión de las empresas (aumenta con la duración de la huelga, de modo que a mayor duración de la huelga la empresa estará dispuesta a pagar mayores salarios:\footnote{El derecho a huelga tiene una historia larga, con ejemplos en el antiguo Egipto y Roma, pero su reconocimiento moderno se vincula al movimiento obrero industrial en Inglaterra en el siglo XIX. La legalización y constitucionalización ocurrieron gradualmente en el siglo XX:
+\begin{lnum}
+    \item 1909 (España): Se promulgó la primera ley específica sobre huelgas y coaliciones.
+    \item 1946 (Francia): La Constitución francesa reconoció el derecho a huelga.
+    \item Post-Segunda Guerra Mundial: El derecho a huelga fue incluido gradualmente en las constituciones europeas y en otros lugares del mundo como un derecho fundamental.
+\end{lnum}
+Actualmente, el derecho a la huelga es un derecho fundamental reconocido en la Constitución Española (artículo 28.2) y, si bien los trabajadores por cuenta ajena (incluidos los funcionarios) tienen derecho a ejercerlo, debe realizarse mediante la suspensión del servicio y sin ocupar el centro de trabajo. Es necesario que la convocatoria sea registrada ante la autoridad laboral y que se garanticen los servicios esenciales.}
+
+\imagenfit{ModeloHICKS-Negociación.png}{Representación de las curvas de poder de negociación y el salario óptima de ésta}{Apuntes ICEX-CECO. Modelo de HICKS}
+
+El supuesto principal es que cada parte posee un poder de negociación de partida derivado de su capacidad de resistencia o grado de concesión, por mantenerse en su postura en caso de conflicto. El enfoque de HICKS tiene como principal ventaja la simplicidad, si bien no analiza los elementos que determinan la capacidad de negociación de los agentes, lo cual constituye su principal crítica. Con objeto de resolver esta limitación, surge el enfoque de NASH.
+
+\subsection{Enfoque axiomático: NASH}
+El enfoque de NASH (1950, 1953) define la solución del problema de negociación sobre la base de unas propiedades o axiomas que debe cumplir. Se parte de asumir que:
+\begin{lnum}
+    \item La negociación se realiza entre dos agentes, que maximizan la utilidad dependiente del resultado de la negociación;
+    \item Existe un conjunto de soluciones $G$ (compacto y convex), que comprende los vectores de utilidad que los dos agentes pueden tener al final del proceso negociador;\footnote{Así, un vector de soluciones será $u = (u_1 , u_2)$ donde $u_1$ y $u_2$ representan las utilidades obtenidas al final de la negociación por los agentes $1$ y $2$, respectivamente.} y,
+    \item En caso de que la negociación no sea exitosa, los agentes reciben unas utilidades $d = (d_1, d_2)$,\footnote{Es decir $d$ es el vector de utilidades que se obtienen cuando falla la negociación.} que deben ser peores que cualquier otro resultado de ésta: si $u \in G$ entonces $u\ge d$.
+\end{lnum}
+
+Así, la solución de Nash será:
+\eqblock{
+\begin{aligned}
+    &\text{Función solución de NASH:} \qquad \boxed{f:(G,d)\to u^N}\;, \quad \text{donde,}
+    \begin{cases}
+        (G,d)&\equiv \;\text{\scriptsize Soluciónes y utilidades cuando falla}\\[0.3em]
+        u^N &\equiv \quad
+        \begin{aligned}
+            &\text{\scriptsize Vector solución,}\\
+            &\text{\scriptsize con $u^N=(u_1^N,u_2^N)\in G$}
+        \end{aligned}
+    \end{cases}\\
+    &\text{Si:}\\
+    &\begin{cases}
+        \text{(A.1)}\quad \text{Óptimalidad de Pareto:} \quad u\in G\;\text{y}\;u\ge u^N \; \Longrightarrow u=u^N\\[0.5em]
+        \text{(A.2)}\quad \text{Invarianza transormaciones lineales y positivas:}\\[0.5em]
+        \hspace{3.3em} T:u(u_1,u_2)\to u'(u_1',u_2')\;\wedge \; u_i'=a_i+b_iu_i\\[0.1em]
+        \hspace{3.3em}\Longrightarrow f(T(G), T(d))=T(f(G,d))\\[0.5em]
+        \text{(A.3)}\quad \text{IIAA:} \quad \text{Si }\; B\subset G \;\text{y}\;f(G,d)\in B, \Longrightarrow\;f(B,d)=f(G,d)\\[0.5em]
+        \text{(A.4)}\quad \text{Simetría:} \quad \text{Si }\; d_1=d_2 \;\text{y}\; (u_1,u_2)\in G\;\Longrightarrow\;(u_2,u_1)\in G, \;\text{y}\; u_1^N=u_2^N
+    \end{cases}\\[1em]
+    &\Longrightarrow \;\text{Entonces,} \quad \exists!u^N=(u_1^N,u_2^N)\in G:\\[1em]
+    &\hspace{5em}u^N=\max_{u\in G}{(u_1-d_1)(u_2-d_2)}\quad \text{o}\quad \underbrace{\boxed{u^G=\max_{u\in G}{(u_1-d_1)^\gamma(u_2-d_2)^{1-\gamma}}}}_{\text{\scriptsize Sin simetría (A.4), diferente poder de negociación}}
+\end{aligned}
+}{Desarrollo analítico: NASH. Negociación.}
+
+\subsubsection{Valoración}
+El enfoque axiomático de Nash es pionero en el estudio del proceso de negociación y sus resultados, estableciendo la base metodológica para los modelos que analizan las decisiones de los agentes en un marco de negociación. Sin embargo, el enfoque axiomático de Nash también plantea algunas limitaciones. Por una parte, no se define el poder de negociación $\gamma$; es un coeficiente exógeno al modelo, pero que resulta determinante para obtener la solución. Por otra parte, al valor de reserva $d$ es difícilmente precisable o cuantificable.
+
+\subsection{Enfoque estratégico} 
+Si el objetivo que planteó NASH para el enfoque axiomático era definir la solución al problema de negociación sobre la base de unas propiedades que debía satisfacer de forma natural, en este caso, el enfoque estratégico hace uso de la Teoría de Juegos no cooperativos en un escenario dinámico y describiendo un proceso de ofertas y contraofertas que, como podemos avanzar, se ajusta más a la realidad.\footnote{Los desarrollos primeros en la materia se remontan a STAHL (1972) y RUBINSTEIN (1982), que plantean un juego entre dos jugadores con vida infinita que comparten una unidad de bien normalizado (1). La negociación termina cuando se llega a un acuerdo entre los jugadores y éste se aplica en todos los periodos posteriores. Para ver el desarrollo en detalle [\authorfont{Ver Apuntes ICEX-CECO}]}
+
+A este proceso de negociación se le conoce como \textit{negociación colectiva} y es habitual en la mayor parte de los países avanzados. Además, es una de las instituciones del mercado de trabajo sobre la que más se ha estudiado ya que tiene consecuencias importantes a la hora de fijar el salario y los niveles de empleo de una economía y, por tanto, sobre el equilibrio del mercado de trabajo, tanto mayores en la medida en que su cobertura sea también mayor.\footnote{Existen varios enfoques teóricos que analizan la negociación colectiva. El primero es el enfoque denominado sindicato monopolista (DUNLOP, 1944), en el que un sindicato único que actúa como "monopolista" tiene el poder para maximizar el salario, a partir del cual la empresa demanda la cantidad de trabajo necesaria. Los trabajos de Nickelly Andrews avanzan sobre el enfoque de Dunlop a través de los modelos del derecho a gestionar (\textit{Right-to-Manage}) en los que, siguiendo el enfoque de NASH (1950), la empresa y los trabajadores negocian el salario.} Uno de los agentes que forman parte de esta negociación colectiva son las organizaciones sindicales.\footnote{La teoría económica predice que los sindicatos suelen tener un impacto positivo en los salarios gracias a su poder de negociación. Sin embargo, reducen la dispersión de los salarios de sus miembros. Dependiendo de las circunstancias, el impacto sobre el empleo no está claro. Además, también se ha demostrado la posible existencia de un impacto del sindicato en la inversión de las empresas, aunque el sentido es ambiguo, dependiendo de la posibilidad de renegociación de los salarios una vez que la inversión de la empresa se ha llevado a cabo.} 
+
+A lo largo de la evidencia económica, se ha tratado de modelizar el comportamiento de la negociación colectiva, y los objetivos de empresa y sindicatos, tratando de aclarar el impacto que tienen en estas variables, principalmente salarios y empleo, a través de diversos modelos teóricos, que se han estimado para distintos países y periodos de tiempo con resultados diversos. A pesar de que el trabajo pionero en la materia fue el de DUNLOP (1944)\footnote{[\authorfont{Ver Apuntes ICEX-CECO}] El primer modelo en representar la negociación colectiva entre empresa y trabajadores es el conocido como modelo del sindicato monopolista de DUNLOP ( 1944), en el cual el sindicato fija un salario de manera unilateral, conociendo la demanda de trabajo de la empresa.}, presentaremos el enfoque estratégico propuesto por NICKELL y ANDREWS (1983) donde se asume que los salarios son negociados pero la empresa tiene capacidad de decisión sobre el ajuste de su plantilla a través de la contratación y el despido.
+
+\subsubsection{Derecho a gestionar: NICKELL y ANDREWS}
+El modelo de derecho a gestionar fue propuesto inicialmente por LEONTIEF (1946) pero estos autores amplían el enfoque del modelo del sindicato monopolista (DUNLOP, 1944), al considerar la posibilidad de que la empresa y el sindicato negocien el salario y que, dado el salario resultante de la negociación, la empresa determine su demanda de trabajo. Los supuestos del modelo de derecho a gestionar son:
+\begin{lnum}
+    \item Existe un sindicato compuesto por $N, N_i=N_j$, miembros idénticos. El objetivo del sindicato es maximizar la utilidad esperada de sus miembros, siguiendo la versión explicada anteriormente para un sindicato con miembros idénticos, con salario de reserva $\bar w$, función de utilidad $v(w)$, con trabajadores adversos al riesgo (es decir, $\mathrm{d}v$ decreciente).
+    \item Por su parte, las empresas maximizan beneficios, que vienen dados por la función siguiente: $\Pi=F(L)-wL$, donde $F(L)$ es la función de ingresos de la empresa, es decir, el resultado de vender la producción obtenida con la fuerza de trabajo, para la cual $F' > O$, y $F''< O$.
+\end{lnum}
+
+En el proceso de negociación, la empresa y el sindicato negocian el salario y , a continuación, la empresa determina el empleo según la demanda de trabajo dada por $L^d(w) = F^{'(-1)}(w)$. Dado el parámetro $\gamma$, que representa el poder de negociación del sindicato, el salario negociado sería aquel, de acuerdo al enfoque axiomático de Nash.
+
+\eqblock{
+\begin{aligned}
+    &\text{Función objetivo del sindicato:}\quad \max_{w}{V_s=\ell\;v(w)+(1-\ell)\;v(\bar w)}\qquad \text{donde,}\quad \ell=\min{\left(1,\frac{L}{N}\right)}\\[1em]
+    &\text{Función objetivo de la empresa:}\quad \max{\Pi=F(L)-wL}\qquad \text{donde,}\quad F(L)\equiv \text{Función de ingresos}\\[2em]
+    &\text{Salario negociado:}\quad \boxed{\max_{w}{\quad \underbrace{[\Pi(w)]^{1-\gamma}}_{\text{\scriptsize Empresa}}\quad \underbrace{[v(w)-v(\bar w)]^\gamma [L^d(w)]^\gamma}_{\text{\scriptsize Sindicato}}}}
+    \quad 
+    \begin{aligned}
+        &\text{s.a.}\quad 
+        \begin{cases}
+            L^d(w)&\leq N;\\
+            w &\ge \bar w
+        \end{cases}\\
+        &\text{\scriptsize Y,} \; \text{\scriptsize$\Pi(w)\equiv F[L^d(w)]-wL^d(w)$}
+    \end{aligned}\\[1em]
+    &\text{De la CPO:}\hspace{3em} \underbrace{\boxed{\eta_w^L=-\frac{w}{L}\frac{\mathrm{d}L}{\mathrm{d}w}}}_{\text{\scriptsize Elasticidad empleo-salarios}}\quad \text{y,}\quad \underbrace{\boxed{\eta_w^\Pi=-\frac{w}{\Pi}\frac{\mathrm{d}\Pi}{\mathrm{d}w}}}_{\text{\scriptsize Elasticidad beneficio-salarios}}\\
+    &\text{Función determinación de salarios (cumplimiento CPO = 0):} \quad \underbrace{\boxed{\phi(w, \bar w,\gamma)=0}}_{\text{\scriptsize CPO en formato función}}\\
+    &\hspace{3em}\text{\scriptsize donde,}\; \partial\phi/\partial \bar w>0 \;\text{y,}\;\partial\phi/\partial\gamma>0
+\end{aligned}
+}{Modelo \textit{derecho a gestionar}. Desarrollo analítico.}
+
+Gráficamente, el equilibrio se puede representar mediante las curvas isobeneficio de la empresa ($\Pi_i$), la demanda de trabajo ($L^d(w)$) y las curvas de indiferencia que representan las preferencias del sindicato ($V_{si}$).\footnote{Las curvas isobeneficio de la empresa representan las combinaciones de trabajo y salario que permiten alcanzar a las empresas el mismo nivel de beneficio y tiene su máximo en el punto donde cortan con la curva de demanda de trabajo.}
+
+\imagenfit{Eq-DerechoGestionar.png}{Equilibrio en el modelo NICKELL-ANDREWS}{Apuntes ICEX-CECO. Tema 3.A.27}
+
+De esta forma, el equilibrio se alcanzará en la intersección entre la curva de indiferencia del sindicato y la curva isobeneficio de la empresa (intersección que siempre se producirá sobre la curva de demanda de la empresa, puesto que es esta la que elige el nivel de contratación, como se ha visto el sindicato maximiza su utilidad tomando como restricción la demanda de trabajo), por lo que:
+\begin{la}
+    \item Si $\gamma=1$: Se alcanza el equilibrio en el punto $M$, en el que su curva de indiferencia es tangente a la demanda de trabajo;
+    \item Si $\gamma = 0$: El equilibrio se alcanza en el punto $E$, en el que la curva isobeneficio es tangente a la oferta de trabajo dada por el salario de reserva; y,
+    \item Si $0<\gamma<1$: El resultado de la negociación $(w, L)$ se situará sobre la demanda de trabajo para unos niveles de empleo y salarios comprendidos entre los puntos $M$ y $E$. La interpretación sería la siguiente:
+    \begin{lnum}
+        \item A más poder de negociación del sindicato ($\uparrow\gamma$) más salario real y menos trabajo: el salario real $w$ es una función creciente del poder de negociación del sindicato y el trabajo de equilíbrio $L$, una función decreciente.\footnote{El sindicato, al tener poder de mercado, fija un salario real superior al de competencia perfecta, aún sabiendo que eso lleva a un menor nivel de contratación. Hay trabajadores que querrían trabajar a ese salario pero no pueden, por eso es desempleo involuntario, aunque para eso tendríamos que asumir que obtienen ese salario de reserva no de otro trabajo en competencia perfecta sino, por ejemplo, de subsidios al desempleo.}
+        \item El salario real es rígido, lo que resulta de utilizar una función de producción homogénea de grado $\alpha$, por lo que la elasticidad del empleo con respecto al salario(como se ha visto, es $1/(1-\alpha)$). Si la elasticidad del empleo es constante, la pendiente de la demanda de empleo también lo será, por lo que todo shock tecnológico va a desplazar la demanda de trabajo horizontalmente de forma paralela, dejando inalterada la pendiente. Como las Curvas de Indiferencia se mueven también de forma paralela (nunca se interseccionan), el equilibrio se produce en el mismo salario real que al inicio, iteradamente hacia la derecha-izquierda en función del tipo de shock, dando lugar a una recta salarial totalmente horizontal
+    \end{lnum}
+\end{la} 
+
+Este modelo integra los determinantes del poder negociación sindical en un modelo clásico de negociación a la NASH con empresas, por tanto, supone la generalización del modelo del sindicato monopolista.\footnote{DUNLOP, 1944. Éste es el caso particular de $\gamma=1$ en el modelo de derecho a gestionar)}
+
+\subsection{Extensiones y desarrollos posteriores}
+Sin embargo, el común denominador de todos los modelos anteriores (en el que sólo se negocia una variable: axiomático, estratégico, en cualquier de sus vertientes) es que la solución no es eficiente en el sentido de Pareto ya que alguna de las partes que participan en la negociación pueden mejorar sin que la otra empeore, dando lugar a la \textit{zona de MALINVAUD}. Esto no es del todo satisfactorio, ya que el sindicato y la empresa podrían lograr una mejora paretiana si se ponen de acuerdo en su proceso de negociación. Gráficamente, en el punto $M$ el sindicato obtiene un nivel de utilidad $V_s$ y la empresa un beneficio $\Pi_1$, pero podrá situarse en un punto como $S$, en el que la empresa obtiene un beneficio mayor, al estar más próximo al origen, y el sindicato alcanza la misma curva de indiferencia.
+
+\imagenfit{Eq-DerechoGestionar.png}{Equilibrio en el modelo NICKELL-ANDREWS}{Apuntes ICEX-CECO. Tema 3.A.27}
+
+\subsubsection{Negociación eficiente}
+Desarrollos posteriores han permitido solventar esta ineficiencia tan importante, como por ejemplo el modelo de contratos eficientes de McDONALD y SOLOW.
+
+\paragraph{Eficiencia débil}
+Al romper con la restricción de la función de demanda de trabajo (e introducir una negociación entre sindicatos y empresa también sobre el nivel de empleo), estos autores demuestran que se logra alcanzar una asignación en la que las curvas son tangentes entre sí (no intersección), de modo que no haya otro resultado Pareto-superior (mejora en el sentido de Pareto), el resultado de la negociación $(w^*, L^*)$ es pues Pareto eficiente.\footnote{Para una formulación analítica al detalle [\authorfont{Ver Apuntes ICEX-CECO. Tema 3.A.27}]}
+
+\imagenfit{Negociacion_ContratosEficientes_CC.png}{Contratos eficientes débiles: Equilibrio cooperativo -- Curva de Contrato (creciente). McDONALD y SOLOW}{Apuntes ICEX-CECO. Tema 3.A.26}
+
+Como vemos, la unión de los puntos de tangencia entre las Curvas de Indiferencia del sindicato ($V_{s,i}$) y las Curvas de Isobeneficio de la Empresa ($\Pi_i$), es lo que se conoce como Curva de Contrato que, para alcanzarla, es importante que en el proceso de negociación se negocien simulatenamente las dos variables asignativas.\footnote{El problema de optimización siguiendo el enfoque axiomático de NASH sería el siguiente: $$\max_{w,L}{\quad [F(L)-wL]^{1-\gamma}[V(w)-V(\bar w)]^\gamma L^\gamma}\quad \text{s.a.}\; 0\leq L\leq N\quad y \quad w\ge \bar w$$}. Con respecto a esta curva es importante destacar dos cuestiones fundamentales:
+\begin{lnum}
+    \item La curva de contrato siempre se va a encontrar a la derecha de la función de demanda (para que haya tangencia, es decir, que ambos salgan ganando, se tendrá que reducir el salario pero también aumentar el empleo). De forma que para un salario determinado en este modelo de negociación conjunta se va a contratar más trabajo de lo que hubiera hecho la empresa si no hubiese sindicato.\footnote{La presencia de un sindicato lleva a un nivel de empleo más alto que en un equilibrio competitivo, lo que genera una pérdida de eficiencia productiva (dado que $F'(L) < w$ debido a que el empleo es mayor que el competitivo, definido por $F' (L)=w$). Además, los salarios y el empleo se incrementan con el poder de negociación del sindicato, dado que el sindicato protege a los trabajadores del desempleo y trata de incrementar su remuneració, por lo que los efectos que puede tener el sindicato en materia de empleo dependerán del tipo de negociación que se esté realizando, por lo que no hay una conclusión única.}
+    \item La curva de contrato no tiene porque tener pendiente positiva. Ésta va a depender de la preferencia frente al riesgo de los trabajadores. CAHUC (2014) demuestra que:
+    \begin{la}
+        \item Si son aversos al riesgo tendrá pendiente positiva, como hemos visto en el gráfico (con las implicaciones que tiene, ya comentadas);
+        \item Si son amantes tendrá pendiente negativa (sólo aquí habría menos contratación que en competencia perfecta); y,
+        \item Si son neutrales será vertical. Este es el caso realmente interesante, pues la curva de contrato sería vertical al nivel de empleo original y esto llevaría a que estuviésemos ante una asignación fuertemente eficiente, pues también hay eficiencia productiva (el nivel de empleo es el competitivo). En este caso los ingresos de la empresa serían constantes, y cambiar el salario solo supondría cambiar la forma de \textit{repartir el pastel} entre sindicato y empresa.
+    \end{la}
+    Si los agentes no son neutrales sino aversos, otra forma de lograr el mismo resultado es que la negociación incluya tanto el salario como el pago de una compensación a aquellos trabajadores que abandonan la empresa, siendo nuevamente la empresa la que elige $L^*\to L^{cp*}$. $\Longrightarrow$ Esto lleva al conocido como \textit{principio de indiferencia}, en el que la utilidad de los trabajadores será la misma en cualquiera de los dos estados (estarán perfectamente asegurados), alcanzando así la eficiencia fuerte.
+\end{lnum}
+
+\paragraph{Eficiencia fuerte}
+Por tanto, como vemos, la actuación de un sindicato únicamente preocupado por el salario real acaba generando un menor nivel de contratación que en competencia perfecta y rigidez del salario real. Sin embargo, si la negociación incluye también el nivel de empleo se alcanzaría la eficiencia asignativa (tangencia entre curvas) mientras que si se centra en salario real y compensación a trabajadores desempleados, se lograría no solo la asignativa sino también la productiva. Gráficamente, la eficiencia fuerte se representa, como ya hemos dicho, mediante una curva de contrato vertical:
+
+\imagenfit{EficienciaFuerte-CC.png}{Contratos eficientes fuertes: Equilibrio cooperativo -- Curva de Contrato (vertical). McDONALD y SOLOW}{Apuntes ICEX-CECO. Tema 3.A.27}
+
+
+\paragraph{Implicaciones: ¿Es la negociación eficiente en la práctica?}
+Lo que vemos en esta modelización entonces es que el efecto que el sindicato puede tener sobre el resultado del mercado de trabajo va a depender enormemente de la forma en que se lleve a cabo la negociación con la empresa.
+
+Paralelamente, las condiciones para que se den los contratos eficientes fuertes no suelen cumplirse en la práctica. Los contratos, al incluir muchas variables (empleo, salario, condiciones laborales, etc.) son muy difíciles de negociarse. De hecho, se suelen negociar para periodos de varios años, dadas las dificultades de llegar a acuerdos entre empresa y trabajadores. Por ello, el poder de negociación suele ser distinto en función de la variable que se esté negociando. Generalmente, el salario se suele negociar a nivel centralizado, mientras que el empleo se negocia en el seno de la empresa.\footnote{Además, la negociación sobre el empleo suele tener lugar tras negociar otras variables como el salario.} Por ello, se suele mencionar que es necesario analizar estas situaciones por medio de otras herramientas como por ejemplo juegos dinámicos repetidos. 
+
+Por otro lado, como hemos mencionado, existen también problemas de incentivos. En los contratos eficientes fuertes, los trabajadores empleados y desempleados tienen los mismos niveles de utilidad y no se diferencia, provocando problemas de riesgo moral cuando la búsqueda de trabajo y el esfuerzo son endógenos. Por último, esta teoría no suele ser consistentes con la evidencia empírica encontrada hasta el momento.
+
+Ahora bien, podría parecer que el desempleo y la rigidez del salario real son únicamente consecuencia del deseo de los trabajadores. 
+
+\clearpage
+\section{Contratos implícitos}
+La evidencia empírica muestra que existen de relaciones contractuales a largo plazo entre trabajadores y empresas, lo que constituye otra de las desviaciones del modelo walrasiano de mercado de trabajo.\footnote{El primer autor en plantear esta posibilidad fue LAZEAR (1979), que observó la existencia de un contrato implícito de empleo en empresas grandes en Estados Unidos que ofrecían un empleo para toda la vida de sus trabajadores. Así, los trabajos situados en la parte alta de la jerarquía de la empresa habitualmente se reservaban para trabajadores que iban ascendiendo a través de un mercado interno de trabajo, y raras veces se ofrecían para procesos selectivos externos. Estos contratos eran implícitos, en el sentido de que ninguna de estas prácticas, pese a lo habitual de las mismas, era legalmente aplicables.}  
+
+En efecto, las empresas no contratan trabajadores de forma continua ya que, en realidad, existe un gran número de empleados con relaciones contractuales a largo plazo y, como las empresas requieren capacidades muy específicas de sus trabajadores, la \textit{cantera interna} resulta una mejor alternativa, asegurando la permanencia en la empresa a lo largo del tiempo. Es decir, la relación entre un trabajador y una empresa durará varios periodos, no hay una incorporación del trabajador en cada momento $t_i$. 
+
+Sin embargo, a largo plazo, es frecuente que puedan surgir situaciones no previstas por los agentes (shocks de demanda de bienes, shocks de oferta, encarecimiento de las prestacinoes sociales a cargo de la empresa, cambios en el conjunto tecnológico) y, por lo tanto, esta situación de riesgo que enfrentan los agentes económicos debe ser tratado de alguna forma.\footnote{Autores como AZARIADIS, BAILY y GORDON analizaron estas implicaciones.} 
+
+La cuestión radica en comprender cómo se produce el reparto óptimo del riesgo entre agentes, tanto para empresas como para trabajadores.
+
+Una consecuencia inmediata de ello es que el salario no se ajusta a la baja cada vez que existe desempleo.
+
+\subsection{Modelo de referencia}
+En el marco de referencia, asumiremos que:
+\begin{lnum}
+  \item Se trata de un modelo a corto plazo, por lo que el capital ($K$) está dado;
+  \item Existe un número muy grande de empresas;
+  \item Los trabajadores son idénticos y ofrecen inelasticamente una unidad de trabajo;
+  \item Los agentes son precio-aceptantes por lo que respecta a la producción/productos;
+  \item Respecto a los agentes:
+  \item \begin{la}
+    \item El trabajador (representativo) es un Agente:
+    \begin{lnum}
+        \item Maximizador de utilidad intertemporal;
+        \item Averso al riesgo;
+        \item Con una utilidad de reserva definida como $u_0$; y,
+        \item \textit{Locked-in} a su empresa una vez han firmado el contrato, es decir, no existe movilidad laboral; y, por último,
+    \end{lnum}
+    \item Por otro lado, la empresa (existe un número muy grande, pero trataremos una representativa) es una Principal:
+    \begin{lnum}
+        \item Maximizador de beneficios;
+        \item Neutral al riesgo, ya que tiene mayor capacidad de adaptación que le vuelve menos sensible al riesgo;
+        \item Que tiene una función de producción $F$ que presenta rendimientos marginales positivos pero decrecientes y precios constantes;
+        \item Cuya conjunto tecnológico $A_i$ es una variable aleatoria, no negativa, que representa los shocks de productividad, inobservables, sobre los factores de producción de la empresa, y que puede adoptar $N$ estados posibles, cada uno de ellos tiene probabilidad $p_i$;
+        \item Enfrenta una única restricción para el diseño de contratos (por el efecto \textit{locked-in}): que los trabajadores alcancen una determinada utilidad promedio, no en cada realización individual de la perturbación tecnológica.
+    \end{lnum}
+\end{la}
+\end{lnum}
+
+Bajo esta especificación, se supone que existe un contrato por el que el salario y las horas que la empresa ofrece al trabajador dependen de la realización de la perturbación tecnológica.
+\footnote{Una implicación directa de esta formulación es que el reparto óptimo del riesgo entre los agentes conllevará que todo el riesgo lo asuma la empresa a cambio de pagar menos a sus trabajadores.}
+
+
+Los trabajadores saben que con cierta probabilidad puede ocurrir un shock negativo que lleve a una reducción de sus salarios y a que el número de empleados se reduzca. 
+Su utilidad dependerá íntegramente del salario percibido (pues lo que les importa si están empleados es cuanto le pagan). 
+La resolución de esta asimetría frente al riesgo adopta la forma de un contrato de seguro implícito entre empresa y trabajador.
+
+
+
+     Bajo esta especificación, se supone que existe un contrato (implícito)
+     por el que el salario y las horas
+      que la empresa ofrece al trabajador dependen de la realización de
+       la perturbación tecnológica.\footnote{Se denomina contrato implícito
+        ya que en la realidad los contratos entre la empresa y el trabajador
+         no especifican ni trabajo ni salario en función de la realización de
+          la productividad.\\Una implicación directa de esta formulación es que el reparto óptimo del riesgo entre los agentes conllevará que todo el riesgo lo asuma la empresa a cambio de pagar menos a sus trabajadores.}
+     
+
+
+\subsection{Extensión: \textit{Iinsiders-Outsiders}}
+Una de las posibles extensiones a estos modelos considera la existencia de trabajadores no homogéneos. Hasta ahora, hemos assumido que existía un pool fijo de trabajadores con los mismos intereses y que el sindicato representa a todos los trabajadores com las mismas preferencias y el mismo peso em los objetivos de la unión. Pero en realidad, existen dos grupos de trabajadores: los trabajadores internos (insiders) y los trabajadores externos (ollfsiders). 
+\begin{la}
+    \item Los trabajadores internos (que denotaremos por /, de insiders) son los que tienen alguna conexión con la empresa cuando tiene lugar la negociación salarial (ya trabajan en ella), de manera que reflejan sus intereses en esta negociación. Estos intereses van orientados principalmente a obtener un mayor salario (w1 ) y explotan su ventaja posicional sin tener que preocuparse de los intereses de los trabajadores externos; y, por otro lado,
+    \item Los trabajadores externos (que denotaremos por O, de outsiders) son los que no tienen una relación a priori con la empresa, porque no trabajan en ella, aunque pueden ser contratados.
+\end{la}
+
+Por ello, su interés se centra en el objetivo de empleo (L0). Esta diferenciación es clave por las consecuencias que tienen en la detenninación del desempleo y las fluctuaciones cíclicas.
+
+
+
+\clearpage
+\section{Conclusión}
+
+\subsection{Recapitulación}
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+\MyBibItem{Autor}{Título}{Año}{DOI -- LINK}
+
+
+% --- Anexos (no aparecen en el índice) ---
+
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+\end{document}
