@@ -1,0 +1,1167 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Unión Europea (III)\\
+\large La política agrícola de la Unión Europea. Problemas económicos y procesos de reforma. La política pesquera común}
+\author{Marcelo Ortega}
+\date{Marzo 2026}
+\newcommand{\TemaCode}{3B38}
+
+\oldtitle{
+    B.39. La política agrícola de la Unión Europea. Problemas económicos y procesos de reforma. La política pesquera común
+}
+\changerationale{
+    Sin cambios.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     A la hora de realizar la exposición oral del tema se recomienda dedicar 5 minutos a la introducción y a la conclusión, 17-20 minutos a la PAC dando especial relevancia a la última reforma y a su configuración actual y 5-8 minutos a la PPC.
+
+     Si bien se recoge de manera exhaustiva el proceso de reforma de las políticas agraria y pesquera, se recomienda al opositor que, en el momento de la exposición, recorra los antecedentes históricos de manera ejecutiva y se centre en la situación actual de las mismas.
+
+     Las ideas clave que deberían transmitirse son: ¿Por qué son necesarias estas políticas? ¿Cómo se articularon inicialmente y cuáles fueron sus resultados? ¿Qué factores han motivado la necesidad de refonnarlas? ¿valoración de las mismas? ¿Qué rumbo seguirán estas políticas y qué otras problemáticas condicionarán su desarrollo futuro?
+    }
+\vspace{1cm}
+
+\modificaciones{
+    \textcolor{red}{\textbf{OJO ->} Conviene leer el siguiente documento:} \href{https://www.mapa.gob.es/ministerio/pags/biblioteca/fondo/pdf/5384_16.pdf}{Organizaciones Comunes de Mercado y PAC. TAMAMES}
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+
+
+
+\clearpage
+\section{Unión Europea: Política Agraria Común (art. 38-44, TFUE)}
+\puntosclave{
+    Consultar: \href{https://www.elconfidencial.com/mundo/reflexiones-europeas/2026-07-03/politica-agraria-comun-europa-1hms_4381996/}{\textit{La Política Agrícola Común en su dimensión histórica}. El Confidencial (2026)}; \href{https://www.elconfidencial.com/mundo/2026-07-03/ucrania-moldavia-agricultura-ue-integracion-1hms_4381734/}{\textit{¿Pánico agrícola u oportunidad en la UE? La próxima batalla de Ucrania será el grano}. El Confidencial (2026)}; \href{https://www.elconfidencial.com/economia/2024-03-24/funciona-la-pac-los-agricultores-no-tienen-razon_3854235/}{\textit{¿Funciona la PAC? Los agricultores no tienen razón (salvo en alguna cosa)}. El Confidencial (2025)}; \href{https://www.elconfidencial.com/espana/tribuna/2026-04-24/recorte-pac-gobierno-espana-europa-1hms_4343699/}{\textit{El futuro de la PAC en manos del peor Gobierno}. El Confidencial (2026)}; \href{https://www.elconfidencial.com/espana/2024-02-06/que-es-pac-ley-protesta-huelgas-agricultores_3825271/}{\textit{¿Qué es la PAC y por qué es importante en la huelga de agricultores?} El Confidencial (2026)}
+
+    La PAC responde a la necesidad de garantizar la correcta implementación del Mercado Interior en el ámbito agrícola. 
+    
+    Política dinámica, se ha adaptado a los sucesivos desafios de la agricultura europea.
+    
+    La última reforma busca garantizar un futuro sostenible al sector. prestar un apoyo más específico a las explotaciones más pequeñas y ampliar la flexibilidad de los Estados miembros a la hora de adaptar las medidas a las condiciones locales. 
+    
+    Sus principales elementos son, un cambio de orientación estratégica. una mayor ambición medioambiental y la inclusión, por primera vez, de una dimensión social.
+}
+
+La PAC se creó en 1962 con los objetivos de \textbf{mejorar la productividad agrícola para que los consumidores dispusiesen de un suministro estable de alimentos a precios asequibles y garantizar a los agricultores un nivel de vida razonable}, como respuesta al mandato legal, establecido hoy en día en los artículos 38 a 44 del Tratado de Funcionamiento de la Unión Europea (TFUE), y como una competencia compartida entre las Instituciones de la Unión Europea y los Estados Miembros en el ámbito agrícola (artículo 4.2, letra d) del TFUE).\footnote{Varias disposiciones del TFUE incorporan otros objetivos aplicables al conjunto de las políticas de la UE, y que, en consecuencia, son también objetivos de la PAC, relacionados con el empleo y la cohesión económica, social y territorial, la protección del medio ambiente y de los consumidores, el bienestar animal y la salud pública.
+}
+
+\textbf{¿Qué queremos decir?} A lo largo de esta sección, explicaremos brevemente ....
+
+
+A nivel nacional, el sector agrícola se ha visto tradicionalmente sometido a una minuciosa regulación debido a su peso económico y social, su debilidad estructural y su sensibilidad coyuntural. La agricultura es uno de los sectores económicos más sensibles debido a su vulnerabilidad a tres tipos de fenómenos: naturales (riesgos meteorológicos, aleatoriedad de las cosechas, dependencia del clima, carácter perecedero de las producciones), económicos (variabilidad de los precios, gran competencia en el sector, baja elasticidad renta de los alimentos) y sociales (número de explotaciones familiares, envejecimiento de los activos, inmovilidad de la fuerza de trabajo, formación limitada).
+
+La necesidad de una política agrícola se ha visto posteriormente reforzada al tomar consciencia de los efectos externos negativos derivados de ciertas prácticas agrícolas y de los bienes públicos que los agricultores proveen al desarrollar otras funciones más allá de la tradicional provisión de alimentos como son la gestión sostenible de los recursos naturales, la conservación del paisaje y el mantenimiento de una economía rural viva.
+
+A nivel comunitario, la implementación del Mercado Interior y la libre circulación de productos agrícolas manteniendo al mismo tiempo la intervención pública, hacía necesario suprimir los mecanismos de intervención nacionales y transferirlos a nivel supranacional para poder gestionar los eventuales efectos negativos de la integración sobre el campo y evitar que las políticas nacionales introdujesen distorsiones en el Mercado Interior.
+
+\subsection{Desarrollo histórico: Proceso de consolidación}
+La configuración inicial de la PAC en el Tratado de Roma respondía a un contexto posbélico, caracterizado por la escasez de alimentos en Europa tras la Segunda guerra mundial. Se fijaron unos objetivos específicos de carácter económico y social (Art. 39 TFUE) con los que se pretendía proteger los intereses de los productores (aumentar la productividad, asegurar un nivel de vida equitativo) y de los consumidores (asegurar los aprovisionamientos y precios razonables). 
+
+Como veremos a continuación, la PAC se ha sometido a sucesivas reformas y ha registrado una profunda transformación hasta alcanzar su configuración actual basada en un sistema de ayudas multifuncionales de apoyo a las rentas y redes de seguridad para los productores, en el que se ha reforzado la orientación al mercado, el desarrollo rural y los criterios medioambientales. Las sucesivas reformas también han permitido hacer frente a los desafíos a los que se ha ido enfrentando el sector agrícola europeo como perturbaciones en el mercado mundial, la utilización más sostenible de los recursos naturales, la mitigación del cambio climático, garantizar la prosperidad de las zonas rurales y la seguridad alimentaria. De manera específica, la última reforma de la PAC aspira a garantizar un futuro sostenible a los agricultores y ganaderos europeos, prestar un apoyo más específico a las explotaciones más pequeñas y ampliar la flexibilidad de los Estados miembros a la hora de adaptar las medidas a las condiciones locales.
+
+
+\subsubsection{Configuración inicial: Plan MANSHOLT I y II (1962)}
+El primer paso en la construcción de la PAC fue la Conferencia Intergubernamental de Stressa, en 1958, cuyo objetivo fue definir las lineas de acción de la PAC.
+
+El resultado, denominado \href{https://www.mapa.gob.es/ministerio/pags/biblioteca/fondo/pdf/4102_10.pdf}{\textbf{Plan MANSHOLT I}} y aprobado en 1962, recogía las proposiciones de la Comisión para la progresiva edificación de la PAC, entre las que destacan tres puntos esenciales sobre los que debía basarse la política agraria: (i) organización de los mercados agrarios por tipos de productos; (ii) mejora de las estructuras agrarias; y, (iii) ordenación de los intercambios con terceros países. Además, la Conferencia de Stressa estableció una serie de principios que debían regir el funcionamiento de la PAC y fueron incorporados al Plan MASHOLT I:
+\begin{la}
+    \item \textbf{Unidad de Mercado}. Garantizar la libre circulación de los productos agrarios dentro de la Comunidad, excluyendo cualquier discriminación entre los productores o consumidores de cualquiera de los Estados miembros, la fijación de precios idénticos para todo el territorio comunitario y una estricta regulación del mercado interior;\footnote{Se garantizaba mediante la supresión interior de barreras arancelarias, no arancelarias, restricciones cuantitativas, ayudas nacionales, un sistema de tramitación administrativa común de las exportaciones e importaciones de productos agrarios, así como la coordinación y armonización de las medidas sanitarias.
+    }
+    \item \textbf{Preferencia Comunitaria}. Ofrecer protección a la producción interna mediante un complejo sistema de defensa en frontera con el objetivo de favorecer la producción, el comercio y el consumo de los productos comunitarios, mediante un tratamiento exterior común en la gestión de las importaciones y exportaciones agrícolas; y,
+    \item \textbf{Solidaridad Financiera}. Financiar los gastos derivados de la PAC a través del presupuesto comunitario, con la salvedad de la Política de estructuras agrarias que sería cofinanciada por los Estados miembros. A su vez, los ingresos generados por la PAC tenían la consideración de recursos propios de la Comunidad.
+\end{la}
+
+De acuerdo a las propuestas de la Comisión, la PAC quedó articulada en tomo a dos políticas: (i) la Política de precios y de mercados; y, (ii) la Política de estructuras agrarias. 
+
+\textcolor{red}{De relevancia desigual, la primera ha sido tradicionalmente la más importante en cuanto a actuaciones y recursos absorbidos, mientras que la segunda ha tenido escasa entidad debido a la insuficiencia de los recursos asignados y la exigencia de cofinanciación por parte de los Estados Miembros.}
+
+
+
+La financiación de la PAC corría a cargo del Fondo Europeo de Orientación y Garantía A grícola (FEOGA), creado en 1962 y separado en dos secciones en 1 964. - La sección Garantía, con mucho la más significativa, tenía por objeto la financiación de los gastos derivados de la aplicación de la Política de precios y de mercados. Esta sección financiaba íntegramente las medidas de intervención en los mercados. • La sección Orientación financiaba las operaciones de la Política de estructuras agrarias. Esta sección se basaba en el Principio de cofinanciación.
+
+
+\paragraph{Política de precios y de mercados: Unidad de Cuenta Agrícola (UCA)}
+La Política de precios y de mercados se articuló a través de las Organizaciones Comunes de Mercados (OCMs), que regulaban la política común de precios y los mecanismos de intervención.\footnote{En conjunto, las OCMs contenían disposiciones relativas a la producción, comercialización y tratamiento de los productos agrícolas en la UE.
+} 
+
+Por lo que respecta a la política de precios, esta se articulaba en torno a tres tipos de referencia que se fijaban artificialmente al principio de cada campaña de comercialización:
+\begin{la}
+    \item \textbf{Precios guía}. Los precios guía eran fijados por cada OCM y recibían un nombre distinto (en cada OCM) en función del tipo de producto que esta se encargara de regular: (i) precio \textbf{indicativo}, que se aplicaba a aquellos productos cuyas cotizaciones son precisas y se pueden almacenar, como los cereales, azúcar, leche, aceite de oliva y semillas de colza y de girasol; (ii) precios de \textbf{orientación}, para los productos cuyas cotizaciones no son muy precisas y en su mayor parte son perecederos, como bovinos pesados, vinos y ciertos pescados; y, (iii) precios \textbf{base}, para la carne de porcino y ovino y objetivo para el tabaco, algodón, lino, etc.; 
+    \item \textbf{Garantizados o precios suelo}. Al igual que el anterior, recibían nombres distintos en cada OCM en función de la materia que esta regulara, aunque en todas ellas consistía, básicamente, en establecer los precios suelo a los que se adquiriría el excedente en caso de producirse o se pagaría en caso de una disminución excesiva del precio de mercado. De esta forma: (i) en la OCM de cereales, los organismos de intervención tenían la obligación, con las limitaciones de cantidades y calidades establecidas, de adquirir los productos ofertados por los agricultores al precio \textbf{de intervención}; (ii) en la OCM de frutas y hortalizas, cuando se alcanzaban estos precios se concedían ayudas para retirar la producción del mercado hasta que los precios se recuperasen, se pagaba un precio de \textbf{retirada}; y, (iii) una actuación similar se producía en la OCM del vino, en la que se pagaban los precios \textbf{desencadenantes}; y,
+    \item \textbf{De entrada o precios techo}. Por último, igual que en los casos anteriores, según el producto recibían un nombre diferente: (i) umbral, para cereales, azúcar, mantequilla, aceite de oliva; (ii) esclusa, para porcino, aves y huevos; o, (iii) de referencia, para frutas y hortalizas.
+\end{la}
+
+Para fijar precios idénticos para los productos agrícolas en todos los países miembros (recuérdese que no había una moneda común), se creó en 1962 la \textbf{Unidad de Cuenta Agrícola} (UCA), definida por una paridad al oro igual que la del dólar, de tal forma que los precios se establecían en UCAs y después se transformaban a cada moneda nacional aplicando el tipo de cambio vigente. 
+
+Paralelamente, se distinguían dos tipos de OCMs: con \textbf{garantía total} de precios y con \textbf{garantía parcial} de precios. En las primeras, la intervención era obligatoria a requerimiento del productor cualquiera que fuese la situación del mercado y siempre dentro de los meses establecidos, efectuándose la compra al precio guía. En las segundas, las compras sólo estaban previstas en situaciones de descenso de los precios de mercado, situaciones que podían ser definidas de manera precisa en la reglamentación correspondiente o decididas por la Comisión o el Consejo. La compra podía limitarse a ciertas zonas de la Comunidad, a ciertas cantidades y a los precios de compra que eventualmente se determinasen. Complementariamente, a parte de estos mecanismos de intervención (probablemente los más distorsionante), cada OCM establecía:
+\begin{la}
+    \item \textbf{Ayudas al almacenamiento privado}. Ayudas al almacenamiento que sirvieran como mecanismo de retirada temporal, con el fin de conseguir reducir los excedentes coyunturales sin necesidad de incurrir en los elevados costes que suponían las compras de intervención;
+    \item \textbf{Ayudas a la producción}. Subvenciones a los productores que propiciaban el descenso de los precios en origen y que, en consecuencia, incentivaban la demanda de los productos tanto para consumo como para su utilización por la industria;
+    \item \textbf{Ayuda a la eliminación de excedentes}. Estas medidas buscaban la desnaturalización de un producto excedentario de manera que se destinase a usos industriales. La Comunidad completaba esta política con un régimen común de intercambios con terceros países que propiciaba la separación entre el mercado comunitario y el mercado mundial consiguiendo un nivel de precios en el interior de la Comunidad más elevado que en el mercado mundial;\footnote{El ejemplo más relevante era la destilación de vino para la obtención de alcohol. 
+    }
+    \item \textbf{Medidas a la importación}. Uno de los elementos centrales de la PAC originaria era el Arancel exterior común (AEC), aunque resultaba insuficiente para impedir la entrada de productos de terceros países a precios inferiores al precio mínimo de importación. Para evitar esta situación, el AEC se complementaba con: (i) \textbf{exacciones reguladoras} (prélévements), que servían como mecanismos de protección y, dado su éxito, como principal garante del Principio de preferencia comunitaria; (ii) gravámenes variables, normalmente específicos, equivalentes a la diferencia entre el precio del producto en el mercado comunitario y en el mercado mundiál. y, (iii) tasas compensatorias o montantes suplementarios, que se calculaban según el precio de oferta de cada expedición comercial y no según el precio del mercado mundial;
+    \item \textbf{Medidas a la exportación}. Por último se aplicaban restituciones a la exportación, cuyo objetivo era compensar la diferencia entre el precio del producto en el mercado comunitario y en el mercado mundial, generalmente más bajo, para facilitar la exportación de los productos excedentarios. Las exacciones a la exportación y la suspensión de las exportaciones podían ser adoptadas cuando los precios del mercado mundial eran superiores a los existentes en el mercado comunitario, de manera que existía incentivo a exportar y dejar desabastecido el mercado comunitario.
+\end{la}
+
+Para algunos cultivos como las materias grasas y proteaginosas o las semillas oleaginosas, en los que la Comunidad era deficitaria, se utilizaba el sistema de \textit{deficiency payments}. ¿Qué implicaba? Para asegurar los abastecimientos, la producción comunitaria se incentivaba mediante subvenciones a la producción que compensasen la diferencia ente los precios comunitarios y los del mercado mundial. Los productos se intercambiaban en el mercado comunitario a los precios del mercado mundial, y el agricultor recibía un ingreso igual a la diferencia entre su coste de producción y el precio del mercado.
+
+\paragraph{Política de estructuras agrarias: Plan MASHOLT I}
+La PAC articulada únicamente en torno a la Política de precios y mercados se desarrolló entre 1962 y 1969, alcanzando en 1965 una regulación que abarcaba el $85\%$ de la producción final. No obstante, el resultado no fue muy satisfactorio.
+
+Aunque las razones son complejas, podría resumirse diciendo que resultaba insuficiente para satisfacer sus objetivos más holísticos, como asegurar un nivel de vida equitativo a los agricultores, unos precios razonables a los consumidores y un equilibrio entre la oferta y demanda de los productos agrícolas; fundamentalmente por tres razones:
+\begin{la}
+    \item \textbf{Asimetrías en la productividad}. La Política de precios y mercados aseguraba a las explotaciones bien estructuradas y económicamente rentables unas rentas excesivamente elevadas, mientras que las explotaciones marginales obtenían unos ingresos insuficientes;
+    \item \textbf{Protección de empresas ineficientes}. Un régimen de precios en este contexto estructural no podía asegurar unos precios razonables a los consumidores porque si los precios debían posibilitar la subsistencia de explotaciones marginales, estos debían ser elevados en comparación con los que regirían si sólo funcionaran explotaciones modernas; y,
+    \item \textbf{Incentivos perversos}. Un régimen de precios aplicado sobre esta realidad estructural no podía conducir a un equilibrio entre oferta y demanda porque los altos precios inducidos por esta política eran un incentivo a la sobreproducción. 
+\end{la}
+
+
+Ante esta situación, en 1969, la Comisión publicó el \textit{Memorandum sobre la reforma de la PAC} (Plan MASHOLT II), que pretende introducir una serie de reformas encaminadas a: (i) fomentar el crecimiento y modernización de las explotaciones más eficientes; (ii) reducir los costes que provocaría la reestructuración, fundamentalmente relacionados con la expulsión de la mano de obra sobrante y la eliminación de las explotaciones no viables; y, (iii) reducir los costes de producción para conseguir abaratar la política de sostenimiento de precios. A raíz de esta propuesta, se inició un debate que concluiría con la aprobación, en 1972, de la Política de estructuras agrarias, que había sido definida vagamente en el Plan MANSHOLT I pero acabó por clarificarse y ponerse en marcha a través del Plan MASHOLT II. 
+
+Entre sus medidas destacarían: (i) mejora de la eficacia de las estructuras agrarias, mediante ayudas a la inversión en explotaciones agrícolas y/o ayudas a la instalación de jóvenes agricultores;\footnote{Para mejorar la eficiencia/productividad de las explotaciones existentes, las ayudas se concedían a explotaciones en las que la renta del trabajo por unidad de trabajo/hombre era inferior a una renta de referencia establecida por el Estado miembro. Persiguiendo de esta forma la mejora cualitativa y la reconversión de la producción en función de las necesidades del mercado, la diversificación de actividades en las explotaciones, la reducción de los costes de producción y la mejora de las condiciones de vida y de trabajo. Por otro lado, se facilitaba la entrada de jóvenes agricultores al mercado mediante primas o bonificaciones en préstamos (con interés) que se concedían para subvencionar los gastos de primera instalación y los planes de mejora de jóvenes agricultores.  
+} y, (ii) medidas específicas en beneficio de la agricultura de montaña y zonas desfavorecidas para mejorar las condiciones de transformación y comercialización de los productos.
+
+\paragraph{Resultados}
+Entre 1969 y 1984 la PAC se consolidó y parecía poderse alcanzar los objetivos fijados en el Tratado de Roma. Sin embargo, surgieron una serie de problemas que menoscabaron progresivamente su legimitadad, tanto interna como externa.
+
+Por lo que respecta a la Política de precios y mercados, la utilización de la UCA no generó graves inconvenientes hasta la devaluación del franco francés y la revaluación del marco alemán en 1969. Esto provocó un incremento de los precios agrícolas en Francia y una reducción de los mismos en Alemania, además de un incremento de las ayudas percibidas por los agricultores franceses y una disminución de las ayudas obtenidas por los agricultores alemanas. Como solución, se permitió a Francia y Alemania mantener en el sector agrario sus antiguos tipos de cambio frente a la UCA; pero se generó, a partir de ese momento, un riesgo de inestabilidad cambiaria debido a la distinción de dos tipos de cambio: (i) el tipo de conversión o tipo verde, aplicable exclusivamente a la agricultura y que se fijaban para cada campaña coincidiendo con el establecimiento de los precios guía; y, (ii) el tipo central, aplicable al resto de la economía. Para dirimir este riesgo, y evitar que se produjeran movimientos especulativos, se crearon los montantes compensatorios monetarios (MCM): gravámenes y subvenciones que se aplicaban al comercio intracomunitario y de terceros países de ciertos productos agroalimentarios, principalmente a los intercambios de aquellos productos en los que las compras de intervención eran relevantes en la regulación. Actuaban como un impuesto sobre las exportaciones para los países cuya moneda se había devaluado y como una subvención para las monedas que se habían revaluado.\footnote{También al adherirse un nuevo Estado miembro a la Comunidad, durante el periodo transitorio y para adecuar sus precios a los comunitarios, se aplicaban a los intercambios entre la Comunidad y el nuevo Estado miembro los montantes compensatorios de adhesión (MCA). Los MCA adoptaban la fonna de un gravamen o una subvención cuya cuantía era equivalente a la diferencia entre los precios de los miembros recién llegados y los comunitarios. 
+} Sin embargo, la existencia de los MCM, añadía una gran complejidad técnica, administrativa y financiera, tanto para los servicios comunitarios y de los Estados como para los importadores y exportadores agrarios, por lo que se intentó desmantelarse, sin éxito, en varias ocasiones. Solo se conseguiría con la implementación del Mercado Único y la abolición de las fronteras intracomunitarias, que provocó que los tipos verdes se ajustasen a los centrales, eliminándose los MCM a partir de enero de 1993.
+
+Además, y también como problema derivado de la Política de precios y mercados (sistema de ayudas vinculadas a la producción), se favoreció/incentivó un sistema de producción intensivo generador de grandes excedentes, daños medioambientales y una evolución explosiva del gasto agrícola. Al no valorarse adecuadamente la posibilidad de experimentar un aumento de la productividad; al acontecer, y de manera espectacular, se alcanzaron niveles de producción muy superiores al nivel de absorción del mercado. Por un lado, los excedentes que se destinaban al exterior en forma de exportaciones subsidiadas mediante restituciones a la exportación que permitían compensar la diferencia entre el precio interior y el del mercado mundial, acabó generando graves tensiones con terceros países, especialmente con los países en desarrollo. Por otro lado, la parte de estos excedentes que se consumían en el mercado interior, deterioro fuertemente la capacidad financiera de la Comisión ya que su eliminación (adquisición) consumía una parte sustancial del FEOGA-Garantía: la PAC llegó a representar más del 70\% del presupuesto comunitario, que recaía sobre los consumidores y evitaba que se abordasen otras políticas comunitarias. 
+
+Por otro lado, como problemas asociados a la Política de estructuras agrarias, se fue progresivamente agravando la distribución inequitativa de las ayudas entre sectores y Estados Mimebros. Por un lado, los productos atlánticos (cereales, leche, vacuno) llegaron a concentrar el $70\%$ de los gastos agrícolas totales, mucho más favorecidos que los productos recogidos en la cuenca mediterranea (vid, olivo). Por otro lado, al determinarse las subvenciones en función de los rendimientos generados, con el objetivo de fomentar las mejoras en eficiencia, las grandes explotaciones resultaron mucho más beneficiadas que los minifundioso pequeñas explotaciones. 
+
+En definitiva, los resultados de la PAC originaria fueron ligeramente decepcionantes. Tanto por los efectos sobre la inestabilidad cambiaria, las distorsiones en el comercio internacional y los daños medioambientales que generaba; como por los efectos discriminatorios que generaba entre regiones y explotaciones. 
+
+\subsubsection{Reforma: Libro Verde sobre las perspectivas de la PAC (1985)}
+Identificadas las debilidades del modelo inicial, la Comisión presentó en 1985 el \textit{\textbf{Libro Verde sobre las Perspectivas de la PAC}}, con el objetivo declarado de \textbf{disminuir la producción excedentaria} mediante una política de mercados que permitiera ajustar la oferta a la demanda, \textbf{frenar el crecimiento de los gastos presupuestarios} y \textbf{potenciar el desarrollo de las áreas rurales} para preservar la función de conservación del entorno de la agricultura y promover la protección del medio ambiente.
+
+¿Cómo proponían alcanzar estos objetivos? Las principales medidas propuestas, y finalmente adoptadas, fueron:
+\begin{la}
+    \item \textbf{Medidas sobre la producción}. Se establecieron mecanismos que alineasen los incentivos de los agentes con los de la Comisión en lo relativo a la producción. Evidentemente, las medidas adoptadas debieron ser particularmente diseñadas para cada sector, pero entre las más generales figuraban las tasas de corresponsabilidad, la reducción de los período de intervención, el arranque normativo de cepas y la fijación de cuotas de producción;\footnote{Las tasas de corresponsabilidad eran un mecanismo de doble vía. Por un lado, se fijaban cantidades máximas garantizadas en el sector. En caso de superarlas, los productores debían pagar una tasa de corresponsabilidad equivalente al 3\% del precio de intervención. Por otro lado, si los productores superaban las cantidades máximas garantizadas, se reducía el precio de la intervención de la camapaña siguiente en un $3\%$. 
+
+    El arranque normativo de cepas obligaba a los Estados Mimebros a otorgar subvenciones a los productores que voluntaria y definitivamente arrancasen sus cepas. La subvención podía fijarse respecto a algún indicador de referencia, por ejemplo por hectárea.
+    } y,
+    \item \textbf{Medidas socioestructurales}. Por otro lado, se establecieron una serie de medidas orientadas a disminuir la oferta y mejorar las estructuras agrarias y el medio ambiente. Entre las más importantes figuraban la petición voluntaria de recalificación del suelo (disminución de tierras arables), beneficios/bonos por cambios en la tecnología de producción (pasar de producción intensiva a extensiva) o los incentivos sobre la prejubilación.\footnote{Estas medidas consistían, principalmente, en la creación de un menú de incentivos para limitar la producción mediante subvenciones orientadas a retirar tierras de cultivo, reducir la intensividad de la producción o el cese de actividad de aquellos agricultores mayores de $55$ años.
+    }
+\end{la}
+
+Además, en 1988 se introdujeron los llamados \textit{\textbf{estabilizadores presupuestarios}}. Este mecanismo, relativamente automático, se aplicaba en las OCMs más relevantes y consistía en la reducción de precios y garantías cuando la producción o la intervención superaban determinados límites. En las perspectivas financieras del periodo 1988-1992 se introdujo la llamada \textbf{directriz agrícola} que limitaba el crecimiento del gasto agrícola al $74\%$ del crecimiento del PIB comunitario.
+
+
+\textcolor{red}{La reforma de los fondos estructurales de 1 988 incorporó la Política de estructuras agrarias en la Política de cohesión económica y social. Dicha reforma concentró las ayudas de fondos ivos. Las zonas rurales se integraron en el objetivo I y en el obJ<- o 5b) 4 . ..1s explotaciones agrarias susceptibles de ayudas estructurales para moderrnzarse y 111,::J-,1 dr su productividad se incluyeron en el objetivo 5a), centrado en acelerar la adaptación de las estructuras agrarias. Dentro de las iniciativas comunitarias se desarrolló el programa Leader para av,ufar a las asociaciones rurales o gobiernos locales en dichas zonas a potenciar la actividad ,ii versificación.}
+
+\paragraph{Resultados}
+La Reforma de 1985 permitió controlar el crecimiento de los gastos de la PAC y redujo los excedentes en algunos productos. Sin embargo, estos resultados no fueron uniformes. 
+
+En primer lugar, los excedentes de algunos sectores siguieron aumentando (vacuno, leche, vino y tabaco). Además, las medidas socioestructurales no estaban alcanzando los objetivos previstos: sólo se habían retirado el 2\% de las tierras de cultivo y el resto de medidas de acompañamiento prácticamente no se aplicaban. En segundo lugar, la distribución desigual de las ayudas seguía generando graves tensiones internas: cerca del $80\%$ de las ayudas del FEOGA se destinaban al $20\%$ de las explotaciones. En tercer lugar, se venía experimentando un progresivo estancamiento de la renta agraria a nivel agregado, a pesar de que los precios habían aumentado y la población comunitaria había aumentando de manera increible en un $35\%$ en el periodo 1975-89.
+
+Por último, las tensiones con terceros países se agravaron fuertemente. Debems recordar que nos encontramos en el marco de las negociaciones de la Ronda de Uruguay, con el importante papel que estaba jugando el Grupo de Cairns en las negociaciones multilaterales. Este grupo de países fue cada vez más vocal al denunciar las distorsiones que el articulado dela PAC generaba tanto en los mercados mundiales de productos agrícolas (llegando a calificar el excedente orientado a la exportación en europa como \textit{oferta ficticia}) y, quizás más importante, en el propio mercado doméstico. Las tensiones llegaron a un punto tal que se incrementó la oferta mundial de algunos productos agrícolas, causando el desplome de sus precios y agravando fuertemente la situación financiera de la Comisión (medida que puede ser vista como represalía por parte de estos terceros organizados).
+
+\subsubsection{Reforma de MacSharry: Comunicación sobre Evolución y Futura de la PAC (1991)}
+Todos estos problemas que aún persistían fueron analizados por la Comisión en la Comunicación sobre Evolución y Futuro de la PAC (1991), cuyo impacto se materializó en una propuesta de reforma, la Reforma MACSHARRI (1991), aprobada en 1992.
+
+Los objetivos de esta reforma fueron claros: lograr una agricultura europea competitiva en el mercado internacional y desarrollar una agricultura respetuosa con el medioambiente. Para ello se propusieron y adoptaron una serie de medidas. Internamente:
+\begin{la}
+    \item \textbf{Medidas financieras}. Formalizar la conocida \textit{directriz agrícola}; y,
+    \item \textbf{Medidas socioestructurales: medioambiente}. La reforma MacSharry coincidió con la Cumbre de la Tierra de Río en la que se reclamó un desarrollo más sostenible: alcanzar un equilibrio entre el desarrollo de la actividad agrícola y el respeto al medioambiente en el que el agricultor desempeña un papel relevante a través de su función de gestión del espacio y protección de los recursos naturales. Se introduce a partir de este momento el concepto de multifuncionalidad de la actividad agraria, al reconocer que los agricultores no sólo producen alimentos, sino que, además, desempeñan labores de protección medio-ambiental y de ordenación del territorio. Por tanto, en esta linea se introduce un verdadero programa agroambiental en el que las ayudas iban destinadas a los agricultores que se comprometieran a adoptar y mejorar prácticas que preservaran el medio ambiente. Entre las más claras estaban: (i) la reformulación de las ayudas en \textbf{ayudas directas}, por hectárea o por cabeza de ganado, teniendo en cuenta los rendimientos históricos para la compensación ante caídas de ingresos derivadas de la reducción de precios; (ii) la vinculación del cobro de estas ayudas a la retirada forzosa de tierras arables, de forma rotatoria, y la implementación de prácticas de producción extensiva; y, (iii) el establecimiento de límites y códigos de buen uso, como la limitación de los productos químicos, la introducción o continuación de métodos orgánicos, el mantenimiento de tierras arables abandonadas y los bosques, etc. 
+\end{la}
+
+Por otro lado, y teniendo en cuenta el contexto internacional en el que se estaba desarrollando esta reforma (Ronda Uruguay), los compromisos asumidos en materia agrícola modificaron la configuración de la PAC adoptando una serie de importantes \textbf{medidas liberalizadoras}:
+\begin{la}
+    \item \textbf{Acceso a mercados}.En primer lugar, la Unión Europea se comprometió a reducir progresivamente los precios garantizados, hasta su completa eliminación: el sistema de protección frente a terceros países desaparece y se adopta una protección articulada exclusivamente en torno al AEC (sin precios de entrada, sin prélévements, sin tasas compensatorias y sin montantes suplementarios variable), integrándose todo en la estructura arancelaria. En definitiva, se trata de un compromiso que pretende convertir en aranceles las barreras comerciales no arancelarias. Paralelamente se comprometieron a reducir los niveles arancelarios máximos en una media del $36\%$ con un mínimo por línea del $15\%$ en el período 1995-2000. Por último, las exportaciones subvencionadas debían disminuirse un $21\%$, tomando como referencia los períodos 1986-1989 o 1990-92 según productos, y el gasto presupuestario en subvenciones a la exportación debía reducirse en un $36\%$; y,
+    \item \textbf{Ayuda interna}. Respecto a la ayuda interna, se identificaron tres tipos de ayudas en función de su nivel de distorsión sobre el comercio internacional:
+    \begin{lnum}
+        \item \textbf{Caja ámbar}. Las ayudas más distorsionantes se incluyeron en la denominada Caja ámbar.\footnote{Es decir, aquellas ayudad dirigidas a: la industria de transformación (que beneficiaban a los productores del producto de base); al sostenimiento de precios de mercado; las vinculadas a la producción; y, las subvenciones a los inputs y ayudas a los costes de comercialización.
+        } Sobre estas medidas que estaban en vigor, los países debían calcular la Medida Global de Ayuda (MGA) correspondiente al período 1986-88 y reducir su importe en un $20\%$ en tramos anuales iguales;
+        \item \textbf{Caja azul}. En la Caja azul se incluyeron los pagos directos, a agricultores y ganaderos, establecidos en el marco de programas destinados a limitar la producción, y de manera transitoria se excluyeron del cálculo de la MGA y sus compromisos; y,
+        \item \textbf{Caja verde}. En último lugar, dentro de la Caja verde se incluyeron todas las medidas que no distorsionaban el comercio o lo hacían mínimamente. Por ejemplo, la formación, investigación, e infraestructuras; la ayuda alimentaria interna y existencias públicas para seguridad; y/o, los pagos directos a los productores producidos por catástrofes y seguros, desarrollo rural, políticas de medio ambiente y ayudas directas a las rentas no vinculadas a la producción.)
+    \end{lnum} 
+\end{la}
+
+\paragraph{Resultados: }
+De la reforma MacSharry se pueden destacar aspectos positivos y negativos. 
+
+Entre los primeros, la Reforma de MacSharry logró reducir los excedentes, sobretodo de cereales y vacuno, y mejorar las finanzas de la Comunidad debido a: (i) una dismución del coste de la PAC; y, (ii) el aumento de la renta agrícola media un $4,5\%$ (1992- 1996).\footnote{A pesar de númerosas crisis en el sector agrícola, de entre las cuales destacan el síndrome de las vacas locas y los problemas de las dioxinas en la carne de pollo belga.
+} Por otro lado, mientras que la PAC se había financiado mediante subvenciones ocultas en los precios; tras la reforma, empiezan a ser los contribuyentes los que sostienen el coste, convirtiéndose en una política económica convencional. Además, con la introducción de ayudas directas se alcanzó mayor nivel de transparencia en las actuaciones, al conocerse tanto destinatarios como montantes. 
+
+Sin embargo, también se perpetuaron algunos de los viejos problemas. Fundamentalmente la distribución desigual de las ayudas, tanto en términos territoriales, como sectoriales y empresariales. Al calcularse las ayudas en función de los rendimientos históricos, las zonas más productivas consiguieron las primas más elevadas, consagrándose el trato favorable otorgado a los países del norte (con mayor productividad) en detrimento de los del sur (con más bajos rendimientos). Paralelamente, se mantuvieron las grandes diferencias entre los precios comunitarios y los mundiales, al mismo tiempo que la protección en frontera seguía siendo elevada. 
+
+\subsubsection{Reforma \textit{abierta}: }
+Sin duda, la Reforma del 92 fue la más transformadora hasta la fecha. Solucionó gran parte de los desequilibrios generados en los años precedentes y sentó las bases sobre las que se articularía la PAC en los años siguientes. No obstante, debido a sus deficiencias heredadas, el proceso de reforma se mantuvo abierto durante el perdiodo conocido como la \textit{reforma abierta}. 
+
+Para presentar brevemente este periodo de reforma, debemos tener en cuenta que se articuló en tres fases.
+
+: Agenda 2000, la de 2003 y el llamado «chequeo médico» (2008-2009).
+
+\paragraph{Agenda 2000: }
+La primera de ellas conocida como \textit{Agenda 2000}. 
+
+Desde el ámbito económico-político, durante los últimos años de la década de los 90's, los excedentes se incrementaron de nuevo y los estudios realizados por la Comisión en 1999 preveían un empeoramiento de la  situación en el horizonte 2005/2006. Paralelamente, debido al inicio simultaneo de varios proceso de adhesión de algunos países de Europea Central y del Este, la Comisión preveía un empeoramiento de las estimaciones, debido a un incrementos de los excedentes.\footnote{La ampliación de los países del Este preveía un aumento de la superficie agraria en un $55\%$ y un aumento de la población agraria activa en un $13\%$.
+} Además, en el año 2000 se iniciaron nuevas negociaciones en el seno de la OMC que perseguían la reducción de las barreras comunitarias, un nuevo y avivado debate acerca de las subvenciones a la exportación (que aún persistían) y demandas acerca de menores ayudas internas, incluida las encuadradas en la Caja azul (no distorsionantes, a priori).
+
+Por otro lado, desde el ámbito socio-político, debido a sucesivas crisis fitosantiarias experimentadas al final del mileno, el interés por productos alimentarios seguros y de mayor calidad hizo ineludible la incorporación al debate de estas nuevas dimensiones de la PAC. Además, debemos sumar la creciente preocupación por parámetros medioambientales y de bienestar animal. Desde otra perspectiva, los agricultores demandaban mayor transparecia, descentralización y simplicidad en todo lo relativo a la PAC.
+
+En definitiva, la agricultura europea se enfrentaba de nuevo a retos internos y externos, por lo que la Comisión presentó el documento \textbf{Agenda 2000: por una Unión más fuerte y más amplia}, presentada en 1997 y aprobada en 1999.\footnote{Los objetivos perseguidos eran, esencialmente: (i)mejorar la competitividad interior y exterior del sector primario, con el fin de garantizar un nivel de vida equitativo y rentas estables; (ii) diseñar una agricultura duradera y de calidad, que respetase el medio ambiente y ofreciese productos de calidad que respondiesen a las expectativas de los consumidores; (iii) implantar prácticas que preservasen y potenciasen el mundo rural, en línea con el concepto de multifuncionalidad de la agricultura; (iv) acercar la PAC al público, con el objetivo de legitimar los costes de la PAC en virtud de los servicios que los agricultores prestan a la sociedad; y, (v) simplificar los procedimientos, clarificando cuáles debían ser los costes comunes y los que debían reservarse a los Estados miembros.
+} 
+
+Las medidas contempladas y aprobadas fueron de carácter eminentemente \textbf{socio-estructural}. En primer lugar, se realizó un nuevo ajuste de los precios internos con respecto a los precios mundiales y las pérdidas se compensaron mediante un aumento parcial de las ayudas directas por hectárea o cabeza de.ganado. Además, se suprimieron o limitaron los regímenes de intervención sustituyéndolos por ayudas para el almacenamiento temporal, se mantuvo la estabilidad presupuestaria mediante la inclusión de la directriz agrícola en las perspectivas financieras 2000-2006 y se aprobó el Programa Sapard en el periodo 2000-2006 para minimizar el previsible impacto económico que tendría la adhesión de los nuevos miembros en las finanzas de la UE.
+
+En segundo lugar, se introdujeron los \textbf{principios de eco-condicionalidad} y \textbf{modulación} de las medidas. A través de la eco-condicionalidad los Estados miembros establecerían ciertas medidas medioambientales a las que deberían ajustarse los agricultores y ganaderos para recibir las ayudas incurriendo en penalizaciones en caso de no hacerlo. Mediante la modulación, y una vez delimitados y armonizados los criterios para no distorsionar la competencia, los Estados podrían modular las ayudas según criterios nacionales (nivel global de renta, el empleo de la explotación o el volumen de la ayuda monetaria recibida). Como es obvio, ambos principios buscaban adecuar la gestión de la PAC a las realidad de cada Estado, permitiendo que las ayudas no destinadas a explotaciones pudieran utilizarse para financiar medidas de desarrollo rural. Sin embargo, su impacto fue limitado debido a su carácter voluntario. Además, se intensificaron las normas de calidad y seguridad alimentaria, desarrollándose una serie de principios armonizados que debía cumplir la legislación fitosanitaria nacional, creando la Agencia europea para la seguridad alimentaria (EFSA). Además, la Unión Europea estableció una serie de normas con el fin de difundir adecuadamente la calidad y transparencia de los productos: normas de comercialización, sellos de calidad Denominación de origen protegida (DOP), indicación geográfica protegida (IGP) y un logotipo especial para los productos de la agricultura ecológica.\footnote{Las normas de comercialización se aplican a la mayoría de los productos agrícolas y definen categorías de productos, normas mínimas y algunas condiciones de etiquetado. Proporcionan información al consumidor sobre el origen o la variedad y le permiten comparar precios entre productos de calidad similar. Una DOP califica a un producto alimenticio que se ha producido en su totalidad dentro de una zona geográfica definida con técnicas e ingredientes reconocidos de la región y que tiene un vínculo con su origen geográfico. Una IGP califica a un producto vinculado por su calidad y reputación a una región en la que se desarrolla al menos una etapa de la producción. El logotipo especial para los productos de la agricultura ecológica garantiza que se han cumplido las normas europeas de producción ecológica.
+}
+
+En último lugar, en línea con las conclusiones de la Conferencia Europea sobre Desarrollo Rural (\textit{La Europa Rural. Perspectivas de Futuro}; CORK, 1996), se reforzaron las medidas agromedioambientales, mediante la implementación de una nueva \textbf{Política de desarrollo rural}, una reformulación moderna de la antigua Política de estructuras agrarias cuyo objetivo sería preservar el entorno rural y estimular su economía.
+
+La inclusión de esta linea de programas supuso la mayor transformación, e impacto, de la reforma, puesto que a partir de este momento la PAC pasaría a articularse a través de dos lineas funcionales fundamentales: (i) \textbf{primer pilar}, la Política de precios y mercados; y, (ii) \textbf{segundo pilar}, la Política de desarrollo rural con la misión de completar las políticas de mercado y sufragar los gastos de mejora del medio ambiente y de ordenación del espacio.
+
+Para este segundo pilar de la PAC se fijaron los objetivos específicos de incrementar la competitividad de las áreas rurales, mantener el entorno y preservar la herencia rural de Europa. Además, se buscaría aumentar la transparencia en la elaboración y gestión de los programas de desarrollo rural, en los que se diseñaba una estrategia plurianual que respondiese tanto a las necesidades específicas de los Estados Miembros (o las regiones) como a las prioridades de la Política europea de desarrollo rural. Además, se formularon medidas de acompañamiento, modernización y diversificación de las explotaciones agrícolas.\footnote{Dentro de las primeras, se añadieron las indemnizaciones compensatorias en las zonas desfavorecidas o sujetas a limitaciones medioambientales. La novedad respecto a la normativa anterior es que, como hemos dicho, los requerimientos pasan a ser de obligado cumplimiento para los Estados miembros. Entre las segundas, se introdujeron ayudas para inversiones en las explotaciones, instalación de jóvenes agricultores, formación profesional, mejora de la transformación y comercialización de los productos agrícolas, silvicultura y fomento de la adaptación y desarrollo de las zonas rurales.
+} 
+
+\paragraph{Reforma de 2003: }
+Si bien la primera etapa de la Reforma abierta aumentó considerablemente los objetivos de la PAC y permitió darle un enfoque multidimensional, resultó insuficiente para algunos problemas incipientes. 
+
+En particular, en los primeros años de milenio, se esperaba una ampliación más que considerable de los Estados Miembros de la UE: un aumento de diez países. Por otro lado, la apertura de una nueva Ronda de negociaciones en la OMC, la Ronda de Doha, presentaba nuevos retos para el sector primario europeo. 
+
+Para hacer frente a estos retos, la Reforma de 2003 supuso la introducción de una serie de medidas adicionales y la reforma de algunos puntos. 
+
+
+Por lo que respecta a los primeros (nuevas medidas), se introdujo el principio de desacomplamiento en el sistema de ayudas directas. El principio de desvinculación o desacomplamiento disociaba las ayudas de los volúmenes producidos y entraría en vigor en 2005. La discoación provocaría que las ayudas adoptaran la forma de pago único por explotación, de importe determinado en función de la media de los importes que cada explotación recibió en el período histórico de referencia 2000-2002. Bajo este marco, los agricultores dispondrían de mayor flexibilidad para elegir entre cultivos, pues los pagos no estarían ligados a éste o a una determinada especialización ganadera.\footnote{Esta medida no fue implementada en su máxima expresión: ante el riesgo de un abandono masivo de determinados cultivos se introdujeron matizaciones y excepciones parciales, de tal forma que puede hablarse de una \textbf{desvinculación parcial}. Determinadas ayudas siguieron ligadas a cultivos y producciones concretas.
+} Además, los Estados Miembros podían otorgar ayudas adicionales (nacionales o regionales) limitadas a un máximo del $10\%$ de las ayudas recibidas por cada explotación para favorecer determinados cultivos por razones medioambientales, promoción de la calidad o la comercialización. 
+
+\begin{specialblock}{Principio de desacoplamiento}
+    La introducción del principio de desacoplamiento provocó la traslación desde la Caja azul a la Caja verde de la mayoría de programas financieros de la PAC. 
+    
+    El modelo de aplicación de estos pagos ofrecía varias posibilidades según el grado de desacoplamiento aplicado y según las ayudas se concediesen sobre la base individual de lo percibido por el agricultor en el período de referencia 2000-2002 o se optase por un sistema regionalizado:
+    \begin{la}
+      \item \textbf{Fórmula de base} (histórica). Bajo este sistema, la ayuda de cada explotación se calcularía atendiendo a la cuantía de las ayudas percibidas en los periodos predecentes (periodo de referencia) y el número de hectáreas cultivadas durante el mismo que le otorgaron derecho a percibir ayudas directas;
+      \item \textbf{Fórmula regional} (a tanto alzado). Bajo este marco, el importe de la ayuda percibida sería calculada a escala regional. La idea es sencilla: se sumaría las ayudas percibidas por todas las explotaciones en la región (durante el período de referencia) y se dividirían por el número de hectáreas admisibles declaradas por los agricultores (en el año den introducción del Régimen de Pago Único). De esta forma, obtendríamos el valor de \textbf{un derecho en dicha región}, es decir, la ayuda percibida por la posesión de una hectarea. De esta forma, cada agricultor recibía un número de derechos (a tanto alzado) igual al número de hectáreas admisibles declaradas en el año de introducción del RPU.
+      \item \textbf{Modelos mixtos}. Por último, de manera alternativa y solo en casos justificados, los Estados miembros podían aplicar distintos métodos de cálculo en las diversas regiones de su territorio. También podían calcular las ayudas del RPU utilizando una fórmula en parte histórica y en parte a tanto alzado.\footnote{La fórmulas híbridas de este tipo podían ir variando a lo largo del período entre la aplicación inicial del RPU y la plena aplicación, dando lugar a fórmulas híbridas dinámicas y estáticas. Podía recurrirse a las fórmulas híbridas dinámicas para pasar del modelo de base (histórico) al regional (a tanto alzado).
+      }
+    \end{la}
+
+    Para los nuevos Estados Miembros, en los primeros años posteriores a la adhesión, estos podían optar por un Régimen de Pago Único por superficie, importe uniforme por hectárea, hasta alcanzar el límite máximo nacional establecido en los Acuerdos de adhesión. 
+\end{specialblock}
+
+
+Por lo que respecta a los segundos (modificación de algunos puntos), destacan varias reformas importantes. En primer lugar, se agrava la condicionalidad en la recepción de ayudas, debiendo cumplimentar varios requisitos medioambientales, sanitarios, de bienestar animal, salubridad alimentaria y seguridad en el trabajo. En caso de incumplimiento las ayudas se reducirían en proporción al daño causado. Además, se establece la obligatoriedad de la modulación. Las explotaciones que percibiesen más de $5.000€$ anuales en ayudas directas verían reducido su importe en un $3\%$ en 2005, aumentando al $4\%$ en 2006 y al $5\%$ a partir de 2007 y el dinero ahorrado se destinaría al desarrollo rural. De este dinero, el $80\%$ sería gastado en el Estado miembro donde tuviese lugar la modulación y el resto se dividiría entre los Estados miembros sobre la base de criterios de cohesión social y características estructurales de su agricultura.\footnote{Además, los Estados miembros podrían establecer retenciones adicionales para constituir reservas nacionales de derechos de pago o bien para disponer de fondos para llevar a cabo pagos extra en determinadas zonas geográficas, principal mente por moti vos ambientales. Las regiones ul traperiféricas (entre las que se encuentran las Islas Canarias) no estarían sujetas ni a modulación ni a desconexión.  
+} También se fijó el límite de recursos comunitarios comprometidos a la PAC de acuerdo con el Principio de disciplina financiera para el periodo 2003-2009, congelándose el presupuesto de la Política de precios y mercados e imponiéndose límites anuales obligatorios. Además, y muy importante, en 2007 se unificó la actuación de las diferentes Organizaciones Comunes de Mercado bajo el paraguas de una única Organización Común de los Mercados, que codificó los mecanismos de reglamentación de las existentes.\footnote{Esta reforma pretendía simplificar la tramitación y aumentar la transparencia en la actuación y legislación de los 21 productos, que hasta 2007 se regían por OCMs individuales, proporcionando un marco jurídico único para el mercado interior, los intercambios con terceros países y las normas de competencia. Al derogar los reglamentos de base anteriores, se consiguió una simplificación técnica y normas más homogéneas que reemplazaron los planteamientos sectoriales por otros de carácter horizontal.
+}
+
+
+En el segundo pilar, Política de desarrollo rural, se introdujeron nuevas medidas que podían ser cofinanciadas en el marco de los programas de desarrollo rural: (i) incentivos y ayudas a los agricultores para poder mejorar la calidad de sus productos y sus procesos de producción, así como para adaptarse a las nuevas normas comunitarias, en temas medioambientales, de seguridad en el trabajo, de bienestar del ganado, siempre que aún no hayan sido incorporadas a la legislación nacional; (ii) ayudas a los agricultores que acepten compromisos de al menos cinco años para usar técnicas tendentes a mejorar el bienestar de los animales de granja, así como otras dirigidas a jóvenes agricultores; y, (iii) una serie de medidas que abrían la posibilidad de otorgar pagos a superficies de uso agrario y forestal incluidas en la Red Natura.\footnote{La Red Natura integra los espacios ecológicamente valiosos designados para su protección en la Directiva Aves (79/409/CEE) y en la Directiva Hábitats (92/43/CEE). En estas zonas la actividad agraria puede verse sometida a restricciones técnicas y limitaciones dando lugar a una merma en la rentabilidad que la medida de desarrollo rural mencionada trataría de compensar.
+} Esta última resultando especialmente importante para España puesto que es el segundo país de la Unión Europea por extensión de terreno boscoso (solo por detrás de Suecia), lo que supone tanto un gran reto (de gestión y conservación) como una grandísima oportunidad (espacios verdes protegidos, políticas de reforestación y preservación). Además, este segundo pilar registró un importante aumento de recursos financieros y una ampliación de sus objetivos e instrumentos. El nuevo Reglamento de Desarrollo Rural, de 2005, promovió la preparación de programas nacionales y regionales de desarrollo rural organizados en bloques de medidas dentro de cuatro grandes líneas de actuación:
+\begin{la}
+  \item \textbf{Eje 1}. Aumento de la competitividad del sector agrícola forestal;
+  \item \textbf{Eje 2}. Mejora del medioambiente y del entorno rural;
+  \item \textbf{Eje 3}. Calidad de vida en las zonas rurales y diversificación de la economía rural; y, 
+  \item \textbf{Eje 4}. Aplicación del enfoque Leader, estrategias de desarrollo rural y de cooperación interterritorial basadas en grupos de iniciativas locales.
+\end{la}
+
+
+En líneas generales, la reforma incrementó la orientación al mercado, flexibilizó la elección de cultivos u orientaciones productiva y permitió mejorar el equilibrio entre apoyo financiero directo y menores distorsiones del comercio internacional. Sin embargo, los pagos directos siguieron siendo un instrumento de apoyo a la producción con efectos distorsionantes y su fórmula de cálculo (ayudas históricamente recibidas) perpetuó las desigualdades en el reparto entre grandes explotaciones y Estados Miembros. 
+
+
+
+Desde el I de enero de 2007 el FEOGA es reemplazado por el FEADER (Fondo Europeo Agrícola de Desarrollo Rural), destinado a cofinanciar los programas de desarrollo rural y el FEAGA (Fondo Europeo de Garantía Agrícola) que tiene a su cargo la financiación de las intervenciones en los mercados, los pagos directos y las subvenciones a la exportación.
+
+\paragraph{Chequeo médico (2009): }
+Implantas y funcionando estas dos reformas consecutivas, la Comisión emprendió en 2007 un proceso de análisis, revisión y valoración de las medidas implementadas. El resultado fue la aprobación, en noviembre de 2008, de \textbf{El chequeo médico} de 2009, que permitió revisar, y en su caso reformular, un amplio abanico de medidas.\footnote{Como siempre, los objetivos perseguidos son muy redundantes y generalistas: modernizar,simplificar y racionalizar la PAC, eliminando las restricciones impuestas a los agricultores para permitirles reaccionar mejor ante las tendencias del mercado y hacer frente a las nuevas dificultades de la agricultura europea como el cambio climático, la necesidad de gestionar mejor el agua o la conservación de la biodiversidad.
+} 
+
+Fundamentalmente, se culminó la disociación total de las ayudas mediante la eliminación progresiva de los últimos pagos vinculados a la producción. Se reorientarion los fondos destinados a la Política de precios y mercados en favor de la Política de desarrollo rural, aumentado el índice de modulación de las ayudas directas. Se flexibilizaron las normas de intervención pública y de control de la oferta, suprimiendo algunos mecanismos de intervención y endureciendo para otros sus principios de actuación. Se flexibilizó la condicionalidad, suprimiendo las normas no pertinentes e introduciendo nuevos requisitos como una mejor gestión del agua. Por último, se posibilitó la concesión de recursos adicionales hacia regiones desfavorecidas, actividades agrarias de tipo vulnerable y/o instrumentos de gestión de riesgos (seguros, fondos de inversión para enferemedades de animales, etc.)
+
+
+\subsubsection{Propuesta: PAC en el horizonte 2020 (2010)}
+El Chequeo médico constituye el último eslabón del periodo conocido como la \textir{Reforma abierta}. Tras su implementación, la Comisión presentó en 2010 la Comunicación \textbf{La PAC en el horizonte 2020: Responder a los retos futuros en el ámbito territorial de los recursos naturales y alimentarios}, que complementaba la Comunicación \textit{Europa 2020: Una estrategia para un crecimiento inteligente. sostenible e integrador}.
+
+¿En qué temas se centra dicha Comunicación? La Comisión identifica \textbf{tres objetivos}/retos principales. Por un lado, \textbf{responder a las crecientes preocupaciones relativas a la seguridad alimentaria} mientras mantiene y mejora la competitividad del sector primario, en un mundo  globalizado caracterizado por mayor volatilidad en los precios y un progresivo deterioro de la posición de los agricultores en la cadena alimentaria. Por otro lado, se interroga sobre cómo \textbf{promover la gestión sostenible de los recursos naturales}, hacer frente a la presión cada vez mayor sobre las condiciones de producción agrícola causada por el cambio climático, así como a la necesidad de que los agricultores reduzcan su contribución a las emisiones de gases de efecto invernadero y puedan desempeñar un papel activo en la mitigación del cambio climático. Por último, \textbf{aprovechar la diversidad de las estructuras y de los sistemas de producción} y mantener su papel social, territorial y de cohesión especialmente a través de la creaciónde empleo. Las medidas que surgieron del Informe de la Comisión, adoptadas formalmente en 2013, supusieron, por primera vez, una revisión completa de la PAC. 
+
+En primer lugar, se \textbf{suprimen todas las medidas de control de la oferta}. Paralelemante, se introducen instrumentos de uso excepcional para: (i) evitar perturbaciones del mercado, como fluctuaciones de los precios u otros acontecimientos; (ii) apoyar al sector primario en caso de enfermedades animales y pérdida de confianza de los consumidores; e, (iii) instrumentos de concierto a utilizar durante períodos de graves desequilibrios en los mercados. Con éstos, se consolidan las herramientas de la OCM única que definen las \textbf{redes de seguridad}. Además, se crea un fondo de reserva, de carácter intra anual, para hacer frente a crisis que puedan afectar la producción o distribución de productos, financiada mediante una reducción (prima) en la cuantía de los pagos anuales directos. (En caso de que la reserva no se utilice, su importe se restituye cada año a los agricultores, aunque puede utilizarse para financiar las medidas excepcionales.). 
+
+Por otro lado, el sistema de ayudas a los agricultores se desvincula por completo de las cuantías percibidas en los periodos históricos de referencia y pasa a configurarse como un \textbf{sistema de pagos multifuncional}, por niveles o estratos, en el que cada componente de la ayuda está vinculado a objetivos específicos que pueden ser: 
+\begin{la}
+  \item \textbf{Obligatorios}. Los componentes obligatorios son el régimen de pago básico o pago simplificado y cuenta con varios componentes. La primera cuantía se fija atendiendo a criterios de superficie ponderados por otros criterios económicos y/o administrativos. Pueden ser fijados a escala nacional o regional, y están sujetos a un proceso de convergencia interna por el que las asignaciones basadas en referencias históricas deben pasar a sistemas de pagos por hectárea. Por otro lado, se establece una cuantía para compensar los costes asociados al suministro de bienes públicos medioambientales no remunerados por el mercado: una tasa de \textbf{ecologización}. A través de ésta, cada explotación recibirá un pago adicional por hectárea si respeta determinadas prácticas agrícolas;\footnote{Una de las prácticas más importantes es la conocida \textbf{diversificación de cultivos}. A través de esta práctica se busca el mantenimiento de los pastos permanentes existentes, mantenimiento de una \textit{superficie de interés ecológico} de por lo menos el $5\%$ de las tierras de labor de la explotación para aquellas explotaciones con más de quince hectáreas (sin contar los pastos permanentes ni los cultivos permanentes).
+  } y,
+  \item \textbf{Voluntarios}. Los Estados miembros pudieron utilizar hasta el $30\%$ de la dotación nacional para redistribuirla entre los agricultores atendiendo a un pago fijo por sus treinta primeras hectáreas (o hasta el tamaño medio de las explotaciones, si es mayor de 30 hectáreas) o aplicando un pago máximo por hectárea. Con esto, los Estados Miembros disponían de un instrumento menos concesional, mucho más simple, a través del cual conceder ayuda a los pequeños agricultores. Además, este pago podía cumplimentarse en algunos casos con una dotación adicional, de hasta el $5\%$ de la  dotación nacional, destinada a aquellas regiones condicionadas por límites naturales o desfavorecidas.
+\end{la}
+
+Paralelamente, y en linea con la idea de fomentar el recambio generacional, el pago básico (obligatorio) otorgado a los jóvenes agricultores menores de $40$ años, nuevos agricultores o explotaciones recientemente fundadas ($<5$ años), debía completarse con hasta un $25\%$ adicional sobre la cuota resultante y durante los primeros cinco años de instalación. Además, se estandarizan, regulan y simplifican las disposiciones relativas a la condicionalidad y, con el fin de resolver el problema de los \textbf{agricultores de sofá} así como eliminar vacíos normativos que permitieron a un número limitado de empresas reclamar pagos directos sin ser su actividad principal la agricultura, la reforma incluyó una lista de actividades excluidas de recibir pagos directos (ampliable por los Estados miembros).
+
+\paragraph{Resultados:}
+Tras esta última reforma, el contexto económico e institucional se vió notablemente alterado. 
+
+En primer lugar, si bien es cierto que el crecimiento volvió, siguió siendo muy bajo y tornó negativo como consecuencia de la COVID-19. Además, los mercados se sumieron en la incertidumbre radical como consecuencia del Brexit, la crisis económica e implementación de las políticas de austeridad y la crisis del multilateralismo en el ámbito internacional, especialmente en las relaciones entre la Unión Europea y los Estados Unidos (Trump I). Paralelamente, surgieron nuevos desafíos medioambientales como consecuencia de la entrada en vigor del Acuerdo de París (COP$21$) y las innovaciones técnicas, en particular la revolución digital, trajeron consigo importantes cambios en el ámbito productivo, de transformación y de distribución de alimentos. 
+
+En este contexto, imperaba la necesidad de llevar a cabo una revisión que permitiese adaptar la PAC a la nueva realidad institucional, económica y presupuestaria a pesar de su reciente modificación. 
+
+Este proceso se inició en 2016, cuando la Comisión creó un \textbf{Grupo Operativo} encargado de reflexionar acerca del futuro de la PAC (primer pilar en particular) en vistas a mejorar la posición de los agricultores en la cadena alimentaria. El Grupo formuló una serie de recomendaciones, entre las que destacan: la necesidad de mayor transparencia, la prohibición de prácticas desleales y algunos cambios en las normas de competencia que permitieran a los agricultores cooperar entre sí en el seno de las OP. Paralelamente, tras  la Conferencia Europea sobre Desarrollo Rural Cork $2.0$, de 2016, se adoptó la \textbf{Declaración de Cork $2.0$: Una vida mejor en el medio rural}. En esta se definen diez directrices políticas que pueden ayudar a alcanzar un desarrollo rural innovador, coherente e integrador, que contribuyese a hacer frente a los retos económicos, sociales y medioambientales del medio rural. Por último, se llevó a cabo una consulta pública sobre el futuro de la PAC en 2017. 
+
+Todas estas lineas de actuación paralelas cristalizaron en el Informe/Comunicación de la Comisión Europea en 2017: \textbf{El futuro de los alimentos y de la agricultura}, anticipando un giro radical en el modelo de la PAC.
+
+Sus propuestas y lineas de actuación fueron introducidas con motivo de la revisión intermedia del marco financiero plurianual 2014-2020. En 2016, la Comisión presentó una propuesta legislativa (ómnibus, pues afectaba a numerosas políticas europeas, entre ellas la PAC) con el objetivo de simplificar sus instrumentos y gestión. Sin embargo, la propuesta acabó convirtiéndose en una auténtica minirreforma de la PAC.\footnote{Las mejoras abarcaron el ámbito de actuación de las OP, los seguros agrarios, los instrumentos de estabilización de ingresos, las normas relativas a los pagos de ecologización y a los jóvenes agricultores y la definición de \textbf{agricultor activo}. 
+
+Véase: \href{https://www.boe.es/doue/2017/350/L00015-00049.pdf}{Reglamento (UE) 2017/2393 del Parlamento Europeo del Consejo de 13 de diciembre de 2017.}
+} 
+
+Además, la Comisión presentó una nueva batería de propuestas en 2018, esta vez centradas en la PAC, cuyos aspectos principales fueron los siguientes: la reformulación de los pagos directos e intervenciones de desarrollo rural, con el fin de hacerlos más selectivos y sujetos ambos a planificación estratégica; una nueva arquitectura verde, basada en condiciones medioambientales obligatorias y medidas voluntarias adicionales en el marco de ambos pilares; y, una reformulación de los programas para adoptar un enfoque de resultados (nuevo modelo de aplicación) según el cual los Estados miembros tendrán que notificar sus logros cada año.
+
+El retraso característico del debate público acabó provocando una prórroga del marco jurídico existente en 2019 y que a finales de 2020 se adoptara el \href{https://www.boe.es/buscar/doc.php?id=DOUE-L-2020-81956}{Reglamento transitorio de la PAC} para garantizar la continuidad de la ayuda jurídica y financiera hasta finales de 2022. A partir de este punto, entraría en vigor \textbf{la nueva PAC} que se adoptó formalmente en diciembre de 2021 con la publicación de: (i) \href{https://www.boe.es/buscar/doc.php?id=DOUE-L-2021-81699}{Reglamento de Planes estratégicos de la PAC}; (ii) \href{https://www.boe.es/buscar/doc.php?id=DOUE-L-2021-81700}{Reglamento de financiación, gestión y seguimiento de la PAC}; y, (iii) \href{https://www.boe.es/buscar/doc.php?id=DOUE-L-2021-81701}{Reglamento sobre la organización común de los productos agrarios (OCM)}.
+
+\subsection{Nueva PAC 2023-2027}
+A partir de este momento, la PAC, que mantiene sus elementos esenciales, deja de ser una política orientada a beneficiarios (requisitos que deben cumplir) y pasa a ser una política orientada a resultados y desempeño, mientras se convierte simultaneamente en la piedra angular para la consecución de los objetivos y compromisos derivados del Pacto Verde Europeo, hoja de ruta de la Comisión para lograr que la economía de la UE sea sostenible. Esto es así porque dentro del Pacto Verde Europeo se definen dos lineas de actuación con gran incidencia en la PAC: Estrategia \textbf{De la Granja a la Mesa} y la Estrategia de la UE sobre \textbf{Biodiversidad para 2030}.\footnote{La Estrategia De la Granja a la Mesa aborda de manera integral los desafios mediante un Plan de Acción con $27$ medidas, aplicables desde 2020 hasta 2024, que podemos agrupar en seis grupos:
+\begin{la}
+    \item \textbf{Garantizar la seguridad alimentaria};
+    \item \textbf{Estimular las prácticas sostenibles}. Fomentar y desarrollar prácticas sostenibles en todos los eslabones de la cadena: elaboración de alimentos, venta al por mayor y al por menor, hostelería y servicios alimentarios;
+    \item \textbf{Consumo sostenible de alimentos}. Fomentar el consumo sostenible de los alimentos y promover y facilitar los cambios dietéticos, hacia dietas saludables y sostenibles;
+    \item \textbf{Reducir la pérdida y el desperdicio de alimentos};
+    \item \textbf{Lucha contra el fraude alimentario}. No solo en lo relativo a la recepción de ayudas, que ya había sido más o menos gestionado, sino más bien el potencial fraude a lo largo de toda la cadena de suministro;
+    \item \textbf{Garantizar la producción sostenible de alimentos}. 
+\end{la}
+Por otro lado, aunque casi con igual importancia, tendríamos los compromisos incluidos dentro de la estrategia de la UE sobre Biodiversidad para 2030, pudiendo relacionar algunos directamente con la PAC: (i) invertir la tendencia a la disminución de los polinizadores; y, (ii) promover que al menos el $10\%$ de la superficie agrícola contenga elementos de alta diversidad (como los márgenes multifuncionales, muros, terrazas, charcas, etc.). En ambos casos los objetivos operativos son compartidos, pues se busca   reducir para 2030, en un $50\%$ los pesticidas de síntesis química, en un $50\%$ los pesticidas de alto riesgo, en un $50\%$ el exceso de nutrientes (especialmente fósforo y nitrógeno), el $20\%$ el uso de fertilizantes, en un $50\%$ las ventas de antimicrobianos para los animales de granja y en acuicultura y alcanzar, en al menos el $25\%$ de la superficie agraria europea, la práctica de agricultura ecológica.
+}
+
+\subsubsection{Objetivos: ¿Qué queremos?}
+Como vemos, la nueva PAC se centra en la consecución de la sostenibilidad social, medioambiental y económica de la agricultura y las zonas rurales. Los tres pilares sobre los que se articula son: (i) el \textbf{sector primario}; (ii) la \textbf{sostenibilidad medioambiental}; y, (iii) el \textbf{desarrollo rural}.\footnote{En concreto: (i) fomentar un sector agrícola inteligente, competitivo, resiliente y diversificado que garantice la seguridad alimentaria a largo plazo; (ii) apoyar y reforzar la protección del medio ambiente y contribuir a alcanzar los objetivos medioambientales y climáticos de la UE, entre ellos los compromisos contraídos en virtud del Acuerdo de París; y, (iii) fortalecer el tejido socioeconómico de las zonas rurales. 
+} 
+
+Estas lineas de actuación generales se desglosan a su vez en nueve objetivos estratégicos específicos y un objetivo transversal común:
+\begin{la}
+    \item \textbf{Sector primario}. Por lo que respecta al sector primario: (i) apoyar unos ingresos agrícolas viables y la \textbf{resiliencia} del sector con el fin de mejorar la seguridad alimentaria a largo plazo y la diversidad agrícola, así como garantizar la \textbf{sostenibilidad financeria} del sector; (ii) mejorar la orientación al mercado y aumentar la \textbf{competitividad} agrícola con una mayor atención a la investigación, la tecnología y la digitalización; y, (iii) \textbf{reequilibrar el poder} de la cadena alimentaria y mejorar la posición de los agricultores en la misma;
+    \item \textbf{Sostenibilidad medioambiental}. Por lo que respecta a la sostenibilidad medioambiental y los compromisos climáticos: (i) contribuir a la \textbf{mitigación} y \textbf{adaptación} al cambio climático, así como la promoción de la energía sostenible; (ii) fomentar el \textbf{desarrollo sostenible} y la gestión eficiente de los recursos naturales; y, (iii) contribuir a detener y revertir la \textbf{pérdida de biodiversidad}, mejorar los servicios ecosistémicos y preservar hábitats y paisajes;
+    \item \textbf{Desarrollo rural}. Por último, en lo relativo al desarrollo de las zonas rurales, se busca: (i) atraer y sostener a los \textbf{agricultores jóvenes} y nuevos agricultores y facilitar el desarrollo empresarial sostenible en las zonas rurales; (ii) promover el empleo, el crecimiento, la igualdad de género, la inclusión social y el desarrollo local en las zonas rurales, así como la bioeconomía circular y la silvicultura sostenible; y, (iii) mejorar la respuesta a las demandas sociales de alimentos de alta calidad, seguros y producidos de manera sostenible, para reducir el desperdicio de alimentos, así como para mejorar el bienestar animal.
+\end{la}
+
+Por último, y como objetivo estratégico transversal, se busca modernizar la agricultura y las zonas rurales mediante el fomento y el intercambio de conocimientos, la innovación y la digitalización.
+
+\subsubsection{Implementación: ¿Cómo lo haremos?}
+¿Cómo llevarlo a cabo? Para la implementación del plan estratégico se lleva a cabo una reforma complementaria sobre la forma de gobernanza de la PAC. 
+
+\paragraph{Planificación estratégica: Descentralizada}
+En primer lugar, se \textbf{descentraliza la planificación estratégica}. Cada Estado miembro diseñará un Plan Estratégico en el que indicará las intervenciones con las que alcanzar los objetivos de la PAC y el Pacto Verde Europeo. El contenido de los planes debe abarcar un análisis DAFO de las necesidades específicas del sector agrario y el medio rural, la definición de las medidas para dar respuesta a las necesidades existentes, un plan de metas para sus propios objetivos específicos y un plan financiero. El Plan Estratégico debe combinar ayudas directas, medidas de desarrollo rural y medidas sectoriales. De esta forma, cada país elije las intervenciones específicas que considere más eficaces en función de sus objetivos concretos, basándose en una evaluación clara de sus propias necesidades. Cada Plan Estratégico requiere la aprobación previa de la Comisión para garantizar su coherencia con los objetivos de toda la UE, en concreto con la legislación, los compromisos medioambientales y climáticos de la UE y la asuencia de distorsiones en el mercado interior y de cargas excesivas para los beneficiarios o las administraciones.
+
+\paragraph{Control: Nueva Teoría de la Gobernanza Pública y CMIs}
+Por otro lado, y como ya hemos comentado, se adopta un enfoque radicalmente distinto: se pone el foco sobre rendimiento y los resultados, en linea con la \textbf{Nueva Teoría de la Gobernanza Pública} y, en particular, con la adopción de políticas orientadas a resultados y sistemas de evaluación basados en \textbf{Cuadros de Mando Integral}. El Reglamento de los planes estratégicos de la PAC fija un Marco de Rendimiento, Seguimiento y Evaluación (MRSE) para el período 2023-2027. Este marco abarca ambos pilares y supone un cambio de orientación estratégica que pasa del cumplimiento de las normas al rendimiento y los resultados. Este nuevo modelo utiliza las bases de los Cuadros de Mando Integrales y, con el objetivo de evaluar constantemente la implementación de los programas se generan un conjunto de indicadores comunes de rendimiento: (i) de realización, que se utilizarán para el seguimiento de la aplicación de la PAC; (ii) de resultados, que se utilizarán para supervisar los avances de los países hacia los objetivos fijados; y, (iii) de entorno e impacto, que se utilizarán para evaluar el rendimiento global de las políticas respecto de los objetivos de la PAC. Los indicadores se supervisarán mediante infonnes anuales de rendimiento y una revisión semestral de los resultados de los planes estratégicos para evaluar los progresos de los países en la consecución de los objetivos.
+
+\subsubsection{Medidas principales: ¿Qué haremos?}
+La implementación de esta nueva visión se materiza en una serie de medidas principales. 
+
+\paragraph{Objetivos medioambientales: }
+Para conseguir que los planes estratégicos estén en \textbf{consonancia con la legislación medioambiental y climática}, cada país estará obligado a mostrar una mayor ambición en materia medioambiental y deberá actualizar el plan estratégico cuando se modifique la legislación en materia de clima y medio ambiente. 
+
+En este sentido se establecen unas normas de condicionalidad mucho más ambiciosas, entre las que destacan: los \textbf{requisitos legales de gestión} (RLG), aplicables a todos los agricultores, que engloban normas de la UE sobre salud pública, animal y vegetal, bienestar de los animales y el medio ambiente; y las \textbf{buenas condiciones agrícolas y medioambientales} (BCAM), aplicables únicamente a los agricultores que reciben apoyo de la PAC y que consisten en estándares diseñados para prevenir la erosión del suelo, mantener su materia orgánica y estructura, conservar pastizales permanentes, proteger la biodiversidad y garantizar la conservación de las características del paisaje, proteger y gestionar el agua mediante el establecimiento de franjas de amortiguamiento a lo largo de los cursos de agua, la autorización de agua para riego y la protección de las aguas subterráneas contra la contaminación. Además, se establece que al menos el $25\%$ del presupuesto se destine a pagos directos y se asigne a esquemas ecológicos que los países deberán incluir de manera obligatoria en sus planes, aunque sean de voluntario cumplimiento para los agricultores. Las primas pueden establecerse como pagos de \textbf{compensación} por los costos adicionales y la pérdida de ingresos derivados de las prácticas en cuestión o como pagos que van más allá de la compensación, siempre que se respeten las reglas pertinentes de la Caja Verde. No obstante, se establece un \textbf{periodo de aprendizaje} de dos años durante el cual un país puede destinar menos del $25\%$ del presupuesto en caso de que la superficie potencial que cubra esta práctica sea menor de la prevista, aunque con la obligación de compensar dicho déficit a finales de 2027. Por otro lado, se aumenta la dotación de recursos comprometidos a intervenciones relacionadas directamente con el clima y el medio ambiente. Se establece que no menos del $35\%$ de los fondos deban destinarse a compromisos de gestión agroambiental, programas de \href{https://es.wikipedia.org/wiki/Red_Natura_2000}{\textit{Natura 2000}} y pagos de la Directiva Marco del Agua, inversiones ambientales y climáticas, y bienestar animal. Además, el $50\%$ de los pagos irá destinado a zonas con limitaciones naturales. El $40\%$ del presupuesto tendrá que destinarse a atuaciones contra el clima y apoyar el compromiso general de dedicar el $10\%$ del presupuesto de la UE a los objetivos de biodiversidad.
+
+\paragraph{Objetivos redistributivos: }
+Para hacer de la \textbf{PAC un programa político más justo}, se pone el foco sobre quienes más lo necesitan mediante una distribución más equitativa de los pagos. En primer lugar, los países tendrán que dedicar al menos el $10\%$ de sus asignaciones de pagos directos mediante un mecanismo redistributivo de ayuda a la renta para abordar mejor las necesidades de ingresos de las explotaciones pequeñas y medianas. No obstante, los países podrán establecer excepciones a esta obligación si las necesidades redistributivas se abordan adecuadamente a través de otros medios, como, por ejemplo, la reducción de los pagos, la convergencia interna o la territorialización de las ayudas a la renta básica. Además, se permite, opcionalmente, reducir y/o limitar los pagos directos a determinadas explotaciones. Los Estados podrán reducir hasta un $85\%$ los pagos directos por agricultor o ganadero que superen los $60.000€$ al año y limitarlos a $100.000€$ al año, mientras que el apoyo a las pequeñas explotaciones se refuerza permitiendo sustituir el sistema de pagos multifuncional por un pago único. Por otro lado, los países podrán seguir concediendo una parte (limitada) de su dotación a apoyar sectores o tipos concretos de producción agrícola y éstas tendrán como objetivo hacer frente a las dificultades específicas de éstos, mejorando su calidad, sostenibilidad o competitividad. En segundo lugar, la nueva normativa contiene una definición obligatoria, pero flexible de agricultor activo, que se basará en criterios objetivos y no discriminatorios, como la prueba de ingresos, el objeto social y la inclusión en un registro.\footnote{Los países deben garantizar que los agricultores pluriactivos y a tiempo parcial no queden excluidos de las ayudas y podrán determinar que los agricultores que reciben pagos directos de hasta $5.000€$ se consideren agricultores activos.
+} Además, tendrán que distribuir obligatoriamente el $3\%$ de su dotación en pagos directos de apoyo a jóvenes agricultores, mediante apoyo directo a la renta, a la inversión o como ayuda inicial. Por primera vez los pagos estarán condionados al respeto de determinadas disposiciones de la \textbf{legislación laboral} de la UE relativas al empleo, seguridad y salud en la explotación agrícola, así como también políticas u acciones que fomenten la igualdad de género y el aumento de la participación de las mujeres en la agricultura (también por primera vez). 
+
+Por último, se establecen parámetros de convergencia más fuertes, tanto dentro de los distintos países (convergencia interna) como entre los países (convergencia externa). En lo relativo a la convergencia interna, los países que todavía realizan pagos directos basados en referencias históricas deberán seguir reduciendo las diferencias entre los pagos por hectárea, proceso que debe culminar en 2027, cuando todos los derechos de pago alcancen un valor mínimo del $85\%$ del importe medio nacional. En lo relativo a la convergencia externa, los países cuyo nivel de ayuda directa por hectárea sea inferior al $90\%$ del pago medio por hectárea de la UE verán satisfecha la mitad de esta diferencia para 2027.
+
+\paragraph{Objetivos económicos o de eficiencia: }
+En último lugar, con el objetivo de conseguir \textbf{una PAC más competitiva} se refuerza la posición de los agricultores en la cadena de suministro e impulsa la competitividad del sector agroalimentario. En primer lugar, se fortalece la posición negociadora de los agricultores a través de intervenciones sectoriales, mediante: (i) la extensión del modelo OP (de frutas y hortalizas) a todos los sectores agrícolas (excepto el vitivinícola y la apicultura); (ii) la concepción holística de la planificación estratégica, haciendo que todos los programas de apoyo a sectores específicos cubiertos por la OCM formen parte de los planes estratégicos; (iii) la amplización de determinadas excepciones a las disposiciones sobre competencia, lo que permite a los agricultores trabajar juntos y/o con otras partes interesadas en la cadena alimentaria con el fin de garantizar unos markups más elevados; y, (iv) la extensión del actual instrumento de regulación de la oferta para las DOP y las IGP a todos los sectores agroalimentarios, hasta ahora limitados al jamón y el queso. Por otro lado, se mantiene la orientación general al mercado de las reformas anteriores, reforzada con el apoyo de los nuevos planes estratégicos y las normas de la OCM, creando una nueva reserva financiera de $450\text{M}€$ cada año. En segundo lugar, se provee de apoyo a sectore concretos, en particular al vitivinívola.\footnote{Se prorroga el régimen de autorización de plantaciones de vid hasta 2045. Se autoriza utilizar variedades de vid híbridas y otras especies para la producción de vinos de calidad amparados por DOP. Se autoriza comercializar vinos desalcoholizados y proteger los productos vitivinícolas parcialmente desalcoholizados como DOP e IGP. Se implementan nuevas reglas sobre el etiquetado de ingredientes y nutrición para vinos y productos vitivinícolas aromatizados para mejorar la información del consumidor, exigiendo a los productores de vino que indiquen el valor energético de sus productos, y asegurando que se proporcione información completa sobre nutrición e ingredientes en la etiqueta o por medios electrónicos.
+} Por último, se establecen normas adicionales relativas a las IG, permitiendo que criterios de procesamiento sostenible puedan incluirse en la especificación del producto de forma voluntaria, protegiéndolas expresamente en Internet y contra las mercancías en tránsito dentro de la UE, extendiéndola la protección al uso de los nombres de los ingredientes y simplificando y agilizando los procedimientos de obtención, buscando la coherencia entre sectores.
+
+\subsubsection{Financiación: ¿Cómo lo pagamos?}
+Ahora que conocemos los objetivos, la reforma relativa a la implementación y las medidas principales adoptadas (y sus lineas de actuación), debemos saber cómo lo pagamos. A este respecto, lo primero que sería necesario destacar es que los gastos agrícolas mantienen su tendencia descendente dentro del presupuesto comunitario: para el periodo 2021-2027, se espera que alcancen los $386.600\text{M}€$ euros y representen el $31\%$ de los gastos dispuestos, frente al $37,8\%$ del marco financiero plurianual anterior. Esto trae distintas causas, como la salida del Reino Unida como la existencia de otras necesidades de financiación derivadas de las nuevas prioridades de la Unión (migración, fronteras exteriores, economía digital, transportes).
+
+Durante los dos primeros años se han aplicado las disposiciones del Reglamento Transitorio de la PAC. De entre estas se encuentra el desembolso del $30\%$ del Instrumento Europeo de Recuperación en 2021 y el $70\%$ en 2022, el desembolso de un tercio del presupuesto total ($37\%$) para medidas ecológicas y de bienestar animal y más de la mitad del presupuesto total ($55\%$) para medidas sociales y de transformación digital; así como la prórroga en la aplicación de la ayuda temporal excepcional a los agricultores y las PYME afectadas por la COVID-19, por un periodo de seis meses.\footnote{La nueva PAC empezará a aplicarse el I de enero de 2023, una vez finalice la vigencia del Reglamento Transitorio de la PAC y comiencen a aplicarse los Planes Estratégicos. A fines de 2023 la Comisión presentará un informe para evaluar el esfuerzo conjunto de todos los Planes Estratégicos de la PAC, prestando especial atención a la ambición colectiva para alcanzar los objetivos del Pacto Verde Europeo. A partir de 2024, cada país presentará un informe anual de rendimiento y celebrará una reunión de revisión anual con la Comisión. La Comisión llevará a cabo una primera revisión del rendimiento de cada Plan Estratégico de la PAC y solicitará, si fuese necesario, acciones de seguimiento específicas a los países de la UE. En 2026, una evaluación intermedia evaluará el desempeño de la nueva PAC. La Comisión llevará a cabo en 2027 una segunda revisión del rendimiento de cada Plan Estratégico de la PAC.
+}
+
+Tras este periodo de \textit{impasse}, el FEAGA cuenta con una dotación de $291.100\text{M}€$, de los cuales hasta $270.000\text{M}€$ se han destinado a planes de apoyo a la renta. (El resto se ha dedicado a apoyar los mercados agrícolas). Por su parte, el FEADER ha contado con una dotación de $95.500\text{M}€$, donde se incluyen $8.100\text{M}€$ del plan Next Generation EU, destinados a abordar los desafíos del COVID$-19$ y a la reforma estructural necesaria de las zonas rurales para alcanzar los objetivos del Pacto Verde Europeo. Además, para que los países adapten mejor la utilización de los fondos a sus prioridades nacionales se ha concedido el derecho a transferir hasta el $25\%$ de sus asignaciones entre la ayuda a la renta y el desarrollo rural.
+
+
+
+\clearpage
+\section{Política Pesquera Común}
+\puntosclave{
+    La PPC obedece al significativo impacto a nivel social, económico y medioabiental del sector pesquero.
+    
+    Al igual que la PAC, ha ido evolucionando para hacer frente a una realidad cambiante. 
+    
+    Desde 2013 está orientada a garantizar la sostenibilidad medioambi ental, económica y social a largo plazo del sector pesquero así como su competitividad y transparencia. 
+    
+    Dado que el 13\% de todas las capturas procede de aguas internacionales y el 8\% de las ZEE, su dimensión exterior es muy relevante.
+}
+
+La Política Pesquera Común, también conocida como Europa Azul, es el conjunto de normas de la UE destinadas a gestionar los recursos pesqueros, garantizar su sostenibilidad y asegurar condiciones de competencia equitativas entre los pescadores. Se aplica tanto a las actividades realizadas en aguas de la Unión como a las efectuadas por buques con pabellón europeo en tercero países. Al igual que la PAC, se fundamenta en los artículos 38 a 44 del TFUE, que regulan la política agrícola y pesquera común. El art 38 establece que la Unión definirá y aplicará una política común de agricultura y pesca, considerando esta última como parte integrante de la primera, aunque con características propias. En cuanto a la distribución de competencias, la pesca es, con carácter general, una competencia compartida entre la Unión y los EEMM. No obstante, la conservación de los recursos biológicos marinos constituye una competencia exclusiva de la Unión. Tras el Tratado de Lisboa, la adopción de la normativa en materia pesquera se realiza, como regla general, mediante el procedimiento legislativo ordinario, con participación del Parlamento Europeo y del Consejo.
+
+\textbf{¿Qué queremos decir?} A lo largo de esta sección, presentaremos brevemente....
+
+Como se podrá intuir, al sector persquero le corresponde una porción muy marginal del PIB en la práctica totalidad de los Estados Mimebros. Sin embargo, disfruta de una alta prioridad política pues el impacto de la pesca y de la acuicultura es altamente significativo como fuente de empleo en regiones que a menudo no ofrecen otras alternativas económicas (regiones en los márgenes). Adicionalmente, se trata de un sector primario que contribuye a asegurar el consumo alimentario de los ciudadanos y, con sus másy sus menos, está sujeto a la hipótesis de la tragedia de los comunes, por lo que es un bien público que requiere regulación.
+
+
+\subsection{Desarrollo histórico}
+La política pesquera común (PPC) fue instaurada por el Tratado de Roma, aunque incialmente integrada en la PAC.\footnote{Como política integrada en la PAC, la PPC compartía sus objetivos, pero de manera específica. Los objetivos de la PPC en su origen eran preservar las poblaciones de peces, proteger el medio ambiente marino, garantizar la viabilidad económica de las flotas europeas y proporcionar a losconsumidores alimentos de calidad.
+} De importancia menor en comparación con la PAC, adquirió relevancia de manera progresiva debido a la importancia económica del sector de la pesca en la economía de algunos países de la UE y las limitaciones de acceso a los recursos pesqueros derivados de la normativa internacional que motivaron la necesidad de articular una política que garantice un adecuado acceso a los recursos marinos y una eficiente gestión y conservación de los mismos.
+
+Veamos brevemente su recorrido histórico. 
+
+
+
+
+
+
+\subsubsection{Declaración de intenciones: 1954-1982}
+El Tratado de Roma estableció el principio de libre acceso a las aguas de los EEMM, lo que implicaba que los buques pesqueros tuviesen igualdad de acceso a las aguas y a los recursos marinos comunitarios. No obstante, como los seis miembros fundadores contaban con un sector pesquero débil y la actividad pesquera se desarrollaba básicamente entorno a sus puertos base, este principio tuvo escasa relevancia política y, sin duda, ninguna manifestación práctica: el principio no se aplicó y tampoco se desarrolló una política específica en ese momento.  
+
+Sin embargo, a partir de 1970 la política pesquera fue adquiriendo de manera progresiva, con la adopción de las primeras medidas de mercado. Su desarrollo se consolidó tras la ampliación de la Comunidad en 1973 (Reino Unido, Irlanda y Dinamarca), países con importantes flotas pesqueras, la evolución del Derecho del mar (CNUDM, 1982) y el consecuente reconocimiento de las \textbf{zonas económicas exclusivas} (ZEE).\footnote{Espacio marítimo que se extiende a una distancia de 200 millas desde la costa en el que los Estados aledaños ejercen una soberanía funcional y jurisdiccional en lo relativo a la exploración y explotación de los recursos naturales, de las aguas, del lecho y el subsuelo marino.
+}
+
+Este periodo formalizó de forma consuetudinaria el principio de libre acceso, de aplicación en las aguas comunitarias, pero no llego mucho más lejos, carecienco por tanto de un carácter tan formal como el de la PAC que, aunque funcionó perfectamente, con la retirada de Groenlandia de la Comunidad Europea (1985) y la adhesión de España y Portugal en 1986 (22 artículos del Tratado de Adhesión de España a las CCEE se dedican a regular el tema pesquero) resultó necesario reformularla.
+
+
+\subsubsection{Formalización: Cuatro pilares (1992-2002)}
+Esta búsqueda de un marco normativo autonómo y formal, así como la ventana de oportunidad que se abría, permitió en 1992 desarrollar e implementar una política pesquera común autónoma. 
+
+La Reforma de 1992 dió respuestas formales a problemas específicos de la pesca como el acceso a los recursos comunes, la conservación de las poblaciones, las medidas estructurales para la flota pesquera y las relaciones internacionales, introduciendo un sistema basado en cuatro pilares:
+\begin{la}
+    \item \textbf{Política de recursos}. En lo relativo al acceso se consolidó el principio de libre acceso, de aplicación en las aguas comunitarias comprendidas entre las primeras 12 millas náuticas y las 200 millas y, fundamentalmente, en las aguas comunitarias atlánticas, debido a que la estrechez de la plataforma continental en el Mediterráneo hace que la gran mayoría de las zonas de pesca se encuentren dentro de las primeras 12 millas.\footnote{Las primeras 12 millas náuticas desde la costa son aguas territoriales de los Estados, sobre las que tienen competencia exclusiva y pueden restringir el acceso a la flota pesquera de los otros Estados miembros. Esta excepción al principio de libre acceso se basa en la necesidad de preservar estas zonas. más sensibles, mediante la limitación del esfuerzo pesquero y la protección de las actividades pesqueras tradicionales de las que depende el desarrollo social y económico de detenninadas comunidades costeras.
+    } Respecto a la gestión y conservación, se fijó como objetivo principal garantizar la viabilidad del sector a largo plazo mediante una explotación sostenible de los recursos. Se configuró un sistema basado en el cálculo anual de los \textbf{Totales admisibles de capturas} (TACs) para cada especie protegida y para cada zona marítima del Atlántico. Los TACs eran posteriormente repartidos entre los Estados miembros en forma de cuotas nacionales de acuerdo al principio de estabilidad relativa (PER), basado especialmente en los niveles históricos de capturas, quedando determinadas las posibilidades máximas de pesca de cada país. Este sistema implantó una distribución automática, permanente y fija, de las oportunidades de pesca independientemente de la competitividad de las flotas de cada país. El esfuerzo de pesca también se limitó anualmente fijando un número máximo de días de pesca por zona y tipo de embarcación y prohibiendo la pesca en determinados períodos y/o zonas para permitir la recuperación de las especies;\footnote{El esfuerzo de pesca se define como la capacidad de pesca (medida en toneladas de registro bruto o potencia instalada de los barcos) multiplicada por la actividad pesquera. expresada en días pasados en el mar. La gestión del esfuerzo pesquero consiste en combinar las limitaciones de la capacidad de la flota y el tiempo que esta pasa en el mar.
+    }
+    \item \textbf{Política de estructuras}. Su aspecto más relevante fue la financiación de la reducción de la flota comunitaria para eliminar el exceso de capacidad pesquera dada la disminución de las posibilidades de pesca;\footnote{Tiempo después, en 1992, se decidió incorporar la política estructural de la pesca a los Fondos Estructurales y crear el Instrumento Financiero de Orientación de la Pesca (IFOP). Este fondo, además de financiar las medidas estructurales, tenía como objetivo reducir la dependencia económica de aquellas regiones que viviesen exclusivamente de la pesca, fomentado actividades alternativas.
+    }
+    \item \textbf{Política de mercados}. Articulada a través de la correspondiente organización común de los mercados (OCM) para la que se fijaron cuatro objetivos: (i) estimular el asociacionismo a través de las Organizaciones de productores (OP, asociaciones de empresas pesqueras para regular los desembarcos y los precios) y las Organizaciones Interprofesionales de Productores (OIP, personas jurídicas que reúnen la representación de actividades vinculadas a la producción, a la transformación o al comercio con representación en una o más regiones europeas); (ii) implantar un sistema de sostenimiento de precios, que estableciese precios mínimos por debajo de los cuales no se pudiesen vender los productos pesqueros;\footnote{Estos precios de retirada se fijaban en función de la media de los precios registrados durante los tres aftos precedentes en los puertos representativos y eran precios de referencia, no de garantía, puesto que los organismos de intervención nunca compraban directamente al productor, este podía elegir entre la retirada y vender a bajo precio. También se previeron ayudas a las OP para retirar productos o almacenarlos.
+    } (iii) elaborar una normativa común de productos frescos, que desarrolló un proceso de trazabilidad, categorías de empacado y calidad de los productos comunitarios e importados; y, (iv) desarrollar un régimen de comercio con terceros países que garantizase la estabilidad de precios y unas condiciones de competencia leales.
+    \item \textbf{Política exterior}. Se articuló a través de la firma de Acuerdos bilaterales y multilaterales de pesca, donde se alcanzaron diferentes acuerdos bilaterales en función de la capacidad de explotación de los recursos del tercer país.\footnote{La pérdida de acceso a zonas tradicionales de pesca como consecuencia de la ampliación de las ZEE, el exceso de capacidad de la flota y el desarrollo de nuevas tecnologías de pesca industrial, como barcos-factoría y grandes congeladores que permiten pescar lejos de los puertos de origen, motivaron la necesidad de alcanzar estos acuerdos.
+    } Estos acuerdos consistían fundamentalmente en \textbf{intercambios recíprocos de derechos de pesca} y acuerdos de \textbf{compensación por acceso al recurso}, firmados normalmente con países que no tienen capacidad para explotar por sí mismos los recursos marinos que poseen y reciben una compensación financiera por permitir pescar en sus aguas. Por otro lado, los acuerdos multilaterales, que se concretan en la participación en Organizaciones regionales de pesca (ORP) y en Convenios internacionales, se crean para gestionar los recursos en alta mar o los recursos compartidos por diversos países y reforzar la cooperación regional, además de ofrecer un marco jurídico que promueva el uso pacífico de mares y oceános, la utilización equitativa y eficaz de sus recursos, la conservación de sus recursos vivos y la protección y conservación del medio ambiente marino.
+\end{la}
+
+
+
+\subsubsection{Reforma 2002: Sostenibilidad y reforma técnica}
+Los objetivos que se perseguían al plantear la reforma era, fundamentalmente, de carácter político y técnico. En primer lugar, se buscaba reformular algunos aspectos de su gestión y conservación. Se consideraba que los sitemas PER y TACs desincentivaban la modernización y la competencia, haciendo del sector pesquero comunitario un sector cada vez menos competitivo y alejado de los parámetros mundiales. Además, era necesario llevar a cabo un control más eficaz de la actividad empresarial para evitar las numerosas prácticas fraudulentas que acontecían.\footnote{Pesca en determinadas áreas sin la autorización necesaria o por encima de las cuotas asignadas, no respetar los paros biológicos, uso de redes y técnicas inadecuadas y numerosas prácticas más que estaban causando la degradación del ecosistema, un conflicto político social y numerosas conflictos exteriores con terceros países.
+} Para ello, se consideraba imperante superar la paradójica situación de que las cuotas se fijasen a nivel comunitario y el control se delegara a los Estados miembros. Por último, resultaba también necesario hacer frente al exceso de capacidad de la flota comunitaria y la sobreexplotación continuada de algunas especies.
+
+Para sortear todas estas dificultades, se reformaron algunas disposiciones manteniendo la estructura básica de los cuatro pilares. 
+
+\paragraph{Política de recursos: }
+Respecto a la política de recursos, se mantuvieron el PER y el sistema de cuotas, pero se permitió a los Estados distribuir las cuotas de la forma que considerasen más conveniente. 
+
+Además, se introdujo un enfoque plurianual de la política de conservación a través de los planes de recuperación para las poblaciones de peces en peligro y planes de gestión de stocks para las demás poblaciones. 
+
+Los planes de recuperación, de carácter prioritario, establecían los objetivos de recuperación (tamafio de la pob lación y/o producción a largo plazo y/o tasa de mortalidad por causa de la pesca y/o estabilidad de capturas) y el plazo previsible para su consecución. Para poder lograr el objetivo  de recuperación, se introdujo la posibilidad de adoptar medidas ya existentes (limitación de capturas o del esfuerzo de pesca, medidas de carácter técnico) con la novedad de poder adoptarlas de manera conjunta para una o varias especies y con carácter plurianual.
+
+Los planes de gestión establecían una serie de medidas técnicas, en función de las características de las poblaciones y las pesquerías (especies objetivo, artes empleados, estados de las pob lacionesafectadas) y el impacto económico de las medidas aplicadas a las pesquerías de que se tratase. 
+
+Ante evidencia de amenaza grave para la conservación de los recursos marinos y si fuese necesario tomar medidas inmediatas, se otorgó a la Comisión la posibilidad de implementar medidas de emergencia para un periodo máximo de seis meses, prorrogab les a otros seis más. Los Estados miembros podían aplicarlas respecto de sus propias aguas durante tres meses.
+
+Se crearon los Consejos Consultivos Regionales (CCR) para aumentar el grado de participación de los pescadores y otros grupos de interés. Los CCR están integrados por pescadores, científicosy representantes del sector de la pesca y la acuicultura, grupos de defensa del medio ambiente y protección de los consumidores, y también pueden participar las autoridades nacionales y regionales de cualquier Estado miembro y la Comisión. Pueden ser consultados por la Comisión y presentar recomendaciones y sugerencias o informar de los problemas que suscite la aplicación de la PPC en su zona.
+
+\paragraph{Política de estructuras: }
+Respecto a la Política de estructuras se estableció un nuevo sistema basado en unos niveles de referencia de capacidad de pesca expresados en toneladas de registro bruto o KW de potencia instalada. 
+
+Además, se introdujeron medidas socioeconómicas, como ayudas directos para los pescadores y propietarios de buques que interrumpiesen temporalmente su actividad por circunstancias imprevistas o ayudas a los pescadores para emprender actividades alternativas. En esta linea se creó, en 2004, el Fondo Europeo de Pesca (FEP) que sustituyó al IFOP.
+
+\paragraph{Política exterior: }
+En Política exterior, los Acuerdos bilaterales con contrapartida financiera fueron sustituidos por Acuerdos de asociación pesqueros (AAP). 
+
+Bajo este nuevo marco, la flota accedía al excedente de pesca de las ZEE pertenecientes a países (mayoritariamente) de ACP y, en compensación, los países recibían un cánon abonado por los armadores y un importe a tanto alzado por parte de la Unión Europea. La contribución financiera de la UE se justificaba por el interés mutuo en invertir en una política sostenible y no constituía un mero pago por derechos de acceso.
+
+\paragraph{Reforma de gestión: División de competencias}
+Por último, en lo relativo a la implementación y gestión de la PPC, se definió con mayor claridad la división de competencias entre los Estados miembros y la Comisión. Los Estados miembros vieron reforzada su responsabilidad en el control, inspección y cumplimiento de la política y se impulsó la cooperación y coordinación entre Estados en relación a las tareas de inspección. 
+
+Se facultó a la Comisión a realizar auditorías, verificaciones e inspecciones para garantizar la aplicación de la PPC. Y, para consolidar este sistema, se creó en 2005 la \href{https://www.efca.europa.eu/es}{Agencia Europea de Control de la Pesca}, instalándose en Vigo, España.
+
+\subsection{PPC en la actualidad: Reforma de 2013}
+Aunque la reforma de 2002 funcionó bien en muchos aspectos, no detuvo el deterioro de algunas poblaciones y, además, la opinión pública tornó consciente de algunos problemas graves que generaban disfunciones profundas en los objetivos de la PPC y sus formas de implementación, sobretodo en lo relativo a la práctica de los descartes.\footnote{El descarte es la práctica de devolver al mar las capturas no deseadas, vivas o muertas, por no alcanzar la talla, por no disponer de cuota o por determinadas normas de composición de las capturas.
+} 
+
+Para sortear estas dificultades, y de nuevo aprovechando la coyuntura política, se propueso un programa de reforma que culminó en 2013, estableciendo el actual marco regulador de la Política Pesquera Común. Este nuevo marco entró en vigor en 2014 y se estructura en torno a cuatro pilares, con denominación distinta a los anteriores pero con cierta similitud en el fondo.
+
+\subsubsection{Política Pesquera Común}
+El primer pilar, denominado Política Pesquera Común, se formalizó con el \href{https://www.boe.es/doue/2013/354/L00022-00061.pdf}{Reglamento sobre la Política pesquera común}, tiene como objetivo garantizar que las actividades en los sectores de la pesca y la acuicultura contribuyan a la sostenibilidad medioambiental, económica y social a largo plazo. De esta forma, y en consonancia con el Pacto Verde Europeo y la Estrategia sobre la biodiversidad para 2030, las pesquerías de la UE se rigen por el \textbf{principio de cautela} para limitar el impacto de las actividades pesqueras sobre el ecosistema marino.
+
+\paragraph{Principales medidas}
+Mediante esta estratégica se busca implementar una gestión plurianual ecosistémica, que refuerce la importancia de conservación dinámica, pero prestándo más atención a los ecosistemas y sustituyendo los planes para especies concretas por planes para varias especies y caladeros. Además, se introduce el principio de \textbf{Rendimiento máximo sostenible} (RMS), principio de equilibrio teórico máximo que puede extraerse dinámicamente, en promedio, de una población en las condiciones ambientales existentes y sin que ello afecte al proceso de reproducción. Por tanto, el nivel de cuotas fijado se mantiene aunque su cálculo se formula en base al RMS.
+
+Por otro lado, se prohibe expresamente la práctica de los descartes y se establece la obligación de desembarcar todas las capturas, que serán deucidas de las cuotas. Además, se refuerza el aspecto científico, incrementándose la recogida de datos y la puesta en común de información sobre poblaciones, flotas e impacto de la actividad pesquera.
+
+En lo relativo al desarrollo económico social dentro y fuera de la PPC, se establece la necesidad de mantener la reducción de capacidades, siempre que se produzca un exceso de capacidad en cualquier segmento de flota. Se da especial relevancia a la pesca costera, dado su peso en el sector pesquero de la UE. La zona de exclusión de 12 millas náuticas establecida en favor de las flotas tradicionales seguirá vigente hasta 2022 y se recomendará a los Estados miembros que asignen una mayor parte de sus cuotas a ese sector, visto su escaso impacto medioambiental y elevada intensidad de mano de obra. Además, para aumentar el rendimiento y potenciar el crecimiento en las zonas costeras y rurales se elaboran planes nacionales para la supresión de barreras administrativas y aplicación de normas medioambientales, sociales y económicas en el sector de la acuicultura. Y, por último, para acercar la toma de decisiones a los caladeros, el marco general se definirá a nivel comunitario y los Estados miembros desarrollarán las medidas de aplicación
+
+\subsubsection{Organización Común de Mercados}
+El segundo pilar, articulado en el \href{https://www.boe.es/doue/2013/354/L00001-00021.pdf}{Reglamento por el que se establece la nueva Organización común de mercados (OCM) en el sector de los productos de la pesca y de la acuicultura}, tiene como objetivo reforzar la competitividad y mejorar la transparencia mediante la modernización y simplificación de la normativa existente. 
+
+En este contexto, se otorga a las OP un protagonismo mucho mayor en lo referido a la gestión, seguimiento y control del colectivo. Además, para contribuir a la sostenibilidad, las OP y AOP deben establecer planes de producción y comercialización que permitan la gestión y coordinación de actividades entre productores. Por otro lado, se establecen y armoinizan normas de comercialización en cuestiones como el etiquetado, la calidad y la trazabilidad, con características uniformes para los  productos de la pesca que se venden en la UE, sea cual sea su origen y que se aplican de acuerdo a medidas de conservación y contribuyen a la transparencia del mercado y a la calidad de los productos.
+
+\subsubsection{Política Exterior}
+Por otro lado, el tercer pilar no tiene un articulado propio pero perpetua uno de los existentes: la Política Exterior en el ámbito de la Política Pesquera Común. 
+
+En este sentido, se introducen los Acuerdos de colaboración en materia de pesca sostenible (ACPS), que pretenden reforzar la gobernanza y el desarrollo social y económico de los países socios en el sector pesquero. Estos acuerdos permiten el acceso a los recursos a cambio de una contribución financiera y de un apoyo técnico que deben ayudar a lograr un seguimiento, un control y una supervisión más eficaces. El acceso a las flotas se negocia para asegurar que las poblaciones se explotan de forma sostenible, teniendo en cuenta los principios de precaución y RMS y favoreciendo el acceso prioritario de la flota del tercer país. 
+
+Actualmente hay 13 ACPS en vigor con los países socios en los océanos Atlántico, Índico y Pacífico. Más de $135\text{M}€$ del presupuesto de la UE se asignan a los ACPS, de los que un $46\%$ se destinan a apoyar el desarrollo sostenible del sector pesquero en los países socios, así como a aumentar su capacidad global de gobernanza en materia de pesca.
+
+\subsubsection{Fondo Europeo Marítimo, de Pesca y Acuicultura (FEMPA)}
+Reglamento (UE) nº 2021/1 139 del Parlamento Europeo y del Consejo de 7 de julio de 2021
+
+El FEMPA es el nuevo fondo de las políticas marítima, pesquera y acuícola propuesto para el periodo 202 1-2027, en sustitución del anterior Fondo Europeo de Pesca (FEMP) y dotado con 6 140 millones de euros a precios corrientes. Se articula entorno a cuantro prioridades:
+l . Fomentar la pesca sostenible y la recuperación y conservación de los recursos biológicos acuáticos.
+2. Fomentar las actividades sostenibles en la acuicultura y la transformación y comercialización de productos de la pesca y la acuicultura.
+3. Permitir una economía azul sostenible en ·J·as zonas costeras, insulares e interiores, y fomentar el desarrollo de las comunidades pesqueras y acuícolas.
+4. Reforzar la gobernanza internacional de los océanos y permitir que los mares y océanos sean seguros, protegidos, limpios y estén gestionados de manera sostenible.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+\end{document}
