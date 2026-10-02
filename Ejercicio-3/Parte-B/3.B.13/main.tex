@@ -1,0 +1,1194 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Tema 3.B.13 -- Mercado de divisas\\
+\large Operaciones e instrumentos}
+\author{Marcelo Ortega}
+\date{Enero 2026}
+\newcommand{\TemaCode}{3B13}
+
+\oldtitle{Tema 3.B.14. Mercados de divisas: operaciones e instrumentos
+}
+\changerationale{Sin cambios.}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     La idea general sobre el que se construye la exposición es la siguiente: 
+     
+     La expansión del mercado de divisas y su importancia actual sólo pueden entenderse en paralelo a la evolución del sistema monetario internacional. La importancia, estructura, funcionamiento y evolución en el tiempo del mercado de divisas no puede entenderse sin primero conocer a fondo los agentes que intervienen en dicho mercado. Por ello, se ha estimado conveniente empezar analizando los tipos de agentes que interactúan en el mercado. Sentadas las bases sobre la estructura y -funcionamiento del mercado de divisas, el segundo bloque del tema está dedicado a los instrumentos y operaciones del mercado de divisas. Finalmente (llegar máximo en el minuto 25), el último bloque del tema está dedicado al contraste de la hipótesis de eficiencia en el mercado de divisas.
+
+     Este tema tiene sinergias con otros temas tanto de economía internacional como de economía financiera. En concreto, los conocimientos de este tema se complementan y se refuerzan muy bien con el [\authorfont{Ver Tema 3.B.25}] sobre derivados, el [\authorfont{Ver Tema 3.B.14}] sobre determinación del tipo de cambio, así como los [\authorfont{Ver Temas 3.B.20 y 3.B.21}]consagrados a la evolución del sistema monetario internacional. En menor medida se pueden encontrar sinergias con el tema [\authorfont{Ver Tema 3.B.23}] sobre instrumentos fmancieros de renta variable y el [\authorfont{Ver Tema 3.B.32}] sobre flujos comerciales y financieros internacionales. 3) En la fecha de elaboración del presente tema, el último \textbf{informe trianual publicado por el BIS} disponible databa de septiembre de abril de 2022. El próximo informe se publicaría en \textbf{2026}. Se recomienda actualizar los datos de este tema con los que se obtengan del nuevo informe.
+    }
+\vspace{1cm}
+
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+Mercado de divisas es el término genérico utilizado para referirse al conjunto de instituciones a nivel mundial que negocian o intercambian las monedas de los diferentes países. Se trata de un mercado cuya relevancia económica y financiera ha ido en aumento a lo largo de las últimas décadas en paralelo al espectacular crecimiento de los flujos internacionales de bienes, servicios y capitales. Es además un mercado cuya evolución está estrechamente ligada a los vaivenes que ha experimentado el sistema monetario internacional. Así, tras la Segunda Guerra Mundial y la creación del Sistema de Bretton Woods, el dólar americano se consolidó definitivamente como moneda mundial de reserva y ancla del sistema. Durante esos años, el mercado de divisas estuvo dominado por los agentes privados que intervenían en él como consecuencia del fuerte incremento del comercio internacional así como por los bancos centrales que intervenían para mantener las paridades fijas y asegurar el correcto funcionamiento del sistema de Bretton Woods. La progresiva integración de los mercados financieros, el auge y paulatina liberalización de los movimientos de capital a nivel internacional y la mayor interdependencia de las economías agravaron los problemas de diseño del sistema de Bretton Woods y coadyuvaron a la quiebra definitiva del mismo en 1973. A partir de ese momento y desde la instauración del denominado como "no sistema", el continuo proceso de integración de la actividad económica mundial y el espectacular crecimiento de los flujos financieros han contribuido de forma primordial a una expansión del mercado de divisas.
+
+
+
+\subsection{Contextualización}
+
+\subsubsection{Relevancia}
+Tal y como en su día subrayó Paul Yolcker, el tipo de cambio es quizás el precio más importante de una economía. En efecto, la influencia que tienen los tipos de cambio3 sobre la evolución macroeconómica de las economías a través de sus efectos sobre las exportaciones, las importaciones, la inflación o el valor de la deuda externa es trascendental. No es por tanto de extrañar que el mercado de divisas, que es el mercado en donde se determina el tipo de cambio, sea sin lugar a dudas el mercado con mayor relevancia para el conjunto del sistema económico internacional. Pero dicha importancia no solo radica en su relevancia cualitativa, sino que además el mercado de divisas es el mercado financiero más grande, en volumen, del mundo. En él se negocian aproximadamente 7,5 billones de dólares diarios (2022).
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+\clearpage
+\section{Mercado de Divisas: Conceptos y Características}
+
+Antes de entrar en el análisis, comencemos con lo básico:
+\begin{lnum}
+    \item \textbf{¿Qué es una divisa?} La respuesta corta y simple: depende. La concepción de divisa o de moneda nacional es una cuestión relativa que dependerá de la perspectiva desde la cual analicemos el mismo intercambio. Dicho de otra forma: una divisa es a la vez moneda nacional, y viceversa, y su condición dependerá del agente desde el cual estemos observando el intercambio. Económicamente, por tanto, una divisa es un medio de pago denominado en moneda no-nacional mantenido o trasaccionado por los residentes de un país con el fin de generar una transacción internacional;
+    \item Por tanto, \textbf{¿qué se considera divisa?} De la misma forma, es un concepto muy amplio y abstracto que incluye no sólo los billetes o monedas de curso legal extranjeros. También se consideran divisas los depósitos bancarios nominados en moneda extranjera en una institución financiera o los documentos que dan derecho a disponer de esos depósitos sin ningún tipo de restricción tales como cheques, talones o tarjetas de crédito;\footnote{
+    También es importante distinguir entre: 
+    \begin{la}
+        \item \textbf{Divisas convertibles}. Son aquellas que pueden ser intercambiadas libremente por otras monedas sin que existan restricciones a la realización de pagos y transferencias ni esté sujeta a controles cambiarios. Así, su precio es determinado libremente en el mercado; y,
+        \item \textbf{Divisas no convertibles}. Son aquellas divisas que están sometidas a algún tipo de restricción.
+    \end{la}
+    }
+    \item \textbf{¿Qué no se considera divisa?} Por el contrario, no se consideran divisas por ejemplo las letras de cambio o pagarés emitidos por no residentes (pues son instrumentos de crédito), ni las acciones, obligaciones u otros activos financieros, aunque se emitan en moneda extranjera.
+\end{lnum}
+
+Vemos que no es un concepto baladí, por ello es muy importante clarificarlo de ante mano. No obstante, también comprendemos la necesidad de un mercado de divisas, es decir, un mercado en el que las distintas divisas pueden ser intercambiadas. Por tanto, el mercado de divisas es el marco organizacional en el que diversos agentes a nivel mundial negocian e intercambian monedas extranjeras.\footnote{
+Incluye tanto la infraestructura física como el conjunto de instituciones necesarias para poder negociar divisas. El mercado de divisas, como cualquier otro concepto de mercado utilizado en la teoría económica, no es un lugar físico preciso.De hecho, está formado por bancos, brókeres y otros agentes autorizados, a los cuales recurren los agentes económicos para comprar y vender las distintas divisas. Por lo tanto, tiene una dimensión internacional en lugar de nacional, a pesar de que es habitual hacer referencia a los centros financieros (Londres, Nueva York, Singapur, Hong Kong, Tokio, Zúrich, París, Frankfurt) como plazas en las que cotizan los tipos de cambio. 
+}
+
+Finalmente, el tipo de cambio es el \textbf{precio de una divisa en términos de otra}. Este es, probablemente el concepto más importante del Tema, por su relevancia tanto en las operativas e instrumentos como también como veremos en los siguientes temas, por el papel que juega en los intercambios internacionales. El Tipo de Cambio en el mercado de divisas tiene dos componentes: la unidad \textbf{base} (\textit{base currency}) y la unidad de \textbf{cuenta} (\textit{quoute currency}) frente a la que se sitúa.
+
+
+\imagenfit{Par_FOREX.png}{Par de divisas: USD (\textit{base currency}) y EUR (\textit{qupte currency})}{\href{https://fvptrade.com/education/understanding-forex-quotes/}{FVP Trade (2022) Understanding Forex Quotes.}}
+
+¿Qué elementos vemos aquí? En este ejemplo de par podemos analizar los componentes más importantes del mercado de divisas:
+\begin{lnum}
+    \item \textbf{Precio \textit{bid}}. El precio \textit{bid} es el límite superior de la demanda del mercado. Es decir, el precio más alto ofrecido de entre todos los potenciales compradores que mantienen una posición cerrada en el mercado. Intuitivamente, es lo máximo que algún otro agente está dispuesto a pagar por una determinada divisa;
+    \item \textbf{Precio \textit{ask}}. El precio ask es límite inferior de la oferta del mercado. Es el precio mínimo ofrecido de entre todos los potenciales vendedores que mantienen una posición cerrada en el mercado. Intuitivamente, es lo mínimo que algún otro agente está dispuesto a aceptar por una determinada divisa;
+    \item \textbf{\textit{Spread}}. Como es lógico, el precio bid siempre será más bajo que el precio ask. Los compradores en el mercado lo que querrán es comprar barato y los vendedores buscarán vender a un precio elevado y mientras no haya un acuerdo no se podrá realizar la transacción. Por tanto, la transacción se cerrará cuando bid y ask se igualen. Esa diferencia es precisamente el spread. El spread depende principalmente de la liquidez del par de divisas (a mayor liquidez menor spread). Por eso ciertos pares de divisas tienen un mayor spread que otros. Por otra parte, no es de extrañar que un mismo par de divisas tenga diferentes \textit{spreads} en función del día y de la hora;
+    \item \textbf{Tipo de Cambio}. Por último, vamos a ver los dos Tipos de Cambio que nos plantea este par:
+    \begin{la}
+        \item \textbf{Directo}. El Tipo de Cambio directo o continental es, en este caso, la cantidad de euros que obtendríamos por cada dólar;\footnote{
+        Definimos el tipo de cambio como el tipo de cambio directo (o europeo o continental – Price quotation system), de forma que indicamos cuántas unidades de divisa nacional necesitamos para comprar una divisa extranjera (i.e. el precio de la divisa extranjera en términos de divisa local). Recientemente, ha ido ganando peso la definición alternativa de tipo de cambio, tipo de cambio indirecto (o americano o anglosajón – Volume quotation system), que expresa cuantas unidades de divisa extranjera son necesarias para comprar una unidad de moneda local. Es por ello que es necesario hacer este disclaimer, ya que los profesores que formen parte del tribunal pueden no estar habituados a esta expresión del tipo de cambio. La definición que usamos nosotros implicará que un aumento en el tipo de cambio suponga una depreciación, ya que será necesaria más moneda doméstica para comprar una unidad de divisa extranjera.
+        }
+        \item \textbf{Indirecto}. El Tipo de Cambio indirecto es, en este caso, la cantidad de dólares que obtendríamos por cada euro.
+    \end{la} 
+    \item \textbf{Pip: \textit{Price Increment Point}}. En el mercado de divisas, los cambios de valor de las monedas se calculan por las pequeñas variaciones en la cotización de los pares de divisas. El término \textit{pip}, acrónimo de \textit{Price Increment Point}, representa la variación mínima a la que puede fluctuar un par de divisas. Tradicionalmente, para la mayoría de monedas, el pip era el equivalente al cuarto decimal (segundo decimal en el caso del YEN japonés o del BAHT tailandés). Sin embargo, en la actualidad, para las principales monedas los tipos de cambio están expresados hasta en cinco decimales. No hay un consenso generalizado para el nombre de este quinto decimal, aunque a veces los operadores usan los términos de pipette o pip fraccional.\footnote{
+    La distinción entre pip y tick no es evidente: En el lenguaje financiero, se conoce también como tick a la variación mínima de cualquier producto financiero aunque el término procede del argot del mercado de futuros. Esto sugeriría que la diferencia entre el tick y el pip depende exclusivamente de si nos referimos al mercado de divisas en concreto (pip) o a otro mercado de activos (tick). Sin embargo, otros analistas advierten de que los pips no deben confundirse con los ticks y que ambos términos tienen cabida en los mercados de divisas. Así, mientras que un pip sería la variación mínima posible del valor de una moneda, un tick representaría la variación que finalmente se habría producido. En cualquier caso, la diferencia es, cuanto menos, sutil.
+    }
+\end{lnum}
+
+\begin{specialblock}{Tipo de Cambio Directo y Tipo de Cambio Indirecto: Diferencias}
+    Podemos entender de la siguiente forma las ventajas de trabajar con uno u otro, teniendo en cuenta que la mayoría de plataformas de compraventa utilizan el Tipo de Cambio Directo (estándar operativo). Imaginémos que somos una empresa importadora y vamos a realizar un pedido a nuestro proveedor de Estados Unidos. Con el fin de realizar la transacción, me tendré que proveer de divisas (USD) a cambio de mi moneda nacional (EUR). Para ello puedo entrar a cualquier plataforma de intercambio. 
+    
+    ¿Qué buscaré? ¿Qué es lo que me resulta más intuitivo? Yo sé que tengo que pagar 100\$, por tanto, lo normal sería usar eso como referencia.
+
+    Buscando el par USD/EUR, podré ver de forma directa cuántos Euros tengo que vender para obtener 100\$. ¿Cómo?
+
+    $$\underbrace{\text{TCD: USD/EUR}}_{\text{Euros por dólar}}\;\Longrightarrow\; E_{\text{\scriptsize USD/EUR}}=\frac{X\;\texteuro}{1\;\$}$$
+
+    Pongamos otro ejemplo. Soy un exportador europeo que opero en Estados Unidos a través de una filial. Mis ingresos en Estados Unidos son en dólares y luego deseo ingresar los beneficios a europa (en moneda local). Los productos que envío tienen un valor de coste de 100€. ¿Qué par buscaré? ¿Por qué?
+
+    Buscando el par contrario puedo hacer una estimación directa de cuáles son mis \textit{costes} en Estados Unidos:
+
+    $$\underbrace{\text{TCD: EUR/USD}}_{\text{Dólares por euro}}\;\Longrightarrow\; E_{\text{\scriptsize EUR/USD}}=\frac{X\;\$}{1\texteuro}$$
+
+    Pero para repatriar los beneficios, ¿qué haré? Se trata en esencia de realizar la misma lógica que el problema anterior. Como mis beneficios están en dólares, me interesa saber su conversión en euros por dólar, puesto que esto será verdaderamente el beneficio que acabaré repatriando. No obstante, lo anterior me permite hacerme una estimación de costes en el mercado local. 
+
+    El Tipo de Cambio Indirecto, menos utilizado operativamente, se puede calcular fácilmente tomando la inversa del tipo directo sobre el mismo par. Es decir,
+
+    $$\underbrace{\text{TCD: USD/EUR}}_{\text{Euros por dólar}}\;\Longrightarrow\; E_{\text{\scriptsize USD/EUR}}=\frac{X\$}{1\texteuro}\;\iff e_{\text{\scriptsize USD/EUR}}=\frac{1}{E_{\text{\scriptsize USD/EUR}}}=\frac{X\;\texteuro}{1\$}\;\Longleftarrow\;\underbrace{\text{TCI: USD/EUR}}_{\text{\scriptsize Dólares por euro (sobre el mismo par)}}$$
+
+    Por tanto, como vemos, es cuestión de perspectiva. De hecho, podemos pensar que será la moneda de la cual dispongamos (desde una perspectiva de residente: moneda nacional) la que determinará el par que queramos utilizar (desde una perspectiva no-residente: divisa que queremos comprar). 
+\end{specialblock}
+
+\subsection{Características: Estructura y volumen del mercado} 
+Ahora que hemos visto las definiciones fundamentales, veamos algunas características que hacen único al mercado de divisas.
+
+El mercado de divisas es el mayor mercado financiero del mundo. A partir de la Segunda Guerra Mundial se produjo un incremento espectacular en los flujos internacionales de bienes, servicios y factores productivos. Este aumento de las transacciones internacionales aumentó la necesidad de convertir unas monedas en otras, lo que a su vez hizo que el mercado de divisas adquiriese una gran importancia. Según el último informe trienal de 2025 del Banco Internacional de Pagos, el volumen medio diario de negociación es de 9,6 billones de dólares,\footnote{Para hacernos una idea de la magnitud de este mercado, en el año 2022, el volumen medio de las negociaciones fue de 7,5 billones de dólares al día, mientras que el valor de las exportaciones mundiales de mercancías fue de 24,2 billones de dólares anuales y el de servicios fue de 6,8 billones (i.e. un total anual de 31 billones de dólares). Es decir, el valor de las transacciones de divisas es $\sim88$ veces mayor que el de bienes y servicios. Por tanto, el mercado de divisas está dominado por transacciones financieras que suponen el 99\% del total. 
+} y solo el 1\% de transacciones se realizan por motivos comerciales.
+
+\subsubsection{Concentración: Divisas (\textit{pares mayores})}
+En relación a las divisas, destacan las siguientes:
+\begin{lnum}
+    \item \textbf{Dólar estadounidense (\$, USD)}. El dólar continúa siendo la moneda vehicular predominante e incluso aumenta su peso en el último trienio para intervenir en el 89,2\% de los intercambios. Se mantiene como el activo líquido y seguro por excelencia. En especial, la demanda de dólares se eleva en contextos de incertidumbre (\textit{flight to safety}), por lo que en el actual contexto de elevada volatilidad y movimientos en las primas de riesgo se produce una mayor demanda de activos líquidos y seguros como es el dólar;
+    \item \textbf{Euro (€, EUR)}. En segundo lugar, se encuentra el euro, que participa en el 28,9\% de los intercambios (descenso continuo desde 2019, 32,3\% a 30,5\% hasta 28,9\%). La Unión Europea persigue aumentar el papel del euro a través de: (i) recomendar que se pasen a euros todos los contratos entre socios de la UE; y, (ii) denominar los contratos energéticos en euros. El 80\% de la importación de energía se denomina en dólares;
+    \item \textbf{Yen (¥, JPY)}. En tercer lugar está el yen japonés, que interviene en el 16,8\% de los intercambios (sin cambios);
+    \item \textbf{Libra esterlina (£, GBP)}. En cuarto lugar, la libra esterlina, que participa en el 10,2\% (caída de más de dos puntos porcentuales respecto a 2022); y,
+    \item \textbf{Renminbi (¥, CNY)}. En quinto lugar el yuan chino, cuyo peso ha aumentado fuertemente durante los últios tres trienios, pasando a situarse en el 8,9\% (desde 4,3\% de las transacciones en 2019 al 7\% en 2022).
+\end{lnum}
+
+En el siguiente gráfico se puede ver un resumen de los pares (bilaterales, es decir, indistintamente EUR/USD o USD/EUR) más utilizados publicado por el último informe:
+
+\imagenfit{BIS_DivisasUtilizadas.png}{Foreign exchange market turnover by currency and currency pairs}{\href{https://www.bis.org/statistics/rpfx25_fx.pdf}{Triennial Central Bank. \textit{Survey OTC foreign exchange turnover in April 2025}. BIS (2025)}}
+
+\subsubsection{Concentración: Geográfica}
+Además, el mercado de divisas presenta también una fuerte concentración geográfico. Los cuatro centros financiaros más importantes (Reino Unido, Estados Unidos, Singapur, Hong Kong) intermediaron en el 75\% de las transacciones realizadas. El Reino Unido aún es el centro financiero más importante a nivel global con el 38\% de las transacciones (igual que en 2022, pero ha perdido peso desde 2016, cuando alcanzaba el 49\% de las transacciones). Otros centros, como China, están ganando importancia.
+
+Además, dada la distribución geográfico de estos \textit{hubs} podemos intuir un elemento clave: es un mercado abierto las 24 horas del día. A diferencia del resto de mercados financieros es un mercado con horario continuo ya que gracias a las distintas franjas horarias de los principales centros financieros siempre hay algún mercado abierto en el que los agentes pueden intercambiar divisas. Por lo tanto, a efectos prácticos, el mercado de divisas abre los domingos por la noche a las 23:00 (hora española) y cierra el viernes por la noche a las 22:00 (hora española).
+
+\imagenfit {Horas_BOLSA.png}{Horarios de apertura y cierre de los principales índices bursátiles del mundo (hora española)}{\href{https://cincodias.elpais.com/cincodias/2016/07/22/mercados/1469208399_801872.html}{Trincado, B. (2016). \textit{¿Cuál es la mejor hora para ganar dinero en Bolsa?} Cinco Días.}}
+
+\subsubsection{Tipología de mercado: \textit{Over The Counter}}
+Se trata de un mercado esencialmente \textit{Over-The-Counter} (OTC).\footnote{
+Los mercados over the counter (OTC) son mercados extrabursátiles donde se negocian distintos instrumentos financieros (bonos, acciones, swaps, divisas, etc) directamente entre dos partes. Para ello se utilizan los contratos OTC, en los que las partes acuerdan la forma de liquidación de un instrumento. \href{https://www.bbva.com/es/que-son-los-mercados-over-the-counter-otc/}{\textit{Qué son los mercados Over The Counter}. BBVA}
+
+\href{https://es.wikipedia.org/wiki/Mercado_extrabursátil}{\textit{Mercado extrabursátil} (Wikipedia.org)} 
+} Es decir, las divisas no cotizan en mercados organizados, sino que los contratos se negocian a medida entre los agentes. Esta menor estandardización supone una ganancia en flexibilidad, más laxitud en la regulación y supervisión y menores requisitos para operar en el mercado (no se pueden prohibir ventas en corto, etc.). Por tanto, en la transacción de divisas podemos distinguir tres etapas:
+\begin{lnum}
+    \item \textbf{Negociación}. Puesta en contacto entre los agentes a los dos lados del mercado (oferta y demanda). Descubrimiento de precios;
+    \item \textbf{Compensación}. Gestión de la transacción; y,
+    \item \textbf{Liquidación}. Cobros y pagos.
+\end{lnum}
+
+Aunque es una cuestión aún controvertida, los contratos en el mercado de divisas OTC se compensan hoy en día en cámaras bilaterales (y no en cámaras de contrapartida central como sucede en los mercados organizados). Tras la crisis financiera, foros como el G-20 han presionado para que estas operaciones se compensen también en cámaras de contrapartida central.\footnote{La cámara de compensación es el órgano a través del cual se realizan los contratos de derivados y la entrega de los títulos subyacentes. La cámara se convierte en el comprador del vendedor y en el vendedor del comprador. Ésta nunca compra o vende un contrato por sí misma, sino que media entre dos contrapartes, por lo que siempre tiene una posición neta nula en el mercado. Al número de contratos existentes en un momento determinado se le conoce como \textbf{volumen abierto}. Para limitar el riesgo de contrapartida, la cámara exige a cada parte que abra una cuenta específica para sus operaciones con derivados, y que haga un depósito inicial en concepto de garantía (el margen inicial o de desempeño). Durante el período que va desde la firma del contrato hasta su vencimiento, la cámara realiza una liquidación diaria de las pérdidas y ganancias (\textit{mark-to-market}).
+
+\imagenfit{Colateral_CamaraCompensacion.png}{Mecanismos y tipos de compensación (Cámara de compensación)}{Núñez Ramos, S. \& Valdeolivas, E. (2019) Las entidades de contrapartida central: Beneficios, costes y riesgos. Estabilidad financiera, 36, pág. 82.}
+
+Ello se ha trasladado a la regulación en algunas jurisdicciones, entre otras el \textbf{Reglamento MiFIR} de la Unión Europea o la ley Dodd-Frank en Estados Unidos (para incorporar entre otras cosas estas cámaras de compensación en algunos mercados OTC, pero ha eximido a los segmentos spot y forward).
+} 
+
+Por otro lado, se trata de un mercado donde las nuevas tecnologías han tenido un gran impacto que se ve reflejado en tres aspectos: 
+\begin{lnum}
+    \item \textbf{Reducción de spreads}. Como veremos, la innovación tecnológica ha permitido reducir los \textit{spreads} ad-intra y ad-extra, es decir, en un mercado o entre diferentes mercados (reduciendo las posibilidad de arbitraje espacial) por lo que ha permitido que el mercado se acerque más a la Ley del Precio Único (condición de eficiencia del mercado de divisas);
+    \item \textbf{Mejora de la transparencia}. El seguimiento del mercado de forma continua se ha hecho sencillo a través de los sistemas electrónicos. Los agentes pueden observar en tiempo real los movimientos en el mercado sin necesidad de depender de la información de los \textit{brokers}. En este sentido, existe un conjunto de redes informáticas que proporcionan a los operadores las cotizaciones con detalle y actualizadas. Los más conocidos son Reuters y Bloomberg; y,
+    \item \textbf{Mejora de la eficiencia operativa}. Todas las etapas de una operación pueden realizarse electrónicamente sin necesidad de burocracia costosa y sin apenas intervención humana.
+\end{lnum}
+
+\subsection{Características: \textit{Roles} en el mercado}
+Una vez hemos visto las características estructurales y operativas del mercado, debemos destacar otra de sus más importantes: el mercado de divisas es uno de los mercados más atomizados que hay. ¿Por qué? Se trata de la conjunción de características que lo hacen único: (i) OTC y descentralizada (sin una bolsa clara); (ii) diversos agentes relevantes, no solo bancos; y, (iii) fragmentación por jurisdicciones y divisas. En la encuesta trienal publicada en 2025 el BIS recopiló información de entre 52 jurisdicciones y más de 1200 bancos y otros \textit{dealers}.
+
+No obstante, aunque sea atomizado por estructura y variedad de agentes, el propio BIS también señala concentración por plazas, así que atomizado no equivale a uniformemente distribuido. Con esto en mente, realizaremos la siguiente clasificación en relación a los patricipantes del mercado.
+
+\subsubsection{Proveedores de liquidez: \textit{Market makers}}
+Se denomina maker (proveedor de liquidez) al agente cuya participación consiste en introducir en el sistema de negociación una disposición a intercambiar bajo condiciones específicas que no requieren ejecución inmediata. Su acción se caracteriza por proponer términos de transacción —precio y, eventualmente, cantidad— que quedan disponibles para ser aceptados por otros agentes. Desde el punto de vista del mecanismo de mercado, esta acción incrementa el conjunto de oportunidades de ejecución existentes, es decir, crea liquidez, al añadir oferta o demanda pendiente que permanece accesible hasta que es ejecutada, modificada o retirada. La característica definitoria del maker es, por tanto, el carácter pasivo de su intervención respecto a la ejecución: su orden o cotización queda a la espera de que otro agente decida aceptarla.
+
+\paragraph{\textit{Dealers}: Golobally Systemic Important Banks}
+En el centro de sistema estarían los \textit{dealers} que proveen la mayor parte de la liquidez del mercado.\footnote{
+En el contexto financiero, la liquidez de mercado describe la medida en que un activo puede ser comprado y vendido rápidamente y a precios estables. En términos simples, es una medida de cuántos compradores y vendedores están presentes, y si las transacciones pueden llevarse a cabo fácilmente. Normalmente, la liquidez se calcula tomando el volumen de operaciones o el volumen de operaciones pendientes actualmente en el mercado.
+
+\imagenfit{Liquidez_FOREX.png}{Implicaciones de un mercado de alta liquidez}{\href{https://www.ig.com/es/estrategias-de-trading/-que-es-la-liquidez-del-mercado-y-por-que-es-importante--190404}{\textit{La liquidez de mercado explicada}}}
+
+Los altos niveles de liquidez surgen cuando hay un nivel significativo de historial de operaciones y cuando hay una alta oferta y demanda de un activo, ya que es más fácil encontrar un comprador o un vendedor. Si solo hay unos pocos participantes en el mercado que realizan trading con poca frecuencia, se dice que se trata de un mercado ilíquido o que tiene poca liquidez.
+} Se trata de un grupo de bancos y grandes instituciones financieras (bancos de inversión o banca universal), típicamente \textit{globally systemic important banks} en terminología del Financial Stability Board, que cotizan activamente a ambos lados de un mercado en un valor determinado, proporcionando precios de compra (\textit{bids}) y de venta (\textit{asks}), aportando liquidez y profundidad a los mercados y obteniendo beneficios de la diferencia entre el precio de compra y el de venta (\textit{spread}).\footnote{Por ejemplo, cuando un inversor busca una acción a través de una plataforma de corretaje en línea, puede observar un precio de compra de 100 dólares y un precio de venta de 100,05 dólares. Esto significa que el intermediario compra la acción por 100 dólares y luego la vende a los compradores por 100,05 dólares. Mediante operaciones de alto volumen, un spread pequeño puede convertirse en una gran cantidad de ingresos diarios.
+
+\href{https://www.investopedia.com/terms/m/marketmaker.asp#:~:text=Market%20makers%20earn%20a%20profit%20through%20the%20spread%20between%20the,risk%20of%20holding%20the%20assets}{\textit{Understanding Market Makers: Roles, Profits, and Their Impact on Liquidity} INVESTOPEDIA}
+} De hecho, los \textit{dealers} están en muchos casos obligados a cumplir estos parámetros en todo momento, independientemente de su perspectiva sobre el mercado: cuando los mercados se vuelven erráticos o volátiles, los creadores de mercado deben mantenerse disciplinados para seguir facilitando transacciones fluidas.\footnote{Los creadores de mercado son compensados por el riesgo de mantener valores (en los que crean mercado) que pueden disminuir de valor después de ser comprados a los vendedores y antes de ser vendidos a los compradores.
+} 
+
+Muchas bolsas cuentan con \textit{dealers} que compiten para ofrecer los mejores precios y atraer órdenes, siendo los tres dealers (o creadores de mercado) más grandes a nivel mundial: Deutsche Bank (Alemania), Citibank (Estados Unidos) y Barclays (Reino Unido).  No obstante, algunas entidades como la Bolsa de Nueva York (NYSE) utilizan en su lugar un sistema conocido como designated market maker (DMM).\footnote{Anteriormente conocidos como especialistas, los DMM son esencialmente creadores de mercado únicos con un monopolio sobre el flujo de órdenes de un valor o conjunto de valores determinados. Dado que la NYSE es un mercado de subastas, las ofertas de compra y venta son enviadas de forma competitiva por los inversores. Así es como funciona: el DMM publica estas ofertas de compra y venta para que todo el mercado las vea y se asegura de que se informen de manera precisa y oportuna. También se encarga de que siempre se mantenga el mejor precio, de que todas las operaciones negociables se ejecuten y de que se mantenga el orden en el parqué. El DMM también debe fijar el precio de apertura de la acción cada mañana, que puede diferir del precio de cierre del día anterior en función de las noticias y los acontecimientos ocurridos fuera del horario de mercado. Determinan el precio correcto de mercado basándose en la oferta y la demanda.
+}
+
+Desde esta perspectiva, el mercado \textit{interdealer} constituye un elemento fundamental para mantener la liquidez en el mercado. Tradicionalmente ha sido utilizado por los \textit{dealers} para reducir su riesgo de inventario, pero hoy en día estos agentes al preferir no tener inventario, por lo que después de realizar una operación con un cliente, el dealer acude al mercado para traspasar el inventario a otros dealers. A su vez, el segundo dealer hará lo mismo (\textit{hot potato trading}). El volumen de este tipo de operaciones se ha reducido enormemente en los últimos años debido a dos factores principalmente:
+\begin{lnum}
+    \item \textbf{Innovaciones financieras}. Los avances en las tecnologías electrónicas han permitido reducir el riesgo de inventario;
+    \item \textbf{Regulación}. En el plano regulatorio, las propias reformas de Basilea III dan lugar a desincentivos regulatorios a que la banca de inversión actúe como dealer en el mercado de divisas. Las ratios de capital de Basilea controlan los activos ponderados por riesgo (APR). Uno de los riesgos por los que se controlan es el riesgo de mercado (con el objetivo de reducir la sensibilidad del balance de los bancos a oscilaciones en los mercados financieros). Un efecto colateral de esta regulación es una menor liquidez en el mercado de divisas [\authorfont{Ver Tema 3.B.27}].\footnote{Las operaciones interdealers pueden ser tanto directamente en el mercado OTC como indirectamente a través de mercados de órdenes limitadas organizados por brokers. Las órdenes limitadas simplemente indican el precio al que el creador de mercado está dispuesto a comprar o vender una cantidad de divisa. El conjunto de órdenes limitadas representan la oferta de liquidez. Las órdenes se mantienen en este libro hasta que se ejecutan o cancelan.
+    }
+\end{lnum}
+
+Los datos del informe del BIS sugieren que el mercado interdealer de divisas supone un 46\% del volumen total del mercado de divisas (se mantiene constante respecto a 2022, suben desde 38\% en 2019). Esto es así ya que se trata de los agentes mejor informados del mercado, pues conocen la demanda/oferta de muchos clientes. En efecto, de acuerdo con la evidencia empírica, sus órdenes en el mercado anticipan los movimientos de los tipos de cambio. 
+
+\paragraph{Plataformas de operadores minoristas: \textit{retail aggregators}}
+En los últimos años, el auge de las operaciones minoristas ha facilitado el desarrollo de un nuevo tipo de intermediario financiero en el mercado de divisas: las plataformas de operadores minoristas. Estos agentes operan exclusivamente en internet mediante plataformas electrónicas uniendo pequeñas transacciones de inversores minoristas en grandes operaciones con las que negociar con los bancos creadores de mercado.
+
+Algunas de estas plataformas ejercen meramente como brókeres intermediando entre las demandas de los inversores minoristas y las cotizaciones de los bancos (no proveen liquidez). Otras combinan estas funciones de bróker con funciones más propias de los creadores de mercado puesto que no únicamente emparejan ofertas y demandas sino que además operan estratégicamente como contraparte de los inversores minoristas.
+
+\begin{specialblock}{Ejemplo -- Revolut}
+    El ejemplo más sencillo de este tipo de operadores es Revolut. Se trata de un \textit{retail aggregator} en FX, desde un punto de vista conceptual. Revolut agrupa operaciones de cambio de divisas de millones de usuarios minoristas, gestiona ese flujo de forma centralizada y lo ejecuta frente a contrapartes mayoristas. En este caso, sería considerado un \textit{broker} en el mercado, utilizando mecanismos de neteo interno, ventanas temporales de ejecución y reflejando sus tipos de cambio, total o parcialmente, precios obtenidos de proveedores externos. 
+    
+    Ahora bien, cuando Revolut fija tipos de cambio propios para sus clientes (por ejemplo, durante el fin de semana), decide el momento de cobertura y asume el riesgo entre la operación del cliente y su cobertura externa. En este caso estaría desempeñando una función de market maker, aunque sea de forma cerrada, no pública y limitada a su ecosistema. 
+    
+    Como vemos, ambas funciones, aggregación minorista y provisión de liquidez, pueden coexistir en la misma entidad sin contradicción, siempre que se distingan por el tipo de acción de negociación que se realiza en cada momento.
+\end{specialblock}
+
+\paragraph{Bancos custodios: \textit{Makers} de mercado cautivo}
+Por último, una práctica internacional común entre los grandes gestores de activos es contratar a administradores o custodios que se ocupan de hacer el seguimiento de los activos y de las gestiones que conllevan los mismos.\footnote{La actividad de un banco custodio suele ser muy desconocida, pero sin embargo, es transcendental en el sistema financiero. El banco custodio se ocupa de tomar los valores en depósito, calcular el valor de las cartera, cobrar los dividendos, los cupones, los intereses, realizar gestiones de retenciones fiscales...
+} 
+
+Cuando los inversores institucionales necesitan hacer transacciones en divisas, normalmente no lo hacen a través de los grandes bancos sino que realizan dichas operaciones con sus bancos custodios, lo que les permite reducir costes y mejorar la eficiencia administrativa. De esta forma, los bancos custodios proveen de liquidez a sus clientes y en contraprestación reciben una pequeña prima (o \textit{mark-up}) sobre el precio que pagan, o bien en el mercado interbancario a un \textit{dealer} o bien contra su propio balance (reajuste de carteras). Es decir, los bancos custodiosp roveen liquidez a sus clientes cargando un \textit{mark-up} sobre el precio de coste, por eso no son considerados (de manera general) como \textit{makers} en el mercado de divisas, sino dentro de su propio mercado cautivo (activos gestionados). 
+
+\subsubsection{Demandantes de liquidez: \textit{Takers}}
+Se denomina \textit{taker} (demandante de liquidez) al agente cuya participación consiste en ejecutar de manera inmediata contra condiciones de intercambio ya disponibles en el sistema. Su acción se caracteriza por aceptar términos de transacción preexistentes, seleccionando una oportunidad de ejecución ofrecida por otro agente y consumiéndola total o parcialmente. Desde la perspectiva del mecanismo de mercado, esta acción reduce el conjunto de oportunidades de ejecución existentes, es decir, consume liquidez, al retirar volumen previamente disponible. La característica definitoria del taker es el carácter activo de su intervención respecto a la ejecución: su orden exige casar de forma inmediata con liquidez ya creada.
+
+\paragraph{Instituciones financieras}
+Se trata de un grupo muy heterogéneo compuesto por todas aquellas instituciones financieras que no actúan como dealers.\footnote{
+En España, la banca de inversión se encuadra dentro del esquema de banca universal, de tal forma que los grandes bancos nacionales (Santander, BBVA, La Caixa) la realizan con importantes departamentos internos. La separación entre banca comercial y de inversión no existe a nivel jurídico en España. Sin embargo, de facto sí que existe.
+} No obstante, podemos distinguir entre dos tipos principalmente:
+\begin{la}
+    \item Inversores institucionales no apalancados. Fondos de pensiones, compañías de seguros, etc. Realizar operaciones de inversión en divisa o demadan liquidez para re<lizar operaciones de cobertura; y,
+    \item Instituciones de Inversión Colectiva (IIC).\footnote{Las IIC se dividen en sociedades de inversión y fondos:
+    \begin{la}
+        \item \textbf{Sociedades de inversión}. Son sociedades anónimas; y,
+        \item \textbf{Fondos}. No tienen personalidad jurídica, además, el capital mínimo para operar es mayor que en el caso de las sociedades de inversión.
+    \end{la}
+    Asimismo, las IIC se dividen en no libres y libres, respectivemnte: (i) fondos de inversión y SICAVs (tienen determinadas restricciones); y, (ii) hedge funds (menos reguladas). 
+    } Dentro de las instituciones financieras, los inversores que actúan con mayor grado de apalancamiento (p.ej. los hedge funds) son los que suelen estar más informados y los que tienen más incentivos para estarlo puesto que lo normal es que los gestores de estos fondos estén remunerados en función de los rendimientos. Pricinpalmente realizan operaciones especulativas.\footnote{No buscan rentabilidad en \textit{spread} sino en movimientos. Esto puede llevar a problemas de liquidez por la demanda de reembolso de los partícipes.
+    } En 1992, en el contexto de la crisis del Sistema Monetario Europeo (SME), SOROS usó mil millones de dólares (el valor de su fondo) junto con un apalancamiento de 10 a 1 para adoptar una posición corta en el mercado en relación a la libra esterlina.\footnote{
+    SOROS consideraba que la libra estaba sobreevaluada dado que el Banco de Inglaterra se negaba a devaluar la libra debido a la participación del Reino Unido en el SME. Un mes después, SOROS cerró su posición con unas ganancias de más de 2 mil millones de dólares. Sin embargo, esta estrategia es altamente arriesgada. Por ejemplo, el propio SOROS posteriormente perdió más de mil millones de dólares durante la crisis financiera rusa de 1998.
+    }
+\end{la}
+
+Otros operadores financieros relevantes en el mercado de divisas son: (i) Bancos custodios; y, (ii) Fondos soberanos, representan menos del 1\% de las operaciones pero por su mayor volumen de transacciones suelen contar con más información que las no financieras.
+
+\paragraph{Agentes no financieros: Sociedades y minoristas}
+Engloba a una cantidad enorme de agentes no heterogeneos. Desde sociedades mercantiles hasta especuladores minoristas. Por su condición, las transacciones que estos realizan vienen motivadas por los siguientes negocios subyacentes:
+\begin{lnum}
+    \item \textbf{Operaciones corrientes}. Operaciones comerciales corrientes de compraventa de bienes o servicios (i.e. exportación o importación). También podríamos considerar aquí las previsiones en base a viajes turísticos: demandan divisas para realizar transacciones reales (p.ej. un turista en el aeropuerto), aunque resulta una fracción insignificante del número de transacciones;
+    \item \textbf{Operaciones de cobertura}. De manera habitual, para cubrir la exposición al riesgo de tipo de cambio de los flujos de caja en moneda extranjera; y,
+    \item \textbf{Operaciones especulativas/inversión}.\footnote{Las sociedades no financieras que se dedican a las operaciones corrientes no suelen especular ya que para una empresa puede resultar muy costoso tener un departamento que realice operaciones de especulación (entre los riesgos, además, está el de rogue trader risk, riesgo de que un único trader pueda provocar la quiebra de la compañía).
+    }Operando pequeños volúmenes, normalmente a través de plataformas de operadores minoristas. Suelen realizar operaciones en el mercado spot y operaciones con pares mayores, aunque cada vez son más frecuentes las operaciones con monedas de economías emergentes. Además, suelen utilizar apalancamiento por lo que se esperaría que estuviesen informados. Sin embargo, la evidencia empírica disponible muestra que no lo están, ya que sus operaciones no anticipan las variaciones en el tipo de cambio y no suelen ser beneficiosas (según la teoría del behavioral finance, esto podría ser explicado por el exceso de confianza (wishful thinking) [\authorfont{Ver Tema 3.B.23}]).
+\end{lnum}
+
+\paragraph{\textit{High-frequency Trading}}
+Los sistemas de \textit{high-frequency trading} son una forma de operar electrónicamente en donde son algoritmos los que determinan estrategias de órdenes en el mercado de divisas y ejecutan dichas estrategias sin que en ningún momento intervenga un ser humano.
+
+Los algoritmos pueden ser muy simples pero también se han desarrollado programas más complejos que permiten realizar muchas operaciones en una frecuencia muy alta (milisegundos). Generalmente, se trata de programas informáticos que ejecutan operaciones de arbitraje y especulación y tienen ventaja comparativa en periodos muy cortos. De hecho, la rapidez es tan fundamental para estos operadores que es habitual que localicen sus servidores informáticos tan geográficamente cerca de las plataformas de operación electrónica como sea posible.
+
+\paragraph{\textit{Brokers} y Bancos Centrales}
+Se trata de intermediarios entre los creadores de mercado y los oferentes/demandantes en el mercado de divisas que facilitan el acceso al mercado.
+
+Normalmente, la operativa empezaría con los \textit{market makers} comunicando a los brokers sus ofertas de precios de compra (bid) y de venta (ask). Los brokers seleccionan ofertas de precios y las ofrecen a sus clientes (\textit{takers}). De este modo, pequeños inversores pueden conseguir precios a los que probablemente no tendrían acceso si no recurriesen a sus servicios de intermediación.
+
+Por otro lado, los Bancos Centrales mantienen un papel generalmente residual en el mercado de divisas, realizando únicamente operaciones para influir en el tipo de cambio (gestión del crédito interno y de las reservas internacionales). Además, algunos actúan a veces como \textit{market makers}, como la Reserva Federal que provee liquidez internacional en dólares mediante \textit{swaps} de divisas.
+
+
+\clearpage
+\section{Instrumentos y Operaciones: Funciones del Mercado de divisas}
+\puntosclave{
+    Los principales instrumentos son por volumen de transacciones: FX swaps, operaciones spot, forwards, opciones y otros productos. 
+    
+    Las operaciones en el mercado de divisas se clasifican en operaciones comerciales, operaciones de cobertura, operaciones de arbitraje y operaciones especulativas. 
+    
+    Las operaciones de arbitraje garantizan que se cumpla la paridad cubierta de intereses. 
+    
+    Existe multitud de instrumentos derivados sobre el mercado de divisas, que sirven para la cobertura, el arbitraje y la especulación.
+
+}
+
+La distinción en el mercado de divisas entre instrumentos y operaciones no siempre es evidente. De hecho, para distinguir las operaciones resulta muy útil entender las funciones que cumple el mercado de divisas por lo que se utilizarán estas funciones para explicar el tipo de operaciones que se dan en el mercado de divisas. Empecemos, no obstante, presentando los diferentes instrumentos de los que los agentes disponen independientemente de la operación que vayan a realizar.
+
+\subsection{Instrumentos}
+En el mercado de divisas se diferencian dos segmentos del mercado en función de la fecha en la que se deben entregar las divisas que se intercambian, es decir según el momento en que se liquidan las operaciones de intercambio: (i) el mercado \textit{\textbf{spot}}; y, (ii) el mercado \textit{\textbf{forward}}. 
+
+En el segmento o mercado spot o al contado, la liquidación de las operaciones de compraventá de divisas se realiza hasta no más de dos días hábiles tras la fecha de contratación siendo el precio al que se realiza la transacción lo que se conoce como tipo de cambio spot. En el segmento o mercado forward, la liquidación de las operaciones de compraventa de divisas se realiza después de dos días hábiles de la fecha de contratación y su precio acordado (en el momento en el que se realiza la transacción) se conoce como \textit{tipo de cambio forward}. 
+
+Dicho esto, introduciremos los diferentes instrumentos siguiendo la clasificación del informe trienal del BIS:
+
+ii)
+Forward (15 %)
+iii)
+Foreign Exchange swaps (Swaps de tipo de cambio) (51 %)
+iv)
+Currency swaps (Swaps de divisas) (2 %)
+v)
+Opciones OTC y otros productos (4 %)
+
+\imagenfit{BIS_2025.png}{}{\href{https://www.bis.org/statistics/rpfx25_fx.pdf}{Triennial Central Bank. \textit{Survey OTC foreign exchange turnover in April 2025}. BIS (2025)}}
+
+
+\subsubsection{Mercado \textit{spot}} 
+Las transacciones spot son las transacciones directas de divisas (i.e. al contado) y representan el 31\% del volumen de mercado (28\% en 2022). La liquidación de las operaciones de compraventa de divisas se realiza hasta no más de dos días hábiles tras la fecha de contratación siendo el precio al que se realiza la operación lo que se conoce como \textbf{tipo de cambio spot}. 
+
+\subsubsection{Mercados de \textit{swaps}}
+Conviene señalar que en los \textit{swaps} se produce de facto igualmente una transacción en el mercado spot, pero por definición la recogemos en la categoría de los instrumentos swaps. Suponen en la actualidad el 53\% de las operaciones realizadas en el mercado (28\% en 2022). 
+
+Cualquier contrato \textit{swap} es un contrato con características similares: contiene dos operaciones y se realiza entre dos partes. Ahora bien, existen dos instrumentos diferentes que conforman el mercado de \textit{swaps}. En primer lugar, los \textit{foreign exchange swaps} cuyo objeto es el Tipo de Cambio sobre un par de divisas. Y, en segundo lugar, los \textit{currency swaps}, cuyo objeto es el principal en divisa intercambiada. Veámos las diferencias.
+
+\paragraph{Sobre Tipo de Cambio: \textit{Foreign exchange swaps}}
+En un contrato swap sobre el Tipo de Cambio se realiza una compraventa de divisas en el momento actual al tipo de cambio \textit{spot} y una compraventa futura de las mismas divisas en sentido contrario en una fecha concreta al tipo de cambio \textit{forward}. Por tanto, será un instrumento utilizado cuando al menos una de las dos partes tiene divisas que la otra necesita y, sobretodo, con el fin de evitar el riesgo inherente al futuro tipo de cambio. 
+
+Se trata del instrumento más utilizado en el mercado de divisas, representando un 51\% del total del volumen de mercado, principalmente debido a su importancia en el mercado interdealer.
+
+\paragraph{Sobre divisas: \textit{Currency swaps}} 
+Por otro lado, en un contrato de \textit{currency swaps} (swaps de divisas) se realiza la compraventa entre dos partes de una cantidad acordada de dos divisas en sentido contrario: una en el momento actual y otra al final del contrato. ¿Qué diferencia tiene con el anterior? La diferencia es enorme. Recordemos que en foreign exchange swaps estamos intercambiando divisas sobre la base de un contrato en el que hemos acordado un tipo de cambio \textit{spot} y otro \textit{forward}, esto reduce en gran medida el riesgo al que nos exponemos: la fluctuación del Tipo de Cambio. 
+
+Ahora bien, en el contrato currency-swap estamos intercambiando un principal. Es decir, una cantidad de divisas determinada en dos momentos diferentes en el tiempo. Las cantidades están predefinidas (aunque pueden ser variables), tanto el principal \textit{spot} como el principal \textit{forward}, lo que nos expone en mucha mayor medida a las fluctuaciones del Tipo de Cambio. ¿Qué beneficios obtendríamos con este contrato entonces? Para dilucidar los riesgos inherentes a este contrato, los currency swaps llevan aparejados pagos periódicos durante la vida del contrato (span temporal) y definidos en la divisa que cada parte recibe al inicio del contrato. Es decir, si yo recibo dólares, pago los intereses en dólares; si recibo euros, los pago en euros. 
+
+Este tipo de instrumentos es utilizado por instituciones multilaterales como el FMI que prestan fondos a medio y largo plazo a países en desarrollo y quieren cubrirse del riesgo de los reembolsos para mitigar la volatilidad del tipo de cambio. Si bien la importancia de estos instrumentos ha crecido, en 2022 sólo representan el 2\% de las transacciones totales en el mercado de divisas. 
+
+En definitiva, la diferencia entre ambos contratos básicos del mercado \textit{swap} se puede entender como:
+\begin{la}
+    \item \textit{\textbf{Foreign-exchange swap}}. Es, en esencia una operación que consiste en dos intercambios, uno al inicio y otro al vencimiento, a tipos de cambio distintos. La lógica subyacente no es transformar un pasivo o activo en otra divisa de forma estructural, sino obtener (o colocar) liquidez temporal en una divisa, utilizando otra como colateral implícito. Por eso, el \textit{spread} o precio del swap refleja casi exclusivamente el diferencial de tipos de interés entre las dos monedas y el horizonte temporal. Desde este punto de vista, es equivalente a un préstamo garantizado en divisa, aunque se instrumente como dos operaciones spot/forward. No altera de forma permanente la exposición cambiaria ni la estructura financiera del balance; es una herramienta de gestión de liquidez y financiación; por el contrario, 
+    \item \textit{\textbf{Currency swap}}. Un currency swap es un instrumento de transformación estructural de flujos financieros entre monedas. Implica el intercambio inicial de principales en dos divisas, seguido del intercambio periódico de flujos de intereses en esas divisas, y, normalmente, un reintercambio final de principales al vencimiento. Su finalidad económica es convertir un activo o pasivo denominado en una moneda en uno equivalente en otra moneda. El riesgo que se gestiona aquí no es solo de liquidez, sino riesgo de tipo de cambio y de tipo de interés a lo largo del tiempo. El currency swap modifica de manera efectiva la estructura financiera y la exposición económica del participante.
+\end{la}
+
+\subsubsection{Mercados de derivados: \textit{Forwards}, Opciones OTC y otros}
+Un derivado financiero es un contrato cuyo valor económico no es autónomo, sino que se determina en función de la evolución de una variable subyacente previamente existente. La característica esencial es el hecho de que su precio, sus flujos o ambos dependen de otro objeto económico: un activo, un índice, un tipo de interés, un tipo de cambio, una mercancía, un crédito o incluso otro derivado. 
+
+Desde un punto de vista formal, un derivado se define por tres rasgos fundamentales: (i) \textbf{dependencia}, el contrato no tiene valor propio independiente, sino que deriva su valor de un subyacente observable o definible; (ii) \textbf{contingencia}, los derechos y obligaciones que genera dependen de estados futuros del mundo (precios, niveles, eventos); y, (iii) separación entre exposición y propiedad, ya que el derivado permite asumir o transferir riesgo económico sin necesidad de poseer el activo subyacente.
+
+\paragraph{\textit{Forwards}}
+En un contrato forward se acuerda un tipo de cambio sobre un par de divisas, en una fecha $t$ pero cuya entrega o liquidación está prevista en el futuro (más de 2 días hábiles, $t + 2$). Por tanto, no implica la entrega inmediata de la divisa, no confiere propiedad presente sobre el subyacente y su valor en cada momento es una función del precio de ese subyacente. 
+
+Existen diversos tipo de contratos \textit{forward}, por ejemplo, los \textit{forward exchange agreement},\footnote{Acuerdo sobre tipos de cambios futuros. En realidad es un swap en divisas en el que los intercambios de monedas no se producen en el momento actual, sino a partir de una lecha futura previamente acordada. En ese sentido lo que hace es combinar dos contratos a plazo en un único contrato. Losfonrnrd exchange agreemenls son la réplica en e l mercado de divisas de losfonrnrd rafe agreements con respecto a los tipos de interés en el mercado de crédito.
+} los contratos a plazo no entregables,\footnote{También denominados NDFs (\textit{non desirable forwards}). Se trata de \textit{forwards} cuyo activo subyacente son divisas poco intercambiadas y no convertibles y que se caracterizan por no efectuarse la entrega del activo subyacente sino que se liquida la operación mediante el cálculo de la diferencia entre el precio pactado y el tipo de cambio \textit{spot}. Son instrumentos utilizados principalmente por multinacionales para cubrirse frente al riesgo de variaciones del tipo de cambio de monedas que no tienen una alta liquidez en el mercado de divisas.
+} y otras variantes de contratos forwards. Su peso ha aumentado en términos absolutos, suponiendo en la actualidad el 19\% (15\% en 2022) de las transacciones totales. 
+
+\paragraph{Opciones OTC}
+Son contratos que dan el derecho (pero no la obligación), de comprar (\textit{option call}) o vender (\textit{option put}) una divisa (frente a otra divisa, este es el activo subyacente) a un tipo de cambio determinado (\textit{strike}) en/hasta una fecha concreta (\textit{vencimiento}). En esta categoría, además de las opciones tradicionales,\footnote{
+
+} también se incluyen opciones de tipos de cambio más exóticas, como la \textit{average rate option}\footnote{
+La ARO es un tipo de opción utilizada para cubrirse frente a elevadas fluctuaciones o volatilidad del tipo de cambio. Para ello se toma una media de los tipos de cambio \textit{spot} durante la vida de la opción y luego se compara ese valor del tipo de cambio medio con el \textit{strike} de la opción. A vencimiento, si el tipo de cambio medio es menos favorable que el tipo de cambio \textit{strike} entonces el emisor de la opción debe pagarle la diferencia al comprador. Si el tipo de cambio medio es más favorable entonces la opción expira sin más.
+} o la barrier option\footnote{Las opciones con barrera son opciones cuya existencia depende de que el activo subyacente alcance un nivel previamente establecido (la barrera).
+} También hay que destacar las \textit{currency swoptions}\footnote{Son opciones para un contrato swap de divisas.
+} y los \textit{currency warrants}\footnote{Son opciones OTC sobre divisas a muy largo plazo (más de un año de vencimiento)
+}
+
+
+\paragraph{Otros productos derivados}
+El universo de los productos derivados está en constante evolución y la aparición de productos híbridos está a la orden del día. En la categoría de otros productos, el BIS suele incluir aquellos instrumentos que no se pueden descomponer en la clasificación tradicional deforwards, swaps y opciones. Un ejemplo de estos productos serían los swaps sobre un principal nocional denominado en una divisa y unos flujos de tipo de interés fijos o variables denominados en divisas diferentes del principal nocional (\textit{differential swaps}).
+
+
+
+\subsection{Operaciones}
+Una vez que se han visto las distintas categorías de instrumentos disponibles en el mercado de divisas (\textit{spot}, \textit{swaps} y derivados), a continuación, se analiza cómo los agentes del mercado utilizan dichos instrumentos para cumplir con sus objetivos. 
+
+En su origen el mercado de divisas surge fundamentalmente ante la necesidad de intercambiar bienes y servicios internacionalmente. Así, las transacciones de divisas facilitan el flujo monetario que va en paralelo a las actividades de exportación e importación de empresas e individuos (operaciones comerciales). Cualquier transacción internacional que implique comprar o vender bienes o servicios requiere comprar o vender divisas en el mercado de divisas. Así, el mercado de divisas por un lado permite transferir poder adquisitivo entre países y al mismo tiempo proporciona instrumentos y mecanismos para poder financiar las operaciones de comercio e inversión a nivel internacional. 
+
+\subsubsection{Comerciales}
+Por ser las más tradiciones, veamos las operaciones comerciales primero.
+
+Estas surgen como consecuencia del comercio internacional y consisten básicamente en operaciones simples de intercambio en el \textbf{mercado spot} de una moneda por otra:
+\begin{la}
+    \item \textbf{Oferta de divisas}. La oferta de divisas engloba: (i) las exportaciones de bienes y servicios, ya que las empresas exportadores obtienen a cambio de sus exportaciones divisas que posteriormente quieren repatriar a su propio país de residencia, para lo cual tendrán que intercambiarlas en el mercado por su moneda nacional. De esta forma, mayores exportaciones suponen una mayor oferta de divisas; y, (ii) entradas de capitales, ya que los residentes extranjeros intercambian divisas por moneda nacional, aumentando la oferta de divisas. Por tanto, la oferta de divisas que haga un país vendrá determinada por sus exportaciones y por sus entradas de capital. Será creciente con el tipo de cambio nominal directo (TCD), pues si la moneda nacional se devalúa frente a la divisa, la divisa tendrá mayor poder adquisitivo, por lo que los bienes y activos nacionales se abaratarán en términos de la divisa, aumentarán las exportaciones y las entradas de capital y, por lo tanto, diminuirá la demanda de divisas;
+    \item \textbf{Demanda de divisas}. La demanda de divisas engloba: (i) importaciones de bienes y servicios, ya que las empresas importadoras deben demandar moneda extranjera para importar; y, (ii) las salidad de capitales, ya que los residentes nacionales demandan moneda extranjera al invertir en otros países. Por tanto, vendrá determinada por sus importaciones y por sus salidas de capital. Será decreciente con el tipo de cambio nominal directo, pues si la moneda nacional se devalúa frente a la divisa, la moneda nacional tendrá menor poder adquisitivo, por lo que los bienes y activos extranjeros se encarecerán en términos de la moneda nacional, disminuirán las importaciones y las salidas de capital y, por lo tanto, diminuirá la demanda de divisas. 
+\end{la}
+
+El tipo de cambio está determinado en el mercado de divisas mediante la oferta y la demanda de divisas extranjeras, y se mueve (si asumimos un tipo de cambio libre) para igualar la oferta y la demanda de divisas, asegurando el equilibrio en la balanza de pagos (en ausencia de intervención).
+
+\textbf{INCLUIR GRÁFICO IMPORT-EXPORTS}
+
+\begin{specialblock}{Teorías de Ajusta: Cuenta Corriente y Cuenta de Capital en el contexto FOREX}
+    Las teorías de ajuste de la cuenta corriente surgieron en un contexto en que los movimientos internacionales de capitales no eran significativos, por lo que era más relevante estudiar los mecanismos de ajuste bajo un régimen de tipos de cambio fijos (que era el que imperaba bajo los acuerdos de Bretton Woods (1944-1973)). Es por esto, que en el tema 3.B.12 al estudiar las teorías de ajuste de la balanza de pagos usamos principalmente un tipo de cambio fijo. Sin embargo, en un contexto de tipos de cambio flexibles, si hay movimientos internacionales de capitales no tiene por qué estar equilibrada siempre la cuenta financiera y por lo tanto, tampoco la cuenta corriente.
+\end{specialblock}
+
+\paragraph{Acumulación de Reservas Internacionales}
+Las operaciones de acumulación de reservas internacionales son un tipo particular de operaciones corrientes (aunque no solo deben o pueden ser corrientes) a través de los cuales los Bancos Centrales operan en el mercado de divisas con el fin de modificar sus activos en Reservas Internacionales (activos denominados en moneda extranjera: divisa).
+
+Desde un enfoque simplificado, estas operaciones se pueden justificar por varios motivos. En países con regímenes de tipo de cambio fijo, estas operaciones son esenciales para mantener la paridad deseada (enfoque predominante bajo el régimen de Bretton Woods). Por el contrario, en países con regímenes de tipo de cambio flexible, estas operaciones se llevan a cabo persiguiendo otros objetivos de política económica, por ejemplo:
+\begin{lnum}
+    \item \textbf{Motivos precautorios}. En los países emergentes, la acumulación de reservas fomenta la confianza de los inversores en que el país podrá hacer frente a sus pagos en divisa y así indirectamente reducir su coste de financiación en el exterior y limitar la probabilidad de una crisis cambiaria (por ejemplo, como mecanismo de \textit{signalling} de la fiabilidad de estos países). De este modo, las intervenciones oficiales en el mercado de divisas irían encaminadas a adquirir divisas como un seguro frente a la elevada volatilidad de los flujos de capital y los denominados \textit{sudden stops};\footnote{En este contexto cabe destacar que, tras la crisis asiática de finales de los 90, las reservas mundiales de divisas en poder de los bancos centrales se ha multiplicado por nueve, siendo China el país con la mayor reserva de divisas (valoradas en torno a los 3 billones de dólares). Algunos autores han señalado que la acumulación de reservas internacionales ha ayudado a estos países en el marco de la crisis financiera de 2008
+    }
+    \item \textbf{Motivos depreciatorios} (mejora de competitividad). Algunos analistas argumentan que las intervenciones por parte de ciertas economías emergentes buscan devaluar el tipo de cambio y mejorar la competitividad de las exportaciones, así como atraer inversión extranjera, con el objetivo de fomentar el crecimiento económico; y,
+    \item \textbf{Motivos de estabilización de precios} (suavizar el impacto cíclico en el caso de exportadores de materias primas). Países con alta dependencia a la exportación de \textit{commodities} (por ejemplo, petroleo, metales, etc.) pueden, y suelen, acumular reservas para suavizar el impacto de las fluctuaciones en el precio de éstas. Cuando el precio es elevado, estos países acumulan reservas con el fin de crear un colchón para hacer frente a las necesidades de liquidez durante el ciclo bajista. Dichas reservas, a veces gestionadas por fondos soberanos, sirven también de instrumento de ahorro para generaciones futuras o para desarrollar proyectos de inversión en infraestructuras. 
+\end{lnum}
+
+No obstante, cabe también destacar los costes de este tipo de intervención. En particular, el coste de oportunidad de las reservas, pues es un capital que podría invertirse en programas con rendimiento a largo plazo y que según estimaciones de SUMMERS o RODRICK pueden suponer en torno al 1\% en algunos países.
+
+\subsubsection{Provisión de liquidez}
+En contextos extremos, existe un tipo de operaciones donde los \textit{swaps} juegan un papel fundamental: las operaciones de provisión de liquidez en divisas llevadas a cabo por los Bancos Centrales, especialmente por los emisores de monedas fuertes (\textit{hard currency}) y, más concretamente, por la Reserva Federal de Estados Unidos.
+
+Estas operaciones se ejecutan a través de \textit{currency swaps} (swaps de divisas).\footnote{Liquidity lines between central banks are well-established instruments in the central banking policy toolkit, aimed at alleviating tensions in international funding markets. They are framework agreements that enable central banks to receive currencies issued by other central banks in exchange for some form of collateral based on predefined terms. Two basic types of financial instrument can be used to establish a liquidity line: a swap agreement and a repurchase agreement.
+Swap and repo lines have been increasingly used by the ECB and other major central banks since the global financial crisis in 2008-09. The ECB is part of a swap-line network consisting of standing bilateral arrangements with five other major central banks (the Bank of Canada, the Bank of Japan, the Swiss National Bank, the Bank of England and the Federal Reserve System). In response to the coronavirus (COVID-19) crisis, the ECB swiftly reactivated existing swap lines with a number of central banks and also set up new ones. In addition to this, the ECB set up new bilateral repo lines with several non-euro area central banks.
+The Eurosystem’s swap and repo lines are used as monetary policy instruments and as stabilising tools in times of stress on the global financial markets.
+When the ECB provides euro to non-euro area central banks, the liquidity lines address possible euro liquidity needs in non-euro area countries in the event of market dysfunctions. They therefore prevent spillback effects on euro area financial markets and economies that might adversely impact the smooth transmission of the ECB’s monetary policy. The lines also prevent euro liquidity shortages from turning into financial stability risks.
+When the ECB receives foreign currency from another central bank (e.g. US dollars from the Federal Reserve System) and provides euro as collateral, the liquidity lines ensure the continuous provision of loans in foreign currency. This prevents abrupt deleveraging, extreme price movements and interruptions in the flow of credit resulting from tensions in international funding markets.
+\href{https://www.ecb.europa.eu/mopo/international-market-operations/liquidity_lines/html/index.es.html}{\textit{Central Bank liquidity lines.} ECB}
+} 
+
+\begin{specialblock}
+    Durante la crisis del Covid-19 se produjo una falta de dólares globales en entidades bancarias tanto americanas como no americanas (y especialmente en países en desarrollo).
+
+    \textbf{¿Por qué existe una escasez de dólares en América?}
+    
+    Los Bancos Centrales proveen liquidez mediante la adquisición de determinados activos dentro del mercado interbancario y sólo operan con grandes bancos que suelen ser residentes. Por otro lado, los bancos americanos suelen tener sus reservas denominadas en dólares. 
+    
+    Entre marzo y mayo de 2020 se produjo una especial demanda de financiación por parte del Tesoro Americano y los grandes bancos compraron los bonos del Tesoro a cambio de dólares. El símbolo claro de la escasez de dólares en los mercados interbancarios fue la subida del tipo repo (empleado por estos grandes bancos para financiar compras de Letras y Bonos del Tesoro).\footnote{El tipo de interés repo es el que fijan los Bancos Centrales para la recompra de Deuda Pública nacional. 
+    
+    Son operaciones de venta con pacto de recompra de los bancos comerciales con los Bancos Centrales. En esencia, un repo es una operación en la que un participante en el mercado toma prestados fondos de otro participante a cambio de activos de garantía. 
+    
+    A diferencia de los tipos de interés a los que tenemos acceso las personas de a pie, que se fijan teóricamente por el mercado, el tipo repo lo fija un Banco Central y los bancos comerciales que operen en dicha jurisdicción podrán tener acceso al tipo de interés repo. Repo es una abreviatura de la palabra inglés \textit{repossession}. Por tanto, es un instrumento financiero que se utiliza para financiar la compra de Letras y Bonos del Tesoro. Cuando los bancos necesitan financiación, pueden acudir al mercado interbancario y pedir prestado dinero a otros bancos. Si hay escasez de una divisa (o, en este caso, moneda), los bancos pueden tener dificultades para obtener la financiación que necesitan y, por lo tanto, el tipo repo puede subir. Esto se debe a que los bancos que tienen la divisa escasa tendrán que pagar más para obtener la financiación que necesitan.
+    } 
+    
+    \textbf{¿Por qué existe una escasez de dólares fuera de América?} 
+    
+    Un banco global fuera de Estados Unidos no tiene acceso a dólares provistos por la Reserva Federal mediante operaciones de mercado abierto. Por tanto, demanda dólares a través de, al menos, cinco canales:
+    \begin{lnum}
+        \item \textbf{Depósitos en divisas} (en este caso, dólares). Sin embargo, como es normal, los depósitos minoristas representan una porción muy pequeña de la obtención de financiación en dólares;
+        \item \textbf{Operaciones de repos con bancos americanos}. Pero estos mercados operan a corto plazo, por lo que puede haber riesgo de refinanciación (en momentos de crisis resulta difícil obtener nueva financiación) por la subida del tipo de interés repo para estas operaciones. En estas circunstancias es más difícil que un banco americano como JP Morgan provea dólares;
+        \item \textbf{Acciones de reservas exteriores de su banco central en dólares}. Sin embargo, la acumulación de reservas ha demostrado no ser suficiente a la hora de asumir el papel de prestamista de última instancia en otra divisa en caso de crisis de elevada intensidad. De hecho, aunque las reservas internacionales han aumentado en las últimas décadas, en muchos países no hubieran bastado para hacer frente a las necesidades de financiación en dólares no satisfechas por los mercados financieros durante la crisis financiera global;
+        \item \textbf{Acceso a la financiación del FMI}:\footnote{Mientras que el balance del Banco Central se puede expandir o reducir en función de las necesidades del sistema financiero, el sistema de cuotas limita la potencia de actuación del FMI al importe del stock depositado por el conjunto de los socios, reduciendo el papel del FMI como prestamista de última instancia.
+    } Lamentablemente, el diseño del FMI, aunque pueda ser útil en crisis que afectan de manera individual a países concretos con desequilibrios internos no es lo suficientemente rápido ni cuenta con la suficiente potencia para gestionar crisis de liquidez internacionales como la crisis financiera global o la provocada por el coronavirus. No obstante, el FMI está preparando un nuevo instrumento de provisión de DEG's. 
+    \end{lnum}
+    
+    iv) 
+    
+    v) Operaciones de swaps con la Reserva Federal: La Reserva Federal provee dólares en un momento $t$ a un banco central de contrapartida y en $t+1$ (habitualmente entre 1 semana y 3 meses) se realizará la operación inversa para deshacer posiciones, a cambio de un tipo de interés que carga la Reserva Federal. La Reserva Federal amplió sus currency swaps con otros nueve bancos centrales. El mero anuncio de las líneas de swaps fue efectivo en calmar a los mercados y estabilizar las condiciones de financiación. De estos nueve bancos centrales, dos fueron de países emergentes (Brasil y México). En estos países las monedas se apreciaron tras el anuncio. El banco central receptor de los dólares se los prestará a entidades financieras dentro de su jurisdicción al mismo plazo y tipo de interés que el de la operación con la Reserva Federal, requiriendo a las entidades financieras el mismo colateral que utilizan para las operaciones con el banco central en moneda local. El Banco Central receptor de los dólares es el que asume el riesgo del swap, es decir, si la entidad financiera no devuelve los fondos prestados, el banco central tendrá igualmente que devolver los dólares a la Reserva Federal en el plazo establecido. Si no lo hiciera, la Reserva Federal se quedaría con la divisa entregada por el banco central receptor de los dólares. 
+    
+    Los Currency swaps entre bancos centrales cuentan con las características adecuadas para desempeñar un papel de prestamista de última instancia internacional: rapidez y potencia. Pueden proveer una gran cantidad de dólares. En la crisis financiera global, el volumen de dólares necesarios para cubrir las necesidades de financiación surgidas fuera de Estados Unidos tras la caída de Lehman Brothers no podría haberse satisfecho con ningún otro mecanismo de los existentes hasta entonces.\footnote{
+    Dada la importancia de contar con mecanismos de gestión de crisis adecuados a escala internacional, tiene sentido explorar posibles alternativas para ajustar el sistema actual de provisión de dólares para que alcance a un mayor número de países y reducir la fuerte asimetría del modelo actual (algunos países no tienen acuerdos bilaterales con la Reserva Federal).
+    
+    \href{https://www.bde.es/f/webbde/SES/Secciones/Publicaciones/PublicacionesSeriadas/DocumentosOcasionales/20/Fich/do2025.pdf}{\textit{Los swaps de divisas entre Bancos Centrales.} Banco de España (2020)}
+    } 
+    
+    Como conclusión, a pesar de intervenir de manera irregular, los Bancos Centrales ejercen un papel fundamental en el mercado de divisas (en especial, la Reserva Federal).
+\end{specialblock}
+
+
+
+
+
+
+
+
+
+
+
+\subsubsection{De cobertura}
+Las operaciones de cobertura del riesgo cambiario son los distintos mecanismos que tiene el mercado mediante los cuales las empresas pueden cubrir los riesgos cambiarios derivados de sus operaciones en divisas. ‒ Normalmente, van de la mano de las operaciones comerciales, es decir, un exportador/importador está interesado en cubrir riesgos derivados de operaciones comerciales. ‒ De forma genérica, las operaciones de cobertura tratan de cerrar una posición abierta. Por tanto, el objetivo es adquirir la posición contraria a la que se tiene abierta, de tal forma que las variaciones del tipo de cambio no afecten a la cartera del individuo. ▪ La importancia de este tipo de operaciones reside en que permiten reducir la variabilidad y la incertidumbre de los flujos de tesorería de la empresa. Esto puede llevar a otros efectos positivos (p.ej. puede mejorar el acceso al crédito y favorecer la planificación de la empresa). ▪ Un importador sabe que dentro de un mes tendrá que comprar divisas para pagar a un proveedor extranjero. Durante ese tiempo, la divisa en la que tendrá que pagar podría apreciarse o depreciarse, lo que daría lugar a pérdidas o beneficios respecto a hoy, respectivamente. ‒ El importador puede usar contratos forward para eliminar el riesgo de pérdidas a cambio de renunciar a la posibilidad de beneficios. o Así, el importador adquirirá un forward que le protegerá contra apreciaciones de la divisa, es decir, comprará hoy las divisas que ha de pagar en un futuro, con lo que conocerá ya las unidades de moneda nacional que deberá entregar a cambio de la divisa que deberá aportar como pago de su compra. ‒ Por añadidura, cabe destacar que estas operaciones también se pueden hacer con opciones (call y put) y con swaps de tipo de cambio o swaps de divisas.
+
+\subsubsection{De especulación}
+
+Estrategias de especulación, donde distinguimos:
+Estrategias simples: Consisten en comprar o vender opciones de compra o de venta. 
+Estrategias complejas: Se trata de solamente comprar o solamente vender simultáneamente opciones call y put sobre el mismo activo subyacente, con la misma fecha de vencimiento y al mismo precio de ejercicio (p.ej. straddle, strap o strip). 
+Estrategias del diferencial: Se trata de comprar y vender simultáneamente solamente opciones call o solamente opciones put sobre el mismo activo financiero, con la misma fecha de vencimiento pero con diferente precio de ejercicio. Son apropiadas cuando se tienen expectativas no son muy sólidas, por lo que limitan las posibles pérdidas a cambio de limitar también las posibles ganancias. (p.ej. bull spread, bear spread o butterfly spread). 
+Estrategias sintéticas: Si una estrategia simple (compraventa de call o put) se combina con la compra o la venta de un futuro, se podrá obtener una opción sintética que será equivalente a una opción simple.
+
+\paragraph{Especulación: Spot, \textit{forward} y \textit{carry trade}}
+Las operaciones de especulación, al igual que las operaciones de arbitraje, buscan beneficios a raíz de diferenciales de rentabilidades. Sin embargo, en esta caso se toman posiciones abiertas (i.e. se asume riesgo cambiario) con la intención de guiarse por sus expectativas para obtener beneficios. ▪ Vamos a explicar estas operaciones en el segmento spot, si bien también se puede realizar un razonamiento análogo en el segmento forward. ▪ Partamos del mismo escenario que en el caso de la Paridad Cubierta de Intereses. Supongamos un inversor que posee una determinada cantidad de su moneda nacional y quiere invertirla en un activo financiero. Tiene 2 opciones: 1. Invertir 1 u.m. nacional en un activo nacional, con lo que obtendría (1+i) de rendimiento bruto. 2. Invertir 1 u.m. nacional en un activo extranjero, con lo que obtendría (1+i*)∙st+1st⁄ de rendimiento bruto. Para entender este rendimiento vamos a desarrollar las actividades que debería llevar a cabo este inversor: a. Comprar moneda extranjera hoy al tipo spot actual: por 1 u.m. nacional, nos darían 1st⁄ u.m. extranjeras. b. Invertir esa cantidad en moneda extranjera en el país extranjero, con lo que se obtendría (1+i*)∙1st⁄ u.m. extranjeras. c. Convertir en moneda nacional los ingresos al tipo de cambio spot futuro, con lo que se obtendría(1+i*)∙st+1st⁄ u.m. nacionales. La condición de ausencia de oportunidades de arbitraje implicaría la igualación del rendimiento de estas 2 opciones:
+(1+i)=(1+i*)∙st+1st 
+Sin embargo, en la práctica no sabemos con perfecta certidumbre cual será el tipo de cambio spot en el futuro, por lo que podemos preguntarnos: ¿qué tipo de cambio debe utilizarse para convertir en moneda nacional el retorno obtenido? Es decir, cómo sabemos cuánto es st+1. ▪ El inversor tiene, a su vez, dos opciones, en función del riesgo que quiera asumir: 1. Si no quiere asumir riesgo cambiario (es decir, si está arbitrando). Este caso dará lugar a la Paridad Cubierta de Intereses (PCI). 2. Si está dispuesto a asumir riesgo cambiario (es decir, si está especulando). Este caso dará lugar a la Paridad Descubierta de Intereses (PDI). ▪ Si está dispuesto a asumir riesgo cambiario (es decir, si está especulando), entonces convertirá su retorno en moneda nacional al tipo de cambio spot vigente cuando venza la inversión, es decir, st+1. En este caso, como no conoce con certidumbre este tipo de cambio, utilizará la expectativa que se forme de este Et[st+1]. Este caso da lugar a la Paridad Descubierta de Intereses (PDI), de acuerdo con la cual:
+(1+i)=(1+i*)∙Et[st+1]st
+‒ Aproximando por una serie de Taylor obtenemos:
+i−i*≈Et[st+1]−stst⏟ Tasa de depreciación esperada≡γEe
+▪ Por lo tanto, siguiendo la lógica de la especulación el inversor llevará a cabo las siguientes acciones: ‒ Si el diferencial de tipos de interés es mayor que la tasa de depreciación esperada, el inversor espera obtener una ganancia positiva invirtiendo en el activo nacional. En este escenario, el inversor invertirá en activos nacionales.‒Lo contrario sucederá si el diferencial de tipos de interés es menor que la tasa de depreciación esperada. Es decir, en este escenario, el inversor espera obtener una ganancia positiva invirtiendo en el activo extranjero, por lo que comprará divisas hoy (al tipo de cambio spot actual), invertirá en activos extranjeros y comprará moneda nacional en el futuro (al tipo de cambio spot del futuro).‒En definitiva, si ambas estrategias no resultan indiferentes, entonces existirán oportunidades de especulación financiera. Si suponemos que las expectativas de depreciación son idénticas para todo los agentes del mercado, las operaciones de especulación llevan a un equilibrio en el que se cumple la Paridad Descubierta de Intereses y se igualan las rentabilidades de ambas opciones. o Por lo tanto, desde un punto de vista teórico, el arbitraje garantiza el cumplimiento continuo de la Paridad Descubierta de Intereses (PDI).
+
+\subsubsection{Estrategias de cobertura}
+Las estrategias de cobertura se realizan con el fin de reducir el riesgo de mercado de una determinada posición. En el caso del mercado de divisas: o Si se pretende adquirir una cartera de divisas, el riesgo a cubrir sería una posible apreciación de la divisa. La operación de cobertura mediante opciones sería la compra de call sobre la divisa. 
+
+Si se pretende vender una cartera de divisas, el riesgo a cubrir sería una posible depreciación de la divisa. La operación de cobertura mediante opciones sería la compra de put sobre la divisa.
+
+
+
+\subsubsection{De arbitraje}
+Las operaciones de arbitraje se definen como la compra y venta simultánea de una divisa en mercados diferentes con el objetivo de obtener un beneficio sin riesgo, aprovechando diferencias de precios entre los mercados. ‒ La posibilidad de arbitraje conduce a que los tipos de cambio sean consistentes entre mercados y monedas, es decir, al cumplimiento de la ley del precio único. ‒ La lógica del arbitraje fue popularizada por J.M. KEYNES en su Breve Tratado sobre la Reforma Monetaria (A Tract on Monetary Reform, 1923). ▪ Las operaciones de arbitraje se pueden realizar en el segmento spot (operaciones de arbitraje espacial) o en el segmento forward (operaciones de arbitraje temporal).
+
+\paragraph{Tipología: Espacial vs. Temporal}
+Arbitraje en el segmento spot (arbitraje espacial) ▪ Las operaciones de arbitraje espacial buscan aprovechar las diferencias de precios de una misma divisa en diferentes plazas: ‒ En el caso del arbitraje bilateral, la idea es aprovechar divergencias entre el tipo de cambio entre 2 monedas en 2 plazas, comprando una divisa en la plaza donde ésta valga menos con respecto a la otra y vendiéndola donde valga más. ‒ Otra opción es el arbitraje triangular, que implica a 3 monedas y sigue un razonamiento similar.\footnote{Se podría expresar un ejemplo de la siguiente manera: $GBP/CAD=GBP/USD\cdot USD/CAD$ [ver GANDOLFO, págs. 15-18].} Arbitraje en el segmento forward (arbitraje temporal: Paridad Cubierta de Intereses) [ver tema 3.B.14] ▪ Existe un segmento spot y un segmento forward de las divisas. Es decir, como se puede operar en ambos segmentos se puede realizar operaciones de arbitraje temporal. ‒ 
+
+El arbitraje temporal busca aprovechar las diferencias de precios de una misma divisa en diferentes plazos. ▪ Partiremos de los siguientes supuestos:\footnote{Para evitar confusión recordamos la diferencia entre movilidad perfecta de capital y sustituibilidad perfecta:
+•
+La movilidad perfecta de capital significa que la composición actual de la cartera se ajusta instantáneamente a la deseada. Esto implica que –si asumimos que no hay riesgo de impago o controles de capital futuros, etc.– la Paridad Cubierta de Intereses debe prevaler.
+•
+Sustituibilidad perfecta es un supuesto más fuerte, ya que significa que los tenedores de bonos se muestran indiferentes acerca de la composición de su cartera (por supuesto, siempre que tengan la misma tasa de rentabilidad esperada). Por lo tanto, la sustituibilidad perfecta implica que la Paridad Descubierta de Intereses debe prevaler.
+} 1. Libre movilidad de capitales; 2. Perfecta sustituibilidad entre activos nacionales y extranjeros; y 3. Neutralidad al riesgo de los agentes y expectativas no sesgadas.
+
+▪
+En este escenario, supongamos un inversor que posee una determinada cantidad de su moneda nacional y quiere invertirla en un activo financiero. Tiene 2 opciones: 1. Invertir 1 u.m. nacional en un activo nacional, con lo que obtendría (1+i) de rendimiento bruto. 2. Invertir 1 u.m. nacional en un activo extranjero, con lo que obtendría (1+i*)∙st+1st⁄ de rendimiento bruto. Para entender este rendimiento vamos a desarrollar las actividades que debería llevar a cabo este inversor: a. Comprar moneda extranjera hoy al tipo spot actual: por 1 u.m. nacional, nos darían 1st⁄ u.m. extranjeras.b. Invertir esa cantidad en moneda extranjera en el país extranjero, con lo que se obtendría (1+i*)∙1st⁄ u.m. extranjeras. c. Convertir en moneda nacional los ingresos al tipo de cambio spot futuro, con lo que se obtendría(1+i*)∙st+1st⁄ u.m. nacionales. ▪ La condición de ausencia de oportunidades de arbitraje implicaría la igualación del rendimiento de estas 2 opciones:
+(1+i)=(1+i*)∙st+1st
+Sin embargo, en la práctica no sabemos con perfecta certidumbre cual será el tipo de cambio spot en el futuro, por lo que podemos preguntarnos: ¿qué tipo de cambio debe utilizarse para convertir en moneda nacional el retorno obtenido? Es decir, cómo sabemos cuánto es st+1. ▪ El inversor tiene, a su vez, dos opciones, en función del riesgo que quiera asumir: 1. Si no quiere asumir riesgo cambiario (es decir, si está arbitrando). Este caso dará lugar a la Paridad Cubierta de Intereses (PCI). 2. Si está dispuesto a asumir riesgo cambiario (es decir, si está especulando). Este caso dará lugar a la Paridad Descubierta de Intereses (PDI).\footnote{Si está dispuesto a asumir riesgo cambiario (es decir, si está especulando), entonces convertirá su retorno en moneda nacional al tipo de cambio spot vigente cuando venza la inversión, es decir, st+1. En este caso, como no conoce con certidumbre este tipo de cambio, utilizará la expectativa que se forme de este Et[st+1]. Este caso da lugar a la Paridad Descubierta de Intereses (PDI), de acuerdo con la cual: (1+i)=(1+i*)∙Et[st+1]st Aproximando por una serie de Taylor obtenemos: i−i*≈Et[st+1]−stst⏟ Tasa de depreciación esperada≡γEe
+} ▪ Si no quiere asumir riesgo cambiario (es decir, si está arbitrando), comprará forward sobre el tipo de cambio futuro, de forma que en el período t+1 podrá convertir su retorno en moneda nacional a un tipo predeterminado, ft t+1. Este caso da lugar a la Paridad Cubierta de Intereses (PCI), de acuerdo con la cual:
+(1+i)=(1+i*)∙ft t+1st
+‒
+Aproximando por una serie de Taylor obtenemos:\footnote{Nótese que ln(1+i)≅i, si i es pequeño. Asimismo, utilizando esta misma regla, ln(ft t+1st)≡ln(1+ft t+1−stst)≅ft t+1−stst Haciendo uso de esto: (1+i)=(1+i*)∙ft t+1st tomandologaritmos ⇒ ln(1+i)=ln(1+i*)∙ln(1+ft t+1−stst)⟹i−i*≅ft t+1−stst Otra manera de verlo es: (1+i)=(1+i*)∙ft t+1st⟹(1+i)(1+i*)=ft t+1st 1+x1+y≅1+x−y ⇒ 1+i−i*≅ft t+1st −1 ⇒ i−i*≅ft t+1−stst
+} 
+i−i*≈ft t+1−stst⏟ Margen forwardTasa de depreciación esperada 
+
+Por lo tanto, la lógica del arbitraje garantiza el cumplimiento de esta condición: ‒ Si el diferencial de tipos de interés es mayor que la tasa de depreciación mostrada por el margen forward, el inversor obtendrá una ganancia positiva con certeza invirtiendo en el activo nacional. En este escenario, la mayor demanda de activos nacionales aumentará su precio y reducirá su rentabilidad (i.e. el tipo de interés, ↓i), al mismo tiempo que se produce una el efecto contrario en el tipo de interés extranjero (↑i*) y una apreciación de la moneda local (↓st), hasta que se cumpla la igualdad de la PCI: (1+↓i)>(1+↑i*)∙ft t+1↓st⟹(1+i)=(1+i*)∙ft t+1st ‒ Lo contrario sucederá si el diferencial de tipos de interés es menor que la tasa de depreciación mostrada por el margen forward: (1+↑i)>(1+↓i*)∙ft t+1↑st⟹(1+i)=(1+i*)∙ft t+1st ‒ En definitiva, si ambas estrategias no resultan indiferentes, entonces existirán oportunidades de arbitraje financiero. Las operaciones de arbitraje llevan a un equilibrio en el que se cumple la Paridad Cubierta de Intereses y se igualan las rentabilidades de ambas opciones. ▪ Por lo tanto, desde un punto de vista teórico, el arbitraje garantiza el cumplimiento continuo de la ley del precio único en el mercado de divisas y de la Paridad Cubierta de Intereses (PCI).
+
+
+\paragraph{Latencia}
+\href{https://www.youtube.com/watch?v=z4nCTdQlH8w}{\textit{High Frequency Trading} (Youtube)}
+Las operaciones de arbitraje por latencia hacen referencia a las operaciones que han surgido debido al High Frequency Trading (operaciones que antes tomaban días, en la actualidad se realizan en segundos, milisegundos o microsegundos).\footnote{Los High Frequency Traders sólo representan una pequeña porción del total. Sin embargo, son responsables de alrededor de 2/3 de las operaciones que tienen lugar en el mercado de valores.
+} ▪ El High Frequency Trading (HFT) presenta ventajas e inconvenientes: ‒ Por el lado de las ventajas: o Aumenta la liquidez en los mercados (i.e. facilita que para cada oferta de venta surja una demanda de compra en el mercado).• Sin embargo, el HFT funciona mejor en mercados que ya son muy líquidos. • Además, no están obligados a actuar siempre como socio comercial y, en muchas ocasiones, cuando existe una crisis de liquidez en un mercado y es más necesaria su actuación, los High Frequency Traders tienden a dar un paso atrás y se retiran del mercado.o Algunos analistas consideran que el HFT facilita la fijación de precios al reducir su volatilidad.• Sin embargo, estas consideraciones son polémicas, ya que en ocasiones pueden tener el efecto contrario. ‒ Sin embargo, por el lado de los inconvenientes: o El resto de agentes del mercado no pueden igualar la velocidad de los High Frequency Traders, por 2 motivos: • No todos pueden permitirse alquilar un espacio cercano al mercado. • No todos pueden permitirse el algoritmo de HFT, especialmente programado. Esto genera varios inconvenientes: • Los High Frequency Traders tienen una clara ventaja informacional debido a su mayor velocidad, por lo que los dealers tradicionales pierden frente a los High Frequency Traders (esto se traduce en que el resto de agentes no sólo pagan la tarifa explícita del mercado, sino que además pagan un mark-up implícito por la existencia de HFT). • La alta velocidad y la falta de regulación son explotadas a menudo por los High Frequency Traders para manipular los mercados y engañar al resto de participantes del mercado, ya que en ocasiones puede ser difícil estar siempre un paso por delante del resto. En ocasiones es más fácil ralentizar al resto de participantes. Existen diversos ejemplos: ▫ Quote stuffing: Un programa de HFT envía miles de ofertas pequeñas y triviales, inundando el mercado con información. Estos programas criban la información trivial que han enviado de forma más rápida, haciendo perder al resto de programas valiosos milisegundos y permitiéndolas responder más rápido a las ofertas interesantes. ▫ Spoofing: Un programa de HFT genera múltiples ofertas de compra a un precio superior al del mercado. Gracias a la alta velocidad, estas ofertas pueden ser canceladas de inmediato, antes de que nadie pueda concretar el acuerdo. Pero como estas ofertas fantasmas son vistas, esto genera la ilusión de que existen dealers interesados en la compra a esos precios. El resto de traders, reaccionan a esta ilusión haciendo efectiva la subida de precios. El programa de HFT puede ahora utilizar las opciones que había adquirido previamente (antes de manipular el precio) para conseguir beneficios. o El HFT también conlleva riesgos técnicos. • Los programadores de los algoritmos de trading afirman que debido a la creciente complejidad, ya no son capaces de rastrear todo lo que el programa hace. • Además, estos programas nunca están completamente libres de errores, lo que genera problemas en la interacción de distintos programas comerciales, ya que con los operadores humanos pueden surgir situaciones impredecibles. Por ejemplo, cuando 2 o más programas reaccionan repetidamente entre sí podrían entrar en un bucle. El problema es la velocidad con la que esto sucede. Sólo los programas especiales podrían reaccionar suficientemente rápido, mientras que los operadores humanos son mucho más lentos en darse cuenta de la amenaza, evaluarla e intervenir. ▪ Estos riesgos y manipulaciones son perjudiciales para la gran mayoría de los participantes del mercado y no pueden ser compensados por los beneficios. Además de las ventajas ya injustas para los High Frequency Traders. ‒ Todos estos problemas pueden tener consecuencias fatales en la economía real. o Jugaron un papel importante en las caídas del mercado de valores como en el Flash Crash del 6 de mayo de 2010.\footnote{El Flash Crash del 6 de mayo de 2010, también conocido como el Crash de 2:45, el Flash Crash de 2010 o simplemente el Flash Crash, fue una quiebra financiera estadounidense que tuvo lugar el 6 de mayo de 2010 en el que el índice Dow Jones Industrial Average se desplomó cerca de 1.000 puntos, aproximadamente un 9\%, para recuperar esa pérdida escasos minutos. Fue la segunda mayor caída en puntos, 1.010,14 puntos, y el mayor desplome diario, 998,5 puntos, en una base intradía en la historia del Promedio Industrial Dow Jones.
+} Desde entonces se han sucedido distintos colapsos en otros mercados. o Pese a las afirmaciones de inmunidad a tal problema, el mercado de valores alemán también experimentó su primer flash crash en 2014. ‒ Para contrarrestar estos riegos, las reformas de las leyes europeas del mercado de valores se adaptaron a los nuevos desarrollos (MiFID, 2014). Entre otras medidas se encuentran: o Circuit breaker: Se introducen frenos automáticos en la negociación, es decir, en caso de un flash crash la negociación se interrumpe brevemente. Esto no permite prevenir estas caídas repentinas, pero permite limitar los daños.
+
+o Aumento del tick size: Esta es la cantidad mínima en la que el precio de un mercado puede cambiar. Esto representa una regulación indirecta al HFT ya que los cambios de precios ocurrirían con menos frecuencia. ‒ Estas regulaciones, lamentablemente, fueron dejadas abiertas por los mercados bursátiles y no están suficientemente ancladas en la ley. Los mercados de valores se encuentran así en un conflicto de intereses, ya que se están beneficiando del HFT. o Para comenzar, los mercados bursátiles están dirigidos a hacer conexiones electrónicas privilegiadas a los ordenadores del mercado de valores justas y transparentes para todos los participantes en el mercado. Sin embargo, mientras existan conexiones más lentas y más rápidas, esto conducirá a una desigualdad estructural en los mercados, penalizando a aquellos participantes que solo tienen acceso a una conexión más lenta. Además, prácticas como el quote stuffing y el spoofing seguirán siendo posibles. Las conexiones privilegiadas a los ordenadores del mercado de valores (llamadas colocations) deben eliminarse para asegurar la igualdad de oportunidades. o Asimismo, para resolver el problema de las ofertas fantasmas existen 2 soluciones: (i) limitar el número de cancelaciones; y (ii) introducir un período mínimo de mantenimiento de las ofertas. El Parlamento Europeo propuso 500 milisegundos como período mínimo de retención de las ofertas, pero no tuvo éxito en esta iniciativa. Esto evitaría el quote stuffing y, especialmente, el spoofing; garantizaría la igualdad de oportunidades; facilitaría la fijación de precios; y evitaría los flash crashes. ‒ Otras regulaciones a considerar serían: o Minimum Holding Period: Cada vez que se compra un activo financiero, este ha de ser conservado durante un período mínimo, para así evitar que los High Frequency Traders se interpusieran en cada transacción realizada. o Financial Transaction Tax (Tasa Tobin): Haría el HFT menos lucrativo y compensaría las pérdidas sociales en los mercados financieros a través de ingresos fiscales.
+
+
+
+\clearpage
+\section{Mercado de Divisas: Hipótesis de la Eficiencia de Mercados}
+\puntosclave{
+    La hipótesis del mercado eficiente ha sido cuestionada desde prácticamente su aparición. 
+    
+    Se han realizado contrastes para analizar si el margen forward es un buen predictor del precio spot futuro. 
+    
+    Los resultados muestran que el coeficiente es inferior a O (paradoja del margen forward), lo que se ha tratado de explicar con argumentos económicos.
+}
+
+Por lo analizado hasta el momento se podría concluir que las características del mercado de divisas hacen de éste un mercado muy propicio para que se cumpla la hipótesis de eficiencia.\footnote{
+Y en particular. la elevada participación de un gran -número de agentes precio-aceptantes bien i nformados.
+} En el siguiente apartado, en primer lugar, se explica en qué consisten los principales rasgos de la teoría de los mercados eficientes para con posterioridad abordar empíricamente la hipótesis de eficiencia en el caso del mercado de divisas.
+
+¿Se cumple la teoría de los mercados eficientes en el mercado de divisas? Para responder a esta pregunta partiremos de la Hipótesis de los Mercados Eficientes. La hipótesis de los mercados eficientes ha sido empleada para valorar los mercados financieros en general. ‒ El hecho de que los activos estén valorados adecuadamente implica que el precio de los activos refleja adecuadamente toda la información disponible. En este caso se dice que los mercados financieros son informacionalmente eficientes. o Es decir, se cumple la Efficient Market Hypothesis (EMH), estudiada en la literatura por autores como EUGENE FAMA, PAUL SAMUELSON o LOUIS BACHELIER.
+
+\subsection{FAMA: \textit{Joint Hypothesis}}
+EUGENE FAMA recibe el Premio Nobel de Economía en 2013 precisamente «por su trabajo en el análisis empírico de precios de posesiones capitales», es decir, por sus contribuciones con respecto a la hipótesis de los mercados eficientes.\footnote{En el debate desarrollado en 2008 y 2009 en torno al estímulo fiscal y la política monetaria expansiva aplicada por los gobiernos para contener la crisis en el mundo occidental y en los países asiáticos, los argumentos más utilizados fueron de tipo histórico. Los polemistas reconocían que la teoría actual tenía poco (o nada) que ofrecer para solucionar la crisis. Toda la parafernalia matemática de los modelos de los mercados eficientes y de las expectativas racionales, que habían servido de base para las políticas liberales de las 3 décadas previas, se derrumbaron como un castillo de naipes con la crisis iniciada en 2007. No obstante, aunque JUSTIN FOX (2009) consideró que esa teoría formulada por EUGENE FAMA sobre los mercados eficientes, que inspiró la doctrina desreguladora de ALAN GREENSPAN y del consenso de Washington, quedó refutada por la catástrofe financiera de 2008, JOHN QUIGGIN (2010) la incluye entre las «doctrinas zombie», caracterizadas poque siguen vivas entre los académicos universitarios, a pesar de haber sido desacreditadas por la realidad económica.
+} En su discurso de recepción del Premio Nobel menciona lo que él ha denominado la joint hypothesis. Según esta, para que los mercados financieros sean eficientes es necesario que se cumplan 2 condiciones: i. Que exista un modelo de valoración de activos por arbitraje (por ejemplo, el CAPM o el APT). i) Que los activos reflejen toda la información disponible. ▪ Por lo tanto, testar la hipótesis de los mercados financieros eficientes es difícil porque no sabemos si los incumplimientos se deben a que estamos trabajando con un modelo de valoración de activos incompleto o si efectivamente la hipótesis de los mercados eficientes no se cumple. 
+
+3.1.2. Definiciones de eficiencia en el mercado financiero (DARRELL DUFFIE) ▪ También lo que complica el análisis es que van a existir distintas maneras de entender qué es eficiencia en el mercado financiero. Concretamente, siguiendo el libro de valoración de activos de DARRELL DUFFIE, la palabra eficiencia se usa en 3 sentidos: 1) Eficiencia como ausencia de posibilidades de arbitraje: Significa que en un mercado en equilibrio no deben existir oportunidades de inversión sin explotar, es decir, que ningún inversor que cambie la composición de la cartera podrá obtener mediante arbitraje una rentabilidad superior a la que venía consiguiendo con el mismo riesgo.\footnote{Que no existan posibilidades de arbitrar no quita que se puedan obtener remuneraciones positivas a largo plazo. Los agentes que mejor absorban el riesgo o que invierten a un plazo mayor podrán obtener rendimientos positivos. Sin embargo, no tendría fundamento la gestión activa de carteras.
+
+La eficiencia de los mercados como ausencia de arbitraje no requiere racionalidad de todos los agentes ni que los precios no se muevan de manera salvaje sin una relación directa con cambios en los fundamentales: se puede dar ausencia de arbitraje en cuestiones donde existen burbujas.
+
+La definición de eficiencia como ausencia de arbitraje también implica que los precios en los mercados financieros se comportan como una martingala, es decir, la esperanza del precio de mañana es el precio de hoy. Pero es una martingala peculiar, pues la esperanza debe ser tomada con respecto a una distribución de probabilidad específica que HARRISON y KREPS definieron en 1979: la medida de martingala equivalente. En particular, esta distribución de probabilidad permite que sea perfectamente posible tener predictibilidad en los precios de los activos ya que corrige por la tolerancia de los agentes al riesgo.
+} 
+
+2) Eficiencia como transmisión de toda la información: Según esta definición el mercado será eficiente cuando el precio determinado por la oferta y la demanda es una buena forma de estimar el valor real del activo, es decir, su valor intrínseco. Esto supone que el precio incluye toda la información necesaria y es la principal y más fiable señal del mercado y que éste funciona sin distorsiones.\footnote{
+Una rama de la literatura iniciada por ROLL (1977) mantiene que los mercados financieros internacionales son eficientes y por eso las desviaciones de la PPA (el tipo de cambio real) deben seguir un paseo aleatorio. A veces se le denomina PPA ex ante o PPA de mercados eficientes. Parte de los supuestos de expectativas racionales y cumplimiento de la PDI.
+Siguiendo a ROLL, supongamos que los agentes dormán sus expectativas racionalmente y que participan en la compra especulativa de bienes. Un agente nacional puede comprar un bien extranjero y mantenerlo un periodo. El rendimiento nominal esperado de esa estrategia, expresado en moneda extranjera será igual a la inflación esperada en el extranjero. Para expresarlo en moneda doméstica habrá que tener en cuenta los cambios esperados en el tipo de cambio y en los precios domésticos de forma que el rendimiento esperado para un residente nacional al especular con un bien extranjero será: Et[Δp*t+1]+Et[Δst+1]−Et[Δpt+1]
+Teniendo en cuenta la definición del tipo de cambio real (en logs): qt=st−pt+p*t obtenemos: Et[Δqt+1]=0
+Lo que implica que qt sigue un paseo aleatorio: qt+1=qt+ηt+1, donde ηt+1 es un error de previsión con expectativas racionales tal que Et[ηt+1]=0.
+Esto significa que la mejor predicción del tipo de cambio real futuro será el tipo de cambio real actual y que ante cualquier desviación de la PPA, no se producirá un proceso de reajuste o reversión a la media. Un shock que afecte al tipo de cambio real tendrá efectos permanentes. De acuerdo con este enfoque, el cumplimiento de la PPA a largo plazo sería incompatible con la eficiencia de los mercados (otros autores no comparten esta conclusión).
+Los resultados empíricos sugieren que la PPA es una buena primera aproximación al comportamiento a largo plazo de los tipos de cambio y que el proceso de ajuste hacia ese nivel parece presentar no linealidades. Estos modelos no lineales parecen la línea de trabajo más prometedora en estos momentos.
+La mayoría de los modelos del tipo de cambio real se centran en los determinantes reales (frente a los nominales) del tipo de cambio ajustado por el nivel de precios. La PPA es una versión particularmente simple donde se supone que el tipo de cambio real es constante.
+
+\href{https://en.wikipedia.org/wiki/Roll%27s_critique}{\textit{ROLL's Critique}. Wikipedia.org}
+
+\href{https://www.investopedia.com/terms/r/rollscritique.asp}{\textit{Understanding Roll's Critique in Market Diversification}. WILL KENTON (2025)}
+} La eficiencia con la que el precio cumpla su función en el mercado está en función de la cantidad de información que incorpora y de la velocidad con la que ésta se incorpora. El profesor HARRY ROBERTS en 1967 clasificó la información en tres grupos: o Información histórica: Aquella que se puede conseguir en bases de datos y en medios de comunicación, fundamentalmente contiene series históricas. o Información pública: Toda la información referida a la empresa, desde cuentas anuales a hechos y circunstancias de la empresa. o Información privada: Es aquella información privilegiada en manos de muy pocas personas y que, en general, no trasciende al público. Basándonos en esta clasificación, y en función de la información que se maneja en el mercado para valorar los activos, podemos clasificar la eficiencia de ese mercado como: o Hipótesis fuerte: Implica que los precios indican toda la información disponible (privada, pública e histórica), de forma que nadie puede obtener un rendimiento superior al de mercado. o Hipótesis semifuerte: Implica que los inversores no son capaces de superar el rendimiento del mercado usando información histórica y pública, ya que dicha información se incorpora directamente en el precio. Las técnicas de análisis fundamental no serán capaces de lograr rendimientos superiores a los de mercado, ya que éstos sólo se podrán obtener con información privada. o Eficiencia débil: Supone que la cotización de los títulos refleja la información pasada obtenida de las series históricas de precios. En consecuencia, no es posible hallar estrategias de inversión basadas en los precios históricos de las acciones. Esto implica que el análisis técnico no es útil, pero el análisis fundamental sí (siendo esta definición de eficiencia la única que abre la puerta a una racionalidad de gestión activa de carteras). 3) Eficiencia como optimalidad de Pareto: Este criterio es el que se aplica habitualmente en Economía del Bienestar para valorar los mercados financieros. Es la más restrictiva de las tres definiciones pues requiere que no exista una asignación de los recursos de la sociedad alternativa a la que genera el mercado que permita al menos a un agente mejorar su situación sin empeorar la situación de nadie. Esta situación es muy poco plausible ya que existen una serie de fenómenos como externalidades o información asimétrica que impedirán que se cumpla el Primer Teorema Fundamental de la Economía del Bienestar [ver tema 3.A.22].
+
+\subsection{Mercado de Divisas: ¿Eficiente?}
+
+
+\subsubsection{Eficiencia: Ausencia de posibilidades de arbitraje}
+En el mercado de divisas, la eficiencia entendida como ausencia de posibilidades de arbitraje implica que la Paridad Cubierta de Intereses debería cumplirse. Es decir, debería ser imposible obtener un beneficio sin riesgo. La PCI se cumple continuamente con mucha precisión gracias a estas operaciones de arbitraje que, con los desarrollos informáticos permiten que las posibles diferencias de rentabilidad duren muy poco tiempo. Los incumplimientos de la PCI están relacionados con la ruptura del supuesto de libre movilidad de capitales (p.ej. por la existencia de comisiones y costes de transacción).
+
+\subsubsection{Eficiencia: Transmisión de toda la información disponible (precios informados)}
+EUGENE FAMA: ‒ Las cotizaciones de las divisas reflejan toda la información disponible en un momento determinado. De este modo, cualquier modificación en el conjunto de información disponible debe quedar recogida inmediatamente por el mercado y reflejado en los tipos de cambio. ‒ La hipótesis de eficiencia en el mercado de divisas como transmisión de toda la información implica que el tipo de cambio forward debe ser el mejor predictor del tipo de cambio spot esperado. ▪ GROSSMAN y STIGLITZ: ‒ La búsqueda de información es costosa, con lo que puede ser que el mercado transmita la información disponible sólo de manera imperfecta. Es decir, el tipo de cambio sólo refleja de forma parcial toda la información disponible. ‒ En este sentido, los mercados financieros se alejarán menos o más de la eficiencia informacional. Sin embargo, por las características del mercado de divisas, existen argumentos que nos permiten inducir que podemos estar cerca de la eficiencia informativa (los costes de adquisición de la información son pequeños (desarrollo de plataformas), existen muchísimos agentes y el mercado es líquido). ▪ En cualquier caso, debemos guiarnos también por lo que dice la evidencia empírica al respecto.
+
+\subsubsection{Eficiencia: Optimalidad de PARETO}
+En cualquier caso, en general se acepta que los mercados financieros no son eficientes en sentido de Pareto. ‒ Se considera muy poco plausible debido a la existencia de una serie de fenómenos que impiden el cumplimiento del 1TFEB: mercados incompletos, externalidades o información asimétrica. ‒ Sin embargo, existen defensores de la EMH (p.ej. JOHN COCHRANE) que admiten estos fallos de mercado pero subrayan que en la mayoría de los casos estos problemas no son muy grandes (e incluso si lo son la intervención pública no mejoraría la situación).
+
+\subsection{Contraste de Hipótesis}
+Si los mercados financieros fueran eficientes, el tipo de cambio forward sería el mejor predictor el tipo de cambio spot esperado y ello llevaría a que se cumpliera la PDI. Sin embargo, si los mercados financieros no son eficientes (como de hecho muestra la evidencia empírica), tenemos que realizar nuevas explicaciones de por qué se incumple la PDI y arrojar nueva luz sobre la determinación del tipo de cambio.
+
+Entenderemos la eficiencia en el mercado como transmisión de toda la información. Por lo tanto, el tipo de cambio refleja toda la información disponible en un momento determinado. De este modo, cualquier modificación en el conjunto de información disponible debe quedar recogida inmediatamente por el mercado y reflejada en los tipos de cambio (i.e. los precios actuales reflejan toda la información disponible y por lo tanto no hay oportunidades de beneficio sin explotar). ‒ La hipótesis de eficiencia en el mercado de divisas como transmisión de toda la información implica que el tipo de cambio forward debe ser el mejor predictor del tipo de cambio spot esperado. ‒ Entonces, por definición, en un mercado de divisas eficiente, tanto la PCI como la PDI deben ser aplicables. ▪ El supuesto de eficiencia en el mercado de divisas, junto con las condiciones de paridad, ha sido objeto de innumerables estudios empíricos.
+
+\subsubsection{Paradoja del margen \textit{forward}}
+Para que el mercado de divisas sea eficiente, se tienen que cumplir tanto la PCI (i.e. la cotización de las divisas descuenta ya toda la información pública) como la PDI (i.e. la cotización de las divisas descuenta también toda la información privada), de manera que no se puede obtener ningún tipo de rentabilidad extraordinaria:\footnote{If investors are risk neutral and have rational expectations, then the market’s forecast of the future exchange rate is implicit in international differences in interest rates. To see this, suppose that the one-year dollar interest rate is 10\%, and that the comparable German mark interest rate is 7\%. The dollar interest differential is then said to be 3\%. Risk neutral, rational investors then must expect the dollar to depreciate against the mark by 3\% over then next year. This amount of depreciation would be just enough to equalize the expected returns on dollar and mark denominated deposits. If instead these investors expected a different rate of dollar depreciation, say 4\%, they would all wish to borrow in dollars and lend in marks. Consequently, dollar interest rates would tend to rise and mark interest rates would tend to fall until the interest differential also became 4\%. This simple relationship between interest differentials and expected currency depreciation is called uncovered interest parity (uncovered because forward markets are not used as a hedge). Thus, uncovered interest parity implies that the interest differential is an estimate of the future exchange rate change. If expectations are rational, then this estimate of future exchange rate changes provided by the interest differential should be unbiased. Unbiasedness is usually tested by regressing the change in the exchange rate on the interest differential.
+}
+PCI: (1+i)=(1+i*)∙ft t+1st y PDI: (1+i)=(1+i*)∙set t+1st⇓PCI: i−i*≅ft t+1−stst y PDI: i−i*≅set t+1−stst⇓ ft t+1−stst=set t+1−stst⟹ft t+1−st=set t+1−st⏟ ΔEse
+▪ La condición de eficiencia en el mercado puede contrastarse mediante la siguiente regresión:
+Δst+1⏟st+1−st=β0+β1∙(ft t+1−st)+εt+1
+‒ En esta contrastación, lo que estamos viendo es cómo las diferencias entre el tipo forward y el tipo spot afectan a la depreciación del tipo de cambio. ‒ Si el tipo forward fuese un predictor insesgado del tipo spot, en esta contrastación, esperaríamos que β1=1. o Sin embargo, la mayoría de estudios empíricos rechazan la hipótesis de eficiencia en el mercado de divisas. o Es más, es un hecho estilizado que las estimaciones de β1 están más cerca de −1 que de +1 (FROOT y THALER, 1990),\footnote{
+“The average coefficient across some 75 published estimates is −0.88. A few are positive, but not one is equal to or greater than the null hypothesis of β1=1” FROOT y THALER (Anomalies: Foreign Exchange, 1990)
+} por lo que suele decirse que el tipo forward es un mal predictor, no ya de la magnitud del cambio en los tipos spot futuros, sino incluso de su dirección (la llamada “paradoja del margen forward”). • Esta anomalía refleja el hecho de que los países con tipos de interés relativamente más altos parecen experimentar apreciaciones en su tipo de cambio nominal, mientras que la PCI señalaría que estos altos tipos de interés deberían estar asociados a depreciaciones del tipo de cambio nominal.\footnote{Otro fenómeno que señala al incumplimiento de la PDI (y por tanto indica que el tipo de cambio forward no es un buen predictor del tipo de cambio esperado futuro) es el éxito empírico de operaciones de carry trade. El carry trade consiste en endeudarse en una divisa con bajos tipos de interés para invertir en activos denominados en una divisa con altos tipos de interés. Según la PDI, el diferencial de tipos de interés debe ser igual a la depreciación esperada de la divisa cuyos tipos de interés son más elevados. Por tanto, si se cumpliese la paridad descubierta de intereses, una operación de carry trade debería esperar unas ganancias netas nulas.Esta práctica cuenta con cierto éxito debido a la paradoja del margen forward (las divisas con tipos de interés más elevados tienden a apreciarse y no a depreciarse). En consecuencia, históricamente las estrategias de carry trade se han visto recompensadas con rendimientos positivos.
+}
+
+\subsection{Limitaciones: Paradoja \textit{forward-margin}}
+FAMA propone que las diferencias entre el tipo de cambio forward y el tipo de cambio spot futuro reflejaban la existencia de una prima de riesgo, es decir, el tipo de cambio forward era igual al tipo de cambio spot futuro más una prima de riesgo.\footnote{
+En caso de prima de riesgo, tendríamos: (1+i)=(1+i*)∙ft t+1st y (1+i)=(1+i*)∙set t+1st+δ⇓ft t+1=set t+1+δ
+} 
+
+Sin embargo, algunos estudios reflejan que estas divergencias no puede explicarse únicamente mediante la inclusión de la prima de riesgo, por lo que el mercado en realidad refleja que los inversores tienen expectativas sesgadas. ‒ Esto puede ocurrir, por ejemplo, cuando los inversores esperan una devaluación de la moneda pero no saben cuándo ocurrirá con exactitud (\textit{peso problems}).\footnote{The Peso problem in finance is a problem which arises when “the possibility that some infrequent or unprecedented event may occur affects asset prices”. The difficulty or impossibility of predicting such an event creates problems in modeling the economy and financial markets by using the past. It is useful in various contexts, in particular, in analyzing the forward premium anomaly.
+}
+
+\subsubsection{Expectativas heterógenas}
+Los propios FROOT y THALER sugieren que las divergencias vienen de expectativas heterogéneas de los agentes. En este sentido, señalan que en los mercados financieros operan agentes heterogéneos. ‒ Por un lado, están los chartistas (que se mueven por inercia o se basan en comportamientos pasados del tipo de cambio). ‒ Por otro lado, están los fundamentalistas (que se mueven por el valor intrínseco de las divisas). ▪ Como los fundamentalistas saben cuál va a ser el comportamiento de los chartistas, pueden dudar de que el tipo de cambio vaya a retornar a su valor de equilibrio. Estas dudas pueden hacerlos desistir de apostar por el retorno al equilibrio, lo que explicaría que durante períodos largos de tiempo el tipo de cambio se separe considerablemente del que vendría dado por los fundamentales. ▪Este tipo de comportamientos ha sido modelizado por GRIMALDI y DE GRAUWE (The exchange rate in a behavioral finance framework, 2006).\footnote{
+\href{https://www.ifo.de/DocDL/cesifo1_wp1849.pdf}{\textit{A behavioral finance model of the exchange rate with many forecasting rules}. GRIMALDI y DE GRAUWE}
+} ‒ Idea. o Siguen la línea de los modelos de cartera (comparten el mismo espíritu, entienden el tipo de cambio como el precio de un activo) pero incluyen desviaciones de racionalidad de los agentes y microfundamentan el modelo.
+
+Este modelo muestra una fuerte influencia de la economía del comportamiento y de los trabajos de autores como KAHNEMAN, TVERSKY y THALER. Los agentes confrontamos con situaciones de riesgo e incertidumbre no se comportan siguiendo los postulados de la Teoría de la Utilidad Esperada y pueden usar reglas de comportamiento basada en rules of thumb para simplificar la complejidad de la realidad [ver tema 3.A.10].
+‒Relevancia. o Los modelos de behavioral finance ofrecen una alternativa que permite considerar algunas características de cómo se comportan de los individuos en los mercados financieros, lo que puede tener impacto sobre el tipo de cambio. ‒ Supuestos. o Agentes heterogéneos: Distinta manera de confrontar la incertidumbre que en este modelo se ve escenificada en no conocer el tipo de cambio futuro. o Agentes maximizan su utilidad que depende de la riqueza. ‒ Desarrollo. o Por el lado de la demanda de activos, cada tipo de agente maximiza su utilidad y selecciona una cartera que está formada por activos domésticos y por activos denominados en moneda extranjera. La utilidad depende de forma positiva del rendimiento esperado de la cartera y de forma negativa de la varianza y de un parámetro de aversión al riesgo. • Se asume que la riqueza en t+1 viene dada del rendimiento ponderado por lo que ha invertido en activos nacionales y extranjeros. • La proporción que cada agente invierte en el activo nacional depende de: ▫ Diferencial de tipos de interés (+). ▫ Expectativas de depreciación de la moneda doméstica (i.e. de la diferencia entre el tipo de cambio en el periodo t+1 y el tipo de cambio hoy). Considerando todos los agentes de la economía, podríamos hallar la demanda de activos extranjeros. o Se asume que la oferta de activos extranjeros es exógena. o El tipo de cambio sale de igualar demanda de activos extranjeros y oferta de activos extranjeros. • El tipo de cambio determinado dependerá de las expectativas de los agentes con respecto al tipo de cambio futuro. o ¿Cómo se forman esas expectativas? Hay 2 tipos de agentes: fundamentalistas y chartistas. La idea de distinguir entre ellos fue introducida por FRANKEL y FROOT.•Fundamentalistas▫ Los fundamentalistas tratan de predecir el tipo de cambio futuro en base a la diferencia entre el tipo de cambio de mercado y el tipo de cambio fundamental (i.e. prevén que el tipo de cambio de mercado regrese al tipo de cambio fundamental en el futuro). Es decir, introducen una dinámica de reversión a la media del tipo de cambio. ▫ El valor esperado de la variación del tipo de cambio futuro vendrá dado por la diferencia entre el valor observado de mercado y el valor fundamental del tipo de cambio (ponderada por un parámetro de velocidad de dispersión).
+
+
+• Chartistas ▫ Los chartistas tratan de predecir el tipo de cambio futuro en base a información histórica sobre el tipo de cambio; se basan en gráficas para analizar movimientos
+
+del tipo de cambio. A diferencia de los fundamentalistas, no tienen en cuenta información sobre el tipo de cambio fundamental. ‒ Determinación del tipo de cambio. o Posibilidad de equilibrios múltiples. A grandes rasgos, existen 2 tipos de equilibrio: 1) Coexistencia fundamentales y chartistas. 2) Chartistas se imponen. ▫ GRIMALDI y DE GRAUWE consideran que el hecho de que los fundamentalistas observen la pujanza de los chartistas puede hacerlos desistir de apostar por el retorno al equilibrio, lo que explicaría que durante períodos largos de tiempo, el tipo de cambio se separe considerablemente del que vendría dado por los fundamentales. ‒ Resumen. o En definitiva, estos modelos las interacciones entre agentes heterogéneos puede dar lugar a dinámicas complejas y a un tipo de cambio muy volátil y posiblemente desconectado con los fundamentos económicos. 
+
+
+
+c) Interpretación incorrecta – HODRICK ▪ HODRICK (1990) señala que dicha paradoja podría no darse si se tiene en cuenta el término constante de la regresión (el intercepto, β0). ΔEse⏟set t+1−st=β0+β1∙(ft t+1−st)+ε ‒ Y es que, lo que realmente significa un valor negativo de β1 es que la depreciación esperada será menor cuanto más a descuento esté la moneda nacional (es decir, cuanto mayor sea ft t+1−st), pero no que haya una apreciación esperada cuando la moneda está a descuento. En efecto, si el término independiente, β0, es positivo y lo suficientemente alto, aun cuando la moneda nacional esté a descuento, podría darse la depreciación esperada. o Y, de hecho, en la práctica, el valor de β0 suele ser positivo y alto.
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+\end{document}
