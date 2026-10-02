@@ -1,0 +1,1093 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Teoría de la integración económica\\
+\large }
+\author{Marcelo Ortega}
+\date{Marzo 2026}
+\newcommand{\TemaCode}{3B10}
+
+\oldtitle{
+    B.10. Teoría de la integración económica.
+}
+\changerationale{
+    Sin cambios.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     
+    }
+\vspace{1cm}
+
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+La integración económica es el proceso por el cual diferentes países deciden conformar conjuntamente entidades más grandes con el fin de mejorar tanto su bienestar nacional como el del grupo en su conjunto. En concreto, esta rama de la literatura pone su foco de estudio tanto en analizar los incentivos y determinantes que empujan este proceso, como entender y medir los impactos que la integración tiene sobre el bienestar. 
+
+Sin embargo, ésta no es una tarea sencilla: en cualquier proceso de integración intervienen múltiples factores que pueden tener un rol simultáneo en distintas direcciones. 
+
+
+Para ello, tras una primera aproximación a las fases de la integración propiamente dicha, nos dedicaremos a exponer los principales resultados teóricos esperados tanto desde un enfoque más clásico (o estático) hacia un enfoque que incorpore elementos dinámicos de la integración. Tras esto, brevemente se plantearán las limitaciones potenciales al proceso integrador, para pasar a analizar los condicionantes políticos de la misma. Por último, atenderemos a la evidencia y metodologías seguidas para el análisis empírico de la integración. A lo largo de este recorrido, es conveniente tener en mente que la integración podría considerarse como un sustitutivo imperfecto de la teoría del librecambio planteada por autores clásicos como Adam Smith o David Ricardo. Éstos plantearon teóricamente los beneficios y la necesidad de llevar al mundo hacia una situación en la que las barreras al comercio y a la libre movilidad de factores fuesen prácticamente inexistentes. Sin embargo, el mundo "real" puede estar sujeto a mayores riesgos e incertidumbres que la teoría clásica del comercio estaba obviando. Por el contrario y sabedores de las dificultades y posibles efectos adversos que acarrea la apertura total e incondicional de un país al libre mercado internacional, los países han optado por ir abriendo sus fronteras de forma gradual y mediante acuerdos más o menos comprometidos con otros posibles socios comerciales, todo ello tras ponderar los posibles costes y beneficios en términos de bienestar que acarrea dicho proceso. Por ello, no es de extrañar que, sin llegar a ser una teoría sobre el libre comercio, la teoría de la integración haya sido concebida como un second best, en sentido paretiano, de la propia idea del librecambio.\footnote{Se considera que los procesos de integración eliminan algunas distorsiones, pero mantienen otras respecto de la situación de libre comercio, tanto en los países que los llevan a cabo como en países externos a la integración, de ahí que no resulten en óptimos paretianos, es decir, una situación en la que no es posible una reasignación de recursos que beneficie a un país sin perjudicar a ningún otro. Con la integración económica no se puede garantizar una mejora del bienestar de todos los países respecto de la situación de partida.
+}
+
+
+\subsection{Contextualización}
+Pese a estar muy interconectada con otras disciplinas de la teoría económica, carece de un cuerpo teórico claro y estructurado. Sus orígenes parten de la propia teoría clásica del comercio internacional, pero según se fue expandiendo el abanico de temas incluidos dentro de la integración, ésta se vio en la necesidad de reformularse. Así y tras unos vagos inicios como disciplina propia en los años 50, la integración empezó a beber de temas propios de las ciencias políticas, la economía política internacional o incluso la teoría de juegos, todo ello bajo la influencia directa de las nuevas teorías del comercio y del crecimiento. Con este marco entre manos, este tema tiene como objetivo esbozar los principales análisis y resultados de las diferentes ramas por las que ha ido evolucionando la teoría de la integración. 
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+
+
+
+\clearpage
+\section{Integración Económica: Marco teórico}
+\puntosclave{
+    
+}
+
+
+La integración económica puede tomar distintas formas en función del grado de compromiso de los países participantes, el número de países que formen parte, y el tipos de costes de transacción que pretende reducir. De forma esquemática podemos ver las diferencias entre acuerdos: 
+
+\begin{center}
+\begin{tabular}{|p{0.20\linewidth}|p{0.10\linewidth}|p{0.10\linewidth}|p{0.10\linewidth}|p{0.10\linewidth}|p{0.10\linewidth}|p{0.10\linewidth}|}
+\hline
+\textbf{Etapa Integradora} & \textbf{Tratado de Libre Comercio (TLC)} & \textbf{Unión Aduanera (UA)} & \textbf{Mercado Común (MC)} & \textbf{Unión Económica} & \textbf{Unión Monetaria} & \textbf{Unión Política y Económica}\\
+\hline
+\textbf{Eliminación de Tarifas y Cuotas} & Sí & Sí & Sí & Sí & Sí & Sí \\
+\hline
+\textbf{Arancel Común Externo} & No & Sí & Sí & Sí & Sí & Sí \\
+\hline
+\textbf{Movilidad Factorial} & No & No & Sí & Sí & Sí & Sí \\
+\hline
+\textbf{Armonización de Políticas Públicas} & No & No & No & Sí & Sí & Sí \\
+\hline
+\textbf{Moneda Única} & No & No & No & No & Sí & Sí \\
+\hline
+\textbf{Instituciones Democráticas Comunes} & No & No & No & No & No & Sí \\
+\hline
+\end{tabular}
+\end{center}
+
+Aunqque existen múltiples clasificaciones, para dar una imagen general y no muy extensiva de las diferentes etapas que conducen a la perfecta integración económica (\textit{benchmark}), que definiremos más adelante, identificamos tres importantes etapas sucesivas: (i) la integración comercial, en la que se pretende liberar la circulación de bienes y servicios y, por tanto, reducir los costes de transacción asocidados estríctamente al comercio ex post; (ii) la integración económica, que pretende una coordinación real de los factores productivos en los países integrantes así como una coordinación sustantiva de las políticas económicas, con el fin de reducir las asimetrías y costes para los \textit{perdedores} de la integración; y, (iii) la integración político-económica en la que se busca delegar la soberanía sobre instituciones democráticas compartidad, alcanzando de esta forma la máxima minimización de los cotes implícitos en cualquier transacción, tanto ex ante como ex post. 
+
+\subsection{Integración comercial: libre circulación de bienes y servicios}
+Empecemos por la primera gran etapa, la integración económica. Esta constituída por diferentes subetapas entre las que identificamos tres muy características.
+
+\subsubsection{Tratado de Preferencias Comercial (PTA)}
+La primera, la forma más básica de integración, es la firma de un Tratado de Preferencias Comercial (TLC) que conlleva el acuerdo de un trato preferencial en materia de barreras comerciales entre los países firmantes.
+
+Esta reducción de barreras, aunque sustancial, no baja los aranceles a cero. Casos como el tratado \textit{Developing \& Organization} formado por ocho países árabes (Turquía, Indonesia, Malasia, Bangladesh, Pakistán, Egipto, Irán y Nigeria) serían un ejemplo de PTA. 
+
+\subsubsection{Tratado de Libre Comercio (TLC)}
+La segunda, pretende la eliminación total de los aranceles, que sería el objetivo de un Área de Libre comercio (Free Trade Agreement, TLC). A menudo, los TLCs persiguen también la eliminación de todas las barreras formales al comercio entre los países integrantes. El NAFTA entre México, Estados Unidos (EE.UU.) y Canadá sería el ejemplo clásico de TLC. 
+
+No obstante, estos países pueden seguir manteniendo aranceles con países terceros y externos a la unión, lo que puede generar fuertes asimetrías y debilitar la legitimidad del Tratado.
+
+\subsubsection{Unión Aduanera (UA)}
+Por ello, la tercera subetapa, cbuscaría sortear estas posibilidade de arbitraje en materia comercial que habría entre países de un mismo area de integración y acordar un arancel exterior común, manteniendo aranceles formales igual a cero entre ellos. Esto supondría el avance hacia una Unión Aduanera (UA). El ejemplo clásico de Unión Aduanera sería la Comunidad Europea, fundada en 1957. Un ejemplo más actual de UA (aunque con importantes trabas), sería la Unión Aduanera de África Austral formada por Sudáfrica, Lesoto, Botsuana, Namibia y Suazilandia. 
+
+\paragraph{Integración Regional (RTAs)}
+Mención aparte merecen los procesos de Integración Regional (Regional Trade Agreements, RTA). Los RTAs no son una fase del proceso integrador per se, porque suelen agrupar bajo un mismo acuerdo las características de los TLCs y la Unión Aduanera. 
+
+\imagenfit{Fig3.png}{Take-off in BITs, FDI, unilateralism, and deep RTAs}{}
+
+Debido a la proliferación de los TLCs, BITs (Billateral Investment Treaties) y la progresiva reducción de las barreras convencionales en el esquema multilateral, muchos países se han visto en la necesidad de cooperar a través de mecanismos no contemplados en la teoría de la integración económica tradicional. Estos mecanismos han transcendido de las fases anteriormente citadas y han adquirido un rol más transversal dentro de la cooperación económica internacional. Los RTAs consideran no sólo la reducción de tarifas arancelarias sino también medidas dentro de frontera como serían cambios y compromisos regulatorios en materia de inversiones, servicios, política de la competencia, procedimientos gubernamentales o incluso movilidad laboral. Es más, tal surgimiento de RTAs se considera que responde a un intento por atraer no sólo comercio sino también fondos de inversión, todo ello dentro de un esquema de creciente multilateralismo a nivel internacional. 
+
+\subsection{Integración económica: coordinación de los recursos y factores productivos}
+Una vez alcanzada la integración comercial entre los países, se buscaría coordinar la utilización de factores productivos y los recursos entre estas. De esta forma, se pretende evitar las desigualdades generadas en materia de localización, se buscaría minimizar el impacto de shocks asimétricos que tengan carácter permanente y se buscaría reducir parte de los costes de transacción originados para los \textit{perdedores} del comercio.
+
+\subsubsection{Mercado Común (MC)}
+La primera subetapata dentro de este proceso sería la constitución de un Mercado Común (MC), que tendría como objetivo la libre movilidad de factores productivos. MERCOSUR, integrado por Brasil, Argentina, Paraguay y Uruguay sería un buen ejemplo de MC formal, aunque con considerables fallas a la libre movilidad del trabajo. 
+
+\paragraph{Unión Económica y Monetaria (UEM)}
+Este Mercado Común puede avanzar hacia una Unión Monetaria. Con ella, los Estados-miembros poseerían una moneda común a fin de eliminar fluctuaciones y costes debidos al tipo de cambio, pero a la vez tendrían que ceder parte de su Política Monetaria a un Banco Central.
+
+La zona euro sería un ejemplo de esto.
+
+\subsubsection{Unión Económica (UE)}
+Un Mercado Común pretende el ajuste de los shocks, cíclicos o permanentes, a través de mecanismos de mercado. Sin embargo, cuando estos no son suficientes y las disparidades del ciclo económico y la carencia de coordinación entre Políticas Económicas, tensionan la legitimidad del Mercado Común (o de la integración comercial), los socios pueden avanzar a una Unión Económica (o Económica y Monetaria), con el objetivo de conseguir una armonización de las políticas y del ciclo.
+
+Los países miembros se comprometan a alcanzar una serie de objetivos de política económica comunes, como la armonización impositiva (evitando el arbitraje fiscal), la armonización de los estándares laborales, mismos estándares de supervisión bancaria o determinadas Políticas de estímulo que puedan resultar perniciosas entre socios. 
+
+\subsection{Integración Político-Económica: Instituciones democráticas comunes}
+La última fase de cualquier proceso de integración se deriva de las carencias evidentes que ostentan las fases previas en lo relativo a la mutualización de los riesgos de la actividad económica. Este problema (diferencias políticas internas) puede llevar a que los países necesiten también integrarse en términos políticos, es decir, a crear instituciones políticas que puedan, tanto dirimir problemas de gobernanza como crear leyes y ejecutarlas para el conjunto de los socios para no socavar la legitimidad de las fases de integración anteriores. Al alcanzar un grado pleno en esta fase de integración, constituiríamos una Unión Político-Económica, que supondría el último estadio de integración. 
+
+A menudo suele citarse como ejemplo de inegración Económica y Política un Estado Federal (cualquiera). No obstante, cualquier nación es en realidad un Unión Económica y Política entre diferentes comunidades/pueblos que a lo largo de la historia han padecido las etapas analizadas. Pensémos por ejemplo el caso de España. En nuestra constitución se identifican claramente cada uno de los elementos que caracterizan una o más etapas de integración:
+\begin{lnum}
+    \item \textbf{Libre circulación de bienes}. El artículo 139 de la CE impone sobre las Autoridades una obligación negativa, de abstención, al impedir la injerencia que altere o impida la libre circulación de bienes y servicios en el territorio nacional;
+    \item \textbf{Libre circulación de factores de producción}. Tanto el artículo 139 CE como el artículo 19 CE, sujeto a mayor protección, protegen el derecho y e imponen el deber a la Autoridades de velar por que se cumpla la libre circulación de factores de producción por todo el territorio nacional;
+    \item \textbf{Presupuestos y coordinación económica}. El marco constitucional regula y desarrolla la coordinación económica de los diferentes entes que conforman el Estado;
+    \item \textbf{Jerarquía legislativa e instituciones democráticas comunes}. También se establece la unidad política reflejada tanto en el preámbulo del texto como en la creación de instituciones democráticas comunes, una jerarquía legislativa bien definida y unos objetivos comunes en diversas materias;
+    \item \textbf{Moneda común}. Por último, fuera del marco constitucional, tendríamos la legislación consolidada en materia de acuñación y emisión de moneda, reservada en exclusiva al Estado en el marco de la Zona Euro. 
+\end{lnum}
+
+Como podemos ver, la Teoría de la Integración Económica alcanza al análisis de la formación de los Estados, sus efectos y las diferentes etapas por las que se puede pasar en aras de su formación.
+
+\subsection{Limitantes a la integración}
+Ahora que conocemos las formas de integración, su máximo exponente y las diferentes etapas por las que se puede pasar, podríamos preguntarnos si existen límites a los procesos de integración. 
+
+La indisoluble unidad de la Nación es un hecho bien conocido por la población pero, ¿es posible aumentar el tamaño de la integración? ¿podría España incorporarse a una entidad política equivalente territorialmente más grande? Por ejemplo, ¿podrían España y Francia constituir un único Estado? ¿Y la UE? Todas estas preguntas pueden enfocarse de dos formas: (i) una de carácter político-jurídico, cuyo objeto de estudio sería la capacidad de las diversas comunidades de formar una entidad política mayor, así como su voluntad y en última instancia los mecanismos jurídicos que habría que seguir para alcanzarlo; y, por otro lado, (ii) una de carácter estríctamente económico, cuyo objeto de estudio serían las disparidades reales que existen entre las diferentes regiones del plantea, sus causas, sus consecuencias y cómo éstas pueden, en última instancia, suponer un límite a cualquier proceso de integración. Este segundo enfoque, de interés central para lo que nos ocupa, se puede analizar bajo la óptica de diferentes teorías, de entre las cuales quizás la más destacada es la Nueva Economía Geográfica. 
+
+\subsubsection{La Economía Espacial: Diferencias, dinámicas espaciales y efectos}
+Es un hecho conocido que la riqueza, la población y el empleo están distribuidos espacialmente de forma desigual, tanto a nivel regional como entre países, concentrándose en diversos lugares y dispersándose en otros. 
+
+Estos desequilibrios espaciales pueden surgir por dos motivos:
+\begin{la}
+    \item Los primeros de ellos son los llamados detenninantes de \textbf{primera naturaleza} y tienen que ver con la distribución desigual de los recursos naturales, así como con factores geográficos característicos de las diferentes localizaciones como la presencia de materias primas, la proximidad a vías naturales de comunicación (ríos, océanos, etc.), el clima, etc;
+    \item El segundo de ellos recibe el nombre de determinantes de \textbf{segunda naturaleza} y tienen que ver con el resultado de la acción humana y, principalmente, con factores económicos (estructura de mercado, reglas de precios, etc.).\footnote{Ejemplos notables de la aglomeración de la actividad económica en determinados lugares geográficos son el llamado cinturón industrial en Estados Unidos de América, con una gran atracción de actividad industrial alrededor de la zona de los grandes lagos a finales del siglo XIX y principios del XX, la cuenca del Rühr en Alemania como una de las mayores zonas industrializadas de Europa, o más recientemente, la concentración de empresas de tecnología en el área de Silicon Valley de la Bahía de San Francisco.
+    }
+\end{la}
+
+La economía geográfica es el estudio de dónde tiene lugar la actividad económica y las fuerzas que hay detrás de ello. Siguiendo la aproximación de la NEG propuesta por FUJITA, KRUGMAN y VENABLES, se identifican dos tipos de fuerzas:
+\begin{la}
+    \item Las fuerzas de aglomeración o centrípetas, que provocan que la actividad económica se aglomere en determinadas localizaciones. La ciencia económica ha buscado múltiples razones por las que se generan este tipo de fuerzas, entre otras: (i, MARHSALL) la presencia de economías deescala externas [\authorfont{Ver Tema 3.B.6}]; (ii) las ventajas de la puesta en común, la apertura de nuevos mercados debido a la especialización; y, (iii) la presencia de externalides positivas y spillovers en el conocimiento; y, por otro lado,
+    \item Las fuerzas de dispersión o centrífugas, que son las causantes de que la actividad económica se disperse a lo largo del espacio. Por ejemplo, los costes de transporte, la congestión, la inmovilidad de algunos factores de producción, etc.
+\end{la} 
+
+Pero, ¿cuál es el objetivo de la NEG y estos desarrollos? ¿Por qué esto es relevante para el estudio de los limitantes de la integración? Veámoslo con un ejemplo. En términos de PIB per cápita ajustado por poder adquisitivo, Missisipi es considerado el Estado más pobre de los Estados Unidos. Sin embargo, Mississipi es, con diferencia, mucho más rico en los mismo términos que cualquier región/país al sur del Rio Bravo. Con esto podemos ver que, a priori, la pertenencia de Mississipi a la Unión Político Estadounidense a tenido efectos muy positivos: existen desequilibrios espaciales que han dado origen a las desigualdades interterritoriales en los Estados Unidos, junto con estas dos fuerzas comentadas que han potenciado y dirimido estos. En suma, la economía de Mississipi se ve gravemente afectada tanto por sus desequilibrios/determinantes de primera/segunda naturaleza y las fuerzas centrípedas que actúan en aras de la aglomeración económica en regiones más ricas y, por otro lado, positivamente afectada por las fuerzas de dispersión o centrífugas que generan spillovers positivos en su economía. 
+
+\paragraph{Modelo de KRUGMAN (1991): Nueva Economia Geográfica}
+¿Cómo podemos visualizar el impacto de estos efectos y cómo éstos condicionan la viabilidad (política, limitante) de un proceso de integración? Uno de los marcos teóricos más sobresalientes es el propuesto por la tradición de la Nueva Economía Geográfica iniciada por KRUGMAN, FUJITA y VENABLES.\footnote{Los modelos anteriores tomaban una aproximación diferente. Dada la complejidad de modelizar las interacciones en el espacio geográfico, la investigación teórica inicial en nueva geografía económica asumió la inexistencia de diferencias en la geografía de primera naturaleza para caracterizar los mecanismos de la geografía de segunda naturaleza. Los investigadores consideraron típicamente un pequeño número de regiones simétricas, o bien una llanura sin rasgos o un mundo sin discontinuidades, en el que las localizaciones son homogéneas ex ante. No obstante, estas localizaciones se vuelven heterogéneas ex post en equilibrio, mediante la aparición de una distribución espacial desigual de la actividad económica impulsada por fuerzas de aglomeración y dispersión.
+} 
+
+El modelo canónico considera dos regiones que son idénticas ex ante y parte de los siguientes supuestos: (i) existen dos sectores productivos: agricultura y manufacturas; (ii) los bienes agrícolas son homogéneos y se producen bajo rendimientos constantes a escala y competencia perfecta, mientras que las manufacturas consisten en variedades horizontalmente diferenciadas que se producen bajo rendimientos crecientes a escala y competencia monopolística; (iii) los agricultores son geográficamente inmóviles y están distribuidos equitativamente entre las dos regiones, mientras que los trabajadores manufactureros son perfectamente móviles entre ambas regiones. Como vemos, podríamos considerarlo como un escenario similar, aunque sumamente restringido, a la situación real tras la Guerra de secesión entre los Estados Confederador y la Unión.
+
+\textbf{INCLUIR REPRESENTACIÓN VISUAL DE ESTA DISPOSICIÓN ESPACIAL}
+
+Estas hipótesis generan conjuntamente un encadenamiento hacia atrás: los rendimientos crecientes proporcionan a las empresas un incentivo para concentrar la producción manufacturera en una única localización (economías de escala interna), mientras que los costes de transporte generan el incentivo para que esta concentración se produzca cerca de los grandes mercados (economías de escala externa).\footnote{Es decir, las fuerzas de aglomeración surgen de la combinación de preferencias por la variedad en los bienes manufacturados, rendimientos crecientes a escala y costes de transporte.
+} Pero también generan también un encadenamiento hacia adelante: las preferencias por la variedad proporcionan a los trabajadores un incentivo para consumir los bienes manufacturados producidos por todas las empresas, mientras que los costes de transporte generan el incentivo para localizarse cerca de donde dichos bienes son producidos.
+
+Estos encadenamientos hacia adelante y hacia atrás se refuerzan mutuamente en un proceso circular de causación acumulativa, lo que favorece la concentración de la actividad manufacturera, fomentando la formación de un núcleo manufacturero en una región y una periferia agrícola en la otra. Por otro lado, las fuerzas de dispersión surgen de la existencia de costes de transporte y de agricultores geográficamente inmóviles, incentivando a que algunas empresas manufactureras se localicen en cada región para abastecer a los agricultores. En definitiva, que emerja una estructura núcleo-periferia en equilibrio depende de la fuerza relativa de estas fuerzas de aglomeración y dispersión. A medida que los costes de transporte disminuyen, tanto las fuerzas de aglomeración como las de dispersión se debilitan, pero las fuerzas de dispersión disminuyen más rápidamente en términos absolutos que las de aglomeración.\footnote{varies with transportation costs (τ ), where τ > 1 is the fraction of a good that must be shipped in order for one unit to arrive, such that τ = 1 corresponds to zero transport costs. Solid lines denote stable equilibria. Dashed lines denote unstable equilibria. λ is the share of manufacturing workers in a region. τ (B) is the break point and τ (S) is the sustain point.
+}
+
+\imagenfit{Fig1.png}{Configuración del equilibrio en KRUGMAN (1991)}{}
+
+Como se muestra en la figura, para costes de transporte suficientemente altos ($\tau$), existe un equilibrio simétrico, con manufacturas y agricultura localizadas en ambas regiones. Cuando los costes de transporte caen por debajo de un valor crítico (punto de sostenimiento, $\tau(S)$), se hace posible sostener un equilibrio núcleo-periferia, en el que la manufactura se localiza únicamente en una de las dos regiones. A medida que los costes de transporte disminuyen aún más por debajo de otro valor crítico (punto de ruptura, $\tau(B)$), el equilibrio núcleo-periferia se convierte en el único equilibrio espacial estable. Solo cuando los costes de transporte caen a cero ($\tau = 1$) la localización en el espacio geográfico deja de ser relevante.
+
+Dado que las dos regiones son idénticas ex ante, se sigue que, para aquellos valores de los parámetros para los cuales es sostenible un equilibrio núcleo-periferia, es indeterminado cuál de las dos regiones se convierte en el núcleo manufacturero. Por lo tanto, una predicción clave es que la distribución espacial de la actividad económica puede caracterizarse por la existencia de múltiples equilibrios.\footnote{En presencia de estos múltiples equilibrios, pequeñas intervenciones de política pueden tener efectos discontinuos al desplazar la economía entre distintos equilibrios.
+}\textsuperscript{,}\footnote{Esta posibilidad de múltiples equilibrios estimuló una extensa literatura empírica que examina si los shocks temporales pueden tener efectos permanentes (“histéresis” o “dependencia de la trayectoria”) al modificar la localización de la actividad económica entre distintos estados estacionarios. Davis y Weinstein (2002) utilizan el bombardeo de ciudades japonesas durante la Segunda Guerra Mundial como un shock temporal de gran escala y no encuentran evidencia de dependencia de la trayectoria. Bleakley y Lin (2012) analizan los sitios de porteo en Estados Unidos, que históricamente presentaban ventajas naturales para el transbordo en el comercio fluvial. Aunque estas ventajas naturales han dejado de ser relevantes, se observa que tienen efectos permanentes sobre la distribución espacial de la actividad económica. Determinar en qué circunstancias la localización de la actividad económica presenta o no dependencia de la trayectoria sigue siendo un área activa de investigación.
+}
+
+\subsubsection{Implicaciones de Política Económica}
+Esta linea de investigación ha sido ampliada muchísimo desde sus inicios, incluyendo desplazamientos migratorios con fricciones bilaterales (lo que introduce efectos dinámicos sujetos a shocks), teoría de grafos para el análisis de la evolución de los costes de transporte y las decisioens de localización de las empresa, innovación endógena o acumulación dinámica de capital, etc. Sin embargo, la respuesta a nuestra pregunta inicial no parece quedar bien resuelto: ¿existen límites a la integración?
+
+La razón es bastante sencilla: los límites a la integración requiere ensanchar la búsqueda más allá de razones estríctamente económicas. Como vemos, la integración permite que el principio de la ventaja comparativa emerja a máximos porque logramos reducir progresivamente los costes ineherentes a cada transacción económica. En nuestro ejemplo, se muestra como la progresiva reduccción de los costes de transporte y la libre circulación de factores de producción condicionan a priori la estructura económica que podemos observar entre diferentes regiones lo que, evidentemente, constituye un límite político al nivel de integración que se desee alcanzar. Sin embargo, continuando el proceso se alcanza una situación de múltiples equilibrios en los que, debido a la plena integración, los efectos centrípedos de la geografía económica vuelven a tener un papel relevante y permiten distribuir más homogeneamente los efectos. Volveremos sobre esto en la última parte.
+
+
+\clearpage
+\section{Efectos de la Integración Económica: Marco analítico}
+\puntosclave{
+    
+}
+
+Ahora que conocemos las diferentes etapas que podemos identificar en cualquier proceso de integración, así como la imposibilidad de identificar razones exclusivamente económicas que supongan un límite a dicho proceso, conviene analizar brevemente los efectos esperados de una integración. 
+
+Si bien el Modelo de KRUGMAN proporciona insights potentes acerca de las dinámicas que podemos esperar con la progresiva reducción de los costes de transacción y cómo esto puede servir a los decisores políticas para valorar las implicaciones políticas que tendría iniciar dicho proceso, no nos proporciona mucha información acerca de las razones por las cuales deberíamos llevarla a cabo. 
+
+Resulta obvio que toda decisión económica conlleva una serie de costes y beneficios y, en este contexto, guardará estrecha relación con las características de los países implicados. Pero, ¿cómo podemos cuantificarla? ¿qué efectos positivos y negativos podemos esperar de este proceso?
+
+\textbf{¿Qué queremos decir?} La teoría de la integración se ha conformado de acuerdo a dos grandes literaturas: la teoría tradicional que únicamente considera efectos estáticos del comercio, y la nueva teoría de la integración que considera efectos dinámicos, la integración de flujos de inversión extranjera directa (y los posibles penalizadores geográficos al comercio ya mencionados de la NEG). Además, junto el desarrollo teórico de esta rama teórico multitud de estudios empíricos se han realizado con el objetivo de cuantificar el impacto de los procesos de integración. Presentaremos brevemente algunos de sus resultados más importantes aunque, como veremos, el resumen final puede resumirse a lo siguiente: los efectos esperados son tremendamente positivos, los efectos observados no lo son tanto (como mínimo, no concluyentes).
+
+Empecemos por la evaluación de impacto desde un punto de vista normativo. 
+
+\subsection{Enfoque normativo: Efectos de la integración}
+¿Qué podemos esperar que suceda tras un proceso de integración? Adoptar un enfoque normativo equivale a modelar el comportamiento de los agentes económicos y analizar los resultados del modelo tras la intervención, en este caso la integración, reducción de costes de transporte entre dos o más regiones o ampliación del tamaño de mercado. Todas estas tendrán pocas diferencias en cuanto a los supuestos teóricos subyacentes pero su utilidad variará en función de las partes implicadas. 
+
+Por ello, utilizaremos dos enfoques diferentes, uno de equilibrio parcial y otro de equilibrio general, y dos tipos de partes implicadas: (i) en el enfoque de equilibrio parcial consideraremos los efectos sobre la estructura microeconómica del mercado en partes sujetas a un proceso de integración; y, (ii) en el enfoque de equilibrio general valoraremos los efectos que tiene la integración entre dos mercados y su contraparte, el mundo.
+
+\subsubsection{Marco de Equilibrio Parcial: efectos sobre la estructura del mercado}
+Los efectos sobre la estructura competitiva del mercado se pueden analizar bajo el modelo marco propuesto por MELITZ-OTTAVIANO (2008). Las ecuaciones fundamentales para evaluar los cambios que experimentaremos son:
+
+\eqblock{
+\begin{aligned}
+    &\text{Demanda}:&&\underset{\text{\scriptsize }}{\boxed{p_i=\alpha-\gamma x_i-\eta X}}\\[1em]
+    &\text{Beneficio operativo}: &&\underset{\text{\scriptsize }}{\boxed{\Pi(c)=\frac{L}{4\gamma}(c_D-c)^2}}\\[1em]
+    &\text{Incumbentes/Firmas}:&&\underset{\text{\scriptsize }}{\boxed{N=C(c_D)N_E}}
+\end{aligned}
+}{}
+
+
+
+
+\paragraph{Implicaciones de Política Económica}
+La integración tiene efectos tanto a nivel de país como a nivel microeconómico (empresas). La teoría más reciente del comercio se centra en el papel desempeñado por las empresas en las relaciones comerciales. En este sentido, el modelo de Melitz (2003) se ha convertido en el marco analítico de referencia.Los modelos tradicionales de competencia monopolística asumen que todas las empresas son idénticas, lo que determina un equilibrio simétrico entre ellas. Por ejemplo, tras una apertura comercial, todas las empresas se convierten en exportadoras. Esto no es una buena descripción de la realidad. En la mayoría de las industrias se observa que existe mucha heterogeneidad entre las empresas en términos de tamaño, beneficios, productividad, etc. Además, en la mayor parte de las industrias sólo una pequeña proporción de empresas es capaz de exportar.
+
+Como hemos visto, esta predicción del modelo se ajusta muy bien a la observación empírica de que sólo unas pocas empresas son capaces de exportar. En resumen, el modelo tiene unas predicciones muy claras con respecto a los efectos de escala y a los efectos selección del comercio internacional: La apertura comercial hace que las empresas menos productivas abandonen el mercado ( efecto selección). Con la apertura comercial, las empresas más productivas, pero no suficientemente eficientes venden únicamente en el mercado doméstico. Las empresas más productivas son capaces de obtener beneficios en los mercados de exportación, con lo que crecen y se convierten en empresas exportadoras. El hecho de que las empresas menos productivas abandonen el mercado y las empresas más productivas ganen cuota de mercado hace que la productividad agregada de un país sea mayor con el comercio internacional, ya que los recursos que antes estaban en las empresas menos productivas pasan a las más productivas, y éstas los utilizan más eficientemente. Se reducen los precios, lo que representa una ganancia de bienestar para los consumido res. Por último, cabe señalar que el modelo no se restringe a analizar la situación de una apertura comercial completa. Las mismas intuiciones pueden obtenerse si se analizan situaciones donde aumentan el número de países a los que se puede exportar o caen los costes fijos o variables de exportar. En todos los casos las empresas menos eficientes abandonan el mercado y las más eficientes ganan cuota de mercado, generando ganancias en la productividad agregada.
+
+\subsubsection{Marco de Equilibrio General: efectos sobre el bienestar agregado}
+
+
+
+
+\paragraph{Implicaciones de Política Económica}
+El impacto de medidas proteccionistas en economías grandes puede transcender las propias fronteras de la unión afectando al resto de los mercados internacionales. Estos efectos se dan a través del precio de los bienes y pueden llegar a afectar a la relación real de intercambio de los países involucrados en el comercio, tanto dentro como fuera de la unión. Para entender esto, supongamos que una economía es lo suficientemente grande como para afectar el precio de los productos internacionales. Si este país entra en una unión aduanera y fija un gravamen a las importaciones llegadas de otros países, puede generar tal desviación de comercio, vía una reducción de la demanda de importaciones de países terceros, que el precio internacional del bien importado se reduzca y su relación rea·l de intercambio mejore. Este es el denominado el efecto de los términos de comercio (terms oftrade effect). Este efecto debe su nombre a la alteración de los térn:inos de intercambio definidos éstos como la relación entre los precios de exportación sobre los precios de importación de los bienes de un país. El corolario es que un país grande puede mejorar su bienestar con un arancel si las ganancias en los términos de comercio compensan las pérdidas asociadas a las restantes distorsiones. Como consecuencia, los países pequeños pueden mejorar su bienestar si, al integrarse, pasan a comportarse en su conjunto como un país grande. Los efectos debido a la alteración de los términos de intercambio pueden provocar que las ganancias de algunos países de la unión se vean eclipsadas por las pérdidas de los demás integrantes. Esto lleva a una necesidad por coordinar las políticas macroeconómicas. De acuerdo a esto, incluso aunque entre países se den los requisitos necesarios para avanzar en la integración, tales como bajos niveles de costes de transporte o un similar tamaño de las economías (PIB), la integración puede mostrar importantes fallos simplemente porque los países socios muestran políticas macroeconómicas que actúan en sentidos opuestos. Este sería el caso de MERCOSUR donde países como Argentina y Brasil, pese \i ser economías muy similares, al no coordinar sus políticas, especialmente las del tipo de cambio, han visto que no han podido alcanzar los beneficios de pertenecer a un mercado común. De acuerdo a la evidencia, esta falta de coordinación puede ser más grave en países en desarrollo que en países desarrollados. Por ello, diversos autores (Persson y Tabellini, 1995) apuntan a la necesidad de coordinar estas políticas e incluso alcanzar compromisos de armonización entre los países. De ahí que, tras un mercado común, los países acaben optando por avanzar hacia una unión económica.
+
+
+
+\subsection{Enfoque cuantitativo: Metodología empírica de la integración económica} 
+Una vez que conocemos los efectos que cabría esperar de un proceso de integración, tanto a nivel microeconómico como a nivel macroeconómico, podemos pasar a presentar los efectos observados de algunos procesos de integración. Cabe resaltar que estimar los efectos de la integración económica puede resultar unos de los ejercicios más complicados dentro de la literatura de comercio internacional. Su dificultad estriba en no poder delimitar claramente tanto los efectos como las variables que actúan dentro del proceso integrador.\footnote{A modo de ejemplo, en el inicio del proceso integrador europeo, varios estudios indicaban que éste no conllevaría crecimientos superiores al 1\% del PIB europeo, mientras que la Comisión Europea enfatizaba que dicho proceso permitiría aumentar el PIB Europeo entre un 5\% y un 7\%. Es decir, ante el mismo fenómeno podríamos obtener previsiones totalmente contradictorias.
+}
+
+Cualquier estudio empírico debe tener en cuenta que cualquier proceso integrador conlleva cambios ex post fruto, en gran medida, de alteraciones endógenas que no somos capaces de captar a través de los indicadores observados. 
+
+Por ello se recurre a menudo a la construcción de escenarios \textit{contrafactuales}: cómo hubiera sido la evolución de un país si éste no hubiera experimentado el tratamiento; para luego determinar los efectos de dicho tratamiento como la diferencia entre el resultado final (observado) y el contrafactual (estimado), efecto que que se asociaría al tratamiento. A priori, podemos empezar identificando dos series limitaciones de cualquier estudio que pretende construir un escenario contrafactual: (i) los indicadores que utilizamos quedan contaminados por el tratamiento recibido y puede resultar muy dificil descomponer la medida observada en país/tratamiento, o cuántas partes se quiera; y, (ii) dicha descomposición no es solo complicada sino también sujeta a un elevado grado de \textit{discrecionalidad} por parte de los investigadores. La razón es sencilla: si nosotros queremos demostrar \textit{x} nos veremos conducidos a construir el escenario que mejor se preste a demostrarlo. 
+
+Para mitigar los errores que pueden conducir a falsas predicciones, se han desarrollado algunas metodologías estándar para la construcción de estos escenarios contrafactuales de manera rigurosa. 
+
+\subsubsection{Modelos gravitatorios: ¿Cuánto ha afectado?}
+El primero de ellos consiste en la construcción de un benchmark teórico de comercio potencial entre dos economías. Se conoce como modelo de gravedad y es uno de los mejores predictores de volumen de comercio (a nivel agregado) que se han desarrollado. Si bien cabe destacar que no consiste, verdaderamente, en construir un escenario contrafactual el objetivo que persigue es sustancialmente parecido: ¿qué volumen de comercio debería haber entre dos areas, cuánto observamos antes y cuánto observamos después?\footnote{Para un análisis en profundidad del modelo gravitatorio revisar el capítulo 3 de HEAD y MAYER del \textit{Handbook of International Economics} (2014).
+
+Para ver una extensión del Modelo Gravitatorio con heterogeneidad de empresas [\authorfont{Ver Anexo \ref{anx:metodos_cuantitativos}}]
+} 
+
+Para contestar a esta pregunta debemos encontrar los determinantes del comercio. Sin embargo, como esto sería una labor más teórica que empírica, se restringe a la consideración de que \textbf{las relaciones bilaterales observadas son el resultado de dos fuerzas opuestas}:
+\begin{la}
+    \item \textbf{Potencial de mercado} (trade potential). La primera de éstas engloba los factores positivos que permiten la aparición del comercio, estos son, el PIB, la población y el PIB per cápita. Estas medidas si se refieren al origen del flujo de comercio, estarían indicando la facultad de un país para ofrecer/producir bienes, mientras que, si se refieren al país de destino, harían alusión a las fuerzas de demanda que impulsarían la compra de productos del país de origen; y,
+    \item \textbf{Resistencia al comercio} (trade resistance). Por otro lado, actuando en sentido contrario tendríamos la fricción que generan los costes de transacción, es decir, la resistencia al comercio. Por ejemplo, costes de transporte, distancia física entre los países como indicador del coste de envío de los productos, como elementos geográficos (islas), la existencia de una lengua común o de instituciones comunes (Common Wealth), la pertenencia a una misma área comercial o incluso los lazos históricos medidos a través de regímenes coloniales anteriores. 
+\end{la}
+
+En su forma primigenia, el modelo gravitatorio puede expresarse de manera equivalente a la propuesta por NEWTON:
+
+\eqblock{
+\begin{aligned}
+    &\hspace{5em}\boxed{X_{ij}=\varphi\frac{Y_i^{\alpha_1}Y_j^{\alpha_2}}{r_{ij}^{\alpha_3}}}\\[2em]
+    &\ln X_{ij}=\varphi+\alpha_1\ln Y_i+\alpha_2\ln Y_j+\alpha_3\ln r_{ij}+\varepsilon_{ij}
+\end{aligned}
+}{Modelo gravitatorio: Formulación clásica y logarítmica.}
+
+¿Cómo funciona un modelo de gravitación? Es muy sencillo, se trata de una construcción inversa. Como disponemos de los flujos bilaterales de comercio, los indicadores observados de tamaño de mercado y la distancia, la matriz por MCO nos proporciona los parámetros de calibración del modelo así como su significación estadística.\footnote{OJO, si el número de ceros de la variable endógena ($X_{ij}$) en la matriz es muy elevado, se podrían obtener variables sesgadas. Para evitar estos sesgos necesitaremos recurrir a estimaciones tipo TOBIT o POISSON.
+} Dos cosas cabe destacar de esta aproximación: (i) el término de error puede descomponerse en cuantos \textit{fundamentos} desee incluir el investigador (por ejemplo, idioma, sistema legal, proceso de integración económica, etc.); y, (ii) su simplicidad no debe engañarnos, es uno de los mejores modelos existentes para predecir el volumen de comercio.
+
+¿Por qué sucede esto? No hay que buscar muy hondo para hallar una razón intuitiva. Es razonable que el PIB de ambos países tenga un signo positivo y significativo ya que indicaría que a mayor renta mayor será el nivel de comercio (sin entrar en la relación causal), mientras que la distancia muestre un signo negativo, es decir, a mayor distancia menor será el volumen de comercio (sí causal).
+
+Veamos algunos de los resultados que ha proporcionado esta rama de la investigación empírica.
+
+\paragraph{Resultado (I): Comercio Internacional}
+El primero de ellos no debería sorprender. Gracias al uso del modelo gravitatorio, hemos podido validar que procesos integradores como el de un TLC/Unión Aduanera aumenta el comercio de sus integrantes en un 49\% mientras que un área monetaria lo expande hasta el 87\%. 
+
+Entre los TLC, pertenecer a la UE aumenta el comercio de sus países en un 23\% mientras que en el caso del NAFTA en un 39\%. La distancia, por su parte, tiene una penalización media de 0,89\%, esto es, aumentar la distancia (costes de transporte) entre dos socios comerciales disminuye su comercio en un 0,89\%.\footnote{Otros factores, como disponer de una lengua común y un pasado colonial común, aumentan el comercio de los países miembros en un 49\% y un 91\% respectivamente. Incluso países que llegan a compartir fronteras experimentan crecimientos del comercio en tomo a un 49\% respecto de aquellos que no la comparten.
+} Además, se observa que la distancia (costes de transporte) presenta un impacto mucho más negativo en servicios que en el comercio de manufacturas, debido al carácter de cercanía geográfica que requieren. Aun así, hay que tener en cuenta que los avances en las nuevas tecnologías reducen los costes de transacción (coste de transporte en servicios) de tal manera que no se llega a capturar correctamente el impacto de la distancia geográfica, pudiendo incluso sobre-estimar el efecto de la misma sobre el comercio de servicios.
+
+Si bien es cierto que los resultados son importantes para validar algunas posiciones respecto a la importancia geográfica en las relaciones comerciales o el impacto de los procesos de integración; no distan mucho de lo que cabría esperar. Ciertamente hemos demostrado con una significancia estadística muy alta que, entre otras muchas cosas, el mundo no es plano (al menos en términos económicos), las personas tienen problemas de comunicación (que se reflejan en costes), que las diferencias horarias importan al hacer negocios y que la protección legal varía significativamente entre diferentes países, aumentando o disminuyendo los costes de cualquier transacción.\footnote{Lamentablemente tras un primer uso en la década de los 80, los modelos gravitatorios fueron dejados de lado al no estar proporcionar resultados lo \textit{suficientemente} microfundamentados.
+
+Esto, fue resuelto más tarde con la introducción de la \textbf{resistencia multilateral} (multilateral resistance, ANDERSON y VAN WINCOOP 2003). De acuerdo con ella, los países no sólo comercian bilateralmente entre pares, sino en función de cómo sean los precios relativos de los bienes de esto dos países cualesquiera en relación a un tercero. Estos precios suponen la valoración subjetiva que hacen los consumidores de dos determinados países en relación con otro. Por ejemplo, si dos países $A$ y $B$ poseen precios relativos menores a un país $C$, el comercio entre $A$ y $B$ aumentará en mayor proporción que el comercio entre $A-C$ y $B-C$. De lo contrario, cabe esperar que tanto $A-C$ y $B-C$ empiecen a comerciar relativamente más. Gracias a la modelización formal de esta idea, el comercio se contempla no como una relación bilateral entre dos países, sino como un esquema multilateral en el que los flujos bilaterales dependen de cómo sean respecto de terceros países en el mundo. En definitiva, reimpulsó los modelos gravitatorios permitiendo que: (i) se introdujesen comportamientos heterogéneos entre empresas a la hora de comerciar; (ii) se conociesen con mayor detalle los efectos que los TLC, y en especial el de organismos multilaterales como la Organización Mundial del Comercio (OMC) (ROSE 2002), tienen en el comercio entre sus países integrantes; (iii) se ampliase el uso del modelo gravitatorio no sólo a comercio sino a flujos de inversión extranjera directa; y, (iv) se originasen explicaciones más razonables a fenómenos como el \textit{efecto frontera}, que se explicará a continuación.
+} 
+
+\paragraph{Resultado (II): Efecto frontera}
+Al margen de lo anterior, sí que existe un resultado fuertemente debatido en la literatura que surgió gracias a esta linea de investigación. Hemos dicho que la distancia geográfica juega un papel muy importante en las relaciones comerciales. Pero, ¿existe alguna violación flagrante de este principio? Es decir, ¿hay regiones muy próximas cuyos flujos bilaterales son manifiestamente inferiores a los que cabría esperar dado el tamaño de su economía y la distancia que los separa? La realidad es que sí. Muchos flujos observados son muy (muy) inferiores a lo que cabría esperar controlando por estos parámetros, incluso cuando \textit{no existe} virtualmente ningún impedimento al comercio entre dos regiones. Pensemos en lo siguiente, ¿qué comercio cabría esperar entre Cataluña y la región Sur de Francia? ¿más o menos comercio que entre Cataluña y Andalucía?
+
+Esta pregunta aparentemente inocente (yo pensaría que más) fue propuesta por MCCALLUM (1995). Concluyó que el comercio entre provincias canadienses es $22$ veces mayor al comercio que éstas mantienen con EE.UU (aunque posteriormente se rebajaría esta cifra; ANDERSON y VAN WINCOOP, 2003), hecho que se dió a conocer como \textbf{efecto frontera}.\footnote{El efecto frontera constituye una de las paradojas más evidentes en la literatura del comercio internacional (OBSTFELD y ROGOFF, 2000) pues permite ver de forma inequívoca los límites a de la integración comercial, como veremos más adelante. Algunos autores, como ANDERSON y VAN WINCOOP 2003, incluyeron la resistencia multilateral y consiguieron reducir el sesgo del efecto frontera. Otros se han dirigido a esgrimir el papel que juegan la existencia de redes (distribución/producción) o el rol de las cadenas de valor (decisiones de localización en frontera, minimizando costes de transacción).
+
+Los gobiernos también pueden desempeñar un papel importante en la magnitud de la frontera. De hecho, uno de los objetivos del Programa del Mercado Único en Europa era socavar el sesgo en las decisiones de compra del sector público. Se han introducido políticas para mejorar la transparencia del proceso de contratación, aunque existen pocos estudios rigurosos y no hay evidencia sólida de que esto haya incrementado significativamente el contenido de importaciones en las compras del sector público. Aquí tenemos incluso mayores dificultades para evaluar las implicaciones de bienestar. Parte del sesgo en la contratación pública puede reflejar proteccionismo encubierto para favorecer productos domésticos frente a sustitutos más eficientes producidos en el extranjero.
+} ¿Qué podría explicar esta paradoja? Algunos factores que podrían explicarlo serían diferencias en marcos institucionales, legales y sociales, historia común, idioma, y otras muchas barreras menos económicas que elevarían los costes de emprender comercio exterior. De hecho, uno de los posibles factores que más atención ha recibido es la ausencia de regulación armonizada, lo que fue reconocido explícitamente en la UE y constituyó un pilar central en la política de creación de un Mercado Único en Europa.\footnote{Sin embargo, aunque resulta dificil de cuantificar su efecto directo, una investigación emprendida por BRENTON y VANCAUTEREN (2001) llegó a conclusiones muy esclarecedoras. Dentro del Mercado Común Europeo, los autores evaluaron si los efectos frontera son más prevalentes o no para productos en los que se ha emprendido la armonización de los requisitos técnicos nacionales. Si observásemos un menor efecto frontera, cabría esperar que esta armonización ha tenido un impacto sustancial. ¿Han acercado las políticas de la UE implementadas para eliminar barreras técnicas al comercio dentro de la UE a los países de la UE? La sorprendente conclusión es que los efectos frontera siguen siendo sustanciales para grupos de productos en los que la UE ha introducido regulaciones técnicas armonizadas. Curiosamente, también encuentran que existen fuertes efectos frontera para productos en los que las diferencias en regulaciones técnicas no se consideran restricciones importantes al comercio transfronterizo.
+}
+
+La dificultad de cantificar dichos efectos condujo a muchos economistas a estimar el \textbf{arancel equivalente}: el impacto que tiene en términos equivalentes a un arancel la presencia de esta barrera administrativa entre regiones/países. Esta equivalencia arancelaria seguiría la siguiente expresión (MINONDO, 2006) que vemos en la ecuación:\footnote{Para calcularlo, se parte del modelo gravitatorio e incluye una variable ficticia que toma el valor $1$ si un flujo de comercio es entre países y $0$ si el flujo es dentro del país. Es lo que se conoce como variable frontera, $\theta$. Resolviendo la matriz de MCO, sabremos: (i) si la variable es significativa, lo que indicaría que existe el efecto frontera y que la integración entre países, pese a tener aranceles cero, no llega a ser plena; y, (ii) el signo y la magnitud de dicho efecto, que vendría reflejado en el parámetro $\alpha_1$.
+}
+
+\eqblock{
+\begin{aligned}
+    \ln{X_{ij}}=\varphi+\alpha_1\theta_{ij}+\alpha_2\ln{Y_i}+\alpha_3\ln{Y_j}+\alpha_4\ln{r_{ij}}+\varepsilon_{ij}\\[1em]
+    \Longrightarrow \underset{\text{\scriptsize arancel equivalente}}{\boxed{\tau_{ij} =\frac{\alpha_1}{e^{1-\sigma}}-1}}
+\end{aligned}
+}{Modelos gravitatorios: Efecto frontera y arancel equivalente. }
+
+Como se puede ver, el efecto frontera ha sido extensamente estudiado y constituye una manifestación tremendamente significativa de los \textit{límites} a la integración, sobre los que volveremos más tarde. No obstante, quizás resulte incluso más interesante saber que el efecto frontera no es único entre naciones, sino que en esenarios de perfecta integración (i.e. Estados): \textbf{el efecto frontera también se menifiesta entre regiones de un mismo país, con una magnitud menor}.\footnote{Para el caso español, por ejemplo, el efecto frontera a nivel provincial se cifra en $5$, es decir, las provincias comercian cinco veces más con ellas mismas que con otras provincias españolas. Esta paradoja parece que viene explicado por la existencia de economías de aglomeración, especialmente a nivel de ciudad, según las cuáles las aglomeraciones de población estarían provocando que se comerciase mucho en corta distancia, llevando a la aparición del efecto frontera a nivel administrativo, y no en larga distancia (comercio con otras regiones).
+
+De hecho, diversos autores señalan (LLANO y REQUENA, 2010) que el efecto frontera observado entrepaíses puede ser resultado de efectos frontera observados a niveles regionales inferiores. Así, dentro del comercio interregional que se realiza dentro de los países, serían las propias regiones las que ya presentarían un efecto frontera.
+}
+
+\subsubsection{Escenarios contrafactuales: ¿Cómo ha afectado?}
+Esta aproximación metodológica constituye un instrumento muy (muy) útil si se quieren buscar/analizar cuán significativa es una variable sobre los flujos comerciales entre dos países. Sobre un benchmark teórico, el modelo nos permite analizar las contribuciones, independientes o agregadas de diferentes parámetros que, a menudo, poco tienen que ver con un factor estríctamente económico. 
+
+No obstante, el modelo gravitatorio permite diferenciar los efectos de cada uno de estos elementos en una imagen fija/estática. Dicho de otra forma, no nos permite evaluar el impacto de este tratamiento en el comportamiento/rendimiento de la economía en un marco temporal definido.\footnote{Dos cosas cabe aclarar aquí. En primer lugar, el modelo de gravedad nos permite evaluar el impacto que tiene determinado tratamiento sobre los flujos observados, pero es muy controvertido decir que nos proporciona una herramienta incluso para saber \textit{cómo} sería en caso de no haberlo recibido (en un escenario contrafactual). Esto se debe a que la calibración del modelo se fundamenta sobre los parámetros incorporados, incluido el tratamiento. Por tanto, los problemas de endogeneidad evidentes serían díficilmente sorteables.
+Por otro lado, ...} Esto constituye una limitación importante porque solo nos permite saber cuán importante es el efecto de un proceso de integración en términos agregados, no cómo ha afectado dicho proceso a la evolución de la economía en el tiempo.
+
+Contestar a la segunda pregunta requiere construir un verdadero escenario contrafactual dinámico. Para ello, podemos recurrir a diferentes métodos, de entre los cuales presentaremos únicamente uno, pero todos comparten dos limitaciones fundamentales: (i) los
+
+\paragraph{Método de Control Sintético: ABADIE et al.}
+
+
+\subsubsection{Implicaciones de Política Económica}
+Ahora que conocemos algunas de las metodologías para abordar un estudio empírico que pretenda analizar los efectos de cualquier proceso de integración (y, como hemos visto, las carencias de éstos mismo), presentamos brevemente algunos resultados futo del contraste de los resultados del enfoque normativo visto antes. 
+
+\paragraph{Resultado (I): Integración en términos comerciales}
+En lo relativo al comercio de bienes, la tasa de apertura (importaciones mundiales sobre el PIB mundial) alcanzó el 30\% e 2011 (HEAD y MAYER, 2013). ¿Representa un gran nivel de integración mundial entre países o no?\footnote{Los autores plantearon el siguiente marco de referencia (benchmark):
+$$\text{Benchmark}=\sum_{n}\frac{X_n}{X_w}-\sum_n\left(\frac{X_n}{X_w}\right)^2=1-H$$
+Donde $X_n$ representa las importaciones del país $n$ y $X_w$ las importaciones totales del mundo. $H$ indica el índice HERFINDHAL de concentración (de las importaciones en este caso), $1-H$ se considera el índice de dispersión de la economía mundial. Si el benchmark que hemos planteado llega a alcanzar el valor de $1$ ($H=0$), estaríamos en un mundo plenamente integrado: plano.
+}
+
+\imagenfit{Benchmark_IntegracionEconomica.png}{Benchmark calculado}{Apuntes ICEX-CECO. Tema 3.B.10}
+
+El benchamrk de estos autores indica un crecimiento a lo largo del periodo, del 77\% en 1960 al 92\%, debido a que múltiples países se han integrado progresivamente a la economía mundial. Sin embargo, si comparamos los datos reales de $0,3$ (30\% de la tasa de apertura mundial) con este benchmark (100\% de integración) de integración plena, vemos que el mundo dista mucho de estar plenamente integrado.\footnote{Es más, si atendemos al volumen de comercio acumulado (eje de ordenadas) con relación a la distancia (siguiente HEAD y MAYER, 2013), vemos que la mayor parte del comercio únicamente se desarrolla en distancia menores a $5,000$km.
+} De manera más general, los datos muestran que la desagregación entre bienes finales y bienes intermedios influye mucho en el resultado del estudio: (i) el comercio de bienes intermedios representa alrededor del 70\% del comercio, siendo el de bienes finales el 30\%; y, (ii) el nivel de autosuficiencia de insumos intermedios varía entre el 75\%-80\%, mientras que la autosuficiencia en bienes finales se sitúa en torno al 65\%-75\%.\footnote{ ¿Qué significa esto? Tres son las conclusiones directas: [\authorfont{Ver Tema 3.B.17}]
+\begin{lnum}
+    \item \textbf{Regiones}. El mundo está mucho más fragmentado de lo que se creía. De hecho, el comercio internacional debería renombrarse como comercio \textbf{regional} puesto que se identifican tres regiones clave (con un  patrón centro-periferia más o menos definido) en las que sucede la mayor parte de los flujos comerciales observados: Fábrica Asia (China), Fábrica Europa (Alemania) y Fábrica Ámerica del Norte (Estados Unidos). Una situación radicalmente opuesto se observa en el comercio de materias primas, donde sí se puede decir que existe comercio internacional;
+    \item \textbf{Comercio intraindustrial} Las cifras de comercio intraindustrial son las verdaderamente importantes. No obstante, contrasta con lo observado por otro lado: los países tienden a ser más autosuficientes en insumos intermedios que en bienes finales;
+    \item \textbf{Mito: Cadenas de Valor}. Esto nos conduce a la última conclusión relevante: las conocidas cadenas de valor globales, aunque suenen bien, podrían descartarse como realidad económica, al menos por ahora. El contenido doméstico prima en cualquier flujo comercial observado (de principio a fin) lo que supone una alta concentración en determinadas economías del \textit{valor añadido} en los productos y un patrón de ensamblaje global en el que se experimenta una deslocalización productiva que no genera (salvando la generalidad) valor para muchas de las economías implicadas. 
+\end{lnum}
+}
+
+En cuanto al impacto concreto de los acuerdos comerciales de servicios, los resultados apuntan a que tanto los ACPR de integración negativa como los tratados de integración profunda, tienen un impacto muy positivo sobre el comercio de servicios, siendo incluso mayor para los primeros, en torno al 15\%, que para los segundos, con aproximadamente un impacto del 12\% y una vez corregidas las características económicas del importador y del exportador. Ambas cifras indicarían que los acuerdos de liberalización de servicios impulsan en un porcentaje considerable el comercio entre sus países miembros en relación con terceros países fuera del acuerdo comercial. Respecto a por qué los ACPR de integración negativa parecen tener un impacto levemente superior al de la propia liberalización profunda de los servicios en Europa, diversas hipótesis apuntan a que Europa partía de niveles de comercio, previos a la integración, más elevados entre sus países miembro.
+
+\paragraph{Resultado (II): Integración de los flujos de factores productivos}
+Como un paso más en los procesos de integración sería la creación de un mercado común, también hay cierta evidencia relativa a la movilidad de factores productivos y su impacto:
+\begin{lnum}
+    \item \textbf{Flujos de capital}. Por lo que respecta a los flujos de capital, MEDVEDEV (2012) muestra que pertenecer a un TLC tiene cambios positivos en los flujos de entrada de IED. HASKEL, PEREIRA, y SLAUGHTER(2007) encuentran efectos spillovers positivos en los flujos de IED de empresas extranjeras a las locales en UK. YEAPLE (2009) muestra similares efectos para el caso de empresas en EE.UU. XU (2012) sugiere, para el caso chino, efectos positivos que la presencia de la IED en las empresas doméstica vía una mejora al acceso de inputs intermedios de alta calidad;
+    \item \textbf{Flujos migratorios}. Respecto a la inmigración, ORTEGA y PERI (2013) encuentran que la apertura a la inmigración conlleva aumentos de la renta per capita del país receptor, gracias a que los inmigrantes poseen mayores niveles de aptitudes que impulsan la innovación. WINTERS et al (2004), y GOLDBERG y PAVCNIK (2007) encuentran que el teorema de STOLPER-SAMULESON no funciona para el caso de la inmigración, especialmente en países en vías de desarrollo. De hecho, en estos países, la apertura ha tendido a premiar en mayor medida los salarios de trabajadores más cualificados, lo que redunda en aumentos de desigualdad en el país emisor si éste posee un elevado número de trabajadores poco cualificados.
+\end{lnum}
+
+No obstante, el efecto frontera también se manifiesta desproporcionadamente en las observaciones de estos flujos. Para los flujos de capital vemos que la magnitud de éstos es pequeña en relación con lo que cabría esperar en una situación de integración completa. La primera pieza de evidencia a este respecto es la conocida \textbf{paradoja ahorro-inversión}: la correlación observada para los países de la OCDE entre las tasas nacionales de ahorro e inversión doméstica promediadas durante largos períodos es cercana a la unidad (FELDSTEIN y HORIOKA, 1980).\footnote{En regresiones iniciales de la inversión nacional sobre el ahorro nacional utilizando datos de los años sesenta, el coeficiente del ahorro era cercano a la unidad. Estimaciones más recientes sugieren que el coeficiente ha disminuido pero que sigue siendo grande y altamente significativo (OBSTFELD y ROGOFF, 2000). Esto se ve reforzado por estudios que demuestran que dentro de los países existe muy poca correlación entre las tasas regionales de ahorro e inversión (HELLIWELL, 1998).
+} 
+
+¿Qué significa esto? En mercados de capital globalmente integrados, el ahorro debería asignarse a países con las mayores tasas de rendimiento y no debería esperarse una relación fuerte entre ahorro e inversión domésticos. Por tanto, esta paradoja refleja la magnitud sorprendentemente pequeña de las cuentas corrientes en los países de la OCDE en relación con el ahorro y la inversión domésticos.\footnote{Otras piezas clave son:
+\begin{lnum}
+    \item \textbf{La baja correlación entre los rendimientos de carteras nacionales en los mercados internacionales de acciones}. ROUWENHORST (1998) informa que la correlación entre los índices del Reino Unido y de EE. UU. era de $0,5$, mientras que la correlación entre dos carteras aleatorias obtenidas dividiendo el índice de EE. UU. por la mitad era de $0,99$. Una explicación de esto es que los inversores muestran sesgo doméstico en sus carteras y sobreponderan valores domésticos en lugar de diversificar entre todos los mercados y mantener una cartera que se parezca a una cartera mundial. Esta falta de diversificación internacional eleva el nivel de riesgo y reduce los rendimientos; y,
+    \item \textbf{Propiedad corporativa}. WOJCIK (2001) examina el alcance y la naturaleza de la propiedad corporativa transfronteriza en Europa y concluye que el nivel de integración del mercado de capitales en Europa sigue siendo bajo y que los contornos de las fronteras nacionales en el mapa de los mercados de capital europeos siguen siendo muy nítidos. Estos efectos frontera reflejan que las condiciones de la propiedad extranjera difieren entre países, poniéndose particular énfasis en el papel del gobierno corporativo.
+\end{lnum}
+}
+
+\paragraph{Resultado (III): Integración y crecimiento}
+Por último, respecto al crecimiento inducido por la integración, KUTAN y YIGIT (2007) encuentran que la Unión Europea ha tenido efectos positivos en la productividad y el crecimiento económico. EGGER y LARCH (2011) encuentran que los tratados entre países de Europa del Este previos a la integración UE tuvieron efectos positivos en el comercio, el PIB y el bienestar de estos países. CABRAL y MOLLIK (2012), utilizando datos panel, analizaron el NAFTA y encontraron un impacto positivo en el PIB per capita mejicano, además de permitir la convergencia entre los estados mejicanos. 
+
+BILLMEIER y NANNICINI (2013) muestran que la liberalización comercial impulsa el crecimiento en los siguientes 10 años, excepto para el caso de los países africanos, como consecuencia del crecimiento en los flujos de comercio bilateral entre países que experimentan un proceso de integración.\footnote{Este resultado fue inicialmente propuesto por BAIER y BERGSTRAND (2007), que mostraron como la intergación duplica los flujos comerciales bilaterales entre dos países. Los autores extienden este estudio a sus efectos sobre el crecimiento.
+} Por su parte, HUR y PARK (2012) no encuentran cambios significativos en el crecimiento tras los 10 años posteriores al lanzamiento de un TLC, utilizando técnicas no paramétricas. 
+
+FEYRER (2009) estima el enlace entre comercio y crecimiento y concluye que aumentar el comercio un 1\% termina aumentando el PIB per cápita un 0,5\%. WACZIARG y WELCH (2008), y KNELLER et al. (2008) encuentran que tras un proceso liberalizador, éste viene precedido de aumentos en la tasa de apertura, del PIB y de la inversión. 
+
+A nivel de empresa, BUSTOS (2011) encuentra que el MERCOSUR indujo ganancias de productividad en las empresas argentinas debida a que la reducción de barreras arancelarias permitió acceder a una mejor tecnología. LACAVONE (2012) encuentra que el NAFTA mejorar la productividad media de las empresas mejicanas vía una mayor innovación y una mejorar de la calidad empresarial, aunque de estos efectos fueron las empresas grandes las que más se beneficiaron. DE HOYOS y LACOVONE (2011) también encuentran esta mejora en la productividad de las empresas debida al NAFTA gracias a una mejora de la competitividad del mercado a y a que las empresas pudieron acceder a inputs más baratos. 
+
+
+\clearpage
+\section{Enfoque cualitativo: Una nueva perspectiva de Economía Política} 
+\puntosclave{
+    
+}
+
+Recapitulando, podemos aseverar que, a pesar de los efectos \textit{perversos} que genera el efecto frontera, los datos tan sumamente positivos que arrojan los procesos de integración deberían conducir a una única conclusión: ¡adelante la globalización! Sin duda esta ha sido la posición defendida por muchos economistas durante décadas (hasta muy recientemente algunos), pero cualquier persona que habite el mundo real vería de una manera muy escéptica todas estas \textit{manifiestas} ventajas que trae consigo la integración. ¿Por qué? La razón es simple: la realidad es mucho más tozuda y rara vez está dispuesta a ceder ante las presiones de los \textit{investigadores}. 
+
+Hemos presentado dos enfoques, uno normativa y otro cuantitativo, a través de los cuáles analizar el impacto de la integración económica y poder preveer sus efectos (rara vez negativos). Sin embargo, se requiere un enfoque mucho más holístico para comprender ciertamente las consecuencias y efectos que pueden derivarse de cualquier proceso de integración. Por ello presentamos brevemente un enfoque cualitativo para intentar reconciliar ambos puntos de vista y responder a la pregunta que verdaderamente nos interesa: ¿qué debemos esperar de un proceso de integración?
+
+\subsection{¿Existen límites a la integración? Una visión político-económica}
+Sería interesante empezar respondiente ¿cuál es el alcance actual de la integración económica, tanto a nivel regional como global? ¿cuánta integración adicional podemos esperar? ¿Existen barreras restantes sustanciales que constriñen la productividad, al comercio y a los flujos de capital, que deberían estar recibiendo la atención de los responsables de política? 
+
+\subsubsection{El \textit{sesgo doméstico}: ¿Existe margen para una mayor integración económica en Europa?}
+Si uno acepta que las fronteras nacionales siguen siendo importantes impedimentos para la integración, las preguntas obvias que deben plantearse son cuáles son las causas y si los responsables de política deberían tratar de aumentar aún más el nivel de integración.\footnote{Siguiendo a OBSTFELD y ROGOFF (2000), si los costes de realizar comercio internacional de productos siguen siendo mayores que los de intercambios similares pero domésticos, entonces no deberíamos esperar ver mercados de activos globalmente integrados. Entonces, ¿qué subyace a estos efectos frontera estimados?
+} Hemos visto algunos de los argumentos que pueden explicar este efecto y han sido arduamente criticados por los economistas. Sin embargo, existe uno en conreto que se tiende a evitar conscientemente por las consecuencias que tendría desde una perspectiva teórica. 
+
+¿Qué sucede si los consumidores tienen preferencia sobre los productos nacionales? Tal posibilidad ha sido reconocido por los legisladores en Europa como una posibilidad clara. El TJUE ha dictaminado que el etiquetado obligatorio de bienes con su origen nacional no es compatible con el derecho comunitario, ya que tendría un efecto equivalente a una restricción cuantitativa.\footnote{El Tribunal consideró que las marcas de origen nacional inducirían al consumidor a dar su preferencia a los productos nacionales, y contribuirían así a ralentizar la interpenetración económica en la Comunidad.
+} Sin embargo, si reconocemos que esto existe, no podemos seguir manteniendo (al menod desde una perspectiva téorica) las virtudes que cualquier proceso de integración: si debe someterse a tal regulación no podemos asgurar que aumente el bienestar agregado. 
+
+Pensemoslo. Si los consumidores fueran completamente racionales en un sentido económico neoclásico estricto y tomaran sus decisiones solo sobre la base de los precios relativos y su renta, entonces tales regulaciones no serían necesarias.\footnote{Así, si los consumidores pueden determinar el origen nacional de los productos, podrán ejercer cualquier sesgo doméstico que tengan en sus preferencias. De hecho, aunque no existen normas obligatorias sobre el etiquetado de productos, el etiquetado voluntario de origen nacional es extremadamente común. En efecto, existe una amplia literatura en el contexto del marketing que documenta la presencia e importancia del sesgo doméstico sobre la base de encuestas a consumidores. Por ejemplo, KNIGHT (1999) informa de los resultados de una encuesta sobre las preferencias de consumidores estadounidenses respecto a hornos microondas y platos, y concluye que se preferían productos fabricados en Estados Unidos frente a productos fabricados en Japón y, curiosamente, esto ocurría con independencia de si la empresa era de propiedad estadounidense o japonesa. Así, a partir de esta fuente de información parecería que el país de localización de la producción, no el país de propiedad de la producción, importa en las preferencias del consumidor: sesgo doméstico.
+} En general, la evidencia sistemática sobre el sesgo doméstico en las preferencias es escasa. Pero si el sesgo doméstico en las preferencias es un fenómeno genuino y refleja deseos reales por parte de los consumidores, entonces las políticas que buscan socavar dicho sesgo y promover un mayor comercio es poco probable que mejoren el bienestar. De hecho, probablemente estemos observando la tendencia opuesta. Los consumidores demandan cada vez más información sobre los productos que compran y las empresas que los producen, lo que provoca que el margen para socavar los sesgos en las preferencias mediante la falta de información se está reduciendo.
+
+\subsubsection{La paradoja de la globalización: costes de transacción}
+FUKUYAMA (1995) enfatiza el papel de la confianza en la aparición del sesgo doméstico. La confianza engloba multitud de elementos que escapan un análisis minucioso de sus componentes. Sin embargo, su traducción económica es sencilla y nos hemos referido a ella a lo largo de toda la exposición: costes de transacción. Superar la falta de confianza puede implicar costes de transacción sustanciales. 
+
+Pensemoslo con un ejemplo. Incluso en mercados plenamente integrados, como la Nación, el dinamismo comercial que se observa no ha sido siempre así. ¿Por qué? Porque la confianza es mucho mayor entre nuestros más allegados que para con desconocidos y, cuando la confianza entre individuos no es suficiente para llevar a cabo una transacción, el Estado toma el papel que le corresponde y actúa como garante del cumplimiento de los negocios en virtud del marco jurídico común.\footnote{De ello se sigue que altos niveles de confianza tenderán a asociarse con mayores niveles de productividad. 
+
+Argumentos similares también se aplican a los flujos internacionales de capital, donde los inversores tienden a mantener un número mucho menor de activos de otros países del que cabría esperar en una cartera bien diversificada. De nuevo, los inversores parecen mostrar sesgo doméstico en sus preferencias, y la información imperfecta y los costes de transacción siguen siendo una barrera para los flujos de inversión entre países. 
+} En una célebre frase, el presidente del Tribunal Supremo e impresionante jurista, FEDERICO DE CASTRO, definió el Derecho Civil como \textit{aquel que regula las relaciones íntimas de una Nación}. El Estado, por tanto, minimiza estos costes de transacción pues puede actuar de mediador y depositante último de la confianza y, en nuestro contexto, cabe esperar que la confianza en general sea mucho mayor entre individuos dentro de una comunidad nacional.
+
+Este hecho ha sido ampliamente documentado por muchos estudios en diversas areas. Cuando nos fijamos en el tamaño del Estado en distintas sociedades, descubrimos un hecho bastante asombroso. Con muy pocasa excepciones, cuanto más desarrollada está una economía, mayor es la parte de sus recursos consumida por el sector público. Las administraciones públicas son más grandes y más fuertes, no en las economías más pobres del mundo, sino en las economías más avanzadas. La correlación entre tamaño de la administración y renta per cápita es muy fuerte. Los países ricos tienen mercados que funcionan mejor y administraciones mayores, en comparación con los países pobres. Todo esto puede sorprender a primera vista, pero la argumentación precedente ayuda a comprender lo que ocurre. Los mercados están más desarrollados y son más eficaces generando riqueza cuando cuentan con el apoyo de instituciones públicas sólidas. Los mercados y los Estados se complementan, no se sustituyen.
+
+\textbf{Incluir estudios}
+
+Pero esta minimización de los costes de transacción no debe interpretarse únicamente desde un lado de la balanza: el Estado actúa como último garante de los riesgos asociados a la integración económica internacional. En especial, minimizando los efectos distributivos que vimos que generaba. En los países de la OCDE en general, y en la UE donde la integración económica es más avanzada, las políticas nacionales relativas a impuestos y transferencias, incluidos los subsidios por desempleo, desempeñan un papel importante en la reducción de la pobreza.\footnote{A mediados de los años noventa, la tasa de pobreza antes de impuestos y transferencias para la población en edad de trabajar era de aproximadamente el 23\% en Bélgica, el 25\% en Francia, el 14\% en Alemania y el 23 y 24\% respectivamente en Suecia y el Reino Unido. Sin embargo, las tasas de pobreza después de impuestos y transferencias para la población activa eran de alrededor del 6\% en Bélgica, el 7\% en Francia, el 9\% en Alemania y el 7 y 12\% en Suecia y el Reino Unido respectivamente (FORSTER (2000)). 
+} En general, la efectividad de los sistemas de impuestos y transferencias en los países de la OCDE ha aumentado durante el período de globalización: \textbf{el impacto redistributivo del sistema fiscal y de transferencias aumentó a finales de los años ochenta y durante los años noventa}.\footnote{En varios países (Australia, Canadá, Dinamarca, Irlanda y Estados Unidos) las tasas de pobreza antes de impuestos y transferencias aumentaron entre mediados de los años ochenta y mediados de los noventa, mientras que las tasas después de impuestos y transferencias disminuyeron. En la mayoría de los demás países, las tasas de pobreza después de impuestos y transferencias aumentaron menos que las tasas antes de impuestos y transferencias, siendo las excepciones Alemania y los Países Bajos. 
+
+Esto se agrava cuando consideramos la cuestión de la redistribución dentro de los países en desarrollo y en transición, profundamente limitados en recursos. Además, sumándose a la percepción sostenida por muchos de que la globalización está aumentando la desigualdad entre países ricos y pobres, lo que lleva a cuestionar la globalización y el papel de las instituciones internacionales. A nivel global, la redistribución entre países es muy pequeña en comparación con la redistribución dentro de los países. Es posiblemente el mejor ejemplo del efecto frontera: los mayores efectos frontera se encuentran en relación con los flujos de ayuda exterior en comparación con los flujos dentro de los países. A nivel global, la globalización ha promovido mayores vínculos económicos y ha sido apoyada por el desarrollo de un conjunto claro y eficazmente aplicado de reglas que gobiernan los intercambios internacionales, pero, como enfatizan los politólogos, aún no ha proporcionado mecanismos para el establecimiento de un conjunto de valores y normas compartidas. 
+}
+
+Pero esta actuación tiene sus límites, el poder del Estado se circunscribe en gran medida a las fronteras nacionales y, por ello, es lógico pensar que, por un lado, los costes de transacción se incrementen para los de fuera de su jurisidicción a la vez que se intenta minimizar el impacto redistributivo que la integración tiene sobre los que quedan en el interior. De esta forma, se construye paralelamente a la integración lo que se ha venido en llamar la \textit{paradoja de la globalización}: los Estados son indispensables para el funcionamiento dinámico de los mercados nacionales (cuando la confianza intra-comunidad no alcanza), pero son también el principal obstáculo para el establecimiento de mercados globales. ¿Por qué? Porque minimizar los costes de transacción nacionales obliga a preservar el conjunto de preferencias de cada país, de su posición internacional y de su trayectoria histórica; lo que deja la globalización económica en una situación frágil, faltándole los apuntalamientos institucionales de los mercados nacionales y encontrándose entre los límites institucionales existentes, generando muchos costes de transacción.
+
+\subsection{¿Dónde queremos llegar? El trilema inexorable}
+En definitiva, aunque existe una gran cantidad de evidencia de que la integración económica está ocurriendo a un ritmo rápido y está teniendo un efecto profundo sobre las vidas económicas y los pensamientos de una amplia gama de individuos, existen también razones para creer que los alcances actuales son bastante bajos cuando se comparan con el punto de referencia de mercados completamente integrados y ahora estamos en una mejor posición para cononcer por qué. Por tanto, si queremos alcanzar una mayor integración y beneficiarnos del profundo impacto que esto ha resultado tener tanto en términos nacionales como los que se preveen en términos internacional debemos tener en cuenta los intereses en conflicto y la voluntad para mediar y elegir entre ellos. 
+
+Y, ¿cuáles son estos intereses? Recapitualando, todo proceso de integración se enfrenta a tres intereses (y efectos) contrapuestos: (i) la integración y los efectos positivos que puede traer consigo; (ii) la mutualización del riesgo, es decir, la capacidad de preservar el conjunto de preferencias de cada comunidad y hacer frente a las reivindaciones sociales surjan durante el proceso; y, (iii) la capacidad de forjar un conjunto de preferencias común atendiendo a razones históricas, culturales, económicas, etc. Gráficamente:
+
+\textbf{VÉRTICES EN CONFLICTO}
+
+Cada uno de estos elementos forma el vértice de un triángulo, y este a su vez constituye el trilema inexorable al que se enfrenta cualquier proceso de integración. Desde una perspectiva nacional, los intereses de los diferentes pueblos que conforman la nación española han sido embedidos en la constitución y estos a su vez han cedido su soberanía en favor de una instituciones supra-regionales/comunitarias (como se quiera). 
+
+\subsubsection{Implicaciones de Política Económica}
+Hablar de integración es hablar de \textbf{integración} y requiere comprender tanto los potenciales efectos positivos, que son plenamente observables en cualquier Estado actual, habida cuenta de las posibles consecuencias a las que se expone un proceso de integración incompleto. ¿Podemos comprimir la heterogeneidad de intereses de manera que puedan ser el objetivo de instituciones supra-nacionales? Si es así, podemos seguir con la integración económica. ¿No podemos llegar a un acuerdo capaz de mutualizar el riesgo y preservar el conjunto de preferencias como un todo homogeneo? Entonces debemos frenar nuestro proceso integrador:
+
+\textbf{FORMACIÓN DEL TRILEMA}
+
+La última opción es quizás más utópica que la existencia de un Gobierno mundial que poteja los intereses de todas las comunidades de la tierra bajo un mismo marco político-económico. La razón es sencilla: la historia del mundo es trayectoria dependiente (un alivio) y cualquier intento de eliminar la posibilidad de resolver los conflictos sociales que emerjan, amplificando las pérdidas en caso de que sucedan, no constituye un equilibrio estable, como diríamos los economistas.
+
+\subsubsection{Miembros: ¿cualquier socio es bueno?}
+Una cuestión clave, que queda plasmado en el trilema montado y será determinante en el éxito o fracaso de una proceso de integración es el conjunto de miembros: la capacidad para agrupar los intereses colectivos en pro de unas instituciones de representación común. Los primeros teóricos de la integración económica planteaban sus análisis dejando de lado todo el espectro de decisiones políticas que conlleva un proceso integrador, ya sea desde sus inicios con un TLC o con avances posteriores una vez el proceso haya sido iniciado. No obstante, los elementos políticos son precisamente dos de los vértices del problema, siendo los económicos una parte importante pero residual en un proceso de integración (exitoso).\footnote{Aún hay autores que argumentan que es precisamente ésta la causa por la que los países no avanzan hacia el libre comercio y recurren a instrumentos como los acuerdos comerciales para conseguir potenciar sus relaciones internacionales (en el espíritu del \textit{second best}, aunque sería más propia catalogarlos como \textit{very worst} por la inestabilidad intrínseca a la que están sujetos. Pensemos cómo deberíamos abordar estos tres retos: 
+\begin{lnum}
+    \item Las exportaciones chinas de juguetes a Estados Unidos contienen niveles peligrosos de plomo;
+    \item La crisis de las hipotecas subprime en Estados Unidos se extiende por el resto del mundo a la vez que muchos valores emitidos por bancos estadounidenses y comercializados en países extranjeros resultan ser «tóxicos»;
+    \item Algunos de los bienes exportados por Indonesia a Estados Unidos y Europa se fabrican empleando mano de obra infantil.
+\end{lnum}
+
+Todas ellas tienen tres soluciones posibles: (i) una es la armonización regulatoria a nivel internacional; (ii) las soluciones de mercado (basadas en la información: se incluye en el producto toda la información relevante, ¿quién dice qué es relevante?, y se delega a la elección del consumidor); y, (iii) reconocer el límite de la integración global, cediendo en pro de las políticas de Estado.
+} 
+
+RODRIK (1995) plantea que la política comercial que al final llevará a cabo un país es el resultado de múltiples preferencias que se dan tanto por el lado de la demanda como de la oferta:\footnote{Mientras que el lado de la demanda hace referencia a las preferencias de los individuos de un país, así como de sus grupos de presión, el lado de la oferta respondería a las preferencias del legislador (policymaker) y de la propia estructura institucional del país
+}
+
+\imagenfit{PoliticalEconomyofTradePolicy.png}{Modelo de Política Comercial desde la óptica de la  Economía Política}{\textit{Political Economy of Trade Policy}. RODRIK. Capítulo 28, Volumen III, \textit{Handook of International Economics}}
+
+Si aplizamos este marco a cualquier proceso de integración, su alcance dependerá de la capacidad de sus promotores en alinear los intereses intra e inter nacionales. Por tanto, factores que determinarán la relación de preferencias serán siempre: la identidad y el compromiso de mutualización de riesgos, la estructura institucional y de participación democrática del país (sociedad civil) y las ganancias esperadas de la integración.
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+
+
+
+\clearpage
+\anexo{Metodología empírica de la integración: Otros métodos cuantitativos}\label{anx:metodos_cuantitativos}
+A continuación se presentan otros métodos cuantitativos para la evaluación de impacto de los procesos de integración económica.
+
+
+$$\text{\textbf{Modelos de Gravitatorios con heterogeneidad de empresas}}$$
+Puesto que el comportam iento de las empresas cada vez es más predom inante en la literatura, éste se ha incorporado también en el modelo gravitatorio, y más concretamente a través de los márgenes extensivo e intensivo del comercio. De acuerdo con estos dos márgenes las empresas pueden mostrar dos patrones simultáneos y complementarios en su apertura al exterior. Cuando dos países se integran, tanto el número de empresas que exportan como el número de envíos que una única empresa realiza al exterior, pueden aumentar. Este es el conocido como margen extensivo. Por su parte, si tras una integración las mismas que antes comerciaban internacionalmente, aumentan aún más el valor de sus exportaciones o hacen envíos unitarios de mayor valor, estaríamos hablando de un aumento en el margen intensivo de un país. Como se ha dicho, ambos efectos pueden darse con una integración, aunque la evidencia empírica apunta a que son los cambios en el margen extensivo del comercio los que mayormente dirigen el comercio. En una forma red ucida, ambos márgenes se pueden incorporar en un modelo gravitatorio de la siguiente manera (Hillberry y Hummels, 2008):
+
+$$\begin{aligned}
+    \frac{\partial \ln X_{ij}}{\partial \ln\theta_{ij}}=\frac{\partial\ln N_{ij}}{\partial \ln\theta_{ij}}\cdot\frac{\partial\ln\bar{x}_{ij}}{\partial\ln{\theta_{ij}}}
+\end{aligned}$$
+
+La expresión anterior se expresa en términos de elasticidades respecto de los costes de transporte ($\theta_{ij}$), donde $X$ son las exportaciones ($X+M$) totales de $i$ a $j$, $N_{ij}$ es el número total de envíos (número de empresas exportadoras) de $i$ a $j$; $\bar{x}_{ij}$ es el valor medio de los envíos (o el valor medio de exportación) de $i$ a $j$. Mientras que $N_{ij}$ refleja el margen extensivo, $\bar{x}$ indicaría el margen intensivo del comercio.
+
+$$\text{\textbf{Modelos de intensidad del comercio}}$$ 
+Esta línea de investigación se basa en la idea según la cual existe un nivel natural de comercio entre dos socios comerciales dadas sus condiciones económicas y geográficas. Si el comercio es mayor a ese nivel natural, indicaría que el comercio está sesgado a favor de otros factores más allá de ese nivel natural. Éstos podrían ser factores naturales, como la lengua común o la existencia de una frontera común, o factores institucionales, tales con10 la pertenencia a un área de libre comercio. 
+
+Dentro del abanico de índices propuestos para medir ese nivel natural de comercio, destaca el ratio de concentración comercial (trade concentration ratio). Este índice tomaría la forma: 
+
+$$\begin{aligned}
+    \text{Trade concentration ratio}=\frac{\text{Comercio}_{ij}^R}{\text{Comercio}_{R-\mathbf w}}
+\end{aligned}$$
+
+Donde $\text{Comercio}_{ij}^R$ indicaría el comercio ($X+M$) entre los países $ij$ pertenecientes a la región ($R$) y $\text{Comercio}_{R-w}$ indica el comercio bilateral ($X+M$) entre la región $R$ y el resto del mundo ($\mathbf w$). Esta ratio sería igual a uno si la intensidad de comercio bilateral entre dos países $ij$ es igual a la que presenta la región económica ($R$) a la que pertenecen ambos países con respecto al mundo ($\mathbf w$). Esto significaría que no existiría ningún sesgo geográfico en el comercio entre países. Por el contrario, si este índice es mayor a uno, el comercio estaría sesgado geográficamente en favor de los países $ij$. Un inconveniente de este método es que, a diferencia del modelo de gravedad, no permite distinguir a qué factores se debe el sesgo geográfico observado. 
+
+Para los años 1970-2001, la UE habría experimentado un aumento de su ratio concentración comercial del $1,5$ al $1,6$, mientras que NAFTA habría aumentado del $1,9$ al $2,9$, MERCOSUR del $6,2$ al $13,6$, y ASEAN habría reducido su índice del $11,4$ al $3,5$. En todos los casos y con menor o mayor magnitud, encontraríamos evidencia del sesgo geográfico.
+
+$$\text{\textbf{Modelos de EGC}}$$
+Los modelos de Equilibrio General Computable, posteriores a los modelos gravitatorios, con los más populares y utilizados en el análisis empírico de la integración económica. Su principal ventaja se encuentra en la posibilidad de realizar análisis ex ante de los procesos integradores. Éstos se conforman como modelos dinámicos que pretenden capturar las interacciones entre múltiples variables que bien podrían estar influenciando el comercio entre países, o podrían verse afectadas tras el inicio de la integración. A diferencia de los modelos econométricos, los cuales se usan para estimar parámetros muy concretos proponiendo modelos simples o únicamente centrándose en variables endógenas, los CGE se fijan en modelos basados puramente en la teoría. Para el cálculo de los resultados según un CGE los investigadores han de elegir valores para los parámetros de sus funciones que en multitud de ocasiones resultan ser ad-hoc Esta forma de proceder se la conoce como "calibración'', esto es, el investigador que pretende explicar una serie de ecuaciones (funciones de producción o de utilidad, por ejemplo) necesita recurrir a una serie de valores para los parámetros de sus funciones con el objetivo de poder simular el comportamiento final de su función de interés. Estos valores los obtendría de estudios econométricos previos que pretendan calcular este parámetro.\footnote{A modo de ejemplo: supongamos que queremos estimar la tecnología de un país según una función de producción COBB-DOUGLAS del tipo $Y=K^\alpha L^{1-\alpha}$ para la cual conocemos únicamente los valores de Capital ($K$) y Trabajo ($L$). El parámetro $\alpha$ es necesario para poder calcular $Y$, pero desconocemos su valor. Para ello, recurrimos a estimaciones econométricas previas en la literatura del parámetro $\alpha$ e incorporamos dicho valor en nuestra función de producción como un parámetro constante. Este proceso sería la calibración.
+} Los modelos CGE incorporan tanto el comportamiento de las empresas (posiblemente por sectores), como de los consumidores y del Sector Público (según sea el caso) a través de distintas funciones matemáticas. Con estas funciones, pretenden simular el impacto final de una apertura comercial sobre las variables estudiadas (PIB, empleo, salarios, etc). Hasta mediados de los 90, su dimensión era puramente estática, limitando la validez de los mismos. Sin embargo, con la mejora de las capacidades informáticas, su aplicación como herramienta de análisis de política comercial se ha visto muy extendida por tres principales motivos: 1) Permiten generar multitud de equilibrios donde, cambios en los precios relativos de los bienes comerciados, pueden llevar a diferentes escenarios de crecimiento, empleo e inversión. 2) Capturan no sólo los efectos primarios de la integración económica, es decir, los efectos parciales en el comercio de un shock en la política comercial, sino que ofrecen resultados para todos los países implicados en el área y para multitud de dimensiones simultáneas que se retroalimentan con el comercio; 3) Permiten calcular tanto cambios en la estructura económica de los países como consecuencia de la liberalización, entendidos estos cambios como variaciones en la proporción que representan sobre el agregado nacional sectores corno la agricultura, las manufacturas y las servicios, como también cambios en la retribución de los factores (capital y trabajo) y de los ingresos estatales. Los modelos CGE son una importante herramienta de análisis tanto para el análisis de un país individual como multi-regional, aunque no por ello están exentos de problemas. Para el cálculo de los efectos endógenos de las variables, se han de realizar supuestos acerca del comportamiento de las mismas. 
+
+Como todo supuesto, éste puede ser criticable en caso de ser un supuesto muy restrictivo. Por su parte, además los modelos CGE necesitan ser calibrados, como se ha indicado anteriormente, lo que puede arrojar dudas sobre los mismos si los parámetros que se usan para dicha calibración son constantes (no varían en el tiempo) o si están calculados para un país y unas condiciones específicas que pueden no las necesarias en el contexto en el que estemos usando el modelo CGE.\footnote{Por ejemplo, si deseamos realizar una simulación CGE para un TLC entre Europa y Corea del Sur pero para esta simulación únicamente disponemos de parámetros acerca del comportamiento de empresas y familias en un contexto de un TLC entre EEUU y Europa, los resultados del CGE para Europa-Corea del Sur pueden no ser consistentes y
+robustos.} 
+
+Todos estos inconvenientes arrojan dudas sobre los resultados finales del CGE. Aún así, el refinamiento de estos modelos cada vez se está mejorando más mediante la inclusión de mercados imperfectos con asimetrías entre los bienes nacionales y extranjeros. Sea como sea, los modelos CGE son una buena primera imagen acerca de los posibles efectos esperados a la hora de plantear un TLC. Aunque la evidencia disponiole no es concluyente y luego se hará un resumen detallado de la que se conoce, los análisis CGE para el caso de NAFTA apuntan a una mejora sustancial del comercio entre sus participantes, siendo Méjico el país que más se podría haber beneficiado de este tratado de no ser por las barreras no arancelarias que son muy dificiles de medir en estos modelos. Igualmente, análisis posteriores del caso de NAFTA sugieren que incluso con esas dificultades, se ha tendido a infra-estimar los efectos del NAFTA. En la actualidad, los modelos CGE se están utilizando para la negociación tanto del Trans-Pacific Partnership (TPP) entre Estados Unidos y varios países asiáticos, como para el Trans-Atlantic Trade an lnvestment Partnership (TTIP) entre la Unión Europea y Estados Unidos.
+
+
+
+
+
+
+\end{document}
