@@ -1,0 +1,1188 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{La empresa y las decisiones de financiación\\
+\large Financiación propia frente a financiación ajena. Política de dividendos y estructura del capital}
+\author{Marcelo Ortega}
+\date{Marzo 2026}
+\newcommand{\TemaCode}{3B3}
+
+\oldtitle{
+    B.3. La empresa y las decisiones de financiación: Financiación propia frente a financiación ajena. Política de dividendos y estructura del capital
+}
+\changerationale{
+    Sin cambios.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     Los dos principales bloques de este tema (el segundo y el tercero) tienen estructuras similares: se parte de Modigliani-Miller para introducir sucesivamente diferentes desviaciones respecto al modelo básico. 
+     
+     El buen opositor comprobará que éste es el proceder habitual en el método del economista: partir de un modelo con supuestos restrictivos, y relajarlos de manera controlada para localizar y valorar determinantes relevantes. 
+     
+     El primer bloque del tema es menos relevante, por lo que ha de exponerse de manera mucho más ágil. Se debe evitar una mera sucesión de instrumentos financieros y su definición mercantil, y en su lugar optar por una perspectiva claramente económica que dé repuesta a las siguientes preguntas ¿Qué fundamentos teóricos justifican la existencia de este modo de financiación? ¿Qué tipos de empresas van a encontrar más adecuado acudir a este tipo de financiación? ¿Qué ventajas/desventajas tiene este modo de financiación? 
+     
+     Como apunte concreto: el título habla definanciación propia (fondos propios) frente a financiación ajena (pasivo); por lógica económica y siguiendo a la literatura, se opta por analizar financiación interna (beneficios no distribuidos) frente a financiación externa (bien directa a través de la emisión de títulos de equity o de deuda, o bien indirecta a través de préstamos bancarios).
+    }
+\vspace{1cm}
+
+\modificaciones{
+    \textcolor{red}{\textbf{OJO!}} El supuesto implícito en la Hipótesis de la irrelevancia (también en la TCV de MODIGLIANI) y que no se comenta como tal al analizar los supuestos es que \textbf{el dinero es fungible}
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+Uno puede preguntarse por qué unas empresas se apoyan en la adquisición de capital en rondas de financiación, por qué unas empresas están más endeudadas que otras, o si existe un endeudamiento o estructura de capital óptima. El objetivo de este tema es abordar estas cuestiones desde la perspectiva de las finanzas corporativas:
+
+En un primer apartado, se repasarán las diferentes fuentes de financiación empresarial, tanto internas como externas (equity y deuda), con el objetivo de entender los fundamentos de cada una de estas fuentes de financiación y los motivos por los que detenninados tipos de empresas hacen (o no) uso de ellas. 
+
+El segundo apartado abordará la estructura del capital: una vez que ya se ha explicado cada una de las fuentes de financiación por separado, se partirá de las proposiciones de Modigliani-Miller para justificar que, cuando los mercados son perfectos, en realidad la composición de equity y deuda de la empresa es irrelevante. Puesto que esta teoría se apoya en supuestos exigentes, se irá presentando la literatura más relevante que ha surgido a partir de los estudios de Modigliani-Miller y sus implicaciones para a la estructura del capital de la empresa. Asimismo, se acompañará de contenido empírico  para conocer hasta qué punto las teorías que se presentan se ajustan o no a la realidad. 
+
+Por último, se repasará un apartado en estrecha relación con los dos anteriores: las políticas de reparto de dividendos. Debido a su potencial equivalencia, además, la política de dividendos se tratará de manera conjunta con la política de recompra de acciones. Al igual que en el apartado anterior, este apartado partirá de la irrelevancia de la política de dividendos de Modigliani-Miller para, de nuevo, ir presentando avances teóricos que ofrezcan explicaciones a los hallazgos empíricos.
+
+
+
+
+\clearpage
+\section{Fuentes de financiación empresarial}
+\puntosclave{
+    Las características de la empresa (tamaño, riesgo, sector, tipos de proyectos, activos de la empresa) condicionarán la posibilidad de obtener un tipo u otra de financiación, siendo las empresas más grandes generalmente las que tienen una mayor variedad de fuentes de financiación disponibles. 
+    
+    La financiación interna ofrece una financiación discrecional para la empresa, pero en ocasiones es insuficiente para acometer las inversiones de la empresa, especialmente si ésta es una empresa de rápido crecimiento. 
+    
+    La financiación vía deuda remunera de manera fija a los prestamistas y no diluye el control de la empresa. Ésta puede obtenerse en los mercados (de manera competitiva) o mediante intermediación bancaria. El coste y condiciones de ambos tipos de deuda es diferente.
+    
+    La financiación vía equity supone remunerar a los accionistas con una parte proporcional al control que éstos tienen de la empresa después de remunerar a los prestamistas. Puesto que se puede perder control de la compañía, el tipo de inversor que compra las acciones es relevante para la gobernanza de la empresa.
+}
+
+¿Por qué se financian las empresas? Contestar a esta pregunta no es cuestión baladí. No obstante, es la pregunta que verdaderamente nos interesa ya que nos permite analizar los \textbf{objetivos} y las \textbf{fuentes} de manera conjunta, única linea de análisis que proporciona un verdadero significado económico. 
+
+De manera simple, y sin entrar a valorar motivaciones frugales, accesorias o sin sentido que pudieran mediatizar la inversión, las empresas recurren a la financiación con el \textbf{objetivo de crecer}. Esto es: para emprender proyectos de inversión que hagan crecer su stock de capital (activos), su productividad (producción), sus resultados (PN) y, en último instancia, el valor económico (real) de ésta. Por eso, la manera más ilustrativa de representar el objeto del tema es mediante la siguiente ecuación:
+
+\eqblock{
+\begin{aligned}
+    &\text{OBJETIVO}: \text{Crecimiento}\equiv g\quad \Longrightarrow\quad \underset{\text{\scriptsize Las empresas se financiancian para \textbf{crecer}}}{\boxed{g=\underbrace{\left[\text{ROA}+(\text{ROA}-i)\frac{D}{E}\right]}_{= \text{ROE}}(1-d)}}\\[1em]
+    &\text{donde,}\quad 
+    \left\{\begin{aligned}
+        &\text{ROA}=\frac{\text{BAII}}{\underset{\text{\scriptsize(medio)}}{\text{Activo}}}&&\equiv \text{Rentabilidad $\underset{\text{\scriptsize (o sobre activos)}}{\text{económica}}$}\\[1em]
+        &\text{ROE}=\frac{\text{BN}}{\underset{\text{\scriptsize(medio)}}{\text{Patrimonio Neto}}}&&\equiv \underset{\text{\scriptsize (además de la equivalencia ROE-ROA antes expuesta)}}{\text{Rentabilidad financiera}}\\[1em]
+        &\frac{\text{Deuda ($D$)}}{\underset{\text{\scriptsize(medio)}}{\text{PN o Equity ($E$)}}}&&\equiv \text{Composición del capital (fuentes)}\\[1em]
+        &(\text{ROA}-i)&&\equiv \underset{\text{\scriptsize (sobre la rentabilidad de la empresa)}}{\text{Efecto del apalancamiento}}:
+        \left\{\begin{aligned}
+            &\text{ROA}<\text{ROE}\Longrightarrow \underset{\text{\tiny potencia la rentabilidad}}{\text{Positivo}}\\
+            &\text{ROA}>\text{ROE}\Longrightarrow \underset{\text{\tiny merma la rentabilidad}}{\text{Negativo}}
+        \end{aligned}\right.\\[1em]
+        &(1-d)&&\equiv \text{Retención de dividendos}\\[1em]
+    \end{aligned}\right.
+\end{aligned}
+}{Financiación: Objetivo de la financiación y descomposición del crecimiento. Fuentes de financiación}
+
+Por tanto, identificamos perfectamente la incidencia de la financiación en el crecimiento de la empresa, así como también las diferentes fuentes de financiación en las que se descompone dicho crecimiento, su incidencia y sus condicionantes. De esta manera, el potencial de crecimiento de la empresa queda limitado por: (i) por la rentabilidad y la eficiencia en el uso de su activo (ROA); (ii) el coste de la deuda, que sirve para valorar el efecto (positivo o negativo) sobre el crecimiento del grado de apalancamiento; (iii) la estructura de capital; y, (iv) la retención de dividendos.\footnote{El ROA puede ser sustituido perfectamente por el ROCE con los debidos ajustes. Se ha elegido el ROA por ser uno de los indicadores utilizados en el [\authorfont{Ver Tema 3.B.1}]. No obstante, la sustitución no afectaría de ningún modo a las conclusiones de la exposición. 
+
+El ROCE es la ratio de los beneficios operativos de la empresa dividido entre el capital empleado. De esta manera, el ROCE supone un indicador para medir la rentabilidad del capital empleado. Además, el ROCE también se puede interpretar como la rentabilidad del equity si la deuda fuera igual a 0. El ROCE puede obtenerse de diferentes formas, siendo una de las más comunes: $\text{ROCE}=\frac{\text{BAII}}{\text{Activo utilizado en el proceso productivo}}$
+}
+
+\textbf{¿Qué queremos decir?} No obstante, ante la gran cantidad de \textbf{innovaciones financieras} que han hecho posible que las empresas tengan a su disposición un amplio abanico de opciones de financiación adaptadas a sus necesidades, es necesario hacer un breve repaso de algunas de estas alternativas, así como también enfatizar en las ventajas e inconvenientes de cada una de ellas, aunque de forma general podamos agruparlas en dos bloques claramente diferenciados sobre los cuales seguiremos:
+
+\eqblock{
+\begin{aligned}
+    \text{Composión del capital:}\left\{\begin{aligned}
+        &\text{Financiación interna}: &&\underset{\text{\scriptsize (participaciones o \textit{equity})}}{\text{Patrimonio Neto ($E$)}}\\[0.5em]
+        &\text{Financiación externa}: &&\underset{\text{\scriptsize (acreedor-deudor)}}{\text{Obligaciones ($D$)}}
+    \end{aligned}\right.
+\end{aligned}
+}{Composición del capital: Categorización de las diferentes fuentes de financiación. Fuentes de financiación}
+
+\subsection{Financiación interna} 
+Empecemos con la financiación interna. 
+
+Como hemos dicho, el \textit{net income} o Beneficio Neto (BN) solo tiene dos destinos alternativos: (i) reinversión en la empresa; o, (ii) distribución en forma de dividendos (o recompra de acciones). De esta forma, constituye una de las fuentes de financiación básicas y más relevantes de muchas empresas, ya que no depende de la relación con otros agentes (ofrece una mayor discrecionalidad). 
+
+Recurrir a este mecanismo de financiación exige, por parte de la empresa (sus directivos), tener en cuenta:
+
+\eqblock{
+\begin{aligned}
+    &\uparrow\underset{\equiv\,\,[\text{ROE}(1-d)]}{\text{Financiación interna}}\quad \Longrightarrow\quad \,\,\uparrow d\quad \text{o,}\,\,\uparrow \text{ROE}\\[2em]
+    &(1) \qquad \exists \,\,\text{Coste de oportunidad}\\[1em]
+    &\Longrightarrow
+    \left\{\begin{aligned}
+        &(2) &&\frac{\partial g}{\partial ROE}>\gamma_t\\[1em]
+        &&&\hspace{1em}+\\[1em]
+        &(3) &&\text{Costes de información}
+    \end{aligned}\right.
+\end{aligned}
+}{Financiación interna: Características básicas y mínimos exigibles. Fuentes de financiación}
+
+En palabras, aunque parezca que no, la financiación interna conlleva un coste de oportunidad: aquel que enfrentan los accionistas por el conjunto de usos alternativos en la economía. Por ello, la reinversión debe asegurar un retorno mayor al coste de oportunidad, por ejemlpo: que la tasa de rendimiento de las nuevas inversiones sea superior al coste medio ponderado del capital ($r_{WACC}$). Y, por último, debe prestar especial consideración a la reducción de los costes de información que emergen del problema de agencia presente entre accionistas y directivos.
+
+En definitiva, las principales ventajas de la financiación interna son: (i) permitir financiar el crecimiento de la empresa sin diluir la propiedad; (ii) otorgar mayores recursos a empresas con potencial crecimiento; y, (iii) disponer de un mayor grado de discrecionalidad e inmediatez. No obstante, sus limitaciones y desventajas también son importantes, ya que: (i) pueden emerger problemas de desalineamiento de incentivos, suponiendo mayores costes de agencia (Principal-Agente, JENSEN (1986)); y, (ii) pueden ser claramente insuficiente para proyectos en crecimiento.
+
+
+\subsection{Financiación externa}
+Por ello en muchas ocasiones vemos que la gran porción de la financiación de inversiones empresariales tiene su origen en la financiación externa. Aunque existen múltiples fuentes de las cuales la empresa pueden obtener fondos las empresas, se puede hacer una gran subdivisión en dos tipos de sistemas de financiación: financiación vía \textbf{deuda} y financiación vía \textbf{emisión de acciones}. 
+
+\eqblock{
+\begin{aligned}
+    &\uparrow\underset{[D/E]}{\text{Financiación externa}}\quad\Longrightarrow\quad \uparrow \text{Deuda}\quad\text{o}\quad \uparrow\underset{\text{\scriptsize (en realidad, Patrimio Neto)}}{\text{Capital Social}}\\[2em]
+\end{aligned}
+}{Financiación interna: Características básicas y mínimos exigibles. Fuentes de financiación}
+
+Por tanto, requiere un análisis más exhaustivo de las alternativas de financiación y, en consecuencia, los instrumentos que la posibilitan.
+
+\subsubsection{Financiación vía deuda}
+La financiación mediante deuda es una de las principales vías de las empresas de adquirir fondos de manera externa. Dentro de esta categoría existen dos maneras principales de llevarla a cabo: sector bancario o mercados abiertos de capital.
+
+Dicho esto, aunque existen muchisimos instrumentos o alternativas de las que podríamos hablar, cada una con sus respectivas características, resulta más importante, y breve, destacar de manera general sus rasgos definitorios, que son:
+
+\eqblock{
+\begin{aligned}
+    &\boxed{b_t=(1+i_t)k_t}\quad\Longrightarrow\quad \uparrow \text{Activo}\propto\frac{\uparrow \text{D}}{\text{E}}\propto  k_t\quad\Longrightarrow\quad \uparrow\text{ROE}\iff\underset{(\text{ROE})}{\frac{\text{BN}}{\text{PN}}}>\underset{(\text{ROA})}{\frac{\text{BAII}}{\text{Activo}}}\\[2em]
+    &{\begin{aligned}
+        &\text{Bancaria (B)}\\
+        &\hspace{2em}\text{vs.}\\
+        &\text{Mercados (M)}
+    \end{aligned}:}
+    \left\{\begin{aligned}
+        &(1)&&\underset{\text{\tiny ¿cuánto cuesta?}}{\text{Costes}}&&:\quad\text{B}\gtrless\text{M}\\
+        &(2)&&\underset{\text{\tiny ¿volumen mínimo?}}{\text{Volumen}}&&:\quad\text{B}<\text{M}\\
+        &(3)&&\underset{\text{\tiny (marco sintitucional y desarrollo financiero)}}{\text{Desarrollo financiero}}&&:\quad\text{EEUU}\,\text{vs}\,\text{UE}\\
+        &(4)&&\underset{\text{\tiny ¿qué es más rápido?}}{\text{Inmediatez}}&&:\quad\text{B}<\text{M}\\
+        &(5)&&\underset{\text{\tiny ¿cuál requiere menos información?}}{\text{Información}}&&:\quad \text{B}<\text{M}
+    \end{aligned}\right.
+\end{aligned}
+}{Financiación vía deuda: Obligación, capital e intereses. Fuentes de financiación: Financiación externa}
+
+Por tanto, la deuda ($b_t$) representa una obligación incondicional para el prestatario, que debe pagar una cantidad compuesta del capital recibido y los intereses acordador. Además, como se ha visto antes, la financiación vía deuda incrementará el ROE si el diferencial entre el ROCE y los intereses de la deuda son positivos. 
+
+En definitiva, la deuda permite financiar nuevas oportunidades de inversión sin otorgar derechos políticos, pero por otro lado una deuda excesiva podría comprometer la solvencia de la empresa. Sin embargo, es necesario tener en cuenta que la estrategia de financiación deberá tener en cuenta más aspectos además de la idoneidad (o no) de endeudarse.\footnote{Un desarrollo más extenso de todas las diferencias existentes entre ambas alternativas de financiación vía deuda puede encontrarse en [\authorfont{Ver Anexo \ref{anx:financiacion_via_deuda}}].
+} 
+
+\subsubsection{Financiación via \textit{equity}}
+Por otro lado, las empresas pueden financiarse externamente a través de \textbf{ampliaciones de capital} que, a diferencia de la financiación vía deuda, aumentan el equity de la empresa. Esta vía de financiación, y sus efectos, puede representarse mediante el siguiente esquema:
+
+\eqblock{
+\begin{aligned}
+    &\uparrow\text{Equity}\,\propto\,
+    \left\{\begin{aligned}
+        &\uparrow\text{Patrimonio Neto (+ PE)}&&\Longrightarrow\quad\downarrow\text{ROE}\\[0.5em]
+        &\uparrow\text{Activo (+ PE)}&&\Longrightarrow\quad\downarrow\text{ROA}
+    \end{aligned}\right.
+\end{aligned}
+}{Financiación vía equity: Efectos y descomposición. Fuentes de financiación: Financiación externa}
+
+Cuando una empresa emite nuevas acciones, los accionistas actuales aceptan compartir con los nuevos accionistas sus derechos sobre el capital de la empresa (que se incrementa con el producto de la emisión), sus derechos sobre sus beneficios futuros y su control sobre la propia empresa. De esta manera, la ampliación de capital es, al fin y al cabo, la venta de nuevas acciones a un precio determinado: (i) si ese precio es igual al valor real de la acción, no hay creación de valor, ni ningún accionista actual sale perjudicado; pero, (ii) si las nuevas accion es se venden con prima de emisión, la empresa se habrá beneficiado de una fuente de financiación a bajo coste en detrimento de sus nuevos accionistas.\footnote{Esto es importante ya que, considerando aspectos informativos, la ampliación de capital podría implicar la señalización de un valor de la compañía por encima de su verdadero valor. Aunque las explicaciones pueden ser varias, en la práctica el anuncio de una ampliación de capital produce un ajuste a la baja en el valor de la compañía de en tomo al 3-5\%. 
+} En términos de valoración, se suele considerar que el coste de financiación vía ampliación de capital es el retorno exigido por los accionistas dada la valoración de mercado de la acción ($r_{WACC}$).
+
+En definitiva, supone una manera alternativa de captar fondos con implicaciones muy diferentes a la financiación de la compañía mediante la emisión de deuda, en la que será muy importante considerar, además del coste del capital, los inversores que van a formar parte del capital de la empresa para entender el impacto de la financiación vía equity en el futuro de la compañía. 
+
+Una compañía en rápido crecimiento puede tener ciertas reticencias a realizar ampliaciones de capital, ya que: 
+
+Al ser de rápido crecimiento, el directivo puede considerar que sus acciones están infravaloradas;
+
+Puede enviar una señal de sobrevaloración de las acciones al mercado. En este contexto, los bonos convertibles pueden suponer una buena alternativa de financiación. 
+
+No obstante, las empresas consolidadas también han utilizado bonos convertibles como fuente de financiación como manera de diversificar la base inversora (existen fondos especializados en este tipo de producto que invierten solamente en bonos convertibles). 
+
+
+
+
+
+
+
+
+\textcolor{red}{Además, es necesario tener en consideración que existe una interrelación entre la financiación vía equity y vía deuda: cuando el perfil de la deuda tiene un riesgo moderado o alto, la entrada de nuevo capital también afecta al valor de la deuda, ya que se reduce el riesgo de la compañía y el valor de la deuda aumenta. En todo caso, esta interrelación será fundamental en la decisión de la estructura del capital de la empresa y se explorará más adelante en detalle. 
+
+Además de las características básicas de la financiación vía ampliación de capital, es necesario hacerse, como mínimo, dos preguntas ¿diluirá el capital de los accionistas ya presentes? ¿Qué efectos tendrá dicha ampliación de capital en la gobernanza de la empresa? 
+
+Con respecto a la posible dilución del capital, dependerá de los compradores de las nuevas acciones: por ejemplo, imaginemos una compañía con un capital por valor de 1 00€ dividido entre dos accionistas, el accionista A, con un 80\% de la compañía, y el accionista B, con un 20\%. Si B vende su 20\% de la compañía a un nuevo accionista C, el capital de la empresa y la posición de A se mantienen inalterados. En cambio, si se emiten nuevas acciones para ofrecer a C el 20\% del control de la empresa, tendrá que comprar 25€ en acciones en lugar de 20€, ya que el nuevo capital de la compañía será de (100+25) 125€. En este caso. el accionista A pasará a tener el control del (80/125) 64\% de la compañía (en lugar del anterior 80\%) y el accionista B pasará a tener el control del (20/125) 16\% de la compañía en lugar del 20\%. Es decir, si los antiguos accionistas no adquieren acciones en la ampliación de la capital, efectivamente, su participación se diluye. Por el contrario, si A adquiere el 80\% de la emisión de nuevas acciones y B adquiere el 20\%, los dos mantienen su participación en la compañía. Suponiendo que ni A ni B participan de la ampliación de capital, la siguiente pregunta que cabe hacerse es¿Q ué efectos tendrá C en la gobemanz.a de la empresa? ¿Qué tipos de inversores pueden entrar en la empresa y cuáles son sus implicaciones? Dependerá del tipo de inversor que entre en la empresa y de la estructura del capital de ésta: por ejemplo, las empresas familiares tienen en muchas ocasiones el objetivo de no perder el control de la empresa; otros inversores, como los bussiness angels y de Prívate Equity, entran en el capital de la empresa y aportan, de diferentes maneras, know-how o cambios en las prácticas de la empresa para mejorar su desempeño; otros inversores, como los inversores institucionales suelen tener participaciones minoritarias en el capital de la empresa; los empleados pueden también fonnar parte del capital de la empresa ysuele ser un accionariado poco volátil, ya sea mediante la inversión directa en acciones de la empresa o mediante stock options.} 
+
+
+
+\subsubsection{Financiación híbrida}
+Hasta ahora se han abordado dos mecanismos de financiación externa como son la deuda y el equity: el primero no genera derechos políticos y el repago de la financiación es independiente de los resultados de la compañía, mientras que el segundo genera derechos políticos y los retornos dependen del rendimiento de la empresa.
+
+No obstante, existen casuísticas intermedias que tienen características de ambos tipos de financiación. Aunque existen una gran cantidad de instrumentos híbridos, algunos de los más conocidos son:
+\begin{la}
+    \item \textbf{Warrants (opciones)}. Título que permite a su portador suscribir otro título de nueva emisión (acción, bono o incluso otro warrant) durante un período determinado, en una proporción y a un precio fijados de antemano;\footnote{Por ejemplo, en 2017, Berkshire Hathaway ejerció sus warrants para comprar 700 millones de acciones de Bank of America a un precio de ejercicio de 7,14\$ por acción. En ese momento, las acciones de Bank of America cotizaban a 24,32 dólares, lo que significa que este movimiento fue inmediatamente rentable, puesto que Berkshire Hathaway pudo comprar acciones por valor de 24, 32 $ por 7, 14 $. Entonces ¿Por qué las compañías emiten warrants? En primer lugar, puede incentivar a más inversores: por ejemplo, un bono a tipo fijo puede ser atractivo solamente para un inversor más averso al riesgo, mientras que un warrant sobre un bono puede atraer a inversores de un mayor perfil de riesgo; por otra parte, puede ser interesante para facilitar la ampliación de capital, puesto que un inversor puede no estar dispuesto a entrar en el capital de la empresa (especialmente si su situación es compleja o está cerca de la bancarrota) pero puede estar dispuesto a comprar un warrant. 
+    }
+    \item \textbf{Bonos convertibles}. Un bono convertible es como un bono tradicional, salvo que también otorga al titular el derecho a canjearlo por una o más acciones de la empresa emisora durante un período de conversión establecido de antemano. Para la empresa, permite en un primer lugar emitir deuda a un tipo de interés menor que la deuda ordinaria y, en un segundo lugar, obtener capital en un futuro a un precio superior al actual;\footnote{Tienen implicaciones muy significativas, en particular asociados con los costes de agencia: los bonos convertibles ayudan a resolver algunos conflictos entre accionistas y bonistas ya que, a menudo, la tentación de los directivos de empresas altamente endeudadas es la de llevar a cabo inversiones arriesgadas que incrementen la riqueza de accionistas a expensas de un mayor riesgo para los bonistas. En este caso, los bonitas pueden negarse a financiar a la compañía excepto con bonos convertibles, ya que les da la opción de convertirse en accionistas si la política de la empresa es desfavorable a los bonistas.
+    }
+    \item \textbf{Acciones preferentes}. Son acciones que gozan de determinados privilegios frente a las acciones ordinarias, generalmente a cambio de la ausencia total o parcial de derechos políticos;\footnote{Por regla general, estas preferentes pagan un dividendo anual expresado como porcentaje del valor de la acción, por lo que tienen cierta similitud a la deuda (sólo que el principal no se devuelve). Por ejemplo, una empresa familiar puede preferir emitir acciones preferentes para evitar diluir su control de la compañía. Las entidades financieras también han utilizado estos instrumentos por motivos regulatorios.
+    } y,
+    \item \textbf{Préstamos participativos}. Consiste en un tipo de financiación en el que el prestamista, además de recibir intereses, puede compartir en los beneficios y pérdidas de la empresa prestataria.
+\end{la}
+
+
+
+
+
+\clearpage
+\section{Teorema de la Irrelevancia (I): Estructura del capital}
+\puntosclave{
+    Bajo unos mercados financieros sin imperfecciones, el marco de MODIGLIANI-MILLER nos muestra que la estructura de financiación del capital es irrelevante. Este marco es, además, un gran punto de partida para pensar en la estructura de capital de la empresa.
+    
+    La introducción del impuesto de sociedades sesga la decisión hacia el endeudamiento, mientras que la introducción de costes de bancarrota penaliza a las empresas sobreendeudadas. Sin embargo, MILLER nos muestra que, con la introducción también de impuestos personales, si los mercados están en equilibrio la estructura de financiación es nuevamente irTelevante.
+    
+    La información asimétrica también supone una desviación clave del marco básico y explica, por ejemplo, el uso de la deuda para señalar la capacidad de generar rendimientos futuros o para evitar parecer que se intenta vender un proyecto de mala calidad. 
+    
+    Por último, la información asimétrica también permite explicar la existencia de una jerarquía en las fuentes de financiación de inversión.
+}
+
+A modo de conclusión, podemos decir sin duda que las innovaciones financieras desarrolladas desde hace ya casi más de seis siglos han ido proporcionando a las empresas cada vez más instrumentos diferentes a través de los cuales obtener financiación. Esto se debe, a que, como hemos podido ver, cada empresa es un \textit{micro mundo} particular, con sus características, debilidades, ventajas y oportunidades. Factor que se proyecta también en la imposibilidad de proporcionar un marco analítico general y riguroso a través del cual poder analizar la incidencia de todos y cada uno de los instrumentos financieros.
+
+No obstante, sí que hemos podido crear una división clara entre dos alternativas de financiación que, a primera vista, parecen tener implicaciones profundamente diferentes tanto en la composición del capital como en el futuro de la empresa: la financiación interna y la financiación externa. Por tanto, cabe preguntarse ¿es una mejor que la otra? ¿sus diferentes consecuncias pueden valorarse en términos de optimalidad? Esta pregunta puede resultar muy fácil de contestar para una persona corriente: evidentemente parece mejor auto financiar nuestros propios empréstitos que compartir nuestros beneficios con agentes externos, más teniendo en cuenta que nos veremos obligados a cumplir nuestras deudas, lo más seguro a riesgo de perder el colateral de garantía. Sin embargo, no parece riguroso aceptar este análisis superficial (y sesgado). Y esto es precisamente lo que pasaremos a contrastar ahora.
+
+\textbf{¿Qué queremos decir?} De hecho, veremos como esta afirmación no solo es (aparentemente/analíticamente) falsa, sino que la composición del capital resulta irrelevante, siempre y cuando se cumplan una serie de supuestos, atendiendo al Teorema/Hipótesis de la irrelevancia en la composición/estructura del capital proppuesto por MODIGLIANI-MILLER. No obstante, presenta ciertas limitaciones que nos conducirán a pensar que (muy al pesar de los autores), el conocimieto vulgar es a menudo díficil de refutar. 
+
+Pero antes de entrar a presentar el Teorema, resulta interesante ver
+de entender los fundamentos de Modigliani-Miller, es necesario presentar el entendimiento previo con respecto a la estructura óptima del capital. En este contexto, la deuda es menos costosa que el equity al tener menos riesgo. En este contexto, las teorías previas apuntaban a que, partiendo de una compañía totalmente financiada con equity, un aumento de la deuda disminuía el coste del capital de la empresa. Sin embargo, la teoría tradicional también apunta a que un nivel alto de endeudamiento incrementa el riesgo de los accionistas, lo que provoca un incremento del coste del equity, hecho que cancela parcialmente los beneficios del endeudamiento. No obstante, el coste de la deuda también incrementa a partir de cierto punto por el riesgo de bancarrota. Así, a partir de cierto punto, el aumento del coste del equity y de la deuda cancelan el menor coste de la deuda y, a partir de ese punto, un incremento del endeudarr1iento provoca un mayor coste del capital. Por ello, para la teoría convencional existe una estructura óptima del capital.
+
+\imagenfit{WACC_Clasico.png}{Coste del capital bajo el marco clásico}{Apuntes ICEX-CECO. Tema 3.B.3}
+
+
+\subsection{Hipótesis de la irrelevancia: MODIGLIANI-MILLER}
+El análisis seminal de MODIGLIANI y MILLER puede clasificarse como el primer marco teórico de reflexión sobre la estructura del capital de la empresa. En un curioso coloquio organizado en la Universidad de Chicago (el día que MODIGLIANI fue declarado ganador del Premio Nobel de Economía, 1985):
+
+\begin{cita}{Todo lo que he aprendido con la psicología económica}{2021}{R. THALER}
+    [MILLER] habló brevemente sobre su investigación con MODIGLIANI. En una ocasión, dijo, la prensa le había pedido que resumiese en pocas palabras el desarrollo de tal investigación, a lo que con su habitual ingenio respondió que básicamente habían demostrado que si sacas un billete de diez dólares de un bolsillo y te lo metes en el otro tu riqueza total no cambia.
+\end{cita}
+
+\subsubsection{Desarrollo: Supuestos}
+El punto crucial para el desarrollo del Teorema de Irrelevancia es la comprensión de sus supuestos. Entenderlos supuestos es la única manera de comprender bajo qué condiciones se mantiene el principal resultado: el valor de la empresa (definida corno la suma del valor de su deuda y su equity) no depende de la estructura del capital. MODIGLIANI y MILLER demuestran que, siempre y cuando:
+\begin{lnum}
+    \item \textbf{Mercados eficientes}. Los mercados financieros son perfectos y no tienen ningún tipo de fricción, por lo que el precio es el correcto y no hay oportunidades de arbitraje;
+    \item \textbf{Fungibilidad perfecta del dinero}. El dinero es un bien fungible, lo que significa que es intercambiable, sustituible y no tiene identidad propia. Una unidad es una unidad venga de donde venga;
+    \item \textbf{No hay distorsiones inducidas}. En especial, no hay impuestos de sociedades ni personales; y,
+    \item \textbf{Deuda y Equity}. Consideremos que las empresas sólo pueden recurrir a dos tipos de financiación, deuda sin riesgo y acciones.
+\end{lnum}
+
+Como vemos, estos supuestos son en realidad la conjunción, en el marco de las finanzas corporativas, de dos de las hipótesis más importantes de la facción de la Ciencia Económico: (i) la Hipótesis de los Mercados Eficientes (FAMA); y, (ii) la Hipótesis sobre la fungibilidad perfecta del dinero (c. WALRAS). 
+
+Entonces, ¿cómo alcanzan sus conclusiones?
+
+\paragraph{Proposición I.- $r_{WACC}(\mathbb E_t[\text{ROE}])$}
+La primera proposición nos dice que: el coste promedio del capital ($r_{WACC}$) de una empresa es independiente de su estructura del capital (efecto composición nulo) y está enteramente determinada por la capitalización del retorno esperado de la compañía. 
+
+Es fácil demostrarlo por no arbitraje.\footnote{La demostración se encuentra en: [\authorfont{Ver Anexo \ref{anx:teorema_mm}}]
+}
+
+\paragraph{Proposición II.- $r_E\propto D:\qquad {r_{WACC}}\equiv \text{cte.}$}
+Sin embargo, y puesto que en ausencia de la posibilidad de quiebra de la empresa el coste del capital de la deuda ($r_D$) se mantiene constante y también sería inferior al coste del capital accionario ($r_E$) ¿cómo puede ser que la estructura del capital sea irrelevante para el coste de financiación de la empresa?
+
+Para sortear esta evidente contradicción presentaron también una segunda proposición, que podría resumirse como: el coste del capital accionario ($r_E$) de una empresa aumenta linealmente con el endeudamiento ($D$) de la empresa, de tal manera que el coste promedio del capital ($r_{WACC}$)  se mantiene inalterado. 
+
+Por tano, la ecuación del WACC se puede reescribir de la siguiente manera: 
+
+\eqblock{
+\begin{aligned}
+    r_{WACC}=r_E\frac{E}{V}+r_D\frac{D}{V}\quad\underset{V=E+D\,\,\text{\scriptsize y operar}}{\Longrightarrow}\quad \boxed{r_E=r_{WACC}+(r_{WACC}-r_D)\frac{D}{E}}
+\end{aligned}
+}{Proposición II: Coste del capital accionario. Teorema de la irrelevancia (I): Composición}
+
+En definitiva, el motivo por el cual el WACC se mantiene inalterado cuando se aumenta el endeudamiento de la empresa es debido a que, a medida que aumenta el endeudamiento de la empresa, el coste del capital accionario ($r_E$) contrarresta el efecto del endeudamiento en la disminución del coste promedio del capital ($r_{WACC}$).\footnote{Además, MODIGLIANI y MILLER presentaron, como aplicación de su marco a la teoría de la inversión, su Proposición III, en la cual las decisiones de inversión de la empresa serán independientes de las decisiones de financiación.
+}
+
+\imagenfit{WACC_Modigliani_Miller.png}{Coste de capital bajo el marco de MODIGLIANI-MILLER}{Apuntes ICEX-CECO. Tema 3.B.3}
+
+
+\subsection{Extensiones: Relajación de los supuestos}
+Ahora que conocemos la Hipótesis de la irrelevancia debemos volver a la valoración de los supuestos que lo posibilitan y preguntarnos: ¿cuán real resulta cada uno de ellos?
+
+A excepción de algún fanático aún residente en Chicago, es muy probable que cualquier persona considere que el mundo terrenal incumple alguno, sino todos, de los supuestos sobre los que se asienta dicha Hipótesis. Por tanto, es necesario valorar los efectos e incidencias de dichos incumplimientos, habida cuenta de lo expuesto.
+
+\subsubsection{\textit{Trade off theory}: Impuestos y bancarrota}
+Unos de los primeros en hacerlo fueron, curiosamente, MODIGLIANI-MILLER (1963).
+
+Estos autores ampliaron su modelo básico introduciendo impuestos de sociedades, demostrando que la estructura de capital de la empresa sí afecta al valor de ésta. Sobre la Hipótesis y las conclusiones originales, al introducir impuesto de sociedades el endeudamiento genera un aumento del valor de la empresa debido a la deducibilidad de los intereses de la deuda del impuesto de sociedades. 
+
+\eqblock{
+\begin{aligned}
+    r_{WACC}=r_E\frac{E}{V}+r_D\frac{D}{V}(1-T)\quad\Longrightarrow\quad \boxed{r_E=r_{WACC}+[r_{WACC}-r_D(1-T)]\frac{D}{E}}
+\end{aligned}
+}{Proposición II: Coste del capital accionario. Teorema de la irrelevancia (I): Composición}
+
+La idea principal es que las empresas más endeudadas pueden deducirse los gastos de intereses del impuesto de sociedades, reduciendo así la base imponible. De esta manera, la deductibilidad de los gastos por intereses entra en el modelo como una especie de subsidio que incentiva el endeudamiento. 
+
+Además, si relajamos el supuesto de bancarrota llegamos a conclusiones más interesantes. Suponer que los costes de bancarrota son nulos para los inversores con una buena cartera diversificada (donde las minusvalías se compensan con las plusvalías) no aporta gran información. Pero si consideramos que estos costes no son nulos, entonces el efecto de estos se proyecta directamente en una disminución del valor de la empresa a medida que ésta aumenta su endeudamiento.\footnote{¿Cómo de importantes son estos costes? GRAHAM (2000) calcula que los beneficios derivados de la deducción de los intereses de la deuda del impuesto de sociedades ascenderían al 9,7\% del valor de la empresa (o al 4,3\% si descontamos los impuestos personales). Para GRAHAM, las empresas grandes estarían actuando de manera conservadora en cuanto a la emisión de deuda. Por otro lado, ALMEIDA y PHILLIPON (2007) calculan los costes de bancarrota en aproximadamente el 4.5\% del valor de la empresa, lo que cancelaría los beneficios del endeudamiento derivados del sistema impositivo y ayudaría a explicar el comportamiento conservador de las empresas subrayado por Graham.
+} Es decir, opera en la dirección contraria que los impuestos corporativos y se genera un \textit{trade-off} entre estos.
+
+\imagenfit{TradeOffTheory_ImpuestosYBancarrota.png}{Costes de capital bajo el marco de la Trade off Theory}{Apuntes ICEX-CECO. Tema 3.B.3}
+
+Como vemos, el endeudamiento comenzaría a aumentar el valor de la empresa, pero solamente hasta cierto punto. Pasado dicho punto, el valor de la empresa comienza a disminuir.
+
+\begin{specialblock}{MILLER (1977) -- Impuestos personales: sobre dividendos}
+    Más adelante, Miller (1977) incluyó impuestos personales afirmando que los impuestos pagados por los inversores pueden anular los pagados por las empresas, lo que nos devuelve al punto de partida de MODIGLIANI-MILLER (1958): no debería existir una estructura óptima de capital.
+
+    Para esto, MILLER introduce: (i) un impuesto de sociedades ($T_c$); (ii) un impuesto a los dividendos ($T_e$); y, (iii) un impuesto a la renta de los bonos ($T_d$). En este caso, el valor del endeudamiento (Go) sería:
+
+    $$G_D=\left[1-\frac{(1-T_c)(1-T_e)}{1-T_d}\right]D$$
+    
+    Podríamos contemplar varios escenarios:
+    \begin{la}
+        \item Cuando el impuesto a los dividendos y la renta (bonos) son equivalentes $( 1 - T_e)/(1-T_d) = 1$. Entonces, la introducción de impuestos personales no altera el resultado previo y continuaríamos de cierto modo en el escenario de MILLER (1963), donde el valor delendeudamiento sería igual a $T_cD$;
+        \item Cuando el impuesto de dividendos y de la renta son $(1-T_e)/(1-T_d)=(1-T_c)$, entonces la introducción de impuestos personales cancela las ganancias de la imposición de sociedades y la estructura del capital vuelve a ser irrelevante; y,
+        \item Para otros valores, la introducción de los impuestos personales podría amplificar las ganancias del endeudamiento $(T_e>T_d)$ o mitigarlo $(T_d>T_e)$ 
+    \end{la}    
+    
+    Para Miller, además, existen dos conceptos que son clave para entender las implicaciones de sus aportaciones: 
+    \begin{lnum}
+        \item \textbf{El inversor marginal}. Es necesario tener en cuenta que los impuestos personales son, generalmente, progresivos; por eso, en un universo con inversores de diferentes rentas, los individuos se enfrentarán a diferentes tipos impositivos y, por tanto, a medida que varíe su $T_p$, también se encontrarán en diferentes puntos de la fórmula. El inversor marginal es aquel cuyo beneficio del endeudamiento de la empresa es de 0; es decir, aquel en el que se cumple $(1-T_e)/(1-T_d)=(1-T_c)$. 
+        \item \textbf{Equilibrio de MILLER}. Establece que el sector corporativo en su conjunto se situará en un punto donde $G_D$ sea $0$ para el inversor marginal, estableciendo un nivel de deuda/equity determinado para el sector en su conjunto. No obstante, a nivel individual de empresa, la decisión de deuda/equity es irrelevante. 
+    \end{lnum}
+
+    Imaginemos un sector empresarial con un determinado nivel de deuda que se encuentra inicialmente en equilibrio. Al estar en equilibrio, todas las empresas (independientemente de su nivel de endeudamiento) también se encuentran en un punto donde su valor no aumentaría si su endeudamiento aumenta o disminuye. Supongamos también una demanda de bonos que depende positivamente del tipo de interés. En este contexto, si el nivel de deuda corporativa agregada aumentase, para vaciar los mercados, la demanda de bonos también debería aumentar, correspondiendo con un tipo de interés mayor. Al aumentar el tipo de interés, aumenta el coste de la deuda y las empresas encontrarán rentable sustituir deuda por equity hasta el punto inicial de endeudamiento que correspondía al equilibrio.
+
+    Sin embargo ¿Cómo puede ser compatible un nivel de deuda agregada única y de equilibrio con la irrelevancia de la estructura de capital de cada empresa de manera individual? La clave está en los diferentes tipos de inversores: los inversores con menores (mayores) tipos en el impuesto sobre la renta necesitarán rendimientos menores (mayores) de la deuda para ser indiferentes entre deuda y equity; la lógica es que el rendimiento que le importa a los inversores es el rendimiento neto de impuestos, por lo que, suponiendo un impuesto sobre dividendos constante, para igualar el rendimiento de deuda y equity los inversores en los tramos más elevados del impuesto sobre la renta exigirán rendimientos de la deuda mayores. En este contexto, las empresas menos endeudadas colocarán su deuda en los agentes que se enfrentan a menores tipos impositivos de renta. Si la empresa aumenta su endeudamiento, tendrá que acceder a in versores cada vez que se enfrentan a tipos impositivos mayores (y que, por tanto, exigirán un rendimiento mayor de su deuda). Por lo tanto, las ventajas del endeudamiento de la empresa derivadas del escudo fiscal quedarían canceladas por el mayor rendimiento de la deuda que exigirán los nuevos inversores.
+    
+    De este modo, MILLER demuestra, en un nuevo contexto y con impuestos, la irrelevan cia de la estructura del capital. Posteriormente, DEANGELO y MASULIS (1980) extendieron el modelo de MILLER (1977) para incorporar escudos fiscales diferentes al de la deuda (por ejemplo, la incorporación de depreciaciones, deducciones fiscales de algunas inversiones, etc.). El resultado de su modelo es que sí existe un nivel óptimo de deuda distinto de $0$. Aunque ambos marcos conceptuales tienen sustentos teóricos sólidos, la evidencia empírica es mixta y es complejo obtener los tipos impositivos marginales. 
+    
+    Una excepción es GRAHAM (2000), donde el valor del endeudamiento considerando todos los impuestos era positivo.
+\end{specialblock}
+
+
+\subsubsection{Información asimétrica}
+Otro de los supuestos clave en el modelo de MODIGLIANI-MILLER es la simetría informativa. Sin embargo, si relajamos ese supuesto surgen varias razones para pensar que la estructura del capital es relevante para el valor de la empresa.
+
+Existen varias formas de incorporar un contexto de información incompleta al escenerio de las finanzas corporativas. No obstante, las lineas más destacadas en este ámbito (dentro de la ortodoxia) son: los problemas Principal-Agente y la introducción de costes de señalización o informacionales.
+
+\paragraph{Señalización y control: ROSS (1977)}
+El primero de ellos fue desarrollado por inicialmente por ROSS. Considerando que los directivos tienen mejor información que cualquier outsider y son los únicos que conocen las características de su empresa, ROSS plantea un modelo en el que el objetivo del directivo es mostrar, mediante su política de endeudamiento, la capacidad de las empresas de generar rendimientos futuros. Por tanto, la \textbf{emisión de deuda serviría de señal} a inversores \textbf{neutrales al riesgo}. 
+
+Supongamos que existen dos tipos de empresas y que el directivo planifica en un horizonte de dos periodos. En el primer periodo, la empresa $A$ tendrá un valor de $V_A$ mientras que la empresa $B$ tendrá un valor de $V_B$, siendo $V_A>V_B$, con una probabilidad $p_A$ de que la empresa sea tipo $A$ y una probabilidad $(1-p_A)$ de que sea tipo $B$:
+
+\eqblock{
+\begin{aligned}
+    &\underset{\text{\scriptsize esquema de compensación del directivo}}{\boxed{M=(1+r)\gamma_0V_0+\gamma_1\tilde V_1}}\qquad :\,\,\,\tilde V_1=
+    \left\{\begin{aligned}
+        &V_1 &&\text{si}\,\,B_0\leq V_1\\
+        &V_1-L &&\text{si}\,\,B_0> V_1
+    \end{aligned}\right.\\[1em]
+    &\text{donde,}
+    \left\{\begin{aligned}
+        &B_0&&\equiv \text{Valor emitido de deuda en $0$}\\
+        &L&&\equiv \text{Penalización por bancarrota}\\
+        &V_i&&\equiv \underset{\text{\scriptsize(conocido por le directivo)}}{\text{Valor de la empresa en cada periodo}}\\
+        &\gamma_i&&\equiv \underset{\text{\scriptsize (a cada periodo, teniendo en cuenta que depende su remuneración)}}{\text{Peso asignado por el directivo}}\\
+        &r&&\equiv \underset{\text{\scriptsize (neutrales al riesgo)}}{\text{Tasa de descuento inversores}}
+    \end{aligned}\right.\\[1em]
+    &\Longrightarrow\qquad \boxed{\text{Mercados}:\mathbb E[V_0=\{A,B\}\,|\,B_0]}
+\end{aligned}
+}{}
+
+En resumen, el directivo controla $B_0$ para maximizar su compensación.\footnote{Esto es así porque los mercados observan $B_0$ y, en consecuencia, estiman el valor de la empresa en el primer periodo, $V_0$, asociándolo a una de los tipos que conoce el mercado, $A$ o $B$.
+} De esta forma, su comportamiento (prudente/imprudente) se determinará en función de: (i) la penalización ($L$); (ii) la ponderación entre futuro y presente; y, (iii) la diferencia entre la empresa $A$ y $B$, puesto que el fingir ser otro tipo de empresa reportará mayores ganancias en el primer periodo.
+
+\textcolor{red}{\textbf{OJO!} Falta incluir todo el desarrollo del ejemplo para que quede más claro, se puede encontrar en el Tema de ICEX-CECO.} 
+
+\paragraph{Pecking order Theory: MYERS (1984)}
+Una forma alternativa de incorporar el supuesto de información incompleta es a través de los costes de señalización (información). En el anterior ejemplo hemos incorporado este supuesto considerando la presencia de información asimétrica, es decir, la compatibilidad entre los intereses de los directivos y los agentes y como esto condiciona la situación financiera de la empresa. 
+
+Sin embargo, también podemos considerar que son las diferentes fuentes de financiación externa las que están sujetas a problemas de información. Este es el planteamiento de la \textit{pecking order theory}, desarrollada inicialmente por MYERS y MAJLUF (1984) y MYERS (1984).
+
+Brevemente, el punto central de esta linea de investigación supone que en un contexto de información asimétrica donde los inversores no conocen el valor real de las acciones de la compañía ni el valor de las oportunidades de inversión la financiación vía ampliaciones de capital puede realizarse únicamente con un descuento, ya que emite dos señales a los mercados: 
+\begin{la}
+    \item Una positiva, que indica la existencia de oportunidades de inversión; y,
+    \item Una negativa, ya que la propia emisión de acciones emite la señal de que las acciones están sobrevaloradas (al emitirse con descuento). 
+\end{la}
+
+El recurso a este \textbf{descuento} es simplemente un recurso analítico para replicar precisamente la evidencia empírica, puesto que la emisión de acciones parece tener un efecto negativo en el valor de la compañía (ASQUITH y MULLINS, 1986), que caen en torno a un 3\% después de la emisión de acciones.\footnote{También puede pensarse como que la deuda minimiza la ventaja informativa de los directivos: ya que los directivos optimistas (piensan que las acciones de la empresa están infravaloradas) emitirán deuda en lugar de equity, mientras que los directivos pesimistas emitirán equity.
+} De esta forma, el resultado teórico establece un orden en cuanto a las fuentes de financiación de la empresa: (i) financiación interna, ya que este tipo de financiación no está sujeto a costes informativos; (ii) emisión deuda; y, (iii) vía equity, cuando la deuda alcance ratios elevados. 
+
+Además, permitiría explicar por qué el grueso de la financiación de las empresas proviene de la financiación vía deuda y por qué las empresas más rentables tienen menos deuda: no es porque tengan objetivos de deuda más conservadores, sino porque tiene a su disposición más financiación interna.\footnote{No obstante, estas teorías adolecen de algunas críticas: la primera es que, aunque la asimetría informativa entre directivos y otros agentes es crucial para el desarrollo de esta teoría, no se desarrollan las preferencias de los directivos, como si hacen otras teorías anteriormente presentadas (Ross, 1977). La segunda crítica es que el escenario que se presenta es demasiado simplista y estos problemas pueden mitigarse con otro tipo de instrumentos, como la deuda convertible.
+}
+
+No obstante, cabe entonces preguntarse ¿por qué alguien compraría equity? O, ¿quién comprará equity? Teniendo en cuenta lo anterior, la emisión de equity revelará una visión pesimista de la compañía, por lo que en el equilibrio de le dará prioridad a la emisión de deuda siempre y cuando la empresa no se acerque a puntos donde se anticipen costes derivados de un alto endeudamiento.
+
+
+\paragraph{Otros modelos: LEELAND y PYLE (1977) y STULTZ (1990)}
+Otros autores han desarrollado teorías diferentes con otras implicaciones apoyándose también en asimetrías informativas. 
+
+Por ejemplo, LEELAND y PYLE (1977) presentan una versión alternativa de señalización donde un emprendedor averso al riesgo necesita financiar un proyecto con un mix de deuda y equity, siendo la calidad del proyecto solamente conocida por el propio emprendedor y no por agentes externos. Financiarse principalmente vía deuda y menos con equity es costoso, puesto que el emprendedor tendrá que mantener una mayor proporción de equity y tomar más riesgos en el proyecto, siendo este coste menor para los emprendedores con proyectos con alta calidad. El principal resultado de este modelo es que la emisión de deuda puede ser una señal de alta calidad del proyecto, ya que en los proyectos de mayor calidad el emprendedor estará menos dispuesto a deshacerse de su participación en la empresa.
+
+Otros autores han señalado el rol de la deuda como mecanismo de control. Stulz ( 1990) presenta un modelo donde el propio directivo recibe beneficios privados de la inversión de la empresa ( este conocido como el fenómeno del empire building). Por tanto, el directivo puede verse tentado a llevar a cabo proyectos e inversiones incluso si tienen un valor presente neto negativo. En este caso, la financiación vía deuda tiene un tradeotf simple: • Por una parte, la financiación vía deuda crea una empresa más apalancada y, de cierto modo, disciplina al directivo, puesto que el repago de la deuda conlleva una serie de obligaciones, deadlines y compromisos. • Por otra parte, la financiación vía deuda, puesto que restringe al directivo, limita la flexibilidad empresarial frente a una compañía con menor deuda. De este modo, el uso de la deuda o equity dependerá tanto de las posibles perspectivas de crecimiento de la empresa como de la capacidad del directivo de llevar a cabo proyectos de valor presente negativo para aumentar su utilidad a expensas de los accionistas.
+
+
+\clearpage
+\section{Teorema de la Irrelevancia (II): Política de dividendos}
+\puntosclave{
+    De nuevo, bajo unos mercados financi eros sin imperfecciones, el marco de MODIGLIANI-MILLER nos muestra que la política de reparto de dividendos es también irrelevante.
+    
+    La introducción del impuesto también puede generar un sesgo a favor de ciertas políticas de reparto de dividendo en funciones de los diferentes tipos de inversores. No obstante, a medida que la posibil idad de llevar a cabo estrategias dinámicas la importancia de la política de dividendos en presencia de impuestos se diluye.
+    
+    La información asimétrica, al igual que en el anterior apartado, provoca que la política de dividendos pueda tener un impacto en el valor de la empresa mediante la mitigación de los problemas de agencia o mediante la señalización a inversores externos de la capacidad de la empresa de generar flujos futuros.
+}
+ 
+La política de dividendos es otro de los núcleos de finanzas corporativas. Cuánto pagan las empresas que eligen para distribuir efectivo a sus accionistas puede afectar a su valoración a sus accion istas puede afectar a su valoración, tiene un impacto potencial en los impuestos que pagan los inversores, puede afectar a las decisiones de inversión de la dirección, puede informar al mercado sobre la calidad de la empresa en relación con sus accionistas, y puede informar al mercado sobre la calidad de la empresa en comparación con sus homólogas. No obstante, es necesario entender que la literatura sobre la política de dividendos está, en realidad, estrechamente entrelazada con los apartados anteriores: en concreto, podemos entender la distribución dividendos como la estrategia inversa a retener los beneficios de la empresa para financiarla de manera interna. En este contexto, el inversor será indiferente entre recibir dividendos o que la empresa reinvierta los fondos si el rendimiento de la empresa es igual a la del mercado; por otro lado, si el rendimiento de la empresa es mayor al del mercado, el inversor preferirá no recibir dividendos y mantener su inversión en la empresa y viceversa. Por último, en este apartado se cubrirá ( como es habitual en otras fuentes) la política de dividendos de manera conj unta con las recompras de acciones. El motivo es que, cuando la empresa recompra acciones a todos los accionistas en proporción a sus participaciones y luego las cancela, la recompra de acciones resultante es materialmente idéntica al pago de un dividendo, transfiriendo el efectivo de la empresa a los accionistas sin que cambie la estructura de la propiedad. Antes de comenzar a revisar las diferentes teorías acerca de las políticas de dividendos, es interesante revisar primer algunos hechos estilizados acerca de ésta: 
+
+1. Las grandes empresas consolidadas suelen repartir un porcentaje significativo de sus beneficios en forma de dividendos y recompras. 
+
+2. Históricamente, los dividendos han sido la forma predom inante de pago. Las recompras de acciones fueron relativamente poco importantes hasta mediados de los 80, pero desde entonces se han convertido en una forma importante de pago. 
+
+3. Entre las empresas que cotizan en mercados organizados de EE.UU., la proporc ión de empresas que pagan dividendos ha ido disminuyendo constantemente. Desde principios de los años 80, la mayoría de las empresas han comenzado a pagar a sus accionistas en forma de recompras en lugar de dividendos. 
+
+4. Las personas que se encuentran en los tramos impositivos más altos reciben grandes cantidades en dividendos en efectivo y pagan impuestos sobre estos dividendos. 
+
+5. Las empresas suavizan los dividendos en relación con los beneficios. Las recompras son más volátiles que los dividendos. 
+
+6. El mercado reacciona positivamente a los anuncios de recompra de acciones. 
+
+Anteriormente, otros autores han defendido la relevancia de la política de dividendos en la valoración de la empresa: por ejemplo, el modelo de Gordon (1962) parte de una empresa de vida infinita, con un retorno del capital r y un coste del capital k constantes, y una empresa totalmente financiada vía equity y sin opciones de financiación externa. En este modelo, el precio de la acción en tiempo presente viene determinado por: E1 (1 - b) Po =-k--- r- Donde E son las ganancias por acción de la empresa, y 1 - b es la fracción de los ingresos que la empresa reparte en dividendos. Las conclusiones de este modelo son muy simples: si r > k, entonces el valor de las acciones de la empresa aumenta con la retención de dividendos, y si r < k, al contrario. Solamente cuando r = k la política de dividendos es irrelevante para detem1inar el valor de la empresa.
+
+
+
+\subsection{}
+
+De manera similar al teorema de la irrelevancia expuesto en el anterior apartado, la aportación teórica de Modigliani y M il ler es verdaderamente revolucionaria y, a priori, tal vez contraintuitiva. La opinión predom inante en ese momento era que las empresas tenían una cantidad "correcta" de deuda, y que la política de dividendos era fundamental para su valor. S i pagaban demasiado e n dividendos, n o les quedaría efectivo para invertir; �� i pagaban demasiado poco, sus precios de las acciones caerían ya que los inversores en busca de ingresos buscarían en otro l ugar para obtener rendimientos. Sin embargo, esta noción no había sido sometida a un ar\álisis teórico riguroso. Al exponer su enfoque, Miller y Modigliani señalaron "una ausencia en la literatura de una declaración completa y rigurosa de aquel las partes de la teoría económica de la valoración que afectan directamente a la política de dividendos". Como los propios autores lo expresaron, "Al igual que muchas otras proposiciones en economía, la irrelevancia de la política de dividendos, dada la política de inversión, es 'evidente una vez que la piensas"'. En su núcleo, el artículo trataba sobre cómo evaluar el valor de una empresa. ¿Era el valor de laempresa el valor presente de sus ganancias o el valor presente de sus dividendos futuros? Mil let· y Modigliani demostraron que ambas son iguales si los factores adecuados se mantienen constantes (por ejemplo, el valor de la empresa en términos de ganancias es el valor presente de las ganancias menos los gastos en inversiones futuras). Esto fue indudablemente una contribución significativa al campo de las finanzas En su artículo de 1961, los autores extienden su modelo básico para penn itir también el reparto de dividendos con conclusiones similares: la política de reparto de dividendos no afecta al valor de la empresa. De nuevo, las aportaciones de Modigliani y Miller sientan las bases del estudio moderno de las políticas de dividendos. 
+
+Específicamente, el marco de Modigliani-Miller comparte los mismos supuestos que el estudio de 1958. En este contexto de mercados financieros perfectos y sin fricciones. La premisa básica de su argumento es que el valor de la empresa viene detenninado por los rend imientos de sus activos. El dividendo y las emisiones/recompras de acciones es la diferencia entre los beneficios y la inversión, y es simplemente un residuo. Como la empresa puede aj ustar sus dividendos a cualquier nivel con un cambio equivalente en la emisión de acciones, desde la perspectiva de los inversores, la política de dividendos es irrelevante, porque cualquier flujo de pagos deseado puede reprod ucirse mediante las compra y venta de acciones. 
+
+De manera analítica, el desarrollo de la demostración de Modigliani-Miller sería la siguiente: partimos de una empresa enteramente financiada con equity con un precío por acción que viene determinado por: 
+
+$$P_0=\frac{D_1+P_1}{1+K_E}$$
+
+Donde $P_0$ el precio de la acc1on en el momento presente vendrá detenninado por $D_1$, los dividendos para repartir al final del periodo, y $P_1$, el precio esperado de la acción al final del año, descontado por el coste del equity para la empresa ($k_E$). Si la empresa tiene un número n de acciones, entonces el valor de la empresa será el valor de la acción multiplicado por el número de acciones: 
+
+$$nP_0=\frac{nD_1+nP_1}{1+K_E}$$
+
+En un contexto de una empresa totalmente financiada por equity, si la empresa no dispone de suficientes fondos para acometer la inversión que desea, podrá emitir un número m de nuevas acciones, que pueden ser introducidas en la fónnula anterior de manera sencilla (añadiendo y sustrayendo el ténnino mP1):
+
+$$nP_0=\frac{nD_1+(n+m)P_1-mP_1}{1+K_E}$$
+
+Ahora ¿Cuántas acciones emitirá la empresa? La emisión de acciones de la empresa corresponderá con las necesidades de inversión, es decir, toda la inversión {I) y reparto de dividendos (nD1 ) qu no pueda ser cubierta con los propios flujos de la empresa (x) tendrá que ser financiado med iante la emisión de nuevas acciones.
+
+$$mP_1=1-(x-nD_1)1-x+nD_1$$
+
+El último paso sería sustituir en las dos últimas ecuaciones. Una vez se sustituye, se puede ver
+claramente como simplificando la ecuación los dividendos repartidos desaparecen de la ecuación.
+El resultado sería:
+
+$$nP_0=\frac{(n+m)P_1-I+x}{1+K_E}$$
+
+La intuición es la siguiente: el valor de la empresa depende de los ílujos esperados de la empresa, pero no de su política de dividendos, como puede verse claramente en la ecuación. No obstante, y al igual que sucedió en el apartado anterior, es necesario recordar que el marco de Modigliani-Miller se apoya en supuestos exigentes como la ausencia de impuestos, información simétrica, contratos completos, ausencia de costes de transacción y mercados completos. Por lo tanto, de aquí en adelante se verá cuál es el impacto de .la política de dividendos en la empresa una vez nos alej amos de algunos de los supuestos básicos.
+
+\subsubsection{Impuestos} 
+Gran parte de la literatura sobre la política de dividendos se centra en la importancia de los impuestos e intenta conciliar varias de las observaciones empíricas ya comentadas: las empresas reparten una gran parte de sus beneficios en forma de dividendos y muchos de los beneficiarios se encuentran en tramos impositivos elevados. Para ello, vamos a ver cómo los impuestos pueden explicar estos hechos estilizados tanto en modelos estáticos como en modelos dinámicos: En los modelos estáticos, vamos a explorar el impacto de los impuestos en el caso particular donde todos los inversores se enfrentan a los mismos impuestos y los impuestos sobre dividendos (renta personal) son superiores a los impuestos sobre el capital, como suele ser el caso. En este contexto, la política óptima de dividendos es la de no repartir dividendos, ya que todos los inversores preferirían recibir los ingresos vía recompra de acciones (ganancias de capital). No obstante, esta no es la política habitual de muchas empresas, tal y como se ha visto en los hechos estilizados. Por eso, hay que considerar también:
+• Que las ganancias de capital pueden posponerse y el inversor puede elegir el timing de realización de las ganancias, puesto que puede elegir el momento de vender sus acciones. No es el caso de los dividendos, donde el inversor individual no tiene poder de decisión. Como algunos autores han mostrado (Constantinides ( 1984)), los inversores estarían dispuestos a pagar por esta opción de posponer los impuestos sobre las ganancias de capital.
+• Algunas instituciones financieras (fondos de pensiones, por ej emplo) no pagan impuestos, por lo que no tienen, a priori, motivos para preferir los ingresos derivados de las ganancias de capital frente a dividendos. Además, en algunas jurisdicciones (Estados Unidos o la Unión Europea, por ej emplo), el reparto de dividendos entre empresas del mismo grupo está exentos de impuestos. No obstante, también es necesario tener en cuenta que, en un mundo más complejo, algunos inversores institucionales tienen restricciones a la hora de adquirir acciones de empresas que no reparten dividendos.
+
+En este contexto (inversores que se enfrentan a diferentes tipos impositivos de dividendos y ganancias del capital y diferentes empresas con diferentes políticas de reparto de dividendos) se desarrollan los cliente/e mode/s estáticos: según esta familia de modelos, los inversores que sean personas físicas se enfrentan a altos tipos impositivos de dividendos y preferirán empresas con un bajo reparto de dividendos; las empresas, al estar exentas de la tributación de dividendos de otras empresas pero tienen que tributar por sus ganancias de capital invertirán en empresas con un mayor reparto de dividendos; y los inversores institucionales invertirán en todo tipo de empresas, puesto que no pagan impuestos. De nuevo, se puede desarrollar un concepto de equilibrio semejante al equilibrio de Miller de tal manera que el valor de la compañía sea independiente de su política de dividendos: imaginemos que, en empresas idénticas, las empresas que no reparten dividendos tienen un valor de 1050€ y las empresas que reparten dividendos un valor de 1000€: en este contexto, algunas empresas qu reparten dividendos tend��ían el incentivo a dejar de repartir dividendos, incrementando la oferta de las acciones de empresas que no reparten dividendos y disminuyendo su precio hasta que éstos se igualen. Al respecto, algunos autores (Blume, Crockett y Friend (1974)) han encontrado cierta relación entre los tipos impositivos a los que se enfrentan los inversores y las políticas de reparto de las acciones que compran (los individuos que se enfrentan a mayores tipos impositivos de renta personal tienen acciones de empresas que reparten menos dividendos). No obstante, los modelos dinámicos dan una perspectiva diferente. Si se permite la compraventa de acciones en diferentes puntos del tiempo, entonces las predicciones de los modelos estáticos dejan de ser válidas. Desde una perspectiva puramente teórica, Miller y Scholes ( 1978) demostraron que, siguiendo diferentes estrategias dinámicas basadas en vender y comprar a instituciones libres de impuestos, en ausencia de costes de transacción se podrían evitar todo tipo de impuestos. Esto haría que los diferentes tipos impositivos de dividendos y ganancias de capital sean irrelevantes. No obstante, la evidencia muestra que no se hace un uso extensivo de este tipo de estrategias. Por otro lado, las estrategias dinámicas post día de dividendos sí cuentan con apoyo empírico: la idea básica de estos modelos (Kalai (1 982)) es que el arbitraje dinámico puede eliminar los efectos de los impuestos en los precios, ya que los inversores que se enfrentan al mismo tipo impositivo de dividendos y ganancias del capital pueden comprar las acciones justo antes del reparto de dividendos, cobrar el dividendo y venderlas justo después. En mercados perfectos, estos inversores venderán con un descuento igual al dividendo cobrado. La evidencia empírica apoya la existencia de este tipo de estrategias dinámicas: Michaely y Vita ( 1996) muestran un volumen de transacciones mucho mayor el día de reparto de dividendos y al día siguiente. Este hecho contradice los modelos estáticos descritos anteriormente, donde este fenómeno no debería suceder. Estos autores también demuestran que las acciones con menos costes de transacción registraron mayores incrementos en el volumen de transacciones, lo cual también apoya las predicciones de los modelos dinámicos (mientras mayores sean los costes de transacción de las acciones, menos se incentiva el uso de este tipo de estrategias). Además, la evidencia muestra que inversores situados en tramos elevados de los impuestos a los dividendos reciben una gran cantidad de dividendos, lo cual también contradice a los modelos estáticos.
+
+La validación de este tipo de modelos dinámicos nos devuelve, de cierto modo, al punto de partida
+donde la política de dividendos es irrelevante.
+
+
+\subsubsection{Información asimétrica}
+Los mercados de capitales son imperfectos no solamente porque los agentes tengan que pagar impuestos o porque existan costes de transacción, sino también porque, si los insiders tienen más información sobre el futuro de la empresa, la política de reparto de dividendos puede contener información relevante para los inversores y afectar a la valoración de la empresa. En este sentido, el modelo de Bhattacharya ( 1979) supone un gran paso adelante, ya que permite formalizar un modelo con información asimétric a donde el reparto de dividendos se usa para señalizar los resultados esperados de la empresa. Este es un modelo de dos periodos donde el directivo de la empresa busca maximizar el valor de la empresa para los accionistas. En el primer periodo, el directivo invierte en un proyecto del cual solamente éste conoce su rentabilidad esperada (los inversores no la conocen). En este momento, el directivo también se compromete con una política de dividendos. En el segundo periodo, el proyecto genera un beneficio que se utiliza para pagar los dividendos comprometidos en el primer periodo. Un supuesto crucial del modelo es que, si el beneficio es insuficiente para cubrir los dividendos, la empresa debe recurrir a financiación externa costosa (puesto que está sujeta a costes de transacción) para pagar los dividendos. En el primer periodo, los directivos pueden señalizar que el proyecto de la empresa es bueno comprometiéndose a repartir un dividendo alto en el siguiente periodo. Si la empresa tiene efectivamente un buen proyecto, los dividendos se reparten. Si una empresa tiene un buen proyecto, normalmente podrá pagar el dividendo sin recurrir a financiación externa y, por lo tanto, no tendrá que soportar los costes de transacción asociados. En el equilibrio separador, una empresa con un mal proyecto no reparte tantos dividendos porque tendrá que recurrir más a menudo a la financiación externa y, por tanto, tendrá que soportar unos costes de transacción más elevados. En este caso, bajo la existencia de un equilibrio separador, el proyecto más rentable recibe una mayor valoración debido a que su política de reparto de dividendos actúa como elemento señalizador. Además, dado que el tradeoff crítico en el modelo es entre los costes de transacción y el valor de la empresa, estos resultados se mantienen incluso si existen impuestos a los dividendos. Esta familia de modelos tiene un gran punto a favor y otro punto en contra: el principal punto a favor es que permite explicar la reacción positiva de los mercados ante un aumento del reparto dedividendos o la recompra de acciones. No obstante, para estos modelos, él reparto de dividendosy la recompra de acciones son perfectamente sustitutivas, por lo que no son capaces de explicarpor qué, si los impuestos a los dividendos son mayores que a las ganancias de capital, las empresas continúan utilizando los repartos de dividendos como señalización cuando la recompra de acciones podría tener el mismo efecto. No obstante, existen otras versiones de esta familia de modelos donde reparto de dividendos y recompra de acciones no son sustitutivos. Por ejemplo, el modelo de Allen, Bernardo y Welch (2000) tiene en común con el resto de los modelos de esta familia que el reparto de dividendos señaliza buenos resultados futuros. Sin embargo, la principal diferencia es que aquí reparto de dividendos y recompra de acciones no son sustitutivos, por lo que acomoda el hecho de que los dividendos se enfrenten a una imposición más alta que las ganancias de capital y que aun así las empresas utilicen el reparto de dividendos y no la recompra de acciones como señalización. La principal diferencia en este modelo es que las empresas estarán interesadas en atraer a los inversores mejores infomiados para revelar su valor: como generalmente las instituciones que no pagan impuestos (fondos de pensiones, mutual funds, ... ) están mejor infomiadas, la manera de atraer a este tipo de inversores es mediante el pago de dividendos y no mediante la recompra de acciones, ya que estas instituciones no sufren la desventaja fiscal de los dividendos frente a las ganancias de capital y, en muchas ocasiones, tienen reglas de inversión que les impiden invertir en empresas que no pagan dividendos. Según este modelo, las empresas pagarían dividendos y no recomprarían sus acciones para atraer a estos inversores con mayor capacidad de detectar la calidad de la empresa, mientras que las empresas con inversiones menos rentables no tienen incentivos a replicar dicha estrategia para que no se revele su tipo de empresa. Además, este modelo pennite justificar teóricamente la suavización de la política de dividendos: las empresas que pagan dividendos serán reacios a disminuirlos, ya que podrían expulsar a este tipo de instituciones y verse penalizados por ello, por lo que tienen una preferencia por mantener el reparto de dividendos en el tiempo. De este modo, las teorías de señalización contienen 3 hipótesis que pued��n ser validadas empíricamente: 
+
+1. Los cambios en las políticas de dividendos deben ir acompañados de cambios en los ingresos en la misma dirección en los siguientes periodos (si no fuese así, la política de dividendos no se estaría utilizando para señalizar). 
+
+2. Cambi9s no anticipados en los dividendos deben ir acompañados por variaciones en el precio de las acciones en la misma dirección. 
+
+3. Cambios no anticipados en los dividendos deben ir acompañados por revisiones en la misma dirección de los ingresos esperados de la empresa. 
+
+Es necesario tener en cuenta que estas hipótesis son necesarias, pero no suficientes para garantizar que los modelos de señalización representan los mecanismos por los cuales se reparten dividendos. Por regla general, la literatura se ha concentrado en testear la segunda hipótesis, generalmente refrendándola: por ejemplo, Grullon, · Michaely y Swaminathan (2002) han encontrado un retomo extraordinario de las acciones de un 1.34\% cuando se aumentan significativamente las políticas de reparto de dividendos y de un -3.71\% cuando se disminuyen. Esta asimetría entre aumentos y reducciones de dividendos implica, según estas teorías, que los recortes de dividendos contienen más infonnación sobre las perspectivas de la empresa que los incrementos. Por otra parte, otra familia de modelos son los modelos de agencia, que inciden en otro problema no señalado anterionnente, y es que los intereses de los directivos y accionistas no tienen necesariamente que estar alineados. Este hecho es algo que ya se ha visto anterionnente, y su justificación nace en que los directivos pueden querer llevar a cabo proyectos con rentabilidad negativa porque les deriva utilidad (por ejemplo, comprar un jet privado para el directivo de la empresa) o por motivos de empire building. En este caso, autores como Grossman y Hart (1980) han sugerido que los accionistas pueden minimizar estos problemas repartiendo dividendos y disminuyendo la cantidad de recursos bajo el control total del directivo. En este caso, el reparto de dividendos disminuye la discrecionalidad del directivo en el uso de los fondos. No obstante, estos modelos no resuelven por qué el mecanismo para disciplinar al directivo es el reparto de dividendos y no la recompra de acciones o, como se vio en el apartado anterior, la emisión de deuda. Una potencial explicación es que, como hemos visto anteriormente, los precios de las acciones suelen disminuir al disminuir la política de dividendos, así como hemos visto algunas justificaciones teóricas que explican la decisión de suavizar la política de dividendos: enestos casos, el reparto de dividendos disciplina más al directivo que otras alternativas. Los modelos de agencia tienen más dificultades para derivar implicaciones claras. Por ejemplo ¿Qué debería suceder después de un aumento de los dividendos en estos modelos? Depende, por ejemplo, si esta decisión se toma después de que el directivo invierta en proyectos con rentabilidad negativa, la rentabilidad debería aumentar. No obstante, si le decisión se toma antes de que el directivo invierta en proyectos de rentabilidad negativa, los resultados son ambiguos. Una clara implicación de estos modelos es que estos problemas son más pronunciados en empresas estables, con más tesorería y sin muchas oportunidades de crecimiento, ya que son empresas donde las oportunidades para llevar a cabo inversiones con rentabilidad negativa son mayores. Aunque existe evidencia a favor de esta hipótesis, tampoco es unánime.
+
+
+
+
+\subsection{Evidecia empírica}
+BAKER y WURGLER (2004) -- Proporcionan pruebas empíricas de que las empresas se adaptan a los deseos de dividendos de los inversores, ofrenciédoles más cuando el mercado fija una prima sobre las empresas que paguen dividendos.
+
+SHREFFIN y STATMAN (1984) -- Comportamiento de las finanzas corporativas ¿por qué las empresas pagan dividendos cuándo no se espera que lo hagan: autocontrol y contabilidad mental?
+
+LINTNER (1956, encuesta) -- Aversión a la pérdida: ¿Por qué las empresas son reacias a recortar dividendos?: Las empresas aumentan sus pagos de dividendos cuando están seguras de que podrán mantener dichos pagos en el futuro
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+\anexo{Características e instrumentos de la financiación vía deuda}\label{anx:financiacion_via_deuda}
+Los préstamos bancarios siguen una lógica de negociación e intermediación, mientras que la emisión de deuda sigue criterios de mercado. 
+
+De manera general, podemos identificar los siguientes criterios de discordia:
+\begin{lnum}
+    \item \textbf{Coste}. El coste puede diferir entre ambas opciones, pudiendo ser el coste de endeudarse con el sector bancario mayor o menor a la emisión en los mercados debido a que: (i) existe de un margen de intermediación bancaria para los préstamos o créditos bancarios; (ii) existe un coste de emisión de deuda en los mercados que no está presente en la intermediación bancaria; y, (iii) el tipo de interés de un préstamo bancario puede no corresponder con el coste real de financiar a la compañía.
+    \item \textbf{Volumen}. La emisión de deuda en los mercados suele requerir unos volúmenes mínimos. Los motivos por los que la emisión de deuda suele requerir unos volúmenes mínimos son:
+    \begin{enumerate}
+        \item \textbf{Institucionales}. Las plazas financieras suelen exigir volúmenes míniinos de emisión;
+        \item \textbf{Económicos}. Si la empresa quiere que su deuda sea atractiva para, los inversores, deberá tener la liquidez suficiente en el mercado que pcnnita a los inversores comprar y vender los títulos cuando sea necesario. Por otro lado, la empresa deberá emitir deuda con diferentes vencimientos para poder.construir una curva de tipos. Una alternativa es el private placement, donde la emisión se realiza a un número reducido de inversores que mantienen la deuda hasta el vencimiento: no obstante. el prívate placemcnt se aleja de la lógica de mercado y se acerca a la negociación bilateral.
+    \end{enumerate}
+    Por ejemplo, en las empresas de la UE, la empresa media mediana o grande emite deuda corporativa 4 puntos porcentuales más a menudo que las empresas de menor tamaño (ECB, 2023);
+    \item \textbf{Desarrollo financiero}. Además de las características individuales de las empresas, el desarrollo del sistema financiero de un país y el crecimiento económico suelen estar positivamente relacionados con el uso de la financiación de mercado (DE JONG et al., 2008). Por ejemplo, el sistema basado en la financiación bancaria es predominante en la zona Euro (donde el 80\% de la deuda es bancaria frente al 20\% financiada en los mercados), mientras que la emisión de deuda corporativa lo es en Estados Unidos y otros países anglosajones (donde las proporciones serían las inversas);
+    \item \textbf{Inmediatez}. Mientras que los préstamos bancarios pueden obtenerse normalmente con relativa rapidez, los preparativos para acudir al mercado de deuda pueden llevar semanas si es la primera emisión. Además, no hay garantía de éxito en la captación de fondos. Por otra parte, las grandes empresas y grupos con buena calidad crediticia pueden captar una gran cantidad de recursos en pocas horas en los mercados financieros;
+    \item \textbf{Información}. Al existir una relación más estrecha entre prestamista y prestatario en los préstamos bancarios, la financiación bancaria es más apropiada en contextos de menor grado de transparencia e información (ZINGALES y RAJAN, 2003)
+\end{lnum}
+
+Private placement. Hasta ahora se ha enfatizado el hecho de que, como la emisión de deuda en los mercados requiere un volumen mínimo elevado para poder generar la liquidez suficiente, las empresas más pequeñas tienen dificultades para acceder a este tipo de emisiones. En este caso, los prívate placemenl consisten en la emisión a inversores preseleccionados mediante una relación directa con ellos en lugar de subastados en el mercado. Como los inversores suelen mantener los bonos hasta el vencimiento, no suele haber una necesidad de liquidez y se pueden emitir pequeñas cantidades. Sin embargo, la falta de documentación nonnalizada aumenta los costes de emisión e inhibe un uso más amplio de estos instrumentos por parte de las pymes. Esta opción es atractiva para empresas que desean diversificar sus fuentes de financiación y tener acceso a financiación a largo plazo sin necesidad de rating.
+
+La intermediación bancaria: los préstamos sindicados. Hasta el momento tampoco se ha detallado la manera en la que el sector bancario opera en relación con las compañías. Cuando se habla de préstamo bancario, es bastante intuitivo tener en cuenta la operativa del retail banking, en el cual una entidad bancaria individual sirve como intennediaria entre agentes que buscan financiación y los que buscan rentabilizar sus fondos. No obstante, el corporate and investment banking ofrece a las compañías más grandes servicios más sofisticados, entre los cuales se encuentra la sindicación bancaria. La sindicación bancaria entra en juego cuando las cantidades son tan elevadas que una sola entidad no estaría dispuesta a otorgar financiación. En este caso, el banco que lidere la sindicación (mandated lead arranger) invitará a otros bancos a fonnar parte de la sindicación para conseguir la cantidad total que la empresa necesita.
+
+Este proceso de sindicación puede ser voluntario o comprometido: el lead bank puede hacerlo de forma voluntaria, es decir, para conseguir lo que el mercado permita, pero sin ningún compromiso; o puede ser comprometido, es decir, se compromete con la empresa que, si no consigue suficientes bancos participantes, que el banco agente cubriría lo que falta. Por otra parte, es especialmente interesante entender la razón de ser de los préstamos sindicados desde la perspectiva de la teoría de la información y de la agencia: a) Con respecto a la financiación bancaria tradicional, la lógica de los bancos como entidades delegadas.por los depositantes para monitorizar el uso de los fondos (Diamond, 1 984) aplicaría igualmente a la sindicación bancaria, solamente que en este caso los bancos que fo1men parte de la sindicación delegarían esta tarea al lead bank. La sindicación en este caso podría minimizar estos costes de rnonitoreo encargando su tarea al lead bank en lugar de a todos y cada uno de los bancos, así como.permitiría un mayor grado de especialización en estas actividades al poder delegarse. • b) Con respecto a la emisión de deuda corporativa, la sindicación podría resolver algunos problemas identificados en la financiación en los mercados como puede ser la existencia de costes innecesarios de monitoreo o de problemas de free-riding (Altubas et. al, 20 1 O).
+
+
+II.II. ll. Financiación vía deuda: otros aspectos relevantes a considerar. 
+Una vez exploradas las principales implicaciones y difer encias de la financiación en los mercados o mediante intennediación bancaria, es necesario continuar presentando otras alternativas y detalles que son cruciales a la hora de estudiar la financiación de la empresa. Intermed iación no bancaria : los fondos de d euda. Es necesario tener en cuenta que el sector bancario no es el único que puede ofrecer financiación a las empresas, y un ejemplo de lo anterior son los llamados fondos de deuda o fondos de direct lending: éstos son fon dos de inversión donde se ofrece fin anciación a la compaflía con algunas pecu· liaridades frente a la financiación bancaria: por ejemplo, son a menudo productos más flexibles, pudiendo amortizar todo el capital avencimiento ( 100\% bullet); con plazos superiores a los otorgados por los bancos y con importes a veces superiores y con tipos de interés que también pueden diferir frente al ofrecido por los bancos. Este tipo de financiación suele estar disponible para empresas ya establecidas, con activos y un historial que pueda respaldar la decisión del fondo de financiar a la empresa. Utilizar o no activos como colateral: asset backed lending. El principal objetivo de los prestamistas es asegurarse de que la empresa pagará los intereses y reembolsará el préstamo. Una de las fomias más seguras de garantizar el reembolso es utilizar uno de los activos de la empresa como fom1a de garantía. Esto supone fuertes restricciones para la empres(! (imposibilidad de vender el activo), pero podría permitirle reducir su coste de financiación. No obstante, es necesario destacar que algunas empresas pueden tener una capacidad limitada de aprovechar este tipo de deuda colateralizada: en el caso de start-ups que dependen de intangibles en su modelo de negocio, éstos son muy específicos de la empresa y dificiles de utilizar como colateral en este tipo de préstamos bancarios (OECD, 2015). Así, la financiación respaldada con activos ofrece un perfil de rentabilidad y riesgo más moderado que la financiación tradicional vía deuda al ofrecer también un activo como garantía. Algunos de los tipos de financiación de es ta naturaleza son, por ejemplo, el factoring, el leasing y el renting. 
+
+La titulización Las empresas también pueden llevar a cabo acciones de titulización para refinanciar parte de sus activos, transformando un crédito u otro título financiero en un valor negociable. Algunas empresas que usan frecuentemente este tipo de financiación son los grupos automovilísticos: por ejemplo, el Grupo Mercedes crea un vehículo especial que compra los préstamos y leasing que han ofrecido los servicios financieros de la compañía a sus clientes. Estosactivos se financian con la emisión de Asset Backed Securities que son negociables en los mercados. A su vez, esta deuda puede contener diferentes tramos (deuda senior, subordinada, tramos mezzanine .... ) para ofrecer diferentes perfiles de riesgo-rentabilidad a los inversores. Una vez aislados, estos activos pueden ser de mayor calidad que el conjunto del balance, lo que permite a la empresa financiarlos a tipos preferentes. No obstante, el coste de estas estrategias es más elevado que el de la deuda directa, sobre todo para una empresa de alta calidad con un coste de endeudamiento atractivo. Por ello, son difíciles de poner en marcha por menos de 50 millones de euros, salvo si la plataforma está sindicada entre varias empresas. Es importante no confundir la utilización d�� activos como colateral de la titulización. El "assetbacked lending" se refiere a préstamos individuales respaldados por activos, mientras que los "asset-backed securities" involucran la agrupación de muchos préstamos similares. Desde la perspectiva de la rentabilidad y riesgo, ya que el asset backed lending está respaldado por el activo en el caso de que el prestatario no pueda hacer frente a sus obligaciones, mientras que la securitización implica la comercialización de la deuda respaldada solamente por el conjunto de activos.
+
+
+\textcolor{red}{\textbf{OJO! China} - Project finance: una opción para grandes proyectos.} El project finance se basa en la financiación de un proyecto basado en la evaluación del propio proyecto en lugar de la capacidad de pago del propio prestatario; por ello, lo que se usa como colateral son los activos del propio proyecto. Este modo de financiación se ha utilizado, por ejemplo, para ofrecer financiación a proyectos de prospecciones petrolíferas, ref inerías o plantas de energías renovables que no podían ofrecer las garantías estándar para un préstamo común. La manera de instrumentar estos préstamos fue utilizar una parte del petróleo (incluso antes de ser extraído) como colateral y utilizar parte de las ventas futuras para pagar los préstamos extendidos. Debido a que este modelo está especialmente pensado para grandes proyectos en sectores como la energía o las infraestructuras, los bancos regionales de desarrollo suelen utilizar este tipo de financiación para grandes proyectos. En este caso, el banco se involucra más en la toma de riesgos que en los préstamos convencionales (por ejemplo, si el proyecto no es capaz de repagar el préstamo, el banco podría verse como propietario de una planta eléctrica, un parque de atracciones, petróleo sin extraer, ... ). Por eso, es difícil pensar en aplicar este tipo de técnicas a proyectos relacionados con nuevas tecnologías y retornos bastante inciertos. Entre las ventajas de este tipo de financiación se encuentra: plazos de financiación que se puede elevar considerablemente, alcanzando hasta los 30 años; un apalancam iento con nivel eje deuda/capital muy elevado; y la posibilidad de sacar estos importantes importes de deuda del balance corporativo y no afectando a las ratios de deuda de la compañía.
+
+
+\anexo{Teorema de la Irrelevancia (demostración)}\label{anx:hipotesis_mm}
+En primer lugar, el valor de la empresa es igual al valor de su equity más al valor de su deuda: $V = D + E$. De esta forma, podemos partir de dos empresas, 1 y 2, donde la empresa 1 no tiene deuda y la empresa 2 sí está endeudada. En este contexto, el valor de la empresa 1 es igual al valor de su equity ($V_1= E_1$) y el de la empresa 2 es igual a la suma de valor de su equity y deuda ($V_2= E_2 + D_2$). Además, supongamos también que ambas empresas tienen el mismo activo con un rendimiento de $x$. 
+
+Si un inversor tiene $s_2$ euros de acciones de la empresa 2, representando una fracción a del stock total de acciones de la empresa $2$, que es igual a $S2$, siendo $s_2 = \alpha S_2$. El retorno que recibe el inversor será igual a la fracción del rendimiento total después de pagar a los tenedores de la deuda: $y_2 = \alpha(x - rD_2)$. Supongamos que dicho inversor vende su posición en la compañía por valor de $\alpha S_2$ para adquirir el mismo grado de participación $s_1 = \alpha(E_2+D_2)$ en la empresa 1. Podría vender su posición de acciones de la empresa 2 ($\alpha E_2$) y, además, obtener un préstamo personal por la cantidad de $\alpha D_2$ a un tipo de interés $r$. 
+
+En este caso el inversor se garantizaría una posición en la compañía 1 de:
+
+
+Por lo tanto, obtendría un retorno de:(después de pagar el coste de su deuda,)  
+
+
+Comparando los retornos del inversor en las dos empresas se puede ver fácilmente que si el retomo de las dos empresas es el mismo ($y1 = y2$), entonces el valor de las empresas debe ser el mismo (V 2/V 1 = 1 ). La principal implicación es que un inversor no puede generar ganancias mediante arbitraje: es decir, los inversores no pueden generar ganancias mediante el intercambiode posiciones en empresas endeudadas y no endeudadas. Sin embargo, y puesto que en ausencia de la posibilidad de quiebra de la empresa el coste del capital de la deuda (ko) se mantiene constante y también sería inferior al coste del capital ¿Cómo puede ser que la estructura del capital sea irrelevante para el coste de financiación de la empresa? Para ello, Modigliani y Miller presentaron también la 
+
+Proposición II: el coste del equity de una empresa aumenta linealmente con el endeudamiento de la empresa de tal manera que el coste medio ponderádo del capital (WACC) de la empresa se mantiene inalterado.
+
+De esta manera, la ecuación del W ACC se puede reescribir de la siguiente manera: D KE = WACC + (WACC - K0 ) • E
+
+En definitiva, el motivo por el cual el WACC se mantiene inalterado cuando se aumenta el endeudamiento de la empresa es debido a que, a medida que aumenta el endeudamiento de la empresa, el coste del equity aumenta de contrarresta el potencial efecto del endeudamiento en la disminución del WACC.
+
+
+
+\end{document}
