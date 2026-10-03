@@ -1,0 +1,1361 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Procesos de integración no comunitarios\\
+\large }
+\author{Marcelo Ortega}
+\date{Julio 2026}
+\newcommand{\TemaCode}{3B35}
+
+\oldtitle{
+    B.36. Procesos de integración no comunitarios. Organismos de Cooperación Internacional: la OCDE y otros organismos de cooperación
+}
+\changerationale{
+    Se desplaza la referencia a los organismos de cooperación internacional al tema B.19, al estar más relacionado con aquél.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     Este tema aterriza a la práctica la teoría de la integración económica estudiada en el [\authorfont{Ver Tema 3.B.10}]. Por tanto, se ha de estar perfectamente familiarizado con las diversas teorías del comercio internacional y sus distintas extensiones. De hecho, podría ser deseable que el opositor incluyese referencias sucintas a dichas teorías económicas a lo largo de su exposición ante el tribunal. En todo caso, el análisis en este tema ha de ser \textbf{estrictamente económico} y no meramente descriptivo, buscando introducir cuestiones de \textbf{evidencia empírica} para los distintos acuerdos así como una visión de \textbf{economía política}: ése ha sido el enfoque adoptado en este texto.
+
+     Se advierte de que, en ocasiones, el nombre del acuerdo puede llevar a confusión.
+
+     Se ha de ser capaz detrazar patrones comunes y estado de situación a nivel mundial. Por tanto, se recomienda construir una introducción y una conclusión extensas, para ofrecer esta visión más amplia (evitando solapamientos con el resto del temario).
+
+     Como último apunte: \textbf{es importante tener este tema actualizado de cara al test.}
+    }
+\vspace{1cm}
+
+\modificaciones{
+    \textcolor{red}{OJO ->} Podría ser interesante cambiar el enfoque de la estructura con el objetivo de explicar adecuadamente los principios, objetivos y finalidades que subyacen en cada proceso de integración regional. Las ideas que se me ocurren son: (i) por continentes (o subcontinentes); (ii) por consideraciones institucionales, convicciones religiosas, etc.; o, (iii) por posicionamiento geoestratégico. Si lo enfocamos de esta forma, debemos dejar claro en la introducción que los procesos de integración regional rara vez tienen una razón exclusivamente económica. De hecho, dentro de los factores que motivan dichos procesos los más predominantes son los factores políticos, ideológicos y/o estratégicos
+
+    \textcolor{red}{\textbf{OJO ->} Conviene leer el siguiente documento:} \href{https://www.piie.com/blogs/realtime-economics/2026/are-regional-pacts-future-world-trade}{Are regional pacts the future of world trade?}
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+
+
+
+\clearpage
+\section{Áreas de Libre Comercio}
+\puntosclave{
+    Los acuerdos recientes abarcan gran parte del comercio mundial e incluyen nuevas disposiciones tipo OMC plus (es decir, que van más allá de las nom1as multilaterales existentes). Son acuerdos \textit{profundos y globales} que se conocen como Deep and Comprehensive Free Trade Agreements (DCFTAs) 
+    
+    El RCEP es el mayor tratado de libre comercio del mundo en la región con mayor crecimiento económico del mundo. Aunque se ha descrito como un acμerdo más superficial que otros grandes acuerdos, supone un espaldarazo económico y político para Pekín, suprincipal promotor. 
+    
+    El RCEP se compara a menudo con el CPTPP. Aunque ambos tienen objetivos similares, se considera que el CPTPP cuenta con mayor alcance y profundidad, y aborda los nuevos retos comerciales. EE. UU., tras su retirada del TPP, corre el riesgo de perder influencia en la región Indo-Pacífico. 
+    
+    El NAFTA original cambió por completo las economías de EE. UU., Canadá y México al favorecer la integración entre países con características económicas enormemente dispares. El debate acerca del impacto del acuerdo ha estado muy polarizado, poniendo en evidencia la necesidad de su modernización surgiendo así el NAFTA 2.0 o USMCA.
+    
+    El impacto económico del RCEP, CPTPP y del USMCA estará, en parte, marcado por el actual orden económico internacional caracterizado por la rivalidad geoestratégica y tecnológica y la ralentización de la globalización.
+    
+    El AfCFTA también debe considerarse como un acuerdo histórico porque pretende integrar el mercado de África, el continente más pobre del mundo. Una cuestión clave será como desarrollar la complementariedad entre las economías del AfCFTA para potenciar el comercio intraafricano, hoy en día muy por debajo de su potencial.
+}
+
+Las Áreas de Libre de Comercio (ALC) son acuerdos que persiguen la eliminación de las barreras formales al comercio en todos los bienes que se comercian entre los países integrantes. Por supuesto, estos países pueden seguir manteniendo aranceles con países terceros y externos al área, pero al menos dentro de ella, el objetivo ha de ser el de mantener aranceles en torno al $0\%$. En los últimos años, cada vez más los acuerdos finnados son los denominados acuerdos \textit{profundos y globales} (DCFTA, Deep and Comprehensive Free Trade Agreements) que contienen nuevas disposiciones tipo OMC plus (es decir, que van más allá de las normas multilaterales existentes) muy importantes sobre comercio electrónico, empresas estatales, subvenciones y normas laborales y medioambientales.
+
+\begin{center}
+\begin{tabular}{|p{0.4\linewidth}|p{0.15\linewidth}|p{0.15\linewidth}|p{0.15\linewidth}|p{0.15\linewidth}|}
+\hline
+\textbf{ACUERDO} & \textbf{MIEMBROS} & \textbf{PIB Global (\%)} & \textbf{Comercio Global (\%)} & \textbf{Población Global (\%)} \\
+\hline
+\textbf{Regional Comprehensive Economic Partnership (RCEP)} & $15$ & $28,7$ & $27,80$ & $29,65$ \\
+\hline
+\textbf{Comprehensive and Progressive Agreement for Trans-Pacific Partnership (CPTPP)} & $11$ & $15,03$ & $15,43$ & $6,64$ \\
+\hline
+\textbf{United States-Mexico-Canada Agreement (USMCA)} & $3$ & $25,82$ & $16,11$ & $6,45$ \\
+\hline
+\textbf{Mercado Común del Sur (MERCOSUR)} & $4$ & $3,44$ & $1,49$ & $3,49$ \\
+\hline
+\textbf{African Continanteal Free Trade Agreement (AfCTA)} & $54$ & $3,07$ & $2,79$ & $17,04$ \\
+\hline
+\textbf{Gulf Cooperation Council (GCC)} & $8$ & $1,84$ & $3,44$ & $0,75$ \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Asociación Económica Integral Ragional (RCEP; 2022)}
+La Asociación Económica Integral (RCEP. por sus siglas en inglés) entró en funcionamiento el pasado 1 de enero de 2022, tras haber alcanzado el número necesario de ratificaciones.\footnote{A día de hoy, incluye quince \textcolor{yellow}{\textbf{países miembro}}: diez de la Asociación de Países del Sudeste Asiático (ASEAN), además de China, Japón, Corea del Sur, Australia y Nueva Zelanda
+} Se marcó  así un hito fundamental en el desarrollo de una iniciativa que comenzó hace 1 O años y que concentra casi un tercio de la población y del PIB global. La idea del RCEP nació en 2012 y fue vista como una forma, por parte de China -el mayor importador y exportador de la región- de contrarrestar la influencia que Estados Unidos estaba tomando en la región Asia-Pacífico bajo el gobierno de Barack Obama al promover el Acuerdo Transpacífico de Cooperación Económica (Trans-Pacific P-artnership o TPP) -del que también formaban parte México, Chile y Perú, y no China-.\footnote{En distintos ámbitos internacionales, el término Asia-Pacífico (designación de origen económico que secreó en la década de 1990) se ha ido reemplazando paulatinamente por el término Indo-Pacífico. La regióndel Indo-Pacífico es una región que incluye desde la zona Oriental de África hasta la costa oeste de América del Norte pasando por el golfo Pérsico y el subcontinente indio. El interés por esta-región, que ha servido como paso de las rutas de abastecimiento más importantes. además de concentrar los principales corredores del comercio marítimo mundial. está aumentando en detrimento del concepto estratégico de Asia-Pacífico. Esto no significa que el concepto de Asia-Pacífico se haya dejado de lado, sino que refleja cómo se mueven los intereses según el contexto geopolítico en el que nos encontremos en cada momento. El concepto de Indo-Pacífico antagoniza. desplaza y subsume parcialmente la tradicional noción de Asia-Pacífico. Actualmente se expresa en las narrativas geoestratégicas de cuatro países -Japón. India, EE.UU. y Australia-; es asumido'. con matices propios. por actores europeos como Francia y Gran Bretaña; es reformulado y adaptado por los Estados parte de la Asociación de Naciones del Sudeste AsÍálico (ASEAN) y es rechazado por China y, más ambiguamente. por Rusia. Parafraseando al analista político Robert D. Kaplan, no es que la geografia haya cambiado. sino la manera en que se concibe.
+} El interés en el RCEP creció cuando Donald Trump retiró a EEUU del TPP en 2017, que era el arquitecto del acuerdo y cuya economía abarcaba dos terceras partes de la del bloque. 
+
+Se origina así el bloque comercial más grande del mundo en términos de PIB y, por lo tanto, se configura un nuevo centro de gravedad para los intercambios globales. Las concesiones arancelarias del RCEP buscan impulsar aún más el comercio dentro de la asociación recién formada, no solo al fomentar los intercambios en su interior, sino también al desviar el comercio de fuera de la región.
+
+Se organiza en torno a las reuniones ministeriales de países miembros, el Comité Conjunto del RCEP y 4 sub-comités para cuestiones específicas (bienes, servicios e inversión, crecimiento sostenible, y clima de negocios). Para la resolución de disputas se prevé la posibilidad de crear un panel de expertos. El Secretariado permanente del RCEP se encarga de la gestión diaria, así como de la agenda de negociaciones.
+
+
+\subsubsection{Contenido}
+Este mega tratado sin precedentes, comprende una combinación heterogénea de economías (ASEAN$+5$) e incluye varios ámbitos de cooperación, pero son las concesiones arancelarias sueje central. En concreto, respecto al comercio de mercancías, el acuerdo incluye diferentes disposiciones obligatorias (cláusula de trato nacional, valoración en aduana, reafirmación de los compromisos de la Organización Mundial del Comercio (OMC), etc), así como compromisos para reducir o eliminar los derechos de aduana impuestos por cada miembro sobre las mercancías en aproximadamente un $92\%$. Algunos aranceles se suprimirán inmediatamente, mientras que otros se eliminarán gradualmente a lo largo de veinte años. Los aranceles restantes se limitarán en gran medida a sectores estratégicos, como la agricultura y el de la automoción, en los que muchos de los miembros del RCEP han optado por no incluir ningún compromiso de liberalización. 
+
+En general, el RCEP facilitará el acceso al mercado, con la eliminación de aranceles y cuotas en más del $65\%$ de los bienes comercializados. No obstante, esto no implicará necesariamente grandes reducciones arancelarias para todas las partes. La mayoría de las economías del RCEP ya están relativamente abiertas al comercio, tanto por sus bajos aranceles NMF (nación más favorecida) de la OMC como por su participación en otros.acuerdos comerciales regionales, como ASEAN. Con ello, el acuerdo reducirá sobre todo los aranceles en las importaciones procedentes de China, Japón y la República de Corea. Para ios miembros de la ASEAN, junto con Australia y Nueva Zelanda, la proporción de productos con arancel cero ya superaba el $90\%$, por lo que las principales áreas de oportunidad para la reducción de aranceles se encontraban con los demás miembros del RCEP.
+
+Además, el acuerdo también aumenta la liberalización del comercio de servicios, establece reglas de origen comunes para todos los bienes comercializados, introduce medidas de transparencia y facilitación de comercio, fija compromisos en materia de contratación pública, regulación de aspectos relacionados con protección de la propiedad intelectual, y comercio digital, entre otros aspectos.
+
+El RCEP se compara a menudo con otro mega acuerdo regional, el Acuerdo General y Progresivo de Asociación Transpacífico (CPTPP) -que veremos más adelante. Aunque ambos tienen objetivos similares para promover el comercio y la inversión de forma mutuamente beneficiosa, se considera que el CPTPP cuenta con mayor alcance y profundidad. El RCEP tiene fama de ser flexible en su ambición y de prestar atención a las diferencias de desarrollo de las economías de sus miembros. En concreto, el RCEP sigue el "método ASEAN" de consulta y consenso para gestionar la integración comercial regional mediante una agenda combinada de implementación y disposiciones incorporadas para avanzar gradualmente en la liberalización del comercio, en lugar de compromisos firmes adoptados desde el principio y contenidos en el texto original, como fue el caso del CPTPP.\footnote{El \textit{método ASEAN} (\textit{the }ASEAN\textit{ way}) es una forma de tomar decisiones entre los países de la ASEAN. es decir, musyawarah (en indonesio. debate y consulta), mufakat (en indonesio, decisión unánime), y consenso. Aunque ASEAN normalmente se presenta como modelo de integración económica y política. esta nunca ha aspirado a crear un ente supranacional con la capacidad de dictar órdenes o controlar las decisiones de sus miembros. ASEAN opera bajo los principios de no-int erferencia en los asuntos domésticos de sus miembros y la toma de decisiones basada en consenso. Como resultado, ASEAN es a menudo considerada como modelo para otras regiones que buscan crear una forma más flexible de agrupación regional.
+}
+
+\subsubsection{Valoración}
+El RCEP tiene por delante el gran reto de estar a la altura de las expectativas y ver si puede resolver muchos de los problemas que han planteado los múltiples ALC de la región y lograr una mayor liberalización y cooperación económica.
+
+El resultado más inmediato del RCEP se plasmará en la mejor aplicación de los acu·erdos comerciales ya existentes en la zona, al reducir los costes administrativos para los operadores económicos por la aplicación de reglas de origen annonizadas para todos los participantes. Hasta ahora, y durante años, los beneficios que reportaban las reducciones de tipo arancelario de los diversos acuerdos bilaterales existentes en la región no se habían aprovechado al cien por cien como consecuencia de los procedimientos previos para justificar las reducciones. De hecho, y según reflejó un estudio del Consejo de Cooperación Económica del Pacífico, solo el $22\%$ del comercio de Asia-Pacífico hizo uso de esas preferencias en 2015.
+
+Asimismo, es previsible que la armonización de las reglas de origen ayude también a las empresas· de terceros países a enviar sus productos más fácilmente a través de esta área, obviando los diferentes criterios de reglas en cada paso fronterizo y reduciendo las cargas para las compañías con cadenas de suministro a lo largo de la región.
+
+Según un análisis de impacto de económico publicado por la UNCTAD en 2021, las concesiones arancelarias servirán para incrementar las exportaciones dentro de la nueva alianza casi un $2\%$, hasta suponer unos 42.000 millones de dólares más que los 2,3 billones registrados en 2019. De ellos, casi 25.000 millones de dólares se deberían a la reorientación de las ventas de terceros países hacia las de los miembros del acuerdo. Los expertos de la Universidad John Hopkins prevén que el RCEP implique agregar más de 200.000 millones de dólares anuales al PIB mundial y más de 500.000 millones al comercio internacional para 2030, principalmente entre sus integrantes.
+
+No obstante, otros analistas consideran que el RCEP sigue siendo un acuerdo de "antigua generación" y un instrumento relativamente débil, pues, a pesar de consolidar los tratados comerciales, no representa un avance hacia un espacio económico liberal, ni tiene el potencial necesario para iniciar un proceso de integración regional. Aunque el tratado aumenta los vínculos, su ambición reguladora es explícitamente modesta, no limita la futura política comercial de los signatarios y tampoco parece ser, por el momento, una contribución decisiva para superar las crecientes tensiones en el Indo-Pacífico.
+
+En esta línea, el RCEP ha sido descrito como mucho más superficial que otros grandes acuerdos debido a sus escasos compromisos en materia de disposiciones para servicios o comercio digital, así como po.r su incapacidad para eliminar más aranceles en ámbitos protegidos, como la agricultura o la automoción, o para ampliar su ámbito de acción en contratación pública, compañías públicas y subvenciones a empresas. Tampoco contempla ningún compromiso en desarrollo sostenible y cambio climático o en la protección de los derechos laborales.
+
+Por otra parte, la firma de este acuerdo permite que China se asegure una amplia influencia económica y política en Asia, sobre todo si se tiene en cuenta que ni los Estados Unidos, ni la India forman parte del mismo. Sin embargo, el RCEP no implica un cambio radical en las ya establecidas relaciones comerciales entre la ASEAN y este país, pero sí supone un gran éxito porque reúne a los dos pesos pesados económicos y políticos de Asia: China y Japón. A pesar de que el Gobierno nipón ha mostrado sus reticencias ante la política exterior cada vez más expansiva de China, también es cierto que Japón está interesado en impulsar su comercio.
+
+De hecho, de acuerdo con las previsiones realizadas por la UNCTAD, Japón es el país que más se podría beneficiar en términos absolutos de las concesiones arancelarias del tratado, en gran parte gracias a los efectos derivados de la desviación del comercio. Así,, estos cálculos apuntan que las exportaciones japonesas al resto de miembros del RCEP podrían crecer cerca de un $5,5\%$ frente a lo alcanzado en 2019, lo que supondría un incremento de más de 20.000 millones de dólares.
+
+Los países asiáticos han estrechado sus lazos económicos en las últimas tres décadas, desde la firma del ALC de la ASEAN en 1992. Un número cada vez mayor de acuerdos bilaterales y multilaterales de comercio e inversión también han reforzado los lazos económicos en la región, \ proporcionando cierto contrapeso frente al telón de fondo de la guerra comercial entre Estados Unidos y China, las pandemias y las recientes tensiones geopolíticas. La desglobalización, impulsada por riesgos y vulnerabilidades previamente infravalorados en las cadenas de suministro mundiales, puede servir en realidad para acelerar la tendencia de las empresas a crear cadenas de suministro paralelas o a deslocalizar las cadenas de suministro cerca de casa y, en consecuencia, a profundizar en las redes de producción locales y regionales. Según la UNCTAD, el volumen de comercio intrarregional de la cadena de suministro ha crecido más rápidamente entre los miembros del RCEP, alcanzando 1,5 billones de dólares en 2017, un crecimiento del $50\%$ desde 2010. Se espera que la aplicación del RCEP, junto con iniciativas como el CPTPP y The Belt and Road Initiative aumenten aún más el impulso de la integración económica regiqnal entre las economías asiáticas.\footnote{La Iniciativa de la Franja y la Ruta (en inglés: Belt and Road Initiative, BRI) o Nueva Ruta de la Seda esuna estrategia de desarrollo de infraestructura global -tanto terrestre como marítima- y cooperación internacional impulsada por la República Popular China lanzada en 20 13. Se considera una pieza central de la política exterior del gobierno de Xi Jinping. Entre las propuestas de inversiones en infraestructura se incluyen puertos. vías fé rreas, carreteras, aeropuerto, etc. La iniciativa persigue construir un gran mercado unificado y favorecer la integración en las regiones de Asia Pacífico. África y Europa Central y Oriental.
+}
+
+
+\begin{specialblock}{\textbf{Relaciones}: UE-Asociación Económica }
+    Los lazos económicos de la UE con el Sudeste Asiático son sólidos, como lo demuestra el hecho de que el bloque europeo es la mayor fuente de flujos de inversión extranjera directa de la ASEAN y uno de sus principales socios comerciales. Además, la UE dispone de una activa agenda que incluye acuerdos comerciales ya operativos con Corea del Sur, Japón, Vietnam y Singapur, y otros en fase de negociación con otros países.
+
+    Dados los largos períodos transitorios y la complejidad de los calendarios de acceso a los mercados del RCEP o los numerosos acuerdos comerciales ya existentes entre los miembros. resulta aventurado valorar un impacto negativo en las empresas, que también dependerá de los sectores de actividad. Tal como se ha señalado antes, sí se espera que el RCEP origine una cierta desviación del comercio en detrimento de las exportaciones de la UE y de terceros países, al crear, por primera vez, un acceso preferencial al mercado entre Japón y China y entre este último y Corea del Sur -puesto que el resto ya cuenta con acuerdos previos entre sí-, y al establecer un único conjunto consolidado de nom1as de origen que contribuirá al aprovechamiento de las cadenas de valor regionales.
+
+    En este sentido, la UNCTAD estima que la UE será el proveedor que sufra mayores pérdidas en el valor de sus exportaciones, pues estas podrían superar los 8.300 millones de dólares y representar una caída del $2\%$ en el peso de sus ventas totales a los integrantes del RCEP. Este riesgo hace aún más relevante el papel de los acuerdos ya alcanzados por la UE y de las negociaciones en curso o paralizadas con los países de una región que previsiblemente continuará con un crecimiento elevado en las próximas décadas.
+\end{specialblock}
+
+
+\subsection{Tratado de Libre Comercio entre Estados Unidos-Mexico-Canadá (USMCA; 2022)}
+Este tratado marca un hito en la historia de la integración regional ya que, por primera vez, un país en desarrollo se integraba en un bloque fonnado por países desarrollados.\footnote{Sus miembros actuales (y así se espera permenezca en el futuro) son: Canadá, Estados Unidos y México.
+} En las elecciones presidenciales de 1980, el candidato conservador Ronald Reagan, propuso un acuerdo de libre comercio entre Estados Unidos y México. Finalmente, en 1993 el presidente Clinton finnaba un acuerdo negociado enteramente por su predecesor, George H. W. Bush. Con origen en el acuerdo existente entre Canadá y EEUU (CUSFT A, 1988), en 1994 entra en vigor e! NAFTA, que incluye también a México. El acuerdo fue validado en 1992 y ratificado en 1993 por las cámaras legislativas de los tres países; con su entrada en vigor definitiva un año después, crearía la mayor zona de libre comercio en el mundo, con más de 365 millones de personas y un peso económico de seis billones de dólares estadounidenses.
+
+Su firma se explica por la estrecha relación entre EEUU y México y el potencial que el libre comercio implicaba para ambos. Para EE. UU, México constituía un amplio mercado mientras que, para México, EE. UU era el principal socio comercial. Además, el acuerdo atraería inversión extranjera e impulsaría la credibilidad de las políticas de liberalización comercial (en 1986 Méjico se había adherido al GA TI).
+
+En última instancia, los partidarios del NAFTA defendían que éste serviría para frenar la inmigración ilegal que se producía en la frontera entre México y Estados Unidos. Así, los defensores del NAFTA predecían que, a consecuencia de la entrada de inversiones de empresas estadounidenses, la economía de México experimentaría un considerable crecimiento económico y se impulsaría la creación de empleo en México.\footnote{En concreto, la reducción de las barreras a la inversión inherentes al NAFTA, unida a los salarios más bajos encontrados en México atraerían a Canadá y Estados Unidos a expandir sus oportunidades de empleo en México. Así. el posterior aumento de la demanda de trabajadores en México junto con una menor demanda de trabajadores en Estados Unidos y Canadá, reduciría la brecha salarial entre los tres países, y con ello el incentivo a emigrar desde México.
+} Así, este crecimiento económico mejoraría la vida de muchos trabajadores mexicanos, reduciendo así su incentivo para emigrar a Estados Unidos. Sin embargo, estas expectativas optimistas no se cumplieron y los flujos de inmigración ilegal continuaron creciendo tras la firma del acuerdo.\footnote{Entre los motivos que se suelen señalar para explicar esto, d,estacan: la expansión de la economía estadounidense a finales de la década de 1990, que creó una fuerte demanda de trabaj adores mexicanos; la crisis de México en 1994 y la fu erte devaluación que sufrió el peso. que dificultaron las necesarias inversiones de acompañamiento en la economía mexicana; el boom demográfico vivido en México en la década de los 90; y la historia de migración y fuertes redes migratorias que unen a los dos países.
+}
+
+El 30 de septiembre de 2018, tras una serie de intensas negociaciones, Canadá, México y Estados Unidos acordaron crear un NAFTA 2.0, más tarde rebautizado como USMCA. Este nuevoacuerdo seguirá dando cabida a un comercio mutuamente beneficioso entre las tres naciones, altiempo que busca abordar preocupaciones, como la pérdida de empleos en Estados Unidos, la explotación de los trabajadores en las maquiladoras, el auge del comercio electrónico y la protección de la propiedad intelectual.
+
+El USMCA fue impulsado en gran medida por el enfoque de la administración Trump hacia el comercio y el deseo de devolver la manufactura, y los empleos manufactureros, a suelo estadounidense. El acuerdo finalmente entró en vigor el I de julio de 2020.
+
+La Comisión de Libre Comercio (CLC) es la institución central del USMCA y está integrada por n;presentantes de los gobiernos de cada una de las Partes a nivel de Ministros o sus designados. Entre las funciones de la CLC se incluyen: • Considerar asuntos relativos a la aplicación del acuerdo, propuestas para .modificar o enmendar el acuerdo, fonnas de mejorar el comercio y la inversión entre las Partes. • Supervisar el trabajo de los órganos subsidiarios establecidos en virtud del acuerdo. • Establecer y modificar las normas de procedimiento y el código de conducta para la soluciónde diferencias. • Revisar periódicamente la lista de los grupos de solución de diferencias. • Resolver los conflictos relacionados con la interpretación o aplicación del acuerdo. • Emitir interpretaciones de las disposiciones del acuerdo. Además, el texto del USMCA estableció 24 comités trilaterales, grupos de trabajo y otros órganos subsidiarios entre Canadá, Estados Unidos y México con mandatos para implementar el Acuerdo y resolver asuntos. Todos los comités informan de sus actividades a la Comisión de Libre Comercio ("Comisión") y se reúnen una vez al año, a menos que se especifique lo contrario en el texto del Acuerdo.
+
+
+\subsubsection{Contenido}
+El NAFTA original contemplaba la creación de una de las áreas d!:! libre comercio más grandes del mundo, como palanca para fomentar la competitividad de los países implicados y el crecimiento económico. Buscaba la eliminación gradual de las barreras, con un plazo de diez años para la eliminación total de las barreras arancelarias y no arancelarias entre ambos países. Del contenido original, podernos destacar:
+
+• Acceso a los mercados de bienes industriales. con la arancelización de las barreras no arancelarias y su reduc;ción. Además, se prevén regímenes especiales para los productos agrícolas, textiles y el sector de la automoción
+• Protección de la inversión extranjera, aplicando trato nacional a inversores extranjeros y estableciendo un mecanismo formal de resolución de disputas.
+• Protección de la propiedad intelectual.
+• Aplicación de la cláusula NMF en materia de servicios.
+• Facilitación del acceso a la contratación pública.
+• Normas de origen.
+
+Además, tras la firma del NAFTA se adquirieron compromisos adicionales en materia de protección del medioambiente y en el ámbito de la regulación laboral. Los detractores del NAFTA tradicionalmente han afirmado que Estados Unidos no presionó lo suficiente en favor de una protección más estricta de los trabajadores y el medio ambiente al negociar el acuerdo, desaprovechando la oportunidad de promover programas favorables al trabajo y el medio ambiente.
+
+Con la revisión del NAFTA se introdujeron una serie de novedades, entre las que podernos destacar: 
+
+• Disposiciones sobre solución de diferencias:\footnote{Aunque desde la introducción de este tipo de mecanismos en los ALC su utilización por parte de las empresas se ha disparado. en los últimos años han aumentado el número de países contrarios al considerar que socavan la legitimidad de los Estados al situarlos al mismo nivel que las multinacionales privadas.
+} en virtud del nuevo acuerdo, Canadá se retirará completamente de la solución de diferencias entre inversores y Estados (ISDS), aunque la solución seguirá vigente en algunos casos entre EE.UU. y México.
+
+• Reglas de origen' para el automóvil: La administración Trump planteó repetidamente la preocupación de que el TLCAN fomentara la deslocalización de la producción de automóviles, en detrimento de la fabricación y el empleo en Estados Unidos. El NAFTA exigía que los automóviles tuvieran un $62,5\%$ de componentes fabricados en México, Estados Unidos o Canadá para poder optar a aranceles cero. Con el USMCA, este porcentaje aumentará hasta el $75\%$. Además, entre el $40\%$ y el $45\%$ de las piezas de automóviles deben ser fabricadas por empleados que ganen más de 16 dólares la hora. 
+
+• Propiedad intelectual: Se han hecho algunas adiciones para abordar la propiedad intelectual y la economía digital. Por ejemplo, el USMCA ampliará los plazos de los derechos de autor de 50 a 70 aftos más allá de la vida del autor. Otras cláusulas recogen la protección a las  empresas de interne! para que no sean responsables de los contenidos que produzcan sus usuarios, y la prohibición de aranceles sobre los libros electrónicos y la música.
+
+• Umbral de minimis: El umbral de rninimis (libre de derechos) se ha incrementado de 20 a 150 dólares para las importaciones a Canadá y de 50 a 100 dólares para las importaciones a México. Esto podría afectar negativamente a los minoristas de Canadá y México, que se verán más perjudicados económicamente al importar productos de poco valor.
+
+• Contratación pública: El USCMA pennitirá a todas las partes mantener protocolos que permitan el trato preferencial de las pequeftas y medianas empresas (PYME). El acuerdo también reconoce el uso de procedimientos de licitación electrónica y protecciones contra la corrupción y el fraude para las empresas que participen en la contratación pública.
+
+• Nonnas medioambientales: Cuando un proyecto tiene el potencial de tener un impacto perjudicial sobre el medio ambiente, el USMCA especifica que debe completarse una evaluación del impacto ambiental para minimizar o mitigar los efectos.
+
+• Mercado lácteo canadiense: Las reformas del sistema de precios de los productos lácteos de Canadá proporcionarán a los agricultores estadounidenses un acceso exclusivo al mercado  lácteo canadiense. Bajo el USMCA, se prevé que las exportaciones lácteas estadounidenses aumenten en más de 3 14 millones de dólares al año.
+
+• Certificación de origen: Bajo el USMCA, los países participantes pueden obtener una certificación de origen a través de documentación informal, incluyendo facturas comerciales.  Esto anulará la necesidad de que las empresas completen un certificado de origen formal y puede ser completado por el importador, exportador o productor.
+
+• Cláusula de extinción: El NAFTA no incluía un plazo de actualización ni una cláusula de extinción. La cláusula de extinción del USMCA obligará a las partes participantes a revisar y renegociar sus términos -o a retirarse por completo del acuerdo- antes de que se cumplan 16 años de su entrada en vigor. Esto persigue que no se descuiden las cuestiones comerciales.
+
+\subsubsection{Valoración}
+El acuerdo cambió por completo las tres economías al favorecer un nivel de integración sin precedentes entre países con características económicas enormemente dispares. El debate acerca de si su impacto fue positivo o negativo ha estado intensamente polarizado, con argumentos a favor de ambas posturas, lo que contribuyó al consenso en torno a su necesidad de renegociación.
+
+Quienes defienden el acuerdo tienden a hacer referencia al impacto en términos de aumento de integración, volumen de negocio y de inversión, impacto sobre el PIB, así como efecto sobre losflujos bilaterales. En particular, México se ha convertido en el primer socio comercial de EE. UU (actualmente, Estados Unidos representa más del 70\% de las exportaciones mejicanas y más del 50\% de sus importaciones). Destaca, además, que el Acuerdo ha supuesto la diversificación del comercio mexicano, desde petróleo (que representaba en tomo al 80\% de las ventas al exterior a principios de los 90) hacia las manufacturas de maquinaria y vehículos a motor y componentes (ésta última es hoy en día la partida más destacada en las exportaciones a EE.UU.). También se ha doblado la prestación de servicios comerciales desde eÍ escenario previo al NAFTA. El acuerdo no ha cerrado la enorme brecha de ingresos con Canadá y EE.UU. pero ha contribuido a que México sea más estable y próspero.
+
+Por otro lado, los detractores tienden a centrarse en otros aspectos, fundamentalmente los relacionados con el mercado de trabajo en EE. UU. El NAFTA ha sido durante mucho tiempo objeto de discusión, especialmente por el efecto sobre la industria manufacturera de EE.UU.\footnote{En la campaña presidencial estadounidense de 1992, Ross Perol -un candidato independiente por Texas- ya afirmó oír un \textit{gigantesco sonido de succión} cuando México se preparaba para absorber los puestos de trabajo estadounidenses.
+} Como señala la teoría económica de comercio internacional, durante su cuarto de siglo, el NAFTA creó ganadores y perdedores. Sin embargo, conviene recordar que los flujos comerciales que pueden atribuirse a la pérdida de puestos de trabajo en el sector de manufacturas palidecen en comparación con el comercio de Estados Unidos con China, y que el impacto del NAFTA en la economía general de Estados Unidos durante sus 25 años de vigencia fue relativamente menor. 
+
+La economía china, que representa más del $13\%$ de las exportaciones mundiales y en tomo al $25\%$ del valor añadido de la industria manufacturera mundial, ejerce una atracción irresistible sobre las cadenas de suministro mundiales. En un trabajo reciente, Brad Delong, historiador económico de la Universidad de California en Berkeley, consideraba que el NAFTA podría serresponsable de una pérdida neta de empleo del orden del $0,1\%$ de la población activa estadounidense. En otras palabras, incluso sin el NAFTA, los puestos de trabajo en el seétor manufacturero habrían disminuido. La fortaleza del dólar y la mejora de las tecnologías detransporte y comunicación hacían más atractiva la producción en el extranjero. La automatización aceleró el persistente declive del empleo industrial, algo que es común a otras economías desarrolladas.
+
+\begin{specialblock}{Cadena de Valor (automóvil): Estados Unidos - Méjico}
+    Tras la firma del NAFTA. EE. UU. y México pasaron a integrarse en una misma cadena de valor, siendo especialmente intensa esta integración en la industria automotriz. La mayor parte del aumento en los füüos del comercio entre estos dos países se debió a la inserción en la cadena bilateral, y la distribución geográfica se hizo en función de las ventajas comparativas respectivas, produciéndose una especialización en la exportación de bienes intermedios (aguas arriba) por parte de EE. UU y de bienes finales (aguas abajo) por parte de México. De este modo, el aumento en el flujo de bienes intermedios exportados de EE UU a México y el aumento de las importaciones de productos terminados de origen mexicano por parte de EE. UU. favorecieron que las regiones fronterizas de estos dos países se consolidaran como un centro de producción de gran importancia para la industria a nivel global. En concreto, la producción mexicana de vehículos ligeros pasó de representar un $6\%$ de la producción total norteamericana de dichos bienes en 1999 a un $19\%$ en 2012 (KLIER y RUBENSTEIN, 2013). Asimismo, el NAFTA fue detenninante para el auge del comercio intra-industrial en la década de 1990 , tanto en el comercio total mexicano como en el bilateral con EE UU, y ha sido especialmente notable en el capítulo de automóviles, sus partes y accesorios (el comercio intraindustrial mexicano correspondiente al capítulo de automóviles y sus partes se incrementó un $45\%$ entre los años 1993 y 1 999) (León González Pacheco y Dussel Peters, 2001).
+\end{specialblock}
+
+\begin{specialblock}{Impacto del NAFTA sobre el empleo manufacturero}
+    Los análisis económicos realizados durante los últimos años (Acemoglu et al., 20 1 6; Pierce y Schott, 2016; Ebenstein et al., 2017 ) concluyen que el comercio internacional con los países en vías de desarrollo -y especialmente con China- ha tenido un impacto negativo notable sobre el empleo manufacturero, y este no se ha visto compensado, por lo menos en EE UU, por mayores oportunidades en otros sectores. Los trabajadores más expuestos a las importaciones de China han tenido una mayor probabilidad de pasar al desempleo y, en algunos países, de sufrir recortes salariales. Los estudios también muestran que los trabajadores más negativamente afectados por el comercio internacional con los países en vías de desarrollo son los poco cualificados, lo cual explicaría el aumento de la desigualdad en los países desarrollados. Sin embargo, el comercio internacional también ha permitido una reducción de los precios, que ha favorecido especialmente a las personas de menor renta.
+
+    Aunque en términos generales los trabajadores poco cualificados son los perdedores de la globalización en los países desarrollados, la evidencia empírica concluye que existe mucha heterogeneidad entre los mismos. Son los trabajadores poco cualificados que trabajan en las industrias más afectadas por las importaciones chinas, que realizan tareas más rutinarias-y que están empleados por las empresas menos productivas los que están más expuestos al impacto negativo del comercio internacional con lo_s países en vías de ��esarrollo. 
+
+    No obstante, el comercio internacional con los países en vías de desarrollo no es el unico proceso económico que incide sobre la desigualdad. Las nuevas tecnologías han permitido codificar muchas tareas rutinarias, y sustituir trabajadores con cualificaciones intermedias por máquinas. Este proceso, que ha provocado una polarización del mercado laboral en los países desarrollados, también ha contribuido a aumentar la desigualdad en estos países.
+
+    Es dificil culpar a los estadounidenses -y población de otras economías desarrolladas- por ver la globalización como un juego de suma cero. El estancamiento de los salarios, el aumento de la desigualdad y la complacencia de los gobiernos mientras las regiones industriales sufrían un declive, han creado un terreno fértil para discursos popul-istas. En este punto conviene recordar la importancia de recetas clásicas como mejorar la formación de los trabajadores poco cualificados e incidir en las políticas que favorezcan la movilidad de los trabajadores entre industrias, regiones y empresas. Es importante poder mejorar estas políticas para no caer en la tentación del proteccionismo.    
+\end{specialblock}
+
+Aún es pronto para conocer cuáles han sido los efectos del USMCA. No obstante, según la Comisión de Comercio Internacional de Estados Unidos, el USMCA aumentará las exportaciones a Canadá y México en un $5,9\%$ y un $6,7\%$, respectivamente. Gran parte de estos beneficios económicos previstos proceden de la certidumbre en materia de política comercial que ofrecen las nom1as del USMCA en ámbitos como el comercio digital. Asimismo, conviene resaltar aquí que los efectos futuros serán el resultado de un nuevo contexto del nuevo orden económico internacional -caracterizado por la rivalidad geoestratégica y tecnológica, el proteccionismo y la ralentización de la globalización- que, junto a la incertidumbre generada por las irrupciones en las cadenas de suministros en los últimos años, están contribuyendo a un acortamiento de las cadenas de valor.\footnote{El fenómeno de la globalización de la cadena de valor parece estar sufriendo en los últimos años un proceso de desaceleración. Varios economistas ya hacen referencia a esta nueva era como de globalización ralentizada o slowbalisation. Este concepto alude a que. después de varias décadas de hiperextensión. las cadenas de valor se habrían estancado o acortado desde la crisis financiera (Berglof. 2020).
+} En particular, la industria automotriz se está consolidando en tomo a centros regionales de producción provocándose así una regionalización de las cadenas de valor. Se están evidenciando así tres grandes ejes regionales de producción a nivel mundial: México para EE UU; Europa del Este y Marruecos para Europa Occidental; y el Sudeste Asiático para China. Por último, destacar que, aprobado por una amplia mayoría en el Congreso, el USMCA representa un hito en el consenso bipartidista en torno al comercio en EE. UU.
+
+
+\begin{specialblock}{Política Exterior de Estados Unidos (Doctrina Monroe) y la Cumbre de las Américas}
+    A iniciativa del presidente Bush, se celebra la Primera Cumbre de las Américas (Miami, I 994) en la que se acuerda la creación de un ALC para todo el continente (con la excepción de Cuba). Con el Área de Libre Comercio de las Américas (ALCA) se plantea un potencial mercado de los más grandes del mundo, con más de 800 millones de personas y un PIB cercano a los I O billones de dólares. Se trata de un proyecto ambicioso que eliminaría progresivamente todas las barreras al comercio y la inversión del continente, para impulsar la especialización, la competitividad y el comercio en la región, para en última instancia, facilitar el crecimiento económico y el desarrollo. Con el establecimiento del ALCA, se buscaba aprovechar significativos beneficios potenciales: economías de escala, reducción de los costes de estar fuera del NAFTA ( Domin o Theory ), impulso a la competitividad, aumento de la credibilidad de las reformas liberalizadoras, mejora de la certidumbre y, por tanto, aumento de la inversión directa extranjera, entre otros.
+
+    Ahora bien, el intento de integrar un número tan elevado de economías con un grado de desarrollo tan dispar y la apertura de economías pequeñas a la liberalización comercial, también acarreaba ciertos riesgos y críticas. En particular, los críticos interpretan que la carga del ajuste recae sobre los países de América Latina y el Caribe, sin que EE.UU. permitiese un acceso efectivo a los mercados de los productos agrícolas. El ALCA fue descartado tras la IV Cumbre de las Américas realizada en Argentina en 2005 , debido a las desventajas que conllevaba para los países de la región sudamericana y, en particular, para los miembros del Mercado Común del Sur (Mercosur). 
+
+    Desde 1994 , los competidores estratégicos, China en primer lugar, han dado un salto adelante para aumentar su influencia económica en América Latina y el Caribe. En el año 2000 , sólo el $1,3\%$ de las exportaciones de América Latina y el Caribe se destinaban a China. En 2020, este porcentaje había aumentado hasta casi el $15\%$, y China compite ahora por ser el primer o segundo socio comercial de países como Argentina, Brasil y Chile, donde en 1994 China apenas aparecía en el radar.
+
+    En consecuencia, en el marco de la IX Cumbre de las Américas (junio 2022 ), el presidente de EE. UU. Joe Biden anunció la nueva Alianza de las Américas para la Prosperidad Económica (APEP, por sus siglas en inglés), una iniciativa económica para América Latina. El marco de asociación consta de cinco pilares temáticos: ( 1) revitalizar las instituciones económicas regionales y movilizar la inversión, (2 ) hacer más resistentes las cadenas de suministro, (3 ) actualizar la negociación básica, (4) crear empleos en energías limpias y avanzar en la descarbonización y la biodiversidad, y (5) garantizar un comercio sostenible e integrador. Sin embargo, el APEP, al igual que el plan "hermano" de la Administración Biden, el Marco Económico Indo-Pacífico (IPEF), prevé pocos planes concretos para la liberalización del comercio.
+
+    Por otra parte, como contrapropuesta al ALCA, en 2004 se formuló la Alternativa Bolivariana para la América (ALBA), siendo Hugo Chávez su principal impulsor, y que se consolida con la Declaración conjunta suscrita por éste y Fidel Castm La hoja de ruta del ALBA incluye principios y proyectos en clara contraposición a la agenda de liberalización internacional, como: la efectiva participación del Estado como regulador de la actividad económica;  especialización productiva dentro del ALBA, evitando la competencia entre países y producciones; y el fomento de la inversión latinoamericana en· la propia América Latina y el Caribe con_ el objetivo de reducir la dependencia de la inversión extranjera.
+\end{specialblock}
+
+
+\subsection{Acuerdo Amplio y Progresista de Asociación Transpacífico (CPTPP; 2018)}
+El Acuerdo Integral y Progresista de Asociación Transpacífico (CPTPP), también conocido como TPPII es un ALC entre 11 países de la región del Pacífico.\footnote{A día de hoy, tras la retirada de EE.UU. del TPP, cuenta con 11 partícipes: Australia, Brunei, Canadá, Chile, Japón, Malasia, México, Nueva Zelanda, Perú, Singapur y Vietnam. A fecha de febrero de 2023 todos los países, excepto Brunei, han ratificado el acuerdo11. Además, otros países como Reino Unido, China, Ecuador o Costa Rica han solicitado formalmente formar parte del CPTPP.
+}
+
+Se trata de una evolución a partir del Acuerdo de Asociación Transpacífico (TPP), que nunca llegó a ratificarse debido a la retirada de Estados Unidos.\footnote{EE.UU. había decidido reformular su política comercial impulsando dos grandes acuerdos comerciales. Con Europa el Tratado Transatlántico de Comercio e Inversiones (TTIP). Con Asia-Pacífico. el Acuerdo  de Asociación Transpacífico (TPP). El primero pretende mantener la influencia con un aliado tradicional, el segundo buscaba contrarrestar el crecimiento de China en la región. hacia donde se ha desplazado el centro de gravedad de la economía global.
+} Las economías combinadas de los 1 1 signatarios representan el 13,5\% del producto interior bruto mundial, con aproximadamente 1 3,5 billones de dólares, lo que convierte al CPTPP en una de las mayores zonas de libre comercio del mundo por PIB,junto con el RCEP, el USMCA y el Mercado Único Europeo (que recordemos, no es objeto de estudio en este tema). 
+
+El TPP se había finnado el 4 de febrero de 201 6, pero nunca entró en vigor, ya que EE. UU. se retiró del acuerdo poco después de la elección del presidente Donald Trump.\footnote{La entrada en vigor del TPP requería la ratificación por al menos '6 estado·s parte que representaran 85\% del PIB conjunto de los 1 2 estados parte. La retirada de EE. UU., que representaba 60\% del TPP, hacía imposible la entrada en vigor del acuerdo original.
+} Todos los demás signatarios del TPP acordaron en mayo de 20 1 7 revitalizar el acuerdo, y se infonnó ampliamente de que la administración de Shinzo Abe en Japón asumiría el papel principal en lugar de EE. UU. En enero de 201 8, se creó el CPTPP como acuerdo sucesor, conservando dos tercios de las disposiciones de su predecesor.
+
+La Comisión del CPTPP es el órgano de toma de decisiones del CPTPP, que se estableció cuando el CPTPP entró en vigor el 30 de diciembre de 201 8. Se trata de una reunión de representantes (a nivel de ministro o alto cargo) de los países miembros del CPTPP que se reúne en sesiones breves, normalmente dos veces al año para debatir cuestiones derivadas del acuerdo. La Comisión, así como los distintos órganos subsidiarios establecidos en el acuerdo toman todas las decisiones por consenso, salvo que se disponga otra cosa en el acuerdo, o cuando las partes decidan otra cosa.
+
+\subsubsection{Contenido}
+El CPTPP es un tratado independiente que incorpora, por referencia, las disposiciones del Acuerdo de Asociación Transpacífico (TPP) original. En virtud del CPTPP, los signatarios aplicarán entre sí el TPP original, con la excepción de un número limitado de disposiciones que quedarán suspendidas.
+
+Su objetivo declarado es la promoc1on de la integración econom1ca como palanca para el crecimiento económico. Se trata de crear nuevas oportunidades para empresas y trabajadores y reforzar su competitividad en los mercados internacionales, así como generar beneficios para los  consumidores, mejoras a nivel social, aumento de la calidad ·de vida, reducción de la pobreza y promoción del crecimiento. 
+
+Las negociaciones del TPP se centraron en más de 20 mesas de trabajo, incluyendo agricultura, aduanas, bienes industriales, reglas de origen, textiles, servicios, servicios financieros, movilidad de personas de negocios, inversión, telecomunicaciones, competencia/empresas comerciales del Estado, comercio y medio ambiente, compras del gobierno, derechos de propiedad -intelectual, medicinas, comercio y trabajo, medidas sanitarias y fitosanitarias, obstáculos técnicos al comercio, remedios comerciales, y temas legal��s/institucionales. En última instancia, con una amplia g��ma de medidas, el Acuerdo trataba de impulsar un "leve! playing field" entre socios comerciales. Destaca, además, que uno de los objetivos declarados es la contribución al desarrollo del comercio a nivel mundial y la catalización de una más amplia cooperación regional e i ntemacional.
+
+En el texto final del CPTPP se han pospuesto temporalmente alrededor de 20 artículos originales del TPP, incluidos los firmes compromisos sobre propiedad intelectual que EE.UU. planteó anterionnente, y que habían generado recelo entre el resto de los países miembros. En concreto, 11 de los 20 artículos se refieren a la propiedad intelectual.\footnote{El CPTPP retrasará los requisitos para que los países miembros modifiquen sus leyes y prácticas. El CPTPP también suspende el plazo de vigencia de los derechos de autor en caso de retrasos injustificados en la concesión de licencias. Los miembros del acuerdo no tendrán que ampliar los plazos de protección de 50 a 70 años.
+} El resto de artículos aplazados se refieren a la inversión Estas provisiones han sido, no obstante, suspendidas, lo que deja la puerta abierta a que EE.UU. se reincorpore al acuerdo.\footnote{En cuanto al mecanismo de solución de diferencias entre gobiernos e inversores (ISDS. por sus siglas en inglés), el CPTPP ha reducido los mecanismos disponibles para que los inversores extranj eros demanden a1 Estado miembro de acogida. Además. el CPTPP establece que un miembro del Panel de Arbitraje ISDSserá designado por el gobierno y el demandante cada uno. y uno por ambos
+} Además, incluso con estas disposiciones suspendidas, el capítulo sobre propiedad intelectual ofrece las nonnas más avanzadas y detalladas sobre propiedad intelectual en un acuerdo comercial hasta la fecha. Ofrece una protección sustancial a las empresas que operan en el extranjero en materia de propiedad intelectual.
+
+\begin{specialblock}{Estados Unidos: \textbf{Giro hacia el Indo-Pacífico}} 
+    La región lndo-Pacífico se ha convertido a lo largo de los últimos años en un motor clave del crecimiento económico mundial y en una región de gran importancia estratégica. En consecuencia, y en el marco de la competición estratégica con China en la región, durante la presidencia de Barack Obama (2009- 1017), los EE. UU. pusieron en marcha su giro estratégico hacia la región de Asia (pivotlrebalancing strategy). Ello reflejaba una nueva visión postatlántica de la diplomacia estadounidense y una ambición renovada por aprovechar el potencial de una región que representa un tercio del PIB mundial y alrededor del 60% de la población mundial.
+
+    No obstante, más allá del valor económico del TPP, este acuerdo fue diseñado para ser la pieza central del giro estadounidense hacia Asia: el TPP preservaría el liderazgo de Estados Unidos en el Indo-Pacífico, daría fonna al orden regional en apoyo de sus valores e intereses y, críticamente, contrarrestaría a una China en ascenso y asertiva. Sin embargo, la política interna estadounidense y la oposición de los movimientos sindicales hicieron que la ratificación del TPP fuera impopular para los líderes políticos estadounidenses. Así, en 2017 , el entonces presidente Donald Trump, retiró a EE.UU. del TPP en su primer día en el cargo En lo·s últimos años, especialmente bajo la administración Trump, EE. UU. ha cambiado suenfoque hacia los ALC bilaterales, que eliminarían o reducirían los desequilibrios comercialesbilaterales (America First). Sin embargo, estos acuerdos proporcionan beneficios económicos limitados a Estados Unidos y no suponen el mismo catalizador para las redes de producción regionales en la región Indo-Pacífico que los ALC multilaterales. El Instituto Peterson de Economía Internacional calcula unas pérdidas de 133.000 millones de dólares anuales. para Estados Unidos debido a la retirada del TPP y las consiguientes oportunidades comerciales perdidas. Esta estimación incluye los 131.000 millones de dólares que EE.UU. habría ganado con el TPP original, así como los 2 .000 millones de dólares en pérdidas en que incurre EE.UU. sin la pertenencia al CPTPP..
+
+    Al retirarse del TPP, EE.UU. también empezó a perder su estatus de legislador en materia de comercio internacional. Dado que muchos miembros del CPTPP utilizan el acuerdo como modelo en la negociación de nuevos ALC, el CPTPP desempeña un papel importante en las normas de los ALC. Aunque el USMCA ayudó a Estados Unidos a reafirmarse como creadorde nonnas comerciales, volver al CPTPP amplificaría esta situación y reforzaría la influencia estadounidense en la región Indo-Pacífica en relación con China.
+
+    Actualmente, Washington ·está excluido de los dos bloques comerciales principales y superpuestos que han surgido en la última década: el CPTPP y el RCEP. China es miembro fundador y mayoritario de la RCEP, que gira en torno a la ASEAN junto a Australia, China, Japón, Nueva Zelanda y Corea del Sur. Aunque parezca irónico -dado que Estados Unidos diseñó originalmente el CPTPP para contrarrestar a China-, la reciente solicitud de adhesión de China al CPTPP fue un duro recordatorio de la disminución de la influencia estadounidense en la misma región con la que pretendía reequilibrarse.
+
+    Así, aunque los EE. UU. han impulsado asociaciones con sus principales socios en la región en el ámbito militar, de seguridad y de inteligencia -como por ejemplo, ''Australia-United Kingdom-United States" (A UKUS), "Quadrilateral Security Diaologue"(QUAD) o "Five Eye s "-, la estrategia para la . región desde un punto de vista económico ha tenido menor protagonismo. Es por ello que, en mayo de 2022, el presidente de EE. UU., Joe Biden, lanzó el ··Marco Económico Indo-Pacífico'· (/n do-Pacific Ec onomic Fram ework, IPOF). El IPOF es un marco de asociación que reúne a EE. UU. y a otros 13 estados del Indo-Pacífico, entre ellos Japón, India, Corea del Sur y Australia, que se estructura en torno a cuatro pilares: comercio justo; cadenas de suministro resilientes; infraestructuras. energía limpia y descarbonización; yfiscalidad y lucha contra la corrupción. En conjunto, estas 14 economías representan un 40% del PIB mundial y cerca de 30% del comercio internacional de bienes y servicios.
+\end{specialblock}
+
+\subsubsection{Valoración}
+En efecto, la retirada de EE.UU. tuvo un impacto considerable en los efectos del acuerdo comercial, ya que reduj o en un 70\% las ganancias globales de ingresos derivadas del acuerdo.\footnote{En concreto. el TPP representaba un 40\% del PIB mundial. un 30\% del comercio internacional y 800 millones de habitantes. Por su parte. el CPTPP. representa un 30\% del PIB mundial. un 15\% del comerciointernacional. y 500 millones de habitantes.
+}
+
+Sin embargo, incluso sin EE.UU., el CPTPP sigue generando un aumento real de los ingresos de aproximadamente el 1\% del PIB para los países del CPTPP. El Instituto Peterson de Economía Internacional estima que el CPTPP añadirá unos 1 47.000 millones de dólares a la renta mundial. El CPTPP proporciona reformas, liberalización del comercio e inversiónes cruciales, impulsando la productividad y las oportunidades empresariales en los países miembros. Entre los aspectos más destacados del acuerdo cabe señalar:
+
+• Amplio acceso al mercado: elimina los aranceles y otras barreras no arancelarias a una amplia gama de bienes y servicios de comercio e inversión, con el fin de crear nuevas oportunidades para los trabajadores y las empresas y beneficios inmediatos para los consu!1)idores. Sólo se mantienen los aranceles en unos pocos sectores muy sensibles: por ejemplo, Japón mantiene los aranceles sobre el arroz, mientras que la industria láctea canadiense también está protegida. Se calcula que el CPTPP elimina el 95\% de los aranceles para el comercio de bienes entre los países del CPTPP.
+
+• Acuerdo plenamente regional: para facilitar el desarrollo de las cadenas de producción y suministro entre los miembros del CPTPP, apoyando el objetivo de crear empleo, elevar el nivel de vida, mejorar el bienestar y promover el crecimiento sostenible en los países miembros. 
+
+• Cuestiones comerciales transversales: aprovechar el trabajo realizado en APEC y otros foros incorporando varias cuestiones transversales. Entre ellas figuran: 
+
+o Coherencia nonnativa: Los compromisos fomentan el uso de buenas prácticas reguladoras ampliamente aceptadas y facilitan la coordinación dentro de los gobiernos de los miembros del CPTPP.
+
+o Competitividad y facilitación de la actividad empresarial: Los compromisos mejoran la competitividad nacional y regional de la economía de cada país del CPTPP y promueven la integración económica y el empleo en la región, incluso mediante el desarrollo de cadenas regionales de producción y suministro.
+
+o Pequeñas y medianas empresas: Los compromisos abordan las preocupaciones que las pequeñas y medianas empresas han planteado sobre la dificultad de comprender y utilizar los acuerdos comerciales, animando a las pequeñas y medianas empresas a comerciar internacionalmente.
+
+o Desarrollo: La liberalización completa y sólida de los mercados, las mejoras en las disciplinas que fomentan el comercio y la inversión, y otros compromisos, incluido un mecanismo para ayudar a todos los países del CPTPP a aplicar eficazmente el Acuerdo y aprovechar plenamente sus beneficios, servirán para fortalecer las instituciones importantes para el desarrollo económico y la gobernanza, contribuyendo así de manera significativa al avance de las respectivas prioridades de desarrollo económico de los países del CPTPP.
+
+o Contratación pública: Los compromisos abordan las barreras en la contratación pública, permitiendo a las empresas de los países CPTPP tener más oportunidades de licitar para proyectos gubernamentales que antes no estaban disponibles para los licitadores extranjeros.
+
+• Aborda los nuevos retos comerciales: promover el comercio y la inversión en productos y servicios innovadores, incluidos los relacionados con la economía digital y las tecnologías verdes, y garantizar un entorno empresarial competitivo en toda la región CPTPP. 2
+
+• Acuerdo '"vivo'': para permitir la actualización del acuerdo según proceda para abordar las cuestiones comerciales que surjan en el futuro, así como las nuevas cuestiones que surjan con la ampliación de.1 acuerdo para incluir nuevos países
+
+\begin{specialblock}{CPTPP y ASEAN}
+    El CPTPP está abierto a la adhesión de otros países, incluidos EE.UU. y otras naciones del Sudeste Asiático, aunque el proceso puede ser largo debido a los altos estándares incluidos en el acuerdo. Además de los actuales signatarios del CPTPP en la ASEAN, Tailandia, Indonesia y Filipinas han expresado su interés en adherirse al CPTPP. La incorporación de más economías al CPTPP podría multiplicar los beneficios del acuerdo. Según el Instituto Peterson de Economía Internacional, si Indonesia, Corea, Filipinas, Taiwán y Tailandia entraran a formar parte del CPTPP, los beneficios se triplicarían. La incorporación de estos cinco países al acuerdo supondría un aumento de la renta mundial estimado en 44 9.000 millones de dólares al año, en comparación con los 147.000 millones de beneficios anuales generados por el acuerdo actual. El aumento del número de miembros del CPTPP estimularía una mayor integración económica regional y las cadenas de suministro en toda la región Asia-Pacífico.
+
+    \imagenfit{Fig1.png}{Participación en acuerdos regionales de las economías del Pacífico}{Instituto Peterson de Economía Internacional}
+       
+\end{specialblock}
+
+\subsection{Área Continental Africana de Libre Comercio (AfCFTA)}
+La idea de crear en África una enorme área de libre comercio surgió de la cumbre de la Unión Africana que se celebró en 20 1 2 en Addis Abeba. 
+
+Las negociaciones comenzaron en 2015 y el acuerdo lo firmaron 44 de los 55 miembros de la UA, durante la cumbre de la Unión Africana en Kigali, Rwanda en marzo de 20 1 8.\footnote{A fecha de abril de 2023, 54 de los 55 (a excepción de Eritrea) países de la Unión Africana 17 han firmado el AfCFTA, 46 de los cuales han ratificado el proceso. En ténninos de número de países participantes, el AfCFT A es la mayor zona de libre comercio del mundo desde la creación de la OMC
+} En un primer momento, las grandes economías como Sudáfrica y Nigeria rehusaron respaldar el acuerdo. No obstante, Sudáfrica lo firmó en julio de 2018 y Nigeria se unió en el último minuto en julio de 20 1 9 cuando el pacto entró en la fase operativa. Con la confirmación de la entrada en este proyecto de Nigeria, la mayor economía africana, la iniciativa cobró sin duda un mayor alcance.\footnote{Nigeria es, sin duda. el país más importante de África. Cuenta con una población de más de 200 millones de habitantes y la economía del país representa un 17, 1\% de la producción total en el continente. En tanto que puntal económico de la Comun_idad Económica de los Estados de África Occidental (CEDEAO), Nigeria tiene mucha influencia en el conjunto de la región de África occidental. 
+
+Marruecos, Argelia, Egipto, Etiopía y Sudáfrica, son países que, tanto por su tamaño demográfico corno económico. juegan. junto a Nigeria. un papel importante en el continente africano. Además. en África se encuentran seis de las diez economías de más rápido crecimiento del mundo: Ruanda, Etiopía, Costa de Marfil. Ghana. Tanzania y Benin. si bien. parten de niveles de PIB per cápita muy bajos.
+}
+
+\begin{specialblock}{Procesos de Integración en África\footnote{Fuente: versión anterior del tema de CECO Terna 36: Procesos de integración no comunitarios. Organismos de cooperación internacional: La OCDE y otros organismos de cooperación.}}
+    Quizá es en el continente africano donde se ponen de manifiesto las mayores dificultades de la integración regional por la cantidad de procesos existentes -quizá excesivos-, mutantes, y en muchas ocasiones solapados, que constituyen posiblemente un intento de estrechar lazos entre países tras sus procesos de independencia. En este caso, sin embargo, existen factores estructurales y de carácter socio-económico de dificil resolución en el corto plazo que impiden que estos procesos hayan desembocado en la proliferación del comercio intra-regional. 
+    
+    Según se desprende de la teoría de integración, una unión aduanera será más beneficiosa cuanto mayor sea la complementariedad comercial, si bien la falta de complementariedad entre las estructuras productivas de los países y la reducida gama de productos competitivos en la exportación, reducen el potencial beneficio. A ello se une la disparidad en los niveles de desarrollo de los países africanos, las carencias de infraestructura básica, el comercio de Estado y la persistencia de monopolios, conflictos étnicos, situaciones de corrupción, etc. La resolución de estos factores y la creación de capacidad institucional es condición necesaria para aprovechar los beneficios de la liberalización comercial y, con ello, pem,itir el crecimiento económico.
+\end{specialblock}
+
+Los tres principales órganos del AfCFTA son la Asamblea de Jefes de Estado, el Consejo de Ministros y la Secretaría. En primer lugar, la Asamblea de Jefes de Estado es el órgano supremo de toma de decisiones de la UA y proporciona supervisión y orientación estratégica sobre el AfCFTA, incluido el Plan de Acción para impulsar el comercio intraafricano. En segundo lugar, el Consejo de Ministros está integrado por los Ministros responsables del comercio. y los funcionarios designados por los Estados parte. El Consejo informa a la Asamblea a través del Consejo Ejecutivo y se encarga, entre otras funciones, de armonizar políticas y estrategias, y hacer cumplir implementación efectiva del Acuerdo. Por último, aunque el AfCFTA es impulsado por sus Estados parte, la Secretaría funciona como el organismo coordinador de todas sus actividades. La Secretaría es el órgano administrativo encargado de coordinar la implementación del AfCFT A.
+
+\subsubsection{Contenido} 
+El AfCFTA es el área de libre comercio más grande del mundo. Reúne a 54 países de la Unión Africana (AU) y ocho Comunidades Económicas Regionales (REC) con un mandato general de crear un mercado continental único.\footnote{Con el Tratado de Abuja de 1991. los Estados parte de la Organización para la Unidad Africana (OUA) acordaron una hoja de ruta para la creación ele un mercado común africano. La completa implementación del AfCFTA es un pre-requisito para poder establecer una Tarifa Exterior Común y lograr una Unión Aduanera. y en última instancia. lograr un mercado continental único.
+} Abarca un mercado de más de 1.200 millones de personas (se prevén 2.500 en 2050) y un PIB combinado de más de 3,4 billones de dólares. El objetivo es pennitir el libre flujo de bienes y servicios en todo el continente e impulsar tanto el comercio intra-africano como la posición comercial de África en el mercado mundial. El acuerdo abarca los ámbitos del comercio de bienes, el comercio de servicios y la solución de diferencias, así comola inversión, la propiedad intelectual. la competencia y el comercio electrónico.
+
+El Acuerdo por el que se establece el AfCFTA entró en vigor el 30 de mayo de 2019 para los 24 países que habían depositado sus instrumentos de ratificación. El inicio del comercio bajo el AfCFTA comenzó el I de enero de 2021. Sin embargo, la implementación del AfCFTA, según las últimas informaciones disponibles, lleva retraso: el comercio preferencial de mercancías y de servicios bajo el régimen AfCFTA ha comenzado sólo en algunos países: Egipto, Kenia, Ruanda, Camerún y Ghana. 
+
+Actualmente, los términos específicos de la liberalización de bienes y servicios se encuentran en una fase más avanzada. Las reducciones arancelarias previstas se aplicarán sobre el 90\% de las líneas de productos, que deberán eliminarse en un periodo de 5 años (10 años en el caso de los países menos avanzados) a partir de enero de 202 1 . Cinco años después ( 8 años en el caso de los países menos avanzados), se iniciará la reducción arancelaria del 7\% de líneas restantes, quedando un máximo del 3\% de líneas fuera de la liberalización. En cuanto a las barreras no arancelarias, se reducirán sobre la base de la nación más favorecida, mientras que las medidas de facilitación del comercio se referirán sobre todo a las mejores prácticas en gestión aduanera y de fronteras y disponibilidad de infonnación. Otras cuestiones como los protocolos de inversiones, las reglas de competencia, o los derechos de propiedad intelectual están también siendo negociados en una Fase 1 1. La Fase III de negociación, sobre comercio digital, aún no ha empezado. 
+
+Además del tratado de libre comercio, también está en marcha la ratificación del Protocolo de Libre Movimiento, aunque a un ritmo más lento. Mediante este instrumento, complementario del AfCFTA, se persigue la libre circulación de personas, la protección del derecho de residencia de los africanos en cualquier país del continente y blindar jurídicamente la posibilidad de que se establezcan y abran un negocio o empresa. Esto permitirá que los africanos se puedan beneficiar de la creación de empleo esperada allí donde se produzca.
+
+\subsubsection{Valoración}
+Aunque muchas de las economías de más rápido crecimiento del mundo están en África, el comercio intraafricano se sitúa por debajo de su potencial. Actualmente, el continente sigue dependiendo en gran medida de las exportaciones de productos básicos y agrícolas hacia fuera del continente, mientras que importa bienes de capital o productos alimentarios predominantemente también desde fuera de África. 
+
+El comercio intra-africano representó alrededor del 15% del total del volumen de comercio en 2 021. Por el contrario, el comercio intra-continental representa el 51 % de las exportaciones en América del Norte, el 49% en Asia, y el 22 % en América Latina. Entre los países de Europa Occidental esta cifra alcanza el 69%. 
+
+Aunque algunas Comunidades Económicas Regionales (REC)22 de África han logrado mejoras en la integración comercial mediante reducciones arancelarias, el mercado africano sigue fragmentado. Las barreras no arancelarias, como los procedimientos burocráticos descoordinados, los largos tiempos de espera en la frontera o los requisitos de exportación largos y engorrosos elevan los costes comerciales en el continente. Como consecuencia, África se ha integrado con el resto del mundo más deprisa que consigo misma.
+
+Por lo tanto, la aplicación efectiva del AfCFT A como régimen continental es esencial para potenciar el comercio intraafricano y las exportaciones fuera del continente. Además, la perspectiva de acceder a este gran mercado atraerá sustanciales flujos de inversión extranjera directa, necesaria para que África se diversifique en nuevos sectores, como la agroindustria, la industria manufacturera y los servicios, y reducir la vulnerabilidad de la región a los ciclos de precios de las materias primas.
+
+Más a medio plazo una cuestión clave será cómo desarrollar la complementariedad entre los productos de las economías integrantes del AfCFTA. En este sentido, la posición de países como Egipto, Sudáfrica, Nigeria, Marruecos, Kenia o incluso Costa de Marfil, con una cierta base industrial, es muy distinta a la de otros países totalmente dependientes de la minería y las materias primas. La combinación de adecuadas políticas industriales y del acompañamiento de inversión doméstica y extranjera en sectores con potencial se hace más necesaria que nunca. Según un informe del Banco Mundial publicado en 2 022 , una mayor IED podría aumentar las exportaciones de África hasta un 32 % en 2 035, con un crecimiento de las exportaciones  intraafricanas del 109%, especialmente en los sectores de productos manufacturados. Todos los países de África verán aumentar sus exportaciones intraafricanas, entre ellos Túnez ( 165%). Camerún (144%), Ghana (1 32%), Tanzania (1 26%) y Sudáfrica (61 %).
+
+Asimismo, podría crear casi 18 millones de puestos de trabajo más, muchos de ellos mejor remunerados y de mayor calidad, y las mujeres trabajadoras serían las más beneficiadas. De aquí a 2035, los puestos de trabajo y el aumento de los ingresos podrían ayudar a 50 millones de personas a salir de la pobreza extrema. La aplicación del acuerdo comercial también supondría mayores ganancias salariales para las mujeres y los trabajadores cualificados. Se espera que los salarios de las trabajadoras sean un 11,2\% más altos en 2035 en comparación con el nivel salarial sin el acuerdo, superando el crecimiento del 9,8\% de los salarios de los trabajadores masculinos. Existen perspectivas optimistas para un proyecto que podría favorecer el desarrollo del continente africano. En concreto, contribuirá a establecer cadenas regionales de valor en África, impulsará la inversión y la creación de empleo, y mejorará de forma sustancial las condiciones de vida de su población. El AfCFTA aspira a ser, además de un instrumento liberalizador del comercio, un facilitador de crecimiento integrador y desarrollo sostenible, en consonancia con la Agenda 2063.\footnote{La Agenda 2063 es un marco estratégico de la Unión Africana para la transformación socioeconómica del continente. así como el avance en seguridad. autosuficiencia y sostenibilidad.
+}
+
+\begin{specialblock}{Unión monetaria: el \textbf{Franco CFA}}
+    Aunque la firma del AfCFTA ha renovado las esperanzas de crear una unión monetaria que vincule el continente en su totalidad, las únicas uniones monetarias existentes en la actualidad son a nivel regional. Hoy en día, en el continente africano conviven 42 monedas y dos uniones monetarias, estas últimas bajo la influencia de Francia. El franco CFA es, desde hace 75 años, la moneda utilizada en catorce países africanos, casi todos ellos antiguas colonias francesas. Los países son: Benín, Burkina Faso, Costa de Marfil, Guinea Bisáu, Malí, Níger, Senegal y Togo en África occidental; y Camerún, República Centroafricana, Chad, República del Congo, Guinea Ecuatorial y Gabón en África central. Las siglas de esta moneda corresponden a "Comunidad , Financiera Africana", aunque en el momento de su creación significaban "Comunidad Francesade África". Tras las Segunda Guerra Mundial, el Gobierno francés estableció dos nuevas monedas que sustituirían al franco francés y se implantarían en sendas regiones: el franco CF A del África occidental, y el del África central. Cuando las colonias africanas francesas se independizaron en 1 960, mantuvieron la moneda y, a través de ella, Francia conservó parte de su influencia en estos nuevos países.
+    
+    Los dos francos CFA tienen un tipo de cambio fijo con la moneda que use Francia: primero el franco metropolitano y, desde 1999. el euro. El 50 % de las reservas de los Estados que usan el franco CF A deben ser depositadas en el Tesoro Francés que, a cambio, devuelve intereses por' esas reservas y garantiza la convertibilidad a euros. Además, las transacciones de franco CF A a otras divisas pasan por París y es el Banco Central Francés el que se ocupa de la impresión de los francos CF A. A cambio de estas condiciones, los defensores del franco CFA argumentan que los Estados africanos han gozado de protección frente a la inflación y de mayor estabilidad, lo que les ha permitido desarrollar sus economías. No obstante, el debate sobre el franco CF A sigue abierto: sus detractores ven en él una herramienta de control neocolonial de Francia.
+
+    A finales del 20 1 9, el presidente francés, Emmanuel Macron, y el presidente de Costa de Marfil, Alassane Ouattara, anunciaron el fin del franco CFA del África occidental para dar paso a una nueva moneda: el ECO, que se introduciría en los países UEMOA (véase Anexo 7). La medida de momento no se implementaría en las excolonias francesas de África Central. No obstante, lo que sí se plantea es la extensión del ECO de la W AEMU ( compuesta de 8 estados parte) al resto de países de África occidental (ECOWAS, compuesta por los miembros de WAEMU junto a otros 7 Estados parte la mayor parte excolonias británicas). A lo anterior hay que añadir que el ECOWAS, desde hace décadas viene tratando de impulsar su propio proyecto de moneda común con el mismo nombre: ECO. Además, del desencuentro provocado por la unilateralidad de la decisión de Francia y países del franco CF A occidental, ambos proyectos ECO presentan algunas diferencias técnicas entre sí, lo que hace presagiar que el franco CF A está aún lejos de desaparecer.
+
+    Hay que señalar que de producirse la completa integración bajo un mismo ECO por parte de los 1 5 países de ECOWAS, esto tendría considerables efectos. Por un lado, Francia perdería su influencia política y económica en los países CF A occidental. Por otra parte, Nigeria, que tiene dos tercios de la población y genera más del 80 % del PIB de la zona, podría tomar liderazgo en la región, especialmente en los países CF A donde por diferencia de idioma ha estado tradicionalmente menos presente. Por último, los países de ECOWAS que no formaban parte  del franco CF A occidental, abandonarían su soberanía monetari&. Aquí cabe recordar la importancia de un buen diseño de las uniones monetarias para lograr su buen funcionamiento y que beneficie a todos los integrantes.
+\end{specialblock}
+
+
+\subsection{Zona de Libre Comercio Pan-Árabe (PAFTA; 2004)}
+La creación de esta región representa un paso avanzado en el camino de la cooperación económica entre países árabes al tiempo que se persigue aprovechar las oportunidades comerciales disponibles en estos mercados. Se trata de una zona - en determinados países- rica en recursos naturales, principalmente petróleo y gas natural.\footnote{También se conoce como Greater Arab Free Trade A rea (GAFTA). Actualmente cuenta con los dieciocho Estados Miembros: Argelia, Bahréin, Egipto, Iraq, Kuwait, Líbano, Libia, Marruecos, Omán, Estado de Palestina, Qatar, Arabia Saudita, Sudán, Siria, Túnez, Emiratos Árabes Unidos, Jordania y Yemen.
+
+Están incluidos todos los países del Acuerdo de Agadir (2004). que buscaba el establecimiento de una zona de libre comercio entre Jordania. Túnez. Egipto y Marruecos. si bien el PAFTA ha superado el Acuerdo. Cabe recordar que este acuerdo fonna parte del proceso para el establecimiento de una zona de libre comercio UE-Mediterráneo (Proceso de Barcelona). Véase Anexo 4. 26 Los Estados parte tienen una población conjunta de unos 433 millones de personas. es decir, alrededor del s:5% de la población mundial total. En términos de PIB, representa alrededor del 2.9% de la economía mundial.
+} Las principales economías de la zona son Emiratos Árabes Unidos y Arabia Saudita, que lideran el comercio intra-regional. Buena parte de las exportaciones tanto a la región como fuera de ésta lo son de petróleo o productos derivados.
+
+Ambos factores son condicionantes claros del impulso integrador en la zona y la evolución a la baja de su precio en los mercados internacionales en la época reciente ha limitado los avances. Frente a las primeras iniciativas infructuosas de los años 5 0 y 60. y posterionnente de los 80, a finales de los años 90 la Liga Árabe27 decidió crear un Área de Libre Comercio Árabe.
+
+El principal órgano es el Consejo Económico y Social de la Liga Árabe, que tiene encomendada la función de coordinar la integración económica de los miembros de la Liga, y que es asistido por diferentes comités.
+
+\subsubsection{Contenido}
+El objetivo último es la creación de un bloque económico árabe con capacidad de competir a nivel internacional. Las principales disposiciones se referían a la supresión progresiva de las barreras arancelarias y no arancelarias en el comercio de manufacturas, si bien los productos agrícolas contaron con un trato especial: cada país podía excluir un máximo de 10 productos agrícolas del acuerdo durante la temporada de cosecha. Además, las normas de origen se fijaron en el 40\% del valor añadido. En el plazo de diez años desde su entrada en vigor en 1 998, se llevó a cabo una reducción anual de aranceles en un 10\%. Este proceso se aceleró progresivamente y ya en 2005 el PAFTA estaba completamente implementado.
+
+De acuerdo con la OMC, actualmente continúan los esfuerzos por eliminar las barreras no arancelarias, en particular las relativas a procedimientos administrativos en aduanas. En los últimos años, los miembros del PAFTA han continuado participando en la Ronda de Negociaciones de Beirut dirigida a la liberalización del comercio de servicios entre países árabes, lanzada en 2 004. Así, en febrero de 2017, Emiratos Árabes Unidos junto con otros países del PAFTA acordaron compromisos relativos al comercio de servicios. Esto fue posteriormente ratificado en marzo de 2020.
+
+\subsubsection{Valoración}
+Además de las novedades en materia de política comercial, bajo la supervisión del Consejo Económico de la Liga Árabe, el acuerdo avanza en otras materias como las comunicaciones entre los países miembros. o la mayor colaboración público-privada en el desarrollo del acuerdo. A pesar de que los avances han sido significativos en la reducción de aranceles para el comercio de bienes, todavía pemtanecen barreras comerciales no arancelarias. Continúan, por ello, las negociaciones para unificar los procedimientos aduaneros, establecer una verdadera zona de libre comercio y, posteriormente, una unión aduanera.
+
+El comercio intra-regional supone algo más del 10 % del comercio de la región y está dominado por las exportaciones de Arabia Saudita (de los cuales, en torno al 50 % están vinculados al petró_leo) y de Emiratos Árabes (que, además, es el principal importador). Hay, no obstante, un nivel importante de re-exportación desde estos países hacia el resto del bloque que dificulta tanto la identificación del origen de las mercancías y, con ello, la medición del volumen comercial de la región, como los avances en la simplificación de medidas aduaneras. En todo caso, la riqueza de la región (renta, población y recursos naturales) apuntan a ventajas significativas de profundizar en la integración.
+
+Por otra parte, conviene destacar las negociaciones tanto con la UE como con EE. UU, aspirantes a alcanzar sendos acuerdos de libre comercio con los países de la región. No obstante, se trata de proyectos de significativa dificultad política cuyas negociaciones se encuentran estancadas.
+
+\subsection{Acuerdos europeos no Unión Europea}
+
+
+\subsubsection{Acuerdo Europeo de Libre Comercio (EFTA)}
+Tras la Segunda Guerra Mundial, por el Tratado de París (1948), se crea la Organización Europea para la Cooperación Económica (OECE), embrión de la actual OCDE.\footnote{El objetivo era gestionar el Plan Marshall y contribuir a normalizar los pagos a través de la Unión Europea de Pagos. El éxito de la OECE anima a Estados Unidos y a Canadá a construir una organización similar, pero a una escala más amplia. lo que da IL1gar a la firma en 1 960 del Convenio de París por el que se crea la OCDE.
+} 
+
+En su seno surgirán dos iniciativas opuestas: por un lado, la de aquellos países más comprometidos con el proceso integrador, que serán los que, en última instancia, firmasen los Tratados de Roma (1957) que dieron origen a la Comunidad Económica Europea (CEE). Por otro, países liderados por el Reino Unido interesados en un proyecto menos ambicioso que las Comunidades Europeas.\footnote{Los 7 fundadores fueron Austria, Dinamarca, Noruega, Portugal, Reino Unido, Suecia y Suiza, a los que se unieron Finlandia (1961), Islandia (1970) y Liechtenstein (1991). A día de hoy, tan solo Islandia, Liechtenstein, Noruega y Suiza continúan en la Asociación, ya que según los miembros se adherían a la UE abandonaban el EFTA.
+} En particular, el Reino Unido muestra interés por promover acuerdos preferenciales para productos industriales con países no miembros de la CEE. Esta situación desemboca en la creación de la EFTA (Asociación Europea de Libre Comercio) -como alternativa a la CEE- en 1 960 por el Convenio de Estocolmo, que fue actualizado en 2001 por el Convenio de Vaduz.
+
+Los principales órganos son el Consejo y la Secretaría General. El Consejo del EFTA es el máximo órgano de gobierno. El Consejo suele reunirse ocho veces al año a nivel de embajadoresGefes de las delegaciones permanentes ante el EFTA) y una vez al año a nivel ministerial. En las reuniones del Consejo, las delegaciones se consultan entre sí, negocian y deciden sobre cuestiones políticas relativas a la EFTA. Cada Estado miembro está representado y las decisiones se toman por consenso. La Presidencia del Consejo de la EFTA rotará cada 12 meses entre Islandia, Noruega, Liechtenstein y Suiza (antes cada seis meses).
+
+La Secretaría General está dirigida por el Secretario General, con sede en Ginebra, que cuenta con la asistencia de tres Secretarios Generales Adjuntos, uno con sede en Ginebra y los otros dos en Bruselas. Los cuatro puestos son nombrados por el Consejo y repartidos entre los Estados parte. La división de la Secretaría refleja la división de las actividades de la EFTA. La Secretaría cuenta con unos 90 empleados, de los cuales un tercio trabaja en Ginebra y dos tercios en Bruselas y Luxemburgo.
+
+\paragraph{Contenido}
+El objetivo principal era crear un área de libre comercio para los productos industriales como punto de partida para un marco de liberalización comercial de mercancías más amplio entre sus miembros. Aunque la reducción de aranceles no afectaba a productos agrícolas, los países miembros del EFTA firmaron diferentes acuerdos bilaterales y por la CNMF la reducción de aranceles se extendía al resto de países. Además. también se produjeron avances en materia no arancelaria (no discriminación fiscal, prohibición de subvención a las exportaciones. etc.).
+
+\paragraph{Valoración}
+La EFTA ha ido perdiendo relevancia a medida que sus miembros se fueron incorporando a la CEE y, posteriormente, a la UE. Así, por ejemplo, tan pronto como 1 973 , se produce la primera ampliación de la CEE con la entrada de Reino Unido y Dinamarca, que abandonaron el EFTA. Destaca, no obstante, que precisamente para evitar el establecimiento de aranceles entre antiguos socios comerciales, se acuerda la creación de una zona de libre comercio CEE-EFTA. Surge así el Espacio Económico Europeo (EEE), que pretende extender los beneficios del mercado interior de la CEE a la EFTA, avanzando en la integración de ambos proyectos europeos (Declaración Conjunta de Luxemburgo, 1 984). Este nuevo impulso integrador culmina con la Declaración de Oporto de 1992 , que pe'nnitió la entrada en vigor del EEE en 1 994 (UE + EFTA excepto Suiza).\footnote{El referéndum negativo en Sujza (que. por tanto. abandona el proyecto) pospone la entrada en vigor hasta 1 994. 
+
+Tras el rechazo en referéndum de su adhesión al EEE. la U E•firmó con Suiza en 1 999 un total de siete acuerdos sectoriales. conocidos como ·'Bilaterales l", que abarcan la agricultura, la libre circulación de personas o la contratación pública. Estos acuerdos de añaden al Acuerdo de Libre Comercio entre la CEE y Suiza de 1972. que solo incluye el comercio de mercancías. En 2004 se firma otro paquete de acuerdos. "Bilaterales 11", que abarca los productos agrícolas transformados o su incorporación al Espacio Schengen. entre otras cuestiones. En 2 0 1 4 se iniciaron negociaciones para la firma de un Acuerdo Marco Institucional. cuyo objetivo era crear un marco de gobernanza horizontal para cinco de los acuerdos firmados en 1999. Sin embargo, en mayo de 2021 Suiza detuvo las negociaciones. Actualmente existen más de 100 acuerdos bilaterales entre la UE y Suiza. los cuales se gestionan a través de unos 20 comités mixtos.
+}
+
+El EEE es un área de libre comercio y de libre competencia formado por los 27 Estados miembros de la UE, Noruega, Islandia y Liechtenstein. El Acuerdo se caracteriza por la incorporación del acervo comunitario, la aplicación de las cuatro libertades fundamentales que rigen el mercado interior (mercancías, servicios, personas y capitales), por determinados acuerdos sectoriales en algunos ámbitos (competencia, medioambiente, etc.), así como la cooperación en otras cuestiones. No obstante, algunas áreas relevantes, como por ejemplo las relativas a la unión aduanera, la política comercial, y las políticas agrícolas y pesqueras comunes, están excluidas del acuerdo. Como consecuencia, el EEE constituye actualmente el mayor mercado interior del mundo, tanto en ténninos de PIB, de población, así como por v?lumen de exportaciones e importaciones.
+
+
+\subsubsection{Acuerdo Centroeuropeo de Libre Comercio (CEFTA; 1992)}
+La disolución del antiguo Consejo de Ayuda Económica Mutua (COMECON, 1949) de la órbita soviética fue consecuencia de la crisis industrial de los años 70, las crecientes discrepancias y el deseo de los países del grupo Yisegrado (Polonia, Hungría y Checoslovaquia - hoy República Checa y Eslovaquia-) de apertura social como símbolo de compromiso con las reformas hacia el libre mercado.\footnote{Tras el abandono del Acuerdo por los antiguos países Yisegrado, así como de Eslovenia, Rumanía, Bulgaria y Croacia (que fueron adhiriéndose y, posterionnente, abandonando el CEFT A, para fonnar parte de la Unión Europea), hoy fonnan parte del CEFTA Macedonia, Bosnia y Herzegovina, Moldavia, Serbia, Montenegro, Albania y Kosovo (Misión de Administración Provisional de las Naciones Unidad en Kosovo, UNMIK).
+
+España es uno de los países que no ha reconocido la independencia de la República de Kosovo, autoproclamada en febrero de 2008.
+} Este mismo deseo motivó el CEFT A, cuyo acuerdo original fue finnado por los citados países en diciembre de 1 992 en Cracovia, entrando en vigor en 1 994. En 2006 se finna el nuevo acuerdo expandido del CEFTA.
+
+El Comité Mixto es el máximo órgano decisorio del CEFT A. Está compuesto por representantes de los miembros del CEFTA y su principal función es regir la aplicación y el desarrollo ulterior del Acuerdo. El Comité Mixto funciona de acuerdo con su reglamento interno y se reúne al menos una vez al año. El Comité Mixto está presidido por una de las partes del acuerdo y esta función rota anualmente por orden alfabético. El Comité Mixto está a su vez fonnado por diferentes Comités, Sub-Comités y Grupos de Trabajo.
+
+Por su parte, la Secretaría del CEFT A se encarga de prestar apoyo técnico y administrativo a las Partes en la aplicación del Acuerdo del CEFT A y sus documentos jurídicos. También presta apoyo al Comité Mixto y a otros órganos del CEFTA en el desarrollo de políticas y procedimientos en las áreas relacionadas con el comercio.
+
+\paragraph{Contenido}
+A través del CEFTA, los países parttctpantes aspiran a incrementar su integración en las instituciones de Europa occidental y. con ello. adherirse a los sistemas económicos, políticos. legales y de seguridad europeos, como vía para la consolidación de la democracia y la economía de libre mercado.
+
+El Acuerdo preveía la liberalización inmediata del comercio de productos industriales y la liberalización gradual del comercio de productos agrícolas y servicios. Además de aplicar las liberalizaciones tradicionales relacionadas con el comercio. como las reducciones arancelarias y la eliminación de barreras no arancelarias, el CEFTA 2006 obliga a las partes a asumir determinados compromisos: coordinar sus políticas de inversión, abrir progresivamente sus mercados de contratación pública, y proteger eficazmente los derechos de propiedad intelectual. Como tal. el CEFT A 2006 constituye un acuerdo de libre comercio verdaderamente moderno y ambicioso.
+
+\paragraph{Valoración}
+Todos los países miembros del acuerdo original, excepto Macedonia, han ido incorporándose a la UE y abandonando el CEFT A que, por tanto, se ha establecido, de facto, como antesala a la adhesión a la UE para los países del este y los estados balcánicos. A medida que la UE se ha expandido hacia el este, el CEFTA se ha desplazado en esa misma dirección. De hecho, todos los miembros del CEFTA cuentan con acuerdos previos de asociación con la Unión Europea y, a día de hoy, Macedonia, Montenegro, Serbia y Albania son candidatos oficiales a la entrada en la UE.
+
+
+
+
+\clearpage
+\section{Uniones Aduaneras y Mercados Comunes}
+\puntosclave{
+    La mayor ambición de los objetivos requiere dotarse de un mayor número de instituciones. Algunos de los procesos de integración existentes en la actualidad se caracterizan por tratarse de uniones aduaneras y de mercados completos imperfectos.
+
+    La región del Sudeste Asiático tiene un enorme potencial económico y ha avanzado considerablemente en la integración económica. Sin embargo, hasta la fecha, el impacto de la ASEAN ha sido desigual y el objetivo de un mercado común aún está lejos. 
+
+    MERCOSUR, muy rica en materias primas y con abundantes recursos energéticos, tieneentre sus objetivos la consecución de un mercado común. La valoración general de los . pasos alcanzados no es del todo positiva y los avances se han visto muy condicionados por la voluntad política de cada momento.
+
+    Tanto la CAN como el MCCA han logrado considerables avances en términos de integración, lo que les ha permitido en ambos casos impulsar los flujos comerciales tanto intrarregionales como con otros socios comerciales.
+    
+    La UEE ha avanzado considerablemente hacia la consecución de un mercado común, especialmente en el ámbito de movimiento de trabajadores. No obstante, determinados comportamientos unilaterales por parte de los algunos miembros implican que la unión aduanera funcione de forma fragmentada.
+    
+    El CCG nace como acuerdo para garantizar la seguridad entre sus miembros en una región marcada por la inestabilidad política. En la actualidad, su objetivo es completar la u'nión aduanera y el mercado común. Con algunas de las mayores reservas del mundo, sus miembros están poniendo en marcha agendas reformistas para diversificar sus economías.
+}
+
+A continuación, pasamos a estudiar las principales uniones aduaneras, es decir, aquellas áreas de libre comercio en las que además se fija un arancel exterior común (AEC) frente a economías no pertenecientes al bloque, y los mercados comunes, es decir, aquellos en los que además de lo anterior se va un paso más allá al pennitirse la libre circulación de factores productivos dentro del bloque (en especial, del factor capital). Podemos adelantar que, algunos de los procesos de integración existentes en la actualidad se caracterizan por tratarse de uniones aduaneras y de mercados completos imperfectos, es decir, en los que no se cumplen todas las condiciones para ser considerados de buen funcionamiento en ténninos de teoría del comercio internacional.
+
+\subsection{Asociación de Naciones del Sudeste Asiático (ASEAN; 1967)}
+La asociación nace en 1967 propiciada por EE. UU, buscando crear un contrapeso al régimen imperante en Vietnam en el sudeste asiático. Aunque inicialmente de marcado carácter político, desde finales de los 70 (Cumbre de Bali, 1976) comienzan los esfuerzos hacia la liberalización comercial y la cooperación en el ámbito agrícola e industrial, para aprovechar las economías de escala y mejorar las redes de transporte y distribución entre los partícipes.\footnote{Inicialmente une a Indonesia, Malasia, Filipinas, Singapur y Tailandia, para posterionnente incorporar a Brunei (1984), Vietnam ( 1 995), Laos (1997), Birmania (1997) y Camboya (1999), hasta los 10 países miembros actuales.
+
+La ASEAN reúne a países con diferencias significativas. Singapur tiene el PIB per cápita más alto delgrupo, unos 60.000 dólares. según cifras del Banco Mundial de 2020: el de Myanmar es el más bajo. unos 1 .400 dólares. La demografia también difiere en la región. con muchos grupos religiosos y étnicos representados. Por ej emplo. Singapt1r y Vietnam se enct1entran entre los países con mayor diversidad religiosa del mt1ndo, según t1n informe de 20 14 del Pew Research Center, mientras que Camboya, de mayoría budista. e Indonesia, de mayoría musulmana. son relativamente homogéneos. La geografia de la ASEAN incluye archipiélagos y masas de tierra continentales con llanuras bajas y te1Teno montañoso. Los sistemas políticos de sus miembros incluyen democracias. Estados autoritarios y regímenes híbridos. En la última década. los gobiernos semidemocráticos se han vuelto cada vez más autoritarios. En la actualidad, Timor Oriental (en proceso de adhesión) sigue siendo la única democracia plenamente libre del Sudeste Asiático, según el grupo de investigación y defensa Freedom llouse.
+} Su intención inicial es acelerar el crecimiento económico, el progreso social y el desarrollo cultural, como motor para la prosperidad, la paz y estabilidad en la región.
+
+En los 90 , la estrategia avanza hacia la creación de una zona de libre comercio (Cumbre de Singapur, 1992) que va de la mano del inicio de la aplicación de los programas de liberalización económica en los países miembros. Desde entonces, se han intensificado los esfuerzos para ampliar el potencial económico de la región.\footnote{Debido a la crisis financiera asiática que se extendió por toda la ASEAN a pa11ir de la caída del bath tailandés en julio de 1997. muchos analistas académicos consideraron que "los países miembros de la ASEAN se replegarían en sus caparazones nacionales a causa de la crisis financiera" y que el ALC. de hecho, estaba muerto. Sin embargo. la ASEAN, seriamente preocupada por la reducción de la inversión extranjera procedente de la zona, aplicó en repetidas ocasiones un calendario acelerado de reducción arancelaria e insistió en su motivación hacia la eliminación de aranceles.
+} En 1998, los líderes adoptaron el Plan de Acción de Hanoi (HPA), que establecía una serie de iniciativas de integración económica para hacer realidad la Visión 2020 de la ASEAN.\footnote{Perseguía convertir ASEAN en una región altamente competitiva con libre circulación de bienes. servicios e inversiones. un !luj o de capital más libre, un desarrollo económico equitativo y una reducción de la pobreza y las disparidades socioeconómicas
+} 
+
+En 2007. los diez miembros adoptaron la Carta de la ASEAN, un documento constitucional que dotó a la agrupación de personalidad jurídica y de un marco institucional. La Carta establece el proyecto de una comunidad formada por tres ramas: la Comunidad Económica de la ASEAN (AEC), la Com1;1nidad Política y de Seguridad de la ASEAN, y la Comunidad Sociocultural de la  ASEAN. El AEC Blueprint 201 5 se adoptó en 2007 como un plan maestro coherente que guiaba el establecimiento de la AEC en 20 15. Inmediatamente después, se elaboró un nuevo Plan AEC 2025, que establece las orientaciones estratégicas de la próxima fase de integración económica de la ASEAN.
+
+La Declaración de Bangkok, de apenas dos páginas, establece objetivos vagos y generales de cooperación en campos como el comercio, la educación, la agricultura y la industria. Los únicos mecanismos previstos para cooperación son reuniones periódicas, en su mayoría no especificadas, de ministros de gobierno, funcionarios y expertos. La Carta de la ASEAN de 2007 sitúa la cooperación sobre una base algo más formal, con objetivos y mecanismos más detallados. Aunque siguen parcialmente el modelo de la UE, todas las instituciones son intergubernam entales y todas las decisiones se toman por consenso.
+
+A semejanza del Consejo Europeo, la Cumbre de la ASEAN reúne a los Jefes de Estado o de Gobierno. Se reúne al menos dos veces al año y es el órgano supremo de la organización. La supervisión más detallada de las actividades de la ASEAN la ej erce el Consejo de Coordinación de la ASEAN, que reúne Ministros de Asuntos Exteriores de la ASEAN, y que también se reúne al menos dos veces al año. Asimismo, también hay varios órganos sectori ales a nivel ministerial, como la Reunión de Ministros de Defensa, la Reunión de Ministros de Transporte, y la Reunión de Ministros de Economía. Además, la ASEAN cuenta con tres Consejos Comunitarios a nivel ministerial y de altos funcionarios que coordinan las actividades en cada uno de los pilares de la Comuni'dad de la ASEAN: político, de seguridad, económico y sociocultural. Cada Estado miembro preside los órganos decisorios durante un año, por orden alfabético. Como ocurre con la presidencia del Consejo de la UE de la UE, la presidencia de la ASEAN ofrece a los miembros la oportunidad de marcar la agenda.
+
+La Asamblea Interparlamentaria de la ASEAN es una platafonna en la que los parlamentarios del sudeste asiático se reúnen e intercambian infonnación. Sin embargo, no puede compararse con el Parlamento Europeo: no es elegida directamente, no tiene poderes legislativos ni otros poderes de toma de decisiones, y está clasificada por la Carta como una mera "entidad asociada a la ASEAN", y no como una institución de pleno derecho. La Secretaría de la ASEAN, con sede en Yakarta, dirigida por un secretario general (actualmente, Lim Jock Hoi, de Brunei), se encarga de prestar apoyo administrativo.
+
+\subsubsection{Contenido}
+El AEC Blueprint 20 25 tiene como objetivo profundizar en la integración económica y lograr una comunidad económica más integrada con las siguientes características:
+1. Una economía altamente integrada y cohesionada.
+2. Una ASEAN competitiva, innovadora y dinámica.
+3. Mayor conectividad y cooperación sectorial.
+4. Una ASEAN resistente, inclusiva, orientada a las personas y centrada en las person as.
+5. Una ASEAN global.
+
+Un plan de implementación más específico para AEC 2025 es el "Plan de Acción Estratégico Consolidado AEC 202 5" (CSAP), que fue aprobado por el Consejo AEC (compuesto por ministros de economía). Mientras que AEC 202 5 desarrolló planes de trabajo más detallados para 23 áreas, CSAP resumió las principales medidas en cada área.
+
+En términos de comercio de mercancías bajo el objetivo estratégico de "una economía altamente integrada y cohesionada", el CSAP incluye tres Medidas Estratégicas y 40 Líneas de Acción Clave. Las tres primeras medidas estratégicas son: ( 1) reforzar aún más el Acuerdo sobre el Comercio de Mercancías de la ASEAN (A TIGA), (2 ) simplificar y reforzar la aplicación de las Reglas de Origen (RoO), y (3 ) acelerar y profundizar la aplicación de medidas de facilitación del comercio. De los 40 principales planes de acción para el comercio global de mercancías, 32 medidas se establecieron bajo (3 ), lo que indica que el énfasis del comercio de mercancías ha pasado de la reducción y eliminación de aranceles a la facilitación del comercio.
+
+\subsubsection{Valoración}
+El Sudeste Asiático tiene un enonne potencial económico. Los países de la ASEAN tienen un PIS combinado de 3 billones de dólares, lo que los convierte en la quinta mayor economía del mundo, creciendo a un ritmo medio anual cercano al 5\% (antes de la pandemia). Para aprovechar plenamente este potencial, la hoja de ruta de 2009 de la ASEAN fijó el objetivo de crear una comunidad económica de la ASEAN (AEC). Aunque la fecha límite de 20 15 ya ha pasado, la AEC sigue siendo un proyecto en marcha. 
+
+Hasta la fecha, algunos de los mayores avances se han producido en materia de aranceles. Ya en 1992, la zona de libre comercio de la ASEAN eliminó o reduj o la mayoría de los aranceles entre los países de la ASEAN, y en el marco de la AEC todos los aranceles, salvo unos pocos, se eliminaron progresivamente antes de 20 18. La ASEAN también ha liberalizado el comercio conel resto de la región, celebrando acuerdos de libre comercio con China, India, Japón, Corea del Sur, Australia y Nueva Zelanda. Además, la RCEP también incluirá a todos los Estados parte de la ASEAN y a cinco de los países con los que ASEAN tiene ALC. Sin embargo, aunque los países de la ASEAN están armonizando sus normas técnicas y procedimientos aduaneros, el número de barreras comerciales no arancelarias dentro de la ASEAN sigue siendo obstinadamente alto e incluso puede estar aumentando.
+
+Respecto a la libre circulación de personas, dadas las enormes disparidades de renta de la región, no es una perspectiva realista para el sudeste asiático. Sólo se han producido algunos avances para . facilitar la migración de mano de obra cualificada, por ej emplo, mediante el reconocimiento mutuo de las cualificaciones profesionales.
+
+Por otra parte, los países del Sudeste Asiático también carecen de infraestructuras de transporte y otras infraestructuras de conexión. Según una estimación del Banco Asiático de Desarrollo, los países de la ASEAN necesitan un gasto colectivo en infraestructuras de 2,76 billones de dólares -es decir, el 5, 7 % de su PIB- en gasto en infraestructuras entre 20 16 y 2030; con un gasto real de solo aproximadamente el 2,3 % del PIS en infraestructuras, las necesidades siguen siendo inmensas. A través de la Belt and Road Initiative, China, desde 20 13, ha invertido 200.000 millones de dólares en Asia Oriental, principalmente en los países de la ASEAN. Sin embargo, ni siquiera esto es suficiente para cerrar la inmensa brecha.
+
+Los países de la ASEAN comercian mucho menos entre sí que con el resto del mundo. Elcomercio intrarregional de bienes sigue siendo bajo, del 21,3% (apenas ha variado desde el 19% de 1993 ), y el comercio de servicios no llega al 12%, según datos de 2022 de la Secretaría de la ASEAN. En cierta medida, esto refleja los tipos de bienes exportados por los países de la ASEAN. Por ej emplo, Camboya, Myanmar y Vietnam son grandes exportadores de textiles; sus principales mercados de exportación están en Europa y Norteamérica, más que en otros países del sudeste asiático. Sin embargo, este bajo nivel de comercio también pone de manifiesto la falta de integración económica real.
+
+En definitiva, el impacto de. la ASEAN ha sido desigual. La organización es una plataforma eficaz para la cooperación entre sus Estados parte y la región del Indo-Pacífico en general, pero su objetivo de promover la cooperación pacífica debe hacer frente a tensiones geopolíticas, especialmente en el Mar de China Meridional y en relación con Myanmar. En un contexto como el actual, en el que las grandes potencias están sumidas en un conflicto de suma cero -como entre Rusia y Occidente o China y Estados Unidos-, la ASEAN corre el riesgo de sufrir divisiones entre sus miembros, poniéndose así en juego la "centralidad" de ASEAN.\footnote{En el caso de las disputas marítimas en el Mar del Sur de China. el conflicto interno en Myanmar y la guerra de Rusia en Ucrania. cada uno de los países miembros de ASEAN parecen mantener posiciones encontradas en cada una de estas cuestiones.
+
+Se trata de tln principio que ha tratado de mantener la organización conforme el cual debe ser la propia ASEAN el que resuelva las crisis de la región, evitando la intervención de potencias extranjeras, principalmente China y EE. UU .. que conviertan el Sudeste Asiático en terreno de batalla y lo dividan.
+} Además, aunque se ha producido una integración económica significativa, el objetivo de un mercado único al estilo de la UE aún está lejos, algo que explica en parte por qué el comercio intrarregional sigue siendo relativamente débil.
+
+Por último, las relaciones entre la UE y la ASEAN abarcan más de cuatro décadas y no han dejado de estrecharse, basándose en valores comunes, así como en el auge del comercio y la inversión. En 2020, ambas partes pasaron a una asociación estratégica. En el actual entorno de enormes desafios geopolíticos, ambas partes parece decididas a llevar su cooperación bilateral a un nivel superior, como demuestra el nuevo plan de acción (202 3-202 7), la primera cumbre bilateral a nivel de líderes y la actual e intensificada cooperación entre el Parlamento Europeo y los parlamentos de los Estados parte de la ASEAN.
+
+
+\subsection{Mercado Común del Sur (MERCOSUR, 1991)}
+MERCOSUR se creó en gran parte para cimentar un acercamiento entre Argentina y Brasil, cuya relación había estado definida durante mucho tiempo por la rivalidad. Juntos, ambos países representan casi el 95\% del PIB del bloque y el 96\% de su población.\footnote{Fue inicialmente instituido por Argentina, Brasil, Paraguay y Uruguay, incorporándose posteriormente Venezuela (200637) y Bolivia (finnó el Protocolo de Adhesión en 2015 aunque sigue pendiente de incorporación). Además, actúan como miembros asociados todos los países de la CAN, Chile, Guayana y Surinam'.
+
+Venezuela se incorporó como miembro de pleno derecho en 2012. Desde 2016 se encuentra suspendida de manera indefinida en todos los derechos y obligaciones inherentes a su condición de Estado Parte del MERCOSUR -de conformidad con lo dispuesto en el segundo párrafo del artículo 5° del Protocolo de Ushuaia-. es decir. por incumplimiento de los principios democráticos.
+} Además, se trata de una región muy rica en materias primas y que cuenta con muy abundantes recursos energéticos, tanto renovables como no renovables. En su conjunto representa una de las i1iayores economías del mundo.\footnote{En 2021. los países fundadores tenían un PIB combinado de unos 2.2 billones de dólares. según datos del Banco Mundial, lo que convierte a MERCOSUR en uno de los mayores bloques económicos del mundo. En comparación, la Alianza del Pacífico, tenía un PIB combinado ligeramente inferior. de unos 2, 1 billonesde dólares.
+
+Además de la importancia económica que representa el MERCOSUR en toda América Latina. este conlleva una relevancia geopolítica de gran magnitud. ya que dos de sus miembros, Argen'tina y Brasil, son miembros del exclusivo G-20. En el caso de Brasil, este pertenece al grupo de los BRICS, que en la actualidad concentran el 40% de la población mundial. el 20% del PIB mundial, y producen más de un tercio de la producción mundial de cereales.
+}
+
+Así, a principios de la década de los 90 , Argentina y Brasil comienzan a realizar importantes esfuerzos liberalizadores y abren-parcialmente- sus economías al exterior. A raíz de este impulso,en 1991 se va a firmar el Tratado de Asunción, por el cual se pone en marcha el proceso de integración más importante de la región. Los miembros fundadores esperaban formar un mercado común, similar al de la UE, que permitiera aumentar las oportunidades de negocio e inversión de las industrias regionales y fomentar el desarrollo local. Algunos miembros del bloque han propuesto incluso adoptar una moneda común para reducir la dependencia del dólar estadounidense, si bien los más escépticos afirman que las economías de los países miembros son demasiado diferentes para compartir una política monetaria única.
+
+Asimismo. uno de los primeros objetivos del MERCOSUR era cimentar el retorno de la región a la democracia, ya que todos sus miembros fundadores habían salido de dictaduras en los años ochenta. En 1 998, el grupo firmó el Protocolo de Ushuaia sobre Compromiso Democrático. afirmando que las instituciones democráticas son esenciales para la integración de los estados de MERCOSUR y que una "ruptura del orden democrático" sería causa de suspensión de un miembro.\footnote{Los miembros del MERCOSUR invocaron el protocolo por primera vez en 20 1 2 para suspender a Paraguay. alegando que el presidente Fernando Lugo había sido destituido injustamente del poder después de que sus opositores internos le acusaran de gestionar mal un enfrentamiento mortal entre agricultores y fuerzas del orden. Algunos expertos afirman que la suspensión de Paraguay. que se levantó en 20 1 3 , tuvo  motivaciones políticas, ya que el entonces gobierno de izquierdas de Brasil buscaba la admisión de Venezuela en el bloque y el nuevo gobierno de centroderecha de Paraguay se oponía.
+}
+
+\begin{specialblock}{Orígenes de los procesos de integración en América Latina}
+    Los procesos de integración en América Latina desde los años 50 vienen impulsados por la Comisión Económica para América Latina y el Caribe (CEPAL), creada en 1948 (resolución del Consejo Económico y Social de Naciones Unidas) con el objetivo de ayudar a los países latinoamericanos a fomentar su desarrollo económico. Para ello, defendía una política de crecimiento hacia dentro, partiendo de la idea de que las relaciones de comercio internacional multilaterales perpetuaban la dependencia e impedían el desarrollo de los países de América Latina. Por ello, la CEPAL proponía una política de sustitución de importaciones y procesos de integración económica -pero a nivel regional- para. superar la estrechez de los mercados domésticos y aprovechar potenciales economías de escala, sin enfrentarse a la competencia internacional de.productos industriales en los que carecían de competitividad.
+
+    Con este espíritu surge la Asociación Latinoamericana de Libre Comercio (ALALC, 1960) que posteriormente se convierte en la Asociación Latinoamericana de Integración (ALADI, 1980), • que abarca todos los países de América Latina continental (excluidos los de América Central, en su propio proceso continental). Su objetivo era establecer preferencias bilaterales de forma temporal para gradualmente preparar los productos latinoamericanos para la competencia internacional. Aunque la iniciativa estuvo muy condicionada por la crisis de deuda que frenó el proceso integrador, de nuevo en los 90 surge un gran impulso integrador gracias a la récuperación económica y la postura de EE. UU y Canadá (firmarían el NAFTA, con México). 
+    
+    Destaca que, a pesar de la diversidad, complejidad y constante dinamismo de las agrupaciones regionales desde entonces, su característica común es que representan una parte importante del comercio internacional de los países miembros.
+\end{specialblock}
+
+Dada la ambición de los objetivos y la necesidad de dar forma a los compromisos sociales, se hizo necesario adaptar y ampliar progresivamente la institucionalidad del bloque en toda la región. En este proceso destaca la firma del Protocolo Ouro Preto (1 994.), un protocolo adicional al Tratado de Asunción para establecer los instrumentos de política comercial (el arancel exterior común), la estructura institucional de MERCOSUR, así como para dotarle de personalidad jurídica propia.
+
+Según lo establecido en el Artículo I del Protocolo de Ouro Preto, los órganos con capacidad decisoria, de naturaleza intergubernamental del MERCOSUR son: el Consejo del Mercado Común, órgano superior del MERCOSUR, el cual conduce políticamente el proceso de integración-; el Grupo Mercado Común, que vela por el funcionamiento cotidiano del bloque; y la Comisión de Comercio del MERCOSUR, encargada de la administración de los instrumentos comunes de política comercial. Asistiendo a dichos órganos existen más de 300 foros de negociación en las más diversas áreas, los cuales se integran por representantes de cada país miembros y promueven iniciativas para ser consideradas por los órganos decisorios. 
+
+Con el transcurrir del tiempo y a los efectos de la implementación de sus políticas regionales, el MERCOSUR ha creado en distintas ciudades diversos organismos de carácter permanente entre los que se encuentran el Fondo para la Convergencia Estructural del MERCOSUR (FOCEM), el Instituto de Políticas Públicas en Derechos Humanos (IPPDH), el Instituto Social del MERCOSUR (ISM), el Parlamento del MERCOSUR (PARLASUR), la Secretaría del MERCOSUR (SM) y el Tribunal Permanente de Revisión (TPR).\footnote{En 2004. se establece el FOCEM con el fin de financiar proyectos para promover la competitividad, la cohesión social. la infraestructura institucional y la reducción de asimetrías estructurales entre los integrantes. El fondo cuenta con una dotación anual de 100 millones de dólares aportados por los miembros en función, entre otros criterios, del PIB de cada país.
+}
+
+\subsubsection{Contenido}
+MERCOSUR tiene entre sus objetivos la creación de un mercado común, para lo cual promueve la libre circulación de bienes, servicios y factores productivos entre los países, a través, entre otros, de la eliminación de los derechos aduaneros y restricciones no arancelarias a la circulación de mercancías y de cualquier otra medida equivalente. Además, se establece un AEC, se adopta una política comercial común con relación a terceros Estados (o agrupaciones de Estados), y se tratará de coordinar las posiciones en foros económicos-comerciales regionales e internacionales.
+
+Por otra parte, se acuerda también la coordinación de políticas macroeconómicas y sectoriales entre los países miembros. En concreto, las políticas de comercio exterior, agrícola, industrial, fiscal, monetaria, cambiaría y de capitales, de servicios, aduanera, de transportes y comunicaciones y otras que se ac1,1erden, a fin de asegurar condiciones adecuadas de competencia entre los países miembros. Esto se acompaña, además, de un compromiso de los países miembros de armonizar sus legislaciones en las áreas pertinentes para lograr el fortalecimiento del proceso de integración.
+
+\subsubsection{Valoración}
+La mayoría de los países de la región de América Latina han adoptado e implementado en los últimos 30 años políticas de apertura comercial de forma unilateral, multilateral, y en el contexto de acuerdos comerciales alcanzados dentro de la región y con socios extra regionales. Si bien para el pro��edio de la región estas políticas han generado aumentos en el comercio e inversiones, sus resultados han sido más bien modestos. Según un estudio del Banco de Desarrollo de América Latina (CAF), una razón detrás de esta situación radica en que las medidas de apertura mencionadas no generaron aumentos significativos y sostenidos en el intercambio intrarregional. Así, mientras que, en otros bloques comerciales como la Unión Europea, el TLCAN o ASEAN, la participación de las exportaciones intrarregionales en el total de exportaciones de bienes y servicios se sitúa en niveles cercanos al 60 %, el 45 % y el 35 % respectivamente, en el caso de MERCOSUR, se verifica una importante disminución en los flujos de comercio internos, que pasan del 2 0 % a mediados de los noventa hasta el 12 % en 2015-2018.
+
+Así, la valoración general de los pasos alcanzados en MERCOSUR no es del todo positiva toda vez que siguen existiendo problemas en cuanto a la aplicación íntegra del arancel exterior común (de hecho, la región continúa constituyendo una unión aduanera incompleta).\footnote{Por ejemplo. 3.200 líneas arancelarias. que representan el 32% de su lista de aranceles. están exentas del AEC, es decir. los miembros imponen aranceles diferentes a las importaciones de terceros países. Las mercancías no circulan libremente, sino que están sujetas al cumplimiento de normas de origen intrarregionales. Además, en ocasiones se han adoptado medidas anti-dumping contra economías del mismo bloque. En consecuencia. la falta de coordinación de la política comercial impide aprovechar todos los beneficios derivados de la unión aduanera y afecta de forma al debate en torno a las bondades de la integración económica (building blocks vs stumbling blocks)
+} A los costos que imponen las tarifas arancelarias, hay que añadir también las barreras no arancelarias, el mejorable desempeño de los países miembros en la implementación de medidas facilitadoras de comercio, así como la insuficiente inversión en infraestructuras.\footnote{Atendiendo a la importancia de estos costos para los flujos comerciales, se firmó en el marco de la OMC el Acuerdo de Faciltiación del Comercio (en vigor desde 2017)
+} Además, los avances se han visto condicionados en gran medida por la voluntad política de cada momento. Cabe recordar que, de acuerdo con la teoría económica, cuando un grupo de países establece un área de libre comercio, deben adoptarse medidas para c;ornpensar distorsiones en los flujos comerciales interregionales ante una posible devaluación de una de las monedas. Con frecuencia, las devaluaciones del real  brasileño o del peso argentino han supuesto un reto para el proyecto común e impulsado la búsqueda de soluciones bilaterales parciales entre los países rniernbros.\footnote{En enero de 2023 Brasil y Argentina anunciaron que pretenden· lanzar una moneda común: "el sur". Si bien ambas economías tienen intensos lazos comerciales y ciclos económicos bastante sincronizados (ambos son grandes exportadores de materias primas), la muy diferente evolución de la inflación (inflación galopante en Argentina mientras que en Brasil está mucho más bajo control) puede suponer un problema considerable para compartir política monetaria (véase tema 16 parte B del tercer ejercicio acerca de lasáreas monetarias óptimas)
+}
+
+Son muchos los procesos de integración de MERCOSUR con otros países que han sido abiertos con el aumento del comercio en la región. En su primera década, MERCOSUR firmó acuerdos de cooperación económica con Bolivia, Chile, Israel y Perú, y en 200 4 firmó un acuerdo de comercio preferencial con India. Pero los acuerdos de mayor envergadura han resultado esquivos. Aunque su acuerdo de libre comercio más reciente, con Egipto, entró en vigor en 20 I 7, las negociaciones con Canadá y Corea del Sur siguen en curso, y el acuerdo con la UE se ha topado con obstáculos. Actualmente no existen acuerdos comerciales entre Estados Unidos y ninguno de los países del MERCOSUR o el propio bloque, y las relaciones han sido tensas en diferentes ocasiones.\footnote{En 2019, el presidente de Estados Unidos. Donald Trump. impuso aranceles sobre el acero y el aluminio a Argentina y Brasil, aunque al año siguiente lirmó un acuerdo comercial limitado con Brasil. El presidente brasileño Jair Bolsonaro expresó más tarde su deseo de un amplio TLC con Estados Unidos tras la toma de posesión del presidente estadounidense Joe Biden. pero algunos expertos dicen que es poco probable que · tal acuerdo ocurra bajo la presidencia de Lula da Silva.
+}
+
+Dichas negociaciones, tal y corno se establece en el tratado constitutivo, deben· contar con la anuencia de todos los miembros del bloque. Esto, en ocasiones, da lugar a discrepancias entre los miembros. Desde hace años, algunos de sus miembros corno por ejemplo Uruguay, piden una tlexibilización de esta norma de forma que puedan avanzar en negociaciones de ALC con grandes potencias como China. Mientras que Brasil apoya la finna de u.n acuerdo con China, Argentina se ha opuesto públicamente, alegando que un acuerdo comercial podría dar lugar a una afluencia de importaciones chinas baratas a la región.
+
+\begin{specialblock}{Acuerdo UE-MERCOSUR: Implicaciones para la economía europea}
+    En 2019, la Unión Europea (UE) y los países latinoamericanos que forman MERCOSUR alcanzaron un acuerdo político para la firma, ratificación e implementación de un tratado comercial entre los dos bloques. Este acuerdo prevé la eliminación de aranceles en más del 90% de los intercambios de bienes entre las dos áreas e incluye disposiciones qμe facilitan elcomercio de servicios y la liberalización de los procesos de contratación pública. En línea con el modelo de acuerdos comerciales que se ha impuesto en los últimos años, el tratado incluye también disposiciones de salvaguarda del medioarnbiente y de los estándares laborales, tales corno la libertad de asociación de los trabajadores, el derecho a la negociación colectiva o la no discriminación en el trabajo.
+    
+    Tanto desde una perspectiva política corno econorn1ca, el acuerdo comercial es extremadamente relevante para ambas partes y representa un importante paso en la integración económica global, compensando en parte el estancamiento de dos décadas de negociaciones multilaterales. Corno es habitual en el patrón de comercio entre las economías desarrolladas y las emergentes, la UE presenta ventaja comparativa frente a MERCOSUR en la provisión de productos de mayor contenido tecnológico, como la maquinaria, el material eléctrico o los productos químicos. mientras que los países de MERCOSUR muestran ventaja comparativa en aquellos bienes intensivos en materias primas o recursos naturales. como los animales, minerales, alimentos o vegetales. Dada la amplitud de su alcance, se espera que el acuerdo impulse de manera notable los flujos comerciales bilaterales y la integración económica· entre las dos regiones.
+
+    Actualmente, la UE es un bloque económico de relevancia mundial que representa casi una cuarta parte del PIB global (tres veces la suma de los PIB de los socios de los demás acuerdos comerciales del MERCOSUR), y después de China, es el principal socio comercial de MERCOSUR, representando el 20 % del comercio de bienes del bloque latinoamericano. Según informes del Banco de España, se espera que para los países de MERCOSUR la aprobación del acuerdo comercial UE-MERCOSUR genere un aumento importante de los flujos comerciales (en promedio, de alrededor de un 1 5% para las importaciones. y exportaciones) y un incremento del PIB de estos países de entre el 0,3% y el O, 7% en el medio plazo.
+
+    En el caso de la UE, el comercio con MERCOSUR constituye únícamente el 2 ,2 % de los intercambios comerciales de bienes y servicios. No obstante, una integración económica más profunda con los países latinoamericanos puede ser una herramienta para promover una agenda más amplia de asociación con otros países y para diversificar sus cadenas globales de valor y sus exposiciones frente al entorno exterior, aprovechando el impulso actual para reforzar la «autonomía estratégica» de la UE. De hecho, las fortalezas de América Latina en producción de materias primas estratégicas ( entre ellas, las energéticas) y la ventaja comparativa de la UE en tecnologías relacionadas con las energías renovables pueden generar importantes sinergias entre los dos bloques y reducir la exposición de la UE a otras áreas caracterizadas por una mayor inestabilidad geopolítica.
+
+    Aun cuando el impacto económico estimado para los países de la UE es menor que para los del MERCOSUR, dado el mayor tamaño económico de la UE, tampoco es despreciable, y sería aproximadamente de la misma magnitud que los estimados ex ante para otros acuerdos recientes e importantes, como el Acuerdo de Asociación Económica UE-Japón. Además, encomparación con otros acuerdos, el tratado con MERCOSUR supondrá una reducción en los costes de la exportación mucho mayor, debido a que la disminución de aranceles en este acuerdo será comparativamente más pronunciada en los principales productos de exportación europeos, de acuerdo con las estimaciones de la Comisión Europea.
+
+    A pesar del principio de acuerdo, el proceso de ratificación se ha ido retrasando. En el ámbito medioambiental, el principio de acuerdo UE-MERCOSUR, a pesar de contener un amplio conjunto de disposiciones medioambientales y de incluir solo concesiones limitadas a los productos agrícolas del MERCOSUR ha generado cierta preocupación ��or sus posibles efectos adversos. Varios miembros de la UE temen que la madera exportada de Brasil a la UE pueda ser el resultado de talas ilegales en la selva amazónica. Además, los agricultores europeos también han denunciado la afluencia prevista de exportaciones de q1rne de vacuno barata de Argentina y Brasil. No obstante, las promesas del nuevo gobierno en Brasil de combatir la deforestación de la selva amazónica brasileña han despertado cierto optimismo respecto que se pueda firmar el acuerdo en 2023. La ratificación del acuerdo -pendiente desde 20 1 9- supondría una señal de compromiso por ambas partes con el mantenimiento del libre comercio ·en un contexto global caracterizado por crecientes tensiones comerciales.
+\end{specialblock}
+
+
+\subsection{Comunidad Andina de Naciones (CAN, 1969)}
+En 1969 por el Acuerdo de Cartagena se firma el Pacto Andino que establece una zona de libre comercio y que en 1 996 derivará en la Comunidad Andina de Naciones, cuando la integración avanza tanto a nivel económico (con la creación de una Unión Aduanera) como político.\footnote{Originariamente formado por Bolivia, Colombia, Ecuador y Perú. A ellos se unen los países asociados (Chile y los países fundadores del MERCOSUR - Argentina, Brasil, Paraguay y Uruguay -), así como España, que actúa como país observador desde 201 1 .
+} 
+
+En la década de los 70 , el éxito del Pacto se puso de manifiesto con el crecimiento del comercio de manufacturas dentro del grupo (se triplicó). No obstante, en los años 80 y principios de los 90 fueron creciendo las divergencias en las políticas nacionales que dieron lugar a enfrentamientos políticos paralizando, en última instancia, el proyecto integrador. Ejemplo de ello es la retirada de Chile ( 1 976) por la incompatibilidad del Pacto con la política económica de Pinochet o la suspensión temporal de la membresía de Perú (1992 ), a medida que avanzaba en su liberalización económica.
+
+Para desbloquear la situación anterior, en la década de los 90 se da un nuevo impulso a la integración (a partir del protocolo de Quito, 1 989): en 1995 se establece un Arancel Exterior Común (Unión Aduanera) y en 1996 se crea la Comunidad Andina de Naciones (CAN) que apunta a la integración económica-y política de sus miembros.
+
+Para el cumplimiento de los mencionados objetivos, la CAN se ha dotado de una importante estructura institucional (Sistema Andino de Integración, SAi) con diversos órganos que ponen de manifiesto el alcance político del proceso integrador (cuenta, por ejemplo, con un Consejo Presidencial Andino, Consejo de Ministros de Relaciones Exteriores, Consejos Consultivos · empresariales y laborales, incluso un Parlamento andino).
+
+\subsubsection{Contenido}
+El objetivo último del Pacto era establecer una Unión Aduanera para promover el desarrollo industrial mediante la ampliación de los mercados nacionales (en definitiva, una política de sustitución de importaciones a nivel regional). En particular, como primera etapa, para fomentar el comercio intra-industrial, el Pacto proponía la creación de una zona de libre comercio (liberalización comercial plena entre los miembros) y una política industrial común (planificación industrial a escala regional).
+
+Alcanzada la Unión Aduanera, entre los objetivos de la actual Comunidad Andina destacan: la promoción del crecimiento económico y el empleo, la promoción de un desarrollo equilibrado mediante la cooperación entre sus miembros, el impulso a la integración subregional andina con vistas a la ulterior creación de un mercado común y el refuerzo de la proyección externa del grupo. Para ello, se habla de una •'integración integral", como respuesta a la diversidad de modelos de desarrollo existentes y la necesidad de lograr el equilibrio entre los aspectos sociales, culturales, económicos y ambientales (Cumbre Presidencial de Tarija, 2007).
+
+\subsubsection{Valoración}
+Este entramado ha favorecido una integración ambiciosa en diversos ámbitos: normas de origen, normas técnicas y sanitarias, competencia, propiedad intelectual, contratación pública, etc. Además, ha favorecido avances en materia de transporte, telecomunicaciones e infraestructura común. Así, actualmente la CAN incluye a más de 100 millones de habitantes y supone más de 10.000 millones de dólares en comercio intrarregional. Además, mantiene negociaciones pennanentes con otras áreas, como CARICOM o MERCOSUR, del que todos los países miembros son miembros asociados y viceversa.\footnote{Comunidad del Caribe constituida en 1973 (Tratado de Chaguaramas) por Barbados, Guyana. Jamaica y Trinidad y Tobago. con el objetivo de promover un mercado común. coordinar la política exterior y colaborar en materia de agricultura, industria. transporte y telecomunicaciones. Cuenta hoy con 1 5 estados partes. 5 asociados y 8 observadores
+}
+
+No obstante, la CAN es objeto de importantes presiones desintegradoras, como pone de manifiesto el abandono ,de Venezuela en 2006 (como reacción al acercamiento de otros Estados parte a EE.UU.), la manifestación de diferentes velocidades de integración (Perú desearía avanzar más rápido mediante acuerdos bilaterales) y el creciente peso de MERCOSUR, al que Bolivia solicitó adhesión en 20 15.
+
+\subsection{Mercado Común de Centroamérica (CAFTA, 1960)}
+Aunque formalmente continúa existiendo el Mercado Común Centroamericano ( 1 960, Tratado de Managua) y sin perjuicio de que continúe avanzando su agenda hacia un mercado común entre los países miembros, sin duda este proceso se ha visto superado por el Acuerdo DR-CAFTA (Dominican Republic, Central A merican Free Trade Agreement), firmado por la región en 200449, con el que constituye su principal socio comercial (EEUU).
+
+El Mercado Común tiene su origen en los años 60 , en una política común de desarrollo industrial basada en la sustitución de importaciones. A pesar del éxito inicial (el comercio intrarregional pasa del 2% al 10 % del PIB en esa década), no será hasta mediados de los 80 y principios de los 90 cuando se consolide el avance integrador. En particular, destaca de entonces la firma de un acuerdo comercial con la Comunidad Económica Europea ( 1985 ) y la constitución del Parlamento Centroamericano ( 1987 ), así como las Conferencias de San José ( 1990 ) que permiten, enparticular: la mayor coordinación de las políticas macroeconómicas y de la política comercial de los países centroamericanos, así como un Plan de Acción Económica para Centroamérica, que propone la ruptura con la política de sustitución de importaciones, apostando por la liberalización de capitales y la movilidad de personas intra-grupo, así como la mayor integración comercial con el resto del mundo. 
+
+Puede decirse que esta apertura ha favorecido el crecimiento de las exportaciones ( 160 % en la década de los 90 ), tanto intrarregionales como con otros socios comerciales, principalmente EE.UU. Asimismo, la apertura iría de la mano de procesos de integración con otros países: principalmente, el Acuerdo DR-CAFTA y el Acuerdo de Asociación con la UE.
+
+\subsubsection{DR-CAFTA}
+En vigor entre 2006 (El Salvador. EEUU, Honduras. Nicaragua, Guatemala), 2007 (República Dominicana) y 2009 (Costa Rica). en función de los diferentes plazos previstos para cada estado parte.
+
+El objetivo es la formación de una zona de libre comercio que abarca diferentes ámbitos, con la extensión de los beneficios que supuso la Iniciativa de la Cuenca del Caribe ( 1984 ), también a los países centroamericanos, así como a la República Dominicana.\footnote{Como iniciativa para impulsar la economía regional , existe un compromiso de reducción gradual de los aranceles estadounidenses a los productos de estos países que se revalida periódicamente.
+}
+
+Centroamérica y la República Dominica constituyen el tercer mercado de exportación de EEUU (por detrás de Méjico y de Brasil). Desde la entrada en vigor del Acuerdo, el comercio bilateral ha aumentado en más de un 70 % (hasta cerca de 50.000 millones dólares en 2015). Algunos de los aspectos más destacados del Acuerdo: • Productos agrícolas: se prevé un régimen especial para productos sensibles que permite, por ejemplo, que EE. UU mantenga aranceles sobre el azúcar y Centroamérica sobre el maíz. Además, se prevén mecanismos de salvaguarda frente a éstos. Por otra parte, existe un compromiso de eliminar medidas sanitarias y fitosanitarias, si bien éstas pennanecen en la actualidad.
+
+• Productos textiles: cuentan con eliminación plena de aranceles en EE.UU. 
+
+• Productos industriales y de bienes de consumo: se han ido eliminando progresivamente aranceles hasta 2 0 1 4.
+
+• Servicios: el Acuerdo ha supuesto, en particular, la eliminación de restricciones de residencia que dificultaban la prestación de servicios que requieren presencia ftsica (de acuerdo con la definición del GA TS).
+
+• Inversiones: el Acuerdo da derecho a las empresas estadounidenses a establecerse en Centroamérica en las mismas condiciones que las empresas locales. Además, amplía los requisitos de transparencia y de seguridad jurídica en la región.
+
+• Derechos de los trabajadores: en este ámbito, los países centroamericanos y República Dominicana han adquirido el compromiso de conceder a los trabajadores un mejor acceso a los procedimientos que protegen sus derechos reconocidos legalmente, así como acercar su legislación laboral a la nonnativa de la Organización Internacional del Trabajo (OIT) y los derechos reconocidos por ésta.
+
+• Protección medioambiental: el Acuerdo establece una Comisión de Cooperación Medioambiental para identificar prioridades y conceder a la región recursos para poder l levar a cabo esa protección (capacity building).
+
+Por otro lado, cabría interpretar que este proceso integrador y el crecimiento del comercio ha contribuido al impulso de la integración con la Unión Europea (en la línea del Domino Theory) que culmina con el Acuerdo de Asociación del 20 12 (entra en vigor en 20 1 3).
+
+\subsubsection{Acuerdo UE-Centroamérica}
+Formado por UE, Honduras, Nicaragua, Panamá, Costa Rica, El Salvador, Guatemala.
+
+Este último promueve tres pilares para la integración: además del libre comercio, la cooperación y el diálogo político como palancas para el crecimiento económico, la estabilidad política y la democracia. Pretende, a su vez, favorecer la integración entre los países de la región, como vía para la atracción de inversión extranjera, refuerzo del mercado y de su capacidad de competir a nivel internacional. Del contenido del Acuerdo, cabe destacar:
+• La eliminación de la mayoría de los aranceles de bienes. • El mayor acceso a la contratación pública, mercados de inversión y servicios. • Nueva normativa en materia de barreras no arancelarias, competencia y derechos de propiedad intelectual. • Nuevos mecanismos de mediación y de resolución de disputas bilaterales. • Apoyo al desarrollo sostenible, abogando por la consulta a la sociedad civil.
+
+
+Los principales bienes de importación de la UE desde Centroamérica son: componentes electrónicos para procesadores de datos, café, plátano y piña.
+
+Las principales exportaciones: maquinaria y aplicaciones mecánicas, aplicaciones eléctricas, productos fam1acéuticos, vehículos de motor y productos de acero. A pesar algunos retos en los primeros años (la epidemia que afectó a los granos de café· y la deslocalización de Costa Rica al Sudeste asiático del principal exportador de componentes), el comercio entre ambos bloques es muy significativo y evoluciona al alza (en 2 0 1 4, excluidos los dos productos mencionados, aumentó en más de un 1.1%).
+
+\subsection{Unión Económica Euroasiática (UEE, 1991)} 
+La UEE hunde sus orígenes en los años 90 del pasado siglo XX, amparada por hitos históricos que marcaron esa etapa, como la caída del Muro de Berlín, la desaparición de la URSS y laposterior formación de las diferentes repúblicas exsoviéticas. Después de la Guerra Fría y la desintegración de la URSS el 8 de diciembre de 1991, Rusia y las repúblicas de Asia Central hicieron reformas económicas crearon la Comunidad de Estados Independientes (CEI). Pero su funcionamiento fue problemático: algunos Estados parte de la CEI estaban interesados en una cooperación más estrecha con Rusia, mientras que, en otros países, muchos percibían la organización como un mecanismo destinado únicamente a facilitar un divorcio amigable de Rusia.
+
+Así, se crearon otras iniciativas fuera de la CEl y surge esta unión de carácter económico y comercial, en un territorio de encuentro entre Europa y Asia, y que aspiraba a ser un contrapeso a la actual Unión Europea (por aquel entonces, Comunidad Económica Europea). Además de su posición clave desde un punto de vista geográfico, la región es muy rica en combustibles fósiles (po��ee más del 20 % del gas y el 15% del petróleo mundial), lo que la convierte en una gran potencia energética. Así, el proyecto tenía sentido desde un punto de vista no sólo cultural, sino también económico debido a los estrechos lazos comerciales heredados de su pasado común y a la ya existente conexión mediante infraestructuras. Una mayor integración también tenía sentido desde el punto de vista político, ya que la unión económica con Rusia conllevaba expectativas de apoyo político, garantías de seguridad e incentivos como energía barata. Estas ventajas pennitirían a los dirigentes autocráticos evitar las refonnas que empezarían a llevar a cabo otros estados postsoviéticos.
+
+En 1 994, durante la visita a Rusia del presidente de Kazajstán, Nursultan Nazarbayev, surge por primera vez el planteamiento de esta comunidad.\footnote{Actualmente formado por Rusia, Bielorrusia, Kazajstán, Kirguistán y Annenia.
+} En un discurso en la Universidad Estatal de Moscú, el presidente kazajo abogó por la necesidad de crear un organismo económico que aglutinase a estas nuevas repúblicas exsoviéticas.\footnote{El planteamiento se apoyaba en los planteamientos de Lev Gumilev. uno de los mayores promotores del eurasianismo, corriente que defiende la idea de un tercer continente ( Eurasia) entre Europa y Asia con Rusia como el eje vertebrador.
+} En 1 995 se finna un primer acuerdo de unión aduanera, con el objetivo de favorecer el libre comercio y la colaboración entre los países finnantes. eliminando las barreras arancelarias y facilitando la competencia y el trabajo entre ellos. En 1996 Bielorrusia, Rusia, Kazajstán y Kirguistán firman el llamado Tratado de Integración Económica y Humanitaria, con el fin de propiciar y avivar el proceso de integración económica iniciado. En 1 999 se firma el Tratado del Espacio Económico Único por parte de Rusia, Tayikistán, Kazajstán y Bielorrusia, con la intención de promover la cooperación y el trabajo entre estos países.
+
+Posterionnente, en el año 2000, estos mismos países establecieron la Comunidad Económica Euroasiática, uniéndose también en el año,2006 Uzbekistán. En este mismo año, Bielorrusia, Rusia y Kazajstán forman oficialmente la Unión Aduanera Euroasiática. que entró en vigor el 1 de enero de 2010.\footnote{Esto se vio espoleada en parte por la crisis financiera de 2008 así corno por el impulso a la Política Europea de Vecindad, que pretendía profundizar las relaciones económicas de la UE con sus Estados vecinos postsoviéticos corno Armenia, Azerbaiyán, Bielorrusia. Georgia, Moldavia y Ucrania. Rusia lo percibió corno una violación de su esfera de influencia y quiso crear un bloque económico alternativo y complementario a la UE.
+
+Tanto Bielorrusia como Kazajstán hicieron hincapié en que buscaban una unión económica y no política. Pero la realidad de la UEE como proyecto geopolítico ruso se puso de manifiesto en el caso de Armenia, que había estado persiguiendo un acuerdo con la UE. El 3 de septiembre de 2013 se anunció que Armenia se uniría a la Unión Aduanera Euroasiática, que pronto se convertiría en la UEE. Armenia disfrutaría así de rebajas de precio en el suministro de gas natural y de la eliminación de aranceles sobre los productos petrolíferos rusos.
+
+Rusia hizo un intento similar para obligar a Ucrania a rechazar la UE en favor de la adhesión a la UEE, pero fracasó y las protestas provocaron el derrocamiento del gobierno del presidente Víktor Yanukóvich en 2014. Esto inició una secuencia de acontecimientos que condujeron a la anexión rusa de Crimea y a la  escalada de la agresión rusa contra Ucrania en 2022.
+} Tras una serie de negociaciones diversas el 29 de mayo de 2014 se lleva a cabo la finna del Acuerdo para la creación de la Unión Económica Euroasiática.\footnote{Aunque en el acuerdo constitutivo de la UEE no se prevé la creación de una unión monetaria. en los últimos años se han producido intentos para lanzar una moneda común. Así. el presidente de Kazajistán, Nursultán Nazarbáyev propuso, en 2009. la creación de una moneda común no fisica. denominada "yevraz" para la Comunidad Económica Euroasiática54. Desde 20 12. la idea de la nueva moneda conjunta encontró el apoyo de Vladímir Putin y de Dmitri Medvédev, y en 2 0 1 4 las propuestas fueron redactadas en documentos de la Comisión Euroasiática para el establecimiento de un Banco Central Euroasiático y una moneda común. llamada Altyn (una moneda usada históricamente en Rusia y en varios países turcólonos), que debería ser introducida en el año 2025. Actualmente, las discusiones continúan produciéndose a nivel teórico entre expertos. y los esfuerzos de los Estados parte se centran en lanzar sus propias monedas digitales.
+} El I de enero de 2 0 1 5 se constituye formalmente este nuevo mercado en territorio euroasiático, la Unión Económica . Euroasiática (UEE), formada por Rusia, Bielorrusia, Kazajstán, Armenia y Kirguistán.
+
+La UEE ha procurado basar su modelo en la Unión Europea. La UEE cuenta con una serie de organismos como el Banco de Desarrollo Euroasiático (con sede en Almaty, Kazajstán); la Corte de Justicia (situada en Minsk, Bielorrusia) y la Comisión Económica Euroasiática (con sede en Moscú, Rusia). Sin embargo, las decisiones importantes para la UEE son abordadas por el Consejo Económico Euroasiático Supremo, que está compuesto por los jefes de Estado de los Estados parte. El Consejo Supremo determina la estrategia, la dirección y las perspectivas de la integración y toma decisiones encaminadas a la consecución de los objeti��os de la Unión.
+
+\subsubsection{Contenido}
+El Tratado de la Integración Incrementada en los Dominios Económicos y Humanitarios, firmado en 1 996, puso la primera base para la convergencia económica, y sirvió como modelo para el futuro mercado común. Actualmente, la Unión se apoya en dos cuestiones fundamentales: el libre movimiento de mercancías, capitales, servicios y trabajadores dentro de los territorios que la fonnan; así como el desarrollo de una política común en algunos sectores que son básicos para sus economías, como la energía, la agricultura, la industria y el transporte.
+
+La movilidad laboral resulta de especial relevancia dentro de este proyecto.\footnote{Kirguistán tiene una de las mayores ratios de remesas en relación con el PIB del mundo. y el número de trabajadores inmigrantes kirguisos que van a Rusia aumentó significativamente en 2014.
+} Los emigrantes centroasiáticos llevaban mucho tiempo trabajando en Rusia, sin embargo, sufrían discriminación y persecución. La UEE proporcionó fonnas legalizadas de migración laboral facilitando las oportunidades de encontrar trabajo en Rusia y enviar remesas a las familias en casa.
+
+\subsubsection{Valoración}
+Actualmente, la UEE abarca un área que representa en tomo al 15\% de la superficie terrestre donde habitan más de 180 millones de habitantes. Desde un punto de vista económico, la UEE ha avanzado considerablemente hacia la consecución de un mercado común, especialmente en el ámbito de movimiento de trabajadores. No obstante, determinados comportamientos unilaterales por parte de algunos Estados parte implican que en la práctica la unión aduanera funcione de fonna fragmentada. Por ejemplo, en 20 14, Rusia bloqueó las importaciones agrícolas de la UE y el comercio con Ucrania en represalia por la imposición de sanciones financieras y económicas. Mientras que algunos Estados parte de la UEE no apoyaron ni aplicaron la prohibición, otros como, Bielorrusia o Armenia intentaron beneficiarse de ella.\footnote{Otro ej emplo de actuación unilateral fue la adhesión de Kazajstán a la Organización Mundial del Comercio (OMC) en noviembre de 20 15 -tras ingresar en la UEE- donde negoció un arancel inferior al arancel común de la UEE. Esto significa que alrededor del 40% de los derechos de aduana de la UEE no están armonizados.
+}
+
+Al frente de la UEE, debido a su posición predominante de poder por sus conexiones económicas y comerciales, se sitúa Rusia, que representa el 80\% del PIB de la UEE.\footnote{Sistemáticamente el primer socio comercial de todos los países de la UEE -incluso de aquellos con los que no comparte frontera-, el comercio de Rusia con sus vecinos es casi igual al de todos los demás miembros de la UEE juntos (95\% de los flujos comerciales ex-Rusia de la UEE)
+} Sin embargo, el impactoeconómico de la Unión en la economía rusa es menor, y el volumen comercial de Rusia con la UEE es significativamente menor que su volumen comercial con el resto del mundo. Así, para Rusia, la UEE tiene fundamentalmente un propósito geopolítico ya que es parte de su estrategia para restablecer la esfera de influencia rusa perdida tras la disolución de la Unión Soviéti.ca. Rusia considera que un proyecto de integración económica regional es un atributo necesario de una gran potencia y una forma de contrarrestar lo que se considera un mundo unipolar dominado por Estados Unidos. Asimismo, la UEE también contribuiría a fre nar la expansión de la UE en la antigua URSS y contribuiría a apoyar a los sistemas prorrusos. 
+
+Como economías más pequef\as, los demás Estados parte tenían diferentes motivos para unirse a la Unión, incluidas muchas dependencias económicas, energéticas o de seguridad existentes que podrían verse facilitadas por la integración económica con Rusia. Recientemente, se ha hablado de la adhesión de Uzbekistán a la UEE, pero no se ha avanzado mucho. Desde la agresión rusa contra Ucrania en 20 22, Azerbaiyán también ha debatido su adhesión a la UEE, ya que la guerra ha obligado al país a reconocer que Rusia es su socio geopolítico más importante. Las secuelas de la agresión de 2022 han hecho que la UEE sea considerablemente más útil que nunca para Rusia desde el punto de vista económico. Países como Kazajstán han sido fundamentales para permitirle eludir las sanciones occidentales e importar bienes restringidos. 
+
+La UEE también está negociando acuerdos de libre comercio con varios países, entre ellos India, Egipto y Tailandia, y los ha firmado con Irán y Vietnam. El volumen de comercio de la UEEA superó los 73 .000 millones de dólares en el afio 2022, siendo el rublo ruso la moneda principal, con el 72\% de todos los pagos.\footnote{Durante 2022. Rusia se vio sometida a durísimas sanciones occidentales y se prohibieron las transacciones en divisas a través del sistema SWIFT. por lo que era de esperar que las autoridades rusas se esforzaran por normalizar el comercio exterior con otros países utilizando mociedas nacionales. En los próximos años, un aumento de la proporción de liquidaciones en "monedas amigas". como el yuan chino y la rupia india. sustituirá parcialmente al dólar estadounidense y al euro.
+}
+
+\begin{specialblock}{Relaciones UEE: UE, China e India}
+    La idea fun dacional de la Unión Económica Euroasiática era que sirviera ,de homólogo euroasiático, y potencialmente. socio de la UE. Muchas de sus estructuras e instituciones siguen el modelo de la UE y Rusia ha presentado la UEE como socio de la UE en una zona de libre comercio propuesta "que se extiende de Lisboa a Vladivostok". Especialmente en Alemania, había optimismo sobre la UEE como proyecto para acercar a Europa y Rusia a través del comercio y la conectividad. Las relaciones entre ambos bloques estaban fuertemente condicionadas por la provisión de materias primas energéticas y por el interés en profundizar en la posición casi monopolística de Rusia hacia algunos países de la UE, a través de proyectos como Nordstream y Nordstream 11.
+
+    lncl uso después de la anexión rusa de Crimea en 2014, hubo apoyo a un acuerdo comercial UEUEE para aliviar las tensiones e incorporar a Rusia a negociaciones útiles sobre la seguridad europea. Sin embargo, a algunos gobiernos les preocupaba desde el principio que la UEE fuera principalmente una construcción geopolítica rusa que utilizara el bloque para actuar como guardián de los intereses de los Estados parte más pequef\os de la UEE. También se sospechaba que Rusia veía la integración económica con la UE principalmente como una vía para levantar las sanciones. Por parte de la UEE, el acuerdo con la UE era percibido, especialmente por Rusia. como un riesgo para su sef\a de identidad al pasar a estar bajo "el paraguas de Occidente". A esto hay que añadir el recelo que podía levantar que se terminaran llevando las fronteras de la OTAN hasta las mimas fronteras de Rusia.
+
+    En lo que respecta a China, Rusia, Kazajstán y Kirguistán ya cooperaban con el gigante asiático a través de la Organización de Cooperación de Shanghai (OCS) -una alianza política, económica y militar fundada en 2003- desde antes de la fundación de la UEE. Por su parte, China también quería desarrollar la cooperación económica a través de la OCS por lo que cuando el presidente chino Xi Jinping anunció la Be/t and Road Initiati ve (BRI) en mayo de 2015, China se cuidó de reconocer la UEE y la necesidad de cooperar con ella. Esta cooperación no tenía mucha sustancia, pero era un reconocimiento político de la importancia de la UEE.
+
+    Por su parte, en Rusia, que concebía la UEE como medio de contrarrestar la influencia de China en la región (casi tanto como para contrai:restar a la UE en Europa occidental), existía cierta inquietud por la expansión de la influencia china a través de la BRI en los antiguos estados soviéticos Kazajstán, Kirguistán, Uzbekistán y Turkmenistán. No obstante, este equilibrio ha cambiado desde la anexión rusa de Crimea en 201 4, ya que las relaciones de Rusia con la UE y Estados Unidos se han vuelto más abiertamente hostiles. Así, en mayo de 2018, se anunció un acuerdo comercial y de cooperación entre China y la VEE si bien de mayor valor simbólico que de beneficio económico real.
+
+    India tiene una larga historia política de cooperación con Rusia y la Unión Soviética. En diciembre de 201 6 comenzaron las negociaciones para un acuerdo de libre comercio entre India y la UEE. Las conversaciones no han progresado, ya que ambas partes tienen políticas bastante proteccionistas. India y Pakistán también se adhirieron a la OCS en 2017 , un foro de compromiso alternativo a la UEE.
+\end{specialblock}
+
+
+
+\subsection{Consejo de Cooperación del Golfo (GCC, 1981)}
+El CCG nació como acuerdo de cooperación entre los· seis países, para garantizar la seguridad entre los países miembros frente a un período de gran inestabilidad en el área del Golfo, motivado  por la guerra entre lrak e Irán, la Revolución Chiita del Ayatolá Jomeini, la invasión soviética de Afganistán o la constante tensión generada por el conflicto israelí-palestino. Todos estos acontecimientos eran vistos como amenazas directas a la seguridad de unos Estados que, si bien se encontraban en buenos términos con EE. UU., no contaban con capacidad propia de defensa. Su origen se puede encontrar en una reunión celebrada por los ministros de Asuntos Exteriores de los miembros fundadores -Arabia Saudí, Kuwait, Qatar, Omán, Baréin y Emiratos Árabes Unidos (EAU)- el 4 de fe brero de 1981 en Riad y donde se acuerda de manera fonnal el poner en marcha un mecanismo de integración y cooperación mutua.\footnote{
+Actualmente, sus miembros son: Arabia Saudita, Bahréin, Emiratos Árabes Unidos, Kuwait, Omán y Qatar.
+}
+
+Esta zona cuenta con algunas de las economías de más rápido crecimiento del mundo, debido sobre todo al auge de los ingresos procedentes del petróleo y el gas natural, unido además a un boom de la construcción y la inversión respaldado por décadas de ingresos del petróleo ahorrados.
+
+Así, a lo largo de los últimos años, en un esfuerzo por construir una base ftscal y económica antes de que se agoten las reservas, los brazos inversores de algunos miembros como los EAU, entre ellos Abu Dhabi lnvestment Authority- mantienen más de 900.000 millones de dólares en activos.\footnote{La brusca caída de los precios del petróleo en 2014 ha desencadenado un considerable esfuerzo de saneamiento fiscal en la mayoría de los países del CCG, donde los responsables políticos han adoptado una combinación de recortes del gasto y medidas de recaudación de ingresos nó petroleros (como la introducción del IVA y/o el aumento del tipo del IVA) para reducir los déficits fiscales.
+} Otros fondos regionales tienen varios cientos de miles de millones de dólares de activos bajo gestión.
+
+Las principales organizaciones del CCG son: el Consejo Supremo , que se compone por los jefes de Estado de los países miembros, es la autoridad más alta del CCG y se encarga de dirigir y trazar las líneas del proyecto (equivalente al Consejo Europeo en el caso de la UE); el Consejo . Ministerial, que se compone de los ministros de Asuntos Exteriores y que se encarga de la formulación de políticas y promoción de coordinación entre los miembros, entre otras funciones; y por último, la Secretaría General, cuyas funciones están relacionadas con los estudios decooperación, coordinación y programación de la acción común.
+
+\subsubsection{Contenido}
+El objetivo declarado es el refuerzo de la relación y la cooperac ión entre los países miembros, tanto en el ámbito económico, como político y de seguridad. En 2001, el CCG establece se marcalos siguientes objetivos: la creación en 2003 de una unión aduanera, en 2008 un mercado común y, desde 2009, una unión monetaria con una moneda común.
+
+La creación de una unión aduanera comenzó en 2003, y se completó y fue plenamente operativa el I de enero de 20 15.\footnote{Los aranceles exteriores del CCG son relativamente bajos: 5\% para la mayoria de las mercancías importadas y del 0\% para los bienes esenciales (aproximadamente una quinta parte de las importaciones totales). El tipo arancelario medio aplicado de nación más favorecida bajó del 8.2 por ciento en 2000-04 al 5.9 por ciento en 2006-09 y a alrededor del 4 por ciento en 20 16.
+} • Desde 20 15, el mercado común también se integró aún más, avanzando hacia una mayor igualdad entre los ciudadanos del CCG.\footnote{Los nacionales del CCG pueden participar libremente en activ idades empresariales relacionadas con el comercio minorista y mayorista, las oficinas de contratación. el alquiler de coches y la mayoría de las actividades culturales. También se han reducido las restricciones a la posesión de acciones y propiedades por parte de los ciudadanos del CCG.
+} Sin embargo, subsiste,n algunos obstáculos a la libre circulación de bienes y servicio y los mercados laborales de la región siguen padeciendo problemas estructurales.\footnote{Por ej emplo. los mercados laborales de la región siguen estando fragmentados. con grandes sectores públicos que se utilizan como vehículo de empleo para los nacionales. y un sector privado dominado por los trabajadores expatriados. A pesar de las recientes mejoras en la participación fe menina en el mercado laboral del CCG. siguen existiendo importantes diferencias. ya que la participación femenina sigue siendo inferior a la mitad de la masculina.
+} Por ello, deben acel erarse las reformas estructurales aumentando la participación de la mano de obra femenina y la flex ibil idad para los trabaj adores expatriados, mejorando la calidad de la educación, buscando un mayor aproyechamiento de la tecnología y la digitalización, mejorando los marcos normativos, reforzando las instituciones y la gobernanza, y profundizando en la integración regional.\footnote{Incluidos los altamente cualificados -que constituyen una parte importante de la mano de obra y una fuente de talento en el CCG- para evitar una disminución brusca de la oferta de mano de obra. Una mayor flexibilidad también reducirá las diferencias salariales entre nacionales y expatriados. lo que también animará a las empresas a contratar más nacionales.
+}
+
+Asimismo, durante la Primavera Árabe de 20 12, Arabia Saudí propuso transfonnar el CCG en una "Unión del Golfo" con una coordinación económica, política y militar más estrecha, una medida considerada destinada a contrarrestar la influencia iraní en la región, sin embargo, otros países plantearon objeciones.
+
+\subsubsection{Valoración}
+La proporción de exportaciones e importaciones de bienes y servicios respecto al PIB superó el 100\% en 2021 , muy por encima de la media del 50\% de las economías emergentes. Sin embargo, a pesar de las escasas barreras comerciales en el CCG desde 2008, el comercio intra-CCG no petrolero sigue siendo bajo, con solo el 10\% respecto del comercio total en 2021. Esto sugiere que las complementariedades dentro de la región son débiles, muy probablemente debido a estructuras económicas y niveles de desarrollo económico similares.\footnote{Además. de los 85 .000 millones de dólares de comercio intra-CCG en 202 1, los EA U representan la mayor parte, destacando su papel como un importante centro de reexportación. seguido de Arabia Saudí y Omán.
+}
+
+Con algunas de las mayores reservas de hidrocarburos del mundo, la mayoría de los países del CCG (excepto EAU y Bahréin) concentran la mayor parte de sus exportaciones totales en petróleo y gas, con una cuota de este último que oscila entre el 70\% y el 80\% en Kuwait, Qatar y Arabia Saudí. Por su parte, las importaciones de las economías del CCG superan con creces sus exportaciones no petroleras debido a la dependencia de fuera de la región para satisfacer sus necesidades de consumo e inversión. Resultado de ello, la balanza comercial no petrolera de los países del CCG ha estado en constante déficit (alrededor del 11\% del PIB no petrolero en 2021).
+
+Entre 2000-2017, los ingresos del petróleo representaron cerca del 80\% de los ingresos públicos, las exportaciones de petróleo ascendieron al 65\% de las exportaciones totales y el PIB del petróleo representó el 42\% del PIB total, apenas variando estas cifras a lo largo del periodo. Las grandes dotaciones de hidrocarburos, así como la escasa diversificación y sofisticación de las exportaciones, podrían además explicar en parte la limitada integración del CCG en las cadenas de valor mundiales.\footnote{El índice de complejidad de los productos de exportación. que tiene en cuenta la proporción de productos intensivos en conocímiento en la cesta de exportaciones. muestra el nivel de sofisticación de las exportaciones de bienes de un país. que se asocia a niveles de renta más elevados (HENN et al. 2013).
+} Así, se hace necesario diversificar las economías del CCG para reducir la exposición a la volatilidad y la incertidumbre del mercado mundial del petróleo, contribuir a la creación de empleo en el sector privado y aumentar la productividad y el crecimiento sostenible. 
+
+En los últimos arios se están poniendo en marcha agendas con un cierto cariz reformista tanto a nivel social como económico, apoyadas en proyectos de medio plazo, como por ejemplo la Visión Saudí 2030.\footnote{Todos los países del CCG han aplicado reformas para reducir los trámites burocráticos y las cargas administrativas que pesan sobre las empresas nacionales y extranjeras y han promovido activamente en el extranjero su imagen de destino empresarial atractivo. Algunos (por ejemplo. los EAU) también han creado zonas económicas especiales (ZEE) con normativas independientes y liberalizadas e infraestructuras bien establecidas. Sin embargo. la apertura a la entrada de extranjeros (fuera de las zonas económicas especiales) varía mucho entre los miembros del CCG. siendo los EAU y Bahréin los más liberales y Kuwait y Arabia Saudí los más restrictivos.
+} que buscan reducir la dependencia de Arabia Saudita del petróleo. diversificar su economía y desarrollar sectores como salud. educación, infraestructura, recreación y turismo. Mientras que a nivel comercial el CCG dista aún de ser una unión aduanera perfecta, a nivel social y político los estándares democráticos internos son cuestionados frecuentemente por organismos internacionales independientes, y Arabia Saudí lidera una agresión militar en Yemen en la que participan también todos los países del CCG excepto Omán.\footnote{La prevalencia de barreras no arancelarias varía ampliamente dentro de la región del CCG. Según el Índice de Competitividad Global 2017 del Foro Económico Mundial, los EAU se encuentran entre los países menos restrictivos en términos de barreras comerciales no arancelarias, m ientras que Kuwait se encuentra entre los más restrictivos.
+} El embargo de tres años y medio Gunio 20 1 7-enero 2021) a Qatar encabezado por Arabia Saudí y EAU pone dé manifiesto las no siempre fácil relación existente entre los Estados parte del CCG.\footnote{En el 2017, Arabia Saudí y tres de sus países aliados en la región. EA U, Bahréin y Egipto, rompieron sus l azos con Qatar acusándola de apoyar a grupos islamistas. de un acercamiento excesivo con sus adversarios turcos e iraníes e incluso de desestabilizar la región. Aunque las relaciones de Qatar con Arabia Saudí. Bahréin y EAU han fluctuado desde mediados de la década de .1 990. ninguna crisis anterior rivaliza en gravedad con el bloqueo de junio de 20 1 7. A diferencia de disputas anteriores. como la retirada de los embajadores saudí. emiratí y bahreiní de Qatar en marzo de 2014. las repercusiones del reciente bloqueo se dejaron sentir tanto en las élites como en la población. La ruptura implicó el cierre de fronteras y del espacio aéreo a los aviones cataríes y la restricción de movimiento de los ciudadanos del emirato. El 5 de enero de 202 1 . tras una cumbre del CCG y con la intermediación de Kuwait y EE. UU .. Qatar y Arabia Saudí acordaron la resolución de la crisis
+}
+
+Así, en la actualidad la hoja de ruta establecida fija como objetivo completar la unión aduanera y el mercado común antes de finales del 2024. Si la integración avanza más, las ganancias de crecimiento a largo plazo podrían ser sustanciales, con un margen significativo para mej orar el comercio intra-CCG. Asimismo. una mayor integración, unida a mejoras del entorno empresarial, también contribuiría a atraer más inversiones extranjeras directas a la región. La integración monetaria, por su parte, avanza a un menor ritmo.
+
+Los avances en el CCG no se limitan solo a buscar una mayor integración entre los Estados parte, sino que también con países no miembros y con otros bloques regionales. Así, por ejemplo, el GCC negocia como grupo acuerdos de libre comercio con China, MERCOSUR, Japón o India, entre otros. Con la UE, tras paralizarse las negociaciones en 2008 debidos a los diferentes niveles de ambición en puntos clave, desde 2022 se busca reforzar la asociación existente entre ambas partes.\footnote{El 1 8 de mayo de 2022 la UE presenta su Asociación Estratégica con el Gol fo.
+} En concreto, se busca aborda una serie de ámbitos políticos clave y presenta propuestas concretas para reforzar la cooperación UE-CCG en materia de energía, transición ecológica y cambio climático, comercio y diversificación económica, estabilidad regional y seguridad mundial, retos humanitarios y de desarrollo, y contactos interpersonales más estrechos.
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+
+
+\clearpage
+\anexo{Procesos de Integración Regional: Evolución histórica y lugar dentro del orden multilateral (OMC)}\label{anx:rta_historia}
+Los procesos de integración regional encuentran su origen en la segunda mitad del siglo XIX, con el Tratado de Cobden-Chevalier ( 1 870) entre Reino Unido y Francia, que sirvió de base para numerosos acuerdos bilaterales entre ambos países y otras naciones europeas. Tras la Segunda Guerra Mundial, sin embargo, se inicia un proceso de reestructuración del sistema económico internacional que se caracteriza por un abandono del bilateralismo hacia el multilateralismo. Surge así la búsqueda de soluciones cooperativas al desgobierno comercial y monetario característico del período de ·entreguerras, en torno a las Naciones Unidas y sus agencias especializadas, así corno en torno a las tres principales instituciones económicas que forman ese nuevo orden: el Fondo Monetario Internacional (FMI) y el Banco Mundial (BM) para las cuestiones monetarias y financieras; y, tras su firma en 1 94 7, el Acuerdo General sobre Aranceles de Aduanas y Comercio (General Agreement on Tariffs and Trade, GATT), con el objetivo de liberalizar progresivamente el comercio. Se supera, por tanto, un contexto de enfrentamiento bélico y de guerra comercial avanzando hacia otro de cooperación, en el que aumentan las relaciones económicas entre países y crece, con ello, la interdependencia en los mercados de bienes, servicios, capitales y trabajo (Tinbergen, 1 968).
+
+De fonna paralela al mencionado proceso, no obstante, se observará el avance de la integración regional en sucesivas oleadas, inicialmente intra-regionales, aunque con el tiempo también se darán entre países de diferentes zonas geográficas. Así, la primera oleada de regionalismo en el siglo XX se puede identificar a partir de los años 50, con la creación de las Comunidades Europeas, así como con la Asociación Europea de Libre Comercio (EFTA, 1 960). También la firma del Sistema Generalizado de Preferencias en el seno del GA TT ( 1 97 1 ) que ofrecía ventajas para los países en vías de desarrollo para incentivar su participación en el comercio internacional, promovió la firma de nuevos acuerdos regionales. La segunda oleada se inicia en los años 80, con el abandono del GA TT por parte de EEUU y la firma del Tratado de Libre Comercio de América del Norte (NAFTA, 1993). La expansión de la Unión Europea durante estos años también impulsó el regionalismo, de forma que a finales de la década de los 90, el 60 % del comercio internacional se llevaba a cabo entre países que mantenían algún tipo de acuerdo regional. La tercera oleada podría identificarse a partir de principios de los 2000 , con el liderazgo de Asia oriental, una vez superada la crisis de 1 997 y apoyada en el crecimiento económico de China.
+
+Vemos por tanto que, los acuerdos comerciales preferenciales (PTA, por sus siglas en inglés) siempre han sido un elemento clave del sistema comercial mundial, si bien en los últimos años han cobr.ado mayor importancia si cabe.\footnote{En la literatura económica y jurídica internacional, "PTA" es un término genérico que engloba varios tipos de acuerdos recíprocos entre socios comerciales: acuerdos comerciales regionales (ACR). acuerdos· de libre comercio (ALC) y uniones aduaneras (UA). Esta delinición difiere de la de la Organización Mundial del Comercio (OMC), que define los PTA como acuerdos que conceden preferencias comerciales unilaterafes (es decir, no recíprocas), como los regímenes del Sistema Generalizado de Preferencias (SGP), en virtud de los cuales se conceden preterencías comerciales a los países en desarrollo.
+} Actualmente, todos los miembros de la OMC son parte de uno, y a menudo de varios PTA. Aunque las normas de la OMC siguen constituyendo la base de la mayoría de los acuerdos comerciales, los PT A han, en cierto sentido, liderado la agenda comercial. Es interesante observar que, mientras que en sus orígenes la integración regional comercial era un fenómeno fundamentalmente de países más avanzados, hoy hay una presencia clara de los países en vías de desarrollo en estos procesos: menos de un 20 % de los vigentes son acuerdos "norte-norte", en torno a un 50 % lo son "sur-sur" y un 30 % "norte-sur". En su conjunto, estos acuerdos dan cobertura a más del 50 % del comercio internacional (OCDE,2011).
+
+Las áreas tradicionales de la política comercial, como la reducción de los aranceles o la liberalización de los servicios, se negocian ahora con más frecuencia en contextos regionales que en la OMC, y los acuerdos comerciales preferenciales van a menudo más allá de lo que los países se han comprometido en la OMC. Así, mientras que en los años 50 abarcaba 8 áreas políticas; en los últimos años ha alcanzado una media de 17. En otras palabras, hay indicios preliminares deque los PT A se están convirtiendo en acuerdos comerciales profundos (DT A, por sus siglas en inglés), tanto en el margen intensivo (compromisos específicos dentro de un área política) como en el margen extensivo (número de áreas políticas cubiertas).
+
+Tradicionalmente; los economistas evalúan los acuerdos comerciales en función del acceso al mercado que crean. La teoría de la integración económica d�� Bella Ballasa es bien conocida (The Theory of economic integration, 1 961 ). Ballasa defendía que la integración económica adopta varias formas que representan diversos grados de integración. Éstas son: áreas de libre comercio (ALC), unión aduanera, mercado común, unión económica, e integración económica completa.
+
+Actualmente, dada la creciente complejidad de los acuerdos comerciales, existen varias teorías . sobre las etapas de la integración económica. Así, por ejemplo, Jacques Pelk.mans, destacado estudioso de la integración económica de la UE y la ASEAN, ofrece un enfoque moderno en seis etapas: ALC, unión aduanera, ALC plus (unión aduanera-plus), ALC profundo y global (DCFTA), mercado común, y mercado único.\footnote{Se define como un ALC y una únión aduanera que incluyen todas las obligaciones de la OMC y algunos elementos OMC-plus. es decir. áreas no incluidas en acuerdos de la OMC.
+} En concreto, respecto a los DCFTA, dada la complejidad de los ámbitos políticos que abarcan, la métrica del acceso al mercado -aunque sigue siendo importante- parece inadecuada. El rec iente Handbook of Deep Trade Agreements (Mattoo et al. 2020) propone definir los acuerdos de libre comercio como acuerdos internacionales que tienen por obj eto regular tres conjuntos (parcialmente superpuestos) de ámbitos políticos:
+
+l. En primer lugar, las áreas políticas centrales de los DCFT A pretenden establecer cinco derechos de integración económica: libre (o más libre) circulación de bienes, servicios, capital, personas e ideas. Los ámbitos políticos que afectan directamente a estos flujos son los aranceles, los impuestos a la exportación, los servicios. la invers.ión, la circulación de capitales, los visados y el asilo, y los derechos de propiedad intelectual.
+
+2. En segundo lugar, los acuerdos de libre comercio abarcan ámbitos políticos que pretenden  apoyar estos derechos de integración económica limitando la discrecionalidad y las acciones gubernamentales (a menudo de naturaleza reguladora) en la frontera y detrás de la frontera. En esta categoría se incluyen las aduanas, las normas de origen, los remedios comerciales, la contratación pública, los obstáculos técnicos al comercio (OTC), las medidas sanitarias y fitosanitarias (MSF), las empresas estatales, las subvenciones y la política de competencia.
+
+3. En tercer lugar, los acuerdos de libre comercio abarcan ámbitos políticos cuyo objetivo es mejorar el bienestar social o de los consumidores regulando el comportamiento de los exportadores. Ámbitos corno el medio ambiente y el trabajo imponen obligaciones a los exportadores para prorn'over los intereses sociales o de los consumidores. Las normas en ámbitos corno la competencia, las empresas públicas y las subvenciones pueden tener una doble vertiente: además de regular las acciones que socavan los derechos de integración económica, pueden tener por objeto abordar las medidas distorsionadoras que reducen la eficiencia económica.
+
+Los acuerdos comerciales regionales (ACR), que son acuerdos comerciales preferenciales recíprocos entre dos o más socios (no necesariamente de la misma región), han aumentado en número y alcance a lo largo de los años, y operan paralelamente a los acuerdos multilaterales globales de la Organización Mundial del Comercio (OMC). Los miembros de la OMC están obligados a notificar los ACR en los que participan. Todos los miembros de la OMC han notificado su participación en uno o varios ACR (algunos miembros son parte en 20 o más). Desde  junio de 20 16, todos los miembros de la OMC tienen un ACR en vi gor. A 22 de junio de 2023 , estaban en vigor 357 ACR. 
+
+Los responsables políticos son conscientes de que los acuerdos comerciales regionales deben ser coherentes con las normas multilaterales y de que es necesaria la coherencia entre los acuerdos regionales, así corno entre los sistemas regionales y multilaterales. Algunos países incluso negocian ACR con la intención explícita de sentar un precedente para la futura elaboración de normas multilaterales, mientras que otros consideran que la adopción de medidas más profundas en las asociaciones regionales es una forma de complementar el sistema multilateral. En cualquiera de los casos, hay argumentos a favor de prácticas "multilaterales favorab les" que pueden ayudar a promover la convergencia.
+
+Así, muchos miembros de la OMC siguen participando en negociaciones para crear nuevos ACR. La mayoría de las nuevas negociaciones son bilaterales, sin embargo, una novedad reciente han sido las negociaciones y nuevos acuerdos entre varios f!1iembros de la OMC. Esto incluye, entre otros, la entrada en vigor del Acuerdo Integral y Progresista de Asociación Transpacífico (CPTPP), la firma del Acuerdo de Asociación Global Regional (RCEP), así como la entrada en vigor de la Zona de Libre Com��rcio Continental Africana (AfCFTA). Sin embargo, la gran mayoría de estos nuevos acuerdos plurilaterales no han reducido la maraña de ACR, ya que no han sustituido a los acuerdos bilaterales existentes.
+
+Los acuerdos comerciales preferenciales (ACP), por su parte, se refieren a privilegios comerciales unilaterales, como los regímenes del Sistema General de Preferencias (SPG) y los programas preferenciales no recíprocos que algunos miembros de la OMC aplican a los productos de los países en desarrollo y menos adelantados.
+
+La no discriminación entre socios comerciales es uno de los principios básicos de la OMC. Los miembros se han comprometido, en general, a no favorecer a un socio comercial en detrimento de otro. Sin embargo, los ACR, constituyen una de las excepciones y están autorizados en el marco de la OMC, sujetos a una serie de normas. Estos acuerdos, por su propia naturaleza, son discriminatorios, ya que sólo sus signatarios disfrutan de condiciones de acceso al mercado más favorables. 
+
+Los miembros de la OMC reconocen el papel legítimo de los ACR cuyo objetivo es facilitar el comercio entre sus partes, pero que no levantan barreras comerciales frente a terceros. Los miembros de la OMC están autorizados a celebrar ACR en condiciones específicas que se detallan en tres conjuntos de normas. Estas normas abarcan la formación y el funcionamiento de uniones aduaneras y zonas de libre comercio que cubran el comercio de mercancías (Artículo XXI V del Acuerdo General sobre Aranceles Aduaneros y Comercio de 1994), acuerdos regionales o mundiales para el comercio de mercancías entre países en desarrollo miembros (Cláusula de Habilitación), así como acuerdos que cubran el comercio de servicios (Artículo V del Acuerdo General sobre el Comercio de Servicios). En términos generales, los ACR deben abarcar sustancialmente todo el comercio - a menos que se acojan a la Cláusula de Habilitación y contribuir a que el comercio fluya más libremente entre los países del ACR sin levantar barreras al comercio con el exterior.
+
+En la medida en que los ACR van más allá de los compromisos adquiridos en la OMC y pennanecen abiertos a la participación adicional de países comprometidos con el. cumplimiento de sus normas, pueden complementar el sistema multilateral de comercio, y allanar así el camino hacia una mayor integración multilateral.
+
+A pesar de lo anterior, los miembros de la OMC han declarado que los ACR deben seguir siendo un complemento, y no un sustituto, del sistema multilateral de comercio. De hecho, (;!I Director General Roberto Azevédo ha reiterado en diferentes ocasiones que muchas cuestiones clave - como la facilitación del comercio, la liberalización de los servicios y las subvenciones a la agricultura y la pesca - sólo pueden abordarse de forma amplia y eficaz cuando todos están presentes en la mesa de negociaciones. Además, un sistema multilateral garantiza la participación de los países más pequeños y vulnerables y contribuye a apoyar la integración de los países en desarrollo en la economía mundial.
+
+Hay opiniones encontradas sobre los efectos de los ACR en la liberalización del comercio mundial. Aunque los ACR están diseñados para beneficiar a los países signatarios, los beneficios esperados pueden verse mermados si no se minimizan las distorsiones en la asignación de recursos y la desviación del comercio y la inversión.
+
+Además, el aumento de ACR ha producido el fenómeno del solapamiento de miembros. Esto puede obstaculizar los flujos comerciales cuando los comerciantes se esfuerzan por cumplir múltiples conjuntos de normas comerciales. Asimismo, a medida que se amplía el alcance de los ACR para incluir ámbitos políticos no regulados multilateralmente, puede aumentar el riesgo de incoherencias entre los distintos acuerdos. La mayoría de los ACR más antiguos sólo abarcaban la liberalización arancelaria y las normas conexas, como la defensa comercial, las normas y lasreglas de origen. Cada vez más, los ACR han pasado a incluir la liberalización de los servicios, así como compromisos en materia de normas sobre servicios, inversión, competencia, derechos de propiedad intelectual, comercio electrónico, medio ambiente y trabajo. Esto puede dar lugar a confusión normativa y problemas de aplicación.
+
+\imagenfit{Fig2.png}{Participación en acuerdos comerciales regionales: Mercancías y servicios}{\href{https://www.wto.org/spanish/tratop_s/region_s/rta_participation_map_s.htm}{OMC}}
+
+
+
+
+
+
+
+
+
+\end{document}
