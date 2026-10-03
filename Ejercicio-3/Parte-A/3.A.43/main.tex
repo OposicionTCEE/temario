@@ -1,0 +1,1125 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Tema 3.A.43 -- Teorías del crecimiento económico (I)\\
+\large Acumulación de capital y progreso técnico exógeno. El modelo de SOLOW. El modelo de SOLOW aumentado con capital humano. El modelo de RAMSEY-CASS-KOOPMANS}
+\author{Marcelo Ortega}
+\date{Diciembre 2025}
+\newcommand{\TemaCode}{3A43}
+
+
+\oldtitle{Tema 3.A.42. Teorías del crecimiento económico (I). El modelo de HARROD-DOMAR. El modelo de SOLOW. El modelo de RAMSEY-CASS-KOOPMANS. Sus implicaciones y limitaciones}
+\changerationale{Se incluye explícitamente el modelo de Solow ampliado según el enfoque de MANKIW, ROMER y WEIL (1992). Se elimina el Modelo de HARROD-DOMAR, muy primitivo, para que haya suficiente tiempo para dedicarlo a los modelos más relevantes hoy. Ello no obstante, se hace notar que el modelo de Harrod introduce conceptos que siguen siendo de interés para los economistas del crecimiento económico, como las tasas de crecimiento garantizado y la tasa de crecimiento natural.}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     
+    }
+\vspace{1cm}
+
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}\label{intro}
+
+
+\subsection{Contextualización}\label{context}
+
+
+\subsubsection{Relevancia}\label{importance}
+
+
+
+\subsubsection{Problemática}\label{problem}
+
+
+
+\subsection{Estructura de la exposición}\label{structure}
+
+
+
+\clearpage
+\section{Modelo de SOLOW}
+\puntosclave{
+    Asumiendo que, en el largo plazo, los precios de los factores son flexibles y éstos pueden remplazarse sin problema, Solow modeliza que las economías tienen un crecimiento que es estable y converge a un estado estacionario;
+    
+    La renta per capita y stock de capital en el estado estacionario dependenderán de la tasa dahorro, pero el crecimiento en el mismo no. Éste vendrá determinado por el crecimiento de la población y por el progreso técnico exógeno;
+    
+    La regla de oro responde a maximizar el consumo en el estado estacionario, pero ello no es equivalente a que ese equilibrio sea Pareto-superior a los demás;
+    
+    El modelo de Mankiw, Rorner, Weil amplia el modelo de Solow reconociendo el efecto del capital humano en el crecimiento a largo plazo.
+}
+
+SOLOW en su artículo de 1956 \textit{A Contribution to the Theory of Econornic Growth} realizó una primera exposición de este modelo. Responde a las inquietudes y estado de conocimientos de su época, en donde se pensaba que la acumulación de capital físico ($K$) a lo largo del tiempo era la clave para conseguir el crecimiento sostenido a lo largo del tiempo. De hecho, muchos de los supuestos simplificadores que haremos a continuación, pretenden arrojar el haz de luz sobre esta variable que se concebía corno básica. Sorprendentemente, el resultado del modelo no ratifica (a largo plazo) esta idea previa y da entrada al papel del progreso tecnológico o aumento del stock de ideas como variable motor del crecimiento.
+
+\subsection{Supuestos y debates de las CAMBRIDGE}
+Los supuestos que caracterizan el modelo son:
+\begin{lnum} 
+    \item Economía cerrada y sin sector público. En este caso, la producción ($Y$) se iguala a la demanda de bienes que es la suma del consumo ($C$) y la Inversión ($I$), $Y = C + I$. Como, además, la producción o renta se dedica a consumir o a ahorrar, $Y=C+S$, resulta que el ahorro es igual a la inversión $S=I$;
+    \item Se ahorra e invierte una fracción constante de la renta $s\in(0, 1)\;\;(S = sY)$. La tasa de ahorro suele ser una variable bastante estacionaria en periodos largos cuando se analiza con periodicidad anual;
+    \item La población trabajadora es una fracción constante de la población total y suponemos que crecen a una tasa exógena $n$;
+    \item La productividad $A$ se considera una variable exógena, que crece a una tasa constante $g$;
+    \item El stock de capital $K$ se deprecia en cada período a una tasa constante exógena $\delta$;
+    \item Hay competencia perfecta. Así, la igualdad necesaria entre ahorro e inversión ($S=I$), se produce, en cada momento, para un nivel de renta que es el de pleno empleo de los factores productivos. La plena e instantánea flexibilidad de todos los precios garantiza este resultado. En competencia perfecta, también, se retribuyen a los factores rivales ($K,L$) según su productividad marginal y junto con el supuesto de rendimientos constantes a escala de la función de producción, se genera el resultado de que los pagos a los inputs agotan toda la renta;
+    \item Suponemos una Función de Producción:
+    \begin{lnum}
+        \item Con tres factores de producción: $(K, L, A)$, capital, trabajo y progreso técnico;
+        \item Con rendimientos constantes a escala en sus inputs de capital y trabajo, y decreciente en ambos inputs por separado (productividades marginales positivas pero decrecientes);
+        \item Es homogénea de grado 1. Es decir, presenta rendimientos constantes a escala para los factores rivales, lo que implicará que la producción se agota en los pagos a los factores. También, que la productividad de un factor disminuye cuando disminuye la utilización del otro factor.
+    \end{lnum}
+\end{lnum}
+
+Estos conducen a la formulación de una Función de Producción:
+
+\eqblock{
+\begin{aligned}
+    Y_t=\underbrace{K_t^\alpha(AL_t)^{1-\alpha}}_{\text{\scriptsize Función Cobb-Douglas}}\quad \overbrace{\Longrightarrow}^{\substack{\text{\scriptsize En unidades de}\\\text{\scriptsize trabajo efectivo}}}\quad \boxed{\tilde y=\tilde k_t^\alpha}\quad \text{donde,}\;\;
+    \begin{cases}
+        \tilde y_t=\frac{Y_t}{AL_t}\\[0.5em]
+        \tilde k_t=\frac{K_t}{AL_t}
+    \end{cases}
+\end{aligned}
+}{Función de Producción en unidades de trabajo efectivo. Modelo SOLOW}
+
+\subsection{Desarrollo analítico}
+Dado que la economía es cerrada y sin sector público , la producción se dedica al consumo e inversión, y la inversión es igual al ahorro, por tanto:
+
+\eqblock{
+\begin{aligned}
+    Y=C+I=C+\dot K+\delta K\Longrightarrow S=\dot K+\delta K\Longrightarrow \underbrace{\dot K=sY-\delta K}_{\text{Dividimos por $AL$}}\\[0.5em]
+    \underbrace{\dot{\tilde k}=sf(\tilde k)-(n+g+\delta)\tilde k}_{\text{\scriptsize Ecuación fundamental del Modelo de SOLOW}}\\[0.5em]
+\end{aligned}
+}{Ecuación fundamental del Modelo de SOLOW}
+
+Ésta ecuación establece que la variación en el tiempo del capital en unidades de trabajo efectivo será la diferencia entre el ahorro (en unidades de trabajo efectivo) y la pérdida de capital debido a su uso (depreciación) y a que se ha de repartir entre más personas ($n$) donde cada una de ellas es ahora más productiva ($g$). El primer término será la inversión efectiva y el segundo la inversión de mantenimiento:
+\begin{la}
+    \item Si la inversión efectiva es mayor que la inversión de mantenimiento, aumentará el stock de capital por trabajador efectivo; y,
+    \item Si la inversión efectiva es menor que la inversión de mantenimiento, se reducirá el stock de capital por trabajador efectivo
+\end{la}
+
+Así, el stock de capital permanecerá constante siempre que se ahorre lo necesario para cubrir la pérdida de capital por depreciación y por crecimiento de la población y de la productividad. 
+
+\imagenfit{EcuacionFundamentalSOLOW.png}{Representación de la ecuación fundamental de SOLOW}{Elaboración propia}
+
+Están representadas las funciones de producción ($f(\tilde k)$, el ahorro ($s\;f (\tilde k)$ y la pérdida de capital $(n + g + \delta)\tilde k$,  en unidades eficientes o por unidad de trabajo efectivo. Dado un stock de capital inicial en unidades eficientes ($\tilde k_0$), la distancia entre el punto $B$ y el punto $C$ es la depreciación total del capital; la distancia entre el punto $D$ y el punto $B$ es el ahorro en unidades de trabajo efectivo; por tanto, la distancia entre $D$ y $C$ es la variación del stock de capital en unidades de trabajo efectivo ($\tilde k^*$), que en este caso es positiva, por lo que se espera que el stock de capital siga creciendo en el siguiente instante de tiempo; la distancia entre $E$ y $B$ es la producción total (en unidades de trabajo efectivo), así que la distancia entre $E$ y $D$ es el consumo en unidades de trabajo efectivo. 
+
+La variable $\tilde k^*$ denota el nivel de capital (en unidades de trabajo efectivo) para el cual la inversión/ahorro se iguala a la depreciación total implicando que la inversión neta (en unidades de trabajo efectivo) se hace cero. 
+
+\subsubsection{Estado Estacionario}
+A este stock de capital se le denominará de estado estacionario.
+
+\textbf{Definición.-} Un estado estacionario es un vector de valores para las tasas de crecimiento de las principales variables (capital fisico, output y consumo) en unidades de trabajo efectivo tal es que si son alcanzadas, se mantendrán constantes para siempre si no hay cambios en ninguno de los parámetros estructurales.
+
+En el Estado Estacinoario (EE) se cumplen tres condiciones esenciales:
+\eqblock{
+\begin{aligned}
+    \text{(1)}\quad &\tilde k_t^{ee}=\left(\frac{s}{\delta+n+g}\right)^{\frac{1}{1-\alpha}}\\[1em]
+    \text{(2)}\quad &\tilde y_t^{ee}=\left(\frac{s}{\delta+n+g}\right)^{\frac{\alpha}{1-\alpha}} \\[1em]
+    \text{(3)}\quad &\tilde c_t^{ee}=(1-s)\left(\frac{s}{\delta+n+g}\right)^{\frac{\alpha}{1-\alpha}}
+\end{aligned}
+}{Condiciones de Estado Estacinoario. Modelo SOLOW}
+
+Con estas condiciones, alcanzan tres corolarios muy importantes:
+\begin{lnum}
+    \item La tasa de crecimiento de la economía no depende del ahorro. El nivel de renta en EE estacionario sí;
+    \item Se cumple el Golden Age de forma sistemática. La economía es estable en el LP; y,
+    \item El Estado Estacionario es estable
+\end{lnum}
+
+¿Qué conclusión podemos extraer por tanto del modelo hasta aquí? Que la economía en el muy largo plazo tenderá a crecer a una situación de Estado Estacionario, en la que las tasas de crecimiento de todas las variables serán constantes. ¿Cuáles serán estas tasas? 
+
+\imagenfit{TasasCrecimiento_SOLOW.png}{Tasas de crecimiento del Modelo de SOLOW}{Elaboración propia}
+
+\subsubsection{Estática comparativa}
+Una de las variables sobre las que tradicionalmente más se ha centrado el análisis de crecimiento económico es el ahorro. ¿Qué papel juega el ahorro sobre el crecimiento? ¿Es conveniente ahorrar más o menos? Tanta es su importancia, que muchos organismos internacionales como el Banco Mundial recomiendan a menudo a los países en vías de desarrollo que incrementen la tasa de ahorro.
+
+\paragraph{Incremento del ahorro}
+
+¿Qué efectos generarían tales medidas? Un incremento en la tasa de ahorro provocaría un desplazamiento de la curva de inversión hacia arriba (de $C\to F$). De manera que, para un Estado Estacionario inicial, la inversión efectiva sería superior a la de mantenimiento. Esto implicaría que, durante unos períodos, la economía estaría creciendo a un ritmo superior a $g$ (para variables per cápita). Sin embargo, esto no será así de forma indefinida, sino que la economía volverá a alcanzar un nuevo estado estacionario (superior al inicial, porque el shock en la tasa de ahorro ha sido permanente y no temporal), y por tanto se volverá a llegar a un punto en el que la inversión efectiva sea igual a la de mantenimiento. 
+
+\imagenfit{EstaticComparativa_SOLOW.png}{Efectos de un aumento de la tasa de ahorro}{Apuntes ICEX-CECO. Tema 3.A.43}
+
+Vemos que ha habido un aumento del stock de capital por unidad de trabajo efectiva, y un aumento del PIB por unidad de trabajo efectiva. Del consumo no podemos asegurar nada, se analizará posteriormente al hablar sobre la regla de oro.
+
+\paragraph{Dinámica de transición}
+
+¿Y cómo evolucionan las variables hasta el nuevo Estado Estacionario a lo largo del tiempo? Pasamos a analizar su dinámica de transición en escala logarítmica. 
+
+\imagenfit{DinamicaTransicion_SOLOW.png}{Dinámica de transición}{Apuntes ICEX-CECO. Tema 3.A.43}
+
+Vemos que un aumento de la tasa de ahorro aumenta el nivel de la renta y del stock por trabajador efectivo, pero no afecta a las tasas de crecimiento de largo plazo. Por ello, las diferencias en ahorro nos permitirían explicar diferencias en niveles, pero no diferencias en tasas (se vuelve de nuevo a los modelos de crecimiento endógeno). 
+
+Este ejericio ilustra dos puntos importantes:
+\begin{lnum}
+    \item Cambios de política (subida del ahorro), aumentan las tasas de crecimiento pero sólo de forma transitoria. Esto es, no hay efectos de crecimiento a largo plazo en las variables en unidades de trabajo efectivo; y,
+    \item Cambios de política, pueden tener efectos permanentes de nivel. Así, en este caso el aumento de la tasa de ahorro incrementa el nivel de producción por trabajador (como proxy de renta per cápita) de forma permanente.
+\end{lnum}
+
+\subsubsection{Regla de Oro}
+Como hemos dicho antes, el cambio en el ahorro no generaba un efecto claro sobre el consumo. ¿Por qué ocurre esto? Porque se están produciendo dos efectos de signo contrario:
+\begin{la}
+    \item \textit{Efecto Sustitución}. Por un lado, un aumento del ahorro implica que se destina una proporción de la renta al consumo inferior que antes; y,
+    \item \textit{Efecto Renta}. Pero al mismo tiempo, a pesar de que la proporción de la renta sea inferior, la renta es ahora superior, por lo que habría que consumir más
+\end{la}
+
+¿Qué efecto predomina? 
+
+Es aquí donde encontramos la Regla de Oro,\footnote{La Regla de Oro fue un concepto desarrollado por PHELPS, que basó su concepción en el Evangelio según San Mateo.
+} que implica que el objetivo del \textit{policy maker} tiene que ser maximizar el bienestar de la sociedad y esto, en términos de utilidad, es maximizar su consumo. 
+
+Ahora bien, el objetivo tiene que ser maximizar el consumo de todas las generaciones, por lo que el objetivo tiene que ser maximizar el consumo de estado estacionario.
+
+Por ello, esta Regla de Oro trata de solucionar el trade-off antes expuesto: si no se ahorra nada $s=0$ no se podría invertir, por lo que habría un consumo per cápita nulo (porque no habría renta en el largo plazo), pero si ahorramos todos $s=1$ tampoco existiría consumo en el corto plazo. Para encontrar el capital de la Regla de oro, basta con maximizar el consumo de estado estacionario con respecto a $s$.
+
+\eqblock{
+\begin{aligned}
+    &\tilde c^*(s)=(1-s)f(\tilde k^*(s))=f(\tilde k^*(s))-sf(\tilde k^*(s))\underbrace{=}_{\substack{\text{\scriptsize En el estado estacionario}\\\text{\scriptsize $s(f(\tilde k^*))=(n+g+\delta)k$}}}f(\tilde k^*(s))-(n+g+\delta)\tilde k^*(s)\\[1em]
+    &\text{Resolviendo:}\\[1em]
+    &\text{CPO}\equiv\qquad  \boxed{\underbrace{f'(\tilde k^*_{oro})}_{\text{\scriptsize PMg Capital}}=(n+g+\delta)}\\[1em]
+    &\text{Si es COBB-DOUGLAS:}\\[0.5em]
+    &sf(\tilde k)=(n+g+\delta)\tilde k\underbrace{\Rightarrow}_{\text{\scriptsize $f(\tilde k)=\tilde k^\alpha$}}s\tilde k^\alpha=(n+g+\delta)\Rightarrow \tilde k^*=\left(\frac{s}{n+g+\delta}\right)^{\frac{1}{1-\alpha}}\\
+    &\Longrightarrow\quad
+    \left\{
+    \begin{aligned}
+        f'(\tilde k^*)=(n+g+\delta)\Rightarrow\\
+        \Rightarrow\alpha(\tilde k^*)^{\alpha-1}=n+g+\delta
+    \end{aligned}
+    \right\}\quad\Longrightarrow
+    \tilde k^*_{oro}=\left(\frac{\alpha}{n+g+\delta}\right)^{\frac{1}{1-\alpha}}\Rightarrow \boxed{s_{oro}=\alpha}\\[1em]
+    &\Longrightarrow\qquad \boxed{\tilde c^*_{oro}= s_{oro}f(\tilde k_{oro}^*)}\quad =\quad \alpha^{\frac{1}{1-\alpha}}\left(\frac{1}{n+g+\delta}\right)^{\frac{\alpha}{1-\alpha}}
+\end{aligned}
+}{Consumo maximizador del bienestar en el Estado Estacionario: Regla de oro. Modelo de SOLOW}
+
+Se tiene que el stock de capital de la regla de oro es aquel tal que la pendiente de la función de producción (la productividad marginal del capital) se iguala a la pendiente de la recta de depreciación total $(n+g+\delta)\tilde k^*$. Además, se obteniene así la tasa de ahorro de la regla de oro.
+
+\imagenfit{ConsumoRORO.png}{Regla de Oro}{Apuntes ICEX-CECO. Tema 3.A.43}
+
+La caracterización de la Regla de Oro parece sugerir que hemos resuelto el problema de optimalidad que desde un inicio estamos planteando. En definitiva, hemos determinado un estado estacionario, o equilibrio a largo plazo que proporciona el máximo consumo y, salvo que la función de utilidad de los consumidores presente un punto de saturación, ello será óptimo. Efectivamente, esto es cierto y, si el planificador económico o cualquier autoridad económica predominante determinase que su objetivo es maximizar el bienestar de los consumidores en estado estacionario, entonces la Regla de Oro sería preferida a cualquier otro equilibrio a largo plazo. 
+
+Nótese, que a diferencia de lo que ocurre con el Estado Estacionario, no hay nada que nos garantice que la economía va a tender a esta Regla de Oro, es decir, que éste no es un atractor global del sistema, por lo que será necesario modificar la tasa de ahorro para garantizar que alcanzamos este punto. 
+
+Entonces, nos surgen varios problemas. ¿Sería preferible por parte de los consumidores que la economía se situase en dicho nivel de la regla de oro? 
+\begin{la}
+    \item Por un lado, hemos visto que maximiza el consumo a largo plazo y el consumo es la fuente de utilidad de los agentes;
+    \item Sin embargo, hay que tener en cuenta que:
+    \begin{lnum}
+        \item Alcanzar este nivel de regla de oro puede implicar sacrificios a corto plazo. Si hay que incrementar la tasa de ahorro, entonces la renta ($Y$) no cambiará mucho al principio, pero tu ahorro sí aumentará, por lo que consumirás menos en el corto plazo y estarás peor;
+        \item Si se produce el punto uno, entonces el individuo tendrá que sacrificar utilidad presente por utilidad futura, pero recordemos que la futura se descuenta por la impaciencia;
+        \item Si el sacrificio a corto plazo se extiende mucho en el tiempo, puede que al final el individuo acabe con un nivel de bienestar inferior
+    \end{lnum}
+\end{la}
+
+La comparación, en términos de la utilidad agregada intertemporal no es, ni mucho menos, sencilla como vemos. Dependerá la magnitud de los sacrificios a corto plazo, las diferencias de utilidad proporcionadas por la Regla de Oro y el estado estacionario al se convergiría sin cambios en la tasa de ahorro, el factor de descuento (impaciencia) y el tiempo que tarde la transición.
+
+Por ello, no es evidente que los agentes prefieran que se ponga en marcha una política que conduzca a la economía desde su posición actual hacia la Regla de Oro. De hecho, podemos clasificar las ventajas y sacrificios en función del punto en el que nos encontremos.
+
+\imagenfit{Ineficiencias_RO.png}{Regla de Oro}{Apuntes ICEX-CECO. Tema 3.A.43}
+
+\paragraph{Aumentar la tasa de ahorro}
+En caso de que el Estado Estacionario objetivo en la trayectoria actual sea inferior al de la regla de oro, la tasa de ahorro sería inferior que la de la Regla de Oro, por lo que se tiene que aumentar (disminuir el consumo).
+
+\imagenfit{EE_sup_RO.png}{Transición del consumo: $EE\to RO$. Aumentar la tasa de ahorro}{Elaboración propia}
+
+Esto implica que a corto plazo el consumo por unidad de trabajo eficiente se reduce (la renta ya está determinada, pues solo depende del capital por trabajo eficiente que viene decidido del período anterior; pero estás ahorrando más que antes de esa renta). Progresivamente, conforme la renta por unidad de trabajo eficiente vaya aumentando, el consumo por trabajo eficiente aumentará hasta situarse en un nivel por encima que el inicial. Una vez alcanzado el nuevo estado estacionario ya no volverá a crecer más.
+
+\paragraph{Disminuir la tasa de ahorro}
+En este caso la tasa de ahorro es superior que la de la Regla de Oro, por lo que se tiene que reducir.  
+
+\imagenfit{EE_inf_RO.png}{Transición del consumo: $EE\to RO$. Disminuir tasa de ahorro}{Elaboración propia}
+
+Esto implica que a corto plazo el consumo por unidad de trabajo eficiente aumenta (la renta ya está determinada, y ahora ahorro menos de esa renta). Progresivamente, conforme la renta por unidad de trabajo vaya cayendo, el consumo por trabajo eficiente irá disminuyendo hasta situarse en un nivel por encima que el inicial. Una vez alcanzado el nuevo estado estacionario ya no volverá a crecer más. Esto es lo que se denomina ineficiencia dinámica: una disminución de la tasa de ahorro aumenta el consumo en todo momento.
+
+\imagenfit{ReglaDeORO.png}{Regla de Oro. Modelo de SOLOW}{Apuntes ICEX-CECO. Tema 3.A.43}
+
+\subsubsection{Convergencia}
+Una de las conclusiones de mayor relevancia que se obtiene de este modelo de SOLOW es la hipótesis de la convergencia. Hemos observado como, en el largo plazo, las economías crecerán a una tasa constante, marcada (en términos per cápita), por el crecimiento de la tecnología.
+
+A corto/medio plazo este crecimiento puede ser diferente. Más concretamente, cuanto más alejado esté el país de su estado estacionario, mayor será su tasa de crecimiento. Este hecho implica que deberá de existir una convergencia entre las economías a nivel mundial. Más concretamente, este modelo de SOLOW-SWAN nos permite analizar dos tipos de convergencia. 
+
+\paragraph{Convergencia absoluta} 
+Decimos que dos economías convergen en términos absolutos si, partiendo de una situación inicial diferente, la diferencia entre ambas tiende a disminuir con el paso del tiempo. Por distinta situación inicial entendemos que sus stocks de capital $\bar k_0$ y $\bar k_0'$ sean diferentes, por lo que sus niveles iniciales de renta per cápita también serán distintos. Entonces, suponiendo que una de ellas, la pobre, tiene un stock de capital inicial $\tilde k_0^P$ inferior al de la economía rica, $\tilde k_0^R$, la determinación de las respectivas tasas de crecimiento, muestra claramente que la tasa de crecimiento de la economía pobre será superior a la de la economía rica, por lo que los stocks de capital de ambas y, con ello, sus rentas per cápita, irán haciéndose más similares con el paso del tiempo.
+
+\imagenfit{ConvergenciaAbsoluta.png}{Convergencia en términos absoltos}{Apuntes ICEX-CECO. Tema 3.A.43}
+
+No obstante, esta convergencia no se demuestra en la evidencia empírica. De hecho tampoco es defendida por el modelo de SOLOW ya que el país rico y el país pobre pueden tener parámetros diferentes, y por tanto que el país rico esté más alejado que el pobre, por ejemplo, en términos de ahorro, $s$.
+
+\paragraph{Convergencia condicional}
+En este caso, sería necesario que corrijamos antes por el hecho de que el estado estacionario de ambos países es distinto. Para ello, habremos de condicionar la evolución del crecimiento por los determinantes del estado estacionario. Esta convergencia se denomina convergencia condicional (condicional en los determinantes del estado estacionario de una economía). Aunque dos países con características estructurales distintas pueden converger condicionalmente o no, el modelo neoclásico implica que lo harán; es decir, hecha la corrección que permite tener en cuenta sus diferencias estructurales, el país pobre crecerá más rápidamente, de modo que se tendría la convergencia entre ambos. 
+
+\imagenfit{ConvergenciaCondicional.png}{Convergencia condicional}{Apuntes ICEX-CECO. Tema 3.A.43}
+
+La evidencia empírica sí parece mostrar la existencia de convergencia condicional: si mantenemos fijos los niveles de ciertas variables (niveles iniciales de capital humano, medidas de ciertas políticas gubernamentales, propensiones a ahorrar, tasas de fertilidad), entonces se detecta tal relación.\footnote{Obteniéndose tasas de convergencia de aproximadamente un 2\%, en el sentido de que serían precisos unos 35 años para que una economía eliminase la mitad de su brecha inicial respecto a su nivel de largo plazo de PIB per cápita. 
+}
+
+\subsection{Extensión: Acumulación de Capital Humano} 
+El modelo de MANKIW, ROMER y WEIL (1992) es uno de los modelos de crecimiento empíricos más importante para identificar los determinantes de las diferencias entre países en renta per cápita.\footnote{El capital humano es un término que usamos para representar el stock de habilidades, educación, competencias y otras características que mejoran la productividad del trabajo. El capital humano representa las unidades de eficiencia de la mano de obra integradas en las horas de trabajo bruto. El término capital humano surge de la observación de que los individuos invertirán en sus aptitudes, competencias y en su capacidad de obtener ingresos, de la misma manera que las empresas invierten en su capital físico, para incrementar su productividad.
+} Por ahora, en este modelo supondremos que las horas de trabajo ofertadas por los individuos \textbf{no contienen las mismas unidades de eficiencia}. 
+
+Bajo este supuesto, en este modelo se investigará si la inclusión de capital humano hace que el modelo de SOLOW pueda tener un mejor ajuste a los datos. Además, la inclusión del capital humano nos permite integrar las tres principales fuentes de diferencias de renta: capital físico, capital humano y la tecnología.
+
+\subsubsection{Desarrollo}
+El modelo va a desarrollarse en tiempo continuo. Supondremos que la función de producción agregada de la economía es:
+
+\eqblock{
+\begin{aligned}
+    &Y=F(K,H,A\;\cdot L),\qquad \text{donde}\;
+    \begin{cases}
+        H\equiv\quad \text{Capital humano}\\
+        A\equiv\quad \text{Tecnología}\\
+    \end{cases}\\[1em]
+    \text{Suponemos,}\quad 
+    &\begin{cases}
+        \text{(S.1)}\quad F\;\text{es dos veces diferenciable, }\partial F/\partial i>0\quad y\quad \partial^2F/\partial^2i<0\qquad \forall i=\{K,H,AL\}\\[1em]
+        \text{(S.2)}\quad F\;\text{satisface Inada, i.e.}\quad \lim_{i\to 0}\partial F/\partial i=\infty\quad y\quad \lim_{i\to\infty}\partial^2F/\partial^2i=0\qquad \forall i=\{K,H,AL\}\\
+        \hspace{0.5em}\Longrightarrow\text{Cóncava y rendimientos constantes en todos los argumentos}\\[1em]
+        \text{(S.3)}\quad s_k\equiv\text{Ahorro capital físico, }\delta_k \text{ (depreciación)}\\[1em]
+        \text{(S.4)}\quad s_h\equiv\text{Ahorro capital físico, }\delta_h \text{ (depreciación)}\\[1em]
+        \text{(S.5)}\quad \text{ctes. }(n, g)\equiv\text{Crecimiento población y efectividad del trabajo, respectivamente}
+    \end{cases}\\[1em]
+    &\tilde y_t\equiv\frac{Y_t}{A_tL_t}=F\left(\frac{K_t}{A_tL_t}, \frac{H_t}{A_tL_t}, 1\right)=f(k_t,h_t)\Longrightarrow
+    \begin{cases}
+        \underbrace{\dot K_t+\delta_kK_t}_{\substack{\text{\scriptsize Inversión bruta}\\\text{\scriptsize en capital físico}}}=s_kF(K_t,H_t,A_tL_t)\\
+        \underbrace{\dot H_t+\delta_hH_t}_{\substack{\text{\scriptsize Inversión bruta}\\\text{\scriptsize en capital humano}}}=s_hF(K_t,H_t,A_tL_t)\\
+    \end{cases}\\
+    \Longrightarrow\quad
+    \begin{cases}
+        \dot k_t=s_kf(k_t, h_t)-(\delta_k+n+g)k_t\\
+        \dot h_t=s_hf(k_t, h_t)-(\delta_h+n+g)h_t
+    \end{cases}\Longrightarrow
+    \underbrace{\boxed{
+    \begin{cases}
+        s_kf(k^*,h^*)-(\delta_k+n+g)k^*=0\\[0.5em]
+        s_hf(k^*,h^*)-(\delta_h+n+g)h^*=0
+    \end{cases}
+    }}_{\text{Estado Estacionario}}
+\end{aligned}
+}{Introducción de capital humano en la función de producción y Estado Estacionario. Modelo de SOLOW (ampliado)}
+
+Además de existir y ser único,\footnote{Ver [\authorfont{Apuntes ICEX-CECO. Tema 3.A.43}] para la desmotración de existencia y unicidad
+} este estado estacionario es globalmente estable.
+
+\imagenfit{ModeloSOLOW_ampliado.png}{Dinámica del capital físico y humano en unidades efectivas en el modelo MRW (SOLOW, ampliado)}{Apuntes ICEX-CECO. Tema 3.A.43}
+
+Si nos situamos en un punto cualesquiera de la curva asociada a la inversión en capital físico (primera ecuación del EE), en la que $\dot k=0$, tenemos que un aumento marginal en $h$ hará que $s_kf(k,h)>(\delta_k+n+g)k$, o lo que es lo mismo, que $\dot k>0$; esto implica que los puntos que están por encima de la curva son tales que el capital en unidades efectivas aumentará. Por la misma razón, lo puntos que están por debajo de la curva serán tales que el capital en unidades efectivas disminuirá. 
+
+Si, por el contrario, nos situamos en un punto cualesquiera de la curva asociada a la segunda ecuación del EE, en la que $\dot h=0$, un aumento marginal en $k$ hará que $s_hf(k,h)>(\delta_h+n+g)h$, es decir, que $h>0$; esto implica que los puntos a la derecha de la curva serán tales que el capital humano en unidades efectivas aumente; por la misma razón, los puntos a la izquierda de la curva serán tales que el capital humano en unidades efectivas disminuya. 
+
+En definitiva, se puede observar que, cuanto mayor sean $s_k$ y $s_h$, mayores serán los niveles de equilibrio de ambos tipos de capital. Nótese que, cuanto mayor es $s_k$, la curva asociada a la primera de las dos ecuaciones anteriores se desplaza hacia abajo y a la derecha, y que, cuanto mayor es $s_h$, la curva asociada a la segunda de las dos ecuaciones anteriores se desplaza hacia arriba y a la izquierda, por lo que el punto de corte se dará con mayores niveles de ambos tipos de capital. Esto significa que el output en unidades efectivas se incrementará cuanto mayores sean $s_k$ y $s_h$, ya que, de la función de producción se deriva que, cuanto mayores sean los inputs, mayor será el output. El diagrama de fase se caracteriza por que cualquier punto del espacio $(k, h)$ tenderá a converger hacia el equilibrio de estado estacionario.
+
+Por tanto, si se traslada este resultado al comportamiento que tendrá un conjunto de países con iguales tasas de crecimiento tecnológico mejorador de la efectividad del trabajo (a), aquellos con una propensión mayor a invertir en capital físico o humano o ambos serán relativamente más ricos.
+
+\subsubsection{Modelo empírico}
+Este es, precisamente, el tipo de predicción que puede ser contrastado para estudiar si el modelo de SOLOW extendido con capital humano (en países con similares posibilidades tecnológicas) proporciona una manera útil de explicar las diferencias de renta entre países.
+
+En su artículo de 1992, usando el modelo teórico presentado en el subapartado anterior, estudian los determinantes de las diferencias de renta entre países. Los resultados a los que llegan MRW a partir de sus estimaciones empíricas parecen mucho más exitosos que los que obtuvieron para el modelo de SOLOW sin capital humano. Sus resultados en el modelo con capital humano parecen indicar que las diferencias en renta per cápita entre países pueden ser explicadas en un porcentaje alto por las diferencias en el comportamiento de la inversión en capital fijo y humano de cada país. 
+
+Sin embargo, estos resultados también implican que las diferencias tecnológicas (en la productividad total de los factores) tienen un papel bastante limitado.
+
+\paragraph{Implicaciones}
+Podría bastar con fijar la atención en el comportamiento de la inversión en capital físico y humano para explicar la prosperidad de los países y asumir que los países tienen más o menos el mismo acceso a tecnología.
+
+Sin embargo, este resultado tiene algunos problemas, como:
+\begin{lnum}
+    \item Problemas relacionados con las estimaciones de la regresión de MRW:
+    \begin{lum}
+        \item El supuesto que hace el modelo empírico de que las diferencias en tecnología de los países son ortogonales (independientes) a las otras variables del modelo de regresión. La razón es que las diferencias tecnológicas son también resultado de las decisiones de inversión en capital físico y humano; y,
+        \item Si se tiene en cuenta la evidencia microeconométrica, la estimación de $\beta$ parece excesivamente alta.
+    \end{lum}
+    \item El hecho de que se haya supuesto que el capital humano no genera externalidades (es decir, que el capital humano de un trabajador no incrementa la productividad de otros trabajadores). En los modelos de equilibrio general con acumulación de capital humano, sí se tiene en cuenta tal externalidad.
+\end{lnum}
+
+
+\subsection{Implicaciones}
+Una vez que ya hemos presentado el funcionamiento de este modelo de crecimiento de SOLOW, así como su extensión con acumulación de capital humano, conviene preguntarnos. ¿Qué implicaciones podemos extraer de él? Es decir, ¿qué información proporciona sobre el funcionamiento de la economía y sobre la política económica que pueda ser útil para el \textit{policy maker}? Así como, ¿qué limitaciones presenta y que, por tanto, hay que tener en cuenta al interpretar sus implicaciones?
+
+\subsubsection{Política Económica}
+¿Qué información aporta este modelo que pueda ser de interés para el policy maker?
+
+Tanto del Modelo de SOLOW como de su extensión con acumulación de capital humano obtenemos información muy relevante para entender el fenómeno del crecimiento económico:
+\begin{lnum}
+    \item \textit{Acumulación de capital}. La acumulación de capital es el determinante para los cambios en el nivel de renta, pero no puede explicar el crecimiento de la renta. Por ello, políticas encaminadas a aumentar el stock de capital generarán cambios en niveles, pero no cambios en tasas;
+    \item \textit{Estado Estacionario}. La economía en el largo plazo alcanza un estado estacionario que será estable y todo shock transitorio solo llevará a cambios transitorios en la renta. Para cambiar el nivel de forma permanente se necesitan cambios permanentes;
+    \item \textit{Política Económica}. Desde una perspectiva normativa, el nivel de renta per cápita en el largo plazo podrá ser mejorado: (i) con políticas que fomenten el ahorro; y, (ii) con políticas que reduzcan el crecimiento poblacional;
+    \item \textit{Regla de Oro}. Por último, mayores tasas de ahorro no implican obligatoriamente mejoras en la utilidad de los agentes. La Regla de Oro no es un incremento obligatorio en su utilidad total descontada. 
+\end{lnum}
+
+\subsubsection{Limitaciones}
+Pero este modelo:
+\begin{lnum}
+    \item Ni genera crecimiento sostenido endógeno;
+    \item Ni explica los ritmos de crecimiento que han experimentado las economías; 
+    \item Ni es capaz de explicar las enormes diferencias en la renta per cápita de los países. 
+\end{lnum}
+
+Efectivamente, el crecimiento de la renta per cápita a largo plazo en este modelo es igual a la tasa de progreso técnico, que es un parámetro exógeno. Por otra parte, ni la experiencia histórica de una economía como la de EEUU puede explicarse por la acumulación de capital físico, ni las enormes diferencias en la renta per cápita que se observa en los países pueden explicarse por las diferencias en la tasa de ahorro.
+
+Las tasas de crecimiento dependen de $g$ (en términos per cápita). ¿Cómo cambiar $g$? No lo sabemos, modelos endógenos. Además, la Función de Producción es Neoclásica de buen comportamiento, lo que implica que debe presentar RCE para los factores rivales ($K, L$). Además, hay competencia perfecta, por lo que se retribuyen según su $PMg_i$, cumpliéndose el Teorema de Euler que dice que la renta se agota con la retribución de los factores. Ahora bien, esto implica que entonces la economía neoclásica no puede dedicar recursos a la financiación del progreso tecnológicos, por lo que nos vemos obligados a suponer que el progreso tecnológico es exógeno, pues si no ¿cómo se financia? 
+
+Si queremos construir un modelo que explique el crecimiento debemos por tanto abandonar algunos de los supuestos neoclásicos que producen esta situación: la Función de Producción Neoclásica de buen comportamiento, o bien la competencia perfecta.
+
+\clearpage
+\section{Modelo de RCK}
+\puntosclave{
+    El modelo de RAMSEY-CASS-KOOPMANS supone una sofisticación del modelo de SOLOW, al introducir microfundamentación a través de un agente representativo.
+    
+    Los resultados en términos positivos y normativos no cambian respecto a SOLOW, pero la introducción de preferencias explícitas permite ilustrar de manera clara el cumplimiento del Primer Teorema Fundamental de la Economía del Bienestar.
+}
+
+Manteniendo la misma estructura del modelo de crecimiento neoclásico, el modelo propuesto por Cass (1965) y Koopmans (1965) trata de caracterizar la tasa óptima de acumulación de capital, de modo que se maximice algún criterio de bienestar social. 
+
+Se trata, por tanto, de considerar la distribución de la renta entre consumo y ahorro en cada período, reconociendo que las decisiones de ahorro financian los incrementos brutos en el stock de capital y, con ello, condicionan las posibilidades productivas y de renta futuras. En esto, no se distingue del modelo neoclásico: incluso mantiene los supuestos de rendimientos decrecientes de los inputs productivos que, como ya hemos visto, impiden explicar el crecimiento continuado de una economía, salvo que se incorporen elementos de crecimiento exógeno, como el crecimiento tecnológico. Pero en esta sección no vamos a considerar la presencia de progreso técnico, ni siquiera como fenómeno exógeno, ya que las principales conclusiones e implicaciones no varían cualitativamente. 
+
+La diferencia con el modelo de SOLOW y SWAN, que analizamos en la sección anterior, estriba enque ahora consideramos que las decisiones de consumo/ahorro, que determinan el proceso de acumulación de capital y, con él, de evolución temporal de la renta per cápita, se determinan de manera endógena, en principio por decisión de un Planificador benevolente que maximiza una función de utilidad intertemporal que tiene el nivel de consumo per cápita como único argumento.
+
+Este modelo puede plantearse por medio de dos puntos de vista:
+\begin{la}
+    \item Desde la óptica de una planificador benevolente; y,
+    \item Desde la óptica de una economía completamente descentralizada
+\end{la}
+
+Sin embargo, al cumplir con todos los supuestos competitivos, el equilibrio alcanzado en ambos casos será el mismo, por lo que, debido a su mayor simplicidad analítica, desarrollaremos la primera versión para obtener los principales corolarios de este modelo. 
+
+\subsection{Desarrollo analítico}
+Resolvemos el problema del planificador, es decir, un planificador que se preocupa del bienestar de los agentes, por lo que elige las sendas de consumo y ahorro a lo largo de todo el ciclo vital de los hogares tales que maximizan su función de utilidad intertemporal descontada, sujeto a la restricción de recursos de cada periodo. 
+
+Como siempre que se plantea el problema de un planificador, la solución es óptima de Pareto para las asignaciones de consumo y ahorro elegidas por él y ninguna senda de precios está involucrada en la solución, ya que se supone la ausencia de mercados.\footnote{Si se analiza el equilibrio competitivo, podremos obtener soluciones sobre asignaciones y sobre precios, en tanto existirán mercados en los que se obtengan los precios y asignaciones que equilibran la oferta que hacen unos agentes con las demandas que realizan otros agentes. La comparación de las asignaciones del equilibrio descentralizado con las obtenidas por el planificador nos servirá para saber si e\ equilibrio competitivo es óptimo de Pareto o no.
+} 
+
+Analíticamente, el problema del planificador es (en términos per cápita):\footnote{En este caso, $\lambda_t$ es la \textbf{variable de co-estado}. La variable de co-estado tiene la interpretación de ser el precio sombra de una unidad adicional de capital por trabajador, en unidades de utilidad: es el precio que el planifieador estaría dispuesto a pagar por disponer de una unidad adicional de capital en el período $t$.
+}
+
+\eqblock{
+\begin{aligned}
+    &\boxed{\begin{aligned}
+        &\max_{c_t}U(0)=\int_0^\infty e^{-\theta t}u(c_t)\mathrm{d}t=\underbrace{\int_0^\infty e^{-\theta t}\frac{c_t^{1-\sigma-1}}{1-\sigma}\mathrm{d}t}_{\text{Suponemos FUI Isoelástica}}\\[1em]
+        &\text{s.a.}\quad 
+        \begin{cases}
+            \text{RPI:}\;\;c_t+\underbrace{\dot k_t+(n+\delta)k_t}_{\text{Inversión}}=f(k_t)\\[0.5em]
+            \lim_{t\to \infty}e^{-\theta t}\lambda_tk_t=0\;\text{\scriptsize (Transversalidad)}\\[1em]
+            k_0,\quad \text{dado (condición inicial)}
+        \end{cases}
+    \end{aligned}}
+    \quad \text{donde,}
+    \begin{cases}
+        \theta&\equiv\; \text{Tasa de descuento}\\
+        c_t&\equiv\; \text{Consumo per cápita}\\
+        \sigma&\equiv\; \underbrace{\text{Grado de aversión relativa al riesgo}}_{\text{\scriptsize Determina grado de curvatura de la FUI=$-\frac{u''(c_t)c_t}{u'(c_t)}$}}\\
+        f(k_t)&\equiv\; \underbrace{\text{Función de producción Neoclásica}}_{\text{\scriptsize Satisface condiciones de INADA}}
+    \end{cases}\\[2em]
+  &\text{Resolvemos con el Hamiltoniano:}\; H(k_t,c_t\lambda_t)=e^{-\theta t}\frac{c_t^{1-\sigma}-1}{1-\sigma}+\lambda_t\underbrace{(\overbrace{k_t^\alpha}^{\text{\scriptsize Función Producción}}-(n+\delta)k_t-c_t)}_{k_t}\\[0.5em]
+  &\text{CPO's}\;\;
+  \left\{\begin{aligned}
+      H_c=0&:\quad c_t^{-\sigma}e^{-\theta t}=\lambda_t\\[0.5em]
+      H_k=-\dot \lambda_t&:\quad \lambda_t\left[
+      \begin{aligned}
+          \alpha k_t^{\alpha-1}-(n+\delta)\\
+          f'(k_t)
+      \end{aligned}\right]=-\dot \lambda_t
+  \end{aligned}\right\}\quad \boxed{\underbrace{\frac{\dot c_t}{c_t}=\frac{1}{\sigma}[\alpha k_t^{\alpha-1}-(n+\delta)-\theta]}_{\text{Condición de EULER}}}
+\end{aligned}
+}{Problema de maximización y resolución (Hamiltoniano). Modelo RAMSEY-CASS-KOOPMANS}
+
+Esta condición muestra que el consumo óptimo aumenta, disminuye, o permanece constante en cada instante, dependiendo de que la productividad marginal neta del capital fisico, $\alpha k_t^{\alpha-1}-(n+\delta)$, sea mayor o igual que la tasa de preferencia intertemporal $\theta$. Tal crecimiento en el consumo per cápita será mayor cuanto menor sea el parámetro de aversión relativa al riesgo (implicando una mayor volatilidad en la senda de consumo en presencia de shocks); por tanto, una senda de consumo suavizado ante perturbaciones que cambien la relación entre la productividad marginal del capital y la tasa de descuento sólo es compatible con niveles altos de $\sigma$, cuanta más aversión al riesgo tengan los hogares. 
+
+La condición de transversalidad garantiza que la senda de las variables no sea explosiva, evitando que se realice una acumulación de capital excesiva o por el contrario deficiente (en el primer caso acabaríamos sobreacumularíamos y en el segundo sería un esquema PONZI). Su significado es que, en el límite, o bien el capital descontado es cero o su valor es cero (medido por el precio sombra). 
+
+La evolución óptima del capital y del consumo per cápita viene descrita por las ecuaciones dinámicas: condición de EULER y la restricción presupuestaria intertemporal. Dado un stock de capital $k_0$ y la condición de transversalidad, las sendas óptimas de consumo y capital per cápita serán obtenidas de resolver el sistema dinámico dado por la condición de EULER y por la RPI. Debido a la no linealidad del sistema la solución sólo podrá ser dada por aproximaciones numéricas o de forma cualitativa a través de diagramas de fase.
+
+\subsubsection{Estado Estacionario}
+El estado estacionario es un vector de valores numéricos para las tasas de crecimiento, constantes, del stock de capital per cápita, consumo per cápita y producción per cápita tales que una vez alcanzados, las tasas de crecimiento se mantendrán constantes a esos niveles. Tomando logaritmos y derivando observamos que la única tasa de crecimiento constante que puede existir es una tasa de crecimiento nulo. Por ello, buscaremos aquellas combinaciones de $c_t$ y de $k_t$ tales que el crecimiento de ambas variables sea $0$.
+
+No obstante, comenzaremos por puntualizar una primera diferencia respecto a las conclusiones del modelo de SOLOW-SWAN, consecuencia de la formulación característica del modelo RCK. Al imponer que el capital per cápita y el consumo per cápita sean constantes (para ser solución al problema de optimización), obtenemos:
+
+\eqblock{
+\begin{aligned}
+    \substack{\text{\scriptsize De la condición de}\\
+    \text{\scriptsize EULER y la condición}\\
+    \text{\scriptsize de transversalidad}}
+    \left\{\begin{aligned}
+        &k_{ee}=\left[\frac{\alpha}{n+\delta+\theta}\right]^{\frac{1}{1-\alpha}}<\underbrace{k_{oro}=\left[\frac{\alpha}{n+\delta}\right]^{\frac{1}{1-\alpha}}}_{\text{\scriptsize obtenido = que en SOLOW-SWAN para $g=0$}}\\[1em]
+        &c_{ss}=k_{ee}^\alpha-(n+\delta)k_{ee}
+    \end{aligned}\right.
+\end{aligned}
+}{Regla de oro y Estado Estacionario. Modelo de RCK}
+
+Esto indica que en el modelo de Solow hay una sobre-acumulación de capital (imponer una tasa de ahorro constante es subóptimo). En esta línea vertical se dan las combinaciones de consumo y capital per cápita en que el consumo no varía. La curva dibujada representa la relación entre consumo y capital que surge de la restricción de recursos cuando imponemos que $\dot k_t=0:\quad c_{ee}k_{ee}^\alpha - (n-\delta)k_{ee}$. 
+
+\imagenfit{RCK_curvas.png}{Stock de capital del Estado Estacionario en el modelo de RAMSEY-CASS-KOOPMANS}{Apuntes ICEX-CECO. Tema 3.A.43}
+    
+Esta curva representa las combinaciones de consumo y capital per cápita tales que el capital no varía. Por tanto, el punto de corte de estas dos líneas representa el Estado Estacionario ya que en ese punto ni el consumo ni el capital cambian con el tiempo; y fuera de estas dos líneas tanto el consumo como el capital varían en el tiempo. Vamos a ver cómo varían en el tiempo cuando la economía se sitúa fuera del estado estacionario con el fin de estudiar la dinámica de transición hacia el mismo.
+
+\imagenfit{Movimientos_RCK.png}{Estado Estacionario en el Modelo de RAMSEY-CASS-KOOPMANS}{Apuntes ICEX-CECO. Tema 3.A.43}
+
+Podemos distinguir las variaciones en la tasa de crecimiento de las variables como sigue:
+\begin{la}
+    \item \textit{Situándonos sobre la linea vertical de variación 0 en el consumo}. En esta linea sabemos que el \textbf{tipo de interés neto de depeciación} (que mide como el mercado valora el consumo futuro) \textbf{es igual a la valoración subjetiva del consumo futuro del hogar representativo}. Si aumenta marginalmente $k$, entonces la productividad del mismo disminuirá (por los rendimientos decrecientes de este input), disminuyendo así el tipo de interés de mercado; si ahora el tipo de interés de mercado valora menos el consumo futuro que el hogar, lo que hará el hogar será consumir hoy más y ahorrar menos, disminuyendo así la tasa de crecimiento del consumo; por eso, a la derecha de la recta $\dot c_t=0$ el consumo disminuye. Lo contrario ocurrirá en el lado izquierdo; y,
+    \item \textit{Situándonos sobre la curva de variación 0 de la acumulación de capital}. Si nos situamos en un punto sobre tal línea y nos movemos hacia arriba (aumentando el consumo), el stock de capital disminuirá, ya que de la restricción de recursos tendremos que $(k_t^\alpha-(n+\delta)k_t)<c_t$, implicando que $\dot k_t$ pasa de ser cero a ser negativo. Lo contrario ocurrirá si nos movemos hacia abajo. Así, por encima de la curva el capital disminuye y por debajo el capital aumenta.
+\end{la}
+
+Si ahora juntamos ambos gráficos en uno sólo, tendremos lo que se denomina un diagrama de fase: un gráfico que recoge conjuntamente cómo las variables se mueven fuera del estado estacionario. 
+
+\imagenfit{Direcciones_RCK.png}{Estado Estacionario en el Modelo de RAMSEY-CASS-KOOPMANS}{Apuntes ICEX-CECO. Tema 3.A.43}
+
+De los vectores y dirección de los movimientos en las tasas de variación de las variables, observamos que, si la economía parte desde un punto como $A$, se desplazaría progresivamente hacia el eje de ordenadas, es decir, hacia un stock de capital $k_t=0$, y cada vez con un mayor consumo, lo cual no parece posible de lograr técnicamente; si se deja depreciar el stock de capital, no será posible mantener un nivel de consumo elevado, puesto que apenas se podrá producir. Partiendo de un punto como $B$, la economía se desplazaría hacia $c_t=0$, lo cual no parece muy conveniente. En $B$ se está ahorrando demasiado, lo que conduce a una excesiva acumulación de capital, que requiere a su vez una gran cantidad de recursos para reponer la pérdida por depreciación. La necesidad de este tipo de recursos es creciente y, además, se está ahorrando siempre demasiado, por lo que cada vez quedan menos recursos para el consumo de los individuos. Podría pensarse que si la economía parte desde puntos como $P'$, convergerá hacia $E$. Sin embargo, esto no es cierto, debido a la intensidad relativa de cada una de las dos variaciones. El punto $P'$ está muy próximo a la curva $k_t=0$, por lo que en él, $\dot k_t$, que es negativa, será reducida en valor absoluto, mientras que, por hallarse relativamente lejos de la curva $c_t=0$, la variación que es asimismo negativa, será relativamente fuerte; como consecuencia, la economía se desplazaría hacia la región III y, una vez allí, evolucionaría del modo antes descrito. Por el contrario, el punto $P"$ está muy cerca de la curva $c_t=0$, por lo que, en él, $\dot c_t$, será reducida en valor absoluto, mientras que, por hallarse relativamente lejos de la curva $k_t=0$, la variación de $k$, será relativamente fuerte y como consecuencia la economía entrará en la región I y, a partir de allí, evolucionará como antes vimos.
+
+\paragraph{Trayectoria de convergencia} 
+Como consecuencia, el diagrama de flujos ilustra la existencia de una única trayectoria convergente hacia el estado estacionario. Puesto que existe una única trayectoria que conduce hacia el estado estacionario óptimo, si en cualquier instante la economía tiene un stock de capital $k_0$, el papel del planificador económico consistiría en lograr un consumo per cápita de modo que el punto ($k_0, c_0$) esté sobre la trayectoria de convergencia.
+
+\imagenfit{Trayectoria_RCK.png}{Estado Estacionario en el Modelo RAMSEY-CASS-KOOPMANS}{Apuntes ICEX-CECO. Tema 3.A.43}
+
+Esta senda es la que seguiría una economía dirigida por un planificador central cuya función objetivo consistiese en maximizar el bienestar de los consumidores. En definitiva, lo que es óptimo, dado $k_0$, es asignar un nivel de consumo $c_0$ que sitúe a la economía sobre la trayectoria de convergencia hacia su estado estacionario óptimo, lo cual determinará una cierta tasa de ahorro, que evolucionará a través del tiempo, convergiendo asimismo hacia un nivel de equilibrio a largo plazo. 
+
+Puesto que esta trayectoria es la solución al problema de planificación que propusimos inicialmente, garantiza un mayor nivel de bienestar que cualquier otra trayectoria alternativa, incluida la que conduciría hacia la Regla de Oro que obteníamos en el modelo de SOLOW. Ello se debe a que, al considerar la utilidad intertemporal  hasta alcanzar el estado estacionario, la fase de transición acaba predominando sobre la utilidad que se logra en el estado estacionario en ambos casos. En estado estacionario, la Regla de Oro producirá mayor utilidad que el estado estacionario óptimo; sin embargo, estos valores estarán ya muy descontados en la función de utilidad intertemporal. Nótese también que la diferencia entre $k_{ee}$ y $k_{oro}$ se produce sólo si $\theta>0$; es decir, si el factor de descuento intertemporal $\theta$ fuese cero, ambos valores coincidirían. Ello significa que en la Regla de Oro valora demasiado la utilidad futura (en una de las interpretaciones del modelo), o la utilidad obtenida por los miembros de las generaciones futuras (en la interpretación alternativa), pues sería la solución óptima si no se utilizase descuento.\footnote{Que significa que el factor descuento seria 1, no 0. Por tanto, a lo largo de la senda que conduce a la Regla de Oro, se valora igual la utilidad de individuos pertenecientes a distintas generaciones. Sin embargo. puesto que el tamaño de las sucesivas generaciones aumenta (si $n>0$), en la Regla de Oro se estaría tendiendo a conceder más importancia a las generaciones futuras.
+} La causa de este resultado es que, como ya vimos en la comparación con el estado estacionario óptimo, la Regla de Oro representa demasiada acumulación de capital.
+
+\subsection{Análisis normativo}
+Sea $\{c_t,k_t\}_{t=0}^\infty$ una solución al problema de planificación a partir de un $k_0$ dado y, por tanto, una asignación de recursos Pareto eficiente, en una determinada economía de la que se conocen la tecnología productiva y la Función de Utilidad del agente representativo. El tamaño poblacional $L_t=L_0e^{nt}$ crece (exponencialmente) a una tasa $n$ exógena. Si definimos salarios reales ($w_t$) y tipos de interés ($r_t$) hipotéticos,\footnote{En un mundo con planificador no hay mercados ni por tanto precios. Sin embargo, si fuera posible establecer unos precios como los que aparecen en las ecuaciones inferiores, basados en las aignaiones óptimas del planificador, y esas ecuaciones se correspondieran con los precios en una economía de mercado, diríamos que bajo esos precios y las asignaciones del planificador podríamos replicar un equilibrio competitivo.
+} junto con unos niveles de empleo y tamaño de cartera de activos como sigue:
+
+\eqblock{
+\begin{aligned}
+    \left\{\begin{aligned}
+        &w_t=\underbrace{f(k_t)-k_tf'(k_t)}_{\substack{\text{\scriptsize Productividad Marginal del trabajo}\\\text{\scriptsize en términos per cápita}}}=(1-\alpha)k_t^\alpha\\[0.5em]
+        &r_t=\underbrace{f'(k_t)-\delta}_{\substack{\text{\scriptsize Productividad Marginal del}\\\text{\scriptsize capital en términos per cápita}}}=\alpha k_t^{\alpha-1}-\delta\\[0.5em]
+        &N_t=L_t=L_0e^{nt}\\[0.5em]
+        &v_t=k_t
+    \end{aligned}\right.\;\;\Longrightarrow\;\;
+    \underbrace{\begin{aligned}
+    &\text{El vector de sendas temporales: } \{c_t,k_t,N_t,v_t\}_{t=0}^\infty\\[0.5em]
+    &\text{El vector de precios: }\{r_t,w_t\}_{t=0}^\infty
+    \end{aligned}}_{=\text{ Equilibrio Competitivo (EGC)}}
+\end{aligned}
+}{2TFEB -- Alternancia solución competitiva y solución planificador benevolente. Modelo RCK}
+
+Esto significa que existe un vector de precios en cada periodo que, impuestos en el mercado, los vacían en los niveles deseados por el planificador, que constituyen una asignación Pareto eficiente (EGC). El valor de este segundo Teorema es el de garantizar que los mercados pueden alcanzar cualquier asignación de cantidades Pareto eficiente, si se fijan en ellos los precios adecuados.\footnote{Debe recordarse que, así como generalmente no existen muchos equilibrios competitivos en una economía, existe todo un continuo de asignaciones Pareto-eficientes. El segundo teorema garantiza que, seleccionada una detenninada asignación Pareto-eficiente, y definidos apropiadamente los precios, las cantidades de equilibrio competitivo de los distintos bienes coincidirían con las que constituyen la asignación Pareto-eficiente que hemos seleccionado.
+}
+
+En definitiva, tanto el Estado Estacionario como la dinámica de transición analizada para el problema del planificador, coinciden para el problema en su versión descentralizada. 
+
+\subsubsection{Implicaciones de Política Económica}
+-	Al igual que en el modelo de Solow, este modelo predice que países con los mismos parámetros estructurales tienden a converger hacia el mismo estado estacionario (convergencia absoluta). Predice una convergencia condicional si los países no parten de los mismos parámetros estructurales  .
+-	Enriquece el modelo de Solow:
+•	El ahorro es ahora endógeno, dado que depende de la senda de crecimiento del consumo que proviene de la maximización de la utilidad de los agentes.
+•	Mayor rigor en la formalización, al introducir un programa de optimización dinámica.
+•	Representa el punto de partida para los modelos endógenos.
+-	No obstante, recibe algunas de las mismas críticas que el modelo de Solow:
+▲	Llegada a un Estado Estacionario en el que las variables per cápita no crecen. 
+▲	Incapacidad de la acumulación de capital de explicar el crecimiento a L/P.
+
+Por tanto, este modelo de RCK nos permite endogeneizar el modelo de Solow-Swan. Partiendo de un problema de optimización observamos cómo la economía converge hacia una situación de Estado Estacionario en la que, debido a la ausencia de progreso técnico, el crecimiento de todas las variables en términos per cápita es 0, al igual que en el modelo de SS. La diferencia entre ambos modelos reside, además de las diferencias metodológicas obvias, en el hecho de que en SS la regla de oro podía estar por encima o por debajo del estado estacionario. 
+Este modelo indudablemente enriquece formalmente al modelo de SS, si bien como vemos las principales implicaciones de ambos son análogas: la economía tiende hacia una situación de Estado Estacionario en la que en ausencia de progreso técnico todas las variables crecen a una tasa constante y nula. Además, este modelo de Ramsey también recoge la posibilidad de que haya una tasa de ahorro constante, con la diferencia fundamental de que en Ramsey ésta está dictada por los parámetros del modelo y no puede elegirse arbitrariamente. Además, nunca puede ser tan alta como para situar el nivel de capital estacionario en la región dinámicamente ineficiente, mientras que en SS como es exógena no hay nada que le impida ser demasiado alta. 
+
+\subsection{Extensiones}
+El modelo de Ramsey (y sus extensiones a modelos donde se relaja el supuesto de competencia perfecta)' es el modelo de referencia para el análisis de política fiscal y monetaria, y para el análisis de las fluctuaciones económicas. Nosotros vamos a usar este modelo para comentar algun9s resultados básicos de política fiscal. Para ello, introducimos el gobierno en el modelo de equilibrio competitivo, con una empresa y un consumidor/trabajador representativo, manteniendo el supuesto de ausencia de incertidumbre. Suponemos que el gobierno lleva a cabo un nivel de gasto o consumo público en cada período, G,, que no depende del nivel de renta, y que puede utilizar Deuda (es decir, bonos) así como impuestos de cuantía fija, es decir, no distorsionantes, en la financiación de dicho gasto. No consideramos la existencia de dinero en la economía. Suponemos que existe una única empresa con tecnología de rendimientos constantes a escala, que es la propietaria del capital. Emite acciones para financiar su stock de capital productivo; cada acción da derecho a la propiedad de una unidad de capital.
+
+Estamos interesados en caracterizar la asignación de recursos a la que conduce el mecanismo de equilibrio competitivo en esta economía y en cómo depende dicha asignación del nivel de gasto público. En particular, fijando un nivel de gasto público igual a cero en todos los períodos, podremos establecer comparaciones con respecto a la asignación de recursos que resulta en una economía sin gobierno, y que hemos caracterizado en secciones anteriores. Para ello, habremos de obtener funciones del tiempo para el consumo privado, e,, consumo público, g,. stock de capital, k,, deuda pública, b,, acciones de la empresa v,, producto y,, pero también para los precios: tipos de interés y salarios reales r,, w,.
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+
+
+\subsection{Recapitulación}
+
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+\MyBibItem{Agent-Based Computational Economics}{Agent-Based Computational Economics}{2003}{https://www.researchgate.net/profile/Leigh-Tesfatsion-2/publication/228732927_Agent-based_computational_economics/links/541bd54d0cf2218008c4c247/Agent-based-computational-economics.pdf}
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% --- Anexos ---
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+\clearpage
+\anexo{Historia del desarrollo teórico}\label{anx:historia}
+
+
+\end{document}
