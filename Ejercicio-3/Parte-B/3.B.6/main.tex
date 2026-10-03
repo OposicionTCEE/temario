@@ -1,0 +1,1403 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Teoría del Comercio Internacional (II)\\
+\large Nueva teoría del comercio internacional. Especial referencia a la competencia imperfecta, los rendimientos crecientes y la heterogeneidad empresarial.}
+\author{Marcelo Ortega}
+\date{Marzo 2026}
+\newcommand{\TemaCode}{3B6}
+
+\oldtitle{
+    B.6. Teoría del comercio internacional (II): Desarrollos recientes. Especial referencia a la competencia imperfecta y a los rendimientos crecientes.
+}
+\changerationale{
+    Se elimina la consideración de recientes ya que estos desarrollos datan de los años 80-90 y se remplaza por el nombre de la línea de investigación, ya consolidada. Se incluye una referencia explícita al modelo de Melitz.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     Nuevas teorías del comercio internacional: la fase dos, que enfatiza los rendimientos crecientes a escala como motivo del comercio internacional y que, por tanto, logra explicar los flujos de comercio entre países desarrollados; y la fase tres, que pone el foco en los intercambios comerciales a nivel de empresa.
+
+     Sobre la fase dos, es importante entender la estructura y las condiciones de equilibrio del modelo de competencia monopolística, para así estructurar la discusión, por ejemplo, en torno al modelo de Krugman, enfatizando los motivos que dan lugar al comercio internacional y las consecuencias que tiene sobre el bienestar. Debe hacerse una mención breve pero explícita a la evidencia empírica relacionada con los modelos de competencia monopolística, como el comercio intraindustrial. Los efectos de escala y los efectos de selección pueden utilizarse para hilar la discusión con la tercera fase.
+
+     Esta tercera fase debe motivarse tanto desde un punto vista empírico como teórico. Empírico porque la aparición de datos a nivel de empresa (micro datos) ha pem1itido estudiar las características de las empresas exportadoras, debiendo discutirse muy brevemente qué características las diferencian de las empresas no exportadoras; y teórico porque el modelo de Melitz, al introducir heterogeneidad a nivel de empresa, enfatiza un nuevo canal a través del cual el comercio aumenta el bienestar. El modelo de Melitz es muy importante y el opositor debe conocer su estructura y el mecanismo a través del cual el comercio aumenta la productividad agregada. Al final del modelo, puede hacerse una muy breve mención a otros modelos que tratan otras decisiones de las empresas, como la decisión de hacer inversión extranjera directa, y que utilizan marcos conceptuales parecidos al modelo de Melitz.
+     
+     El opositor debe exponer claramente, además, por qué esta parte de la teoría del comercio internacional se aleja del supuesto de competencia perfecta.
+
+     El tiempo restante puede utilizarse para hacer una breve mención al modelo gravitacional del comercio internacional y a las economías de escala externas a la empresa. En este caso, conviene desarrollar brevemente los mecanismos enfatizados por Marshall que dan lugar a las economías de aglomeración y qué consecuencias tienen para el comercio internacional.
+
+     En las conclusiones, por último, debe hacerse un breve resumen sobre la contribución de las fases dos y tres de la teoría del comercio internacional y destacar las líneas de investigación abiertas que se enmarcan en la ·'nueva nueva teoría del comercio internacional", es decir, en la tercera fase.
+    }
+\vspace{1cm}
+
+\modificaciones{
+    \textcolor{red}{\textbf{OJO!}} Hay que realizar las siguientes modificaciones:
+    \begin{lnum}
+        \item Adecuar notación en base a lo expuesto en Tema 3.B.7 -> Costes, ingresos, etc;
+        \item Modificar el Modelo de KRUGMAN de demanda lineal e introducir el de MELITZ-OTTAVIANO que se basan en la misma idea y permite mostrar el comercio intrasectorial;
+        \item Cambiar la medida de \textbf{productividad} expresada en el modelo de MELITZ por la medida de costes (es un cambio paramétrica) definiendo $1/\varphi=c$, de esta forma obtenemos una mejor representación gráfica y mejoras analíticas.
+    \end{lnum}
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+Pueden distinguirse tres etapas en la evolución de la literatura del comercio internacional. 
+
+En primer lugar, la teoría neoclásica ( 1817-1980), cuyos principales exponentes son los economistas David Ricardo, Eli Hecksher, Bertil Ohlin y Paul Samuelson, entre otros. Esta teoría enfatiza las diferencias tecnológicas y/o de recursos entre países para explicar por qué se produce el comercio internacional. El modelo de Ricardo muestra que el comercio internacional se rige por el patrón de la ventaja comparativa: los países exportan los bienes que producen de una manera más eficiente, mientras que importan los bienes que producen de una forma menos eficiente. El modelo de Hechksher-Ohlin predice que los países exportan los bienes cuya producción requiere intensivamente los factores productivos en los que estos países son abundantes. 
+
+A pesar de su enorme influencia, la teoría neoclásica del comercio internacional, y especialmente el modelo de Hecksher-Ohlin-Samuelson, tiene problemas para explicar varios hechos estilizados del comercio internacional:
+\begin{lnum}
+    \item En primer lugar, la \textbf{tasa de apertura de los países desarrollados ha aumentado} considerablemente en las últimas décadas, mientras que el modelo de Hecksher-OhlinSamuelson predice que el grado de apertura debería caer a medida que los recursos de los países son más parecidos;
+    \item En segundo lugar, los \textbf{países desarrollados comercian mayoritariamente entre ellos}, mientras que la predicción de la literatura neoclásica es que el comercio entre países diferentes es mayor que entre países con recursos y tecnologla similares; y,
+    \item En tercer lugar, una \textbf{buena parte de los intercambios} comerciales corresponden a \textbf{bienes de un mismo sector} (comercio intraindustrial), lo que contrasta con los modelos neoclásicos, que predicen que los países comercian bienes de contenidos factoriales diferentes.
+\end{lnum}
+
+
+Estas deficiencias llevaron a la segunda etapa de la teoría del comercio internacional, denominada la \textit{nueva teoría del comercio internacional} o "\textit{new frade theory}, desarrollada entre los años 80 y 90 gracias a las aportaciones de economistas como Paul Krugman o Elhanan Helpman. La nueva teoría del comercio internacional muestra que los intercambios comerciales responden a los incentivos proporcionados por los rendimientos crecientes de escala, es decir, por las tecnologías de producción que aumentan el producto más que proporcionalmente tras un aumento dado de inputs. Los rendimientos crecientes de escala generan una curva de coste medio decreciente en el nivel de output o, lo que es lo mismo, una producción más eficiente en niveles de producción más altos. De este modo, el comercio internacional o, lo que es lo mismo, mercados más grandes, permite a las empresas operar a escalas de producción más altas y, por tanto, a costes medios más bajos. Esto hace que se maximice el producto mundial y aumente el bienestar de los países. Así, la nueva teoría del comercio internacional permite explicar los altos niveles de comercio entre países similares y la importancia del comercio intraindustrial.
+
+
+\textcolor{red}{\textbf{OJO!}} Las economías de escala pueden ser de dos tipos: internas a la empresa o externas a la empresa. Las economías de escala internas a la empresa suceden cuando el coste medio disminuye a medida que la empresa es más grande. Es decir, son economías de escala que dependen del tamaño de la empresa. Las economías de escala externas a la empresa, por el contrario, suceden cuando el coste medio cae a medida que el número de empresas de la industria es mayor, sin que las empresas grandes por sí mismas tengan necesariamente costes más bajos. Esta distinción es muy importante porque cada uno de los dos tipos de economías de escala tiene implicaciones muy diferentes con respecto a la estructura del mercado. Las economías de escala internas a la empresa suponen una ventaja competitiva para las empresas grandes, ya que son más eficientes que las empresas pequeñas, lo que genera mercados no competitivos (monopolios u oligopolios). Las economías de escala externas a la empresa, al no dar una ventaja competitiva a las empresas más grandes, generan industrias compuestas por muchas pequeñas empresas que compiten en un entorno de competencia perfecta. El hecho de que la modelización de economías de escala internas obligue a abandonar el supuesto de competencia perfecta explica en parte por qué se demoró tanto el desarrollo de estas teorías, ya que tradicionalmente los modelos de comercio internacional estaban basados en entornos de competencia perfecta.
+
+
+Por último, la tercera etapa de la teoría del comercio internacional corresponde a la denominada \textit{nueva nueva teoría del comercio internacional}, desarrollada por economistas como MELITZ, EATON, KORTUM, ANTRAS, HELPMAN, etc. a partir de los primeros años del nuevo siglo. 
+
+Esta teoría enfatiza que son las empresas las que llevan a cabo los intercambios comerciales. De este modo, estudia cuáles son las características de las empresas que exportan, cómo afectan los costes comerciales a sus decisiones, qué implicaciones micro y agregadas tiene el comerciointernacional, etc. Se trata de una teoría que ha revitalizado en buena medida la literatura del comercio internacional, tanto desde un punto de vista teórico como empírico. El mayor avance teórico fue la introducción de heterogeneidad entre empresas en los modelos de competencia monopolística, que genera nuevos canales a través de los cuales el comercio internacional aumenta el bienestar de los países. Desde el punto de vista empírico, el desarrollo de esta literatura se ha visto ayudado en buena medida por la disponibilidad de bases de datos a nivel de empresa, que permiten estudiar numerosos aspectos del comercio internacional desde una perspectiva microeconómica. En este capítulo se presenta una breve descripción de las etapas segunda y tercera de la teoría del comercio internacional. A continuación, se estudia un modelo sencillo de competencia monopolística, que ilustra cómo los rendimientos crecientes de escala generan incentivos para que exista comercio internacional.
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+
+
+
+
+
+
+El supuesto de heterogeneidad entre empresas será introducido por MELITZ (2003), cuyo modelo se estudia a continuación y que ya pertenece a la tercera etapa de la teoría del comercio internacional. En este contexto también se estudian algunos modelos posteriores que inciden en otras decisiones de la empresa, tales como la inversión extranjera directa o la forma organizacional. Por último. al final de este capítulo se hace una breve mención al modelo gravitacional del comercio internacional y a las economías de escala externas a la empresa.
+
+
+\clearpage
+\section{Economías de escala internas: Tecnología}
+\puntosclave{
+    Comprender cómo las economías de escala internas y la diferenciación de productos generan comercio internacional y comercio intraindustrial.
+    
+    Reconocer los nuevos tipos de ganancias del bienestar del comercio intraindustrial.
+    
+    Describir cómo puede la integración económica crear tanto ganadores como, perdedores entre las empresas de una misma industria. 
+    
+    Explicar por qué creen los economistas que el dumping no debe ser condenado como práctica comercial injusta, y los motivos por los que la aprobación de leyes antidumping genera proteccionismo.
+}
+
+Lo primero que debemos comprender de la Nueva Teoría del Comercio Internacional es ¿por qué es necesario una \textit{nueva teoría del comercio internacional}? Parece estúpido pero, como veremos, las razones de su existencia están generalmente mal comprendidas y no se justifica la etiqueta de \textit{nueva} en ningún caso. Lo mejor para comprender dicha distinción es atender al objeto que persigue cada vertiente teórica: 
+\begin{la}
+    \item La Teoría Neoclásica del Comercio Internacional es una Teoría Normativa que tiene como objeto la determinación de las razones que justifican la existencia del comercio. En esencia, esta teoría desarrolla y sitúa en la cumbre de la ciencia económica uno de sus principios más queridos: \textbf{ventaja comparativa};
+    \item Por otro lado, la Nueva Teoría del Comercio Internacional es una teoría semi-normativa (eminemente positiva/descriptiva) cuyo objeto es describir los efectos del comercio internacional (Economía Internacional) tanto desde una perspectiva General (en la que se incide en los efectos sobre el equilibrio exterior y la productividad de la economía), como desde una perspectiva económica (en la que se incide en los efectos escala que genera la liberalización del comercio)
+\end{la}
+
+De estas definiciones podemos reiterar lo que ya prepondera en la mayoría de modelos marco de la ciencia económica: la Teoría Normativa del Comercio Internacional carece de validez empírica suficiente como para poder considerarla un marco a través del cual describir (y anticipar) los patrones observadas. En consecuencia, aunque desarrolla uno de los principios más lógicos (y menos triviales) que ha dado a luz la disciplina económica, resulta insuficiente para guiar las decisiones del policy maker, como mínimo a corto y medio plazo.
+
+Por esta razón, el marco que presentamos debe entenderse como una extensión de la paleta de instrumentos metodológicos de los que dispone la Economía Internacional para abordar el análisis de los patrones comerciales y, en concreto, proporcionar un marco más adecuado a la hora de valorar los impactos de cualquier política comercial. 
+
+\subsection{Economías de escala: Incentivos para el Comercio Internacional}
+En este contexto, la Nueva Teoría del Comercio Internacional pretende en particular mostrar la relación biunívoca que existe entre la presencia de economías de escala y la liberalización comercial. No es raro puesto que, en el mundo real muchas industrias se caracterizan por tener economías de escala de forma que la producción es más eficiente cuanto mayor es la escala a la que se lleva a cabo: cuando existen economías de escala, la duplicación de los factores de producción de una industria provoca que la producción aumente más del doble. Y, ¿cómo influyen las economías de escala en los patrones de comercio internacional? ¿proporcionan un incentivo para el comercio internacional? Visualizarlo es muy sencillo. Imaginemos un mundo formado por dos países, los Estados Unidos y el Reino Unido, ambos con la misma tecnología para producir dos bienes: manufacturas y alimentos. 
+
+\textbf{Insertar gráficos para ejemplificar los efectos de escala}
+
+Por tanto, para aprovechar las economías de escala, cada uno de los países se debe centrar en la producción de un número limitado de bienes. Si cada país produce solo algunos bienes, cada bien puede ser producido a una escala mayor y, en consecuencia, la economía mundial podría en su conjunto producir más cantidad de cada bien. 
+
+Ahora bien, analizar los efectos de las economías de escala sobre la estructura de mercado exige aclarar qué tipo de externalides genera el aumento de escala:\footnote{La distinción entre economías externas e internas puede ilustrarse con un ejemplo hipotético. Imaginemos una industria que, en principio, consta de 10 empresas, cada una de las cuales produce, 100 aparatos, para sumar en total una producción industrial de 1.000. Consideremos dos casos:
+\begin{la}
+    \item En primer lugar, suponemos que la industria duplica su tamaño, por lo que ahora consta de 20 empresas, de manera que cada una produce todavía 100 aparatos. Es posible que los costes de cada empresa disminuyan a consecuencia del redimensionamiento al alza de la industria; por ejemplo, una industria mayor podría permitir la provisión más eficaz de servicios o maquinaria especializados. Si así sucediera, la industria mostraría economías de escala externas. Es decir, la eficacia de las empresas aumenta por el hecho de tener una industria mayor, aunque cada empresa individual conserve su tamaño;
+    \item En segundo lugar, supongamos que la producción de la industria permanece constante en 1.000 aparatos, pero el número de empresas se reduce a la mitad, con lo que cada empresa produciría 200 aparatos. Si en este caso disminuyeran los costes de producción, se producirían economías de escala internas: una empresa es más eficiente si aumenta su producción. 
+\end{la}
+}
+\begin{la}
+    \item \textbf{Economías de escala externas}. Si las economías de escala externas se desarrollan cuando el coste unitario depende del tamaño de la industria, pero no necesariamente de la dimensión de cada una de sus empresas, hablamos de economías de escala externas; y,
+    \item \textbf{Economías de escala internas}. Si las economías de escala se desarrollan cuando el coste unitario depende del tamaño de una empresa individual, pero no necesariamente del de la industria, hablamos de economías de escala internas.
+\end{la}
+
+Las economías de escala externas e internas tienen diferentes repercusiones en lo que concierne a la estructura de las industrias: una industria en la que las economías de escala son solamente externas (es decir, en la que las grandes empresas no tienen ventajas) estará formada generalmente por muchas empresas pequeñas que actuarán en un marco de competencia perfecta; por el contrario, las economías de escala internas proporcionan a las grandes empresas una ventaja de costes sobre las pequeñas y conducen a una estructura de mercado de competencia imperfecta. 
+
+Dado que sus repercusiones en la estructura del mercado son diferentes resulta dificil analizar los efectos del comercio bajo el mismo modelo, por ello analizaremos en primer lugar las consecuencias de ecomías de escale interna y, posteriormente de externas.
+
+\textbf{¿Qué queremos decir?} Primero veremos como las economías de escala internas implican que el coste medio de producción de una empresa se reduce cuándo más produce. Analizando de forma explícita el comportamiento de las empresas individualizadas en un marco de competencia monopolística veremos las consecuencias que el comercio internacional tiene sobre el lado de la oferta (estructura de mercado) y, de manera más agregada, cómo afecta a los procesos de ajuste exterior que se realizan, tanto en términos de competitividad (salarios) como de eficiencia (productividad).\footnote{En el caso de algunos bienes (como agua embotel lada, artículos de papelería, etc.), esas diferendas entre productos pueden ser pequeñas, mientras que en otros (automóviles, teléfonos móviles, etc.), esas diferencias son mucho más importantes. 
+} En síntesis, explicaremos: (i) cómo las economías de escala internas y la diferenciación de productos permiten explicar el comercio internacional entre países desarrollados y, particularmente, los flujos de comercio intraindustrial; (ii) cómo y por qué se generan ganadores y perdedores entre las empresas de una misma industria; y, (iii) por qué las empresas que participan en la economía global (exportadores, contratistas externos, multinacionales) son sustancialmente más grandes y tienen un mejor desempeño que las que no participan en los mercados foráneos.
+
+
+
+\subsection{Marco de Equilibrio Parcial: efectos sobre la estructura competitiva de mercado}
+Las economías de escala interna generan costes medios decrecientes y, por tanto, son una de las causas de una estructura de mercado monopolística. Por tanto analizaremos en primer lugar los efectos de la comercio internacional sobre la estructura competitiva de los mercados usando un enfoque de equilibrio parcial.\footnote{En algunos casos, esta situación se produce cuando existe un número bajo de empresas en competencia en el mercado (como sucede en el campo de la aeronáutica). Se genera así una estructura de mercado denominada oligopolio. En esta situación, cada empresa individual tiene una cuota de mercado para influir en agregados del mercado como serían la producción total de la industria y el precio medio. A su vez, ello influirá en las condiciones de la demanda de las demás compañías. 
+
+Por consiguiente, existirá un incentivo para ajustar los precios como respuesta a la decisión de políticas de precio de la gran empresa, y a la inversa, cuando las restantes compañías tienen también un tamaño suficiente. Así pues, las decisiones sobre precios de las empresas son interdependientes en una estructura de mercado de tipo oligopolio: cada empresa que forma parte de un oligopolio, al fijar su precio, tendrá en cuenta las respuestas esperadas de los competidores. Sin embargo, estas respuestas dependen a su vez de las expectativas de los competidores sobre el comportamiento de la compañía (y estamos, por tanto, en un complejo juego en el que las empresas intentan adivinar las estrategias de las demás). 
+
+[Capítulo 12 de KRUGMAN detalla un modelo en Oligopolio]
+}
+
+\subsubsection{Demanda: CES-isoelástica}
+Para empezar, obtenemos la función de demanda de cada variedad a partir de la Función de Utilidad de un agente representativo que contiene numerario y conjunto de variedades. A partir del problema de maximización del consumidor obtendríamos que la función de demanda inversa de cada variedad viene gobernada por:
+
+\eqblock{
+\begin{aligned}
+    &p_i^h = \alpha - \gamma x_i^h - \eta X^h\quad\Longrightarrow\quad \boxed{x_i^h = \frac{L^h}{\gamma}(p_{\max}^h - p_i^h)}\\[2em]
+    &\text{donde,}\quad p_{\max}=\alpha-\eta X^h=\frac{\gamma\alpha+\eta N^h\bar p}{\eta N^h+\gamma}\qquad 
+    \left\{\begin{aligned}
+        &N^h&&\equiv\text{Variedades en el mercado $h$}\\[0.5em]
+        &\bar p^h&&\equiv \text{Precio medio de las variedades en el país $h$}\\[0.5em]
+        &X^h&&\equiv\text{Gasto total en la cesta de variedades, $h$}
+    \end{aligned}\right.\\[2em]
+\end{aligned}
+}{Demanda: Problema del consumidor y demanda residual (MELITZ y OTTAVIANO, 2008). Política Comercial: Instrumentos y efectos}
+
+Por tanto, la demanda residual de cada variedad depende negativamente de su propio consumo y del consumo agregado. La curva de demanda inversa depende de la elasticidad de sustitución entre variedades y de la elasticidad de sustitución entre bien numerario ($\alpha$) y conjunto de consumo de variedades ($\eta$). Como el precio máximo depende a su vez del número de variedades disponibles en el mercado y de su precio medio, vemos que en el modelo la competencia es endógena y actúa reduciendo $p_{\max}$, a través del precio medio: cuanto menor es $\bar p$, menor es $p_{\max}$ y más dura es la competencia (mayor elasticidad).
+
+
+
+
+
+
+Ahora bien, ¿es coherente suponer que el tamaño del mercado no influirá de ningún modo en los precios? ¿un aumento de la variedad hace que los consumidores distribuyan su consumo en más variedades?
+
+Depende, algunos mercados pueden presentar estas características, con una tecnología de producción relativamente sencilla, márgenes de producción muy reducidos y una gran gama de variedades de productos disponibles, sería lógica suponer que el consumidor representativo (que actúa como \textit{el global}) distribuya su consumo hacia otras variedades que se incorporen al mercado. Pero esto no siempre es así. De hecho, en muchas ocasiones lo que observamos es que la entrada de nuevas variedades diciplina la competencia porque provoca variaciones en los precios. Por ejemplo podemos pensar en el mercado de automóviles. Se trata de una tecnología de producción relativamente anciana, donde no hay mucha variedad (aunque cada vez más) y claramente observamos como la introducción de esta actúa como disciplina del mercado. O dicho de otra forma, estimula la competencia y reduce los precios. 
+
+
+
+\subsubsection{Productor: Asimetría en costes}
+Ahora que tenemos la demanda residual de cada variedad, ¿cómo enfrentan sus decisiones los productores? Desde el punto de vista del productor, una estructura de demanda lineal le obliga a considerar la dispersión de precios dentro de sus decisiones de producción. De esta forma, el productor es consciente que enfrenta una curva de demanda por su variedad de la siguiente forma:
+
+
+
+\subsubsection{Equilibrio}
+
+
+
+
+\paragraph{Condición de libre entrada}
+Una característica particular de la competencia monopolística es que exige que se cumpla la condición de libre entrada en equilibrio. La razón es sencilla, una firma fija sus precios por encima del coste marginal y por tanto obtiene beneficios que derivan de este mark-up. Pero al no existir barreras de entrada más allá de la inversión necesaria requerida para obtener una nivel de productividad operativo, es de esperar que cualquier empresa que sea capaz de operar sin generar pérdidas, lo haga. Por tanto, si existe un conjunto continuo de firmas potenciales que puedan entrar al mercado, lo normal será que el beneficio obtenido por la firma marginal capaz de operar sin generar pérdidas sea precisamente cero. Desarrollar analíticamente esta condición es ahora mucho más complejo. Sin embargo, con la CPO del productor, que determina un mark-up constante sobre el precio y la demanda óptima por variedad del consumidor, atendiendo a la dispersión de precios, acabamos llegando a la siguiente ecuación:\footnote{Para ver la derivación, consultar [\authorfont{Ver Tema 3.B.7}]
+}
+
+\eqblock{
+\begin{aligned}
+    &\text{Condición de libre entrada}:&&
+\end{aligned}
+}{}
+
+Como vemos, resolviendo el problema del productor con esta nueva estructura de demanda las condiciones de equilibrio son muy diferentes: el productor no tiene la posibilidad de fijar un margen constante ya que depende negativamente del tamaño del mercado (y de la sensibilidad a la dispersión de precios), de esta forma se endogeneiza la competencia. Por último, en aras de la simplificación hemos supuesto simetría en precios. 
+
+Resulta comprender este supuesto si consideramos que las ventas totales de la industria, $N$, no se ven afectadas por el precio medio $\bar p$ establecido por las empresas en la industria. Es decir, suponemos que las empresas solo pueden ganar clientes a expensas de otras.\footnote{Este es un supuesto irreal, pero simplifica el análisis y nos ayuda a centrarnos en la competencia entre las empresas. En particular, significa que $N$ es una medida del tamaño del mercado y que, si todas las empresas establecen el mismo precio, cada una vende $N/I$ unidades
+}
+
+
+
+
+
+En concsecuancia, podemos representar gráficamente esta función de la siguiente manera:
+
+\textbf{INTRODUCIR GRÁFICO DE RELACIÓN}
+
+Por tanto, el umbral de eficiencia determina la condición de libre entrada y, en este caso, la expulsión de las firmas se debe exclusivamente a que su eficiencia no les permite reducir los costes lo suficiente como para que la demanda residual que les quede sea suficiente como para cubrir los costes fijos: si su productividad es demasiado baja, su precio óptimo resultará demasiado alto, su demanda demasiado reducida y sus beneficios no alcanzarán para cubrir el coste fijo de producción. 
+
+Pero además, encontramos que la estructura de mercado (y de la demanda) también influye determinantemente en el \textit{cut-off} tecnológico. Sabemos que $\sigma$ nos sirve para evaluar el grado de sustituibilidad que existe entre ambos bienes y, consecuentemente, el poder de mercado que ostentan las empresas. De esta forma, cuándo los bienes son muy sustitutivos, el poder de mercado se reduce, la competencia se acrecenta y el umbral tecnológico aumenta (rota hacia la derecho). ¿Por qué? Precisamente por lo mismo que observamos en el modelo de KRUGMAN, los costes fijos se vuelven relativamente más importantes que los costes operativos, por lo que deberemos ser más eficientes para cubrirlos. De forma análoga, si los bienes son poco sustitutivos, las diferencias en eficiencia afectarán poco, pues los costes fijos serán relativamente menos importantes. Téngase en cuenta que este efecto se trasmite por diferentes vías:
+
+\eqblock{
+\begin{aligned}
+    &\text{Sustituibilidad}:&& 
+    \left\{\begin{aligned}
+        \sigma\to\infty\quad\Longrightarrow\quad \uparrow\varphi:\Pi_j(\varphi)=0\\[0.5em]
+        \sigma\to1\quad\Longrightarrow\quad \downarrow\varphi:\Pi_j(\varphi)=0\\[0.5em]
+    \end{aligned}\right\\[1em]
+    &\text{Sustituibilidad}:&& 
+    \begin{aligned}
+        F\to\infty\quad\Longrightarrow\quad \uparrow\varphi:\Pi_j(\varphi)=0\\[0.5em]
+        \sigma\to0\quad\Longrightarrow\quad \downarrow\varphi:\Pi_j(\varphi)=0\\[0.5em]
+    \end{aligned}\\[1em]&\text{Sustituibilidad}:&& 
+    \begin{aligned}
+        \sigma\to\infty\quad\Longrightarrow\quad \uparrow\varphi:\Pi_j(\varphi)=0\\[0.5em]
+        \sigma\to1\quad\Longrightarrow\quad \downarrow\varphi:\Pi_j(\varphi)=0\\[0.5em]
+    \end{aligned}\\[1em]
+\end{aligned}
+}{} 
+ 
+La cantidad óptima de variedad producida en equilibrio dependerá de:
+\begin{la}
+    \item \textbf{El cociente entre costes fijos y marginales} ($\frac{F}{c}$). Cuanto mayores sean los costes fijos en relación a los costes marginales más se podrán aprovechar las economías de escala. Se del determinante principal ya que es íntegramente parte de la decisión del productor; y,
+    \item \textbf{Preferencia por la variedad} ($\sigma$). En función del grado de amor por la diversidad que presenten los consumidores, el equilibrio se alcanzará con menos o más cantidades producidas de producto. 
+\end{la}
+
+Esto identifica de manera única un equilibrio si el lado izquierdo es una función monótona de $I$, lo cual ocurre si la elasticidad respecto a n tiene signo determinado. Se asume que es negativa, ya que la cantidad consumida de cada variedad disminuye cuando hay más variedades disponibles.
+
+
+\subsubsection{Implicaciones de Política Económica} 
+Con esta relación es fácil comprender las mejoras que proporciona el comercio internacional. 
+
+La idea de que el comercio aumenta el tamaño del mercado subyace en la aplicación del modelo de competencia monopolista al comercio. En las industrias donde hay economías de escala, la variedad de bienes que un país puede producir, y la escala de su producción, están restringidas por el tamaño del mercado. 
+
+Mediante el comercio con otros países y, por tanto, en el contexto de un mercado mundial integrado mayor que cualquier mercado nacional individual, las naciones pueden reducir dichas restricciones. Cada país se puede especializar en la producción de un menor número de productos de lo que lo haría en ausencia de comercio; además, al comprar a otros países bienes que no produce, cada nación puede incrementar simultáneamente la variedad de bienes disponibles para sus consumidores. 
+
+Por tanto, el comercio ofrece una oportunidad de ganancia mutua, incluso cuando los países no difieren en sus recursos o en su tecnología. Supongamos, por ejemplo, que hay dos países, cada uno con un mercado anual para un millón de automóviles. Al comerciar entre sí, estos países pueden crear un mercado conjunto de dos millones de automóviles. En este mercado conjunto se puede producir más variedad de modelos a un coste medio menor que en cada mercado aislado. Se puede utilizar el modelo de competencia monopolista para demostrar que el comercio mejora la relación entre la escala de producción y la variedad de bienes de que disponen las naciones. Comenzaremos por mostrar cómo, en el modelo de competencia monopolista, un mercado mayor lleva a un precio medio menor y a la disponibilidad de una mayor variedad de bienes. Al aplicar este resultado al comercio internacional, observamos que el comercio crea un mercado integrado mayor que cualquiera de los mercados nacionales que comprende. Así pues, la integración de los mercados a través del comercio internacional tiene los mismos efectos que el crecimiento de un mercado en un solo país.
+
+
+
+\begin{specialblock}{Comercio intraindustrial -- KRUGMA, OBSTFELD y MELITZ}
+    La proporción del comercio intraindustrial en el comercio mundial ha crecido de manera continua durante el último medio siglo. 
+    
+    La cuantificación del comercio intraindustrial depende de un sistema de clasificación industrial que agrupa los bienes en distintas industrias. En función de la precisión de la clasificación industrial utilizada (miles de industrias distintas o solo cientos), el comercio intraindustrial representa entre la cuarta parte y ca'si la mitad de los flujos comerciales mundiales. 
+    
+    El comercio intraindustrial desempeña un papel aún más importante en el comercio de bienes manufacturados entre las naciones industrializadas avanzadas, que constituye la mayor parte del comercio mundial. 
+
+    \imagenfit{ComIntraindustrial_MANUAL.png}{Índices de Comercio intraindustrial para industrias estadounidenses, 2009}{\textit{Economía internacional. teoría y Política}. KRUGMAN, OBSTFELD y MELITZ}
+    
+    La Tabla muestra valoraciones de la importancia del comercio intraindustrial para un número de industrias manufactureras de los Estados Unidos en 2009. El indicador que se muestra es el comercio intraindustrial respecto al comercio total.\footnote{El intervalo de valores va desde 0,97 para maquinaria metalúrgica y productos químicos inorgánicos (industrias en las que las exportaciones e importaciones de los Estados Unidos son casi iguales) hasta 0,10 para el calzado, una industria en la que los Estados Unidos realizan grandes importaciones pero prácticamente no exportan. El indicador tomaría un valor nulo para una industria en la que los Estados Unidos fueran solo un exportador o solo un importador, pero no ambas cosas a la vez; tomaría el valor 1 en una industria en la que las exportaciones estadounidenses fueran exactamente iguales a sus importaciones. 
+    
+    Además muestra que el comercio intraindustrial es un elemento muy importante del comercio estadounidense en muchas industrias distintas. Esas industrias tienden a ser aquellas que producen bienes manufacturados sofisticados, como productos químicos y farmacéuticos y maquinaria especializada. Estos bienes son exportados fundamentalmente por países avanzados y probablemente disfrutan de importantes economías de escala en la producción. En el otro extremo de la escala se encuentran las industrias con múy poco comercio intraindustrial, que suelen producir productos intensivos en trabajo, como calzado y ropa. Se tratá de bienes que los Estados Unidos importan fundamentalmente de países en desarrollo para los que la ventaja comparativa es el determinante principal del comercio entre los Estados Unidos y esos países.
+    }
+
+    ¿Qué sucede con los nuevos tipos de ganancias de bienestar gracias a una mayor variedad de productos y a las economías de escala? Un reciente artículo de BRODA, de Duquesne Capital Management, y de D. WEINSTEIN, de la Universidad de Columbia, estima que el número de productos disponibles en las importaciones estadounidenses se ha triplicado en el periodo de 30 años entre 1972 y 2001. Además, estiman que esta mayor variedad de productos representa para los consumidores estadounidenses una ganancia de bienestar igual al 2,6\% del PIB estadounidense.
+    
+    También se han medido las ganancias del comercio de una mayor integración económica para otros ejemplos reales. Uno de los más destacados se ha producido en Europa a lo largo del último medio siglo. En 1957, los principales países de Europa occidental crearon un área de libre comercio para los productos manufacturados denominada Mercado Común o Comunidad Económica Europea (CEE). (El Reino Unido entró más tarde en la CEE, en 1973). El resultado fue un rápido crecimiento comercial dominado por el comercio intraindustrial. El comercio dentro de la CEE creció a doble velocidad que el conjunto del comercio mundial durante la década de 1960. Esta integración se amplió lentamente hasta convertirse en la actual Unión Europea. Cuando en un subconjunto de estos países (en su mayor parte, los que habían creado la CEE) se adoptó una divisa común, el euro, en 1999, el comercio intraindustrial creció aún más entre ellos (incluso con respecto a otras naciones de la Unión Europea). Los últimos estudios también concluyen que la adopción del euro ha propiciado un incremento sustancial del número de productos distintos intercambiados dentro de la Eurozona.
+\end{specialblock}
+
+
+
+\subsection{Marco Equilibrio General: efectos sobre el bienestar}
+¿Por qué sucede este cambio? ¿Quién lo sufre y qué impacto tiene sobre la economía? Este ejemplo nos ha servido para ver gráficamente qué impacto tiene la apertura comercial, el aumento del tamaño del mercado, de las variedades y la reducción agregada del número de empresas. Sin embargo no es suficiente para dar una explicación de por qué se experimenta. 
+
+Recordemos que, en los dos desarrollos previos, hemos supuesto estructuras simétricas de costes. Dicho de otra forma, hemos supuesto que todas las empresas eran igual de \textit{buenas}. Puede resultar un supuesto plausible para situaciones en las que tratamos con tecnologías muy básicas y el mercado está atomizado, con una estructura cercana a la ocmpetencia perfecta. Sin embargo, en muchos sectores del mundo real el rendimiento varía enormemente entre las distintas empresas, por lo que los efectos de una mayor competencia del comercio no son, en modo alguno, irrelevantes: la competencia tiende a perjudicar más a las empresas con peor desempeño, porque son aquellas que se ven obligadas a salir del mercado. 
+
+A continuación relajaremos el supuesto de simetría que hemos impuesto en nuestro anterior análisis del modelo de la competencia monopolista para poder analizar que el aumento del tamaño del mercado afecta a las empresas de formas diferentes. 
+
+\subsubsection{Demanda: CES-isoelástica}
+El modelo asume la misma forma funcional para las preferencias que el resto de los modelos estudiados, esto es, unas preferencias con una elasticidad de sustitución constante (CES-isoelástica). De este modo, la demanda de cada variedad es:
+
+\eqblock{
+\begin{aligned}
+    &\text{Demanda de $i$}:\qquad \boxed{x_i=\underbrace{\frac{m_0S(\mathbf p)}{\mathbf p}}_{\text{\scriptsize D-base}}\cdot \underbrace{\left(\frac{\mathbf p}{p_i}\right)^\sigma}_{\text{\scriptsize D-relativa}}}\quad\Longrightarrow\quad X_i^D=\frac{p_i^{-\sigma}}{\mathbf p^{1-\sigma}}N
+\end{aligned}
+}{}
+
+Ahora bien, si los productores tienen diferentes grados de eficiencia: ¿deberían fijar distintos precios? Existen dos alternativas posibles de abordar el problema (y sus consecuencias):
+\begin{lnum}
+    \item \textbf{Precios endógenos}. Si las empresas se enfrentan a diferente tecnología lo adecuado y coherente es que exista mucha dispersión de precios. Esta dispersión de precios hará que el consumidor acapare más demanda de la variedad que resulte relativamente más barata y, en consecuencia, es posible que muchas empresas sean expulsadas del mercado porque la demanda residual que les quede no pueda cubrir los costes fijos que enfrentan: condición de libre entrada con barreras de entrada tecnológicas; y,
+    \item \textbf{Precios exógenos}. Otra forma de abordar el problema es establecer una fijación de precios \textit{ligeramente} exógenos. No es el modelo canónico (por lo que no lo abordaremos) pero permite aproximar mejor algunas de las dinámicas que se observan en la realidad. Si la dispersión de precios es \textit{relativamente} pequeña, las mejoras en eficiencia se traducen directamente en beneficios. Estos beneficios permiten a la empresa llevar a cabo operaciones estratégicas cuyo fin puede ser, y a menudo es, aumentar el poder de mercado. Entre otras: (i) aumentar sus inversiones en inmovilizado intangible; (ii) explicar el gran aumento experimentado en la sexta oleada de fusiones y adquisiciones; y, (iii) 
+\end{lnum}
+
+\subsubsection{Productores: Asimetrías en costes}
+
+
+\paragraph{Implicaciones de Política Económica: Apertura al comercio}
+Entonces, ¿qué sucede cuando nos abrimos al comercio? Este modelo tiene consecuencias muy diversas cuando abrimos nuestro mercado al comercio internacional. Por tanto, lo mejor que podemos hacer es descomponer los efetos por partes.
+
+En primer lugar, una apertura al comercio internacional disminuye el índice agregado de precios (es decir, el deflactor del bienestar o coste mínimo necesario para adquirir una unidad real del mercado de variedades):
+
+\eqblock{
+\begin{aligned}
+    &\text{Apertura}: &&\underset{\substack{\\[0.5em]\\B_a<B}}{\mathbf p_a>\mathbf p_x}\Longrightarrow\underset{\text{\scriptsize reduce la pendiente ($B$) de la recta de beneficios}}{\uparrow \varphi=\sqrt[\sigma-1]{\frac{F}{B_a N}}}\\[1em]
+    &\underset{\text{\scriptsize condición libre entrada}}{\text{Expulsión}}:&&\forall \varphi\in[\varphi_a,\varphi_x)
+\end{aligned}
+}{}
+
+Las empresas que son lo suficientemente productivas como para permancer en el mercado tienen dos opciones: (i) suministrar productos al mercado interior, únicamente; o, (ii) exportar y enfrentar los costes que esto supone. Si las empresas deciden exportar, enfrentan un coste marginal $\tau/\varphi>1/\varphi$ por cada unidad vendida y un sobrecoste fijo $F_x$. Desarrollando nuevamente el problema para estas nuevas condiciones llegamos a:
+
+\eqblock{
+\begin{aligned}
+    &\text{Iceberg costs}:&&B_{ext}=\left[\frac{\sigma^{-\sigma}}{\tau^{\sigma-1}\,\mathbf p^{1-\sigma}_d(\sigma-1)^{1-\sigma}}\right]\Longrightarrow B_a>B_{ext}\\[1em]
+    &\text{Costes fijos}:&&F_{ext}>F_a
+\end{aligned}
+}{}
+
+En definitiva, tenemos dos tipos de empresas, las que operan en el mercado doméstico y las que operan en el mercado exterior, desde un punto de vista comparativo, acabamos obteniendo que:\footnote{Como se ha señalado en la sección 4. 1, existe una amplia literatura empírica que muestra que las empresas exportadoras son más productivas que las empresas que sólo venden en el mercado interno. Existen al menos dos mecanismos que pueden dar lugar a este resultado. En primer lugar. auto selección: sólo las empresas más productivas pueden competir en los mercados internacionales. En s_egundo lugar, aprendizaje por exportar o learning-by-exporting: las empresas que comienzan a exportar adquieren conocimientos y habilidades por este hecho que les permiten aumentar su productividad. El primer mecanismo ha sido ampliamente documemado en la literatura. La evidencia del segundo mecanismo es menor, aunque existen artículos que lo han documentado, véase por ejemplo De Loecker (2007).
+}
+
+\eqblock{
+\begin{aligned}
+    &\text{Exportadoras}:&&\Pi_d(\varphi)=0\Longrightarrow\varphi=\sqrt[\sigma-1]{\frac{F}{B_aN}}\\[1em]
+    &\text{Domésticas}:&&\Pi_d(\varphi)=0\Longrightarrow\varphi=\sqrt[\sigma-1]{\frac{F}{B_{ext}N_{ext}}}
+\end{aligned}
+}{}
+
+Gráficamente, las condiciones resultantes serían:
+
+\textcolor{red}{\textbf{OJO!} -- En la siguiente gráfica se puede entender bien los efectos de cambios paramétricos en el modelo y la interrelación entre variables:} \href{https://www.geogebra.org/m/cyzwwhak}{GeoGebra (Elaboración propia)}
+
+Por tanto, se establecen unas relaciones estructurales que permiten valorar una gran cantidad de sectores con una única especificación. Brevemente podemos decir que dentro de un sector, su potencial exportador está íntimamente ligado a:
+\begin{lnum}
+    \item \textbf{Costes marginales de exportación}. La importancia relativa que adquieran estos costes marginales de exportación. Lo cual es perfectamente comrensible puesto que sectores con unos costes de exportación (relativos) muy altos no es de esperar que lo hagan. Por ejemplo, la industria del cemento;
+    \item \textbf{Grado de sustituibilidad}. De la misma forma, mercados de variedades altamente sustitutivas tendrán más dificultad para enfrentar este empréstito, puesto que la competencia será más feroz, los márgenes más ajustados y, en consecuencia, la importancia relativa de los costes fijos más elevada.
+\end{lnum}
+
+En todo caso, si el sector de análisis tiene una estructura económica adecuada para el comercio exterior, entonces las disparidades/desigualdades intrasectoriales que observemos estarán íntimamente ligadas a:
+\begin{lnum}
+    \item \textbf{Eficiencia}. El nivel de eficiencia de la empresa, puesto que, de forma unívoca, la apertura al comercio reduce el índice de precios, ajusta los márgenes y, en consecuencia, exige mayor productividad;
+    \item \textbf{Tamaño de mercado}. El incremento agregado del tamaño de mercado también será determinante a la hora de establecer el umbral mínimo de eficiencia para exportar, puesto que un incremento pequeño del mercado no produce la suficiente disminución en la importancia relativa de los costes fijos como para, per se, generar incentivos para la exportación (incidencia relativa menor en el umbral de eficiencia).
+\end{lnum}
+
+
+Ahora que conocemos todo el desarrollo del modelo, ¿qué implicaciones de Política Económica proporciona?
+
+En este sentido, es fácil observar una de las conclusiones clave del modelo: abrirnos al comercio, amplía nuestros mercados, aumenta el número de variedades y, en consecuencia, mejora el bienestar.
+
+\eqblock{
+\begin{aligned}
+    \Delta N=(n_1\cdot E)_{dom}+(n_2\cdot E)_{ext}\quad\Longrightarrow\quad \underset{\text{\scriptsize incrmenta variedades y aumenta bienestar}}{\Delta I\quad\Longrightarrow\quad \downarrow \mathbf p}
+\end{aligned}
+}{}
+
+Pero, ¿por qué? ¿cómo afecta el número de variedades al bienestar del consumidor? Este es un concepto tremendamente innovador de la modelización de la competencia monopolística a la DIXIT-STIGLITZ. Como vemos, el problema dual del consumidor nos proporciona un índice de precios que, conceptualmente, nos indica el coste mínimo necesario para adquirir una unidad real de utilidad en términos de la cesta de variedades. Como hemos visto, la utilidad en el modelo se adquiere mediante el agregado de consumo en variedades que el consumidor puede permitirse: si el gasto mínimo necesario para adquirir una unidad de $V(\cdot)$ es $q(\mathbf p)\equiv \mathbf p$, entonces, dado un gasto $E=m_0S(\mathbf p)$ la cantidad total del agregado que puede comprar será $V(\cdot)=\frac{E}{\mathbf p}$. Como sabemos que el índice de precios es una función del número de variedades y la elasticidad de sustitución entre variedades, podemos ver como este coste mínimo cambia en función de sus parámetros:
+
+\imagenfit{IndicePrecios_DIXIT_STIGLITZ.png}{Índice de precios $q(\mathbf p)$ como función del número de variedades $I$ (asumiendo precio constante, $p_i=p=1$)}{Apuntes ICEX-CECO. Tema 3.A.18}
+
+Esta es precisamente una de las conclusiones clave del modelo de competencia monopolística bajo esta especificación CES: la utilidad del consumidor no depende directamente del poder de mercado, ni del número de variedades ni del grado de sustituibilidad entre estas. Por el contrario, serán las interrelaciones entre estas variables las que determinen el bienestar del consuimdor: 
+\begin{la}
+    \item \textbf{Alto grado de sustituibilidad} ($\sigma\to\infty$). Si las variedades son altamente sustituitivas y, por tanto, el poder de mercado es reducido, añadir nuevas variedades aporta muy poco al consumidor. ¿Por qué? Porque cuando las variedades son ya altamente sustitutivas y la intensidad competitiva ya viene fijada por el grado de sustituibilidad, el coste mínimo para adquirir una nueva unidad de utilidad se mantiene casi inalterado; y,
+    \item \textbf{Bajo grado de sustituibilidad} ($\sigma\to1$). Por el contrario, cuando las variedades son mínimamente sustitutivas y, por tanto, el poder de mercado es grande, un aumento del número de variedades tendrá una importancia capital en el bienestar. ¿Por qué? Porque el coste de alcanzar una unidad más de bienestar se reduce drásticamente por la capacidad que adquiere el consumidor de distriuir su gasto entre un mayor número de variedades lo que, dadas las preferencias, genera utilidad.
+\end{la} 
+
+Por tanto, la gran aportación de esta especificación será la separación nítida que el modelo permite entre el número de variedades y el poder de mercado. Aumentar $\uparrow \#I$ siempre mejora el bienestar vía un menor índice de precios ($\downarrow q(\mathbf p)$), pero no por sus efectos sobre el poder de mercado (que viene ya fijado por $\sigma$): no estimula la competencia. Esto explica por qué pueden coexistir una gran variedad de productos con márgenes muy positivos, y viceversa: el tamaño del mercado ($I$, intersectorial) se corresponde con el efecto variedad y la intensidad competitiva ($\sigma$, intrasectorial, $\sigma$) el efecto preferencias; afectando cada uno a márgenes distintos: margen extensivo (cuántas variedades existen) y el margen intensivo (cómo compiten entre sí), el primero afecta al bienestar a través del índice de precios, mientras que el segundo determina el poder de mercado y está fijado por la elasticidad de sustitución.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\subsection{Implicaciones de Política Económica: Visión general}
+A lo largo de la sección anterior hemos visto diferentes desarrollos que permiten abordar el análisis sectorial del comercio internacional. Es fácil subestimar su importancia, sobretodo, habida cuenta de las complejas derivaciones análiticas que requieren. Pero nada más lejos de la verdad. Desde una perspectiva de Política Económica, los desarrollos anterior permiten analizar de una forma tremendamente minuciosa y real las condiciones del comercio internacional desde un enfoque parcial. 
+
+Para ilustrarlo con un ejemplo podemos pensar en la utilidad que esto supone a la hora de valorar el impacto de los tratads de libre comercio, firmados o propuestos. Pensémos en las materias que se están negociando en el Acuerdo UE-Mercosur, ¿cómo podemos valorar su impacto?
+
+Por ejemplo, el sector alimentario (se puede entrar en todo el detalle que se quiera: carne, trigo, soja, etc.) es un sectr con características muy parecidas al estudiado en primer lugar. Con una elevado elasticidad de sustitución, márgenes reducidos y tecnología de producción sin grandes asimetrías, es razonable suponer que un aumento del tamaño de mercado no tendrá gran impacto en los precios. No obstante, un aumento del tamaño de mercado tendrá un impacto significativo en la importancia relativa de los costes medios y, consecuentemente, en el número de variedades disponibles para el consumidor. Si suponemos que un mayor número de variedades mejora el bienestar de todos, tal y como establece el modelo, entonces cabe concluir que se trata de una mejora positiva en términos de bienestar (desde la óptica del consumidor).
+
+Por el contrario, un análisis de impacto en otros sectores, por ejemplo el automovilístico, sería preferible realizarlo mediante las herramientas proporcionador por el modelo de MELITZ. Con asimetrías profundas en costes, márgenes razonables y menor número de variedades (menor grado de sustituibilidad), la apertura comercial tendría grandes implicaciones en la segmentación de mercado y las desigualdades intrasectoriales. Generando claramente ganadores y perdedores en función de la eficiencia productiva, los costes de transporte y el grado de sustituibilidad del sector. No obstante, como se ha visto, las ganancias desde la óptica del bienestar del consumidor serían mucho mayores. Esto es así porque el índice de precios (o deflactor de la utilidad), dada una estructura de mercado con menor grado de elasticidad de sustitución, disminuye rápidamente con el aumento del número de variedades disponibles, por lo que, en términos agregados, esto supone ganancias mucho mayores que en el caso anterior.
+
+
+Las economías de escala interna son una de las causas de una estructura de mercado monopolística. Ahora bien, esta condición es necesaria, no suficiente, puesto que sin barreras de entrada suficientes la aparición de rentas monopolísticas en una industria provocará la entrada de competidores. Existen muchas formas de explicar costes medios decrecientes, pero independientemente de su causa, lo que sabemos es que en la mayoría de casos en los que están presentes, el tipo de competencia que mejor se ajusta es el de \textbf{competencia monopolística}.\footnote{En algunos casos, esta situación se produce cuando existe un número bajo de empresas en competencia en el mercado (como sucede en el campo de la aeronáutica). Se genera así una estructura de mercado denominada oligopolio. En esta situación, cada empresa individual tiene una cuota de mercado para influir en agregados del mercado como serían la producción total de la industria y el precio medio. A su vez, ello influirá en las condiciones de la demanda de las demás compañías. 
+
+Por consiguiente, existirá un incentivo para ajustar los precios como respuesta a la decisión de políticas de precio de la gran empresa, y a la inversa, cuando las restantes compañías tienen también un tamaño suficiente. Así pues, las decisiones sobre precios de las empresas son interdependientes en una estructura de mercado de tipo oligopolio: cada empresa que forma parte de un oligopolio, al fijar su precio, tendrá en cuenta las respuestas esperadas de los competidores. Sin embargo, estas respuestas dependen a su vez de las expectativas de los competidores sobre el comportamiento de la compañía (y estamos, por tanto, en un complejo juego en el que las empresas intentan adivinar las estrategias de las demás). 
+
+[Capítulo 12 de KRUGMAN detalla un modelo en Oligopolio]
+}
+
+\textbf{NOTA.-} En este Tema nuestro interés se encuentra en determinar el comportamiento agregado del sector y no tanto las vicisitudes particulares de la competencia monopolística. Por tanto, saltaremos directamente a los resultados agregados de una forma \textit{compatible} con el modelo propuesto en el [\authorfont{Ver Tema 3.A.18}]
+
+\subsubsection{Demanda: CES-isoelástica}
+La función de demanda del mercado se obtiene a partir de un problema de maximización sobre la función de utilidad de un agente representativo. Esta función de utilidad, separable y aditiva, se evalua sobre dos bienes, el numerario y el no numerario, aunque lo que nos interesa es la estructura de la función de subutilidad que caracteriza el consumo de variedades ($V(\cdot)$).\footnote{\footnote{El supuesto de la separabilidad de la función de utilidad provoca que el porcentaje de gasto al grupo de productos diferenciados y al numerario dependa únicamente del índice de precios del grupo de bienes diferenciados (puesto que el precio del bien numerario es la unidad).
+}
+} Consideraremos, por ahora, que es simétrica y de tipos CES-isoelástica.\footnote{Recuérdese que la elasticidad de sustitución entre dos bienes recoge el porcentaje de variación en la proporción en la que se consume un par de bienes ante variaciones porcentuales de su precio relativo. La función de subutilidad CES permite reflejar el supuesto de simetría.
+} Podemos formular y derivar los resultados del problema de la siguiente forma:\footnote{Para ver el desarrollo completo [\authorfont{Ver Tema 3.A.18}]
+}
+
+\eqblock{
+\begin{aligned}
+    &\boxed{
+    \begin{aligned}
+        &\max U=U\left(m,\underbrace{\;\left\{\sum_{i=1}^Ix_i^\rho\right\}^{\frac{1}{\rho}}}_{V(\cdot)}\right)\\[1em]
+        &\text{s.a.}\quad m+\sum_{i=1}^Ip_i\cdot x_i\leq m_0
+    \end{aligned}
+    }\qquad \substack{\text{Problema dual}\\\text{del consumidor}}:
+    \quad \Longrightarrow\underset{\text{\scriptsize deflactor de utilidad: coste mínimo de una unidad más}}{\boxed{\mathbf p=\left(\sum_{i=1}^Ip_i^{\frac{\rho}{(\rho-1)}}\right)^{\frac{(\rho-1)}{\rho}}}}\\[1em]
+    &\underset{\text{\tiny$\left\{\begin{aligned}
+        &\text{(1) \% $m_o$ en no numerario:}&&\boxed{g=m_0\frac{S(\mathbf p)}{\mathbf p}}\\[0.5em]
+        &\text{(2) Cantidad de cada variedad:}&&\boxed{x_i=g\cdot\left(\frac{\mathbf p}{p_i}\right)^{\sigma}}\qquad \text{donde, }\;\sigma=\frac{1}{1-\rho}
+    \end{aligned}\right\}$}}{\text{(General: 2 Etapas)}}\\[0.5em]
+    &\\[1em]
+    &\text{Demanda de $i$}:\qquad \boxed{x_i=\underbrace{\frac{m_0S(\mathbf p)}{\mathbf p}}_{\text{\scriptsize D-base}}\cdot \underbrace{\left(\frac{\mathbf p}{p_i}\right)^\sigma}_{\text{\scriptsize D-relativa}}}
+\end{aligned}
+}{Problema de maximización del consumidor: Utilidad. Competencia monopolística (variedades endógenas): DIXIT-STIGLITZ}
+
+Como vemos, desarrollando el problema del consumidor obtenemos la cantidad demanda de cada variedad. Esta demanda se pued descomponer en dos tipos: una demanda base que corresponde a la cantidad de real de variedades que el consumidor puede comprar dado el deflactor de precios, ponderado por una demanda relativa que específica cuánta variedad adquirirá dado el precio relativo de esta con referencia al índice de precios.
+
+No obstante, por ahora consideraremos que se dan condiciones d simetría por parte de los productores. Es decir, todos los productores fijan el mismo precio y, en consecuencia, producen la misma cantidad:
+
+\eqblock{
+\begin{aligned}
+    &\text{Simetría}\Longrightarrow 
+    \left\{\begin{aligned}
+        &(1)\,\,p_i=p_j,\quad x_i=x_j,\quad \forall (i\neq j)\in I\\[0.5em]
+        &(2)\,\,\mathbf p=p\cdot(I)^{-\frac{1}{\sigma-1}}\\[0.5em]
+        &(3)\,\,\text{Considerando}:m_0S(\mathbf p):=E
+    \end{aligned}\right\}
+    \underset{\text{\tiny (sustituyendo y operando)}}{\Longrightarrow}\quad \boxed{x_i=\frac{E}{pI}}\\[1em]
+    &\Longrightarrow\underset{\text{\scriptsize depende del tamaño mercado: $N=nE$}}{\text{Demanda agregada}}:\boxed{X_i^D=\frac{N}{pI}}
+\end{aligned}
+}{}
+
+De esta forma, podemos obtener la demanda agregada de la variedad como función del tamaño del mercado.
+
+\subsubsection{Productor: Simetría en costes}
+Ahora que conocemos la estructura de la demanda, pasemos a analizar el comportamiento y estructura de la oferta. Asumiendo que todas las empresas presentan la misma estructura de costes, con rendimientos crecientes a escala ($F_j$, costes fijos), y que cada empresa produce una única variedad,\footnote{La función de costes de la empresa tipo puede entenderse como: $CT(x_i)=C(x_i)+F$
+
+Por tanto, no hay economías de alcanca. Recordar que todas tienen la misma estructura de costes por lo que no hay subíndices.
+} el problema de maximización del productor nos conduce al siguiente resutado:
+
+\eqblock{
+\begin{aligned}
+    &\text{Función objetivo}:&&\Pi(x_j)= p\,x_j-c\,x_j-F\\[0.5em]
+    &\text{CPO}:&&IMg_{x_j}=CMg_{x_j}\quad \Longrightarrow\quad  \underset{\text{\scriptsize igual $\forall j$, por CES pura}}{\boxed{p=\frac{\sigma}{\sigma-1}c}}
+\end{aligned}
+}{Problema de maximización del productor: Beneficios. Competencia monopolística (variedades endógenas): DIXIT-STIGLITZ}
+
+Ahora bien, esta información será únicamente importante para conocer el mark-up, pero no nos indica cuántas variedades (y empresas) operarán en el mercado. Asumiendo, de hecho, que no existen barreras a la entrada y, por tanto, que cualquier potencial productor puede entrar asumiendo únicamente los costes fijos, necesitamos más información.
+
+\paragraph{Condición de libre entrada}
+Sabeos que, dada la estructura de preferencias y el supuesto de simetría, la cantidad vendida de cada variedad disminuye a medida que aumentan las variedades disponibles. Con esta disminución, disminuye también en el beneficio y, en consecuencia, más importancia relativa adquieren los costes medios.
+
+Podemos suponer que, en una situación cualquiera, los beneficios extraordinarios atraen a los competidores. De esta forma, la condición de libre entrada nos permite conocer la cantidad de variedades (y empresas) que habrá en equilibrio, puesto que el beneficio a título individual debe ser nulo:
+
+\eqblock{
+\begin{aligned}
+    &\text{Condición de libre entrada}\Longrightarrow\;
+    \left\{\begin{aligned}
+        &\text{Si,}\;\;\Pi_j>0\Rightarrow &&\uparrow \#X=(x_1,\dots,x_I)\\[0.5em]
+        &\text{Si,}\;\;\Pi_j<0\Rightarrow &&\downarrow \#X=(x_1,\dots,x_I)\\[0.5em]
+        &\text{Si,}\;\;\Pi_j=0\Rightarrow &&\text{Eq:}\;\#X=(x_1,\dots,x_I)
+    \end{aligned}\right.\\[1em]
+    &\Pi(x_j)=0\iff (p-c)x_j=F\\[1em]
+    &\Longrightarrow\underset{\text{\scriptsize depende de la condición de libre entrada}}{\text{Oferta agregada}}:\boxed{X_j^S=\frac{F}{c}(1-\sigma)}
+\end{aligned}
+}{}
+ 
+Por tanto, la cantidad óptima de variedad producida en equilibrio dependerá de:
+\begin{la}
+    \item \textbf{El cociente entre costes fijos y marginales} ($\frac{F}{c}$). Cuanto mayores sean los costes fijos en relación a los costes marginales más se podrán aprovechar las economías de escala. Se del determinante principal ya que es íntegramente parte de la decisión del productor; y,
+    \item \textbf{Preferencia por la variedad} ($\sigma$). En función del grado de amor por la diversidad que presenten los consumidores, el equilibrio se alcanzará con menos o más cantidades producidas de producto. 
+\end{la}
+
+Esto identifica de manera única un equilibrio si el lado izquierdo es una función monótona de $I$, lo cual ocurre si la elasticidad respecto a n tiene signo determinado. Se asume que es negativa, ya que la cantidad consumida de cada variedad disminuye cuando hay más variedades disponibles.
+
+\subsubsection{Equilibrio: Vaciamiento de mercado(s)}
+Ahora que tenemos tanto las condiciones de consumo como las de producción debemos encontrar el equilibrio del mercado. Podemos intuir que, por la especificación del problema, habrán de cumplirse dos condiciones: (i) que la cantidad consumida de cada variedad sea igual a la cantidad producida de esta (vaciamiento intersectorial); y, (ii) que la cantidad consumida de todas las variedades sea igual a la cantidad producida de todas las variedades (vaciamiento intrasectorial). Por tanto:
+
+\eqblock{
+\begin{aligned}
+    &\underset{\text{\tiny Mercado de variedades, determinado por el tamaño del mercado}}{\text{Condición de Demanda (\textit{intersectorial})}}: && X_i^D=X_j^S\qquad\Longrightarrow \quad \boxed{X_i^D=\frac{N}{pI}=X_j^S}\\[1em]
+    &\underset{\text{\tiny Mercado de la variedad, determinado por el poder de mercado del productor}}{\text{Condición de Oferta (\textit{intrasectorial})}}: && X_i^D(\sigma)=X_j^S(\mu)\quad\underset{\text{\scriptsize sustituimos $p^*$}}{\Longrightarrow}\quad \frac{N}{\left(\frac{\sigma}{\sigma-1}c\right)I}=\frac{F}{c}(1-\sigma)\\[1em]
+    &\text{Equilibrio}:\qquad N=\sigma FI\quad\Longrightarrow\quad\boxed{I=\frac{N}{F\sigma}}
+\end{aligned}
+}{}
+
+Por tanto, obtenemos la ecuación de el número de empresas (o variedad) como función de los costes fijos, la elasticidad de sustitución y, sobretodo, el tamaño de mercado. Es muy importante comprender como hemos llegado hasta aquí. Gracias a la condición de vaciamiento intersectorial, que depende del tamaño del mercado, hemos conseguido igualar la demanda de cada variedad a la condición de libre entrada del mercado. Por otro lado, gracias a la condición de vaciamento intrasectorial, que depende únicamente del poder de mercado que ostentan las empresas, es decir, la elasticidad de la demanda determinada por el grado de sustituibilidad entre variedades, hemos conseguido igualar la demanda residual de cada variedad al poder monopolístico que ostenta cada productor en su variedad. 
+
+\paragraph{Implicaciones de Política Económica: Apertura comercial}
+Ahora que conocemos todo el desarrollo del modelo, ¿qué implicaciones de Política Económica proporciona?
+
+En este sentido, es fácil observar una de las conclusiones clave del modelo: abrirnos al comercio, amplía nuestros mercados, aumenta el número de variedades y, en consecuencia, mejora el bienestar.
+
+\eqblock{
+\begin{aligned}
+    \Delta N=(n_1\cdot E)_{dom}+(n_2\cdot E)_{ext}\quad\Longrightarrow\quad \underset{\text{\scriptsize incrmenta variedades y aumenta bienestar}}{\Delta I\quad\Longrightarrow\quad \downarrow \mathbf p}
+\end{aligned}
+}{}
+
+Pero, ¿por qué? ¿cómo afecta el número de variedades al bienestar del consumidor? Este es un concepto tremendamente innovador de la modelización de la competencia monopolística a la DIXIT-STIGLITZ. Como vemos, el problema dual del consumidor nos proporciona un índice de precios que, conceptualmente, nos indica el coste mínimo necesario para adquirir una unidad real de utilidad en términos de la cesta de variedades. Como hemos visto, la utilidad en el modelo se adquiere mediante el agregado de consumo en variedades que el consumidor puede permitirse: si el gasto mínimo necesario para adquirir una unidad de $V(\cdot)$ es $q(\mathbf p)\equiv \mathbf p$, entonces, dado un gasto $E=m_0S(\mathbf p)$ la cantidad total del agregado que puede comprar será $V(\cdot)=\frac{E}{\mathbf p}$. Como sabemos que el índice de precios es una función del número de variedades y la elasticidad de sustitución entre variedades, podemos ver como este coste mínimo cambia en función de sus parámetros:
+
+\imagenfit{IndicePrecios_DIXIT_STIGLITZ.png}{Índice de precios $q(\mathbf p)$ como función del número de variedades $I$ (asumiendo precio constante, $p_i=p=1$)}{Apuntes ICEX-CECO. Tema 3.A.18}
+
+Esta es precisamente una de las conclusiones clave del modelo de competencia monopolística bajo esta especificación CES: la utilidad del consumidor no depende directamente del poder de mercado, ni del número de variedades ni del grado de sustituibilidad entre estas. Por el contrario, serán las interrelaciones entre estas variables las que determinen el bienestar del consuimdor: 
+\begin{la}
+    \item \textbf{Alto grado de sustituibilidad} ($\sigma\to\infty$). Si las variedades son altamente sustituitivas y, por tanto, el poder de mercado es reducido, añadir nuevas variedades aporta muy poco al consumidor. ¿Por qué? Porque cuando las variedades son ya altamente sustitutivas y la intensidad competitiva ya viene fijada por el grado de sustituibilidad, el coste mínimo para adquirir una nueva unidad de utilidad se mantiene casi inalterado; y,
+    \item \textbf{Bajo grado de sustituibilidad} ($\sigma\to1$). Por el contrario, cuando las variedades son mínimamente sustitutivas y, por tanto, el poder de mercado es grande, un aumento del número de variedades tendrá una importancia capital en el bienestar. ¿Por qué? Porque el coste de alcanzar una unidad más de bienestar se reduce drásticamente por la capacidad que adquiere el consumidor de distriuir su gasto entre un mayor número de variedades lo que, dadas las preferencias, genera utilidad.
+\end{la} 
+
+Por tanto, la gran aportación de esta especificación será la separación nítida que el modelo permite entre el número de variedades y el poder de mercado. Aumentar $\uparrow \#I$ siempre mejora el bienestar vía un menor índice de precios ($\downarrow q(\mathbf p)$), pero no por sus efectos sobre el poder de mercado (que viene ya fijado por $\sigma$): no estimula la competencia. Esto explica por qué pueden coexistir una gran variedad de productos con márgenes muy positivos, y viceversa: el tamaño del mercado ($I$, intersectorial) se corresponde con el efecto variedad y la intensidad competitiva ($\sigma$, intrasectorial, $\sigma$) el efecto preferencias; afectando cada uno a márgenes distintos: margen extensivo (cuántas variedades existen) y el margen intensivo (cómo compiten entre sí), el primero afecta al bienestar a través del índice de precios, mientras que el segundo determina el poder de mercado y está fijado por la elasticidad de sustitución.
+
+
+\clearpage
+\section{Economías de escala externas: Efectos desbordamientos}
+\puntosclave{
+    Explicar por qué las empresas que participan en la economía global (exportadores, contratistas externos, multinacionales) son sustancial mente más grandes y tienen ún mejor desempeño que las que no participan en los mercados foráneos.
+    
+    Comprender las teorías que explican la existencia de las multinacionales y la motivación de las inversiones extranjeras di rectas entre economías
+}
+
+Con lo expuesto hasta ahora conocemos, por tanto, muchas herramientas para analizar como las economías de escala internas permiten beneficiarse de la apertura comercial. Además, hemos visto como, en términos agregados, aunque el comercio internacional genere ganadores y perdedores (pero mejoras de eficiencia), es siempre positivo para el bienestar, o al menos atendiendo a los resultados del modelo.
+
+Sin embargo, existen otro tipo de regularidades empíricas que no se ven reflejadas en los modelos expuestos: el aumento de los flujos comerciales entre dos países tiene consecuencias mucho mayores de las que inicialmente puedan preveerse a partir de los tratados comerciales que liberalizan el comercio en determinados sectores. Por ejemplo, es de esperar que el aumento de las rutas marítimas entre dos naciones traigo consigo un abaratamiento de los costes de transporte que reduzca el umbral de eficiencia para otros sectores dificilmente previsibles. O, más indirecto, que los lazos comerciales entre dos países traigan consigo un aumento de flujos migratorios, con los efectos desbordamiento que estos traen consigo: conocimiento, movimiento de capitales, etc.
+
+Esto es lo que trataremos de exponer brevemente ahora. 
+
+\textbf{¿Qué queremos decir?} Veremos como, desde una óptica más general (no sectorial como hasta ahora), la proximidad y el tamaño de la economía tienen una importancia muy grande a la hora de predecir el volumen de comercio. También como el número y concentración/especialización de las empresas en determinados lugares tiene impactos significativos en la productividad del sector. En definitiva, veremos los efectos más o menos directos de lo que se conoce como \textbf{economías de escala externas} y como el comercio internacional y estas se retroalimentan.
+
+\subsection{\textit{Clusterización}: Concentración geográfica}
+Empecemos analizando como las economías de escala externas afectan en particular a un sector económico, siguiendo de esta forma un análisis más concreto, en linea con lo anterior. 
+
+Por diversas razones, es frecuente que la concentración de la producción de un a industria en una o unas pocas localidades reduzca los costes de la industria, aunque no como consecuencia de la tecnología de producción. Cuando las economías de escala se aplican en la industria, en vez de en la empresa individual, se denominan economías externas. 
+
+\subsubsection{Canales de generación: MARSHALL}
+El análisis de las economías externas se remonta a hace más de un siglo, gracias las aportaciones de MARSHALL,\footnote{MARSHALL se sorprendió ante el fenómeno de los \textbf{distritos industriales}, concentraciones geográficas de industrias que no se podían explicar fácilmente por la existencia de recursos naturales. 
+
+En tiempos de Marshall, los ejemplos más conocidos incluían concentraciones de industrias tales como los grupos de fabricantes de cubiertos en Sheffield y de empresas de calcetines en Northampton. Existen numerosos ejemplos modernos de industrias en las que parecen producirse importantes economías externas. 
+
+En los Estados Unidos, estos ejemplos incluyen la industria de los semiconductores, concentrada en el famoso Silicon Valley en California; la industria financiera especializada en bancos de inversión, reunida en Nueva York, y la industria del ocio y el entretenimiento, concentrada en Hollywood. En las crecientes industrias manufactureras de los países en desarrollo, como China, las economías externas son omnipresentes; por ejemplo, en una ciudad de China se fabrica una gran parte de la producción mundial de ropa interior; otra ciudad produce casi todos los mecheros del mundo; otra más fabrica la tercera parte de los cabezales de cinta magnética del mundo, y así sucesivamente. Las economías de escala también han desempeñado un papel clave en la aparición de India como principal exportador de servicios informáticos, con una gran parte de la industria agrupada en tomo a la ciudad de Bangalore. 
+} que apunto tres razones principales por las que un cluster de empresas podía ser más eficiente que una empresa aislada individual.
+
+\paragraph{Proveedores especializados} 
+En primer lugar, la capacidad del grupo de empresas concentradas geográficamente de \textbf{apoyar una red de proveedore especializados}.
+
+En muchas industrias, la producción de bienes y servicios (y, en mayor medida, el desarrollo de nuevos productos) exige el uso de equipos especializados o de servicios de apoyo; sin embargo, una empresa individual no proporciona un mercado suficientemente grande para que se puedan mantener los proveedores de estos servicios. Un grupo industrial concentrado en una localidad resuelve este problema al agrupar a muchas empresas que, de forma colectiva, proporcionan un mercado suficiente para mantener a una amplia diversidad de proveedores especializados.\footnote{Este fenómeno ha sido documentado ampliamente en Silicon Valley; un estudio de 1994 explica cómo, al crecer la industria local, los ingenieros abandonaron empresas ya establecidas de semiconductores para crear empresas fabricantes de bienes de capital tales como hornos de difusión, cámaras de repetición, equipos de verificación, materiales y componentes como fotomáscaras, dispositivos de ensayo y productos químicos especializados.
+} Además, esto provoca que algunos factores productivos clave sean más baratos y estén disponibles con más facilidad porque existen muchas empresas que compiten para suministrarlos, y las empresas se pueden concentrar en lo que hacen mejor, a la vez que subcontratan otros aspectos de su negocio.\footnote{Por ejemplo, algunas empresas de Silicon Valley especializadas en el suministro de chips muy sofisticados para clientes especiales pueden escoger convertirse en \textit{fabless} (sin fábrica), es decir, no necesitan disponer de ninguna fábrica para producir los chips. En su lugar, pueden concentrarse en diseñar los chips, y contratan a otra empresa para que los fabrique. Una empresa que intentara entrar en la industria en otra localización (por ejemplo, en un país que no tuviera un grupo industrial comparable) estaría automáticamente en desventaja porque no dispondría de fácil acceso a los proveedores de Silicon Valley y se vería obligada a proveerlos por sí misma o a tratar con proveedores alejados geográficamente de ella.
+}
+
+En realidad, esto recuerda a la máxima de ADAM SMITH: la economía de mercado tiende a la especialización. De esta forma cuando por diversos factores, muchas veces aleatorios, un grupo de empresas similares se concentra en una zona geográfica, el mercado potencial se vuelve lo suficientemente grande como para que emerja la especialización productiva.
+
+\paragraph{Mercado de trabajo especializado}
+Una segunda fuente de economías externas es el modo en que un grupo de empresas puede crear un mercado conjunto de trabajadores especializados. Un mercado conjunto de este tipo beneficia tanto a productores como a trabajadores, ya que los productores tienen menos probabilidades de padecer una escasez de mano de obra, mientras que los trabajadores tendrán menos probabilidades de quedarse sin empleo.\footnote{De nuevo, estas ventajas han sido documentadas en el caso de Silicon Valley, donde es común tanto que las empresas crezcan rápidamente como que los trabajadores cambien de empleador. El estudio de Silicon Valley que antes citamos destaca que la concentración de empresas en una única localización facilita el cambio de empleo. A este respecto, un ingeniero declaraba: \textit{No es raro dejar tu trabajo un viernes y conseguir otro para el lunes. No hace falta ni que se lo cuentes a tu mujer. Basta con conducir el coche por otra ruta el lunes por la mañana}. Esta flexibilidad hace de Silicon Valley una localización atractiva, tanto para los trabajadores especializados como para las empresas· que los contratan.
+}
+
+\paragraph{Efecto desbordamiento del conocimiento} 
+Por último, encontramos el efecto positivo que genera la concentración de conocimiento especializado. ¿Por qué? Porque una fuente importante de know-how técnico es el intercambio informal de información e ideas que tiene lugar en el plano personal. Y, como es normal, este tipo de difusión informal del conocimiento a menudo parece tener lugar de forma más eficaz cuando una industria está concentrada en un área relativamente reducida. MARSHALL describió esta situación de modo brillante cuando escribió que, en un distrito con muchas empresas de la misma industria, \textit{los misterios del comercio dejan de ser misterios, es como si estuvieran en el aire. (...) El buen trabajo se aprecia de inmediato, los beneficios aportados por los inventos y las mejoras en maquinaria, en procesos y en la organización general del negocio, se discuten sin demora: si alguien plantea una nueva idea, otros la utilizarán y la combinarán con sugerencias propias; y se convertirá así en fuente de nuevas y sucesivas ideas}.\footnote{Un periodista describió este efecto de desbordamiento del conocimiento durante la expansión inicial de Silicon Valley (y ofreció también una excelente panorámica de la cantidad de conocimiento especializado presente en la industria), en los siguientes términos: \textit{Cada año existía un lugar, el Wagon Wheel, Chez Yvonne, Rickey's, la Roundhouse, hacia donde los miembros de esa fraternidad esotérica, los jóvenes hombres y mujeres de la industria de los semiconductores, se dirigían después del trabajo para tomar una copa, de partir e intercambiar historias sobre guerras comerciales acerca de osciladores de fases, circuitos fantasma, memorias de burbujas, trenes de impulsos, contactos sin rebotes, modos de tipo ráfaga, pruebas de saltos directos, (...)}. Este tipo de flujo de información informal se traduce en una mayor facilidad, para las empresas situadas en el área de Silicon Valley, de mantenerse cerca de la vanguardia tecnológica de la industria que la que tienen las ubicadas en otros lugares; de hecho, muchas multinacionales han establecido centros tecnológicos, e incluso fábricas, en Silicon Valley, simplemente para mantenerse al día de las últimas tecnologías.
+}
+
+
+\subsubsection{Implicaciones de Política Económica}
+
+\textcolor{red}{\textbf{NOTA} -- AQUÍ HAY QUE SEGUIR CON EL MANUAL DE KRUGMAN} (breves notas y cuantifiación): Capítulo 7
+
+\textbf{economías crecienres dinámicas (curva de aprendizaje)}, \textbf{comercio y bienestar}, 
+
+
+\subsection{Tamaño: Modelo de gravedad}
+Externalidades: tamaño, integración, rutas comerciales, marcos legislativos, efecto frontera, etc. Todo esto puede ser evaluado mediante el modelo de gravedad.
+
+Cabe incorporalo de manera natural dentro del marco de economías de escala externa, es una labora complicada, pero importante que sea hecho, para mantener la estructura organizativa de la exposición.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Evidencia Empírica: Contrastación}
+
+
+
+
+
+\subsection{Modelo gravitacional: TIBERGEN (1962)}
+
+
+
+
+
+
+
+Dicho de otro modo, en Melitz la reasignación inducida por el comercio opera porque el comercio aumenta la rentabilidad relativa de las firmas más productivas y hace más difícil la supervivencia de las menos productivas. Cuando se abren los mercados, las firmas más eficientes expanden ventas, especialmente porque pueden exportar, mientras que las menos eficientes pierden cuota y muchas dejan de producir. Melitz y Redding describen este resultado como una reasignación intraindustrial de recursos hacia las firmas de mejores atributos y una salida de las firmas marginales, lo que eleva la productividad media de la industria.
+
+
+Supongamos ahora que las empresas tienen distintas curvas de costes porque producen con distintos niveles de coste marginal c. Partimos de la presunción de que todas las empresas aún tienen la misma curva de demanda para sus productos. Si introdujéramos diferencias en la calidad del producto entre las empresas obtendríamos predicciones muy parecidas sobre el rendimiento de la empresa que las que conseguiremos a partir de las diferencias de costes. 
+
+La Figura 8.6 ilustra las diferencias de desempeño entre las empresas 1 y 2 cuando c1 < c2. En el panel (a) hemos dibujado la curva de demanda común (8.5), así como su correspondiente curva de ingreso marginal (8.8). Cabe observar que las dos curvas tienen el mismo punto de corte sobre el eje vertical (sustituimos Q = O en (8.8) para obtener f Mg = P); este punto de corte viene dado por el precio P de (8.5) cuando Q = O. La pendiente de la curva de demanda es 1/(S x b). Como vimos anteriormente, la curva del ingreso marginal tiene más pendiente que la curva de demanda. Las empresas 1 y 2 eligen los nive1es de producción Q1 y Q2, respectivamente, para maximizar sus beneficios. 
+
+Esto se produce en el punto en el que sus curvas de coste marginal respectivas cortan a la curva común del ingreso marginal, y fijan los precios P1 y P2 que se corresponden con esos niveles de producción sobre la curva de demanda común. Podemos ver de inmediato que la empresa 1 fija un precio menor y un mayor nivel de producción que la empresa 2. Dado que la curva del ingreso marginal tiene más pendiente que la curva de demanda, también vemos que la empresa 1 tendrá un margen sobre el coste marginal mayor que la empresa 2: P1 - c1 > P2 - c2. Las áreas sombreadas representan los beneficios de explotación de ambas empresas, iguales a los ingresos P1 x Q1 menos los costes de explotación c1 x Q1 (para ambas empresas, i = 1 e ¡ = 2). Aquí hemos supuesto que el coste fijo F (que consideramos igual para todas las empresas) no se puede recuperar y no forma parte del beneficio de explotación (es decir, se trata de un coste hundido). Como es posible reescribir el beneficio de explotación como el producto del margen por el número de unidades vendidas, (P1 - c1) x Q1, podemos determinar que la empresa 1 o btendrá mayores beneficios que la empresa 2 (recuerde que la empresa 1 fija un margen mayor y produce más que la 2). Por tanto, podemos resumir todas las diferencias de desempeño relevantes en función de las diferencias del coste marginal de cada empresa. En comparación con una empresa que tiene un mayor coste marginal, una empresa con un menor coste marginal (1) fijará un precio inferior pero un mayor margen sobre el coste marginal; (2) producirá más cantidad de producto, y (3) obtendrá mayores beneficios14 .
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Si la mayor competencia proviene del comercio (o de la integración económica), estará también asociada con oportunidades de ventas en nuevos mercados para las empresas supervivientes. De nuevo, como cabría esperar, son las empresas con mejor rendimiento las que mejor aprovechan estas nuevas oportunidades de ventas y las que más se expanden. Estos cambios de la composición tienen una consecuencia crucial en el ámbito de l a industria: cuando las empresas de mejor rendimiento se expanden, y las de peor desempeño se contraen o cierran, mejora el rendimiento de toda la industria. Esto significa que el comercio y la integración económica tienen un efecto directo sobre el desempeño de la industria: es como si se produjera un crecimiento tecnológico en el ámbito de toda la industria. Empíricamente, estos cambios de composición generan sustanciales mejoras en la productividad de la industria. Partamos del ejemplo de la mayor integración económica de Canadá con los Estados Unidos (véase el caso de estudio precedente y el análisis en el capítulo 2). Esta integración llevó a los productores de automóviles a consolidar la producción en un menor número de fábricas canadienses, cuyos niveles de producción aumentaron drásticamente. El acuerdo de libre comercio entre Canadá y los Estados Unidos, que entró en vigor en I 989, amplió el pacto del automóvil a la mayoría de los sectores manufactureros. Se produjo un proceso de consolidación análogo en todos los sectores manufactureros canadienses afectados. Sin embargo, esta consolidación también vino de la mano de un proceso de selección: los productores de peor desempeño tuvieron que cerrar, mientras que los de mejor desempeño se expandieron a través de grandes aumentos de las exportaciones al mercado estadounidense. Daniel Trefler, de la Universidad de Toronto, ha estudiado los efectos de este acuerdo comercial con gran detalle, mediante un análisis de las
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+El modelo de KRUGMAN tiene dos predicciones importantes con respecto a los efectos del comercio internacional: los efectos de escala, que hacen que las empresas que sobreviven a la apertura comercial expandan su producción, y los efectos de selección, que hacen que algunas empresas se vean forzadas a abandonar el mercado tras la apertura comercial.
+
+
+Hay que destacar que el modelo de Krugman no es apropiado para abordar los efectos de selección del comercio internacional, ya que asume que todas las empresas son iguales (excepto en la variedad que producen). De este modo, el modelo no tiene predicciones sobre cuáles son las empresas que crecen y cuáles abandonan el mercado. El modelo de Melitz (2003), al introducir heterogeneidad entre empresas, permite abordar esta cuestión, como veremos más adelante. Por el momento, con objeto de presentar la evidencia empírica sobre estos resultados, nos limitamos a destacar que el modelo de Krugman predice que algunas empresas crecen a expensan de otras, que abandonan el mercado, Hay que destacar que los efectos de selección son muy importantes desde un punto de vista de política económica, ya que el abandono del mercado por parte de empresas puede incrementar fuertemente el desempleo. Además, son un mecanismo potente que genera cambios en la productividad de una industria tras una liberalización comercial. Si las empresas que se ven obligadas a salir son las menos productivas, la productividad de la industria crece tras la liberalización comercial. Este es el mecanismo que precisamente enfatiza el modelo de Melitz. La literatura empírica no ha encontrado una evidencia fuerte sobre los efectos de escala y sí sobre los efectos de selección. Buena paite de los estudios se han centrado en analizar el tratado de libre comercio que tuvo lugar entre Canadá y Estados Unidos en 1989. Por ejemplo, Head y Ries ( 1999) analizaron los efectos de escala durante seis años tras su entrada en vigor. Encontraron un efecto contrapuesto en la escala de las plantas. Por un lado, los menores aranceles en Estados Unidos incrementaron la escala de las plantas canadienses en un 10\%, pero esto se vio compensado por una reducción de la escala de un 8,5\% como consecuencia de los menores aranceles en Canadá. Otro estudio muy influyente en la literatura fue el llevado a cabo por Trefler (2004, véase este hipervínculo para un resumen del artículo aparecido en The New York Times: httpJlgoo.gJ'Se7rK3). Su trabajo encontró que las industrias canadienses que experimentaron las mayores reducciones de aranceles en Canadá aumentaron su productividad en tomo a un 15\%, mientras que aquéllas que experimentaron las mayores reducciones en los aranceles de Estados Unidos aumentaron su productividad un 14\%. Este aumento de la productividad, sin embargo, no se debió en general a un incremento de la escala de las empresas, sino a un trasvase de recursos desde empresas menos productivas a empresas más productivas, es decir, a un efecto selección Las industrias canadienses que más sufrieron la competencia de Estados Unidos se contrajeronun 5\%, mientras que las industrias orientadas a la exportación crecieron un 6\%. De este modo, este trabajo ilustra los ganadores y perdedores que se producen tras una liberalización comercial. Por último, existe evidencia empírica de los efectos selección en otros episodios de liberalización comercial. 
+
+Por ejemplo, Pavcnik (2002) muestra que aproximadamente dos tercios del aumento del 19\% de la productividad de Chile tras la liberalización comercial de finales de los años 70 y principios de los 80 se debió a la supervivencia y crecimiento de las plantas más productivas, y un tercio a ganancias de productividad dentro de la empresa.
+
+
+Los modelos de competencia monopolística muestran que una ganancia de bienestar proveniente del comercio internacional es el incremento en el número de variedades al que los consumidores tienen acceso tras la apertura comercial. Algunos trabajos empíricos han intentado medir estas ganancias de bienestar. Entre ellos destaca el artículo de Broda y Weinstein (2006). Utilizando datos muy desagregados, estos autores muestran que el número de variedades importadas por Estados Unidos en el periodo 1972-2001 se ha multiplicado por cuatro y estiman que las ganancias de bienestar en este país en el año 2001 provenientes de este incremento en el número de variedades equivalen al 2,6\% del PIB. 
+
+Además, si las ganancias de bienestar se comparan con una situación de autarquía, las ganancias son mucho mayores. Por ejemplo, el trabajo de Ossa (2015) utiliza datos de 49 países y estima que la media de las ganancias del bienestar provenientes del comercio internacional es de casi el 50\% del PIB.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+\clearpage
+\anexo{Modelo de MELITZ: Desarrollos auxiliares}\label{anx:melitz_formulas}
+
+A continuación se desarrollarán las derivaciones analíticas auxiliares que no han podido ser presentadas en el apartado correspondiente. No se entrará en el desarrollo del: (i) problema del consumidor; (ii) derivación del índice; (iii) precio óptimo determinado por la CPO del problema de maximización del productor ($IMg_{x_j}=CMg_{x_j}$). El desarrollo de estos apartados puede consultarse en el cuerpo del tema o en el [\authorfont{Ver Tema 3.A.18}]. 
+
+Para consultar el documento original: \href{https://web.stanford.edu/~klenow/Melitz.pdf}{\textit{The Impact of Trade on Intra-Industry Reallocations and Aggregate Industry Productivity}. MELITZ (2003)}
+
+Tenemos las siguientes ecuaciones que obtenemos de los problemas antes mencionados:
+
+$$\begin{aligned}
+    &\underset{\text{\scriptsize problema del consumidor: demanda óptima}}{X_i^D=\frac{p_i^{-\sigma}}{\mathbf p^{1-\sigma}}N},\qquad \underset{\text{\scriptsize problema del productor: precio óptimo}}{p_j=\frac{\sigma}{\sigma-1}\frac{1}{\varphi}}\\[2em]
+    &\Longrightarrow\text{Consideraremos}: i=j
+\end{aligned}$$
+
+A partir de estas ecuaciones, lo primero que debemos hacer hallar las relaciones de ingresos, costes y beneficios:
+
+$$\begin{aligned}
+    &\text{Ingresos}: &&I_j(\varphi)=p(\varphi)\cdot x\\[0.5em]
+    &\text{Coste variable}: &&CV(\varphi)=c(\varphi)\cdot x\\[0.5em]
+    &\underset{\substack{\text{\scriptsize \textbf{OJO!} Consideramos en inicio}\\\text{\scriptsize que está operando}}}{\text{Beneficio operativo}}&& \Pi^{op}_j(\varphi)=I_j(\varphi)-CV(\varphi)\\[1em]
+    &\text{Beneficio de explotación}:&&\Pi_j(\varphi)=\Pi_j^{op}(\varphi)-F
+\end{aligned}$$
+
+Estas distinciones que realizamos tienen únicamente una intención simplificadora. El problema llega a unos desarrollos algebráicos complejos de manejar (aunque sencillos), por lo que es siempre mejor descomponer el puzzle en muchas piezas e ir juntando una vez resolvamos cada una de ellas. Empezamos por los Costes Variables:
+
+$$\begin{aligned}
+    &p=\frac{\sigma}{\sigma-1}c(\varphi)\Longrightarrow c(\varphi)=\frac{\sigma-1}{\sigma}p\\[0.5em]
+    &CV_j(\varphi)=c(\varphi)\cdot x\Longrightarrow CV_j(\varphi)=\frac{\sigma-1}{\sigma}p\cdot x\\[0.5em]
+    &\text{Pero},\quad I_j(\varphi)=p\cdot x\Longrightarrow CV_j(\varphi)=\frac{\sigma-1}{\sigma}I_j(\varphi)\\[0.5em]
+    &\Pi_j^{op}=I_j(\varphi)-CV_j(\varphi)\Longrightarrow\Pi_j(\varphi)=I_j(\varphi)-\frac{\sigma-1}{\sigma}I_j(\varphi)\\[1em]
+    &\Longrightarrow\quad \boxed{\Pi_j(\varphi)=\frac{1}{\sigma}I_j(\varphi)}
+\end{aligned}$$
+
+Por tanto, como vemos bajo preferencias CES-isoelásticas y competencia monopolística, la elasticidad constante implica un markup fijo sobre el coste marginal, lo que a su vez determina que los beneficios operativos sean una fracción constante $1/\sigma$ de los ingresos de la empresa y el resto, $(\sigma-1)/\sigma$ sean costes variables.
+
+Ahora que tenemos esta relación básica de competencia monopolística, veamos como alcanzamos la condición de libre entrada, dados los precios y la demanda de equilibrio. Es decir, el vaciamiento del mercado: $X_i^D=X_i^S$. Empezamos por recuperar la ecuación de ingresos original:
+
+$$\begin{aligned}
+    &I_j(\varphi)=X^S\cdot p\\[0.5em]
+    &\text{Vaciamiento $X_i^D$}:&&I_j(\varphi)=\left(\frac{p^{-\sigma}}{\mathbf p^{1-\sigma}}\right)N\cdot p\underset{\text{\scriptsize operando}}{\Longrightarrow} I_j(\varphi)=\left(\frac{p^{1-\sigma}}{\mathbf p^{1-\sigma}}\right)N\\[1em]
+    &\text{Sabemos}:&&p=\frac{\sigma}{\sigma-1}\frac{1}{\varphi}\quad\Longrightarrow\quad p^{1-\sigma}=\left(\frac{\sigma}{\sigma-1}\right)^{1-\sigma}\varphi^{\sigma-1}\\[1em]
+    &\text{Sustituimos}:&& I_j(\varphi)=N\,\mathbf p^{\sigma-1}\left(\frac{\sigma}{\sigma-1}\right)^{1-\sigma}\varphi^{\sigma-1}
+\end{aligned}$$
+
+Ahora que tenemos la condición de vaciamiento de mercados implícita en la ecuación de ingresos, podemos introducir el desarrollo obtenido en el apartado anterior, y alcanzamos la siguiente ecuación del beneficio operativo:
+
+$$\begin{aligned}
+    &\Pi_j^{op}=\frac{1}{\sigma}I_j(\varphi)&&\Longrightarrow\Pi_j(\varphi)=\frac{1}{\sigma}N\,\mathbf p^{\sigma-1}\left(\frac{\sigma}{\sigma-1}\right)^{1-\sigma}\varphi^{\sigma-1}\\[1em]
+    &\text{Agrupado constantes ($\sigma$)}:&&\Pi_j^{op}(\varphi)=N\mathbf p^{\sigma-1}\frac{(\sigma-1)^{\sigma-1}}{\sigma^{\sigma}}\varphi^{\sigma-1}\\[1em]
+    &\text{Condición de libre entrada}:&&\Pi_j(\varphi)=0\\[1em]
+    &\text{Incorporando Costes Fijos}:&&\Pi_j(\varphi)=\Pi_j^{op}-F\\[0.5em]
+    &\hspace{4em}\Longrightarrow&&\boxed{\Pi_j(\varphi)=\underbrace{\left[\mathbf p^{\sigma-1}\frac{(\sigma-1)^{\sigma-1}}{\sigma^{\sigma}}\right]}_{\text{\scriptsize constante, predefinida: $B$}}N\varphi^{\sigma-1}-F}
+\end{aligned}$$
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
