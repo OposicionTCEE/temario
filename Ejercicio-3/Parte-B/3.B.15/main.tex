@@ -1,0 +1,1189 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Tema 3.B.15 -- Análisis comparado de los distintos regímenes cambiarios\\
+\large Intervención y regulación de los mercados de cambio}
+\author{Marcelo Ortega}
+\date{Enero 2026}
+\newcommand{\TemaCode}{3B15}
+
+\oldtitle{Tema 3.B.16. Análisis comparado de los distintos regímenes cambiarios. Intervención y regulación de los mercados de cambio
+}
+\changerationale{Sin cambios.}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     
+    }
+\vspace{1cm}
+
+\modificaciones{
+    Este Tema estaría completo, a excepción de la introducción y de la conclusión.
+
+    Última modificación: 03/02/2026
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+\subsection{Contextualización}
+
+\subsubsection{Relevancia}
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+\clearpage
+\section{Regimen Cambiario: Diseño}
+
+\textbf{¿Dónde queremos llegar? --} ¿Qué es un régimen cambiario? Y, ¿cuáles es el menú de regímenes disponibles? Estas son dos preguntas fundamentales a las que vamos a dar respuesta en este primer apartado. Vamos a presentar los principales regímenes cambiarios que contempla el FMI, sus diferencias y las tendencias aparentes del Sistema Monetario Internacional, así como también las razones que subyacen en ésta. Esto es crucial para poder luego analizar las diferencias entre éstos.
+
+Un régimen cambiario se define como un conjunto de reglas que determina el comportamiento del tipo de cambio entre una moneda y otra. Tras la caída de Bretton Woods en 1976, se produjo la progresiva instauración del conocido \textit{No sistema}, permitiendo a los países elegir libremente su régimen cambiario, siempre y cuando éste no fuese un tipo de cambio fijo anclado sobre el oro, y los países informasen del régimen cambiario adoptado y proporcionasen la información necesaria relativa a éste, a fin de velar por la no existencia de devaluaciones competitivas entre economías (políticas de empobrecimiento del vecino).
+
+Este no sistema ha generado una heterogeneidad importante de regímenes a nivel internacional, que, en ejercició de su papel, el Fondo Monetario Internacional proyectar y aclarar a través de las publicaciones que ésta Institución realiza de forma anual desde su creación, el \textit{Annual Report on Exchange Arrangements and Exchange restrictions}. En su sistema de clasificación de los regímenes de tipo de cambio de facto clasifica a los países según:
+\begin{la}
+    \item El grado en el que el tipo de cambio está determinado por el mercado y no por acción oficial, siendo los tipos determinados por el mercado más flexibles (grado de fijación); y,
+    \item El grado de flexibilidad del régimen o el compromiso formal o informal para una determinada trayectoria del tipo de cambio (grado de publicidad). 
+\end{la}
+
+\imagenfit{FMI_ClasificacionRC.png}{Classification of Exhange Rate Arrangements}{\href{https://www.imf.org/en/publications/annual-report-on-exchange-arrangements-and-exchange-restrictions/issues/2024/12/19/annual-report-on-exchange-arrangements-and-exchange-restrictions-2023-541890}{International Monetary Fund (2024). \textit{Annual Report on Exchange Arrangements and Exchange Restrictions 2023}. International Monetary Fund Monetary and Capital Markets Department.}}
+
+Por lo tanto, a modo de introducción general, vemos como el FMI distingue entre:
+\begin{la}
+    \item \textbf{\textit{Floating regimes} o Regímenes flotantes}. Representan el 32.5\% de los miembros del FMI. Regímenes en los que la moneda fluctúa libremente en los mercados de divisas, sin ningún tipo de injerencia por parte de ninguna Autoridad Nacional;
+    \item \item \textbf{\textit{Sof-pegs} o TC semi-rígidos o blandos}. Representan el 44.8\% de los miembros del FMI. Regímenes cambiarios en los que se interviene de manera frecuente sobre el mercado  para dirigir la evolución del tipo de cambio, pero que sin embargo sigue existiendo cierta flexibilidad del tipo de cambio pues éste puede variar como consecuencia de las fuerzas del mercado;
+    \item \textbf{\textit{Hard-Pegs} o TC rígidos}. Representan el 13.4\% de los miembros del FMI. Aquellos en los que el tipo de cambio no sufre ninguna oscilación, bien porque directamente se adopta la divisa como moneda nacional, o bien porque la moneda se fija a la divisa de forma absolutamente directa y se mantiene el tipo de cambio a través de una base monetaria completamente formada por reservas internacionales; y,
+    \item \textbf{\textit{Residual}}. Representan el 9.3\% de los miembros del FMI. Categoría residual donde se enmarca cualquier acuerdo que no pertenezca a ninguna categoría descrita previamente. Acuerdos caracterizados por cambios frecuentes en sus políticas pueden ser incluidos en esta categoría.\footnote{
+    Por ejemplo, China estaba de facto clasificada como other managed hasta julio de 2020. Desde entonces es considerado un crawl-like arrangement. Mantiene oficialmente un régimen de flotación controlado para mantener el tipo de cambio del renminbi chino estable a un nivel adaptativo y de equilibrio basado en la oferta y demanda de mercado con referencia a una cesta de monedas con el objetivo de mantener la estabilidad de la economía china y de los mercados financieros.
+    }
+\end{la}
+
+\imagenfit{FMI_ReclasTC.png}{Reclasificaciones \textit{de facto} y número absoluto de miembros atendiendo a su regimen cambiario}{\href{https://www.imf.org/en/publications/annual-report-on-exchange-arrangements-and-exchange-restrictions/issues/2024/12/19/annual-report-on-exchange-arrangements-and-exchange-restrictions-2023-541890}{International Monetary Fund (2024). \textit{Annual Report on Exchange Arrangements and Exchange Restrictions 2023}. International Monetary Fund Monetary and Capital Markets Department.}}
+
+Veamos las categorías contempladas en cada régimen cambiario (de menos a más intervenido).
+
+\subsection{Regímenes flotantes: \textit{Floating regimes}}
+Como sabemos, se clasifica en esta categoría a aquellos países cuyas monedas se consideran que fluctúan libremente en los mercados. Dentro de esta categoría encontraríamos dos subcategorías adicionales. 
+
+\subsubsection{Flotación libre}
+los países englobados en esta categoría no realizan intervención cambiaria alguna, o bien lo hacen de manera tremenda puntual para corregir desequilibrios puntuales y no de forma repetida. El tipo de cambio viene íntegramente determinado por la interacción entre la oferta y demanda de divisas sin que la autoridad monetaria lleve ningún tipo de acción al respecto para modificar la intersección producida libremente en el mercado. 
+Aquí se clasificarían monedas como el dólar, el euro, el dólar australiano, canadiense, el yen japonés, la libra esterlina... Suelen ser países con un inflatión targeting como Reino Unido.
+
+
+\subsubsection{Flotación sucia}
+Se trata de un tipo de cambio flexible en el que la autoridad monetaria interviene de forma puntual para limitar las variaciones del tipo de cambio en lo que se conoce como una “lucha contra el viento” evitando grandes volatilidades intradía o intrasemana, pero no ofrece resistencia a las desviaciones tendenciales a largo plazo. Tampoco hay unas reglas de intervención establecidas, ni objetivos de tipo de cambio anunciados, ni límites a la variación del tipo de cambio, por lo que sigue siendo algo esporádico, aunque más frecuente que con la flotación libre. 
+
+Sin embargo, se ha esgrimido en la literatura que en ocasiones los países clasificados en este régimen acaban interviniendo para afectar al tipo de cambio y no para corregir situaciones puntuales. Es cierto que el FMI prohíbe devaluaciones competitivas, pero hasta ahora no se ha sancionado a nadie por ello. 
+
+Sería el caso del florín húngaro, del franco suizo, Argentina, Turquía, Colombia, Brasil, Uruguay, Ucrania
+
+\subsection{Regímenes semi-rígidos: \textit{Soft-pegs}}
+Encontramos dentro de esta categoría a aquellos países que intervienen de manera frecuente sobre el mercado cambiario para dirigir la evolución del tipo de cambio, pero que sin embargo sigue existiendo cierta flexibilidad del tipo de cambio pues éste puede variar como consecuencia de las fuerzas del mercado. 
+
+\subsubsection{Vinculados a una divisa: \textit{Conventional peg}}
+En este sistema de flotación, la autoridad monetaria establece un objetivo de tipo de cambio fijo frente a una divisa o cesta de divisas. Así, se permite que el tipo de cambio fluctúe en el mercado, pero la autoridad interviene mediante la compra o venta de divisa para mantener dicho tipo de cambio en el objetivo establecido. El margen de fluctuación es muy estrecho, menor del 1\%.
+
+Los países anclan su objetivo de tipo de cambio a divisas de gran relevancia, fundamentalmente el dólar como es el caso de Qatar, Arabia Saudí, Emiratos Árabes...; o al euro como es el caso de Croacia, Macedonia o el franco CFA. 
+
+
+\subsubsection{Vinculados a una divisa con paridad reptante: \textit{Crawling-peg}}
+Mediante un crawling peg, la autoridad monetaria establece un tipo de cambio objetivo que se va modificando con cierta periodicidad según el comportamiento de ciertas variables de interés, como las reservas internacionales o los diferenciales de inflación. De esta forma, se trata de evitar la volatilidad del tipo de cambio, pero no de imponer una restricción dura a la política monetaria. Gráficamente:
+ 
+Supone importantes ventajas al dotar de mayor flexibilidad a la política monetaria y permitir que parte del ajuste en los desequilibrios de BP se produzcan en tipo de cambio nominal, y no todo en reservas internacionales; pero hay también inconvenientes a tener en cuenta, pues la posibilidad de alterar el tipo de cambio objetivo hace que no se elimine tanto el riesgo cambiario y no genera tanta credibilidad antiinflacionista. 
+Es el régimen aplicado por economías como Honduras o Nicaragua.
+
+
+\subsubsection{Bandas de fluctuación: \textit{Pegged Exchange rate within horizontal bands}}
+Sistema por el que las autoridades establecen un tipo de cambio objetivo y unos límites inferiores y superiores sobre éste, de forma que el tipo de cambio fluctúa libremente en el mercado dentro de estos límites. Actualmente, solo el 0,5\% de los países del FMI utilizan este régimen cambiario. Sería el caso de Tonga. 
+
+Los límites son superiores al 1\%, lo que lo diferencia del conventional peg. En caso de que se salga de los mismos, las autoridades intervienen para evitar que se salga de estos. Históricamente, éste fue el régimen utilizado por el Sistema Monetario Europeo o en Bretton Woods. La idea es que al dejar al tipo de cambio fluctuar libremente dentro de los márgenes aceptados la autoridad estaría logrando que el tipo de cambio pueda alterarse para corregir desequilibrios en BP al mismo tiempo que el tipo de cambio es lo suficientemente estable como se desea. Sin embargo, la credibilidad será un aspecto clave en este régimen cambiario, pues habrá dos efectos opuestos, y que se materialice uno u otro depende de cuáles sean las expectativas de los agentes:
+
+\paragraph{Papel de la credibilidad: \textit{Honey-Moon \& Divorce Effects}}
+si los agentes suponen que los límites marcados por la autoridad monetaria son creíbles, si el tipo de cambio se acerca a los límites establecidos el agente esperará que revierta su tendencia, y su propio comportamiento acaba originando que esto se produzca y se aleje del límite. Supone por tanto una estabilización automática del tipo de cambio gracias a las expectativas autocumplidas de los agentes. 
++ Efecto divorcio: si los agentes consideran que la banda no es creíble, conforme el tipo de cambio se acerque a ella los agentes esperarán que se salga de la misma, tomando las decisiones al respecto y llevando con su comportamiento a que el tipo de cambio salga de los límites marcados. Es una desestabilización automática por las expectativas autocumplidas.
+
+\subsubsection{Bandas de fluctuación deslizantes: \textit{Crawl-like arrangements}}
+Incluye la posibilidad de que se modifiquen los límites máximos de apreciación y depreciación del tipo de cambio. 
+
+Proporciona más capacidad a la autoridad monetaria para actuar ante posibles salidas de las bandas, aunque aumenta también la probabilidad del efecto divorcio, pues los agentes anticipan que siempre existirá la posibilidad de que si el tipo sale de la banda la autoridad amplíe la banda. 
+Sería el caso de Costa Rica, Serbia o China (quien oficialmente sigue un sistema de flotación sucia, pero el FMI lo caracteriza como un crawl-like arrangement frente a una cesta de monedas. Desde 2005 no está vinculada al dólar en un intento de favorecer que el renmimbi se internacionalice al ser más intercambiado en los mercados internacionales).
+
+\subsection{Regímenes rígidos: \textit{Hard-peg}}
+Finalmente, la tercera categoría del FMI recoge los tipos de cambio fijos rígidos, que son aquellos en los que el tipo de cambio no sufre ninguna oscilación, bien porque directamente se adopta la divisa como moneda nacional, o bien porque la moneda se fija a la divisa de forma absolutamente directa y se mantiene el tipo de cambio a través de una base monetaria completamente formada por reservas internacionales. Por tanto, encontramos dentro de esta categoría.
+
+\subsubsection{Comité monetario: \textit{Currency board}}
+mediante el establecimiento de un currency board, comité monetario o caja de conversión, el BC se transforma en una junta de conversión cuyo único acometido es transformar cualquier moneda doméstica en divisa extranjera a un tipo de cambio fijo previamente establecido. Esto supone la necesidad de tener suficientes reservas para hacer frente a la demanda, sea cual sea ésta, es decir, mantener el 100\% de la base monetaria respaldada por reservas. 
+La junta de conversión no puede entonces realizar ninguna modificación en la base monetaria con las tradicionales operaciones de mercado abierto, pues la única forma de alterar la base monetaria es si el sector privado acude al BC a cambiar reservas internacionales por moneda doméstica. Por tanto, la cantidad de billetes y moneda en circulación no depende de las decisiones de la autoridad monetaria, sino de los agentes privados. 
+Este régimen cambiario suele ser adoptado por países que han experimentado importantes episodios de hiperinflación y cuyas autoridades no disponen de suficiente credibilidad en el mercado. Esto se debe a que se genera una disciplina macroeconómica muy fuerte, pues la autoridad no puede tomar ninguna decisión para alterar la base monetaria. Sin embargo, es un régimen difícil de instaurar (de dónde sacas un 100\% de la base en forma de reservas) y que genera enorme dependencia de superávits frente al otro país para acumular reservas internacionales. 
+
+\subsubsection{Sin moneda nacional de curso legal: \textit{No separate legal tender}}
+Este sería un régimen cambiario todavía más extremo que el currency board, porque aquí directamente adoptamos una divisa como moneda de curso legal nacional. No obstante, debemos destacar dos tipos de acuerdos que dan lugar a un régimen de estas características.
+
+\paragraph{Adopción de divisa extranjera}
+La moneda de otro país circula como la única moneda de curso legal.\footnote{En contraposición a la dolarización formal, en la que un país adopta la divisa como única moneda de curso legal –e.g. Mónaco– existe la dolarización extraoficial, en la que los agentes económicos la utilizan en la mayoría de sus transacciones –e.g. Montenegro–.
+} Suelen ser países muy pequeños y abiertos, que han tenido importantes problemas de inflación y poca credibilidad institucional y que, para evitar esos episodios de alta inflación, deciden abandonar su moneda nacional lo que supone por tanto renunciar totalmente a la política monetaria propia, que ahora pasa a ser la política monetaria del país cuya divisa están adoptando. 
+
+Tradicionalmente se ha adoptado el dólar como moneda nacional bajo el concepto de dolarización, como es el caso de Ecuador o El Salvador.\footnote{El Salvador tiene desde noviembre de 2021 dos monedas de curso legal: el dólar estadounidense y el bitcoin.
+\href{https://www.funcas.es/wp-content/uploads/2022/11/NL_ODF_77_2022.pdf}{\textit{Bitcoin en El Salvador un año después}. FUNCAS (2022)}
+} Sin embargo, también hay casos de países que han realizado este mismo procedimiento para el euro, bajo el concepto de eurización como Montenegro.
+
+\paragraph{Moneda de curso legal compartida: Unión Monetaria}
+Consiste en que los miembros forman parte de una unión monetaria y comparten la misma moneda. En este caso, el FMI evalúa el régimen cambiario de los países que pertenecen a la unión monetaria en los que se comparte la misma moneda y los clasifica bajo el régimen cambiario seguido por la moneda común.
+
+\subsection{Tendencias actuales: Evidencia Empírica}
+En este apartado hemos visto qué existen una serie de trade-offs en la elección del régimen cambiario, por lo que el régimen elegido depende de las circunstancias del país. Cabe preguntarse, ¿qué sucede en la práctica?¿qué régimen cambiario es más popular? Gracias al informe anual del FMI podemos señalar dos tendencias de gran relevancia.
+
+\subsubsection{Huída del \textit{medio}: Polarización en regímenes cambiarios}
+En primer lugar, en la década de los 90 un gran porcentaje de economías mantenía un tipo de cambio fijo intermedio. Fenómeno que no solo afectaba a los países en desarrollo, sino que economías tan relevantes como eran las europeas también estaban sometidas a un tipo de cambio fijo con bandas en el contexto del Sistema Monetario Europeo (SME). Sin embargo, tanto la crisis cambiaria de segunda generación del SME, como la crisis cambiaria de tercera generación en los países asiáticos mostraron las debilidades de estos regímenes intermedios ante posibles ataques especulativos. 
+
+Los tipos de cambio intermedios se comenzaron a concebir como inestables y se comenzó a defender la receta bipolar: hay que optar o bien por un tipo de cambio puramente flexible o por un tipo de cambio totalmente fijo. El fundamento teórico de esta recomendación se encontraba en la trinidad imposible debido a la liberalización progresiva de los movimientos de capitales. 
+
+¿Pero reflejan los datos esa tendencia que afirma la receta bipolar a la desaparición de los regímenes cambiarios intermedios? En la segunda mitad de los años 90 surgen dos predicciones enfrentadas:
+\begin{la}
+    \item Quienes observaban una polarización de los regímenes cambiarios (EICHENGREEN (1994) y OBSTFELD y ROGOFF (1995)); y,
+    \item Quienes consideraban lo contrario, es decir, que se extenderían los regímenes con \textit{miedo a flotar}, tal y como lo llamaron CALVO y REINHART (2002).
+\end{la}
+
+Sí parece cierto que el porcentaje de países que mantienen un tipo de cambio fijo intermedio ha caído de manera drástica, pues hemos pasado de un 10-70-20 a un 15-45-40 actual. Sin embargo, esta tendencia finalizó a principio de los 2000, pues también ha sufrido críticas teóricas: 
+\begin{la}
+    \item Por un lado, FRANKEL (y otros) mantienen que no existe ninguna justificación que sirva para defender la inviabilidad de los regímenes cambiarios intermedios: la trinidad imposible no implica que no se pueda renunciar parcialmente a dos de sus componentes en vez de renunciar plenamente a uno de ellos. Así, se podrá lograr un tipo de cambio fijo intermedio a base de establecer cierto control sobre el movimiento de capitales; y,
+    \item Por otro lado, aunque la receta bipolar parecía sugerir que los dos regímenes extremos quedaban a salvo de los ataques especulativos, se demostró falso en diferentes ocasiones: (i) el ataque experimentado por el dólar en Hong Kong en 1997; o, (ii) la caída de la Currency Board en Argentina en 2001.
+\end{la}
+
+\subsubsection{\textit{De facto} vs. \textit{De iure}: La declaración}
+Desde inicios de los 2000, el FMI utiliza una clasificación de los regímenes cambiarios utilizados \textit{de facto} y no \textit{de iure}. Esto se debe a que muchos países que afirman tener un régimen de flotación libre, en realidad, intervienen de forma recurrente para lograr situar al tipo de cambio en un nivel objetivo dando lugar a que, \textit{de facto}, se utilice un régimen \textit{soft-peg}.
+
+Esto fue catalogado por CALVO y REINHART como el miedo a la flotación. Según estos autores, los países tienden a comunicar de forma oficial que su régimen cambiario es flotante como una forma de comunicar que son economías orientadas al mercado y poco intervencionistas. Sin embargo, en la práctica no permanecen indiferentes a las variaciones del tipo de cambio nominal y real, y acaban interviniendo.\footnote{Esto no debe entenderse como algo irracional, sino que es completamente racional. Por ejemplo, estas economías suelen hacer frente a un gran volumen de deuda a corto plazo denominada en divisa extranjera, por lo que si su moneda se deprecia mucho en los mercados cambiarios tendrán problemas para devolver esa deuda (\textit{pecado original}).
+} Pero, por lo que hemos visto, si la mayor virtud de las bandas es que si son creíbles reducen \textit{per se} la volatilidad, ¿por qué seguirlas informalmente? Existen dos razonamientos enfrentados para responder a esta cuestión:
+\begin{la}
+    \item Se puede pensar que si la moneda va a estar restringida a unas bandas es mejor que sean públicas y fijas para conseguir la reducción de la inflación y de la volatilidad cambiaria; y,
+    \item Por otro lado, se puede pensar que si se va a reducir la volatilidad, es preferible que no se anuncie de antemano para no atraer ataques especulativos ni imponer un gran coste interno del ajuste macroeconómico.
+\end{la}
+
+En definitiva, siguiendo la clasificación del FMI podemos encontrar tres grandes grupos de regímenes cambiarios: de flotación, fijos y fijos intermedios. En los últimos años se ha producido una cierta polarización, si bien sigue existiendo una enorme diversidad de regímenes. Dada esta heterogeneidad, resulta crucial valorar las bondades e inconvenientes de cada uno para poder optar por aquel que se considere óptimo. 
+
+
+\clearpage
+\section{Análisis comparado de los distintos regímenes cambiarios}
+
+\textbf{¿Qué queremos explicar? --} En este apartado vamos a exponer las ventajas e inconvenientes que presentan los distintos regímenes desde una perspectiva comparada. Nuestro fin es mostrar que, aunque el debate persiste, la evidencia sugiere \textbf{XXXXXX}
+
+Desde la década de los 50's, la literatura económica ha estado sujeta a importantes debates entre las bondades del tipo de cambio fijo y del tipo de cambio flexible. Autores como Milton Friedman destacaron por tener una clara postura defensora de los tipos de cambio flexibles.
+
+El debate se reavivó aún más con la debacle de Bretton Woods y el inicio del ya mentado no sistema, pues los países podían adoptar el régimen cambiario que deseasen y surgía la necesidad de valorar qué régimen cambiario era más deseable para cada economía. Tal fue la importancia que este debate tuvo en la literatura que, de hecho, la teoría de las Áreas Monetarias Óptimas no es sino un efecto colateral de tales discusiones entre economistas, por lo que muchos de los argumentos en favor o en contra de un tipo de cambio fijo van a estar íntimamente relacionados con esta teoría de las áreas monetarias óptimas. 
+
+Lo que debemos tener claro es que \textbf{no hay un régimen superior a otro}, sino que, como ya anticiparían MUNDELL y FLEMING, la importancia radica en lo que \textit{necesitemos} y en lo que estemos dispuestos a \textit{renunciar}. Por tanto, en algunos aspectos un régimen otorgará más ventajas y en otros será más deseable optar por otro régimen. Para analizar esta cuestión, vamos a basarnos en cinco cuestiones estudiadas por la literatura y, en aras de la brevedad, simplificaremos asumiendo que estamos comparando un régimen totalmente flexible con un régimen totalmente fijo. 
+
+\imagenfit{Eje_Ventajas.png}{Diagrama de influencias del régimen cambiario adoptado}{\href{https://policonomics.com/es/lp-regimenes-cambiarios-regimen-cambiario/}{\textit{Regímenes cambiarios} Polinomics}}
+
+Además, dada la dificultad (legal y práctica) de controlar actualmente los movimientos de capitales durante un tiempo prolongado, vamos a comparar los dos regímenes cambiarios estilizados bajo el supuesto de libre movilidad de capitales. En cada caso estudiamos el efecto del régimen cambiario en:
+\begin{lnum}
+    \item La efectividad de las políticas de demanda;
+    \item El equilibrio interno (la disciplina monetaria y la inflación, el ajuste de renta y empleo ante los shocks y los efectos reales de la volatilidad cambiaria);
+    \item El equilibrio externo (las reservas, el comercio y la inversión extranjera y la inestabilidad o riesgo de crisis cambiarias);
+    \item El desarrollo de los mercados financieros; y
+    \item Aspectos políticos.
+\end{lnum}
+
+\subsection{Equilibrio interno}
+
+\subsubsection{Inflación: Modelo de inconsistencia dinámica en economía abierta (GIAVAZZI y PAGANO, 1988)}
+
+\imagenfit{Eq_Interno_Inflacion.png}{Resumen: Control de la Inflación}{Apuntes Víctor Gutiérrez. Tema 3.B.15}
+
+Uno de los argumentos más populares que tradicionalmente se han aportado en favor de los tipos de cambio fijos ha sido el mejor control de la inflación. De hecho, hemos mencionado antes que aquellos países que optan por regímenes extremos como la dolarización o el currency board buscan precisamente mitigar problemas relacionados con la hiperinflación. Problema que suele ser recurrente en los países en vías de desarrollo ya que, al no disponer de fuentes de ingresos sólidas y recurrentes, acaban optando en muchas ocasiones por la monetización del déficit, generando problemas de hiperinflación de los que les resulta difícil y costoso salir.
+
+Por ello, el tipo de cambio fijo proporciona una alternativa para revertir la situación. La idea es que al anclar el tipo de cambio, la Política Monetaria (en un contexto de libertad de movimientos de capital) va a ir orientada exclusivamente a garantizar el mantenimiento de tal tipo de cambio, por lo que ya no es una herramienta que esté disponible para financiar al Gobierno. Esto es lo que GIAVAZZI y PAGANO denominaron atarse las manos: al anclar tu tipo de cambio, la Autoridad Monetaria debe diseñar su Política Monetaria en aras de mantener el tipo de cambio fijado. Generalmente se opta por anclar el tipo de cambio a países con buena reputación antiinflacionista como Estados Unidos o la UEM, pues de esta manera se comprometen a replicar su Política Monetaria y, por tanto, importas su credibilidad antiinflacionista.
+
+Además, y esto es importante tenerlo en cuenta, esta importación de la credibilidad antiinflacionista no solo es un argumento para los países en vías de desarrollo con problemas de hiperinflación ya que los países desarrollados con tasas de inflación aceptables también se benefician de ello al reducir el sesgo inflacionario derivado de una Política Fiscal discrecional, que es precisamente lo que buscaban destacar GIAVAZZI y PAGANO con su modelo, que es una extensión del modelo de Barro y Gordon para dos economías. 
+
+Ahora bien, conviene hacer una importante matización al respecto y es que para que el Tipo de Cambio fijo sea eficaz es crucial que éste sea creíble: de lo contrario, la autoridad siempre podría romperlo cuando le resulte conveniente y volver a generar inflación. Por ello, no solo es necesario que exista un tipo de cambio fijo sino, sobre todo, que éste sea creíble. Esto explica por qué los países que han padecido problemas de hiperinflación hayan optado por los regímenes de tipo de cambio fijo más extremos como el Currency Board o la dolarización (o UM también), que se consideran mucho más creíbles al ser más difíciles de romper (Argentina usó Currency Board).
+
+\subsubsection{Shocks de origen real}
+
+\imeganfit{Eq_Interno_ShocksReales.png}{Resumen: Shocks Reales}{Apuntes Víctor Gutiérrez. Tema 3.B.15}
+
+\begin{specialblock}{\textit{The case for flexible exchange rates}. M. FRIEDMAN (1969)}
+    Curiosamente fue FRIEDMAN, archienemigo de la inflación, en su obra \textit{The case for flexible exchange rates} (1969), quien resalta las ventajas de los tipos de cambio flexibles frente a los tipos de cambio fijos. Los shocks negativos generan recesiones por lo que, en este escenario, es deseable que se produzca un ajuste en precios relativos que puede venir vía precios o vía tipos de cambio. Cuando los precios son flexibles, el ajuste en precios relativos se produce vía precios y el régimen cambiario no es tan relevante en este aspecto. Sin embargo, cuando los precios son rígidos (o se ajustan lentamente), el ajuste en precios relativos puede venir sólo vía tipo de cambio. En este caso, una depreciación del tipo de cambio amortigua el impacto de una perturbación negativa llevando a una ganancia de competitividad. Por lo tanto, la flexibilidad del tipo de cambio sería deseable. 
+
+    Su trabajo influenciaría en la década de 1960 a MUNDELL y FLEMING, que amplían el modelo IS-LM de HICKS para economía abierta, creando el modelo IS-LM-BP (posteriormente DORNBUSCH lo llamaría modelo MUNDELL-FLEMING). 
+\end{specialblock}
+
+Como contrargumento al punto anterior tendríamos las consecuencias de shocks (reales) internos. Aunque el tipo de cambio fijo puede dotar de credibilidad antiinflacionista, éste tiene un coste que es renunciar a la política monetaria como herramienta estabilizadora en un contexto marcado por una elevada movilidad de capitales. 
+
+Los partidarios del tipo de cambio flexible esgrimían que mantener una paridad fija suponía que el \textit{policymaker} debía defender el equilibrio externo a pesar de los posibles problemas que estuviesen sucediendo en la economía a nivel interno. 
+
+\paragraph{La \textit{Trinidad Imposible}: Modelo MUNDELL-FLEMING}
+Para ilustrar su argumento, podemos utilizar una representación sencilla del modelo MUNDELL-FLEMING, que si bien no forma parte del paradigma actual del estudio macroeconómico de economías abiertas (pues está caracterizado por modelos de la NOEM, con microfundamentación, expectativas racionales, enfoque dinámico de horizonte infinito, etc) nos permite comprender esta cuestión.
+
+\imagenfit{MF_Eq_Inicial_ShockRealInterno.png}{Equilibrio inicial para ambos tipos de régimen cambiario}{Elaboración propia}
+
+Supongamos que los agentes experimentan un periodo de alta incertidumbre futura y, como consecuencia, se reduce drásticamente la inversión (cae la demanda interna). Ante una caída exógena de la inversión que decelera el crecimiento económico, la moneda tendería a depreciarse:
+\begin{la}
+    \item \textbf{Tipo de Cambio Fijo}. Bajo un régimen de tipo de cambio fijo, el banco central tendrá que subir los tipos de interés (aumentando así la demanda de moneda nacional) lo cual a su vez enfría más la inversión, al menos, a corto plazo. Es decir, la política monetaria no puede estabilizar el ciclo (e incluso puede que lo pronuncie) porque debe dedicarse a defender el tipo de cambio. Por ejemplo, Argentina a finales de los años 90's y Francia en el Sistema Monetario Europeo en la primera mitad de los años 90's (que fue, de las monedas atacadas, quien no devaluó); 
+    \item \textbf{Tipo de Cambio Flexible}. Sin embargo, ante esta misma situación, bajo un régimen de tipo de cambio flexible, el banco central no tiene que aumentar los tipos de interés, sino que permite a la moneda depreciarse. Esto genera dos efectos: (i) evita la intensificación de la caída de la inversión doméstica; y (ii) provoca en un incremento de las exportaciones y una suavización de la caída del output.
+\end{la}
+
+\imagenfit{MF_Eq_Final_ShockRealInterno.png}{Dinámica de ajuste e impacto del régimen cambiario}{Elaboración propia}
+
+Por tanto, ante perfecta movilidad de capitales observamos que la Política Monetaria está completamente subordinada a la estabilización del Tipo de Cambio, en detrimento incluso de acomodar posibles shocks reales internos. Esto no es lo que se conoce como la \textit{Trinidad imposible} de MUNDELL. Indica que en un triángulo conceptual en el que los vértices fueran la Política Monetaria autónoma de un país, la libre movilidad de capitales desde y hacia ese país y el régimen de Tipo de Cambio Fijo, sólo dos de estos tres vértices se podrían alcanzar simultáneamente (es decir, tenemos que elegir un lado del triángulo):
+
+\imagenfit{Trilema_MundellFleming.png}{La Trinidad Imposible}{Apuntes Víctor Gutiérrez. Tema 3.B.15}
+
+Cuando un país se determina a cumplir dos de estos tres objetivos implícita o explícitamente renuncia al tercero.\footnote{Se puede considerar una aplicación de la regla de TINBERGEN (1952): Para alcanzar un número determinado de objetivos, las autoridades requieren de igual número de instrumentos de política independientes entre sí, tomando en cuenta la existencia del principio de eficiencia de los instrumentos, que consiste en que cada instrumento debe emplearse en la meta en la cual sea más eficiente. Aportaciones como esta valieron a JAN TINBERGEN el Premio Nobel de Economía de 1969 junto con RAGNAR FRISCH.
+En este caso, las autoridades deben definirse sobre tres elementos: el nivel de autonomía de la política monetaria, el grado de libertad en los movimientos de capitales y la flexibilidad del tipo de cambio nominal. Si las autoridades no enfrentaran restricciones, sería posible que la política monetaria fuese asignada a objetivos domésticos (inflación o desempleo), que se optara por un régimen cambiario que mantuviese la estabilidad del tipo de cambio nominal y que se garantizara la plena movilidad de capitales para facilitar la correcta asignación intertemporal de recursos y el correcto reparto del riesgo. Sin embargo, el número de variables exógenas que pueden determinar las autoridades es demasiado escaso y esta falta de grados de libertad determina la aparición del trilema monetario.
+} Así, por ejemplo, si un Banco Central decide aumentar el tipo de interés para frenar presiones inflacionistas (i.e. Política Monetaria autónoma), la entrada de capitales presionará la moneda para que se aprecie. Ante esto, el banco central tiene tres posibilidades: (i) mantener la libre movilidad de capitales, en cuyo caso la moneda se apreciará (i.e. renuncia al tipo de cambio fijo); (ii) mantener el tipo de cambio fijo, en cuyo caso tendría que limitar la movilidad de capitales (i.e. renuncia a la libre movilidad de capitales);\footnote{KEYNES, en su \textit{Treatise of Money} (1930), ya señaló la tensión que provocaría la libertad de circulación de capitales a un orden monetario.
+} o, (iii) dar marcha atrás con la subida del tipo de interés (i.e. renunciar a una política monetaria independiente). 
+
+En conclusión, adoptar un tipo de cambio fijo equivale a adoptar el compromiso de seguir las variables macroeconómicas del país a cuya moneda nos anclamos. Si la evolución del PIB diverge, las variables nominales tendrán que compensar dichas divergencias:
+\begin{la}
+    \item Si las variables nominales son fijas, las variaciones del PIB absorberán las diferencias;
+    \item Si, por el contrario, el tipo de cambio es flexible, la evolución del PIB podrá divergir, lo cual también implicará divergencia en las variables nominales.
+\end{la} 
+
+Esto último puede ser deseable o no en función de la credibilidad institucional de la autoridad monetaria del país. Por lo tanto, esto supondría un punto a favor del tipo de cambio flexible, pues permitiría entonces contar con la Política Monetaria como herramienta de estabilización. 
+
+\paragraph{Dilema: HELENE REY}
+No obstante, se ha puesto en tela de juicio la verdadera existencia de este trilema aunque de manera poco convencional. En un reciente estudio, HÉLÈNE REY (2015) se pregunta si: con tipo de cambio flexible, la Política Monetaria es verdaderamente autonóma y efectiva.
+
+REY parte de la constatación de que existe un ciclo financiero global en los flujos de capitales, los precios de los activos y el crecimiento crediticio que no está alineado con las condiciones macroeconómicas de los países, sino con la incertidumbre y el grado de aversión al riesgo de los mercados.\footnote{En particular, encuentra que el ciclo financiero global está alineado con el Índice VIX que indica la volatilidad en los mercados y que sirve como un termómetro del sentimiento de los inversores. \href{http://www.helenerey.eu/Content/_Documents/MirandaAgrippino_Rey_Handbook.pdf}{\textit{The Global Financial Cycle}. REY (2021)}
+} 
+
+Mediante un análisis de vectores autorregresivos (VAR) encuentra que uno de los principales determinantes del ciclo financiero global es la Política Monetaria del país central, que afecta al apalancamiento de los bancos, a los flujos de capital y al crecimiento crediticio en el sistema financiero internacional. Es decir, hay una correlación significativa entre los precios de los activos con riesgo (por ejemplo, los títulos de deuda pública de países emergentes) y la disponibilidad de liquidez mundial, que viene determinada en gran medida por la Política Monetaria de la Reserva Federal (que permite la disponibilidad para el mundo de dólares, divisa de reserva y más demandada). 
+
+Cuando la Reserva Federal baja los tipos de interés: (i) hace más barato pedir prestado en dólares; (ii) lo que aumenta el precio de los activos globales y, por tanto, aumenta el valor del colateral contra los cuales los préstamos pueden asegurarse; y, (iii) esto relaja las condiciones financieras (globales).\footnote{En un estudio reciente, REY concluye que una decisión inesperada de la Fed de subir pronto su principal tipo de interés provoca un aumento de los diferenciales hipotecarios no solo en Estados Unidos, sino también en Canadá, Reino Unido y Nueva Zelanda. \href{https://www.economist.com/schools-brief/2016/08/27/two-out-of-three-aint-bad}{The Economist (2016). \textit{Two out of three ain’t bad. }}
+} Por tanto, los efectos de la Política Monetaria de la Reserva Federal pueden causar efectos \textit{spillover} sobre el resto del mundo ya que, cuando existe libre movimiento de capitales, el \textit{ciclo financiero global} influye en la dinámica financiera del mundo, independientemente de cuál sea el régimen cambiario, limitando la actuación de Política Monetaria nacional.
+
+Por tanto, para un país abierto a los flujos de capital y con tipos de cambio flexible, HÉLÈNE REY constata la inexistencia del trilema y aboga por lo que ella llama el dilema o dúo irreconciliable: la Política Monetaria independiente es posible si y sólo si no existe libertad de movimiento de capitales.\footnote{Además, esto podría servir como argumento en favor de la coordinación de las políticas macroeconómicas [\authorfont{Ver Tema 3.B.19}]. 
+}
+
+Sin embargo, para GOURINCHAS, la existencia de este ciclo financiero no implica que el tipo de cambio flexible sea poco deseable: todo lo contrario, donde existe un gran \textit{spillover} de la Política Monetaria de la Reserva Federal, el tipo de cambio flexible es deseable. Por ejemplo, supongamos un aumento de tipos por parte de la Reserva Federal, que genera efectos contractivos en nuestro país más allá de lo deseado. Con tipos de cambio flexibles podríamos realizar una Política Monetaria expansiva para permitir que la moneda local se deprecie frente al dólar.
+
+En relación a la evidencia empírica, acerca de este fenómeno y sus implicaciones para la elección del régimen cambiario:
+\begin{la}
+    \item GEORGIADIS y MEHL (2015) encuentran que el ciclo financiero global puede incrementar la efectividad de la política monetaria siempre que el tipo de cambio sea flexible;\footnote{Para estos autores, el impacto del ciclo financiero global en la efectividad de la PM doméstica se ve influenciada por dos características: 
+    \begin{lnum}
+        \item \textbf{Posición de Inversión Internacional}. El tamaño de los balances externos de las economías (negativamente), que determina el grado en el que el ciclo financiero global influye en las condiciones financieras domésticas y por lo tanto reduce la efectividad de la política monetaria doméstica; y,
+        \item La exposición a divisas de los balances externos de las economías (positivamente), que puede dar lugar a efectos de valoración del tipo de cambio que refuercen la efectividad de la política monetaria doméstica en caso de que el tipo de cambio sea flexible. 
+    \end{lnum}
+    En otras palabras, mientras que el ciclo financiero global puede obstruir el canal del tipo de interés de la política monetaria a través de los efectos del ciclo financiero global, puede aumentar el canal del tipo de cambio a través de los efectos de exposición neta a divisas extranjeras.
+    } y,
+    \item OBSTFELD y OSTRY (2018) muestran que el ciclo financiero es más simétrico entre países con tipo de cambio fijo. Es decir, se puede concluir que el trilema de la política monetaria se ha debilitado pero continúa presente. Otros estudios concluyen que en régimen cambario fijo, aunque a largo plazo la autoridad monetaria debe seguir a la del país ancla, goza de cierto margen temporal (menor a un año) para la política monetaria, incluso en un entorno de elevada movilidad de capitales.
+\end{la}
+
+En definitiva, las aportaciones de REY son fundamentales ya que evidencian la importancia en la elección del régimen cambiario bajo libre movimiento de capitales. Siguiendo lo defendido por esta autora, ahora es indiferente cuál sea el régimen cambiario: si hay completa libertad en los movimientos de capitales la política monetaria no podría ser independiente. 
+
+\subsection{Equilibrio Externo}
+Veámos ahora cómo afecta el régimen cambiario a las desviaciones del equilibrio externo en una economía abierta. 
+
+Como veremos, éste es un importante argumento a favor de los tipos de cambio fijos ya que los evita un importante riesgo para los agentes expuestos al exterior: el riesgo cambiario.\footnote{La incertidumbre sobre cómo evolucionará la divisa en el futuro supone un riesgo que deben asumir y, para protegerse de él (agentes aversos al riesgo), los agentes pueden recurrir a: (i) productos financieros, incurriendo en costes que desincentivan el comercio o la realización de proyectos de inversión; o, (ii) mediante primas de riesgo en el precio pactado con la contraparte para compensar el riesgo cambiario. Sea cual sea el caso lo importante es que el riesgo cambiario desincentiva el comercio y la inversión extranjera.
+
+De hecho, KEYNES defendió que un sistema de tipos de cambio fijos era beneficioso para el comercio internacional, aunque en su obra \textit{Consecuencias Económicas de Mr. Churchill} (1925) criticó fuertemente el patrón oro porque el mecanismo de ajuste era costoso para países deficitarios. Estos se veían obligados a responder a las salidas de oro mediante subidas del tipo de interés (para reducir la demanda de importaciones) y reducciones de salarios (para mantener la competitividad de las exportaciones), lo que sólo podía conducir a un mayor desempleo. Como solución, propone un sistema de tipos de cambio fijos pero con bandas de fluctuación y flexibilidad en cuanto a posibles devaluaciones (realineamientos de la moneda para ajustar la balanza de pagos) y en cuanto a préstamos [\authorfont{Ver Tema 3.B.20}]. 
+}
+
+\subsubsection{Efectos sobre el Comercio y la Inversión}
+Un tipo de cambio fijo sería altamente beneficioso pues permitiría tener la certeza sobre cómo evolucionará el tipo de cambio en el futuro, bien plenamente en caso de que sea un Tipo de Cambio rígido, o bien aproximadamente en caso de que sea intermedio. En cualquier caso con un menor nivel de exposición al riesgo cambiario que un tipo de cambio flexible.
+
+Para ilustrar esto, podemos mencionar algunas de las contribuciones empíricas realizadas desde la teoría de las Áreas Monetarias Óptimas [\authorfont{Ver Tema 3.B.16}]:\footnote{Otro punto enfatizado tanto por la literatura teórica como en la práctica con la creación del euro es que una unión monetaria iba a suponer un instrumento de transformación de las estructuras productivas nacionales. La necesaria coordinación de Políticas Económicas impone una mayor disciplina a los gobiernos nacionales que tendrían una mayor presión para adoptar reformas estructurales que antes habían rechazado implementar. Además, otra razón era que como los países no podrían usar la devaluación para recuperarse ante shocks exógenos esto iba a incentivar dichas reformas.
+} 
+\begin{lnum}
+    \item ROSE (2000) publicó un influyente estudio sobre el impacto que tiene que dos países compartan la misma moneda en el comercio entre ellos.\footnote{Aplicando un modelo gravitacional [\authorfont{Ver Tema 3.B.6}] a los datos de comercio de muchos países, que incluían uniones monetarias, concluyó que los miembros de una unión monetaria comerciaban entre ellos tres veces más que con otros socios comerciales que eran similares en lo demás. Incluso excluyendo el componente de la unión monetaria el artículo era relevante, porque concluía que la variabilidad cambiaria influye de manera significativa en el comercio entre dos países. Estudios posteriores confirmaron que un tipo de cambio fijo también produce un incremento del comercio.
+    } No obstante, existen otros factores que menoscaban la validez actual de sus conclusiones: (i) el mayor desarrollo de los mercados financieros de pie a nuevos instrumentos que permiten cubrirse del riesgo de tipo de cambio; y, (ii) nuevos estudios encuentran que las ganancias derivadas son menores a las señaladas;
+    \item GOPINATH (economista jefe del FMI) et. al, señalan que las ganancias de la flexibilidad del tipo de cambio, en cuanto a la mejora de la depreciación sobre las exportaciones netas, pueden ser muy limitadas o incluso inexistentes.\footnote{GOPINATH parte de que FRIEDMAN y el modelo de MUNDELL-FLEMING asumen una fuerte correlación entre el tipo de cambio nominal y la relación real de intercambio (una depreciación del tipo de cambio nominal debería significar una depreciación uno a uno sobre la relación real de intercambio, RRI).
+    } Encuentran que una depreciación del 1\% del tipo de cambio nominal está asociada sólo a 0,1\% de depreciación en la relación real (bilateral) de intercambio. Este hecho es, además, consistente con la idea de que los precios en el comercio internacional no están fijados en la divisa del productor local (exportador) sino en una divisa fuerte (típicamente el dólar, i.e. \textit{dollar currency pricing}). Por tanto, el resultado parece indicar que los precios de las importaciones y las exportaciones son mucho más rígidos de lo que se preveía ante variaciones en el tipo de cambio. De esta forma, una depreciación de la moneda local no afectará en gran medida a las exportaciones netas.\footnote{Sin embargo, GOPINATH reconoce que: (i) la flexibilidad del tipo de cambio ayudó a los exportadores de \textit{commodities} en 2014 ante la caída del precio de las mismas; y, (ii) algunos sectores productivos se beneficiarían como predice la teoría. Por ejemplo, los servicios turísticos se pueden beneficiar de una depreciación del tipo de cambio al estar los precios fijados en moneda local (este sería el caso, muy sonado, del auge del turismo en Japón durante los últimos años). 
+    }
+\end{lnum}
+
+En conclusión, estos estudios parecen validar la idea de que un régimen flexible no es una herramienta útil ni positiva para remediar u evitar los desequilibrios exteriores. 
+
+No obstante, como cualquier asunto en economía, el consenso no es total. Algunos economistas, como McCULLOCH, han tratado de puntualizar este tésis, argumentando que, si bien es cierto que un régimen fijo puede ser positivo en términos de flujos comerciales, puede también ser negativo en términos de inversiones directas (cuenta financiera). Según él, no parece tan claro que un tipo de cambio fijo sea más favorable para el fomento del comercio y de la inversión que uno flexible por dos razones:
+\begin{lnum}
+    \item Bajo un régimen flexible, es probable que las empresas exportadoras prefieran producir directamente en los mercados suministrados en vez de hacer frente al riesgo cambiario (volatilidad del TC). Por tanto, supondría una reducción de las exportaciones pero un incremento en la IED; y,
+    \item Además, refuerza el argumento anterior \textit{sensu contrario}. El autor demuestra que, tradicionalmente, los países con regímenes fijos han optado por establecer controles de capital en vez de renunciar a su Política Monetaria, así como para corregir déficits en su cuenta corriente, lo que supone un desincentivo (o impedimento) de la IED. 
+\end{lnum}
+
+Por otro lado, también se ha observado que los regímenes fijos son más proclives a las crisis, mientras que los flexibles los son menos. Algunos autores argumentan que esto se debe a la actuación desfasada de la Política Monetaria en situaciones en que deviene imposible el mantenimiento de la paridad fijada.\footnote{
+Por ejemplo, en un escenario de inflación elevada, si esta no se consigue mitigar con el abanico de instrumentos disponibles, acabará trasladándose al tipo de cambio real. El TCR se apreciará y esto impactará negativamente en el saldo exterior. 
+
+De hecho, puede haberse validado empíricamente ya que se observa que, mientras los regímenes intermedios son más susceptibles a crisis bancarias y cambiarias, los tipos fijos más rígidos están asociados a colapsos del crecimiento. Puede ser que el elevado coste (principalmente en credibilidad) de salirse del régimen fijo hace que los gobiernos esperen demasiado tiempo para abandonarlo, haciendo el ajuste más doloroso. La clave para definir el riesgo del colapso de un régimen de tipo fijo (rígido o intermedio) es la sobrevaluación del tipo de cambio real. Si está sobrevaluado, la intervención del banco central para prevenir una mayor sobrevaluación reduce el riesgo de crisis, mientras que la intervención para defender el tipo de cambio aumenta el riesgo de crisis. Otro componente fundamental es si el banco central tiene una política macroprudencial para mitigar el riesgo de inestabilidad financiera o no.
+}
+
+\subsection{Mercados Financieros}
+Hasta este momento hemos comparado los regímenes cambiarios bajo la óptica del planificador. Es decir, hemos visto las ventajas e inconvenientes que presenta cada extremo en el mantenimiento del equilibrio interno y del equilibrio externo. Sin embargo, es analizar y comparar cómo los diferentes regímenes cambiarios pueden interactuar con el mercado internacional y descentralizado por antonomasía: el Mercado Financiero.
+
+\subsubsection{Crisis bancarias y Crisis cambiarias: Interrelación}
+En primer lugar, la relación existente entre las crisis cambiarias y las crisis bancarias. A finales de la década de los 90, con las crisis del sudeste asiático, se puso de manifiesto que las crisis cambiarias y bancarias son fenómenos íntimamente relacionados, y que no es posible estudiar las primeras sin tener en consideración las segundas y los nexos que las unen. Surgieron así los modelos de crisis cambiarias de tercera generación, también denominados de “crisis gemelas”. Estos modelos no aclaran cuál es la relación de causalidad entre ambos fenómenos, pero establecen que existe.
+
+Pues bien, la literatura económica subrayó entonces que los tipos de cambio flexibles resultan más propensos para evitar crisis bancarias, no solo porque evitan el surgimiento de crisis cambiarias (que pudiesen ocasionar finalmente una crisis bancaria), sino porque reducen el riesgo directo de ocurrencia de la crisis bancaria. El motivo está en el papel del BC como prestamista de última instancia.
+
+Al final, para que el BC pueda ejercer correctamente este rol es necesario que pueda crear tanto dinero como sea necesario para rescatar a las entidades en problema. Ante un tipo de cambio fijo, la entidad monetaria sin embargo no puede crear esta oferta monetaria a su antojo porque supondría la ruptura del tipo de cambio. Podría esterilizar, pero eso tiene un riesgo de quedarse sin reservas y por tanto precipitar el estallido de una crisis cambiaria de primera generación (modelo de Dooley). Por tanto, el tipo de cambio fijo impediría a las autoridades ejercer correctamente su labor de prestamista de última instancia, pudiendo originar problemas de inestabilidad en el sector bancario. 
+
+El estudio más relevante e influyente en este ambito es el realizado por EICHENGREEN y HAUSMANN. Los autores analizan los determinantes de las crisis financieras de los países asiáticos y encuentran que una de las claves fue la interrelación entre la crisis bancaria y la crisis cambiaria.\footnote{En concreto, la crisis bancaria provocó la crisis cambiaria. \href{https://www.nber.org/system/files/working_papers/w7418/w7418.pdf}{EICHENGREEN, B. \& HAUSMANN, R. (1999). \textit{Exchange Rates and Financial Fragility} (w7418; p. w7418). National Bureau of Economic Research.} 
+}
+
+Los autores enfatizan tres canales por los que el régimen cambiario y la fragilidad financiera están relacionados.\footnote{Si puede decirse algo positivo sobre la crisis asiática y los debates posteriores acerca de cómo fortalecer la arquitectura financiera internacional, es que infundieron nueva vida a un debate moribundo sobre las consecuencias de los regímenes cambiarios. Curiosamente, las primeras contribuciones a la literatura posterior a la crisis asiática sobre cómo hacer del mundo un lugar financieramente más seguro dijeron poco sobre la elección del régimen cambiario, centrándose en cambio en la transparencia, la supervisión prudencial, la política hacia los flujos de capital y la reforma del FMI. El énfasis en los escritos recientes es diferente; en ellos, el tipo de cambio ha pasado a ocupar un lugar central.
+} 
+
+\paragraph{Hipótesis del Riesgo Moral}
+El primero se plantea como la \textit{hipótesis del riesgo moral}. El punto de partida es la voluntad, implícita u explícita, de rescatar a las entidades financieras domésticas en dificultades (sea de los gobiernos nacionales o de las entidades financieras internacionales). Esta posibilidad genera un problema de riesgo moral puesto que, sin una supervisión o control adecuado sobre el comportamiento y/o actividades de estas instituciones, el conocimiento de esta ventaja induce a asumir riesgos (o no actuar con la diligencia debida) que, de otra forma, no se asumirían.\footnote{[\authorfont{Ver Tema 3.B.13}] El riesgo moral es un concepto económico que describe situaciones en las que un individuo tiene información asimétrica acerca de las consecuencias de sus propias acciones y sin embargo son otras personas las que soportan las consecuencias de los riesgos asumidos. El riesgo moral nos informa cómo los individuos asumen en sus decisiones mayores riesgos cuando las posibles consecuencias negativas de sus actos no son asumidas por ellos, sino por un tercero.
+
+Existe riesgo moral cuando una persona tiene una mayor información acerca de sus propias acciones que el resto de los individuos, esta situación provoca que, en caso de que sea otra la persona que soporta los costes asociados a la falta de esfuerzo o responsabilidad, los incentivos a esforzarse o ser responsables estén distorsionados. El riesgo moral reduce la capacidad del mercado para asignar eficientemente el riesgo.
+} 
+
+Los autores identifican que el régimen fijo (cuasi-fijo) operó como seguro implícito en las economías Asiáticas: señalizando que la autoridad defendería la paridad, bancos y empresas \textit{internalizaron} que el riesgo cambiario sería socializado, y se endeudaron en moneda extranjera y a corto plazo sin cubrirse. Cuando el \textit{peg} se volvió insostenible y se produjo el quiebre,\footnote{El \textit{peg} coexistía con déficits por cuenta corriente, entrada masiva de capitales a corto plazo, apreciación real y reservas insuficientes frente a pasivos externos; cuando se desaceleró el crecimiento y subieron los tipos en Estados Unidos, el mercado anticipó que defender la paridad requería tasas prohibitivas o perder reservas, lo que gatilló ataques especulativos (especialmente en Tailandia).
+} la depreciación revalorizó de golpe los pasivos en divisa, deterioró balances y solvencia, y la crisis financiera se propagó por contagio regional. 
+
+En pocas palabras, el régimen cambiario fijo es fuente de riesgo moral porque reduce \textit{ex ante} el precio percibido del riesgo cambiario. Por tanto, para evitar este problema, es deseable una mayor flexibilidad de tipo de cambio que evite la entrada masiva de capital en el corto plazo, fortaleciendo la estabilidad del sistema financiero. Las instituciones financieras y las sociedades no financieras apreciarían mejor la necesidad de cubrir sus exposiciones y por tanto estarán mejor preparadas ante variaciones en el tipo de cambio. La dolarización sería otra opción, pues permite limitar la capacidad de las autoridades monetarias de actuar como prestamista de última instancia, lo que reduciría las expectativas de un \textit{bail-out}.
+
+Dos episodios muy parecudos muestran este mismo fenómeno en la crisis financiero de 2008: Islandia y parte de la Europa emergente. En Islandia, el sistema bancario creció desproporcionadamente con financiación exterior; cuando esa financiación se secó en octubre de 2008, colapsaron los tres grandes bancos y el evento desembocó en una crisis macro-financiera con fuerte tensión cambiaria (la narrativa BIS subraya el rol de la dependencia de la financiación externa y la fragilidad que eso crea). De la misma forma, en Europa emergente, el propio relato del FMI sobre 2008/09 describe como en países con déficits gemelos, el \textit{sudden stop} y la crisis bancaria se acompañaron de quiebre del \textit{peg}. Por ejemplo, Ucrania sufrió una crisis bancaria y el fin de su \textit{peg} durante la crisis global. 
+
+\paragraph{Hipótesis del pecado original}
+Un segundo problema que enfatizan EICHENGREEN y HAUSMANN es lo que ellos denominan el pecado original.\footnote{Se conoce como pecado original haberse endeudado en moneda extranjera sin cobertura de riesgo cambiario adecuada. 
+
+Endeudarse en moneda extranjera (en dólares en la mayoría del mundo o en euros en el este de Europa) es más barato que endeudarse en la moneda local y a veces, dependiendo del desarrollo del mercado financiero local, es la única alternativa para obtener financiación. Sin embargo, este fenómeno liga estrechamente la política fiscal a la política monetaria/cambiaria: una devaluación puede provocar la suspensión de pagos de la deuda generando una crisis de deuda soberana, una crisis bancaria o las dos (según sea el origen de esa deuda en moneda extranjera). También puede provocar una huida de capitales previa que se traduzca en una crisis fiscal: si exógenamente aumenta la percepción del riesgo de devaluación (o de redenominación, como fue el caso de la crisis de deuda soberana europea) se produce una huida de capitales que deprime el crédito y provoca tensiones deflacionistas, abultándose así el déficit público y reduciéndose la sostenibilidad de la deuda.
+} 
+
+Los autores identifican una tendencia de los países en desarrollo a pedir prestado en moneda extranjera ya que existen una reticencia para conseguir fondos en moneda local para proyectos de inversión a largo plazo (por ejemplo debido a un historial de inflación, a mercados financieros poco desarrollados o a una estructura institucional frágil). En este escenario, empresas que necesiten financiación pueden verse forzadas a emitir obligaciones en otra divisa o a corto plazo en moneda nacional, enfrentándose a un \textit{currency mismatch} (descalces de moneda\footnote{Activos e ingresos están en moneda local mientras que pasivos están en moneda extranjera. Una devaluación infla el valor real de la deuda, deteriora balances y puede volver insolventes a bancos y firmas.
+}) y/o a un \textit{maturity mismatch} (proyectos a largo plazo estarán financiados con préstamos a corto plazo).\footnote{En esencia, estas discrepancias no existen porque los bancos y las empresas carezcan de la prudencia necesaria para cubrir sus exposiciones. El problema, más bien, es que un país cuyas obligaciones externas están necesariamente denominadas en moneda extranjera es, por definición, incapaz de cubrirse.
+} De esta forma, a pesar de que un país tenga buenas perspectivas económicas y, por tanto, existan efectivamente oportunidades de inversión, el país se encontraría en una situación de vulnerabilidad financiera por dos razones: 
+\begin{lnum}
+    \item Posibilidad de pérdida de valor de la moneda nacional en caso de pedir prestado en otra moneda; y,
+    \item Subida de tipos de interés en el caso de emitir obligaciones a corto plazo en moneda local, lo que puede llevar a que los préstamos no se renueven.
+\end{lnum} 
+
+EICHENGREEN y HAUSMANN concluyen que ante esa situación se genera un dilema para la política de tipo de cambio. Resulta que tanto los tipos de cambio fijos como los flexibles son problemáticos, ya que:
+\begin{la}
+    \item \textbf{Tipo de Cambio flexible}. Si la moneda nacional se deprecia frente a la divisa, habría un deterioro del balance de las empresas que obtienen sus ingresos en moneda local pero piden prestado en dólares (\textit{currency mismatch}). Por tanto, aumentará la probabilidad de quiebras y suspensiones de pagos promovidos por dichos desajustes y afectará a la capacidad de proporcionar crédito de las instituciones financieras (morosidad o racionamiento de crédito). 
+    
+    A medida que el tipo de cambio se deprecie, los temores de los prestamistas a una depreciación más aguda les llevará a comprar divisa para cubrir sus exposiciones, causando una depreciación mayor\footnote{Otra posibilidad sería imitar a Australia. El miedo a flotar se puede cubrir a largo plazo consiguiendo una redención del pecado original mediante la construcción de mercados de valores domésticos profundos.
+    }\textsuperscript{,}\footnote{Durante la década comprendida entre 1992 (crisis del SME) y 2002 (final del Currency Board en Argentina) hubo varias crisis cambiarias graves, por lo que la tendencia basculó hacia no anunciar un régimen de tipo de cambio fijo, ya que parecía más sujeto a los ataques especulativos, sino hacia regímenes intermedios, con bandas en la práctica (esto es el \textit{miedo a flotar}, CALVO y REINHART, 1999).
+    }
+    \item \textbf{Tipo de cambio no perfectamente flexible}. En las mismas circunstancias, las autoridades monetarias de países que no aspiraban a tener un tipo de cambio perfectamente flexible aumentaban los tipos de interés para evitar la depreciación. Sin embargo, ello inducía tres efectos negativos:
+    \begin{lnum}
+        \item La subida de tipos precipitaba defaults en deudas domésticas a corto plazo (\textit{maturity mismatch});
+        \item La subida de tipos de interés comprometió la recuperación económica de estos países, al afectar a la inversión y al consumo (i.e. colapsos del crecimiento); y,
+        \item La variabilidad en los tipos de interés compromete el desarrollo de un mercado de deuda local, ya que los activos tenían precios demasiado volátiles
+    \end{lnum}
+    \item \textbf{Dolarización (o TC rígido)}. Al haber solo una moneda se eliminan los desajustes. Se podrían pedir préstamos a largo plazo en dólares, que pasarían a ser la moneda local.
+\end{la}
+
+En conclusión, todas las soluciones son imperfectas, aunque la dolarización parece ser la mejor opción para conseguir la estabilidad financiera según estos autores. Esto sería por tanto un punto a favor de mantener un tipo de cambio fijo. 
+
+No es tan sencillo. El caso de México en los años 80's es el mejor ejemplo de ello. El país experimento una crisis cambiaria de primera generación que acabó provocando una devaluación importante del tipo de cambio y un aumento del valor de la deuda externa que acabó generando también el impago por parte del país. Por tanto, garantizar la sostenibilidad de la deuda externa no es cuestión únicamente de optar por un régimen cambiario u otro, sino sobre todo por mantener Políticas Fiscales y Monetarias macro prudenciales, al mismo tiempo que se vigila de cerca el endeudamiento externo. Evidentemente fijar o controlar el tipo de cambio puede ayudar, pero debe ir acompañado de un entorno económico favorable que sustente dicha paridad. 
+
+Además, merece la pena señalar que las economías emergentes están reduciendo la financiación en moneda extranjera en estas últimas dos décadas, por lo que se podría pensar que se está produciendo cierta redención del pecado original. No obstante, existe una gran participación de empresas extranjeras que participan en la economía doméstica en moneda extranjera (pasivos por IED, PPI deteriorada).
+
+\paragraph{Hipótesis del problema de compromiso}
+La tercera y última hipótesis sugiere que el problema es la debilidad de las instituciones, de la que emana un problemas de compromiso (inconsistencia dinámica).
+
+Los acreedores prestan su dinero hoy pero tienen que esperar hasta mañana para ser reembolsados. Las transacciones financieras, en otras palabras, son intercambios intertemporales que se llevan a cabo a lo largo del tiempo y, por lo tanto, inevitablemente surgen problemas de compromiso y de aplicación (enforcement). 
+
+Es decir, transacciones que son mutuamente deseables \textit{ex ante} pueden no serlo \textit{ex post}: existe un problema de \textbf{inconsistencia dinámica}. El prestatario podría estar mejor si no tuviera que devolver el préstamo ya que los acuerdos financieros no son (necesariamente) autoejecutables. 
+
+Si bien es cierto que la solución pasa por políticas que mejoren la infraestructura financiera (por ejemplo, mejora de los derechos de propiedad), las implicaciones para el régimen cambiario están menos claras: 
+\begin{la}
+    \item Por un lado, hay un argumento a favor de una mayor flexibilidad para liberar a las autoridades y permitirles respaldar al mercado, que en condiciones de subdesarrollo institucional probablemente será particularmente frágil y necesitará apoyo oficial. Si están comprometidas con un tipo de cambio fijo, el banco central y el gobierno pueden verse impedidos de proporcionar servicios necesarios, entre otros: (i) actuar de prestamista de última instancia; y/o, (ii) provocar una inflación sorpresiva que reduzca el valor real de las deudas, de otro modo insostenibles; pero,
+    \item Al mismo tiempo, los prestamistas comprenderán el incentivo de las autoridades a recurrir a este impuesto de último recurso y exigirán tipos de interés más elevados como compensación. Estos tipos de interés más altos harán que el sistema financiero sea más frágil en la medida en que las deudas crezcan más rápido que la capacidad de hacerles frente.  
+\end{la}
+
+\subsubsection{Estabilidad del mercado cambiario descentralizado: Ataques especulativos}
+Otro punto importante que debemos analizar en el análisis de deseabilidad entre un tipo de cambio fijo o flexible es la posibilidad de que ocurran movimientos especulativos desestabilizantes. 
+
+El debate sobre esta cuestión ha estado presente en la literatura económica durante décadas sin que exista consenso. 
+
+\paragraph{Tipo de Cambio fijo: Experiencia histórica}
+Los partidarios de un régimen de tipo de cambio fijo aseguran que los regímenes flexibles ven aumentada su volatilidad como consecuencia del comportamiento de especuladores que intentan obtener beneficios anticipando el comportamiento del tipo de cambio. Por ejemplo, si el especulador considera que mañana ($C$, sobre la linea discontinua) el tipo de cambio estará más depreciado que hoy ($B$, sobre la linea continua), venderá hoy esa moneda para comprarla mañana. Si todos se comportan de la misma forma al final las fluctuaciones cíclicas del tipo de cambio tendrían mayor amplitud que la que habría existido sin operaciones especulativas (linea discontinua). 
+
+\imagenfit{FRIEDMAN_Especulacion.png}{Fluctuaciones del tipo de cambio y efectos de las estrategias especuladores sobre las fluctuaciones del Tipo de Cambio (directo)}{Apuntes Alvaro Medina}{Tema 3.B.16}
+
+No obstante, la experiencia histórica nos demuestra que los tipos de cambio fijos no están exentos de ataques especulativos que pueden derivar en importantes crisis cambiarias. La crisis del SME en 1992 es el mejor ejemplo de ello. La inestabilidad cambiaria puede ser incluso mayor pues los especuladores disponen de una \textit{one-way bet}, es decir, cuando los agentes comienzan a creer que la autoridad monetaria va a devaluar, todos los agentes estarán de acuerdo en la dirección que tomará el tipo de cambio, lo que llevará a que todo el mundo apueste en el mismo sentido. La especulación se vuelve entonces prácticamente \textit{risk-free} porque si finalmente la autoridad no devalúa lo único que pierdes son los \textit{fees} a los que has hecho frente al intercambiar las monedas, pero nada más; y si devalúa acabas ganando mucho dinero. 
+
+Sin embargo, en un tipo de cambio flexible no sabemos realmente a dónde va a ir el tipo de cambio: puede apreciarse, puede depreciarse. En definitiva, es más probable que se perciba un riesgo cambiario por lo que no se aportará con tanta fuerza, y como las acciones agregada de los especuladores se anulan (ejem) la volatilidad cambiaria será menor.
+
+\paragraph{Tipo de Cambio flexible: FRIEDMANN}
+De hecho, un contrargumento muy citado es el que postuló MILTON FRIEDMAN. FRIEDMAN acepta que hay especulación en el mercado de divisas, pero que lejos de ser desestabilizante lo que hace la especulación es reducir la amplitud del tipo de cambio, pues es solo este tipo de especulación la que puede \textit{sobrevivir} en el mercado. Razonando sobre la base de un equilibrio anclado en el valor real del Tipo de Cambio y en un marco temporal continuo. Supongamos que un especulados cree que continuará una depreciación mañana:
+\begin{la}
+    \item \textbf{Acierta}. Si acierta, el precio ya estaba por encima de su valor fundamental cuando vendió, por lo que su venta acelera el retorno al valor de equilibrio, y por tanto actúa como estabilizadora; y,
+    \item \textbf{Erra}. Si no acierta, pierde dinero.
+\end{la}
+Sobre este secuencia lógica concluye que sólo las estrategias que empujan sistemáticamente el precio hacia su valor fundamental (real) son rentables y perduran. Cualquier otra estrategia generará pérdidas y desaparecerá. Por tanto, FRIEDMAN argumenta que el (buen) especulador, lo que realmente estará haciendo es comprar la divisa cuando está barata (B) y venderla cuando está cara (punto F), permitiendo que el tipo de cambio fluctúe menos alrededor de su valor a largo plazo. Gráficamente:
+
+\imagenfit{FRIEDMAN_Especulacion.png}{Fluctuaciones del tipo de cambio y efectos de las estrategias especuladores (rentables) sobre las fluctuaciones del Tipo de Cambio (directo)}{Apuntes Alvaro Medina}{Tema 3.B.16}
+
+\paragraph{Modelo comparado: RODRIGUEZ y RODRIGUEZ}
+Desde una perspectiva comparada, el análisis más sobresaliente fue realizado por RODRIGUEZ y RODRIGUEZ, donde estudian la relación entre las bandas de fluctuación y la volatilidad cambiaria. 
+
+Los autores desarrollan un modelo de determinación del tipo de cambio basándose en la PNCI y asumen que cualquier régimen cambiario puede ser considerado un caso particular de una zona de bandas de fluctuación: con tipo de cambio fijo la amplitud de la banda será de $0$, y con flotación libre sería de infinito. Según los autores hay una relación endógena entre: (i) la amplitud de la banda; (ii) credibilidad; y, (iii) volatilidad del tipo de cambio.
+\begin{la}
+    \item \textbf{Tipo de Cambio rígido ($\to$ fijo)}. Las bandas más estrechas imponen límites más rígidos al tipo de cambio, por lo que en principio debería fluctuar menos. Sin embargo, esta gran rigidez deja poco margen a las autoridades para actuar, lo que provocará en última instancia que tengan cierta tendencia hacia la devaluación/apreciación. Como los agentes lo saben, otorgan poca confianza al mantenimiento de la paridad; y,
+    \item \textbf{Tipo de cambio semi-flexible ($\to$ flexible)}. Las bandad más amplias imponen menos límites al tipo de cambio por lo que debería fluctuar más, pero ya que la autoridad tiene más margen para acomodarse, no presentará tanta tendencia hacia la devaluación/apreciación, puesto que será menos necesario. Por tanto, los agentes confiarán más en el mantenimiento del tipo de cambio. 
+\end{la}
+
+En definitiva, la volatilidad del tipo de cambio será el resultado de dos fuerzas que se contraponen entre sí. Como ejemplo piensa paradigmático está el caso del SME: cuando se ampliaron las bandas de fluctuación se observó una reducción en la volatilidad cambiaria gracias a la mejora en la credibilidad de que el SME sería estable a largo plazo. Por tanto, para reducir la volatilidad habrá que lograr un buen equilibrio en ese \textit{trade off} entre credibilidad y rigidez cambiaria. 
+
+\subsection{Aspectos Políticos}
+Uno de los argumentos que más solidez tuvo en el pasado para justificar la adopción de un régimen cambiario fijo es evitar que se produzcan devaluaciones competitivas que acaben generando una guerra de divisas que lleve a un EN que no sea óptimo-paretiano. De hecho, los arquitectos del sistema de BW tomaron en consideración las políticas de empobrecimiento del vecino que tuvieron lugar en la década de los 30, y consideraron que el sistema de paridades fijas adoptado por tal sistema podía evitar dichas devaluaciones competitivas. 
+Sin embargo, este argumento a favor del tipo de cambio fijo puede ser debatible:
+1º Porque para garantizar tal situación necesitaríamos que hubiese una adopción global de tipos de cambio fijos. Es decir, de nada sirve que A mantenga un tipo de cambio fijo frente a B, si llega C y se devalúa con respecto a los 2 anteriores.
+2º Porque solo se evitan las devaluaciones competitivas si el tipo de cambio fijo se cumple, es decir, siempre que no se vulnere la paridad o no haya cambios “poco justificados” de las paridades defendidas en sistemas crawling.
+
+
+\clearpage
+\section{Mercado Cambiario: Actuaciones de Política Económica}
+
+Hasta hora hemos podido ver que existen multitud de regímenes cambiarios sin que la ventajas e inconvenientes de cada uno nos puedan conducir a penar que haya alguna superior a otro. Tanto el tipo de cambio flexible como fijo tienen ventajas y desventajas que hay que tomar en consideración. 
+
+Ni un tipo de cambio flexible es lo más recomendable para cualquier país, ni lo es tampoco un régimen de cambio fijo. Al final, la deseabilidad dependerá, como dijimos al principio, de las características concretas de cada economía (credibilidad, estructuras de mercado, fuente de desquilibrios, grado de apertura, etc.). Además, nada impide que las características no cambien a lo largo del tiempo, de manera que el régimen cambiario idóneo hoy no tiene por qué serlo en el futuro. Tal y como FRENKEL tituló a uno de sus trabajos \textit{no hay un régimen cambiario que sea óptimo para todos los países y en cualquier momento del tiempo}. 
+
+Sea como fuere, una vez que el país en cuestión ha decidido cuál es el régimen cambiario que quiere adoptar, lo que si está claro es que deberá implementarlo. En el caso de la libre flotación su adopción es relativamente sencilla, pues supone simplemente que no hay que intervenir el Tipo de Cambio y su fijación se deja en manos del mercado descentralizado de divisas (FOREX, [\authorfont{Ver Tema 3.B.13}]). Sin embargo, en los regímenes de tipo de cambio fijo, en los que sí es necesario intervenir, la autoridad tendrá que seguir un comportamiento activo en el mercado cambiario a través de la regulación y de las operaciones de intervención. Así que, ¿cómo se instrumentalizan entonces tales operaciones? ¿cómo lograr aplicar el tipo de cambio elegido? 
+
+\textbf{¿Qué queremos decir? --} En este apartado presentaremos los intrumentos que posee la Autoridad Monetaria para perseguir el régimen cambiario elegido. Veremos la distinción entre operaciones de mercado y instrumentos regulatorios y cómo el elemento crucial de optar por uno u otro es, precisamente, la circulación de capitales.
+
+¿Cómo se persigue un régimen cambiario objetivo? Para explicarlo debemos recurrir de nuevo a la trinidad imposible de MUNDELL anunciada antes. Si optamos por un Tipo de Cambio fijo deberemos decidir a qué elemento renunciamos y cuál elegimos, pues cada una de las alternativas requiere una forma de proceder diferente:
+\begin{la}
+    \item \textbf{Libre circulación de capitales}. Si queremos libertad de movimiento de capitales y tipo de cambio fijo deberemos renunciar a la Política Monetaria independiente y recurrir a intervenciones en el mercado cambiario; y,
+    \item \textbf{Política Monetaria flexible}. Si queremos política monetaria flexible y tipo de cambio fijo, habrá que renunciar a la libertad de movimiento de capitales, y recurrir a la regulación de éstos.
+\end{la}
+
+
+\begin{specialblock}{\href{https://www.imf.org/en/publications/annual-report-on-exchange-arrangements-and-exchange-restrictions/issues/2024/12/19/annual-report-on-exchange-arrangements-and-exchange-restrictions-2023-541890}{\textit{Annual Report on Exchange Arrangements and Exchange Restrictions}, FMI (2023)} -- Medidas reportadas por los Estados Miembros}
+    Las medidas de liberalización y de endurecimiento de los mercados de divisas aumentaron con fuerza tanto en 2022 como en 2023, en contraste con el ritmo más moderado observado en 2021. 
+    
+    [...] Tanto las medidas de flexibilización como las de endurecimiento aumentaron de forma generalizada en 2022 en comparación con 2021, con incrementos de aproximadamente 170\% y 300\%, respectivamente.  [...] De los 60 cambios reportados en 2023, 26 fueron clasificados como medidas de flexibilización, ligeramente menos de la mitad de las registradas en 2022, mientras que el número de medidas de endurecimiento disminuyó en algo menos de la mitad con respecto a 2022, hasta situarse en 22 cambios. [...] En términos agregados, las medidas de flexibilización superaron a las de endurecimiento en casi todas las estructuras de mercado tanto en 2022 como en 2023, y se observó un mayor grado de liberalización en todas las estructuras de los mercados de divisas en comparación con 2021. Los países miembros informaron de 121 cambios que afectaron a los mercados de divisas en 2022, un aumento del 105\% con respecto a 2021, alcanzando niveles absolutos cercanos a los de 2020, año excepcional debido a la introducción de numerosas medidas de flexibilización relacionadas con la COVID-19.  Las medidas de flexibilización en 2022 se concentraron principalmente tanto en los mercados spot como en los mercados a plazo, con especial atención a los países que enfrentaron las consecuencias de la invasión rusa de Ucrania. 
+
+    [...] El repunte simultáneo de las medidas de flexibilización y endurecimiento en 2022 y 2023 puede atribuirse en parte a Türkiye y Ucrania, que concentraron casi la mitad de todas las medidas en 2022 y aproximadamente un tercio en 2023. [...] Türkiye informó del mayor número de acciones de flexibilización o endurecimiento (16), seguida de Ucrania (5), Iraq y la RDP Lao (3 cada uno), y Brasil, Ecuador y Mauritania (2 cada uno). Un total de 21 cambios se concentraron en las facilidades permanentes de divisas, donde se agrupan las 16 medidas adoptadas por Türkiye (véase más adelante la discusión sobre facilidades permanentes de divisas). Fuera de este ámbito, el mercado spot registró 13 cambios, de los cuales 8 correspondieron a medidas de flexibilización y 5 a medidas de endurecimiento. Ucrania continuó liberalizando a partir de abril de 2023, permitiendo a los bancos incluir en el cálculo del volumen de venta de moneda extranjera en efectivo un 120\% (anteriormente 100\%) de las compras de moneda extranjera no en efectivo realizadas a personas físicas en un determinado período, y posteriormente extendió estas autorizaciones a instituciones financieras no bancarias y operadores postales en agosto. 
+
+    \imagenfit{MedidasAdoptadas_FMI_Report.png}{Medidas adoptadas en los Mercados de Divisas, 2019-2023}{\href{https://www.imf.org/en/publications/annual-report-on-exchange-arrangements-and-exchange-restrictions/issues/2024/12/19/annual-report-on-exchange-arrangements-and-exchange-restrictions-2023-541890}{\textit{Annual Report on Exchange Arrangements and Exchange Restrictions}. FMI (2023)}}
+    
+    [...] En el caso de Ucrania, los cambios introducidos en 2022 y 2023 reflejan la respuesta tanto a las consecuencias económicas como a los mayores riesgos para la seguridad nacional tras la invasión rusa iniciada en febrero de 2022. [...] Las medidas incluyeron la fijación de la grivna (Ucrania) al dólar estadounidense y la restricción de transacciones, en los mercados spot y a plazo, relacionadas con la compra de moneda extranjera por parte de bancos, instituciones financieras no bancarias y operadores postales, permitiéndose únicamente la compra de moneda extranjera a clientes (se prohibió la venta de moneda extranjera en efectivo a clientes).
+    
+    En el caso de Türkiye, la aceleración de la inflación, la fuerte presión sobre la lira y el aumento de la incertidumbre y turbulencia financiera sistémica que comenzaron a principios de 2022 y persistieron durante todo el período cubierto por el informe explican la multiplicidad de cambios, en particular en su facilidad permanente de divisas.
+\end{specialblock}
+
+\subsection{Intervención en el Mercado Cambiario}
+Las intervenciones en el mercado cambiario consisten en actuaciones por parte del Banco Central de un país con el objetivo de controlar el tipo de cambio mediante operaciones con reservas internacionales.\footnote{La gestión de las reservas internacionales debe asegurar que los activos en divisas de los que dispone el sector público: (i) tengan un volumen adecuado; (ii) se puedan utilizar en el momento necesario; y, (iii) contribuyan a conseguir los objetivos de Política Económica minimizando los riesgos y costes (de oportunidad) asociados a tener dichas reservas, controladas por las autoridades monetarias. 
+
+La gestión se debe ver en un contexto amplio de la política y la situación económica nacional. Como es normal, la tenencia de reservas se han considerado históricamente (aunque, en realidad, no lo son por ser insuficientes en la mayoría de países) un seguro frente a shocks financieros y paradas súbitas en el acceso a los mercados de capitales, así como un medio para mejorar la credibilidad y los instrumentos que tiene a su alcance la política monetaria. 
+
+En concreto, los usos de las reservas de divisas se pueden clasificar del siguiente modo: (i) intervenir en el mercado de divisas para influir o controlar el tipo de cambio; (ii) fomentar la confianza de los inversores en que el país podrá hacer frente a sus pagos en divisas, y así indirectamente reducir su coste de financiación en el exterior y limitar la probabilidad de una crisis cambiaria; (iii, insuficientes) pagar los bienes y servicios que importa el país incluso en un momento en el que no le sea posible acceder a financiación para ello; (iv) realizar operaciones de gestión de la liquidez de la política monetaria (por ejemplo, mediante swaps de divisas en los que se usan activos en divisas como aval o colateral); (v) fomentar la liquidez de los instrumentos del mercado (un instrumento es líquido si se pueden realizar transacciones con él rápidamente y con escaso impacto en el precio) y la liquidez de la financiación (la capacidad para financiarse en un espacio corto de tiempo mediante la venta de un activo en divisas (por ejemplo, un título del Tesoro americano) o el acceso a financiación externa (por ejemplo, líneas de swap entre bancos centrales); (vi) conceder liquidez al sector bancario en situación de emergencia; (vii) asegurar que el Estado puede hacer frente a sus pagos de deuda pública emitida en moneda extranjera, lo cual permite ampliar el abanico de fuentes de financiación pública y reducir su coste; (viii) invertir las reservas en exceso de las necesarias para obtener una rentabilidad; y, (ix) financiar programas de desarrollo u obtener rentabilidad que revierte al sector público (\textit{sovereign wealth funds}).
+} Es decir, las autoridades buscan alterar el tipo de cambio que se alcanzaría con una flotación plenamente libre.
+
+Estas intervenciones buscan fundamentalmente mantener la paridad deseada, si bien, como hemos visto, incluso en regímenes flexibles pueden producirse intervenciones puntuales para corregir pequeños desequilibrios en el mercado, sin carácter exhaustivo:\footnote{Dato: Tras la crisis asiática de finales de los 90, las reservas mundiales de divisas en poder de los bancos centrales se han multiplicado por 9. China es el país con la mayor reserva de divisas (valoradas en torno a los 3 billones de dólares).
+} 
+\begin{lnum}
+    \item \textbf{Motivos precautorios}. En los países emergentes, la acumulación de reservas fomenta la confianza de los inversores en que el país podrá hacer frente a sus pagos en divisa y así indirectamente reducir su coste de financiación en el exterior y limitar la probabilidad de una crisis cambiaria. Se puede entender en términos de signalling (se envía una señal de la fiabilidad de estos países). De este modo, las intervenciones oficiales en el mercado de divisas irían encaminadas a adquirir divisas como un seguro frente a la elevada volatilidad de los flujos de capital y los denominados \textit{sudden stops};
+    \item \textbf{Motivos depreciatorios} (mejora de competitividad). Algunos analistas argumentan que las intervenciones por parte de ciertas economías emergentes buscan devaluar el tipo de cambio y mejorar la competitividad de las exportaciones, así como atraer inversión extranjera, con el objetivo de fomentar el crecimiento económico; y,
+    \item \textbf{Motivos de estabilización de precios}. Con el fin de suavizar el impacto cíclico en el caso de exportadores de materias primas.  Cuando el precio es elevado, estos países acumulan reservas con el fin de crear un colchón para hacer frente a las necesidades de liquidez durante el ciclo bajista. Dichas reservas, a veces gestionadas por fondos soberanos, sirven también de instrumento de ahorro para generaciones futuras o para desarrollar proyectos de inversión en infraestructuras. En otras palabras, el objetivo es ir contra el viento y contrarrestar los movimientos del tipo de cambio a corto plazo.
+\end{lnum}
+
+Independientemente de la motivación subyacente, existen dos formas o diseños principales de esta interveción.
+
+\subsubsection{Operaciones de Mercado Abierto: Divisas}
+Los Bancos Centrales pueden realizar operaciones en el mercado de divisas en función del tipo de presión que se esté produciendo sobre el tipo de cambio, que determinará si es una operación de compra o venta. Más concretamente, si la moneda tiene una presión a la depreciación, entonces la autoridad tendrá que intervenir vendiendo divisa y comprando moneda nacional en el mercado cambiario. Además, pueden realizarse de forma unilateral por los BC, o de forma concertada por diferentes BC, como fue el caso de los \href{https://en.wikipedia.org/wiki/Plaza_Accord}{Acuerdos del Plaza}. 
+
+Las operaciones de intervención pueden clasificarse en:
+\begin{la}
+    \item \textbf{Operaciones no esterilizadas}. Cuando la autoridad monetaria interviene mediante operaciones no esterilizadas se está produciendo una modificación de la oferta monetaria, de tal manera que la política cambiara puede entrar en conflicto con la monetaria. Supongamos que hay una alteración en las preferencias sobre el dinero (moneda nacional), que genera un exceso de saldos reales. En dicho escenario, ya sea porque los agentes compran Bonos y otros activos (nacionales o extranjeros), haciendo subir el precio de los Bonos y, en consecuencia, dimsinuir el Tipo de Interés, o bien porque simplemente, por el exceso de ahorro generaod. Ante dicha caída, habría una huida de capitales, a la que el Banco Central deberá responder comprando activos denominados en moneda nacional a cambio de divisas (moneda extranjera);\footnote{
+    Supongamos que queremos mantener el tipo de cambio fijo pero adoptar una política monetaria anti-inflacionista. Si tenemos libertad de movimiento de capitales esto no será posible, pues la política monetaria contractiva llevaría a un aumento del tipo de interés y a una apreciación del tipo de cambio. Gráficamente, si nos basamos en la PNCI y en una demanda de dinero con pendiente negativa en el plano oferta monetaria tipo de interés tal y como asume mayoritariamente la literatura observaríamos que:
+
+    Por tanto, este tipo de operaciones no esterilizadas no sería posible.
+    } y,
+    \item \textbf{Operaciones esterilizadas}. En este caso la Autoridad Monetaria modifica la composición de la oferta monetaria, pero no su cuantía, por lo que no se produce ningún efecto sobre el tipo de cambio. ¿Por qué estará entonces interesada la autoridad monetaria en realizar esta operación? 
+    
+    Fundamentalmente para lograr acumular reservas internacionales. Supongamos que el banco central desea incrementar la cantidad de reservas de las que dispone. Para ello, puede optar por expandir la oferta monetaria comprando divisa entranjera. Ahora bien, esa operación llevaría a una depreciación de la moneda. Para evitarlo, lo que se hace es drenar esa liquidez creada mediante la venta de activos nacionales (denominados en moneda nacional) que antes eran propiedad del banco central. Así, vemos que hay una modificación en el activo (aumentan las reservas, caen los activos nacionales) pero no un cambio en su tamaño, y por tanto $M_0$ permanece constante.\footnote{Otro ejemplo, relaciónado con la sustituibilidad imperfecta de activos, sería el siguiente.
+    
+    Supongamos que los Bonos nacionales y extranjeros no son sustitutos perfectos (los bonos extranjeros presentan riesgo país, regulación, costes de preferencias, etc.). En este escenario, el Banco Cetral decide recomponer su Balance por algún motivo (por ejemplo, de riesgo). Su objetivo es reducir la tenencia de activos denominados en divisas y aumentar los denominados en moneda nacional. Para ello, puede realizar lo sieguiente: al vender activos extranjeros proporcionará un mayor nivel de reservas internacionales, ...}
+\end{la}
+
+\subsubsection{\textit{Jawboning}: Persuasión y amenazas}
+La otra estrategia de la que dispone es el \textit{jawboning}. Consiste en la amenaza de la autoridad monetaria de intervenir en el mercado de divisas en una dirección determinada. El mero anuncio influye en las expectativas de los agentes, que realizan movimientos en dicha dirección.
+
+Para ello el anuncio debe ser creíble: \textit{profecía autocumplida}. Por ejemplo, supongamos que las autoridades anuncian hoy que van a intervenir para depreciar el tipo de cambio. Esto es recogido por las expectativas de los agentes, quienes esperan esa depreciación, y aunque nada ha cambiado en el mercado monetario, al final se produce hoy esa depreciación del tipo de cambio.
+
+\imagenfit{Jawboning.png}{Efecto \textit{jawboning}: Las expectativas de depreciación inducen una depreciación de la moneda sin la intervención del Banco Central}{Elaboración propia}
+
+\subsection{Ventajas e Inconvenientes: Intervención}
+No obstante, no debemos perder de vista que cualquier operación de la Autoridad Monetaria acarrea unos costes. Uno de los más comúnmente citados es el de oportunidad de las reservas. Las reservas internacionales son un capital que podría invertirse en programas con rendimiento a largo plazo y que, según estimaciones de SUMMERS o RODRICK, pueden suponer en torno al 1\% del PIB en algunos países.
+
+En puridad, la intervención en los mercados cambiarios se realiza mediante la gestión de reservas, a través de la cual se altera directamente la oferta/demanda de divisas. Sin embargo, la Política Monetaria, entre otras, también afectan al mercado cambiario (no afectan a reservas internacionales pero al crédito interno). 
+
+\paragraph{\textit{Quantitative Easing}}
+Uno de los más arduos debates que ha surgido tras la Gran Recesión ha sido acerca de los efectos del QE tanto en Estados Unidos como en la Eurozona sobre el mercado cambiario. 
+
+Desde un punto de vista teórico, CORSETTI (2016) sugiere con un modelo que los países grandes y con moneda fuerte pueden utilizar la expansión cuantitativa como instrumento para conseguir la depreciación de sus monedas y la estabilización del ciclo, aplicando así una política de beggar thy neighbour más sutiles pero en espíritu equivalentes a las devaluaciones competitivas prohibidas por el FMI. ‒ Evidencia de que QE- mayor efecto ha podido ser por la depreciación del euro. ‒ Estas formas modernas de intervención han suscitado tensiones entre por ejemplo MARIO DRAGHI y el MNUCHIN (secretario del Tesoro de Estados Unidos). 
+
+Conclusión: No es intervención sensu stricto porque no supone una gestión directa de reservas, pero en espíritu modifica el valor del tipo de cambio.
+
+\subsection{Regulación: Movilidad de Capitales}
+A pesar de que las intervenciones en el mercado cambiario son comunes, la forma por excelencia de regular los mercados de cambio es vía control de capitales. Se trata de restricciones impuestas por un gobierno sobre la magnitud de flujos de capital que entren o salgan de un país que, al traducirse en variaciones de flujos de divisas, pueden afectar al tipo de cambio.
+
+Acudiendo a la economía del bienestar, en un marco de competencia perfecta en el que no exista ningún tipo de imperfección, lo óptimo será garantizar la libre circulación de capitales. En cambio, en presencia de varias imperfecciones, la teoría del second best establece que la introducción de una limitación adicional (como, por ejemplo, restricciones a la movilidad de capitales) podría aumentar el bienestar. ‒ Es difícil argumentar que en la realidad se da competencia perfecta: hay agentes con poder de mercado, hay externalidades como el efecto contagio, etc. De ahí que en determinados casos se pueda justificar la introducción de restricciones (las imperfecciones de mercado constituyen condición necesaria pero no suficiente para la intervención). ▪ Además de la teoría del second best, existen 2 justificaciones alternativas a los controles de capitales: i) Problemas de sostenibilidad de la deuda: o Debido a la apertura de la cuenta financiera, se puede producir un aumento del consumo presente aprovechando la reducción del coste de financiación. Esto puede dar lugar a problemas de sostenibilidad de la deuda que se agravarían si el país tiene instituciones frágiles (i.e. autoridad monetaria con sesgo inflacionario y poco creíble). o Los controles de capital permiten solventar este problema ya que reducen los flujos financieros, llevando al país a una situación más sostenible. • Es decir, se trata de una solución a corto plazo, que como señala el FMI debería ir ligada a una política monetaria macroprudencial. • La visión convencional ha variado con respecto a los controles de capitales. En cualquier caso, el FMI los concibe como un instrumento con cierta validez a corto plazo que no puede ser sustituto de las políticas macroeconómicas adecuadas que son las que deben asegurar el ajuste externo. ii) País grande: oCuando una economía grande como los Estados Unidos, la Eurozona o China altera su demanda por fondos internacionales, el tipo de interés de esos fondos variará. En este escenario, el gobierno de un país grande puede aplicar políticas para manipular los tipos de interés mundiales en su favor. • Por ejemplo, si el país tiene un déficit por cuenta corriente, el gobierno podría imponer controles de capital para reducir los préstamos externos agregados del país e inducir una caída del tipo de interés mundial. Formas de regulación ▪ Los controles de capital pueden tomar la forma de: a) Límites cuantitativos; b) Impuestos sobre los flujos internacionales de capital; o c) Tipos de cambio múltiples.
+
+Restricciones cuantitativas a los flujos de capitales ▪ Impuestos a las transacciones de capital ▪Tipos de cambio múltiples▪Existe un sistema de tipos de cambio múltiples cuando las autoridades económicas del país establecen tipos de cambio distintos en función del tipo de transacciones que se realizan con el exterior. ‒ La existencia de un sistema de tipos de cambio múltiples lógicamente obliga a que exista alguna clase de control de cambios para dirigir las transacciones a sus correspondientes mercados. ‒ El Fondo Monetario Internacional se opone a la existencia de tipos de cambio múltiples, lo cual no ha impedido que un número importante de países en desarrollo los utilicen. ▪ Se trata de segmentar el mercado de divisas de modo que ciertas transacciones se realicen a un tipo de cambio determinado y diferente del general. ‒ Un ejemplo de esto se da en Venezuela, donde existe un sistema de tipos de cambio múltiples, el DICOM (Sistema de Divisas de Tipo de Cambio Complementario Flotante de Mercado). Este mecanismo de divisas fluctuante tiene como objetivo perfeccionar el sistema de acceso a las divisas de todos los sectores productivos, así como la reactivación del flujo de capital necesario para todos los sectores de la economía. ‒ Otro ejemplo histórico es el de Chile. En 1973, existió en Chile un sistema de tipos de cambio múltiples extremo, en el sentido de que existían 15 tipos de cambio distintos en función del tipo de transacciones. o El tipo de cambio más alto equivalía a 80 veces el tipo de cambio más bajo. o El tipo de cambio más bajo (el más apreciado) era el del cobre, principal producto de exportación. o Las distorsiones que generó el sistema fueron tales que prácticamente los flujos comerciales fueron destruidos.
+
+\subsubsection{Efectos: Modelo intertemporal de consumo con restricciones de capital}
+Para introducir este nuevo enfoque, presentaremos el modelo de OBSTFELD-ROGOFF (1985), basado en la tradición Neoclásica, y formulado en un horizonte de dos periodos. 
+
+Supongamos que se trata de una economía pequeña, abierta, que se interrelaciona financieramente con el mundo en mercados de capitales completos y perfectos (que operan en competencia perfecta).\footnote{Suponer una economía pequeña que toma el tipo de interés como exógeno tiene una gran ventaja: dado que el país no es capaz de alterar el tipo de interés mundial, las decisiones de los agentes nacionales no tendrán efectos en las decisiones de los agentes de otras economías. Esto evita que se deban tener en cuenta los efectos que sobre la economía nacional tendrían las decisiones de otras economías. En otras palabras, es posible realizar un análisis de equilibrio parcial en lugar de equilibrio general. Por otro lado, en autarquía el tipo de interés es endógeno a la economía.
+
+Además, en una economía sin movilidad de capital y tipos de cambio fijos la balanza de pagos podría ser un problema para las autoridades económicas. En estas circunstancias, la economía (el conjunto de los agentes) se enfrenta a una sucesión de restricciones de liquidez a lo largo del tiempo que limitan el tamaño del déficit comercial al volumen de las reservas disponibles en cada periodo. Un déficit persistente acabaría por hacer inviable el compromiso cambiario adquirido por el Banco Central, mientras que un superávit reiterado terminaría por plantear problemas de inflación.
+} Además, existe un único bien que sirve para el consumo o como inversión de capital productivo y que todo el déficit se financia con deuda. La formulación del agente representativo hace obligatoria la mención a IRVING FISHER, que mostró que en el centro de todo problema intertemporal hay que caracterizar las hipótesis de comportamiento, las preferencias y las restricciones presupuestarias:
+\begin{lnum}
+    \item \textbf{Hipótesis de comportamiento}. El agente representativo racional maximiza su utilidad y tiene perspectivas forward-looking, es decir, en su elección presente tiene en consideración el flujo de renta futura (en este caso, dos períodos). Además, opera en un contexto de previsión perfecta;
+    \item \textbf{Preferencias}. Función de utilidad creciente, cóncava, separable y aditiva, teniendo como argumentos los consumos en los dos períodos. Por simplificar, supongamos un factor de descuento nulo ($\beta=1$);
+    \item \textbf{Tecnología}. Supondremos rendimientos constantes a escala en el capital, de modo que la FPP será lineal; y,
+    \item \textbf{Restricción presupuestaria}. Muestra que el sumatorio de los consumos y la inversión actualizados no puede superar al sumatorio de la renta del agente actualizada. Esto implica que se puede trasladar la renta intertemporalmente únicamente a través de la inversión real. Así, la pendiente de la restricción presupuestaria sería $1+r^*$.
+\end{lnum}
+
+Con todo, formulamos el problema de maximización del agente representativo considerando que su Función de Utilidad instantánea es isoelástica:
+
+\eqblock{
+\begin{aligned}
+    &\underset{\substack{\text{\scriptsize Por arbitraje, el coste de financiación de la economía doméstica se iguala al coste de financiación del resto del mundo, $r^*$,}\\\text{\scriptsize y el acceso a la financiación exterior le permite expandir sus posibilidades de consumo en el primer período.}}}{\boxed{
+    \begin{aligned}
+            &\max_{c_t,k_t}U(0)=u(c_1)+u(c_2)\\[0.5em]
+        &\text{s.a.}\quad
+        \begin{cases}
+            &y_t=A_tf(k_t)\quad \text{\scriptsize (Función de Producción, reversible)}\\[0.5em]
+            &c_1+i^o_1+\frac{c_2+i^o_2}{1+r^*}=y_1+\frac{y_2}{1+r^*}\\[0.5em]
+            &\dot k_{t+1}=\overbrace{(y_t-c_t)}^{i^o_t}+\overbrace{k_t}^{\text{\scriptsize Asumimos $\delta=0$}}
+        \end{cases}
+    \end{aligned}
+    }}\\[1em]
+    &\Longrightarrow\;\text{CPO's}\qquad
+    \begin{cases}
+        \frac{\partial c_2}{\partial c_1}=-(1+r^*)\quad \text{\scriptsize(Condición de EULER)}\\[0.5em]
+        PMg(K)=r^*\qquad [\frac{\partial c_2}{\partial c_1}=-[1+PMg(k_2)], \;\text{\scriptsize derivada de la FPP}]
+    \end{cases}
+\end{aligned}
+}{Modelo OBSTFELD-ROGOFF: Problema de Optimización Agente (Consumidor-productor). Posición de Inversión Internacional}
+
+Como vemos, las decisiones del agente están restringidas por tres ecuaciones: (i) la restricción presupuestaria intertemporal, de manera que el total consumido e invertido de cada periodo descontado al presente debe ser igual al total de la renta/producción generada globalmente (en los dos periodos), descontada al presente;\footnote{La razón por la cual la Función de Producción es reversible está precisamente aquí. El proceso es reversible porque la inversión del periodo dos será igual al stock de capital del periodo 2 cambiado de signo. 
+} (ii) la función de producción reversible que utiliza un único input: capital, pero recordemos que es precisamente el mismo input/bien que el consumidor puede consumir, por lo tanto aquí está el problema de decisión; y, (iii) la ecuación dinámica del capital (considerando en este caso que la depreciación es negligible), como en todo problema de optimización. 
+
+El modelo formulado puede representarse gráficamente de manera que, sobre el plano cartesiano ($c_2-c_1$), se representa la Frontera de Posibilidad de Producción (determinado por la Función de Producción, dado el residuo en inversión y la tecnología), la restricción presupuestaria intertemporal (que en este caso viene definido por el coste de financiarse, que deberá ser devuelto en el periodo $2$) y las curvas de indiferencia que representan el grado de sustituibilidad en el consumo de los agentes (entre periodos):
+
+\imagenfit{Eq_CK_Libre_Inicial.png}{Equilibrio inicial y final tras liberalización de la Cuenta Financiera. Análisis comparativo respecto al equilibrio en autarquía.}{Elaboración propia}
+
+Como vemos, las ganancias de un apertura a capitales extranjeros son muy notables siempre y cuando, claro está, el coste del capital interno sea maor que el coste de capital externo (lo cual no es dificil de suponer). No obstante, este equilibrio responde a una liberalización total de los movimientos de capital. ¿Cómo podemos representar las ganancias/pérdidas si imponemos restricciones a este movimiento? Podemos representarlo sencillamente considerando que se impone un impuesto por cada unidad de capital extranjero utilizado. En este escenario, por arbitraje, el coste de financiación será $r=r^*+\tau$ y, en consecuencia, la restricción presupuestaria sería $-(1+r^*+\tau)$ y la Ecuación de EULER $\frac{\partial c_2}{\partial c_1}=-(1+r^*+\tau)$. El equilibrio final quedaría como:
+
+\imagenit{Restricciones_Capital_Eq_Final.png}{Equilibrio inicial y final tras la imposición de restricciones al movimiento de capitales. Análisis comparativo respecto al equilibrio con movilidad perfecta.}{Elaboración propia}
+
+\subsubsection{Implicaciones de Política Económica}
+Este modelo nos permite estudiar los efectos de los controles de capitales, que se proyecta sobre cuatro vertientes fundamentales:
+\begin{lnum}
+    \item \textbf{Consumo}. Un impuesto sobre la entrada de capitales supone una distorsión del consumo intertemporal. En particular, aumenta el coste de oportunidad de consumir hoy, ya que aumenta el coste de pedir prestado. Ello lleva a que se reduzca el consumo en el período actual relativo al consumo en el período futuro;
+    \item \textbf{Inversión}. Las empresas piden prestado en el primer periodo para invertir, y el capital se usa para producir bienes en el segundo periodo. El tipo de interés es el coste de financiación. Por tanto, si existen controles de capital, $r=r^*+\tau$, aumentan los costes de financiación. Esto tendrá un efecto negativo en la adquisición de capital;
+    \item \textbf{Bienestar}. Se produce una pérdida de bienestar, debido a una distorsión que lleva a una caída de la Utilidad Intertemporal (utilidad total descontada al presente). La economía pide menos prestado que lo socialmente óptimo por la introducción del impuesto;
+    \item \textbf{Saldo Balanza de Pagos (Cuenta Corriente)}. La reducción del consumo y de la inversión lleva a una reducción del déficit por cuenta corriente. Puede ser un instrumento efectivo para mitigar desequilibrios externos. 
+\end{lnum}
+
+En pocas palabras, los controles de capital pueden ser un instrumento efectivo para mitigar desequilibrios externos, pero si la economía es pequeña y los mercados son competitivos se reduce el bienestar. 
+
+En el caso de un país grande, aparte de los efectos mencionados (aunque menor reducción del bienestar pues participa en la formación del tipo de interés internacional) existiría otro efecto positivo a través de la reducción del coste de servicio de la deuda externa. Ahora bien, estos resultados dependerían de que no hubiera represalias, escenario que se podría producir si la interacción se da entre dos economías grandes y que podría dar lugar a otro efecto en sentido negativo.\footnote{Puede suceder que algún país esté mejor con controles de capital (a pesar de las medidas de retorsión) que con perfecta movilidad de capitales (depende de los parámetros del modelo). Finalmente, si un país impone controles de capital óptimos unilateralmente, el otro país tendrá interés en responder.
+} 
+
+A modo de conclusión los los efectos de la regulación se pueden reducir a:
+\begin{la}
+    \item \textbf{Positivos}. Disminuye la volatilidad del tipo de cambio al penalizar la especulación. Además, permite ganar tiempo para corregir los desequilibrios internos (por ejemplo, China); y,
+    \item \textbf{Negativos}. Desincentiva la inversión por la menor rentabilidad y mayor incertidumbre. Limita, no sólo la especulación (negativa), sino también el arbitraje (positivo), por lo que se reduce la integración de los mercados de divisas y se incumple la ley del precio único. Y, además, genera distorsiona inducidas en las decisiones intertemporales óptimas de los agentes (pérdida de bienestar).
+\end{la}
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+\end{document}
