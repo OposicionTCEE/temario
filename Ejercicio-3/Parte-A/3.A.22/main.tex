@@ -1,0 +1,1538 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Tema 3.A.22 -- Economía del Bienestar (I)\\
+\large Los Teoremas Fundamentales del bienestar. Óptimo económico y Second-Best}
+\author{Marcelo Ortega}
+\date{Noviembre 2025}
+\newcommand{\TemaCode}{3A22}
+
+\oldtitle{Economía del Bienestar (I). Óptimo económico. Los criterios de compensación. La Teoría del second-best.}
+\changerationale{Se elimima la referencia explícita a los criterios de compensación, por su escasa relevancia actual. Se refuerza la presencia de los TFEB, de los que se esperaría una demostración detallada por parte del opositor. }
+
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+    Muy importante: Desmotración detallada de los TFEB.
+
+    De cara al reparto de tiempos en la exposición, pese a que dividiremos el tema en tres apartados, materialmente cuenta con dos grandes pilares (como se ha explicado arriba). 
+\begin{lnum}
+\item El primero es el básico y al que el opositor de primeras vueltas debe de dedicar más tiempo.  (15’)
+\item Ello no obstante, según se acumulen las vueltas, el opositor debe de profundizar especialmente en el segundo (la teoría del second best y sus distintas aplicaciones (10’).
+\end{lnum}
+    }
+\vspace{1cm}
+
+\modificaciones{
+    Introducir la demostración del STFEB: Manual 
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}\label{intro}
+La Economía del Bienestar es una rama de la Economía cuya propia definición y delimitación no es pacífica dentro de la literatura, pues ha variado desde los inicios de la ciencia económica como disciplina autónoma y está íntimamente relacionada con el debate acerca de la existencia o no de una Economía positiva (del ser) y una Economía normativa (del deber ser). 
+
+\subsection{Contextualización}\label{context}
+\subsubsection{Relevancia}\label{importance}
+La economía del bienestar es la rama del análisis microeconómico que intenta valorar, desde un punto de vista colectivo, las distintas situaciones en que puede encontrarse un sistema económico y, por ello, tiene dos objetivos fundamentales:
+\begin{lnum}
+    \item Buscar los instrumentos que permitan realizar una valoración de la deseabilidad social de estados económicos alternativos; estados caracterizados por una asignación de recursos y una distribución de la renta determinados;  y,
+    \item Maximizar el bienestar social. Es decir, proporcionar normas de política económica que permitan alcanzar el estado o estados realizables socialmente más preferidos.
+\end{lnum}
+
+El criterio fundamental que ha surgido en el campo de la economía del bienestar para valorar los distintos estados alternativos es el de la eficiencia económica. La noción de eficiencia económica se refiere al mejor uso posible de unos recursos limitados, es decir, un sistema económico será eficiente si no desperdicia recursos haciendo máximo el bienestar de los individuos.
+
+El criterio fundamental que ha surgido en el campo de la economía del bienestar para valorar los distintos estados alternativos es el de la eficiencia económica. La noción de eficiencia económica se refiere al mejor uso posible de unos recursos limitados, es decir, un sistema económico será eficiente si no desperdicia recursos haciendo máximo el bienestar de los individuos.
+
+\subsubsection{Historia}\label{history}
+Como grandes momentos históricos en esta rama cabe separar grosso modo tres: 
+\begin{lnum}
+    \item Utilitarismo de finales del s.XIX;
+    \item Nueva teoría de la Economía del Bienestar, tras las aportaciones de autores como \authorfont{PARETO} y \authorfont{ROBBINS};
+    \item Novísima teoría de la Economía del Bienestar, tras la crítica de ARROW y la emergencia de la importancia de los problemas de información.\footnote{Lógicamente, esta tercera aproximación es la que resulta de especial interés al opositor, por lo que conviene estar fuertemente familiarizado antes del estudio con, por un lado, el funcionamiento de los mercados en competencia perfecta (especialmente, el modelo de equilibrio general [\authorfont{Ver Tema 3.A.21}]) y, por otro y especialmente, las herramientas de la Teoría de Juegos (en concreto en lo referido a juegos cooperativos y el diseño de mecanismos [\authorfont{Ver Tema 3.A.14}], pero también otros como los modelos de información asimétrica [\authorfont{Ver Tema 3.A.13}]).}
+\end{lnum}
+En un sentido más amplio, podría considerarse que todos los economistas, desde el momento en que han formulado valoraciones sobre los determinantes del bienestar social, son economistas del bienestar:
+\begin{lnum}
+    \item Desde los mercantilistas (que relacionan el bienestar social con la acumulación de metales preciosos en el país) y \authorfont{ADAM SMITH}, que implícitamente relacionaba bienestar social con el volumen total de producción (para así alejamos del estado estacionario). Un precedente más cercano podría constituirlo \authorfont{BENTHAM}, para quien el concepto de bienestar va asociado al de utilidad;\footnote{\authorfont{BENTHAM}, junto con los autores de la primera revolución marginalista (\authorfont{JEVONS, MENGER y WALRAS}) calculan el bienestar mediante la agregación de funciones de utilidad cardinales.}
+    \item No obstante, el primer economista del bienestar propiamente dicho se considera que ha sido \authorfont{MARSHALL}, quién propone una concepción de bienestar en la que éste es susceptible de medición en términos monetarios, lo que permite las comparaciones interpersonales de bienestar mediante el concepto de excedente del consumidor. 
+    \item Algunos años después, \authorfont{PARETO (1912)}, a la postre sucesor de WALRAS en la cátedra de Lausana, rechaza esta concepción cardinalista, negando que el bienestar sea mensurable y que por tanto las comparaciones interpersonales de utilidad o bienestar sean posibles. \authorfont{PARETO} propone una nueva teoría del bienestar asentada en dos principios:
+    \begin{la}
+        \item Principio del individualismo. Cada agente económico es el mejor juez posible de su propio bienestar.
+        \item Principio de unanimidad. Una situación económica sólo conllevará un mayor bienestar social que otra si en el paso de la segunda a la primera ningún individuo ve reducido su bienestar individual.\footnote{\authorfont{PARETO} se dio cuenta de que si, ante un cambio en la situación, se puede argumentar que algún individuo sale beneficiado sin perjudicar a los demás, el cambio es beneficioso para la sociedad o colectividad de individuos, y ésta establecerá una ordenación entre las situaciones. \authorfont{PARETO} establece unas condiciones para el bienestar máximo o eficiencia económica, y el óptimo de \authorfont{PARETO} es una condición para la maximización de la cantidad total de la producción, dadas las cantidades de factores, los gustos o preferencias de los individuos que los consumen y la distribución de la renta. 
+        \begin{la}
+            \item La importancia del criterio aportado por PARETO radica en su simplicidad y su carácter neutral, al requerir la formulación de juicios de valor considerados débiles, permitiendo valorar el sistema competitivo como mecanismo de asignación de recursos en una economía.
+            \item El problema deriva de su falta de aplicabilidad, puesto que el concepto de bienestar social sólo es realmente útil cuando es aplicable a situaciones no comparables desde el punto de vista paretiano (situaciones en las que algunos agentes mejoran y otros empeoran).
+        \end{la}}
+    \end{la}
+    \item Posteriormente, \authorfont{PIGOU (1920)} señala que el bienestar social será una función con dos argumentos fundamentales: la eficiencia y la equidad. Así, la sociedad podría aumentar su bienestar produciendo más o logrando una distribución más equitativa de una renta dada.
+\end{lnum}
+A partir de los años 30’s las aportaciones a la economía del bienestar se polarizan en tomo a dos grandes líneas de investigación:
+\begin{lnum}
+    \item Las vinculadas a la nueva economía del bienestar (años 20’s-30’s), a través del principio de compensación potencial, en virtud del cual una situación económica es preferible a otra siempre que los individuos que mejoran puedan identificar e indemnizar a los que se vean perjudicados y aun así seguir disfrutando de mayor bienestar individual: esta es la idea que subyace a los criterios de compensación.
+    \item Otras aportaciones posteriores (años 50’s - 60’s) que, sobre la base de las ideas de \authorfont{BERGSON}, propugnan una función de bienestar social que, a través de una relación de las variables que se postulaban como determinantes del bienestar social, ofrecería corno resultado la ordenación deseada de los estados económicos.
+\end{lnum}
+Posterionnente, \authorfont{ARROW}, en el marco de la novísima economía del bienestar social, demostraría que, imponiendo un conjunto de condiciones en principio razonables, la obtención de dicha función de bienestar social sería imposible. 
+Este es, por tanto, el contexto en que se desarrollan las aportaciones teóricas que vamos a ver en este tema.
+
+\subsubsection{Problemática}\label{problem}
+[...]
+
+
+\subsection{Estructura de la exposición}\label{structure}
+El que vamos a seguir el siguiente esquema:
+\begin{lnum}
+    \item Criterio de Pareto y los óptimos económicos. comenzamos definiendo el óptimo paretiano como la situación más deseada: queremos que la asignación de recursos que hace la economía sea un óptimo de Pareto. Para que lo sea, deben cumplirse tres condiciones (que la asignación sea óptima en la producción, en el intercambio y óptimo optimorum o global). ¿Esto nos da un único óptimo de Pareto? No: existen infinitos óptimos paretianos, lo cual es un problema porque nos genera un resultado que es una indeterminación.
+    \item Teoremas Fundamentales de la Economía del Bienestar, los teoremas del bienestar nos penniten concluir que, de todos los puntos óptimos (de todos los puntos sobre la Gran Frontera de Posibilidades de Utilidad), podernos definir al menos uno, que es el resultado del Equilibrio General Competitivo, ya que las condiciones de equilibrio del sistema competitivo cumplen las condiciones para ser un óptimo de Pareto (según el primer teorema del bienestar). Además, el segundo teorema del bienestar nos dice que cualquier otra asignación puede ser también un óptimo paretiano si se puede inferir de la reasignación de recursos a partir de una asignación de EGC, sin más que redistribuir los recursos.
+    \item Teoría del second best
+\end{lnum}
+
+\clearpage
+\section{Óptimo económico: Definición y características}
+\puntosclave{
+    La Economía del Bienestar se enfrenta a importantes retos a la hora de valorar el bienestar desde una óptica social. Dadas estas dificultades, surge el criterio de Pareto para valorar las diferentes asignaciones económicas basando especialmente en la eficiencia y recayendo en un conjunto de juicios de valor generalmente aceptados.
+    
+    El uso del criterio de Pareto en la valoración del equilibrio general competitivo nos permite concluir que la asignación resultante es óptima de acuerdo con este criterio.
+    
+    Una ordenación paretiana adolece de importantes fallas: entre otras, no permite la generación de un orden completo y puede dar lugar a bloqueos en tomo al statu quo.
+}
+
+La economía del bienestar es una rama de estudio que se esfuerza por formular proposiciones que nos permitan afirmar que el bienestar social en una situación económica es mayor o menor que en otra. De hecho, si definimos el bienestar social como aquello que es bueno, o aquello que debe ser maximizado, entonces las dos definiciones son idénticas. Sin embargo, los términos \textbf{mejor} y \textbf{peor} son explícitamente normativos, mientras que \textbf{bienestar social} puede recibir una interpretación normativa o positiva. Es cierto que la mayoría de las personas tienden a considerar el bienestar social como un término normativo, pero no hay ninguna razón lógica por la que no podamos adoptar una definición positiva de él. A continuación se presentan dos definiciones de este tipo.
+
+Primero, el bienestar social puede definirse como un vector de los bienestares individuales:
+
+\eqblock{
+\begin{aligned}
+    &\text{Vector de Niveles de Bienestar}:\qquad W=(W_1,W_2,\ldots,W_I)\\[1em]
+    &\hspace{10em}\Downarrow\text{(Utilidad)}\\[1em]
+    &\text{Vector de Niveles de Utilidad}:\qquad W=(U_1,U_2,\ldots,U_I)
+\end{aligned}
+}{Bienestar Social: Concepto vectorial del Bienestar Social. Óptimo Económico}
+
+Donde $W_i$ es el bienestar del individuo i-ésimo e $I$ el número de individuos. Aquí el bienestar individual puede tomarse como el bienestar de un individuo, o más explícitamente, su felicidad, entendiéndose por felicidad tanto el placer y el dolor sensuales como el deleite y el sufrimiento espirituales. Pero ¿cómo puede medirse la felicidad individual? Una forma de escapar a esta dificultad es suponer que los individuos son los mejores jueces de su propio bienestar y que maximizan este bienestar. De esta forma, siempre que prefieran $x$ a $y$ se supone que son más felices en $x$ que en $y$. Podemos entonces utilizar su Función de Utilidad como un indicador ordinal de su bienestar, alcanzado el \textbf{concepto vectorial de bienestar social}.
+
+\subsection{Criterio de Pareto: Concepto vectorial del Bienestar Social}
+En base al concepto vectorial de Bienestar Social podemos definir la herramiente valorativa conocida como: criterio de PARETO. 
+
+Se dice que un vector es mayor que otro si y solo si algunos de sus elementos son mayores y ninguno de sus elementos es menor que los elementos correspondientes del otro vector. Así, si definimos el bienestar social como un vector de bienestares individuales (o utilidades), decimos que el bienestar social aumenta si y solo si $U_i$ aumenta para algún $i$ y no disminuye para ningún $i$. Por tanto, desde una perspectiva conceptual podemos ver que este criterio se sostiene en base a dos principios fundamentales:\footnote{En palabras, el criterio de PARETO se fundamenta en:
+\begin{lnum}
+    \item \textbf{Principio de individualismo}. Cada agente económico es el mejor juez posible de su propio bienestar.
+    \item \textbf{Principio de unanimidad}. Una situación económica sólo conllevará un mayor bienestar social que otra si en el paso de la segunda a la primera ningún individuo ve reducido su propio bienestar.
+\end{lnum}
+}
+
+\eqblock{
+\begin{aligned}
+    \left.\begin{aligned}
+        &\text{Criterio de PARETO:}\;\;\;W_1>W_2\iff W_1=(U_1,\ldots,U_I)\geq W_2=(U_1,\ldots,U_I),\quad \forall i\in I\\[1em]
+        &\Longrightarrow
+        \left\{\begin{aligned}
+            &\text{Principio de individualismo}&&\Rightarrow\;\;&&U_i\in A_i,\;\;U_j\in A_j,\;\;\;A_i\cap A_j=\varnothing\\
+            &\text{Principio de unanimidad}&&\Rightarrow\;&&\;W_1\not\geq W_2\iff\;\exists i: U_i^1<U_i^2
+        \end{aligned}\right.
+    \end{aligned}\;\;\right\}\iff \substack{\text{\textbf{Utilidad}}\\\text{\textbf{Ordinal}}\\\Downarrow\\\text{Revolución}\\\text{Paretiana}}
+\end{aligned}
+}{Criterio de PARETO: Fundamentos teóricos valorativos. Óptimo económico}
+
+Por tanto, si el bienestar aumenta para algún individuo y disminuye para algún otro individuo, el cambio en el bienestar social es indefinido en signo y magnitud. De esta forma, una condición previa y necesaria para este criterio de valoración es la inintercomparabilidad de las utilidad individuales (o principio de individualismo), lo que constituyó en esencia la revolución paretiana.\footnote{El concepto vectorial de bienestar social debe distinguirse cuidadosamente del concepto de una función de bienestar social paretiana (FBS) [\authorfont{Ver Tema 3.A.24}]. 
+
+El criterio de Pareto dice que el bienestar social aumenta si algunos individuos mejoran su situación sin que ningún individuo empeore, donde mejorar significa ser más feliz o estar en una situación más preferida. Una FBS paretiana acepta el criterio de Pareto. Por lo tanto, un aumento en algún $W_i$ (o $U_i$) y una disminución en ningún $W_i$ (o $U_i$) es una condición suficiente, pero no necesaria, para un aumento del bienestar social. Por ejemplo, para que los individuos vivan en América es suficiente que vivan en Nueva York, pero no es necesario que vivan en Nueva York: pueden vivir en Washington, que también está en América. De manera similar, si un cambio satisface el criterio de Pareto debe ser considerado como un buen cambio según una FBS paretiana. Pero un cambio no necesita necesariamente satisfacer el criterio de Pareto para ser considerado como un buen cambio.
+} En definitiva, el criterio de PARETO nos proporciona un instrumento valorativo últil y directo para valorar el Bienestar Social; podemos decidir entre dos situaciones si una es mejor que otra, \textbf{PARETO superior}. Ahora bien, ¿existe alguna situación/asignación que no sea posible mejorar atendiendo al criterio de PARETO? Es decir, ¿podemos alcanzar una asignación óptima en términos del criterio de PARETO?
+
+
+\subsection{Óptimo de PARETO: Asignación eficiente}
+Esta asignación/situación es la que se conoce como \textbf{eficiente en el sentido de PARETO} o un \textbf{Óptimo de PARETO} y, por construcción, debe satisfacer una serie de condiciones que pasamos a estudiar.
+
+Una asignación es PARETO eficiente si tiene la propiedad de que no exista ninguna asignación factible en la que algunos individuos mejoren sin que exista ningún individuo que empeore. En términos formales, una asignación $W^*$ es PARETO eficiente si maximiza $U_i^*$, sujeto a las restricciones $U_j^*\geq U_{j},\quad \forall j\in I$ y a las restricciones impuestas por la tecnología y las asignaciones de la economía.
+
+Las condiciones para la optimalidad de PARETO pueden dividirse en condiciones \textbf{necesarias} de primer orden y condiciones \textbf{suficientes} de segundo orden.
+
+\subsubsection{Condiciones de Primer Orden: Análisis Marginal}
+Las condiciones de primer orden o marginales consisten en la condición para el \textbf{intercambio}, la condición para la \textbf{producción} y la condición de \textbf{nivel superior}.
+
+\paragraph{Óptimo de Intercambio}
+Para comenzar con la condición óptima para el intercambio, supondremos que los agentes tienen preferencias racionales (continuas, transitivas y reflexivas) y que se trata de una economía de intercambio pura, en la que ya se han producido diversas cantidades de bienes finales y que, por lo tanto, el problema es cómo asignarlos entre los individuos de la economía.\footnote{Supondremos también divisibilidad (es decir, que los bienes y los factores de producción son divisibles en cualquier cantidad deseada), la ausencia de costos de transacción o de asignación y la ausencia de efectos externos del consumo y de la producción.
+} 
+
+Bajo estos supuestos, la condición de PARETO para el intercambio establece que la relación marginal de sustitución ($RMS$) entre cualquier par de bienes debe ser la misma para todos los individuos que consumen los dos bienes:
+
+\eqblock{
+\begin{aligned}
+    &\forall i,k\in I,\;\;i\neq k: \{X,Y\}\in\arg\max \{U_i,U_k\}\in N\\[1em]
+    &\text{Óptimo de intercambio}\iff \frac{\partial U_i/\partial X}{\partial U_i/\partial Y}=\frac{\partial U_k/\partial X}{\partial U_k/\partial Y}\equiv \boxed{{RMS}_{X,Y}^i={RMS}_{X,Y}^k}
+\end{aligned}
+}{Óptimo de PARETO: Condición para el intercambio. Óptimo económico}
+
+Si la $RMS$ entre cualquier par de bienes, digamos $X$ e $Y$, es diferente para cualquier par de individuos, $i$ y $j$ un individuo puede mejorar su situación sin que el otro empeore. Supongamos que la ${RMS}$ de $X$ por $Y$ (${RMS}_{X,Y}$) es igual a uno para $i$ y a dos para $j$. En otras palabras, una unidad de $X$ tiene un valor (en términos de utilidad) de una unidad de $Y$ en el margen para $i$ (utilidad o valor marginal), y vale dos unidades de $Y$ para $j$ en la misma situación. Si tomamos una unidad de $X$ de $i$ y se la damos a $j$, y tomamos una unidad de $Y$ de $j$ y se la damos a $i$, $j$ mejora su situación mientras que $i$ permanece indiferente. Podríamos haber mejorado la situación de ambos si hubiéramos transferido 1,5 unidades de $Y$ en lugar de una unidad de $Y$ de $j$ a $i$. 
+
+Como sabemos, la posibilidad de mejorar la situación de una persona sin empeorar la de la otra significa que una es PARETO superior a la otra, y por tanto no se ha alcanzado la optimalidad de PARETO. Puede demostrarse que esta posibilidad existe siempre que la $RMS_{X,Y}$ de un par de bienes sea diferente entre cualquier par de individuos. Por lo tanto, para un óptimo de Pareto, la $RMS$ de cualquier par de bienes debe ser la misma para todos los individuos que consumen ese par de bienes. Gráficamente:
+
+\imagenfit{EficienciaCons.png}{Consumo de los Agentes y Curva de Contrato}{\href{https://policonomics.com/es/equilibrio-general/}{Policonomics -- Equilibrio General}}
+
+Por consiguiente, todo punto entre E y G, incluidos estos, es Pareto-superior a H. De hecho, esto es cierto para todos los puntos delimitados por las curvas de indiferencia I₂ y K₁, es decir, el área sombreada. Pero para cualquier punto dentro del área sombreada, aún es posible una mejora adicional de Pareto hasta que lleguemos a un punto sobre la curva.
+
+La curva O′EQK se denomina curva de contrato, ya que la libre contratación garantizará que se alcance un punto sobre ella, a menos que nuestros individuos adopten un comportamiento estratégico, intentando cada uno obtener más de lo que el otro está dispuesto a conceder. Si el número de individuos en el intercambio libre es grande y cada uno posee una pequeña fracción de la oferta total de bienes, ningún individuo tendrá poder estratégico ni monopolístico y se alcanzará un punto en la curva de contrato mediante el intercambio libre.\footnote{Una asignación está bloqueada si existe una coalición de comerciantes que puede lograr un resultado mejor para cada uno de sus miembros con sus propios recursos. El núcleo de la economía es el conjunto de todas las asignaciones factibles y no bloqueadas. A medida que aumenta el número de comerciantes, el núcleo se reduce. Con un continuo (infinidad) de comerciantes, el núcleo se convierte en un único punto sobre la curva de contrato: el equilibrio competitivo. Esto se denomina el teorema del límite (demostrado por Shubik, 1959; Debreu y Scarf, 1963; Aumann, 1964; revisado por Hildenbrand, 1977; discutido por primera vez por Edgeworth, 1881).
+}
+
+Un punto sobre la curva de contrato es un punto de tangencia entre una curva de indiferencia de I y otra de K. La pendiente absoluta de una curva de indiferencia mide la TMS entre los dos bienes para el individuo. Por lo tanto, la TMS se iguala para los dos individuos en cualquier punto de la curva de contrato. Esto vincula nuestra ilustración geométrica con la condición de Pareto para el intercambio.
+
+
+\paragraph{Óptimo en la producción}
+La segunda condición de optimalidad de PARETO se refiere a la producción y establece que la relación marginal de sustitución entre cualesquiera dos factores debe ser la misma para todos los productos y para todas las unidades productivas que utilizan estos factores. Dicho de otra forma, una asignación será eficiente en la producción si no es posible producir más de un bien sin reducir con ello la cantidad producida del otro, mediante reasignación de los factores productivos (dadas unas cantidades fijas de éstos). 
+
+\eqblock{
+\begin{aligned}
+    &\forall A,B\in N: \{A,B\}\in\arg\max \{F_j(\cdot)=X,\;\;F_{-j}(\cdot)=Y\}\\[1em]
+    &\text{Óptimo de producción}\iff \frac{\partial F_j/\partial A}{\partial F_j/\partial B}=\frac{\partial U_{-j}/\partial A}{\partial U_{-j}/\partial B}\equiv \boxed{{RMS}_{A,B}^j={RMS}_{A,B}^{-j}}
+\end{aligned}
+}{Óptimo de PARETO: Condición para el intercambio. Óptimo económico}
+
+Esta condición garantiza que, dada una dotación de factores productivos, la producción de cada bien se ha maximizado dadas las cantidades de otros bienes producidos. Si esta condición no se satisface, es posible aumentar la producción de algún(os) producto(s) sin reducir la de ningún otro producto. 
+
+La demostración de esta proposición es muy similar a la anterior: si la relación marginal de sustitución entre los factores $A$ y $B$ es diferente para los productos $F_j(A,B)=X$ e $F_{-j}(A,B)=Y$, la producción de uno puede aumentarse sin reducir la del otro. Supongamos que la relación marginal de sustitución de $A$ por $B$ (${RMS}_{A,B}$) es igual a uno en la producción de $X$ y a dos en la producción de $Y$. En otras palabras, el producto marginal de $A$ es igual al de $B$ en la producción de $X$, pero es el doble del producto marginal de $B$ en la producción de $Y$. Si transferimos una unidad de $A$ desde la producción de $X$ a la de $Y$, y transferimos una unidad de $B$ desde la producción de $Y$ a la de $X$, la producción de $Y$ aumenta mientras que la de $X$ permanece igual. Además, la producción de todos los demás productos no se ve afectada, ya que sus insumos no cambian. Con el aumento de la producción de $Y$ podemos dar (dividir) esta cantidad adicional de $Y$ a algún(os) individuo(s) de la economía y, por lo tanto, mejorar su situación, sin que nadie empeore. 
+
+Por consiguiente, no se ha alcanzado la optimalidad de PARETO mientras la ${RMS}$ entre cualquier par de factores sea diferente en la producción de distintos productos (y de hecho también en la producción del mismo producto en distintas unidades o procesos productivos). Una demostración geométrica de esta proposición puede realizarse también geométricamente:
+
+\imagenfit{EficienciaProd.png}{Eficiencia en la producción}{\href{https://policonomics.com/es/equilibrio-general/}{Policonomics -- Equilibrio General}}
+
+Como vemos, si reinterpretamos las curvas de indiferencia de $I$ y $K$ como las curvas iso-producto (o isoquantas) de $X$ e $Y$, y sustituyendo $A_X$, $B_X$, $A_Y$, $B_Y$ ($A_X$ es la cantidad del factor $A$ utilizada para producir $X$, y así sucesivamente) respectivamente por $X_i$, $Y_i$, $X_k$, $Y_k$. Entonces puede demostrarse que la eficiencia productiva requiere la asignación de factores en un punto de tangencia mutua de las isoquantas, lo que implica la igualación de la $RMS$ entre factores.
+
+
+\paragraph{Óptimo de nivel superior: Producción ($RMT$) $\parallel$ Preferencias ($RMS$)}
+La tercera condición necesaria para la optimalidad de Pareto se denomina el óptimo de nivel superior, también conocido como \textbf{óptimo optimorum}, y relaciona la producción con las preferencias. Exige que, para cualquier par de bienes, la TMS (que se iguala entre todos los individuos, como lo requiere el óptimo de intercambio) sea igual a la relación marginal de transformación (TMT). 
+
+\imagenfit{OPTGlobal.png}{Optimalidad global}{\href{https://policonomics.com/es/equilibrio-general/}{Policonomics -- Equilibrio General}}
+
+La relación marginal de transformación entre dos bienes cualesquiera es la tasa marginal a la cual la economía puede transformar uno en el otro asignando más recursos para producir uno y menos para producir el otro. Si la $RMT$ no es igual a la $RMS$ para cualquier par de bienes, podemos producir más de un bien y menos del otro para hacer que todos mejoren su situación. Por ejemplo, si $RMS_{X,Y} = 1$ y $RMT_{X,Y}=2$, entonces la economía puede transformar una unidad de $X$ en dos unidades de $Y$ y los individuos son indiferentes entre una unidad de $X$ y una de $Y$. Así, produciendo dos unidades más de $Y$ y una unidad menos de $X$, puede mejorarse la situación de algunos o de todos los individuos.
+
+\paragraph{Asignación PARETO-Eficiente ($2\times2\times2$): Curva de Posibilidades de Utilidad}
+Para resumir, las tres condiciones necesarias para la optimalidad de Pareto son las siguientes:
+\begin{lnum}
+    \item \textbf{Óptimo de intercambio}. La relación marginal de sustitución ($RMS$) entre cualquier par de bienes debe ser la misma para todos los individuos que consumen los bienes. (Para aquellos individuos que no consumen un bien particular, su TMS de este bien por cualquier bien que sí consumen debe ser menor, o al menos no mayor, que la TMS entre estos dos bienes para aquellos individuos que consumen ambos. Requisitos de desigualdad similares se aplican con respecto a las dos condiciones siguientes);
+    \item \textbf{Óptimo de producción}. La TMS entre cualquier par de factores debe ser la misma para todas las unidades productivas que utilizan los factores; y,
+    \item \textbf{Óptimo de nivel superior}. Para cualquier par de bienes reproducibles, la $RMS$ común debe ser igual a la tasa marginal de transformación ($RMS$). Esta condición sirve para asegurar que el conjunto de bienes producidos sea consistente con las preferencias de los individuos.
+\end{lnum}
+
+Si restringimos nuestro análisis a un modelo $2\times2\times2$ tendremos: (i) dos agentes consumidores-productores, con una dotación inicial de factores productivos; (ii) dos bienes que sirven a su vez como bienes de consumo y como factores prductivos. De esta forma, podemos representar el óptimo de la siguiente forma. En primer lugar, la relativa a la relación marginal de transformación, cuya pendiente mide la relación marginal de transformación entre los bienes $X$ e $Y$. 
+
+\textbf{INTRODUCIR RMT DE LA PRODUCCIÓN}
+
+Cada punto sobre la curva representa una colección dada de dotaciones iniciales de los dos bienes y el óptimo de producción es necesario para asegurar que, con esta dotación, la producción de cada bien esté maximizada dadas las cantidades producidas de todos los demás bienes. Introduciendo la dinámica de intercambio a través de los dos conjuntos de curvas de indiferencia en una caja rectangular en el interior, se convierte en una caja de EDGEWORTH similar a la presentada con anterioridad. 
+
+\textbf{INTRODUCIR CAJA INTERIOR}
+
+El óptimo de intercambio es necesario para asegurar que, para una colección dada de bienes, la asignación de estos bienes entre los individuos cumpla la optimalidad de PARETO, es decir, que la utilidad de cada persona esté maximizada dadas las utilidades de todas las demás. En otras palabras, se alcanza un punto sobre, y no dentro de, la (hiper-)superficie de posibilidades de utilidad (o curva, en el caso especial de dos individuos). Esta curva de posibilidades de utilidad indica el nivel máximo de utilidad que un individuo puede alcanzar dado el nivel del otro. Gráficamente:
+
+\textbf{INTRODUCIR CURVA DE POSIBILIDADES DE UTILIDAD}
+
+Por ejemplo, si el nivel de utilidad para I permanece en OG, el nivel máximo posible para K es OH, dada la colección fija de bienes.
+
+\subsubsection{Condiciones de Segundo Orden: Restricciones (Preferencias y Tecnología)}
+Las condiciones de primer orden son necesarias pero no suficientes para un óptimo, ya que pueden definir un mínimo en lugar de un máximo, por lo que además se requieren condiciones de segundo orden para asegurar el logro de la optimalidad de Pareto. Estas condiciones de segundo orden también se denominan condiciones suficientes, y solo combinándolas con las condiciones de primer orden se garantiza la suficiencia:\footnote{Si las condiciones de segundo orden solo se satisfacen en la vecindad del punto en el que se cumplen las condiciones de primer orden, este punto puede ser máximo solo en esta vecindad (un máximo local) y el máximo global puede encontrarse en otro lugar. Esto se ilustra en la Figura 2.6b, donde el punto P representa un máximo local y T el máximo global. Si las funciones relevantes son completamente cóncavas y convexas, un máximo local es también el máximo global (Lancaster, 1968, p. 17). En relación con esto deben mencionarse las llamadas «condiciones totales» (Hicks, 1939, p. 707). Estas condiciones totales exigen que sea imposible aumentar el bienestar mediante el abandono completo o la introducción completa de algunos bienes o factores de producción existentes o nuevos (en el capítulo 10 veremos que esta comparación es una parte esencial del análisis inframarginal de la división del trabajo). Si las condiciones de primer orden se satisfacen no solo con respecto a los bienes y factores existentes sino también con respecto a los potenciales, entonces las condiciones totales se satisfacen, siempre que las condiciones de segundo orden también se satisfagan globalmente. Sin embargo, esta salvedad es bastante restrictiva. En la práctica, cosas como las economías de escala y similares pueden provocar una violación de las condiciones de segundo orden. Por lo tanto, puede ser necesario realizar una comparación de todo o nada. También podría ampliarse las condiciones totales de Hicks para incluir la introducción de nuevas técnicas o procesos de producción. Esto está relacionado con el argumento de que la TMT relevante debe ser la alcanzada por el método de producción más eficiente. Sin embargo, formalmente, podría argumentarse que cualquier nueva técnica o proceso de producción debe estar incorporado en algún factor de producción. Un técnico o gerente que sabe cómo utilizar un mejor método de producción es entonces considerado como un factor diferente y superior a uno que no lo sabe.
+}
+\begin{lnum}
+    \item \textbf{Preferencias localmente insaciables, monótonamente crecientes y (convexas)}. Si las preferencia dan lugar a una Función de Utilidad Neoclásica de buen comportamiento, las curvas de indiferencia serán convexas con respecto al origen;
+    \item \textbf{Tecnología convexa y rendimientos marginales decrecientes}. Si la tecnología de producción, o conjunto de posibilidades de producción da lugar a una Función de Producción Neoclásica de buen comportamiento, ésta será cóncava, con rendimientos marginales decrecientes, 
+    isocuantas convexas con respecto al origen y curvas de transformación cóncavas con respecto al origen.\footnote{La presencia de rendimientos crecientes a escala puede hacer que la curva de transformación sea convexa con respecto al origen (es decir, un conjunto de factibilidad productiva no convexo), pero pueden existir al mismo tiempo rendimientos crecientes y una curva de transformación cóncava. Si hay rendimientos constantes a escala en todas partes, la curva de transformación será lineal si la intensidad de factores (o proporción de insumos) es la misma para todas las industrias. Si las intensidades de factores son diferentes, la curva de transformación será cóncava. Esta TMT decreciente es causada por el hecho de que, si se ha de producir más de un producto, debe recurrirse cada vez más a aquellos factores que son más eficientes (en el sentido técnico) en la producción del otro producto. El grado de rendimientos crecientes a escala tiene que ser lo suficientemente fuerte como para contrarrestar el efecto de las diferentes intensidades de factores antes de que la curva de transformación se vuelva convexa. Sin embargo, los efectos de los rendimientos variables a escala sobre la forma de la curva de transformación son complejos y presentan algunas propiedades inesperadas.
+    }
+\end{lnum}
+
+Por tanto, si se cumplen estas condiciones, sabemos que la asignación alcanzada es óptima en el sentido de PARETO.
+
+\paragraph{Frontera de Posibilidades de Utilidad}
+De hecho, esto tiene fuertes implicaciones en nuestro análisis. Retomando nuestra representación gráfica de la asignación eficiente en el sentido de PARETO (aquí, establecer aclarar que ya subyacían estas condiciones de segundo orden con el fin de agilizar la presentación pero que se debía definir prescindiendo de ellas), podemos ver fácilmente que el punto $P$ representa solo una posibilidad de producción entre un gran número de tales posibilidades a lo largo de la curva de posibilidades de producción (o curva de transformación). 
+
+
+Ahora bien, para cada punto de producción o cada colección de bienes existe una curva de posibilidades de utilidad (CPU) diferente. Si iteraramos el proceso con diferentes dotaciones, la envolvente exterior de estas curvas sería la \textbf{Frontera de Posibilidades de Utilidad}. Esta frontera a veces se denomina una CPU de situación (refiriéndose a una situación dada con una dotación fija de recursos) y una CPU asociada con una colección dada de bienes se denomina una CPU puntual. 
+
+Todos los puntos sobre la frontera de posibilidades de utilidad satisfacen las condiciones de optimalidad de Pareto. Con la tecnología de producción existente y la dotación de factores existente, una vez que estamos en un punto de la frontera no es posible mejorar la situación de nadie sin empeorar la de alguien más. Por lo tanto, cualquier punto sobre la frontera representa un óptimo de Pareto. No obstante, la elección entre estos infinitos puntos no es un problema de optimalidad de Pareto; más bien suele relegarse a una función de bienestar social (FBS) que corresponde al temario que estudiaremos en el [\authorfont{Ver Tema 3.A.24}]. No obstante, se trata de una conclusión importante y necesaria antes de pasar a introducir el siguiente apartado.
+
+Debe señalarse que las condiciones anteriores para la optimalidad de Pareto ignoran factores complicadores tales como los efectos externos y los costos de transacción u otros costos de asignación, cuya presencia puede requerir que se introduzcan modificaciones en las condiciones, como hacer que las condiciones dependan de la posición inicial.
+
+\subsubsection{Implicaciones de Política Económica}
+Todo criterio de valoración depende de ciertos juicios de valor subyacentes. Al ser los conceptos de Pareto-eficiencia y de Pareto superioridad tan extensamente utilizados dentro de la ciencia económica, resulta crucial reconocer los juicios de valor que éstos incorporan, así como que éstos están lejos de ser inocuos:
+\begin{lnum}
+    \item \textit{Independencia del proceso}. Al limitar nuestra atención a las diferentes asignaciones ya estamos aceptando un fuerte juicio de valor según el cual el proceso a través del que se alcanza cierta asignación no importa;\footnote{Por ejemplo, no se considera si el mecanismo que produce cierta asignación permite que los individuos tomen sus propias decisiones o si, por el contrario, les dice qué deben de hacer con respecto a su oferta de trabajo o las cestas que terminan consumiendo. En otras palabras, de acuerdo con este, la economía de mercado o la economía planificada deberían de ser únicamente evaluadas por las asignaciones que producen.}
+    \item \textit{Individualismo}. Bajo el criterio de Pareto el único aspecto de las asignaciones relevante es el efecto que tiene sobre las utilidades de los individuos en la sociedad;\footnote{No importa per se, por ejemplo, si la producción se produce en una gran empresa o en muchas pequeñas empresas, o bien si estas empresas son públicas o privadas. A su vez, no se tienen en cuenta consideraciones colectivas como el nivel de desigualdad o la situación particular de ciertos grupos sociales como los jóvenes o los ancianos.}
+    \item \textit{No paternalismo}. El hecho de que las asignaciones sean evaluadas tomando como referencia las propias funciones de utilidad de los individuos implica que los individuos son los mejores jueces de su propio bienestar; \footnote{Éste es también un fuerte juicio de valor que puede no ser apropiado a la hora de juzgar todas las circunstancias posibles. Por ejemplo, los agentes pueden tener preferencias irracionales con respecto al consumo de drogas, su salud, su educación o sus ahorros vitalicios.}
+    \item \textit{Benevolencia}. El criterio de Pareto es también benevolente hacia los individuos ya que, ceteris paribus, aumentos en la utilidad de un individuo son considerados como una mejora.\footnote{La benevolencia parece un juicio de valor débil y no controvertido, pero puede no ser universalmente aceptado. Requiere, por ejemplo, que el incremento del bienestar de un individuo muy rico, a la vez que el resto permanece igual, sea considerado como una mejora, incluso cuando existen individuos muy pobres en esta comunidad.}
+\end{lnum}  
+
+\authorfont{PARETO} ("\textit{Manual de política económica}", 1906) se basa en la idea de que el bienestar de la sociedad depende del bienestar de cada uno de sus individuos (la sociedad como tal no tendría su propio bienestar que maximizar); bienestar que aumenta con la cantidad de bienes y servicios que consumen. Es, así, el primer autor que define la optimalidad de una asignación de recursos sin necesidad de suponer una función de utilidad cardinal o de realizar comparaciones interpersonales de utilidad (como había hecho \authorfont{MARSHALL} con su concepto del excedente del consumidor).
+La cuestión es descubrir la condición según la cual los factores productivos (capital y trabajo, vamos a suponer) se dividen entre la producción de los distintos bienes, y cómo la producción de éstos se reparte entre los distintos agentes, de modo que ninguna otra configuración de la asignación de factores (óptimo en la producción) y de la asignación de productos (óptimo en el intercambio) permita aumentar el bienestar de un agente sin reducir el de otro, conduciendo al óptimo global.\footnote{Por tanto, nos interesan las condiciones o propiedades que caracterizan a un óptimo paretiano.}  
+
+
+\subsection{Primer Teorema Fundamental de la Economía del Bienestar}
+Habiendo analizado las condiciones para la optimalidad de Pareto, consideraremos ahora la posibilidad de alcanzarla. 
+
+\subsubsection{Demostración: Cumplimiento de las condiciones}
+Manteniendo los supuestos iniciales y considerando que se cumplen las condiciones de segundo orden o de suficiencia, que garantizan que la asignación alcanzada es un Óptimo de PARETO, establezcamos ahora un supuesto adiciones: \textbf{todos los agentes de la economía son precio-aceptantes}.
+
+\paragraph{Equilibrio en el Intercambio}
+Consideremos primero la posición de equilibrio de los consumidores individuales. Dado que no pueden afectar los precios, su restricción presupuestaria es lineal: una línea recta en el caso de dos bienes. Suponiendo no saciedad de los deseos, maximizarán su utilidad consumiendo en un punto P, donde la restricción presupuestaria es tangente a la curva de indiferencia más alta:
+
+\eqblock{
+\begin{aligned}
+    &\boxed{\begin{aligned}
+        &\arg\max_{\mathbf x} \quad U_i(\mathbf x)\\[1em]
+        &\text{s.a.}\quad \mathbf p\cdot \mathbf x^*\leq \underset{\text{\scriptsize $\Omega_i=w\cdot L_i+r\cdot K_i$}}{\Omega_i}
+    \end{aligned}}\Longrightarrow\;\text{Eq.}\equiv \left\{\mathbf x^*\in \mathbb R^L: \forall x,y\in \mathbf x^*,\;\;\frac{\partial U_i/\partial x}{\partial U_i/\partial y}=\frac{P_x}{P_y}\right\}\;\;\sim\;\;\boxed{{RMS}_{x,y}^i=\frac{P_x}{P_y}}\\[1em]
+    &(\checkmark)\;\;\forall i=1,\ldots,I
+\end{aligned}
+}{Óptimo en el intercambio: Demanda de mercado de bienes. Primer Teorema de la Economía del Bienestar}
+
+Dado que la pendiente (en valor absoluto) de la restricción presupuestaria mide la razón de precios ($P_X/P_Y$) y la pendiente de la curva de indiferencia mide la ${RMS}_{X,Y}$, tenemos la igualdad, ${RMS_{X,Y}}=\frac{P_X}{P_Y}$; y esto es cierto para todos los consumidores
+
+\paragraph{Equilibrio en la Oferta}
+De manera similar, podemos mostrar que se alcanza el óptimo de producción observando que un productor no puede influir en los precios de los factores. Sus curvas de isocostes son, por tanto, lineales y produce en el punto en el que una isocuanta es tangente a una curva de isocostes. Así, tenemos:
+
+\eqblock{
+\begin{aligned}
+    &\boxed{\begin{aligned}
+        &\arg\max_{L,K} \quad \Pi_j=P\cdot F(L,K)-w\cdot L-r\cdot K
+    \end{aligned}}\\[1em]
+    &\Longrightarrow\;\text{Eq.}\equiv
+    \left\{\begin{aligned}
+        &P\cdot{PMg}_L=w\\[0.5em]
+        &P\cdot{PMg}_K=r
+    \end{aligned}\right.\qquad \Longrightarrow\;\boxed{\frac{{PMg}_K}{PMg_L}=\frac{w}{r}}\\[1em]
+    &(\checkmark)\;\;\forall j=1,\ldots,J\;\;\wedge\;\;\forall\ell\in \mathbb R^L
+\end{aligned}
+}{Óptimo en la distribución de factores productivos: Demanda de mercado de factores. Primer Teorema de la Economía del Bienestar}
+
+Por tanto, como vemos, como los productores son precio-aceptantes, optimizarán su producción considerando tanto los precios de cada bien como los precios de cada factor productivo dados. En consecuencia, la restricción que impera es la que se debe a la dotación inicial de factores productivos en el conjunto de la economía. Además, la maximización de beneficios garantiza que los métodos de producción elegidos sean eficientes.
+
+\paragraph{Óptimo de PARETO: Eficiencia global}
+Como vemos, las dos condiciones anteriores son consecuencia lógicas de los programas de optimización de cada agente considerado de manera aislada. Por un lado, los consumidores maximizarán su utilidad distribuyendo de la forma más óptima posible su dotación inicial entre cada uno de los bienes considerando los precios como dados. Por otro lado, los productores maximizarán su función objetivo considerando los precios de los factores productivos y de los bienes producidos como dados, de manera que la ratio entre productividades marginales de cada par de factores sea igual a la ratio de sus costes, para cada productor.
+
+No obstante, falta una última condición para que la asignación resultante sea óptima en el sentido de PARETO. Esta es probablemente la más discutida y es la expresión analítica de lo que se conoce como \textbf{disciplina de mercado} o la \textbf{mano invisible}. Veamos como se alcanza.
+
+\eqblock{
+\begin{aligned}
+    &\underset{\substack{\text{\scriptsize Reformulando el problema del productor en base a costes}\\[0.5em]
+    \max\Pi_j=P\cdot Q-C(Q)\Rightarrow P={CMg}}}{\text{Problema del Productor}}\Longrightarrow\boxed{P=CMg}\\[2em]
+    &\text{Sabemos}:\;{MRT}_{x,y}=-\frac{\mathrm dy}{\mathrm dx}\;\;\;\text{manteniendo $\bar K$ y $\bar L$ constantes}\\[0.5em]
+    &\left\{\begin{aligned}
+        x=F_x(K_x,L_x)\\
+        y=F_y(K_y,L_y)
+    \end{aligned}\right.\;\;\;\text{s.a.}\;\; 
+    \left.\begin{aligned}
+        &\bar K=K_x+K_y&&\Longrightarrow\mathrm dK_x=-\mathrm dK_y\\
+        &\bar L=L_x+L_y&&\Longrightarrow\mathrm dL_x=-\mathrm dL_y
+    \end{aligned}\right\}\Longrightarrow
+    \left\{\begin{aligned}
+        &\mathrm dx={PMg}_K^x\cdot \mathrm dK_x+{PMg}_L^x\cdot \mathrm dL_x\\
+        &\mathrm dy=-({PMg}_K^y\cdot \mathrm dK_y+{PMg}_L^y\cdot \mathrm dL_y)
+    \end{aligned}\right.\\[1em]
+    &\underset{\substack{\text{\scriptsize reformulando la}\\\text{\scriptsize RMT}}}{\Longrightarrow}{RMT}_{x,y}=\left.-\frac{{PMg}_K^y\cdot \mathrm dK_y+{PMg}_L^y\cdot \mathrm dL_y}{{PMg}_K^x\cdot \mathrm dK_x+{PMg}_L^x\cdot \mathrm dL_x}\right|_{
+    \substack{\text{Óptimo}:\underset{\forall(x,y)\in\mathbb R^L}{\frac{{PMg}_K^x}{{PMg}_L^x}=\frac{{PMg}_K^y}{{PMg}_L^y}}}}
+    \Longrightarrow\boxed{|{RMT}_{x,y}|=\frac{{PMg}_{K}^y}{{PMg}_K^x}=\frac{{PMg}_L^y}{{PMg}_L^x}}\\[1em]
+    &\text{Imponemos $\underset{\text{\scriptsize en Equilibrio}}{P=CMg}$}\Longrightarrow\; 
+    \left\{\begin{aligned}
+        P_x={CMg}_x=\frac{r}{{PMg}_K^x}=\frac{w}{{PMg}_L^x}\\
+        P_y={CMg}_y=\frac{r}{{PMg}_K^y}=\frac{w}{{PMg}_L^y}\\
+    \end{aligned}\right.\underset{\substack{\text{\scriptsize Equilibrio}\\\text{\scriptsize Intercambio}}}{\Longrightarrow}\frac{P_x}{P_y}=\frac{{CMg}_x}{{CMg}_y}=\frac{{PMg}_K^x}{{PMg}_K^y}=\frac{{PMg}_L^x}{{PMg}_L^y}\\[1em]
+    &\hspace{5em}\boxed{\frac{P_x}{P_y}=\frac{{CMg}_x}{{CMg}_y}=\frac{{PMg}_K^x}{{PMg}_K^y}=\frac{{PMg}_L^x}{{PMg}_L^y}=|{RMT}_{x,y}|}
+\end{aligned}
+}{Óptimo Económico: Equilibrio Demanda-Oferta de Mercado (condiciones de competencia perfecta). Primer Teorema de la Economía del Bienestar}
+
+Por tanto, vemos que recuperando los óptimos definidos en los apartados anteriores (intercambio y asignación de factores productivos), imponiendo las condiciones de equilibrio en un mercado con productores precio-aceptantes ($P=CMg$) y desarrollando la Relación Marginal de Transformación en base a las restricciones de factores productivos, alcanzámos un equilibrio global.
+
+\subsubsection{Enunciado: Desarrollo Gráfico}
+De hecho, esto demuestra que con una serie de supuestos (enunciados al principio) en relación con las preferencias y las tecnologías de produccón, y siempre y cuando impongamos la restricción institucional de que los agentes son precio-aceptantes (mercado atomizado, por ejemplo),\footnote{Incluso en ausencia de grandes números, la optimalidad puede lograrse si la entrada y salida son libres y sin costo, de modo que los mercados se vuelvan perfectamente disputables.
+} podemos alcanzar una asignación eficiente en el sentido de PARETO a través de un Equilibrio General Competitivo: la razón de precios es igual a la razón de los costos marginales, que es la relación marginal de transformación.
+
+Se trata de la demostración analítica de lo que conocemos como el Primer Teorema Fundamental de la Economía del Bienestar (PTFEB). No obstante, su origen conceptual se remonta a los orígenes de la ciencia económica como ciencia independiente, cuando en 1776 SMITH introdujo el concepto de la \textbf{mano invisible}:\footnote{En ella \textit{La Riqueza de las Naciones}, SMITH estableció las bases de un argumento extensamente conocido dentro de la ciencia económica: (i) el ser humano se mueve principalmente por el interés propio; (ii) la mano invisible de la competencia automáticamente transforma el interés propio de cada uno en el bien común de todos; y (iii) por tanto, la mejor política económica que puede adoptar un gobierno para alcanzar el crecimiento de la riqueza nacional es el laissez-faire.
+}  
+
+\begin{adjustwidth}{2cm}{0pt}
+\raggedright
+\textit{Por lo general, un individuo no tiene la intención de promover el interés público, ni sabe cuánto lo está promoviendo (...) Él sólo tiene la intención de obtener su propio beneficio, y en este caso, como en muchos otros, es conducido por una mano invisible a promover un fin que no formaba parte de su intención.}\\
+\raggedleft{\authorfont{ADAM SMITH}, “\textit{La riqueza de las naciones}”, 1776}
+\end{adjustwidth}
+
+No obstante, tendríamos que esperar más de 100 años para que fuera demostrado analíticamente (LERNER, 1933).\footnote{En primer lugar, por LERNER (1933), LANGE (1942) y ARROW (1951).
+} Por tanto, y haciendo honor a su creador, la mano invisible proyectada sobre las fuerzas de mercado, que actúan en última instancia a través de los precios, conducirá a una asignación eficiente en el sentido de PARETO siempre y cuadno se cumplan las condiciones necesarias y suficientes para alcanzar un Equilibrio General Competitivo.\footnote{En el modelo de equilibrio general, los precios se ajustan para traer equilibrio al mercado de cada uno de los bienes. Es decir, los precios permitirán un ajuste completo que igualará oferta y demanda. Cuando esto ocurra, todos los individuos se encontrarán maximizando sus funciones objetivo y la asignación alcanzada será Pareto eficiente.
+}
+
+\subsubsection{Implicaciones de Política Económica}
+El PTFB puede es matemáticamente correcto, pero está expuesto a importantes críticas:
+\begin{lnum}
+    \item \textbf{Información incompleta}. En definitiva, si no hay precios de mercado para guiar las decisiones de los individuos, entonces, las valoraciones marginales de los activos diferirán entre individuos y la asignación no será eficiente.
+    \item \textbf{Fallos de mercado}. Pueden existir fallos de mercado (como la presencia de externalidades o de bienes públicos). Por ejemplo, la condición crucial que hace que la competencia perfecta bajo condiciones clásicas sea capaz de alcanzar un óptimo de Pareto es que ningún comprador o vendedor individual de ningún bien o factor esté en posición de influir apreciablemente en el precio. El comportamiento de maximización de beneficios y de utilidad de las empresas y los consumidores, junto con el funcionamiento de la oferta y la demanda, garantizarán entonces que la posición de equilibrio alcanzada sea un óptimo de Pareto. En tal caso, por ejemplo, los agentes no son precio-aceptantes y el resultado de sus decisiones será que los precios no reflejarán el valor marginal de las actividades económicas de manera eficiente. 
+	\item \textbf{Mercados incompletos}. El requisito de que haya mercados para todos los activos o actividades es un requisito poco probable de ser satisfecho en el mundo real.  
+\end{lnum}
+
+La actuación del mercado, por tanto, puede puede conducir a asignaciones PARETO óptimas, pero el conjunto de resultados eficientes en ese sentido es muy amplio, y hay ciertos resultados más equitativos y otros profundamente desiguales (por ejemplo, el caso del monopolio perfectamente discriminador). Si bien todas las críticas planteadas son relevantes, nos centraremos en la cuestión de la equidad. Existen dos aproximaciones polares para rectificar las desigualdades distributivas del \textit{laissez-faire}: 
+\begin{lnum}
+    \item \textit{Economía centralizada.} Una burocracia central toma de manera detallada las decisiones de consumo y producción de todos los individuos y empresas.\footnote{El principal problema de este enfoque es la ausencia de incentivos generados para consumidores e individuos (entre muchas otras deficiencias, tal y como analiza de manera detallada \authorfont{JANOS KOMAI} en “\textit{The Socialist System: the Political Economy of Communism}”).}
+	\item \textit{Redistribuciones iniciales.} La segunda aproximación es la resolución de los problemas distributivos a través de transferencias de renta entre los individuos, y después dejar al mercado funcionar. 
+\end{lnum}
+
+La estrecha asociación entre la competencia perfecta y la optimalidad de Pareto no debe interpretarse erróneamente como que el concepto de optimalidad de Pareto solo es significativo en una economía perfectamente competitiva: el concepto puede aplicarse de manera significativa a cualquier economía. Además, un sistema económico distinto de la competencia perfecta también puede alcanzar la optimalidad de Pareto, al menos en teoría. Como señala Wiles (1964, p. 189), la asignación eficiente de recursos puede lograrse en principio de tres maneras: mediante la competencia perfecta, el ajuste central perfecto y el cálculo perfecto (asociados respectivamente con los nombres de Lerner, Lange y Leontief). Puede añadirse que un sistema con monopolistas perfectamente discriminadores (que es poco probable que exista en la práctica) también puede alcanzar la optimalidad de Pareto (Pigou, 1932, cap. 17, ap. 3). Además, se han propuesto algunos procesos bastante artificiosos que poseen la propiedad requerida de optimalidad de Pareto. Por ejemplo, el «proceso de la codicia», como lo sugiere Hurwicz (1960), puede alcanzar un óptimo incluso en presencia de indivisibilidades y rendimientos crecientes, pero requiere más información que el mecanismo competitivo y es impracticable, ya que entra en conflicto con el interés propio. De hecho, el requerimiento informativo del mecanismo de mercado competitivo es mínimo en comparación con otros procesos. Esto ha sido destacado por Hayek (1945) y, en relación con otras cuestiones conexas, por Stiglitz (1994).
+
+\subsection{Segundo Teorema Fundamental de la Economía del Bienestar}
+Ahora bien, ¿qué asignación alcanzaremos? Recordemos que existe un número indeterminado de asignaciones Óptimas en el sentido de PARETO, todas ellas sobre la Curva de Posibilidades de Utilidad. Por tanto, ¿a cuál nos conducirá? Si volvemos a introducir la Curva de Posibilidades de Producción:
+
+\textbf{INTRODUCIR CURVA DE POSIBILIDADES DE UTILIDAD BÁSICO}
+
+Como dijimos, todos los puntos sobre la frontera de posibilidades de utilidad satisfacen las condiciones de optimalidad de PARETO. Con la tecnología de producción existente y la dotación de factores existente, una vez que estamos en un punto de la frontera no es posible mejorar la situación de nadie sin empeorar la de alguien más. No obstante, uno puede construir una Función de Bienestar Social de diferentes maneras. Imaginémos que construimos una Función de Bienestar Social cuyas curvas de utilidad son convexas hacia el origen. En este caso:
+
+\textbf{INTRODUCIR CURVA DE POSIBILIDADES DE UTILIDAD CON CURVAS DE INDIFERENCIA DE UNA FUNCIÓN DE BIENESTAR SOCIAL}
+
+Si la FBS relevante está representada por los contornos de bienestar, $W_1$, $W_2$, y así sucesivamente, como se observa en la Figura, entonces se elegirá el punto sobre la CPU que sea tangente al contorno de bienestar más alto. Una vez que se elige un punto, por ejemplo $Q$ sobre $CPU$, podemos retroceder nuestros pasos para ver qué patrón de asignación es necesario para alcanzarlo. 
+
+\subsubsection{Enunciado: Demostración}
+Pero, ¿cómo implementarlo? ¿qué debemos hacer? En primer lugar, sabemos que cualquier intervención se circunscribe, \textit{ceteris paribus}, a las dotaciones iniciales de cada agente, puesto que estas constituyen el elemento vertebrados de nuestra asignación resultante. 
+
+El Segundo Teorema Fundamental de la Economía del Bienestar afirma que: si todos los consumidores tienen preferencias convexas y todas las empresas tienen conjuntos de posibilidades de producción convexos, cualquier asignación PARETO eficiente puede ser alcanzada como consecuencia de la actuación de mercados competitivos redistribuyendo apropiadamente la riqueza mediante \textbf{transferencias no distorsionantes} (de suma fija) y \textbf{dejando que el mercado funcione}.\footnote{Nótese que son hipótesis más restrcitivas que las necesarias para el PTEB ya que, en este caso, resulta imprescindible la convexidad de ambos conjuntos para alcanzar un Óptimo Global
+}
+
+\eqblock{
+\begin{aligned}
+    &\text{Objetivo}: \mathbf W^*=(U_1,\ldots,U_I)\underset{\text{\scriptsize alcanzable}}{\iff}\;\exists(\mathbf p^*,\;\mathbf T^*):\\[1em]
+    &\boxed{\begin{aligned}
+        \\
+        \forall i,(\checkmark)\quad \left\{\mathbf x_i^*\succsim_i\mathbf x_i',\forall \mathbf x_i'\in\mathbb R^L_+: 
+        \left\{\begin{aligned}
+            &(1)\;\;\;\mathbf p^*\cdot \mathbf x_i^*\leq \mathbf p^*\cdot \Omega_i+T_i\\[0.5em]
+            &(2)\;\;\;\sum_{i=1}^IT_i=0
+        \end{aligned}\right.\right\}\\
+        \\
+    \end{aligned}}
+\end{aligned}
+}{}
+
+Las transferencias suman cero, ya que el planificador mantiene un presupuesto equilibrado, limitándose a redistribuir la riqueza entre los consumidores. Con esta descripción analítica, podemos enunciar de manera más formal una versión del segundo teorema del bienestar como sigue: si las preferencias de los dos consumidores son continuas, \textbf{convexas} y fuertemente monótonas, entonces cualquier asignación PARETO-óptima es alcanzable como un equilibrio con transferencias. Restringiendo nuestro análisis a un escenario con dos mercancias y dos agentes, podemos representar gráficamente este mecanismo:
+
+\imagenfit{STFEB.png}{El Segundo Teorema Fundamental de la Economía del Bienestar. (a) Usando transferencias de riqueza; (b) Utilizando transferencia de dotaciones iniciales}{\textit{Mircoeconomic Theory}. MAS-COLELL et. al, 1995}
+
+En la imagen se pueden observar dos tipos de transferencias:
+\begin{la}
+    \item \textbf{Transferencias de riqueza}. Supóngase que las dotaciones de los consumidores se encuentran en el punto $\omega$ y se quiere alcanzar la asignación $\mathbf x^*$ ($\mathbf W^*$). Si una autoridad fiscal construye una transferencia de riqueza (a) entre los dos consumidores que desplaza la recta presupuestaria a la ubicación indicada en la figura, el vector de precios $\mathbf p^*$ vacía los mercados de los dos bienes y resulta la asignación $\mathbf x^*$.  Las transferencia de riqueza no altera las dotaciones físicas iniciales de los agentes, cada consumidor conserva exactamente la misma cesta de bienes con la que entra al mercado, pero su restricción presupuestaria se desplaza paralelamente porque recibe o paga una cantidad monetaria independiente de sus decisiones;
+    \item \textbf{Transferencias de dotaciones iniciales}. Si sustituimos esta transferencia de riqueza por transferencia directa de dotaciones iniciales (b) una transferencia del Bien $1$ que desplaza el vector de dotaciones a $\omega'$ tendrá como equilibrio general competitivo el vector de precios $\mathbf p^*$ y la asignación $\mathbf x^*$. Una transferencia del Bien $2$ que cambia las dotaciones a $\omega''$ también lo hace.\footnote{De hecho, si todas las mercancías pueden transferirse fácilmente, entonces podríamos igualmente mover el vector de dotaciones directamente a la asignación $\mathbf x^*$. Desde este nuevo punto de dotación, el equilibrio walrasiano no implica comercio alguno.
+    } Por tanto, una transferencia de dotaciones modifica directamente las cestas iniciales de bienes: se quita una cantidad física de uno o varios bienes a un agente y se entrega a otro antes de que comience el comercio. Desde el punto de vista formal, una transferencia de riqueza actúa sobre el valor de la dotación evaluado a precios de equilibrio, mientras que una transferencia de dotaciones actúa sobre la composición física de esa dotación.
+\end{la}
+
+En el modelo estándar, estas dos formas de intervención son equivalentes porque bajo los supuestos del segundo teorema del bienestar (preferencias continuas, convexas y fuertemente monótonas, mercados completos, ausencia de fricciones y bienes perfectamente divisibles y transferibles), lo único que importa para el equilibrio competitivo es el valor de la dotación a precios de equilibrio, no su composición concreta. Dado un vector de precios $\mathbf p^*$, cualquier transferencia de riqueza puede replicarse exactamente mediante una transferencia adecuada de dotaciones que tenga el mismo valor a esos precios, y viceversa. Por eso, en la caja de EDGEWORTH, mover el punto de dotación o desplazar la recta presupuestaria conduce al mismo resultado: el mismo sistema de precios vacía los mercados y sostiene la misma asignación Pareto-óptima. Sin embargo, esta equivalencia es frágil y desaparece en cuanto se relaja alguno de esos supuestos. Las dos formas de transferencia dejan de ser equivalentes cuando no todos los bienes son fácilmente transferibles, cuando existen impuestos distorsivos, cuando hay externalidades, bienes públicos, indivisibilidades o información privada. En esos casos, una transferencia de dotaciones puede alterar incentivos, precios relativos o decisiones reales de producción y consumo, mientras que una transferencia lump-sum sigue siendo, por definición, no distorsionadora. Precisamente por eso el segundo teorema del bienestar se formula en términos de transferencias de riqueza lump-sum y no de transferencias físicas: solo las primeras garantizan, en general, que la redistribución no interfiera con la eficiencia del equilibrio competitivo.
+
+\subsubsection{Implicaciones de Política Económica}
+En definitica, el segundo teorema establece que toda asignación PARETO-óptima puede sostenerse como un equilibrio competitivo mediante una distribución apropiada de las dotaciones de recursos. 
+
+Por tanto es posible resolver el conflicto entre eficiencia y equidad a través de la intervención del sector público redistribuyendo las asignaciones con las que parten los agentes y después dejando actuar al mercado para que asigne los recursos eficientemente. En otras palabras, el mercado es neutral en términos distributivos, por lo que, independientemente del criterio elegido para determinar lo que significa una distribución justa de recursos, se pueden usar los mercados competitivos para alcanzarla. En particular, gracias al rol de los precios en el mercado: 
+\begin{la}
+	\item \textit{Un rol asignativo}. Indicando la escasez relativa de cada bien; y,
+	\item \textit{Un rol distributivo}. Determinando cuánta cantidad de cada bien cada agente puede comprar. 
+\end{la}
+
+El STFEB establece que ambos roles pueden ser separados: podemos redistribuir las asignaciones de los agentes para determinar de cuánta riqueza dispondrán y posteriormente usar los precios para indicar la escasez relativa.
+
+No obstante, debe interpretarse cuidadosamente para evitar malentendidos. 
+
+Supongamos que el equilibrio competitivo existente, $A$, da lugar a un estado PARETO-óptimo tal que los ricos tienen altos niveles de utilidad pero los pobres tienen bajos niveles de utilidad. Podría preferirse un estado Pareto-óptimo diferente, B, en el que los ricos tengan niveles de utilidad más bajos (en relación con A) y los pobres niveles de utilidad más altos. El segundo teorema del bienestar establece que si la distribución inicial de las dotaciones de recursos (incluidas las capacidades inherentes y la propiedad inicial de los activos) fuera tal que los pobres tuvieran más (en relación con A) y los ricos menos, entonces el estado Pareto-óptimo preferido, B, podría sostenerse como el equilibrio competitivo con respecto a esta distribución más igualitaria de las dotaciones de recursos. Así, en cierto sentido, el segundo teorema del bienestar muestra que una distribución indeseable en términos de utilidad no es el resultado del mecanismo de mercado como tal, sino más bien el resultado de la distribución desigual de las dotaciones de recursos. Sin embargo, si la historia y la lotería del nacimiento ya han dado lugar a una distribución de dotaciones correspondiente al estado A, el segundo teorema no significa que el estado B pueda alcanzarse a partir de A mediante la redistribución de las dotaciones de recursos (véase Guesnerie, 1995). En primer lugar, algunas dotaciones (como los talentos naturales) no pueden redistribuirse. En segundo lugar, la redistribución mediante impuestos/transferencias puede implicar costos administrativos, de cumplimiento, distorsionadores (incluidos los desincentivos) y de ejecución. Por lo tanto, puede que no seamos capaces de desplazarnos desde A a lo largo de la frontera de posibilidades de utilidad hasta B. Más bien, solo podemos desplazarnos a lo largo de una frontera de factibilidad de utilidad que se sitúa dentro de la frontera de posibilidades de utilidad debido a los diversos costos mencionados anteriormente (véase la Figura 3.2 en el Capítulo 3 para la relación entre una curva/frontera de posibilidades de utilidad y una de factibilidad de utilidad).
+
+Ni los dos teoremas del bienestar ni el caso de la mano invisible muestran que, a medida que un país/región/individuo (o sector) se enriquece a través del crecimiento económico, sus efectos sobre otros sean beneficiosos. De hecho, existen muchos casos en los que los efectos son negativos. Por ejemplo, un país que reduce el costo de producir algunas de sus importaciones puede empeorar la situación de los países que exportan esos bienes. No obstante, puede demostrarse que, para el caso de referencia del enriquecimiento proporcional (una mayor capacidad para producir todos los bienes de forma proporcional), otros sectores en su conjunto se benefician, suponiendo una fuerte no inferioridad en el consumo (más débil que las preferencias homotéticas) (Ng, 1996c). La razón de esto es que los otros sectores tienen un socio comercial más grande con el cual comerciar. El mayor volumen de exportaciones e importaciones que el sector que se enriquece intercambia con los otros sectores hace que los términos de intercambio se muevan a favor del resto del mundo (este análisis no tiene en cuenta los beneficios del comercio a través de una mayor división del trabajo, como se analiza en el Capítulo 10).
+
+\paragraph{Limitaciones}
+Desafortunadamente para la organización de la política que se ha de seguir en el mundo real, es improbable que se satisfagan las condiciones bajo las cuales se cumple el Segundo Teorema de la Economía del Bienestar y no seremos capaces de separar las consideraciones de eficiencia y distribución. 
+
+Aunque podemos listar numerosas limitaciones, debemos destacar en primer lugar que una autoridad planificadora  que pretenda implementar un Óptimo Global en el sentido de Pareto deberá asegurar que:
+\begin{lnum}
+    \item Todos los agentes son precio-aceptantes, por lo que los precios dados por dicha autoridad será siempre respetados;
+    \item La información que tiene esta autoridad debe ser completa, esto es, debe conocer perfectamente: (i) las asignaciones óptimas en el sentido de Pareto; (ii) el vector de precios correspondiente a dicha asignación; y, (iii) las preferencias individuales o, como mínimo la distribución conjunta de preferencias (que conduce a dicho equilibrio); y, por último,
+    \item Para establecer el esquema de compensación debe poder identificar con total garantía quién es quién en dicha estructura
+\end{lnum}
+
+Como resulta evidente, sólo los requisitos informacionales que requeriría la aplicación del STEB en la práctica son inasumibles. Además, debemos tener en cuenta otras limitaciones que comporta la formulación del Teorema:
+\begin{lnum}
+    \item En primer lugar, si en una economía real los mercados no son ni completos ni competitivos, redistribuir las dotaciones iniciales y después dejar que los mercados asignen recursos no necesariamente conduce a la asignación eficiente deseada.\footnote{Por ejemplo, el hecho de que una empresa produjera su vector de producto neto eficientes y tomará los precios como parámetros es irrelevante si tiene poder de mercado y se da cuenta de que los precios a los que se enfrenta se ven afectados sus decisiones de producción.}
+    \item En segundo lugar, si las preferencias y la tecnología no son convexas, los precios relativos no pueden financiar la asignación eficiente deseada como un equilibrio competitivo.  
+    \begin{la}
+        \item Si las preferencias no son convexas, obtendríamos el siguiente problema:\footnote{La asignación eficiente en el sentido de pareto deseada proporciona a este consumidor la cesta de consumo $x^{h*}$.\\Por otro lado, $\dot p_2$ es el precio relativo del bien dos en términos del bien 1 implicado por esta asignación, se muestra como el valor negativo del inverso de la pendiente de la curva de indiferencia $I^{h*}$ en $x^{h*}$. Ajustando las dotaciones iniciales de $h$ podemos proporcionarle unas rentas totales de $\dot R^h$ que a los precios $\dot p$ son exactamente suficientes para permitirle comprar $x^{h*}$ pero, enfrentado con estos precios $h$ demandará $x^{h0}$ en lugar de $x^{h*}$.}
+        \imagenfit{PrefNoConvexas.png}{Economía de dos consumidores con preferencias no convexas sobre $x_1, x_2$}{Microeconomía. GRAVELLE y REES, 2004}
+        
+        \item Si la tecnología no fuera convexa, obtendríamos el siguiente problema:\footnote{La empresa $j$ tiene el conjunto de posibilidades de producción no convexo $Y^j$: en algún rango de valore, la relación marginal de transformación $(RMT_2^1)_j$ es creciente. El producto neto eficiente en el sentido de Pareto deseado para la empresa es $y^{j*}$.\\
+        $\dot p_2$ es el precio relativo de la mercancía 2 implícito en la asignación eficiente deseada es igual a la $(RMT_2^1)_j$ en este punto. Los contornos de beneficio de la empresa en el espacio ($y_1^j, y_2^j)$, en los precios $\dot p$ son rectas con pendiente $-1/\dot p_2$. Si la empresa se enfrenta con el precio $\dot p$ producirá en $y^{j0}$, porque obtiene más beneficios aquí que en $y^{j*}$}:
+    
+        \imagenfit{FPP-NoConvexo.png}{Conjunto de Posibilidades de Producción con no-convexidades en la producción de los bienes $x_1, x_2$}{Microeconomía. GRAVELLE y REES, 2004}
+    \end{la}
+    \item La última dificultad es que puede no ser posible hacer el tipo de retribución inicial que exige el teorema, pues es esencial que las redistribuciones sean de suma fija.\footnote{Los individuos no deberían ser capaces de cambiar las cantidades pagadas o recibidas. Los impuestos no deberían afectar a su comportamiento en el margen. Si es posible para un individuo modificar la cantidad pagada o recibida según la redistribución, cambiando sus demandas u ofertas, los precios efectivos a que se enfrentan los consumidores no serán los precios de mercado y serán diferentes para cada individuo. Si no se ajustan al mismo conjunto de precios relativos $\dot p$, se violarán las condiciones de eficiencia vistas en el PTFEB. En la economía simple de un período que consideramos, las acciones o participaciones y las dotaciones iniciales son exógenas y no se ven afectadas por las decisiones tomadas por los individuos. En un modelo más completo, estas decisiones serían endógenas. Los individuos podrían acumular participaciones ahorrando y cambiar sus dotaciones mediante la inversión en capital humano para aumentar sus niveles de cualificación. La redistribución aplicada sobre los individuos con grandes participaciones o dotaciones iniciales valiosas es, De hecho, un impuesto sobre el ahorro sobre la inversión en capital humano y ya no es un impuesto de suma fija. Además, los precios relativos a que se enfrentan los individuos podrían entonces variar dependiendo de sus participaciones o de los niveles de cualificación, y podrían también variar entre los individuos.}
+\end{lnum}
+
+De hecho, la principal crítica del STFEB es precisamente esta última: transferencias de suma fija,\footnote{Es decir, aquellos impuestos cuya cuantía no puede ser alterada por aquellos individuos que los pagan o los perciben. En definitiva, los impuestos no deberían de alterar las decisiones de los agentes en el margen. En caso de que los agentes fueran capaces de alterar lo que pagan o lo que perciben a través de sus acciones, modificando sus demandas u ofertas, los precios efectivos a los que se enfrentarán los individuos no serán iguales a los de mercado y diferirán entre los agentes.} pues choca frontalmente con la Primera Regla de la Teoría del Public Finance: no existen los impuestos de suma fija.\footnote{El problema reside en la cuestión de cómo medir la dotación de bienes de los agentes.\\ Para la mayoría de la gente, el grueso de su dotación consiste en su dotación de \textit{tiempo}. Por tanto, la dotación de los agentes es el número de horas de trabajo que podrían considerar vender, no la cantidad de trabajo que acaban vendiendo. En consecuencia, gravar las horas de trabajo que finalmente se venden en el mercado (por ejemplo, a través del IRPF) será un impuesto distorsionante que afectará a las decisiones de oferta de trabajo de los agentes, alejándolas del resultado eficiente.}
+
+\paragraph{Ejemplo: Impuestos distorsionantes}
+Para ilustrar esto de forma simple, utilizaremos un modelo de equilibrio general donde se producen dos bienes, $X$ e $Y$, utilizando como inputs trabajo ($L$) y capital ($K$) a través de tecnologías de producción de buen comportamiento. La oferta de capital es fija, no obstante, la oferta de trabajo es flexible y depende del problema de ocio-consumo del agente $U(X,Y,H)$. Tanto el mercado de bienes como de servicios son perfectamente competitivos. Sobre esta economía, se impondrá un impuesto $t$ que afectará de forma distinta a la economía en función de sobre que recaiga. La restricción presupuestaria inicial a la que se enfrentará el agente es: $w(1-H)=P_X X+P_Y Y$.
+
+\textbf{Incluir tabla del WORD}
+
+En definitiva, ante la imposibilidad de establecer impuestos de suma fija, deberemos de aceptar que existe un trade-off entre equidad y eficiencia. 
+
+Además, aumentar la progresividad de un impuesto no equivale a mejorar el bienestar social necesariamente. Por ejemplo, el Sector Público podría decidir el uso de un impuesto muy progresivo para lograr una redistribución muy intensa; no obstante, puede ocurrir que la consecuencia de esta redistribución sean unos costes de eficiencia de tal magnitud que el nivel de bienestar social resulte inferior al que tendríamos con una redistribución más moderada.
+
+La redistribución no es un fin en sí mismo sino un medio para aumentar el bienestar de la sociedad. Un medio cuya utilización tiene costes de eficiencia. Un sistema fiscal es óptimo sólo si el aumento de bienestar social producido por una mayor redistribución viene compensado por una reducción del bienestar social de la misma magnitud producido por la mayor ineficiencia. Cuanto más distorsionantes sean los instrumentos impositivos disponibles, menos intensas serán las políticas redistributivas compatibles con el objetivo de maximizar el bienestar social.
+
+
+\clearpage
+\section{Incumplimiento de las CPO's: Extensiones}
+\puntosclave{
+    La teoría del \textit{second-best} es introducida por \authorfont{LIPSEY y LANCASTER} en 1956.
+    
+    En esencia, lo que esta teoría concluye es que, en ausencia de una o más de las condiciones necesarias para la optimalidad paretiana, acercamos más al cumplimiento del resto de condiciones conducirá a un resultado ambiguo sobre el bienestar general.
+    
+    Por tanto, una vez nos movamos al territorio del Second Best, será necesario analizar caso por caso para encontrar el nuevo óptimo \textit{second-best}, sin la posibilidad de encontrar reglas generales de optimalidad.
+}
+
+Hemos analizado las condiciones necesarias para la optimalidad de Pareto y cómo podían cumplirse dichas condiciones. También hemos visto las implicaciones que esto tiene en términos de Política Económica.
+
+No obstante, haciendo hincapié en las limitaciones, cualquiera podría perfectamente decir que un fisrt-best u Óptimo de PARETO es inalcanzable en la realidad. ¿No son los supuestos excesivamente restrictivos? ¿Es que no existen fallos de mercado? ¿O poder de mercado? ¿No existen externalidades en la producción y en el consumo? Todas estas preguntas arrojan la misma respuesta contrastadas con la realidad: sí. 
+
+Entonces, si las condiciones necesarias no pueden satisfacerse para algunos sectores de la economía por una u otra razón, ¿qué es lo mejor que podemos hacer para el resto de la economía? Este es el problema del segundo mejor (second best). Supongamos, por ejemplo, la presencia de poder monopolístico, prácticamente imposible de eliminar en presencia de rendimientos crecientes a escala y diferenciación de productos, característicos de muchos sectores de la economía. Sabemos que la optimalidad de PARETO requiere la igualdad entre la relación marginal de sustitución (${RMS}$) y la relación marginal de transformación (${RMT}$) para cada par de bienes producidos y consumidos, que se cumplirá si prevalece la competencia perfecta en todos los sectores de la economía (bajo ciertas condiciones). No obstante, si la industria $X$ es competitiva y la industria $Y$ está monopolizada. El precio de $X$ ($P_x$) es entonces igual a su costo marginal (${CMg}_x$), pero $P_y$ excede a ${CMg}_y$. La $RMS_{x,y}$, al ser igual a $P_x/P_y$ debido al comportamiento maximizador de utilidad de los consumidores atomísticos, no es por lo tanto igual a la $RMT_{x,y}= {CMg}_x/{CMg}_y$. En principio, puede existir un sistema de impuestos/subsidios que permita que se cumplan todas las condiciones necesarias y se alcance un óptimo de Pareto de primer orden (first-best). Pero esto puede no ser políticamente o institucionalmente factible y, suponiendo que no tenemos forma de afectar las decisiones en estas dos industrias, la desigualdad ${RMS}_{x,y} \neq {RMT}_{x,y}$ constituye entonces una restricción que impide el logro de un óptimo de Pareto de primer orden. Nos queda entonces hacer lo siguiente mejor, es decir, alcanzar un óptimo de PARETO de segundo orden (second-best), que está sujeto no solo a las restricciones tecnológicas habituales sobre las posibilidades de producción, sino también a la restricción adicional creada por la presencia de un monopolio.\footnote{Las condiciones necesarias para un óptimo de segundo orden siguen siendo óptimas en el sentido de PARETO dadas las restricciones adicionales. El contraste habitual entre las condiciones de PARETO y las condiciones de segundo orden puede dar la idea engañosa de que un óptimo de segundo orden no es óptimo en el sentido de PARETO.
+}
+
+\textbf{¿Dónde queremos llegar?.-} Pero entonces, para alcanzar un óptimo de segundo orden, ¿deberíamos hacer que la $RMS$ sea igual a la $RMT$ para todos los demás pares de bienes? Dado que algunas condiciones de primer orden no pueden cumplirse, ¿es mejor cumplir tantas de las restantes como sea posible? En particular, si el gobierno no puede controlar al sector privado distorsionador, ¿debería poner su propia casa en orden fijando los precios de los servicios públicos al costo marginal? A lo largo de esta segunda parte expondremos la Teoría del Second-Best, que demuestra que la mejor respuesta es un no rotundo. Además, analizaremos las implicaciones de Política Económica que esta tiene y veremos las limitaciones que enfrenta. Por último, presentaremos brevemente una Teoría del Third-Best (óptimo de tercer orden) y las aportaciones que ofrece para diluir algunas de las limitaciones que enfrentan tanto la Teoría del Second-Best como la del Fist-Best.
+
+
+\subsection{Teoría General del Second-Best: Desarrollo. LIPSEY y LANCASTER (1956)}
+El teorema general del second best, señala que: \textbf{si una de las condiciones necesarias para alcanzar el óptimo de PARETO no se cumple, entonces la segunda mejor alternativa no implica necesariamente el cumplimiento de todas las demás condiciones de óptimo}.\footnote{En la década de 1940 SAMUELSON (1947, pp. 252-3) ya era consciente del principio contenido en la teoría del segundo mejor, pero no fue ampliamente discutido hasta la década de 1950, cuando varios autores que trabajaban en distintas ramas de la economía (por ejemplo VINER, 1950; MEADE, 1955a, 1955b; y OZGA, 1955, sobre uniones aduaneras y aranceles; LITTLE, 1951; y CORLETT y HAGUE, 1953, sobre tributación) se encontraron con el problema del segundo mejor. LIPSEY y LANCASTER (1956) generalizaron el principio en la célebre teoría general del segundo mejor.
+} Es decir, no consiste necesariamente en tratar de alcanzar cuantas más condiciones sea posible, ya que, aunque se puedan alcanzar, pueden no ser ya deseables.\footnote{El principio del segundo mejor no es difícil de comprender intuitivamente: por ejemplo, si algunos bienes generan importantes deseconomías externas, sus razones precio/costo marginal (social) serán menores que las de otros bienes, ceteris paribus y, desde un punto de vista social, estos sectores estarán, por tanto, sobredimensionados. Si el gobierno no puede hacer nada directamente para afectar al sector privado, puede dejar de ser deseable fijar los precios, por ejemplo, de sus propios productos al costo marginal. Por ejemplo, para aquellos productos públicos que son altamente complementarios de los productos de los sectores sobredimensionados, puede ser mejor fijar precios por encima del costo marginal con el fin de desalentar indirectamente su sobredimensionamiento. Es decir, si se incumple una condición (existe una restricción exógena), tendremos que maximizar la función objetivo relevante sujeta a esa restricción, y entonces las nuevas condiciones no tienen por qué ser iguales a las antiguas. 
+}  Analíticamente, por simplicidad, se utiliza para su formulación un problema simple de maximización con restricciones. Al maximizar una función objetivo diferenciable de $n$ variables sujeta a una restricción diferenciable sobre las $n$ variables, las condiciones necesarias pueden obtenerse fácilmente como:\footnote{\href{https://www.ub.edu/matheopt/optimizacion-economica/condicion-de-khun-tucker}{\textit{Optimización con restricciones de desigualdad}. Universidad de Barcelona}
+}
+
+\eqblock{
+\begin{aligned}
+    &\underset{\text{\textbf{normal}}}{\boxed{\begin{aligned}
+        &\max F(x_1,x_2,\ldots,x_n)\\[0.5em]
+        &\text{s.a.}\;\;G(x_1,x_2,\ldots,x_n)=0
+    \end{aligned}}}\;\underset{\substack{\text{\scriptsize se puede}\\\text{\scriptsize \textit{economizar}}\\\text{\scriptsize pensando}}}{\sim}\;\;
+    \text{\scriptsize$\left\{\begin{aligned}
+        &\underset{\text{Asemejable a una función de bienestar social con $L$ mercancias y $I$ consumidores}}{W=W(U_1,\ldots,U_I)=F(x_1^1,\ldots,x_1^L,x_2^1,\ldots,x_I^1,\ldots,x_I^L)\equiv n\in\mathbb R^{L\times I}}\\[0.5em]
+        &\underset{\text{\scriptsize Puede interpretarse como una restricción sobre la producción de bienes}}{G\left(\sum_{i=1}^Ix_i^1,\ldots,\sum_{i=1}^ix_i^L\right)=0}\\[0.5em]
+        &\text{\scriptsize La CPO sería}: {RMS}_{i,n}=RMT_{i,n}
+    \end{aligned}\right\}$}\\[1em]
+    &\hspace{2em}\Downarrow\\[1em]
+    &\underset{\text{\textbf{restricción second-best}}}{
+    \boxed{\begin{aligned}
+        &\max F(x_1,x_2,\ldots,x_n)\\[0.5em]
+        &\text{s.a.}\;\;
+        \left\{\begin{aligned}
+            &G(x_1,x_2,\ldots,x_n)=0\\
+            &\underset{\text{\scriptsize restricción diferenciable en la $n$-ésima variable}}{\frac{\partial F/\partial x_i}{\partial F/\partial x_n}=k\frac{\partial G/\partial x_i}{\partial G/\partial x_n}},\;\;\;k\neq 1\;\wedge\;i=1,\ldots,n-1
+        \end{aligned}\right.
+    \end{aligned}}}\\[1em]
+    &\hspace{5em}\mathcal L=F(x_1,\ldots,,x_n)-\lambda G(x_1,\ldots,x_n)-\mu\left(F_1/F_n-kG_I/G_n\right)\\[1em]
+    &\text{CPO}:\frac{F_i}{F_n}=\frac{G_i}{G_n}\cdot\left[\frac{1+\frac{\mu}{\lambda G_i}(Q_i-kR_i)}{1+\frac{\mu}{\lambda G_n}(Q_n-kR_n)}\right]\quad (i=2,\ldots,n-1)\quad\text{donde,}\;\;
+    \underset{\text{p.e.}\;\;F_{1i}\equiv \partial F^2/\partial x_1\partial x_i\;|\;F_n^2\equiv \partial^2 F/\partial^2 x}{\left\{\begin{aligned}
+        &Q_i\equiv (F_nF_{1i}-F_1F_{ni})/F_n^2\\
+        &R_i\equiv (G_nG_{1i}-G_1G_{ni})/G_n^2
+    \end{aligned}\right.}
+\end{aligned}
+}{}
+
+En general, la CPO para cada variable $i$ no es igual a la unidad. Esto significa que las condiciones para la optimalidad de segundo mejor difieren de las condiciones para la optimalidad de first-best incluso para variables que no están sujetas a la(s) restricción(es) adicional(es). En términos de análisis marginal, si no somos capaces de igualar la $RMS$ y la $RMT$ para algún par de bienes, entonces es mejor desviarse de esta igualdad para todos los pares de bienes, excepto cuando las expresiones entre corchetes resultan ser iguales a la unidad.
+
+Por tanto, dada una restricción de segundo orden, las condiciones necesarias resultantes son diferentes de las condiciones necesarias de primer orden incluso para el sector libre. Si las condiciones de segundo orden fueran simples y fáciles de cumplir, el problema del segundo mejor no crearía gran dificultad. Desafortunadamente, las condiciones de segundo orden son, en general, muy complicadas, e involucran, como podemos ver, no solo derivadas de primer orden, sino también derivadas de segundo orden y derivadas cruzadas. 
+
+En términos económicos, esto significa que las condiciones de segundo orden dependen no solo de los valores de (las razones de) los costos marginales y las tasas marginales de sustitución, sino también de los grados de complementariedad o sustituibilidad entre los bienes del sector restringido y los del sector libre, y de los efectos del aumento de la producción de un bien sobre los costos marginales de otro. Esto implica información mucho más compleja que la relacionada con las condiciones de primer orden. Además, esto es así incluso si la restricción de segundo orden se aplica solo a un par de bienes.
+
+\subsubsection{Demostración Gráfica: Tríplex}
+Vémos lo anterior con un ejemplo y aprovechémoslo para demostrar este principio. Enunciar el second best no es equivalentea probarlo y, por tanto, mucho podría decirse a priori sobre la veracidad de la ecuación formulada. 
+
+Para mostrar el principio del segundo mejor de manera vívida consideremos una economía simple que produce tres bienes $X$, $Y$ y $Z$, con costes constantes para todos los productos y que, mediante una elección adecuada de unidades para los tres bienes, una unidad de cada uno puede transformarse en una unidad de cualquiera de los otros. La cantidad agregada de los tres bienes producidos es entonces constante. Por tanto, cualquier combinación de los tres bienes producidos puede representarse mediante un punto en el triángulo equilátero $\Delta XYZ$: el triángulo equilátero representa el conjunto de producción factible de la economía, midiéndose la cantidad producida de cualquier bien por la distancia (perpendicular) del punto al lado opuesto al vértice que le corresponde:\footnote{
+El triángulo equilátero $\Delta XYZ$ es exactamente el conjunto de producción factible de la economía. Pero, ¿por qué representa el conjunto factible? Porque el modelo impone tres supuestos muy fuertes: (i) costes constantes, (ii) plena transformabilidad uno-a-uno entre bienes, y (iii) una cantidad total fija de recursos. Con esos supuestos, producir más de un bien solo es posible sacrificando producción de los otros, y la suma de las cantidades de $X$,$Y$,$Z$ (medidas como distancias a los lados) es constante. El teorema de Viviani garantiza precisamente que todo punto interior del triángulo representa una combinación ($X,Y,Z$) que satisface esa restricción tecnológica agregada. Por eso todo punto del triángulo es tecnológicamente factible.
+
+Nótese que, una consecuencia es lo que dijimos al final: cualquier cantidad producida de un bien puede medirse como la distancia perpendicular desde el punto al lado opuesto de su correspondiente vértice. ¿Por qué? En un triángulo equilátero, la suma de las distancias de cualquier punto del triángulo a los tres lados es constante. \href{https://es.wikipedia.org/wiki/Teorema_de_Viviani}{Teorema de VIVIANI. Wikipedia.org}
+}
+
+\imagenfit{Desmotracion_SecondBest.png}{Tríplex economia de tres bienes con producción: Tecnología de transformación y costes constantes}{\textit{Welfare economics. Towards a more complete analysis}. KWANG NG. (2002)}
+
+Supóngase que la Función de Bienestar Social puede representarse mediante un mapa de indiferencia comunitario sobre $\Delta XYZ$ (implica algunas restricciones, pero se utiliza únicamente para simplificación y no afecta la esencia del argumento). El punto $P$ (nivel más alto de indiferencia comunitaria) se encuentra en el interior de $\Delta XYZ$. Dada la continuidad de las preferencias, los niveles más bajos de indiferencia están representados por anillos (no necesariamente circulares) que rodean al punto $P$.\footnote{Esto es cierto a pesar de que se utiliza un método especial para medir las distintas cantidades de bienes (distancias a los lados), ya que un pequeño desplazamiento en el plano de la figura corresponde a un pequeño desplazamiento en el espacio tridimensional ordinario de las mercancías.
+} Para una cantidad dada de $X$, representada por la distancia entre $TT'$ y el lado $YZ$, $TT'$ es el lugar geométrico de las diversas combinaciones de $Y$ y $Z$ que pueden producirse, y éstas cantidades de $Y$ y $Z$ se miden como distancias a los lados $XZ$ y $XY$. 
+
+Por ejemplo, si la economía está operando en el punto $L$, la cantidad de $Y$ es igual a $LM$ y la de $Z$ es igual a $LN$. A lo largo de $TT′$, el punto $L$ es el que toca la curva de indiferencia comunitaria más alta. Es, por tanto, el punto en el que, para la cantidad dada de $X$, la $RMS_{y,z}$ de la comunidad es igual a la $RMT_{y,z}$ (que es igual a la unidad en este caso simple, $CES=1$).
+
+Si trasladamos las distintas combinaciones de $Y$ y $Z$ a lo largo de $TT′$ a una figura bidimensional ordinaria (no mostrada), con $Y$ y $Z$ medidos a lo largo de los dos ejes:
+
+\textbf{INTRODUCIR CONTRASTE DE UNA Y LA OTRA}
+
+Vemos como la curva de posibilidades de producción o de transformación para $Y$ y $Z$ (con $X$ dado) es una recta con pendiente negativa de $45^º$. Si dibujamos las curva de indiferecia comunitaria en la figura, $L$ corresponderá al punto en el que la recta de transformación es tangente a la curva de indiferencia comunitaria más alta. La curva $XA$ (no necesariamente perpendicular a $YZ$) es el lugar geométrico de todos los puntos, como $L$, en los que, para una cantidad dada de $X$, la curva de transformación correspondiente (como $TT′$) toca la curva de indiferencia comuntaria más alta. Por lo tanto, a lo largo de $XA$ tenemos $RMS_{y,z}=RMT_{y,z}$. De manera similar, a lo largo de $YB$ tenemos $RMS_{x,z}=RMT_{x,z}$, y a lo largo de $ZC$ tenemos $RMS_{x,y}=RMT_{x,y}$. Las tres curvas se intersectan en un punto común, $P$. Esto se debe a que la $RMS$ debe ser igual a la $RMT$ para el par restante de bienes si son iguales para cualesquiera dos pares. Por tanto, el punto $P$ es el óptimo de primer orden donde la $RMS$ es igual a la $RMT$ para todos los pares de bienes.
+
+Supóngase que, por una razón u otra, la $RMS_{x,y}$ no puede hacerse igual a la $RMT_{x,y}$. En lugar de operar en un punto a lo largo de $ZC$, estamos constreñidos a operar en un punto a lo largo de, digamos, $ZD$, donde $RMS_{x,y}\neq RMT_{x,y}$. Dada esta restricción, no podemos lograr tal igualdad para ambos pares restantes de bienes (es decir, $X–Z$ y $Y–Z$), ya que el hecho de que la $RMS$ sea igual a la $RMT$ para cualesquiera dos pares implica que es lo mismo para el par restante y, en efecto, se nos da como restricción que $RMS_{x,y}\neq RMT_{xy}$. En otras palabras, que $RMS\neq RMT$ para cualquier par de bienes implica desigualdad para al menos otro par. Por tanto, ¿debemos conducir la economía a una situación en la que la $RMS$ sea igual a la $RMT$ para un par de bienes, ya sea $X–Z$ (es decir, en el punto $Q$) o $Y–Z$ (en el punto $R$)?
+
+Fíjemonos que tanto $Q$ como $R$ se encuentran sobre una curva de indiferencia comunitaria más baja que el punto $S$, donde la restricción $ZD$ toca la curva de indiferencia más alta. Por tanto, el punto $S$ es el óptimo de segundo orden, que generalmente implica $RMS\neq RMT$ para todos los pares de bienes.\footnote{A menos que la restricción $ZD$ toque la curva de indiferencia más alta en el punto $Q$ o en el punto $R$, lo cual es poco probable
+} Hemos demostrado así, de manera gráfica, el principio del second-best según el cual, una vez que algunas condiciones necesarias no pueden cumplirse, en general ya no es deseable cumplir las restantes, incluso si ello es factible.
+
+\subsubsection{Implicaciones de Política Económica}
+Con todo lo expuesto nos podemos preguntar ¿qué implicaciones tiene esta Teoría en términos de Política Económica?
+
+Hemos visto como las asignaciones first-best son díficilmente aplicable a la realidad por las restricciones que imponen en los fundamentos de la economía. Situaciones tan normales como las economías de escala, los costes de transacción o la información asimétrica impiden garantizar que la asignación resultante sea óptima en el sentido de PARETO. Por otro lado, hemos demostrado que la Teoría del Second-best demuestra que la optimalidad paretiana se puede alcanzar siempre y cuando se disponga de la suficiente información y poder como el que exige la corrección de estos fallos de mercado.\footnote{La dificultad que surge de un conocimiento insuficiente de las interrelaciones relevantes (complementariedades, etc.) es solo una parte del problema del segundo mejor. Por ejemplo, incluso si dispusiéramos de la información requerida, podría seguir siendo prácticamente imposible cumplir todas las condiciones complicadas, ya que los costos administrativos podrían ser prohibitivos. 
+} Por tanto, aunque no podamos alcanzar ni el primer mejor ni el segundo mejor, uno podría considerar que esto no tiene por qué ser demasiado grave si al menos pudiéramos realizar algunas mejoras respecto al estado existente. Y aquí es donde entra la verdadera implicación de la Teoría del Second-Best en términos de Política Económica.
+
+Según la Teoría del Second-Best, al intentar satisfacer tantas condiciones como sea posible podríamos empeorar las cosas. Esto es cierto no solo con respecto a las condiciones de primer orden, sino también con respecto a las condiciones de segundo orden. Dadas algunas restricciones de segundo orden, las condiciones para la optimalidad en el sector libre se convierten en las complicadas condiciones de segundo orden. A menos que podamos satisfacer todas estas condiciones de segundo orden, en general no es deseable satisfacer tantas como sea posible.\footnote{Esto puede demostrarse formando un problema de segundo orden de segunda etapa, en el cual la no satisfacción de algunas condiciones de segundo orden se toma como una restricción adicional. Entonces puede aplicarse nuevamente la teoría del segundo mejor para llegar a la conclusión negativa anterior con mayor fuerza, ya que las condiciones de segundo orden de segunda etapa son aún más complicadas.
+} 
+
+En la economía real, donde existen restricciones de segundo orden (debidas al poder monopolístico, externalidades, impuestos/subsidios, etc.) en muchos sectores de la economía, las condiciones de segundo orden resultantes son prácticamente imposibles de definir, y mucho menos de cumplir y, las implicaciones para la Teoría aplicada del bienestar resultan devastadoras: no existen teoremas generales que aseguren que se aumente el bienestar con políticas económicas parciales, en las que no se cumplen muchas de las condiciones de optimalidad.
+
+\paragraph{Aplicación situacional: Externalidades}
+Un caso particularmente interesante es los ajustes que se realizan en la economía para tener en cuenta únicamente las externalidades en un determinado sector. Al estudiar un subconjunto (apropiado) de la economía, incluso considerando todos los problemas, incluidos externalidades, monopolio, etc., la recomendación de política resultante puede ser peor que no hacer nada, a menos que se tengan en cuenta las complicadas interrelaciones entre este subconjunto y el resto de la economía. Es decir, podemos empeorar las cosas si existen otras distorsiones en el sistema.
+
+Por tanto, parece que para lograr cualquier mejora, debemos analizar toda la economía y tener en cuenta todos los problemas. Debemos saltar directamente a la cumbre para estar seguros de una mejora, pero es evidente que esto sería epistemológica, administrativa y políticamente imposible. Más aún, considerando que la mayoría, si no todos, los análisis económicos se basan en el supuesto de que las condiciones de optimalidad de primer orden se satisfacen en el resto de la economía o para otros aspectos de la economía,\footnote{Por ejemplo, al analizar la política adecuada para un sector particular es analíticamente útil suponer que la optimalidad prevalece en otros sectores. 
+
+Incluso en análisis de tipo equilibrio general, donde se tienen en cuenta todos los sectores, por lo general solo se consideran uno o dos problemas y se supone que los demás ya han sido resueltos. Por ejemplo, al analizar una externalidad se supone que no surgirán problemas de poder monopolístico, y viceversa.
+} según la Teoría del Second-Best, parece que todos estos análisis son inútiles. 
+
+No obstante, antes de concluir, a partir de los resultados negativos anteriores, que la economía del bienestar es inútilveamos algunas de las vías de salida de las dificultades del second-best.
+
+\subsubsection{Diferentes CPO's: MISHAN}
+Una de las aportaciones más notables al respecto fue la de MISHAN (1962). El autor señala que la eficiente paretiana viene definida por tres grupos de CPO's, mientras que el second-best sólo afecta a uno de esos tres grupos: (i) intercambio; (ii) producción; o, (iii) transformación/económico.\footnote{Además, existe un caso especial en el que las CPO's siguen siendo aplicables en la solución de second-best para todas las variables distintas de aquellas que están sujetas a restricciones adicionales de la forma presentada ($x_i\leq\bar x_i$): si las funciones objetivo y de restricción (originales) son funciones separables. 
+
+Toda derivada parcial cruzada de segundo orden de una función separable es cero. Así, si ambas funciones son separables, tenemos $F_{ij} = G_{ij} = 0$ para todo $i \neq j$. Entonces $Q_i$ y $R_i$ en la ecuación CPOdel problema original son todos cero para $i = 2,\ldots, n-1$. La expresión entre corchetes en la CPO original se convierte en la unidad para $i = 2, \ldots, n-1$, y por lo tanto se conservan las CPO's.
+
+Este resultado favorable se deriva del supuesto de separabilidad; la cuestión es la interpretación de este supuesto. DAVIS y WHINSTON (1965, pp. 3, 12) enfatizan que la separabilidad no es un supuesto excesivamente restrictivo. Si no existen externalidades tecnológicas, debe haber separabilidad en términos de las unidades de decisión (consumidores y productores) en el modelo de equilibrio general. En tales situaciones, una política fragmentaria es todo lo que se requiere. 
+
+Si esta conclusión es correcta, entonces la Teoría del Second-Best pierde gran parte de su importancia. Como economista del bienestar, uno desea fervientemente que así sea. Desafortunadamente, el supuesto de separabilidad es en realidad mucho más restrictivo que la mera ausencia de externalidades (NG, 1972a), como se muestra a continuación.
+}
+
+Por ejemplo, algunas restricciones adoptan la forma de que una determinada variable (por ejemplo, la producción de una industria) no debe exceder ni quedar por debajo de cierto valor:
+
+\eqblock{
+\begin{aligned}
+    &\text{Restricción (Óptimo producción)}: x_1\leq \bar x_1\\[1em]
+    &\underset{\text{restricción second-best: \textbf{producción}}}{
+    \boxed{\begin{aligned}
+        &\max F(x_1,x_2,\ldots,x_n)\\[0.5em]
+        &\text{s.a.}\;\;
+        \left\{\begin{aligned}
+            &G(x_1,x_2,\ldots,x_n)=0\\
+            &x_1\leq \bar x_1
+        \end{aligned}\right.
+    \end{aligned}}}\\[1em]
+    &\hspace{5em}\mathcal L=F(x_1,\ldots,,x_n)-\lambda G(x_1,\ldots,x_n)-\mu\left(\bar x_1-x_1\right)\\[1em]
+    &\text{CPO}:
+    \underset{\substack{\\[0.5em]\\\Longrightarrow \text{Solo el sector restringido debe ser ajustado}}}{\left\{\begin{aligned}
+        &\frac{F_i}{F_n}=\frac{G_i}{G_n}&&\forall i=2,\ldots,n\\[0.5em]
+        &\frac{F_1}{F_n}=\frac{G_1}{G_n}+\frac{\mu}{\lambda G_n}&&i=1
+    \end{aligned}\right\}\Longrightarrow\text{donde,}
+    \left\{\begin{aligned}
+        &\mu =0\iff x_1\leq\bar x_1&&\text{(si inefectiva)}\\
+        &\lambda &&\left(\substack{\text{diferente a}\\\text{la anterior}}\right)
+    \end{aligned}\right.}
+\end{aligned}
+}{}
+
+Por lo tanto, vemos que solo el sector restringido necesita ser ajustado; una política de bienestar fragmentaria es suficiente en este caso y sigue siendo cierto incluso si existen varias restricciones del tipo expuesto. Por norma general, \textbf{las restricciones que imponen valores máximos o mínimos a ciertas variables}, como la cantidad de consumo, producción, importaciones, exportaciones, uso de insumos, etc., en general \textbf{reducirán el valor máximo de la función objetivo, pero no conducirán a condiciones complicadas de segundo mejor}.\footnote{El hecho de que las restricciones no conduzcan a condiciones complicadas de segundo mejor se ilustra en el tríplex anterior. Supóngase que la restricción es que el valor de $X$ no debe ser mayor que la distancia entre $TT'$ y $YZ$. Entonces puede verse que la curva de indiferencia más alta se alcanza en el punto $L$, donde $RMS_{y,z} = RMT_{y,z}$. De hecho, la restricción, si es efectiva, confina a la economía a la recta $TT'$, y la condición simple de primer orden para el par $YZ$ la confina a la recta $XA$. Por lo tanto, estas dos ecuaciones (junto con la restricción de producción) ya definen el punto máximo, $L$, y por ende los valores correspondientes de $X$, $Y$ y $Z$. En este caso simple de tres variables no podemos añadir otra restricción efectiva (como una restricción sobre el valor de $Y$) sin hacer que la economía no tenga ningún grado de libertad.
+}
+
+En una economía con muchas variables pueden añadirse varias restricciones del tipo de la ecuación sin afectar las condiciones necesarias de las variables no restringidas. Sin embargo, surgirán condiciones necesarias complicadas si la restricción añadida se especifica en la forma de una desigualdad en una condición original de primer orden como la ecuación de la restricción de la formulación general ($F_i/F_n=kG_i/G_n$). Por tanto, dado que la economía real no carece de restricciones de este tipo, aún debemos enfrentar la dificultad del segundo mejor.\footnote{Como esto implica un par de bienes, McMANUS (1959) lo considera en realidad como dos restricciones por el precio de una. Esta es una interpretación problemática. Es cierto que si la restricción adicional adopta la forma, por ejemplo, $P_1 = k{CMg}_1, k \neq 1$, aún podemos alcanzar un óptimo de primer orden haciendo $P_1 = k{CMg}_1$ para todo $i$ si la economía está integrada verticalmente, es decir, si no existen transacciones interempresariales de bienes intermedios (véase KAHN, 1935). Con bienes intermedios, surge cierta complicación; véase McKENZIE, 1951. En un problema de maximización con restricciones en el que la restricción es efectiva, existen solo $n-1$ grados de libertad. Las $n-1$ condiciones necesarias de la ecuación de CPO's ($F_i/F_n=G_i/G_n$), junto con la ecuación de restricción, determinan las $n$ variables. Una restricción de la forma $P_1 = k{CMg}_1$ no necesita violar ninguna de las condiciones para $RMS = RMT$, siempre que otros sectores fijen precios apropiadamente. Pero si la restricción adicional se debe al poder monopolístico de la primera industria, hará que $P_i > k{CMg}_1$ después de que hayamos fijado $P_1 = k{CMg}_1$ (LIPSEY y LANCASTER, 1959). Este problema del número de restricciones parece manejarse mejor en ALLINGHAM y ARCHIBALD (1975).
+}
+
+De manera más general aún, \authorfont{MISHAN} aclara que el teorema del second best sólo afecta a la condición de Óptimo Económico (otimo optimorum), ya que las dos primeras condiciones son datos para los agentes de Política Económica. Por tanto, solo cabe preocuparse de la tercera condición ya que, para el intercambio y la producción, consumidores y productores tratarán de ajustarse automáticamente a las nuevas condiciones impuestas por las modificaciones que introduzcan los decisores de política económica. Por otra parte, aunque el sistema económico sea interdependiente, el análisis parcial puede estar justificado cuando las interdependencias son mínimas. Por ejemplo, al formular la política óptima para la industria aeronáutica, poco importan las restricciones (si existen) en el sector pesquero.\footnote{Podemos verlo con un ejemplo: supongamos que el sector público se plantea establecer un impuesto sobre la venta de un bien, por ejemplo los DVD: según el primer teorema del bienestar, esto introducirá una distorsión en el mercado, ya que la eficiencia requiere que el precio se iguale al coste marginal para todos los bienes, y si se grava la compra de un bien con un impuesto, el precio será mayor que el coste marginal y la asignación de recursos sería ineficiente. Sin embargo: si consideramos que existe también un impuesto sobre un bien sustitutivo del anterior, por ejemplo las entradas de cine: entonces, el impuesto sobre la venta de DVD hace que se reduzca la demanda de éstos, y, al ser sustitutivos, aumentará la demanda de entradas de cine, que era presumiblemente demasiado baja debido al impuesto sobre las mismas. De esta manera, al introducir una distorsión en el mercado de los DVD, se ha reducido la ineficiencia que existía en el mercado de entradas de cine, donde la demanda era demasiado baja debido al impuesto.
+}
+
+\subsection{Teoría del Third-Best: NG ()}
+Ahora bien, existen otras lineas de investigación reciente que buscan una alternativa viable para la implementación generalizada de las condiciones de optimalidad. En particular, destaca la Teoría del Thrid-Best. Para exponerlo brevemente, la Teoría del Third Best plantea que la pérdida marginal que se deriva de la desviación de una condición de primer orden (ceteris paribus, se puede aplicar a muchas), se puede representar mediante el siguiente gráfico:
+
+\imagenfit{ThirdBest_NG_1.png}{Curvas de relación para diferentes situaciones de incumplimiento de las CPO's}{\textit{Welfare Economics. Towards a more complete analysis}. NG (2002)}
+    
+La curva $F_1$ representa la \textbf{curva de relación} en un contexto de first-best (información completa) sin restricciones de naturaleza second best. El óptimo queda, por tanto, bien definido siempre y cuando se cumplan todas las condiciones de primer y segundo orden. Además, la pérdida marginal que se experimenta sobre la Función Objetivo queda también perfectamente definido.
+
+A partir de aquí, la Teoría del Third Best se plantea una pregunta: imaginemos que no podemos alcanzar esa igualdad porque existe una \textbf{restriccón de primer orden}, ¿cómo cambia el valor máximo alcanzable de la función objetivo cuando fuerzo a una variable a violar su condición de primer orden?
+
+Sabemos, por la Teoría del Second Best, con una distorsión de naturaleza second best, la curva de relación se desviará de $F_1$ pero debido a las restricciones informativas del mundo real, realmente no sabemos hacia dónde. Por ejemplo, podemos representar algunas posibilidades como $F_2$ y $F_3$, y considerarlas igualmente probables (supongámos, $p_2=p_3$). Además, podemos presentar ambas curvas simétricas ya que no conocemos el signo de la asimetría (si es que en efecto existe). En este escenario, es fácil ver que si nos atenemos a la regla del first best el valor esperado de la función objetivo es $OA$. Sin embargo, si nos desviamos de la regla first-best en cualquier dirección y en cualquier grado, por ejemplo hasta el punto $B$, el valor esperado de la función objetivo es $BC : p_2F_2(B)+p_3F_3(B)\;\; <\;\; OA$.\footnote{Por supuesto no es necesario que, frente al riesgo, maximizemos el valor esperado de la función objetivo. Sin embargo, es razonable suponer que lo que maximizamos es una función cóncava de los valores posibles de la función objetivo. En otras palabras, somos neutrales al riesgo o aversos al riesgo. Con este supuesto adicional razonable, se sigue la siguiente proposición tres anterior.
+}
+
+\subsubsection{Situaciones Informacionales: Costes informacionales y Política aplicable}
+A partir de aquí, la Teoría establece una dependencia informacional fundamental para la aplicación de una u otra clase de Teorías:
+\begin{la}
+    \item \textbf{Pobreza informativa}. Pobreza informativa existe cuando la información disponible es insuficiente para proporcionar un juicio razonablemente probabilístico sobre: (i) la dirección y la magnitud de la divergencia del óptimo de second-best respecto del que resulta de la aplicación de la regla de primer orden en presencia de la distorsión de segundo mejor; y (ii) la forma y la asimetría de la curva de relación, aparte de su concavidad general;
+    \item \textbf{Escasez informativa}. Escasez informativa existe cuando la información disponible es suficiente para tal juicio pero no es perfecta;
+    \item \textbf{Abundancia informativa}. Abundancia informativa equivale a información perfecta. 
+\end{la}
+
+A partir de este planteamiento, podemos escribir una nueva función objetivo como dependiente de la cantidad de información $\iota$ y de la política a seguir, $\pi$:
+
+\eqblock{
+\begin{aligned}
+    &Q=Q(\iota,\pi)\quad \text{donde,}
+    \left\{\begin{aligned}
+        &\iota\equiv\text{Cantidad información}\\
+        &\pi\equiv\text{Política a seguir}
+    \end{aligned}\right.\\[2em]
+    &\text{Si,}\;\;Q\in\mathcal C^n\;\;n\geq2\Longrightarrow
+    \underset{\text{\scriptsize Problema de Economía de Información}}{\boxed{\begin{aligned}
+        &\max Q(\iota,\pi)\\
+        &\text{s.a.}\quad \left(\substack{\text{\scriptsize restricciones de costes}\\
+        \text{\scriptsize informativos, administrativos, etc.}}\right)
+    \end{aligned}}}:
+    \left\{\begin{aligned}
+        &(1)&&\frac{\partial Q}{\partial \iota}=0\;\;\wedge\;\;\frac{\partial Q}{\partial \pi}=0\\[0.5em]
+        &(2)&&\underset{\text{\scriptsize lineas de cresta: valores óptimos de una variable ($\cdot^*$) dado el valor de la otra ($\cdot$)}}{\iota^*\equiv \max Q(\iota,\bar\pi)\;\;\wedge\;\:\pi^*\equiv\max Q(\bar\iota,\pi)}
+    \end{aligned}\right.
+\end{aligned}
+}{}
+
+Cuya forma funcional refleja el coste de obtener información, los costos administrativos de llevar a cabo las políticas y el entorno económico dado.\footnote{En presencia de incertidumbre no sabemos con certeza qué ocurrirá para una elección particular de $\iota$ y $\pi$. Pero $Q$ puede considerarse como la utilidad esperada o aquello que se está maximizando. Así, las estimaciones subjetivas de probabilidad y la actitud frente al riesgo también influirán en la forma de la función $Q$, y por lo tanto la función $Q$ puede diferir de la función objetivo, $F$. 
+} Suponiendo diferenciabilidad y maximizando $Q$ en $(Q_\iota = \partial Q/\partial \iota = 0,\;\;Q_\pi = 0)$, podemos ver los diferentes resultados que podemos obtener en la siguiente gráfica:
+
+\imagenfit{ThirdBest_NG_3.png}{Variables informacionales (costes de información, $\iota$) y política óptima ($\pi$)}{\textit{Welfare Economics. Towards a more complete analysis}. NG (2002)}
+
+Las lineas de contornos están determinadas por los costos de obtención de información, los costes administrativos, etc. Las dos líneas que interseccionan (lineas de cresta) trazan los lugares geométricos del valor óptimo de cada variable ($\iota$ o $\pi$) dado el valor de la otra y cabe esperar que ambas líneas tengan pendiente positiva:\footnote{Además, cabe destacar que si los costes de información son muy altos, no es posible tener una solución de esquina en ningún otro punto del eje vertical; mientras que si los costes de información son bajos es lógicamente posible tener una solución a lo largo de la línea vertical por debajo de $A$ ya que la información perfecta no implica necesariamente que una política second best sea óptima.
+}
+\begin{la}
+    \item \textbf{Política Third Best}. Suponiendo que el resultado no es una solución de esquina, la Política Económica óptima vendría dada por el punto $M$,  y la Política recomendada sería Third-Best (A);
+    \item \textbf{Política First Best}. Si el costo de la información es suficientemente alto, podríamos tener una solución de esquina en $0$ como en (B). Por tanto, dada la pobreza informativa, la mejor Política Económica es la first-best; y,
+    \item \textbf{Política Second Best}. Si los costes de obtener información son muy bajos (algo poco probable), puede existir una solución de esquina diagonalmente opuesta al origen en $A$, como en la figura (C).
+\end{la}
+
+\subsubsection{Implicaciones de Política Económica}
+Lo que constituye una política de tercer orden depende, por supuesto, del caso específico que se esté considerando. Lo que puede ofrecerse aquí no es más que una discusión general de algunos factores que probablemente sean importantes en la mayoría de los casos. Primero consideraremos la forma de la curva de relación bajo condiciones de primer orden y luego examinaremos los efectos de las distorsiones de segundo orden.
+
+Considérese la curva de demanda (o de valoración marginal) de una mercancía y su curva de costo marginal (CM). Si ambas son lineales, la curva de relación es cóncava y también simétrica en el entorno de la regla de primer orden. Si excluimos razonablemente cantidades y precios negativos, entonces los valores extremos de la curva de relación no serán iguales a menos que el CM corte a la curva de demanda en su punto medio. Por ejemplo, con CM₁ en la Figura 9.5a, si hay una divergencia positiva respecto de la regla de primer orden (esto es, precio > CM), la pérdida no puede ser mayor que el triángulo ABC. Pero la pérdida máxima derivada de una divergencia negativa es mucho mayor. Por el contrario, si tenemos CM₃, ocurre lo opuesto. Si tenemos CM₂, que corta a la curva de demanda en su punto medio, o si no conocemos la posición probable del CM con respecto a la curva de demanda, la curva de relación puede tomarse como simétrica. Sin embargo, es más probable que la curva de demanda sea isoelástica que lineal en el intervalo relevante, como se muestra en la Figura 9.5b. Si el CM es CM₁ o CM₃ e intersecta la curva de demanda en el centro del intervalo considerado relevante, digamos AB, entonces la curva de relación vuelve a ser simétrica. Si en cambio tenemos CM₂, la curva de relación estará algo sesgada, pero no en un grado significativo.
+
+Las principales fuentes de distorsión de segundo orden parecen ser la existencia de distintos grados de poder monopolístico, externalidades no corregidas, la tributación y la intervención del gobierno.
+
+En un mundo de primer orden, la optimalidad requiere la igualdad entre precios y costos marginales. En presencia de distorsiones monopolísticas no corregidas, la formulación de la regla de precios de segundo orden requiere un conocimiento detallado de las relaciones de costos y demanda (incluidas las relaciones cruzadas). Sin embargo, sobre bases de tercer orden puede sostenerse que, a menos que se sepa que una mercancía en particular es altamente complementaria o competitiva con otras mercancías producidas bajo condiciones fuertemente monopolísticas, no se está muy lejos de la optimalidad si se hace que su razón precio/CM sea igual al promedio estimado en la economía (cf. Green, 1961; Mishan, 1962b; Ng, 1975d). Dado que esta razón probablemente sea mayor que uno, esta regla de tercer orden requiere que el precio esté por encima del CM. Esto ofrece una salida al dilema de la fijación óptima de precios para los servicios públicos con costos medios decrecientes (otra salida es adoptar una tarifa multipartita; véase Mayston, 1974; Ng y Weisser, 1974; Marchand et al., 1984; Bousquet e Ivaldi, 1997; De Borger, 2001). Cuando el CM es menor que el costo medio (CMd), fijar el precio al CM genera pérdidas, cuya financiación —mediante impuestos no de suma fija— vuelve a introducir ineficiencia (sobre algunas de las dificultades involucradas en la fijación de precios al CM, véase Ruggles, 1949-50; Farrell, 1958). Sin embargo, si la optimalidad no requiere fijación de precios al CM sino por encima del CM, entonces no se estaría muy lejos de la optimalidad fijando el precio al costo medio, salvo que el CM sea muy inferior al costo medio.
+
+Son necesarias algunas salvedades a este argumento a favor de la fijación de precios al costo medio. En primer lugar, las distorsiones monopolísticas no tienen por qué dejarse sin corregir. Si subsidios idealizados más un impuesto de suma fija pudieran administrarse sin costo, la presencia de monopolios no causaría ninguna distorsión. Aunque en la práctica una “cura” perfecta del monopolio es imposible, algún tratamiento rudimentario puede ser factible. Dividamos la economía en tres sectores: el muy competitivo, el fuertemente monopolizado y el intermedio. Si el sector competitivo se grava según su producción, el monopolizado según sus beneficios y el intermedio mediante una combinación de ambos, el efecto restrictivo del monopolio puede remediarse parcialmente. En segundo lugar, pueden existir áreas en las que los precios estén por debajo del CM —por ejemplo, la provisión pública de bienes por razones políticas más que de eficiencia, y los gastos sujetos a deducciones fiscales—. Estas deducciones pueden haberse introducido inicialmente por razones de eficiencia o equidad, pero luego volverse obsoletas o sujetas a abuso, y resultar difíciles de eliminar por razones políticas. Si los sectores con precios por debajo del CM son lo suficientemente importantes como para compensar aproximadamente la práctica de fijación de precios al CM de las empresas monopolísticas, puede ser óptimo que los servicios públicos adopten la regla de primer orden de fijación de precios al CM. Sin embargo, también deben tenerse en cuenta otras consideraciones, como la necesidad de prevenir la construcción de imperios por parte de las empresas públicas.
+
+Además de la distorsión monopolística existe la distorsión tributaria (aunque esta distorsión puede ser mucho menos significativa de lo que comúnmente se cree; véase el argumento más abajo). Por ejemplo, la tributación sobre mercancías incrementa la divergencia entre los precios (al consumidor) y el CM. Por lo tanto, incluso para los servicios públicos cuyos CM estén muy por debajo de sus costos medios, la fijación de precios al costo medio puede no estar muy lejos de la optimalidad; la exención impositiva puede ser todo lo que se necesita.
+
+Consideremos ahora las externalidades. Un efecto externo puede ser una economía externa o una deseconomía externa. Si ambos tipos de externalidades, beneficiosas y perjudiciales, fueran igualmente prevalentes en la economía, podría sostenerse sobre bases de tercer orden que, a menos que se sepa que un bien tiene una externalidad significativa o que es altamente complementario o competitivo con otros bienes con externalidades importantes, las reglas de primer orden son aplicables (Ng, 1975d). Sin embargo, parece razonable afirmar que, en conjunto, las externalidades perjudiciales tienden a superar a las beneficiosas: piénsese en la contaminación, la congestión, el “mantenerse a la altura de los Jones”, y similares. Si se incluyen los bienes públicos como externalidades, las externalidades beneficiosas pueden ser igual de importantes, pero esto no es muy relevante para nuestro propósito aquí. Por ejemplo, al determinar el gasto en defensa, presumiblemente se tiene en cuenta el efecto beneficioso sobre todos los ciudadanos. Asimismo, la educación puede tener importantes efectos externos favorables, pero se proporciona de forma gratuita o fuertemente subsidiada. Para el problema del segundo frente al tercer orden, lo que importa son las externalidades no tenidas en cuenta. Si limitamos nuestra consideración a las externalidades no contabilizadas en la producción y el consumo de bienes y servicios, es bastante seguro que predominan las externalidades perjudiciales. La mayoría de los procesos productivos tienen efectos externos negativos sobre el medio ambiente, directa o indirectamente (a través del uso de insumos). Además, el consumo de muchos bienes tiene efectos externos negativos debido al deseo de las personas de mantenerse al nivel o superar a sus vecinos y conciudadanos. Así, la aparición de nuevas modas y nuevos modelos vuelve “viejos” a sus predecesores, y la construcción de casas más grandes hace que las existentes parezcan “más pequeñas”.
+
+Si aceptamos que predominan las externalidades perjudiciales, surge una consideración interesante. La necesidad de recaudar ingresos públicos mediante impuestos no de suma fija siempre se ha considerado una distorsión con la que debemos convivir. Pero si predominan las externalidades perjudiciales, la mayoría de los bienes y servicios tendrían que gravarse para alcanzar el óptimo de primer orden desde el inicio. Este sistema de impuestos de primer orden implicaría, por supuesto, estructuras de tasas complicadas para tener en cuenta los distintos grados de externalidad. Sin embargo, teniendo en cuenta los costos informativos y administrativos de diseñar un sistema tan complejo, puede no estar muy lejos de la optimalidad imponer un impuesto general (en forma de impuesto sobre la renta, impuesto al valor agregado u otro impuesto) sobre todos los bienes y servicios, con ajustes especiales solo para tener en cuenta formas particularmente severas de externalidad. Si esta tasa media de impuestos no difiere mucho de la necesaria para financiar el gasto público, puede no haber ninguna distorsión real como resultado de la tributación gubernamental. Considerando el grado de externalidades como la contaminación ambiental y el “mantenerse a la altura de los Jones”, y el hecho de que el sector público representa alrededor del 30 por ciento del PNB, parece probable que este sea el caso. Debido a la estructura progresiva del impuesto sobre la renta, las tasas marginales son muy superiores a las tasas medias y las tasas sobre los ricos son mucho más altas que las aplicadas a los pobres. Esto puede implicar cierta distorsión, pero al menos parte de la diferenciación de las tasas puede considerarse como una corrección no intencionada de externalidades diferenciales. Las externalidades perjudiciales del consumo debidas a la interdependencia de utilidades (mantenerse a la altura de los Jones, etc.) son probablemente más pronunciadas para los ricos que para los pobres. Por lo tanto, incluso solo por razones de eficiencia, los ricos pueden tener que ser gravados más de todos modos.
+
+La validez de los juicios subjetivos de hecho anteriores es, por supuesto, una cuestión empírica, y hasta que dicha información esté disponible todo lo que tenemos es una estimación aproximada. Sin embargo, debemos actuar con la mejor información disponible. Las decisiones basadas en estimaciones aproximadas son mejores que la elección aleatoria o la indecisión (si esta última es una opción). Es cierto que existen muchas dificultades asociadas a la recopilación de información relevante, pero estudios adicionales parecen estar justificados dada la importancia del tema.
+
+Para nuestros propósitos, la intervención gubernamental puede dividirse en dos tipos: correctiva y distorsiva. La intervención correctiva se lleva a cabo para compensar distorsiones debidas a externalidades, etc. La intervención distorsiva genera ineficiencia y se realiza con fines de redistribución del ingreso, concesiones políticas, y similares. La intervención correctiva no nos concierne aquí. En cuanto a la intervención distorsiva, parece que algunas formas (como el mantenimiento de precios agrícolas, las cuotas, etc.) generan una distorsión positiva, con precios superiores al CM, mientras que otras (como un servicio nacional de salud gratuito) generan una distorsión negativa. En ausencia de estudios empíricos es difícil juzgar la importancia relativa de ambos efectos opuestos.
+
+En relación con la intervención gubernamental y el problema del segundo orden, hay un argumento interesante que debe considerarse. Supóngase que, de acuerdo con una solución de segundo orden, subsidiamos aquellos sectores que “deberíamos” subsidiar y alentamos a aquellos que deben volverse más monopolísticos en su comportamiento a que lo hagan. Con el paso del tiempo, aparecerán otras restricciones y algunas de las que fueron efectivas en el pasado pueden dejar de serlo. Todo esto nos involucrará en un proceso de expansión de subsidios y de fomento de prácticas monopolísticas por un lado, y de intento de desmantelarlas por el otro. Sin embargo, mientras que es fácil comenzar a subsidiar o fomentar prácticas restrictivas, no es tan fácil dar marcha atrás. En general, puede esperarse justificadamente que algunas de las imperfecciones que hayamos fomentado en el pasado conforme a una solución de segundo orden se endurezcan con el tiempo y se conviertan en restricciones por derecho propio, al menos según la lógica de la teoría [del segundo orden]. De este modo corremos el peligro de una proliferación de restricciones y la eficiencia del sistema se volverá muy pobre (Athanasiou, 1966, p. 86).
+
+En respuesta a este argumento, un teórico podría decir que lo que necesitamos es plantear un problema de maximización de largo plazo que tenga en cuenta posibles cambios en las restricciones a lo largo del tiempo. A pesar de los posibles efectos sobre el conjunto de restricciones, puede verse que una política de segundo orden es en general diferente de una de primer orden. De hecho, debido a las interacciones entre política y restricciones, la solución de segundo orden será aún más complicada. Por ejemplo, puede ser óptimo (sobre bases de segundo orden) otorgar subsidios compensatorios a los aranceles sobre productos agrícolas a tasas más bajas de lo que sugeriría una solución estática de segundo orden. (Dado que los aranceles sobre importaciones industriales no pueden eliminarse por razones políticas, se ha propuesto un subsidio a la producción agrícola como solución de segundo orden para compensar el efecto adverso de los aranceles sobre la agricultura. Para un argumento en contra de esta propuesta, véase Warr, 1979). Incluso puede ser óptimo variar las tasas de subsidio a lo largo del tiempo (quizás incrementándolas lentamente) de acuerdo con una fórmula complicada.
+
+La respuesta “de segundo orden” anterior al argumento de Athanasiou es formalmente correcta si ignoramos el problema de los costos informativos y administrativos. Teniendo en cuenta estos, es evidente que una solución dinámica de segundo orden es aún más utópica que su contraparte estática. Por lo tanto, si combinamos nuestro argumento a favor de una política de tercer orden que reconozca los costos informativos y administrativos con el argumento de Athanasiou sobre el peligro de la proliferación de restricciones, puede formularse un caso poderoso a favor de ignorar las consideraciones de segundo orden y adoptar reglas simples de primer orden en la mayoría de los casos. Es cierto que el argumento de Athanasiou implica una asimetría entre impuestos y subsidios, es decir, que es fácil retirar impuestos pero difícil retirar subsidios. Sin embargo, debido a la necesidad de recaudar ingresos públicos, la mayoría de los sectores están sujetos a diversas formas de tributación. Por lo tanto, puede no estar muy lejos de la optimalidad imponer impuestos conforme a reglas de primer orden para corregir distorsiones significativas (como el impuesto de M dólares sobre una deseconomía externa discutido más arriba), abstenerse de introducir subsidios que solo pueden justificarse por razones temporales, y renunciar a impuestos en lugar de conceder subsidios que puedan justificarse por fundamentos más permanentes, y conceder subsidios únicamente cuando estén ampliamente justificados (cf. Bos y Seidl, 1986).
+
+
+\clearpage
+\section{Conclusión}
+
+\subsection{Recapitulación}
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+\MyBibItem{Autor}{Título}{Año}{DOI -- LINK}
+
+
+% --- Anexos (no aparecen en el índice) ---
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+\clearpage
+\anexo{Teorema Fundamental del Bienestar}\label{anx:tbf}
+Extraído de \authorfont{GRAVELLE y REES} (1992, 3ra edición)
+Vamos a obtener un conjunto de condiciones que debe satisfacer una asignación eficiente en el sentido de Pareto, considerando una economía simple en la cual existen dos consumidores, dos bienes, dos factores de producción y dos empresas. El método se puede fácilmente generalizar para economías más grandes. El individuo $h$ tiene la función de utilidad $u^h (x_1^h,x_2^h,z^h )$ donde $x_i^h$; es el consumo que hace $h$ de la mercancía $i$ y $z^h$ es la cantidad que ofrece $h$ de un factor de producción. 
+
+Para simplificar la exposición, supondremos que los individuos ofrecen diferentes tipos de factores de producción (quizás trabajo cualificado y no cualificado), de modo que un cierto factor de producción se puede denotar según el individuo que lo ofrece. Las dotaciones de los factores de producción de los individuos se representan por $\bar{z}^h$. Supondremos que se cumple en principio de no-saturación de las preferencias, de modo que la utilidad marginal de la mercancía $i$ para el individuo $h$ será siempre positiva: $u_i^h>0 (i=1,2\;;\;h=1,2)$ y la utilidad marginal para $h$ asociada a ofrecer más del factor de producción z será siempre negativa: $u_z^h<0$. 
+
+La empresa $i$ produce el output total $x_i$; de la mercancía $i$ de acuerdo con la función de producción:
+
+$$x_i=f_i (z_i^1,z_i^2 )i=1,2\quad [B.1]$$
+
+Donde $z_i^h$, es la cantidad del factor de producción del tipo $h$ (esto es, ofrecido por el individuo $h$) que se utiliza para producir el bien $i$. La productividad marginal del factor de producción h en la producción del bien $i$ es positiva: $f_i^h=\partial f_i/\partial z_i^h>0\quad(i=1,2; h=1,2)$. 
+
+Es imposible que el consumo total del bien $i$ por parte de los individuos supere la producción de la empresa $i$ y que la utilización total del factor de producción $h$ por parte de las empresas supere lo que de él ofrece el individuo $h$:
+$$
+\left\{\begin{aligned}
+    &(x_i\ge\sum_{h=1}^2x_i^h\quad i=1,2 \quad \text{[B.2]}\\[0.5em]
+    &z^h\ge\sum_{i=1}^2z_i^h\quad h=1,2\quad\text{[B.3]}
+\end{aligned}\right.
+$$
+Nuestras hipótesis de que los consumidores no están saturados y de que las productividades marginales son positivas, implican que estas restricciones físicas se satisfarán en forma de igualdad estricta en una asignación eficiente en el sentido de Pareto.\footnote{Si [B.3] se cumpliera como una desigualdad estricta, el factor de producción $z_1^h$ podría aumentarse (sin reducir $u^h$) y, de ese modo, aumentaría la producción de la mercancía 1 y permitiría un aumento del consumo por parte del individuo 1 y un aumento de $u^1$. De modo similar, si [B.2] fuera una desigualdad estricta, el consumo del individuo 1 se podría aumentar sin necesidad de ningún aumento en los factores de producción, lo que desembocaría en un aumento de $u^1$.} 
+
+Las asignaciones factibles también deben satisfacer la restricción de que la oferta del factor de producción $h$ no puede ser mayor que la dotación inicial del individuo $h$; $\bar{z}^h\ge z^h$. Supondremos que las preferencias son tales, que la desigualdad es siempre estricta y que la restricción nunca es efectiva. Si interpretamos $z^h$ como trabajo, el anterior supuesto no resultará inverosímil. 
+
+Centraremos nuestra atención sobre las asignaciones de eficientes en el sentido de pareto que no sean de esquina, en las cuales ambos individuos consumen cantidades positivas de ambos bienes, ofrecen cantidades positivas de sus factores de producción y ambas empresas utilizan los dos tipos de factores.
+
+Una asignación eficiente en el sentido de Pareto es la solución al problema:
+$$
+\begin{aligned}
+    &\max_{x_i^h,z_i^h,x_i,z^h} {u^1(x_1^1,x_2^1,z^1)}\quad \text{s.a.}\quad 
+        \begin{cases}
+            \quad &\bar{u}^2\leq u^2 (x_1^2,x_2^2,z^2)\\
+            \quad &\text{[B.1]}\\
+            \quad &\text{[B.2]}\\
+            \quad &\text{[B.3]}
+        \end{cases}
+        \\[3em]
+\Longrightarrow&\mathcal{L}
+= \underbrace{u^1(x_1^1,x_2^1,z^1)}_{\text{\scriptsize Utilidad de 1}}
++ \lambda\,\underbrace{(u^2(x_1^2,x_2^2,z^2)-\bar{u}^2)}_{\text{\scriptsize Restricción ceteris paribus}}
++ \underbrace{\sum_i p_i (x_i-\sum_h x_i^h)}_{\text{\scriptsize Restricción precios productos}}
++ \underbrace{\sum_h \omega^h (z^h-\sum_i z_i^h)}_{\text{\scriptsize Restricción precios factores}}
++ \underbrace{\sum_i \mu_i (f_i(z_i^1,z_i^2)-x_i)}_{\text{\scriptsize Restricción FPP}}
+\end{aligned}
+$$
+
+Entonces, las CPO’s se obtendrían:
+$$
+\begin{aligned}
+    &\left.
+    \begin{aligned}
+        &\text{[B.6] (1)} \quad \partial \mathcal{L}/\partial x_i^1=u_i^1-p_i=0\quad i=1,2\\
+        &\text{[B.7] (2)} \quad \partial L/\partial x_i^2=\lambda u_i^2-p_i=0\quad i=1,2
+    \end{aligned}\right\}
+    \quad \text{consumo eficiente}\\[1em]
+    &\left.\begin{aligned}
+        &\text{[B.8]    (3)} \quad \partial \mathcal{L}/\partial z^1=u_z^1+\omega^1=0\\
+        &\text{[B.9]    (4)} \quad \partial L/\partial z_2=\lambda u_z^2-\omega^2=0
+    \end{aligned}\right\}
+    \quad \text{oferta eficiente de factor de producción} \\[1em]
+    &\text{[B.10] (5)} \quad \partial \mathcal{L}/\partial z_i^h=\mu_if_i^h-\omega^h=0\quad i,h=1,2\quad \text{utilización eficiente del factor de producción}\\[1em]
+    &\text{[B.11] (6)} \quad \partial L/\partial x_i=p_i-\mu_i=0\quad i=1,2 \text{combinación eficientede productos} 
+\end{aligned}
+$$
+
+Podemos reordenar las condiciones [B.6] y [B.7] para obtener:
+$$(RMS_1^2)_1=\frac{u_1^1}{u_2^1}=\frac{p_1}{p_2}=\frac{u_1^2}{u_2^2}=(RMS_1^2)_2\quad \quad \text{[B.12]}$$
+Por tanto, una asignación eficiente de un bien determinado $x_i$ entre los dos consumidores exige que a los consumidores se les ofrezca una cesta de bienes que iguale sus relaciones marginales de sustitución entre los dos bienes. La relación marginal de sustitución y de la tasa a la que $h$ está dispuesto a sustituir la mercancía 1 por la mercancía dos:\footnote{Dado que estamos manteniendo constantes las ofertas de trabajo de los individuos, podemos dibujar en la caja sus curvas de indiferencia. Para las dos mercancías, los individuos tienen funciones de utilidad estrictamente cuasi-cóncavas, de modo que sus curvas de indiferencia son convexas vistas desde sus respectivos orígenes.}
+
+\imagenfit{ConsumoEficienteGR.png}{Consumo eficiente. Caja de \authorfont{EDGEWORTH}}{Microeconomía. GRAVELLE y REES, 2004}
+
+Combinando las condiciones respectivas sobre el consumo del bien $i$ por el individuo $h$ y sobre la oferta del factor de producción $z^h$:
+
+$$-\frac{u_z^h}{u_i^h}=\frac{\omega^h}{p_i}\quad \text{[B.13]} \quad \quad \underbrace{\Longrightarrow}_{\text{\scriptsize De [B.10] y [B.11] tenemos: $f_i^h=\omega^h/\mu_i=\omega^h/p_i$}}\quad \quad (RMS_i^z)_h=-\frac{u_z^h}{u_i^h}=\frac{\omega^h}{p_i}=f_i^h\quad h,i=1,2\quad \text{[B.14]}$$
+
+La Relación Marginal de Sustitución de $h$ entre su oferta de factor productivo y el consumo de la mercancia $i$ es la tasa a la cual h debe ser compensado con más cantidad de la mercancia $i$ si aumenta su oferta de $z^h$ en una unidad. El término de la parte derecha de [B.14] es la productividad marginal de $z^h$ en términos del bien $i$, para el sujeto $h$. Si $h$ debe ser compensado con dos unidades del bien $i$ por el hecho de ofrecer una unidad más de factor productivo, y esta unidad más se puede utilizar para aumentar la producción del bien $i$ en tres unidades, entonces la asignación no podrá ser eficiente en sentido de Pareto. 
+\imagenfit{Consumo-TrabajoGR.png}{Productividad Marginal de un factor en términos de un bien}{Microeconomía. GRAVELLE y REES, 2004}
+Reordenando la condición [B.10] sobre la utilización de una oferta determinada total de factores de producción por parte de las empresas, obtenemos:
+$$(RMST_2^1)_1=\frac{f_1^1}{f_1^2}=\frac{\omega^1}{\omega^2}=\frac{f_2^1}{f_2^2}=(RMST_2^1)_2$$
+El cociente de productividades marginales ($f_i^1/f_i^2$) es la relación marginal de sustitución técnica del factor de producción 1 por el factor de producción 2 en la producción del bien $i$. Es decir, la tasa a la que se puede cambiar el factor 1 por el factor 2 sin que cambie la producción total del bien $i$. 
+\imagenfit{RMST_GR.png}{Relación Marginal de Sustitución Técnica de \textit{ff.pp}}{Microeconomía. GRAVELLE y REES, 2004}
+El último conjunto de condiciones determina cuándo la combinación de productos producida por las empresas será eficiente, manteniendo constante la oferta de factores de producción. Haciendo uso de que $\mu_i=p_i$, por [B.12] podemos reordenar [B.11] para conseguir:
+
+\text{\small$\overbrace{f_1^h=\omega^h/p_1 \quad f_2^h=\omega^h/p_2 \quad h=1,2}^{\text{\scriptsize[B.16]}}\quad\underbrace{\Longrightarrow}_{\text{\scriptsize Dividiendo la condición de $x_1$ por la condición de $x_2$}} \quad\overbrace{RMT_1^2=\frac{f_2^1}{f_1^1}=\frac{f_2^2}{f_1^2}=\frac{p_2}{p_1}=\frac{u_2^1}{u_1^1}=\frac{u_2^2}{u_1^2}=RMS_1^2}^{\text{\scriptsize[B.17]}}$}
+
+Donde la última igualdad se deduce de [B.12]. El segundo término en [B.17] es el cociente entre la productividad marginal del factor de producción 1, $f^1$, en la producción de $x_2$ y $x_1$. Este cociente es la relación marginal de transformación entre los dos bienes: la tasa a la cual la producción de $x_2$ se reduce a medida que la de $x_1$ aumenta cuando el factor de producción se transfiere desde la $f_1$ a $f_2$ manteniendo constante la oferta total del factor de producción, $f^1$.\footnote{Un aumento de una unidad en la producción del bien 1 necesita que se transfiera, $1/f_1^1$ unidades del factor de producción 1 desde la empresa 2 hasta la empresa 1, esto reducirá la producción de la empresa 2 en un valor igual a la productividad marginal del factor 1 en la empresa 2, multiplicada por la reducción en $z_2^1\;:\; f_2^1\cdot(1/f_1^1)$.}  Igualmente, el segundo término es la tasa a la cual se reduce la producción de $x_2$, cuando aumenta la de $x_1$ por el desplazamiento del factor de producción 2, $f^2$, desde la empresa 2 a la empresa 1, $f_2\to f_1$.\footnote{Observé que la condición para el uso eficiente de los factores de producción [B.15] implica que los dos primeros términos en [B.17] sean iguales: la cantidad de $x_2$ a la que se renuncia cuando se aumenta la producción de $x_1$ es la misma independientemente de cuál sea el factor de producción, $f^h$, que se desplaza desde la empresa 2 la empresa 1, $f_2\to f_1$.} 
+
+Según [B.17], una combinación óptima de productos exige que la relación marginal de transformación $RMT_1^2$ entre los dos bienes sea igual a la $RMS_1^2$ entre los bienes. El gráfico 13.5 ilustra la necesidad de esta condición de eficiencia con una oferta dada de factores de producción. El conjunto de posibilidades de producción para la economía es el conjunto de todas las combinaciones de productos sobre o dentro de la curva de posibilidades de producción. El conjunto de posibilidades de producción se genera a partir de la caja de Edgeworth en la producción, cuyos lados miden unas ofertas dadas de factores de producción. Las asignaciones eficientes de factores de producción sobre la curva $C$ en el gráfico 13.4 general, las combinaciones de productos situadas sobre $p$ en el gráfico 13.5 las asignaciones ineficientes de factores de producción que estaban fuera de la curva $CC$ en el Gráfico 13.4 se corresponden con combinaciones de productos que están dentro de la curva de posibilidades de producción en el gráfico 13.5. La pendiente de $PP$ es $RMT_2^1$, la tasa a la cual se reduce $x_2$ a medida que aumenta $x_1$.
+
+\imagenfit{RMT-GR.png}{Relación Marginal de Transformación entre los bienes $x_1$ y $x_2$}{Microeconomía. GRAVELLE y REES, 2004}
+
+Supongamos que las ofertas de factores de producción son utilizadas eficientemente, de modo que la economía está sobre puntos de la curva P, por ejemplo, en a cero. La Caja de EDGEWORTH de consumo para esta combinación productiva tiene orígenes en o correspondiente a o 1 en el Gráfico 13.2 y en $O$ correspondiente a $O_2$ en el Gráfico 13.2. 
+
+Supongamos que la asignación a cero del producto total entre consumidores es también eficiente, de modo que acero está en el lugar geométrico cero de los puntos de tangencia de las curvas de indiferencia. Sin embargo, supongamos que la pendiente común de las curvas de indiferencia en $A_0$ no es igual a la pendiente de la curva de posibilidades de producción en $A_0$, de modo que se viola la condición [B.17]. Dado que las curvas de indiferencia en $A_0$ tiene una pendiente más inclinada que $P$ en $A_0$, consideramos desplazar los factores de producción desde la empresa 2 hasta empresa 1, moviéndonos por $P$ hacia abajo hasta a 1. Este movimiento da lugar a una nueva caja de consumo de EDGEWORTH con el mismo origen $O_1$, pero con otros desplazado hasta a 1.\footnote{Damos al individuo todos la misma cesta de consumo que tenía en la caja de EDGEWORTH original.} De modo que la asignación de consumo está ahora en $A_1$, donde la distancia desde $a_1$ hasta $A_1$ es la misma que la distancia que había desde $a_0$ hasta $A_0$, de modo que el individuo dos mantiene la misma cesta de consumo. Dado que disfruta la misma cesta de consumo, está sobre la misma curva de indiferencia: $I_2^{01}$ es exactamente $I_2^{0}$ medida desde su origen situado en $A^1$ en lugar desde un origen situado en $A^0$, la utilidad del individuo dos no se ve afectada por el cambio en la combinación de producto. El consumo del individuo 1 continúa midiéndose desde $O$. Su situación es mejor en $a^1$ que en $a^0$, dado que $a^1$ está más arriba en su mapa de curvas de indiferencia que $a^0$. 
+
+Por tanto, el cambio en la asignación desde ($A^0,a^0$) hasta ($A^1,a^1$) constituye una mejora en el sentido de pareto, por lo que la asignación inicial no era eficiente en el sentido de Pareto. 
+
+La curva $a^0a^1$ representa la cesta de consumo del consumidor 1, trazada a medida que la combinación de productos cambia, manteniendo constantes el consumo del consumidor dos. No es más que la curva $PP$ a la que se ha restado, constantemente, la cesta consumida por el sujeto 2 y su pendiente es, por tanto, la pendiente de la curva de posibilidades de producción $PP$. Si la pendiente de $PP$ en $A^0$ fuera la misma que la pendiente de las curvas de indiferencia de los individuos en $a^0$, entonces en lugar geométrico $a^0a^1$ sería tangente $I_1^0$ en $a^0$ y estaría dentro de ella en cualquier lugar. Por tanto, sería imposible cambiar las combinaciones de producción de modo que se produjera una mejora en el sentido de Pareto, porque los movimientos a lo largo de $a^0a^1$ harían entonces que el individuo 1 saliera perdiendo.
+
+
+\clearpage
+\anexo{Teoría del Third-Best: Desarrollo completo}
+
+\begin{specialblock}{Razonamiento previo.- Teoría del Third Best}
+
+    Al maximizar la función objetivo sujeta a la restricción presupuestaria o de recuros:
+
+    $$\begin{aligned}
+        &\max F(x_1,\ldots,x_n)\\
+        &\text{s.a.}\quad  
+        \left\{\begin{aligned}
+            G(x_1,\ldots,x_n)=0
+        \end{aligned}\right.
+    \end{aligned}$$
+    
+    Las condiciones de primer orden necesarias son las $(n-1)$ condiciones $F_i/F_j=G_i/G_j,\quad \forall i,j=1,\ldots,n-1,\;\;i\neq j$ (por la Ley de WALRAS).\footnote{Ignorando las soluciones de esquina (que pueden admitirse).
+    
+    Esto es así ya que, aunque solo tenemos $n-1$ CPO's en un sistema de $n$ variables, el sistema no es indeterminado, ya que existe la restricción general de la ecuación ($G=0$). Si bien las variables del sistema completo se determinan simultáneamente, se puede considerar como ejemplo que cada una de las primeras $n-1$ variables está determinada directamente por la CPO correspondiente, y que la última variable (por ejemplo, el numerario o la oferta monetaria) está determinada directamente por la ecuación de restricción de recursos, es decir, por la necesidad (para factibilidad $+$ optimalidad) de operar a pleno empleo.
+    } Además, sabemos que si las CSO's también se satisfacen en todo el dominio, el resultado define un máximo global. Por tanto, si satisfacemos $F_i/F_j=G_i/G_j$ para todo $i \neq j$, el valor de la función objetivo alcanzará el valor máximo, ya que la CPO también se satisface para $j$, como se ilustra mediante la curva $F_1$.
+    
+    \imagenfit{ThirdBest_NG_1.png}{Curvas de relación para diferentes situaciones de incumplimiento de las CPO's}{\textit{Welfare Economics. Towards a more complete analysis}. NG (2002)}
+    
+    Esto es lo que hemos visto en el problema del first best: las condiciones de optimalidad se defininen para todas las variables.
+
+    $$\frac{F_i}{F_n}=\frac{G_i}{G_n}\quad \forall i$$
+
+    La Teoría del Third Best empieza planteando una pregunta: Imaginemos que no podemos alcanzar esa igualdad porque existe una \textbf{restriccón de primer orden}, ¿cómo cambia el valor máximo alcanzable de la función objetivo cuando fuerzo a una variable a violar su condición de primer orden?
+
+    Sea de la naturaleza que sea la restricción, sabemos que el resultado sería:
+    \begin{la}
+        \item \textbf{Desviación positiva}. Si el lado izquierdo queda demasiado grande, experimentaríamos una desviación positiva de la CPO; y,
+        \item \textbf{Desviación negativa}. Si el lado iquierdo queda demasiado grande, experimentaríamos una desviación negativa de la CPO.
+    \end{la}
+
+    En términos económicos, esto se traduciría como una abundancia (positiva) o escasez (negativa) relativa desmesurada respecto a lo que sería económicamente óptimo, independientemente del de la naturaleza económica que representa la variable $x_i$. Entonces, dado que $x_i$ está distorsionada en tal magnitud, ¿cuál es el mejor valor que aún puedo alcanzar para la función objetivo?
+
+    Para resolver esta cuestión, podemos utilizar el aparato gráfico siguiente. Considerando un plano bidimensional, con deviaciones del óptimo (negativas/positivas) en el eje horizontal y el valor de $F$ en el eje vertical, podemos considerar una a una las variable $x_i$ y ver la pérdida marginal que experimentamos en la función objetivo atendiendo al incremento de la desviación. Mediante esta proyección, obtenemos las \textbf{curvas de relación}, cóncavas hacia el origen, en las que cada unidad adicional de desviación genera más daño que la anterior.\footnote{Esta cualidad se desprende directamente de considerar: (i) preferencias racionales y convexas; (ii) rendimientos decrecientes; y, (iii) convexidad del conjunto factible.
+    }
+
+    \imagenfit{ThirdBest_NG_1.png}{Curvas de relación para diferentes situaciones de incumplimiento de las CPO's}{\textit{Welfare Economics. Towards a more complete analysis}. NG (2002)}
+
+\end{specialblock}
+
+La primera proposición de la Teoría del Third Best es la siguiente.
+
+\textbf{PROPOSICIÓN 1.- \textsc{Reglas de first best para mundos first best}}
+
+\imagenfit{ThirdBest_NG_1.png}{Curvas de relación para diferentes situaciones de incumplimiento de las CPO's}{\textit{Welfare Economics. Towards a more complete analysis}. NG (2002)}
+
+La curva $F_1$ relaciona el valor de la función objetivo con la dirección y el grado de divergencia respecto de la CPO óptima para la variable $j$ y puede denominarse, abreviadamente, la \textbf{curva de relación}. En la mayoría de los casos es razonable esperar que la curva de relación sea cóncava: a medida que nos desviamos cada vez más de la regla de primer orden, el daño marginal aumenta.\footnote{Para ilustrarlo, consideremos un ejemplo específico en relación con la CPO: precio igual a costo marginal. En este escenario, la curva de relación será cóncava (en un mundo de primer orden) si la curva de demanda tiene pendiente negativa y la curva de costo marginal es creciente, constante o decreciente, pero con elasticidad menor, en cualquier caso, que la curva de demanda.
+
+Para expresarlo de manera más concisa, tenemos concavidad si la pendiente de la curva de demanda es en todas partes menor que la de la curva de costo marginal. Por supuesto, es posible construir casos en los que la condición de concavidad no se satisface. Pero la condición puede violarse a cualquiera de los dos lados de la curva. En ausencia de un conocimiento más preciso, es razonable decir que la curva promedio esperada es cóncava.
+}
+
+Además, si existe una distorsión que impide el cumplimiento de dicha CPO para un conjunto de variables sabemos, por la teoría del second best, que el valor de la función objetivo ya no se maximiza hallando la CPO para el resto de variables en las que sea factible (en general). Más aún, si la distorsión es verdaderamente de naturaleza de second-best (es decir, no puede simplificarse mediante los métodos expuestos en [\authorfont{Ver Apartado 3.1.3}]), las reglas a seguir (condiciones de primer orden) son típicamente extremadamente complicadas. 
+
+No obstante, si toda la información relevante puede obtenerse sin costo y aplicamos las reglas del second best sin costes adicionales, obtenemos la siguiente proposición.
+
+\textbf{PROPOSICIÓN 2.- \textsc{Reglas de segundo mejor para mundos de segundo mejor}}
+
+Un mundo de second best se define como la situación en la que existe alguna distorsión de naturaleza second best pero los costos de información y similares son despreciables. 
+
+Pero los mundos de first-best y de second-best no tienen mucho interés práctico: aunque la solución second-best ha sido denominada óptima factible, no es ni óptima ni factible si se tienen en cuenta los costes administrativos y la información inadecuada. 
+
+Lo que es realmente óptimo y factible puede denominarse third-best, ya que el mundo real se caracteriza mejor como un mundo de third best en el que existen tanto distorsiones como costes de información.\footnote{Cuando los costos de adquirir información son significativos, una parte integral del abordaje del problema de optimización es elegir la cantidad de información que se va a adquirir. En general, este problema de la economía de la información no es independiente de los otros aspectos del problema de optimización. Sin embargo, para tratar una cuestión a la vez, supongamos por el momento que el problema de la información ha sido resuelto. En otras palabras, ya hemos decidido la cantidad de información que vamos a adquirir. Esto se denominará la cantidad disponible de información.
+} Atendiendo a las aportaciones de la Economía de la Información podemos sabemos obtener el nivel de información óptimo para un problema. 
+
+Supongamos que ya hemos definido este conjunto óptimo de información y, en consecuencia, lo hemos adquirido. En este escenario, la cantidad disponible de información puede variar de manera continua desde información perfecta hasta ignorancia perfecta, pero en aras de la simplificación, optaremos por una clasificación discreta:
+\begin{la}
+    \item \textbf{Pobreza informativa}. Pobreza informativa existe cuando la información disponible es insuficiente para proporcionar un juicio razonablemente probabilístico sobre: (i) la dirección y la magnitud de la divergencia del óptimo de second-best respecto del que resulta de la aplicación de la regla de primer orden en presencia de la distorsión de segundo mejor; y (ii) la forma y la asimetría de la curva de relación, aparte de su concavidad general;
+    \item \textbf{Escasez informativa}. Escasez informativa existe cuando la información disponible es suficiente para tal juicio pero no es perfecta;
+    \item \textbf{Abundancia informativa}. Abundancia informativa equivale a información perfecta. 
+\end{la}
+
+Como la abundancia informativa fue tratada en la segunda proposición (Teoría del Second-Best), consideraremos la pobreza informativa y la escasez informativa. 
+
+Entonces, ¿cuál es la política apropiada que debe adoptarse en presencia de una distorsión second best en un escenario con pobreza informativa? 
+
+Se ha señalado que la curva de relación en un mundo first best es probablemente cóncava, alcanzando su máximo en $F_j/F_n - G_j/G_n = 0$. No obstante, con la introducción de una distorsión second best, la curva de relación puede, por supuesto, cambiar tanto su posición como su forma/asimetría. Pero, bajo pobreza informativa, no sabemos: (i) en qué dirección es probable que se desplace; (ii) si está sesgada; ni, (iii) el signo de su sesgo/asimetría. 
+
+Bajo estas condiciones, no es difícil establecer la siguiente proposición.
+
+\textbf{PROPOSICIÓN 3.- {Reglas first best para mundos de third best con pobreza informativa}}
+
+Para entender la razón de esta proposición, consideremos de nuevo la siguiente figura. $F_1$ es la curva de relación bajo condiciones de primer orden:
+
+\imagenfit{ThirdBest_NG_1.png}{Curvas de relación para diferentes situaciones de incumplimiento de las condiciones: Simétricas}{\textit{Welfare Economics. Towards a more complete analysis}. NG (2002)}
+
+Con una distorsión second best, la curva de relación se desviará de $F_1$ pero, debido a la pobreza informativa, no sabemos dónde. Podemos representar algunas posibilidades como $F_2$ y $F_3$, y considerarlas igualmente probables (supongámos, $p_2=p_3$). Además, podemos presentar ambas curvas simétricas ya que no conocemos el signo de la asimetría (si es que en efecto existe). 
+
+Es fácil ver que si nos atenemos a la regla del first best el valor esperado de la función objetivo es $OA$. Sin embargo, si nos desviamos de la regla first-best en cualquier dirección y en cualquier grado, por ejemplo hasta el punto $B$, el valor esperado de la función objetivo es $BC : p_2F_2(B)+p_3F_3(B)\;\; <\;\; OA$.\footnote{Por supuesto no es necesario que, frente al riesgo, maximizemos el valor esperado de la función objetivo. Sin embargo, es razonable suponer que lo que maximizamos es una función cóncava de los valores posibles de la función objetivo. En otras palabras, somos neutrales al riesgo o aversos al riesgo. Con este supuesto adicional razonable, se sigue la siguiente proposición tres anterior.
+}
+
+Examinemos ahora el caso de escasez informativa. Supóngase que, por alguna razón, la curva de relación es asimétrica, como se muestra en la figura siguiente:
+
+\imagenfit{ThridBest_NG_2.png}{Curvas de relación para diferentes situaciones de incumplimiento de las condiciones: Asimétricas}{\textit{Welfare Economics. Towards a more complete analysis}. NG (2002)}
+
+Una desviación hacia la derecha (positiva) respecto de la regla first best provoca una reducción más acusada en el valor de la función objetivo que una desviación hacia la izquierda (negativa). Entonces el valor esperado de la función objetivo con la regla del first best, $OA$, es menor que $BC$, el valor esperado que resulta de una desviación negativa respecto de la regla del first best. 
+
+Además, si tenemos razones para creer que es más probable que la curva de relación se desplace hacia la izquierda que hacia la derecha, existe otra razón para preferir una desviación negativa respecto del first best. Como una política óptima debe adoptarse considerando los efectos de estos factores así como el grado de aversión al riesgo que poseemos, llamando a tales políticas políticas de third best, se desprende la siguiente proposición.
+
+\textbf{PROPOSICIÓN 4.- \textsc{Reglas third best para mundos third best con escasez informativa}}
+
+En consecuencia, salta a la vista que las políticas third best deben depender tanto de la cantidad de información disponible como de los costes administrativos involucrados: con pobreza informativa, éstas políticas convergen con las de first best; con información perfecta y costes administrativos despreciables, convergen con las second best.\footnote{Por lo tanto, tanto las políticas first best como las second best son casos especiales, polares, de las políticas generales third best. Así, si relajamos el supuesto de que la cantidad de información disponible está dada, esta pasa a ser una variable importante del sistema. 
+}
+
+A modo de ejemplo, podemos escribir nuestra función objetivo como dependiente de la cantidad de información $\iota$ y de la política a seguir, $\pi$, es decir, $Q = Q(\iota,\pi)$, cuya forma funcional refleja el coste de obtener información, los costos administrativos de llevar a cabo las políticas y el entorno económico dado. En presencia de incertidumbre no sabemos con certeza qué ocurrirá para una elección particular de $\iota$ y $\pi$. Pero $Q$ puede considerarse como la utilidad esperada o aquello que se está maximizando. Así, las estimaciones subjetivas de probabilidad y la actitud frente al riesgo también influirán en la forma de la función $Q$, y por lo tanto la función $Q$ puede diferir de la función objetivo, $F$. 
+
+Suponiendo diferenciabilidad y maximizando $Q$ en $(Q_\iota = \partial Q/\partial \iota = 0,\;\;Q_\pi = 0)$, podemos ver los diferentes resultados que podemos obtener en la siguiente gráfica:
+
+\imagenfit{ThirdBest_NG_3.png}{Variables informacionales (costes de información, $\iota$) y política óptima ($\pi$)}{\textit{Welfare Economics. Towards a more complete analysis}. NG (2002)}
+
+Las lineas de contornos están determinadas por los costos de obtención de información, los costes administrativos, etc. Las dos líneas que interseccionan (lineas de cresta) trazan los lugares geométricos del valor óptimo de cada variable ($\iota$ o $\pi$) dado el valor de la otra y cabe esperar que ambas líneas tengan pendiente positiva:
+\begin{la}
+    \item \textbf{Política Third Best}. Suponiendo que el resultado no es una solución de esquina, la Política Económica óptima vendría dada por el punto $M$,  y la Política recomendada sería Third-Best (A);
+    \item \textbf{Política First Best}. Si el costo de la información es suficientemente alto, podríamos tener una solución de esquina en $0$ como en (B). Por tanto, dada la pobreza informativa, la mejor Política Económica es la first-best; y,
+    \item \textbf{Política Second Best}. Si los costes de obtener información son muy bajos (algo poco probable), puede existir una solución de esquina diagonalmente opuesta al origen en $A$, como en la figura (C).
+\end{la}
+
+Además, cabe destacar que si los costes de información son muy altos, no es posible tener una solución de esquina en ningún otro punto del eje vertical; mientras que si los costes de información son bajos es lógicamente posible tener una solución a lo largo de la línea vertical por debajo de $A$ ya que la información perfecta no implica necesariamente que una política second best sea óptima.
+
+No obstante, en la práctica, ni $\iota$ ni $\pi$ son unidimensionales y las relaciones funcionales se conocen solo de manera muy imperfecta. Pero dado que la Teoría del Third Best se ocupa precisamente de situaciones en las que falta precisión, el modelo simple anterior puede aceptarse al menos como una primera aproximación. 
+
+\begin{specialblock}{Ejemplo (pobreza vs. escasez informativa).- Impuesto PIGOUVIANO }
+    Para ilustrar aún más la diferencia entre pobreza informativa y escasez informativa, consideremos un ejemplo específico. Supóngase que un bien, $X$, tiene una importante deseconomía externa que justifica, asumiendo un mundo first best, un impuesto pigouviano de $\$M$ por unidad. Sabemos que la economía real no es de first best, por lo que el impuesto de $M$ dólares puede en realidad empeorar la situación si, por ejemplo, $X$ es altamente complementario de $Y$ e $Y$ genera importantes economías externas que por alguna razón no pueden abordarse directamente. 
+
+    Una situación en la que tenemos conocimiento sobre las características de los bienes estrechamente relacionados con $X$ corresponde a nuestro caso de escasez informativa, y la regla de primer orden tendrá que revisarse apropiadamente a la luz de este conocimiento. Por otro lado, si $X$ no tiene ningún sustituto o complemento cercano claramente identificable, o si los bienes estrechamente relacionados con $X$ no presentan características marcadas (como fuertes efectos externos no manejables o un alto grado de monopolio), entonces la política apropiada es adoptar la regla first best del impuesto pigouviano de $M$ dólares sobre $X$, a menos que exista alguna otra razón para justificar una divergencia específica. Es posible que, si conociéramos todas las interrelaciones y características detalladas de toda la economía, el impuesto second best sobre $X$ fuese $(M + N)$. Pero también es posible que fuese $(M - N)$. No podemos saber en qué dirección desviarnos de $M$ a menos que tengamos ese conocimiento detallado. Un aumento marginal de nuestro conocimiento del resto de la economía es probable que no sea de ninguna ayuda. Por ejemplo, el conocimiento adicional de que el bien $Z$ está estrechamente relacionado con $V$ no sirve de nada a menos que también conozcamos otras interrelaciones que nos conduzcan de vuelta a $X$.
+
+    Puede argumentarse que, en presencia de pobreza informativa, no sabemos si la adopción de reglas first best mejorarán las cosas siquiera en un sentido probabilístico. 
+
+    Dado que no tenemos información, no sabemos nada, y bien podríamos mantener el statu quo en lugar de imponer el impuesto pigouviano de $M$ dólares. (Esta es la postura adoptada por BRENNAN y McGUIRE, 1975). Este argumento ignora el hecho de que, aunque no disponemos de información suficiente sobre el resto de la economía para formar un juicio razonable, sí tenemos información específica de que el bien $X$ impone una deseconomía externa (en lugar de simplemente una externalidad cuyo signo desconocemos, es decir, si es un beneficio o un costo) de aproximadamente $M$ dólares por unidad. Rehusarse a imponer el impuesto basándose en el argumento del second best sería no hacer uso de esta información específica, y la política no sería óptima según la teoría del third best. 
+\end{specialblock}
+
+Por tanto, esta teoría muestra que las políticas fragmentarias pueden justificarse y que los análisis basados en supuestos de primer orden sobre el resto de la economía pueden ser útiles. Así, a pesar de la Teoría del Second-Best, la economía del bienestar puede seguir siendo un campo de estudio valioso.
+
+Ahora discutiremos, de manera muy informal, algunos de los factores que pueden afectar la naturaleza de las políticas de tercer orden, teniendo en cuenta el aspecto de eficiencia del problema. 
+
+
+
+
+
+
+\end{document}
