@@ -1,0 +1,1277 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Financiación exterior del desarrollo económico\\
+\large El problema de la deuda externa. La ayuda al desarrollo}
+\author{Marcelo Ortega}
+\date{Marzo 2026}
+\newcommand{\TemaCode}{3B29}
+
+\oldtitle{
+    B.30. La financiación exterior del desarrollo económico. El problema de la deuda externa. La ayuda al desarrollo
+}
+\changerationale{
+    Sin cambios.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     
+    }
+\vspace{1cm}
+
+\modificaciones{
+    \textcolor{red}{\textbf{OJO ->}} Revisar esta publicación: \href{https://www.revistasice.com/index.php/ICE/issue/view/852}{\textit{Financiación para el desarrollo}. Revista ICE nº939 (2025)}
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+\clearpage
+\section{Instrumentos no concesionales: Financiación}
+\puntosclave{
+    El impacto de la financiación exterior depende de la forma de esta financiación. 
+    
+    El desarrollo de un país no esté restringido en cada periodo por la producción y las necesidades de consumo de ese periodo sino por una restricción presupuestaria intertemporal.
+
+    La sostenibilidad de la deuda depende de multitud de factores, no solo del volumen, el crecimiento y el tipo de interés. sino también de las expectativas y las políticas de las autoridades. 
+    
+    El FMI hace análisis regulares de los riesgos asociados a la deuda de todos sus miembros.
+}
+
+
+\subsection{Marco teórico: ¿Por qué es importante?}
+El crecimiento económico sostenible a largo plazo depende de la capacidad para aumentar las tasas de acumulación del capital fisico y humano, de la utilización de los activos productivos resultantes de la manera más eficiente y de asegurar el acceso de toda la población a estos activos. 
+
+La intermediación financiera facilita este proceso de inversiones movilizando el ahorro familiar y extranjero para la inversión empresarial, asegurando que dichos fondos se asignen de la manera más productiva, diversificando el riesgo y proporcionando liquidez con el fin de que las empresas puedan utilizar de manera eficaz la nueva capacidad. Pero un movimiento generalizado de expansión de las inversiones, como el que caracteriza cada fase del desarrollo económico, requiere algún tipo de aporte complementario a la autofinanciación: la \textbf{brecha ahorro-inversión}. Esta condición básica es el fundamento de la relevancia del desarrollo financiero para el desarrollo económico.
+
+Dos de las condiciones distintivas de los PED:
+\begin{la}
+    \item \textbf{Sistema Financiero}. Los niveles más bajos de ingresos y las dificultades de crecimiento económico limitan la expansión del sistema financiero incluso en los segmentos de menor riesgo, haciendo que también el crédito a corto plazo resulte escaso y costoso. Por otra parte, en un PED es mayor el peso relativo de los grupos con un nivel más alto de riesgo y se agrava la escasez de recursos que afecta a esos grupos; y,
+    \item \textbf{Balanza de Pagos}. En cuanto a la restricción externa, el proceso de desarrollo de cualquier país está condicionado por el desempeño de la balanza de pagos. En los países en desarrollo, sin embargo, esa restricción suele tomar la forma de un problema crónico, porque deriva de una condición estructural: la mayor dependencia de esos países respecto a la financiación externa, ya sea para atenuar la falta de completitud del sistema financiero o para cubrir los desequilibrios de la balanza de pagos.
+\end{la} 
+
+\subsubsection{Análisis intertemporal de la financiación del desarrollo} 
+La literatura teórica relativa al enfoque intertemporal de determinación de la balanza por cuenta corriente se ha desarrollado desde principios de los años 80, fundamentalmente a partir de los trabajos de ROGOFF y OBSTFELD, BLANCHARD, BUITER y SACHS. Desde los trabajos de SACHS (1981, 1982), numerosos autores han propuesto modelos en los que se intenta explicar la balanza por cuenta corriente a partir de la consideración de que ésta es el resultado de las decisiones intertemporales de un agente representativo. El planteamiento se efectúa mediantela agregación del comportamiento de los agentes individuales, a los que se supone actuando según la Hipótesis de la Renta Permanente (HRP). La base de este enfoque es que una economía abierta, en contraste con la situación de autarquía, puede tomar prestados recursos del exterior (o prestarlos), no siendo necesario que el consumo y la capacidad de inversión de un país en un determinado periodo estén limitados por la producción corriente, sino que es posible que se adapten a una senda intertemporal óptima que tenga en cuenta la evolución futura de la producción. La balanza por cuenta corriente refleja el ahorro o el endeudamiento del país en su conjunto y depende del valor presente de las variaciones esperadas en el output neto, que se define como el producto interior bruto menos el gasto público y la inversión, y de la diferencia entre el tipo subjetivo de descuento y el tipo de interés. En consecuencia, la apertura permite que el desarrollo de un país no esté restringido en cada periodo por la producción y las necesidades de consumo de ese periodo sino por una restricción presupuestaria intertemporal.
+
+\paragraph{Planteamiento del modelo con horizonte infinito}
+El modelo presentado por OBSTFELD y ROGOFF (1995), para una economía pequeña (A) y abierta, que toma el tipo de interés mundial como dado y abierto, que es menor que el tipo de interés en A (puesto que el capital es relativamente escaso). • Existe un solo bien (sin introducir consideraciones de variaciones en los precios relativos). • El horizonte temporal considerado es infinito (justificado por la hipótesis del altruismo intergeneracional)2. • Perfecta certidumbre acerca del futuro3 • Existe un consumidor representativo cuyas preferencias, expresadas a través de una función de utilidad, son representativas de las del conjunto de la población. La función de utilidad es aditiva y separable donde o es la tasa de descuento subjetiva, que mide la preferencia por el consumo presente. Ésta es la función que habrá que optimizar.
+
+\eqblock{
+\begin{aligned}
+    U(c)=\sum_{t=0}^T\frac{u(c_t)}{(1+\delta)^t}
+\end{aligned}
+}{}
+
+Para deducir la restricción presupuestaria introducimos la cuenta corriente (CA). La balanza por cuenta corriente de un país viene dada por la variación en el valor de sus derechos (activos) netos respecto al resto del mundo, de manera que si es positiva (superávit), la economía es prestamista neta en ese periodo (acreedor neto) al resto del mundo y si es negativa (déficit) la economía será prestataria neta en ese periodo ( o deudor neto). $CA_t=B_{t+1}-B_t$. 
+Donde: 
+
+CA t es el saldo de la cuenta corriente en t 
+Bt+i es el valor de los activos extranjeros netos al final del periodo t ( o al principio de t+ 1) y 
+Bt es el valor de los activos extranjeros netos al principio del periodo t 
+
+Llegamos a la restricción presupuestaria intertemporal a través de un proceso de sustitución iterativo, y aplicando una condición de transversalidad ("No-juego-de Ponzi") por la que el valor presente de los activos netos en el infinito es cero. Esta condición implica que todas las deudas van a pagarse o a cobrarse lo cual garantiza que se hace un uso óptimo de los recursos. 
+
+\eqblock{
+\begin{aligned}
+    \sum_{t=0}^T\left(\frac{1}{1+r}\right)^t(c_t+I_t)=(1+r)B_0+\sum_{t=0}^\infty\left(\frac{1}{1+r}\right)^t(y_t-g_t)
+\end{aligned}
+}
+
+Donde: B0 son los activos exteriores netos acumulados hasta el periodo inicial. Puede ser mayor o menor que cero. Un B0 negativo representa el stock de deuda del país en el periodo cero (éste es el caso que nos . interesa en este tema, para el estudio de la sostenibilidad de la deuda). Para completar el programa optimizador introducimos la función de producción y la inversión. 
+
+$Y_t = A_tF(K_t)$ siendo F' > O; F" < O 
+$K_{t+1}=K_t+I_t$ es decir, en ausencia de depreciación del capital, el capital al final del periodo t (Kt+i) será igual al capital al inicio del periodo (Kt ) más la inversión del periodo Ut ). Maximizando ( 1) sujeto a (2), (3) y ( 4) respecto al consumo y al nivel de capital obtenemos las condiciones de optimización de primer orden: 
+
+$\frac{U'(c_t)}{U'(c_{t-1})}\cdot\frac{1+\delta}{1+r}$
+
+Ésta es la llamada ecuación intertemporal de Euler, que recoge la senda intertemporal óptima de consumo. La decisión de sua,vizar más o menos esta senda dependerá de la relación entre el tipo de interés vigente y la tasa de descuento subjetiva. Un caso particular será aquél en que r=o, que determinará una senda de consumo intertemporal horizontal ( C¡ = C¡ ). Aún así, la apertura es beneficiosa porque es posible que Yi f. Yj. 
+
+$A_{t+1}F'(K_{t+1})=r$
+
+Es decir, se invierte hasta que el stock de capital al final de t tenga una productividad marginal igual al tipo de interés. La gran implicación de este modelo es que un PED puede invertir en su desarrollo a pesar de la falta de recursos internos, todo ello gracias al recurso a la financiación exterior.
+
+
+\paragraph{Caso tle dos periodos. Representación gráfica} 
+A continuación, nos centramos en el caso de dos períodos, lo cual va a permitirnos realizar una representación gráfica del equilibrio.
+
+
+
+La función de utilidad ya presentada, se recoge gráficamente por las curvas de indiferencia: Uo, U 1, ... que cumplen las propiedades típicas de las curvas de indiferencia. 
+
+La frontera de posibilidades de próducción (FPP), es función de las posibilidades tecnológicas y recoge el nivel de consumo máximo en el periodo dos para cada nivel de consumo en el periodo uno. Es cóncava por la productividad marginal decreciente del capital. 
+
+$FPP:C_2=F(K_1+F(K_1)-C_1)+K_1+F(K_1)-C_1$ La pendiente será $\frac{\delta c_2}{\delta C_1}=-(1+F'(K_2))$
+
+Adaptando la ecuación (2) al caso de dos periodos, la restricción presupuestaria intertemporal es:
+
+$C_1+I_1+\frac{C_2+I_2}{1+r}=Y_1-G_1+\frac{Y_2-G_2}{1+r}$
+
+En autarquía la economía se sitúa en el punto A, alcanzando un nivel de utilidad Uo. El tipo de interés es r4 y la restricción presupuestaria vigente es RPI (,✓1) . En este punto el consumo y la producción de la economía coinciden. La única fuente de financiación de la inversión es el ahorro  interno. Si el PED desea aumentar su inversión solo puede hacerlo a costa de disminuir su consumo corriente cuando normalmente el consumo en los PED ya se sitúa en niveles mínimos. 
+
+Cuando abrimos la economía al resto del mundo, la restricción presupuestaria pasa de RPl (r4) a RPl (r*). Con esta nueva restricción el capital internacional fluirá hacia A para aprovechar su mayor remuneración (r'1 >r*). De acuerdo con la nueva restricción, el valor de la producción se maximiza en B y el nivel máximo de utilidad U1 se alcanza en C.
+
+La distancia horizontal AB mide el incremento en la inversión y la distancia horizontal AC mide el aumento en el consumo del primer periodo. La distancia horizontal total BC recoge el déficit por cuenta corriente en el primer periodo. Por el principio de disciplina, este déficit se ve compensado por un superávit en el periodo 2 que viene dado por la distancia vertical entre B y C.
+
+Por lo tanto, en las primeras fases del desarrollo es lógico que los PED tengan déficits por cuenta corriente y que se endeuden en el exterior. Para el PED es óptimo recurrir a la financiación externa del desarrollo. Se observa que el PED ·alcanza un mayor nivel de utilidad (U 1> Uo) como consecuencia de la apertura de la economía (derivado de la posibilidad de suavizar el patrón de consumo y, segundo, de las ganancias en la producción) y, muy importante, acelera su desarrollo al no tener que limitar su inversión a su ahorro corriente. La apertura posibilita el endeudamiento internacional y permite aprovechar mejor las posibilidades de inversión sin tener que renunciar al consumo, promoviendo así una asignación de recursos más eficiente y aumentando el bienestar.
+
+
+\subsubsection{Sostenibilidad: Deuda externa} 
+En el enfoque intertemporal, el endeudamiento asumido por el país deudor es racional ya que surge de un proceso de optimización intertemporal en el que las ganancias de bienestar son claras. Sin embargo, este análisis no quiere decir que todo el endeudamiento sea óptimo. Pueden aparecer problemas cuando:
+• Existe una preferencia desmesurada por el consumo presente (o muy elevado) que genera un fuerte déficit por cuenta corriente destinado al consumo y no a la inversión.
+• Los proyectos de inversión que se financian no están bien estudiados y no son productivos o no son realistas.
+• No existe perfecta certidumbre acerca del futuro (que era uno de los supuestos de partida del modelo teórico). Por tanto, es necesario formar expectativas sobre el nivel de renta futuro,sobre la viabilidad de los proyectos de inversión y sobre los tipos de interés futuros.
+
+En esos casos, cuando el endeudamiento está demasiado sesgado hacia la financiación de consumo presente o hacia proyectos de inversión de dudosa rentabilidad, puede llegar a darse una crisis de endeudamiento excesivo.
+
+De ahí que, junto a la gran ganancia de bienestar que supone la posibilidad de acceder a financiación externa, deba sefialarse también la necesidad de una política prudente de endeudamiento. El crédito externo puede llevar a una mayor laxitud en las políticas macroeconómicas, al facilitar la financiación de desequilibrios por cuenta corriente. Asimismo, puede llevar a una mayor vulnerabilidad exterior de los PED.
+
+Estas consideraciones nos llevan directamente al estudio de la sostenibilidad del déficit exterior. En el caso de la deuda externa se tiene en cuenta el endeudamiento de una economía con el exterior, sea éste público o privado. 
+
+La sostenibilidad de la deuda puede definirse como la capacidad de un país para hacer frente de fonna continuada al servicio de su deuda, sin tener que recurrir a financiación extraordinari a ni a un significativo ajuste interno. A la hora de hablar de la sostenibilidad del déficit externo hay que distinguir entre problemas de solvencia y problemas de liquidez.
+
+Los problemas de solvencia son los problemas de sostenibilidad propiamente dichos. Se refieren a la capacidad de un país para hacer frente, en el largo plazo, a los pagos necesarios para cancelar su deuda. En una situación de insolvencia el país no podría hacer frente al servicio de su deuda sin la reducción en el stock de la misma. La liquidez se refiere a la capacidad de un país para atender, en el periodo en curso, los vencimientos de deuda a los que se enfrenta. Está hablándose por tanto de la posibilidad del país deudor de, en un periodo dado, atender el servicio de la deuda y no de la sostenibilidad global de su volumen de deuda. Un país puede tener un volumen de deuda que, en condiciones económicas normales, no le suponga una carga excesiva. Sin embargo, en un periodo concreto, puede tener un problema financiero que le impida satisfacer todos los vencimientos de ese periodo. En una situación de iliquidez, el país no podría hacer frente al servicio de su deuda sin una reprogramación (que no afecta al principal) del stock de deuda, es decir modificando el perfil de vencimientos, de modo que se aplacen parte de éstos a los que se enfrenta en el período corriente. A continuación, se presenta un análisis de los factores que determinan la sostenibilidad de la deuda externa. Este análisis se centra, sobre todo, en el problema de fondo de la sostenibilidad (solvencia) pero los factores que se presentan son también los que influyen en posibles problemas de liquidez de un deudor.
+
+\paragraph{Análisis: }
+Para analizar la sostenibilidad del déficit comenzamos por retomar la restricción presupuestaria
+intertemporal, ecuación (2):
+
+\eqblock{
+\begin{aligned}
+    \sum_{t=0}^T\left(\frac{1}{1+r}\right)^t(c_t+I_t)=(1+r)B_0+\sum_{t=0}^\infty\left(\frac{1}{1+r}\right)^t(Y_t-G_t)\\[1em]
+    -(1+r)B_0=\sum_{t=0}^\infty\left(\frac{1}{1+r}\right)^t(Y_t-C_t-I_t-G_t)
+\end{aligned}
+}{}
+
+donde la diferencia entre la renta del periodo t y el consumo, la inversión y el gasto público es la balanza comercial $TB_t = (Y_t - C_t - I_t- G_t )$
+
+La interpretación de esta ecuación es que el valor presente de las transferencias de una economía al exterior (segunda parte de la ecuación) debe ser igual al valor inicial de su deuda con el exterior (primera parte de la ecuación).
+
+A continuación, introducimos el crecimiento económico, que juega un papel muy importante en el análisis de la sostenibilidad. Efectivamente, una economía que crece puede presentar déficits por cuenta corriente continuos y aun así mantener una ratio deuda externa/PIB constante. Suponemos que la economía crece a una tasa constante "g" y que se mantiene constante la ratio deuda externa/PIB. Entonces:
+
+\eqblock{
+\begin{aligned}
+    Y_{t+1}=(1+g)Y_t\\
+    B_{t+1}=(1+g)B_t
+\end{aligned}
+}{}
+
+La cuenta corriente mantendrá un desequilibrio estable: 
+
+\eqblock{
+\begin{aligned}
+    CA_t=B_{t+1}-B_t=gB_t\\
+    CA_t=rB_t+Y_t-C_t-G_t-I_t=rB_t+TB_t\\[1em]
+    \Longrightarrow gB_t=rB_t+TB_t
+\end{aligned}
+}{}
+
+Dividiendo entre Yt llegamos a la expresión que indica cuando la relación deuda externa/PIB se mantiene constante. 
+
+\eqblock{
+\begin{aligned}
+    \frac{TB_t}{Y_t}=\frac{-(r-g)B_t}{Y_t}
+\end{aligned}
+}
+
+Ésta es la ecuación fundamental en el análisis de la sostenibilidad. Esta igualdad muestra que para mantener una ratio deuda/PIB constante el compromiso de recursos que debe hacer el país, es decir el superávit comercial necesario, recogido por TBt, debe Yt ser solo el exceso del tipo de interés r sobre la tasa de crecimiento g. El modelo está fonnulado de tal manera que el superávit necesario para financiar la deuda se refiere a la balanza comercial. Sin embargo, podría hablarse del conjunto de la cuenta corriente o, en general, del "compromiso de recursos reales" necesario, sin especificar el origen. 
+
+Por lo tanto, la ratio -(r-g)Bc representa la "carga" que la deuda externa impone a la economía. Yt Cuanto mayor es esa carga, mayor es la probabilidad de que la deuda sea insostenible en el sentido de que el deudor no sea capaz de hacerle frente, o que, sencillamente, no esté dispuesto a ello. A partir de esta expresión podemos hacer un estudio de los factores que influyen en la sostenibilidad de un déficit por cuenta corriente 13 : 
+
+1. Volumen de deuda: evidentemente cuanto mayor sea. mayor es la carga sobre la economía y más dificil la sostenibilidad. 
+
+2. Tasa de crecimiento: Cuanto mayor es, menor es la carga de la deuda sobre la economía, incluso cabe que g>r.
+
+3. Evolución de los tipos de interés: una fuerte subida de los tipos de interés puede hacer que la carga de la deuda se dispare, ya que los vencimientos de deuda incluyen tanto repago de principal como de intereses. 
+
+4. Absorción interna: Cuanto mayor es la absorción interna menores son los recursos reales libres para atender el servicio de la deuda. 
+
+5. Evolución de la relación real de intercambio: si esta evolución es negativa, el compromiso de recursos reales que es necesario hacer para hacer frente a la misma deuda es mayor.
+
+6. Acceso a la financiación internacional: los nuevos préstamos hacen que el compromiso de recursos reales internos necesario sea menor, aunque también aumentan el volumen de deuda, y, por tanto, si bien en el corto plazo puedan aliviar un problema de liquidez, en el largo plazo pueden generar un problema de solvencia.
+
+7. Expectativas: Las expectativas pueden acelerar, o incluso desencadenar, el estallido de crisis de deuda. Frente a esta amenaza, la mejor alternativa de política económica es la aplicación de políticas macroeconómicas sólidas que mej oren la confianza de los mercados y la disminución de la vulnerabi lidad externa.
+
+8. Actitud de las autoridades. Para las autoridades el impago de la deuda tiene costes, pero también benefic ios, de modo que se planteará un análisis coste-beneficio a la hora de devolverla o no.
+
+"Los costes del impago pueden ser de diversa naturaleza: embargo de bienes en el exterior; limitación del acceso comercial y la pérdida de calidad crediticia, y por tanto mayores tipos de interés cuando se le preste, incl uso exclusión de los mercados financieros internacionales. Todo ello tiene un coste de bienestar para el país, pero es sobre todo un coste a largo plazo, por lo que es necesario que las autoridades tengan una tasa de preferenc ia temporal baja, es decir, que sean muy responsables, para que lo ponderen convenientemente.
+
+Los beneficios del impago, sin embargo, se dejan sentir mucho más en el corto plazo. Efectivamente el pago de la deuda implica un compromiso de recursos que exige una reducción de la absorción socialmente costosa. Por lo tanto, a la vista de los costes y de los beneficios las autoridades pueden optar por el impago cuando la alternativa sea una política deflacionaria muy severa.
+
+En conclusión, la sostenibilidad de la deuda depende de multitud de factores, muchos de ellos subjetivos, lo cual dificulta enormemente la previsión de estas crisis y su diagnóstico como crisis de liquidez o de solvencia, más aún cuando, como se ha visto, existen componentes no solo económicos sino también políticos.
+
+
+\subsection{Marco jurídico: ¿Cómo se materializa la financiación al desarrollo?}
+La forma que tome la financiación tiene consecuencias distintas para el país receptor. La financiación exterior puede adoptar, en esencia, tres modalidades distintas: inversión (directa y en cartera), créditos y/o ayuda oficial para el desarrollo (donaciones y créditos concesionales). Además, existen otros tipos de flujos como las remesas o los instrumentos de financiación innovadores5.
+
+\subsubsection{Instrumentos de inversión}
+
+
+\paragraph{Inversión extranjera directa}
+Es la inversión con vocación de obtener una rentabilidad permanente en la empresa en la que se invierte alcanzando un grado significativo de influencia en sus órganos de dirección.\footnote{Según el sexto manual de balanza de pagos del FMI implica una participación del 10\% o más en la empresa en la que se invierte. Asimismo, una vez que se establece que una inversión tiene carácter de IED todas las inversiones posteriores entre matriz y filial se consideran como tal.
+}
+
+Esta forma de financiación exterior del desarrollo presenta claras ventajas: no genera deuda, tiene vocación de permanencia e implica la introducción de nuevas tecnologías y sistemas de gestión de empresas, proporcionando formación y empleo.
+
+En el marco de la teoría neoclásica, lo que cabía suponer era que los países desarrollados, con dotación relativamente abundante de capital, fueran los emisores netos de inversiones y los PED, fueran los destinatarios preferentes de esos flujos. Aunque una parte de la inversión internacional responde a ese patrón, una parte importante escapa a ese comportamiento. De hecho, dentro de los PED destino de la IED son, sobre todo, los más desarrollados o con más riquezas naturales.\footnote{HYMER justifica este comportamiento de la IED subrayando la importancia de las ventajas de localización en el mercado de destino, que pueden estar relacionadas con la dimensión del mercado, sus condiciones de coste, la proximidad a mercados atractivos o la disponibilidad en el país de destino de activos o recursos que puedan ser de valor para la empresa. Todo ello sugiere que si un país quiere atraer IED tendrá que incrementar las ventajas de localización atribuibles a su economía y por tanto invertir en todos los factores que determinan su atractivo: infraestructuras, marco normativo, condiciones de coste o dotación de mano de obra cualificada.
+}
+
+\paragraph{Inversión etranjera en cartera (IEC)}
+Son las inversiones en valores negociables que no cumplen los requisitos para ser consideradas IED. Tiene en común con la IED que no genera endeudamiento y por lo tanto sigue siendo una forma muy ventajosa de financiación. Sin embargo, al no tener la vocación de permanencia de la anterior se la considera más volátil y especulativa. Los flujos de inversión en cartera están muy determinados por las expectativas y pueden venir marcados por efectos rebaño: acudir o abandonar un país en función de los movimientos generales de capital. 
+
+De ahí que puedan ser un elemento de transmisión y contagio de crisis. Por esta razón en ocasiones induso ha llegado a hablarse del establecimiento de algún tipo de restricción a este tipo de movimientos para desincentivarlos frente a los de más largo plazo. 
+
+Al igual que pasaba con la IED los PED se han venido beneficiando más recientemente de este tipo de financiación al incorporarse más plenamente a los mercados financieros internacionales. En el caso particular de la IEC ésta requiere de mercados domésticos seguros que sean amplios y profundos para proveer la liquidez y la diversificación necesaria. Conviene destacar el papel cada vez más protagonista de los fondos y otros vehículos de inversión, instrumentos financieros de capital o cuasicapital que tienen como objeto invertir en el desarrollo de los PED. Dentro de ellos, se encontrarían los fondos de capital riesgo.
+
+La importancia del Capital Riesgo en el crecimiento y el desarrollo económico de una región radica en su capacidad para influir positivamente sobre las empresas en las que invierte (especialmente PYME) en términos de crecimiento, resultados, generación de empleo, formación del personal, inversión en activos y mejora de la financiación. Ello se consigue ya que por parte de los gestores o incluso los inversores de los fondos, además de los recursos financieros que aportan, pueden ayudar a las empresas locales en sus estrategias a largo plazo.
+
+\subsubsection{Instrumentos pasivos}
+
+
+\paragraph{Créditos}
+La obtención de crédito en buenas condiciones no siempre es fácil para los PED. Los mercados penalizan a los países que acumulan un mayor endeudamiento o que experimentan una mayor inestabilidad, fijando intereses más elevados y unas mayores primas de riesgo. En la práctica para un PED pueden quedar excluidos de las operaciones crediticias, por ser las condiciones altamente onerosas, salvo que se trate de operaciones de prestamistas oficiales en términos muy concesionales.
+
+Un rasgo de relevancia es el carácter privado (principalmente la banca comercial internacional) o público del crédito (adjudica los créditos bajo criterios distintos a los del mercado y con condiciones de coste normalmente inferiores). La financiación pública puede a su vez puede ser de origen bilateral, cuando los prestamistas son los Estados, y multilateral, procedente de Instituciones multilaterales. La financiación bilateral está fundamentalmente constituida por los créditos a la exportación y la deuda comercial garantizada, derivada de operaciones de seguro de crédito a la exportación. Es una fuente relativamente estable de financiación y viene marcada por consideraciones no solo comerciales sino también de lazos políticos e históricos. 
+
+La financiación multilateral es muy importante para los países con más dificil acceso a los flujos de capitales de mercado. Con la excepción de la iniciativa HIPC las deudas quedan al margen de cualquier operación de tratamiento de deuda. Los grandes bancos internacionales utilizaron el mercado de préstamos sindicados para proveer de grandes cantidades de crédito a los PED en los setenta, la mayor parte a tipo de interés variable, lo que les hizo vulnerables al aumento de tipos de principios de los ochenta.
+
+\paragraph{Títulos de deuda}
+El paso de préstamos a la emisión de bonos (impulsado por el Plan Brady) permite a los PED aumentar la base de inversores o prestamistas interesados y dejar de depender casi exclusivamente de los créditos bancarios y con ello, incrementar la disponibilidad de capital. Por otro lado, también aumenta la volatilidad de los flujos financieros hacia los PED dado que los bancos son proveedores de fondos más cautivos que los compradores de bonos. 
+
+La experiencia muestra que los bancos a menudos mantuvieron sus compromisos con el país, incluso cuando experimentaban dificultades en el servicio de la deuda, mientras que los bonistas deshacen la posición fácil y rápidamente, pues tienen que valorar sus activos diariamente. No obstante, también los compradores de bonos pueden, de nuevo, recomprar los bonos una vez que han sufrido la caída de precio. Gracias a ello, si bien las crisis de deuda desde los noventa han podido ser más frecuentes y drásticas, han sido más cortas que las precedentes que duraron casi una década.
+
+Destacan los Bonos indexados al PIB, que establecen cupones que varían según el desempeño del crecimiento de la economía, es decir, de su capacidad de pago y por tanto limita las vulnerabilidades cíclicas de los PED (también es beneficioso para los inversores y el sistema financiero internacional dada la reducción de las interrupciones que se deriven de incumplimientos formales). A pesar de su aparente atractivo, no han alcanzado gran popularidad.
+
+Otro instrumento utilizado son los \textbf{títulos de flujos futuros}, método para acceder a los mercados internacionales de capital en tiempos de deterioro de expectativas. La estructura de titulización permite a la deuda soberana, subsoberana, incluso a entidades del sector privado en los PED obtener financiación a tipos de interés significativamente más bajos y de mayor duración. Se estructuran para mitigar la exposición al riesgo soberano de un detenninado país deudor, de modo que el gobierno dará pasos para interrumpir a tiempo el servicio de la deuda. Esta interrupción se logra asegurando que los pagos sobre estos títulos no llegan al país emisor antes de que éste haya cumplido sus obligaciones con los inversores en bonos. El vehículo de propósito específico que emite la deuda y a través del cual se venden los títulos se establece fuera del país emisor. Aunque esta estructura mitiga el riesgo de transferencia y de convertibilidad, otros riesgos permanecen: la capacidad del emisor de generar los flujos futuros; el riesgo asociado a la estabilidad de los flujos futuros que se pueden ver afectados por fluctuaciones de precio; y, volumen y el riesgo de desvío de las ventas a clientes no designados. El comportamiento de estos títulos ha sido muy bueno, con muy pocos casos de impago. No obstante, la emisión de este tipo de títulos está muy por debajo de su potencial, entre otras causas por la escasez de buenas cuentas por cobrar, así como fuertes entidades locales (con suficiente grado de inversión).
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Deuda externa: Crisis, causas y consecuencias}
+
+
+\subsection{Crisis: Precuela}
+
+
+
+
+
+
+\subsubsection{Ajustes: ¿Cómo podemos evitar una crisis de deuda?}
+Cuando un país se enfrenta a un problema de deuda, ya sea de liquidez o de solvencia, puede verse obligado a impagar los vencimientos de su deuda, es decir a entrar en \textbf{default}. En estos casos, el default puede ser: (i) \textbf{unilateral}, cuando el país adopta esa decisión sin contar con sus acreedores, y que no suelen ser sostenibles porque implican el aislamiento del país del Sistema Financiero Internacional; o, (ii) \textbf{coordinado}, cuando existe diálogo entre el deudor y sus acreedores y se pactan unas condiciones de resolución de la crisis y de repago de la deuda. En este sentido es especialmente importante que los tratamientos que den todos los acreedores estén también coordinados para que sean coherentes entre sí.\footnote{Veremos más adelante que existen una serie de foros internacionales cuyo objetivo es, precisamente, lograr esa coordinación.
+} 
+
+En todo caso, ante un problema de deuda se plantea un dilema fundamental para su resolución: el \textbf{ajuste interno} versus la \textbf{financiación externa}: 
+
+\eqblock{
+\begin{aligned}
+    \underset{\scriptsize{\text{Brecha de absorción}}}{CA_t-Y_t}=\overbrace{rB_t}^{\scriptsize{\text{Ajuste externo}}}-\underbrace{C_t-G_t-I_t}_{\scriptsize{\text{Ajuste interno}}}
+\end{aligned}
+}{}
+
+¿Qué parte del problema de balanza de pagos se resuelve mediante ajuste interno, reducción de la absorción o aumento del crecimiento, y qué parte mediante financiación externa, en sentido amplio, es decir incluyendo tratamientos de deuda? 
+
+Por un lado, el ajuste interno representa la participación del país deudor en el proceso de resolución de la crisis y consiste en reformas de Política Económica que lleven a la balanza de pagos al equilibrio. Por otro lado, la financiación exterior representa la participación del resto del mundo en la resolución de la crisis. Puede adoptar varias formas que son, básicamente, nuevos préstamos y tratamientos de deuda. Los tratamientos de deuda pueden consistir en reprogramaciones del perfil de vencimientos de un país, de modo que se difieran parte de los vencimientos de deuda que se producen en el periodo de crisis, aliviando así las presiones financieras de ese periodo. Pueden incluir también condonación de deuda cuando el problema es, no solo de liquidez, sino de solvencia. 
+
+\paragraph{Optimalidad: ¿Ajuste interno vs. financiación externa?}
+Entre el ajuste interno y la financiación exterior existe un \textbf{trade-off}: cuanto mayor es uno, menor puede ser el otro. Esto dificulta el diseño de las soluciones a las crisis de deuda. Por un lado, los ajustes internos pueden conllevar importantes costes sociales en el corto plazo por lo que los países deudores tienen incentivos para tratar de minimizar ese ajuste y solicitar un tratamiento de deuda lo más amplio posible. Por otra parte, los acreedores tienden a exigir los mayores esfuerzos de ajuste posible con objeto de aligerar su contribución vía alivio de deuda.
+
+En la práctica es dificil determinar cuál es el reparto óptimo de la carga entre ambas partes, papel que corresponde a los programas del FMI. 
+
+\subsubsection{Papel del FMI: Supervisor y facilitador}
+Cuando un país se enfrenta a un problema de deuda, lo más normal es que el FMI acuerde con él un programa de reformas internas que implica además la concesión de financiación por su parte. 
+
+Como sabemos, ante tales escenarios, esta financiación suele proporcionarse a través de programas concesionales, el equivalente a los ajustes internos que deben acometerse. De esta forma, mientras que la exigencia de un ajuste importante sería socialmente inviable y, posiblemente, solo agravaría la crisis del país, exigiendo un mayor rescate externo en el futuro; también debe tenerse en cuenta que un ajuste menor, aparte de desviar la carga sobre los acreedores, podría no resolver los problemas subyacentes. Por consiguiente, una buena definición de los ajustes resulta necesario para impedir crisis futuras y, normalmente, medidas más drásticas (como la condonación o reestructuración de deuda) suelen concederse únicamente a países que están haciendo esfuerzos internos para recuperar el crecimiento y la senda de deuda sostenible.
+
+Para valorar de sostenibilidad de las sendas de deuda de sus diferentes integrantes así como, cuándo resulta necesario, cuantificar las reformas y determinar los objetivos de sus programas concesionales, el FMI recurre a un método de análisis de sostenibilidad conocido como \textit{Debt Sustainability Analysis} (DSA, en sus siglas en inglés). Este método se articula en torno a un escenario base construido con la información que existe y diferentes previsiones a medio plazo realizadas el Fondo. Normalmente, suele proporcionar dos resultados principales, atendiendo a la metodología efectuada:
+\begin{la}
+    \item \textbf{Potencial de fragilidad}. Por un lado, el potencial de fragilidad de una economía, que se determina estableciendo un escenario base y comparándolo con proyecciones alternativas. Esencialmente, consiste en realizar un test de \textit{confianza} sobre las previsiones del escenario base, atendiendo a la brecha entre estas proyecciones y el comportamiento de las variables en los escenarios alternativos; y,
+    \item \textbf{Análisis de sensibilidad} (resiliencia). Por otro lado, los análisis de sensibilidad son test de estrés en los que se tensiona alguna de las variables proyectadas, tratando de simular un deterioro y sus posibles consecuencias sobre la sostenibilidad de la deuda. 
+\end{la}
+
+Los análisis de sostenibilidad de la deuda incluyen una evaluación del riesgo de tensión por sobreendeudamiento externo y general según cuatro categorías: riesgo bajo, riesgo moderado, riesgo alto y en situación de tensión por sobreendeudamiento (cuando se produce un evento de tensión, como atrasos en los pagos o una reestructuración, o el evento se considera inminente). 
+
+Las evaluaciones de sostenibilidad de la deuda contribuyen a determinar el acceso al financiamiento del FMI y también se utilizan para establecer los límites de endeudamiento en los programas respaldados por el FMI.
+
+Al ejecutarlo, suelen diferenciarse dos marcos de referencia. 
+
+\paragraph{Países con acceso al mercado (MAC): Marco de Riesgo Soberano y Sostenibilidad de la deuda (DSA, 2022)}
+En primer lugar, los DSAs para países con acceso a mercado (MAC, por sus siglas en inglés): \href{https://www.imf.org/en/publications/dsa/sovereign-risk-and-debt-sustainability-analysis-for-market-access-countries}{\textit{Marco de Riesgo Soberano y Sostenibilidad de la deuda} IMF (2023)}. Fue introducido en 2002 (más sucesivas reformas, rev. 2021) y la última revisión entró en vigor en 2022. Las característics principales de esta nueva revisión son:
+\begin{la}
+    \item \textbf{Horizontes temporales: riesgo}. En primer lugar, lleva a cabo el análisis de riesgos con perspectiva temporal (en linea con otras instituciones; p.e. Comisión Europea). Esto resulta crucial porque permite ajustar mejor las orientaciones y diseño de Políticas Económica. Por ejemplo, anticipar si estas deberían orientarse a la prevención o, por el contrario, a la resolución de crisis: cuando las políticas no tienen tiempo suficiente para ser efectivas. O, también, para anticipar el ritmo previsto de la consolidación fiscal;
+    \item \textbf{Aproximación holística: características}. En segundo lugar, adopta una aproximación holística en el estudio del comportamiento, rendimiento y orientación de las políticas nacionales. Como ha sido ampliamente documentao, las características específicas de cada país y su interacción, son un componente esencial para comprender su capacidad de pago o los riesgo que enfrenta (p.e. calidad institucional);
+    \item \textbf{Estocástico}. Marca la hoja de ruta para avanzar hacia un análisis estocástico del riesgo, reconociendo que los riesgos soberanos y la sostenibilidad de la deuda son fenómenos a medio camino entre el riesgo y la incertidumbres; y,
+    \item \textbf{Señales mecánicas de riesgo}. Por último, introduce señales de riesgo mecánicas, que ya había sido introducido para los países de bajos ingresos (2017). 
+\end{la}
+
+Los resultados de estas proyecciones se resumen en un índice creciente en riesgo, a través del cual se distinguen tres zonas: (i) \textbf{riesgo bajo}, la zona con probabilidad de deuda insostenible estrictamente por debajo del $20\%$; (ii) \textbf{riesgo moderado},  entre $20$ y $50\%$, señala deuda sostenible pero no con alta probabilidad; y, (iii) \textbf{riesgo alto}, valores del índice superiores al $50\%$. No obstante, estas señales mecánicas constituyen meras aportaciones que se tendrán en cuenta al evaluar la sostenibilidad de la deuda, que en última instancia seguirá guiada por el \textit{know how} de los técnicos del FMI porque podría haber información relevante que no reflejen los modelos.
+
+\paragraph{Países sin acceso al mercado (PRB): Debt Sustainability Framework (DSF)} 
+Por otro lado, existen los DSAs adaptados a los países sin acceso al mercado, o con acceso limitado (PRB). Estos países suelen presentar dificultades para obtener tasas de crecimiento sostenible a la vez que buscan evitar incurrir en endeudamiento excesivo. Por su condición, el marco sobre el que se basa es fruto de la decisión conjunta del Fondo Monetario Internacional y el Banco Mundial: \href{https://www.worldbank.org/en/programs/debt-toolkit/dsf}{\textit{Debt Sustainability Framework} (DSF)}, iniciado 2005 e impulsado por sucesivas reformas desde 2006. 
+
+Resulta muy práctico tanto para los países deudores como para los acreedores. Por un lado, es una herramienta muy útil para saber cuánto financiar y de qué manera. Mientras que, por otro lado, resulta muy útil para conocer la calidad creditica y los mejores canales de financiación. Además, el Marco de Sostenibilidad de la Deuda presenta una serie de particularidades: (i) presta especial atención a los componentes institucionales o de Política Económica para establecer los umbrales de sostenibilidad; (ii) tiene un enfoque de valor presente debido a la gran importancia que tiene la deuda concesional en estos países; y, (iii) se presta especial importancia a la calidad de la información, la transparencia y la comparabilidad. De la misma forma que antes, el marco utiliza un indicador compuesto que tiene en cuenta, entre otros, el desempeño histórico del país, sus perspectivas de crecimiento real, las entradas de remesas y las reservas internacionales. 
+
+El marco del DSF es un elemento clave para la aplicación de las iniciativas de alivio de la deuda bilateral de los países altamente endeudados (HIPC) y de alivio multilateral de la deuda (MDRI, en sus siglas en inglés). Ambas iniciativas son elementos importantes para tratar el endeudamiento de los países de renta baja. El análisis de sostenibilidad permite determinar el alivio necesario de su deuda. 
+
+\subsubsection{Marco institucional: ¿Con quién se negocia?}
+Acreedores y deudores interactúan en un marco institucional que pretende facilitar sus relaciones y gestionar las posibles crisis de manera que se ponderen todos los intereses en juego y puedan buscarse soluciones coordinadas. Las relaciones de un acreedor y un deudor y las relaciones de ese deudor con sus demás acreedores son enormemente interdependientes. De ahí que la escena internacional de deuda requiera una gran \textbf{coordinación} entre los actores involucrados.
+
+\paragraph{Acreedores públicos: Club de Paris (1956)}
+El más antiguo de estos foros es el \href{https://es.wikipedia.org/wiki/Club_de_París}{Club de París}, donde los veintidós acreedores (públicos y bilaterales) principales se reúnen periódicamente para coordinar sus actuaciones ante problemas comunes de deuda externa.\footnote{Los miembros permanentes del Club de París son: Alemania, Austria, Australia, Bélgica, Canadá, Dinamarca, España, Estados Unidos, Francia, Finlandia, Holanda, Italia, Irlanda, Israel, Japón, Noruega, Reino Unido, Rusia, Suecia, Core del Sur, Brasil y Suiza. Junto a estos países existen otros que son invitados cuando se trata la deuda de algún país del que son un acreedor importante. La presidencia y el secretariado del Club de París corresponden al Tesoro francés.
+} 
+
+El Club de París se creó ad hoc en 1956 a petición de la República Argentina de reunirse en Paris con sus principales acreedores, seis países, todos ellos europeos. En los años subsiguientes volvió a reunirse para tratar problemas de deuda de otros países y a partir de los años 70 comienza a reunirse de manera periódica y a crear una serie de normas generales de funcionamiento. El Club de París actúa de acuerdo a seis principios:
+\begin{lnum}
+    \item \textbf{Solidaridad}. Los acreedores acuerdan actuar como un grupo y adoptan posiciones coherentes entre sí con respecto a un mismo deudor lo que permite que un país deudor pueda tratar a sus principales acreedores públicos como uno solo.;
+    \item \textbf{Intercambio de información}. Se trata de un foro en el que los países acreedores comparten sus datos y sus puntos de vista sobre la situación y el tratamiento a dar a un deudor;
+    \item \textbf{Condicionalidad: herramienta de último recurso}. El Club de París exige que el deudor tenga un acuerdo con el FMI (para garantizar la condicionalidad y que el país haya agotado todas las oportunidades de financiación y ajuste interno existentes de modo que el Club de París sea un último recurso). El respeto de la condicionalidad es uno de los principios clave del Club de París;
+    \item \textbf{Particularidades: Enfoque EVIAN}. Este principio, consolidado con el Enfoque Evian (2003), se refiere a la negociación particular que el Club de París llevará a cabo con cada país deudor (basándose en las necesidades financieras estimadas por el Fondo). Teniendo en cuenta que los programas del FMI permiten calcular las necesidades financieras y posibilidades de pago de los países deudores, el tratamiento que se le concede está basado en un menú de opciones estándar;\footnote{En un principio estos tratamientos solo incluían reprogramación de los vencimientos. Sin embargo, con el paso del tiempo el menú de tratamientos ha ido incluyendo nuevas opciones entre las que se encuentra la posibilidad de condonación de deuda. 
+    
+    Hay que tener presente que los tratamientos de deuda, aunque alivian las obligaciones de servicio de la misma pueden tener un efecto perverso sobre el acceso a nueva financiación. Por esta razón el Club de París fija la llamada \textbf{fecha de corte} de modo que solo sea objeto de reestructuración la deuda contraída con anterioridad, y que la deuda contraída con posterioridad se pague en sus términos originales. Al proteger la deuda posterior a la fecha de corte se facilita que el deudor tenga acceso a nueva financiación
+    }
+    \item \textbf{Comparabilidad de trato}. Al conceder un tratamiento de deuda, se suele exigir a los demás acreedores (públicos no pertenecientes al Club y privados) que concedan un tratamiento comparable, con objeto de que todos los acreedores realicen un esfuerzo similar y éste no sea asumido solo por sus miembros. Además de evitar que el alivio financiero concedido por el Club solo sirva para que otros acreedores sí puedan recobrar. Como puede suponerse, el cumplimiento de este principio es en ocasiones problemático, especialmente cuando el tratamiento del Club es especialmente generoso por razones políticas y se exige al sector privado que conceda uno similar; y,
+    \item \textbf{Consenso} (p.e. Eurogrupo). Las decisiones del Club se toman por consenso, siendo este un foro informal incapaz de generar decisiones vinculantes o imponer nada sobre sus miembros.
+\end{lnum}
+
+Los casos más célebres en los que intervinó este foro fueron los acuerdos con Argentina y Cuba (2014), no solo por los volúmenes de deuda comprometida, sino también porque en ambos casos se pretendía normalizar las relaciones financieras con la Comunidad Internacional.
+
+En 2020 se vio que la deuda de los PMA se había triplicado y que además esta deuda se había contraído con acreedores completamente nuevos, entre ellos China y acreedores privados, lo que planteaba un mayor reto en la coordinación para el esfuerzo de reestructuración y su distribución equitativa.\footnote{China había pasado de ser el acreedor del 3\% de la deuda de los PMA en 2006 al acreedor del 14\% en 2021.
+} Para establecer esa coordinación, en noviembre de 2020 los miembros y no miembros del Club de París establecieron el \textit{Common Framework for Debt Treatment}: acreedores del Club de París y otros acreedores del G20 se sentaron en la misma mesa a negociar. 
+
+Cuatro países solicitaron una renegociación de su deuda bajo este marco: Chad, Etiopía, Zambia y Ghana. En enero de 2023 se llegó a un acuerdo con Chad, lo que supone un gran hito.
+
+\begin{specialblock}{Importancia -- Club de París}
+    \href{https://www.izquierdadiario.es/Deuda-con-el-Club-de-Paris-la-estafa-continua}{Club de Pairs: Argentina (2021)}
+    
+\end{specialblock}
+
+\paragraph{Acreedores privados: Club de Londres (1976)}
+Los acreedores privados tienen también su propio foro de coordinación, el \href{https://es.wikipedia.org/wiki/Club_de_Londres}{Club de Londres}, que también es un foro informal y sus decisiones se toman por consenso. Aunque su primera reunión se celebró en 1976, su importancia creció significativamente a en los años 80's. 
+
+El Club de Londres difiere en que no tiene una composición, localización ni periodicidad fija, y solo se reúne con ocasión de una negociación de tratamiento. Entonces se constituye un \textit{Bank Advisory Committee} formado por los principales bancos comerciales acreedores de ese país. A ese comité de bancos es a lo que se llama Club de Londres. Su actuación, no obstante, queda ligada al Club de París por la comparabilidad de trato, que resulta a menudo problemática. 
+
+\paragraph{Comités de Bonistas}
+En los casos en los que países la fuente del problema surja del endeudamiento a través de títulos de deuda, el país deberá negociar con los tenedores, especialmente dificil porque puede haber un importante grado de dispersión que, evidentemente, dificulta la coordinación. 
+
+En estos casos no puede aspirarse a la unanimidad y se plantea el problema de determinar una mayoría de aceptación que sea operativa pero que cuente con legitimidad para imponer el resultado de la negociación a los bonistas no participantes o en desacuerdo. Los bonistas no se reúnen en el Club de Londres sino que es necesario crear Comités de bonistas ad hoc para cada caso. Éste es uno de los retos actuales en la gestión y resolución de crisis de deuda.
+
+\subsection{Crisis de deuda: Secuelas} 
+Ahora que conocemos los instrumentos, medidas y diversas instituciones (formales e informales) que juegan un papel fundamental en la prevención de Crisis de Deuda y, en cierta medida, en la suavizacion de su impacto, podemos pasar a ver qué es lo que realmente sucede cuando se experimenta una crisis. 
+
+REINHART y ROGOFF en su libro \textit{Esta vez es diferente: ocho siglos de locura financiera} escriben una historia cuantitativa de las crisis financieras en sus diversas formas. Su mensaje es que no importa cuán diferente sea la última crisis financiera siempre aparecen notables similitudes con la experiencia pasada de otros países y de la historia.\footnote{Througholll hisrory. rich and poor countries alike have been lending. borrowing. crashing --and recovering -· their way through an extraordi11a1y range of financia/ crises. Each time. the experrs have chimed, 'rhis time is different'. claiming rhat rhe old rules of valuar ion no longer app/y and thar the new situation bears /iu/e simil
+} 
+
+El reconocimiento de estas analogías y precedentes es un paso esencial para mejorar el sistema financiero mundial, reduciendo el riesgo de futuras crisis y atenuando su impacto cuandó se producen.
+
+Según estos autores, si hay un tema común a la gran variedad de crisis que han tenido lugar a lo largo de la historia, es que la acumulación excesiva de deuda, ya sea por parte del gobierno, de los bancos, de las empresas no financieras o los hogares, implica elevados riesgos sistémicos que no suelen ser correctamente valorados durante la fase alcista del ciclo. Las inyecciones de dinero que provocan la acumulación de deuda pueden dar lugar a elevadas tasas de crecimiento, pero realmente son \textit{festivales de endeudamiento}, normalmente por parte del sector privado, que suelen acabar inflando los precios de la vivienda y de las acciones situándolos muy por encima de su nivel sostenible a largo plazo. Esta situación también suele dar lugar a que los bancos parezcan más estables y rentables de lo que realmente son. 
+
+Tales acumulaciones de deuda a gran escala plantean riesgos porque hacen que una economía sea vulnerable a crisis de confianza, sobre todo cuando la deuda es a corto plazo y necesita ser refinanciada constantemente. Vamos a estudiar algunas de las crisis de deuda más importantes que se han producido durante las últimas décadas centrándonos en las que tienen una conexión con la financiación de países en desarrollo.
+
+
+
+\subsubsection{Crisis de deuda: Años 80's}
+Aunque los problemas para hacer frente al servicio de la deuda por parte de algunos países han existido en los últimos 200 años, normalmente eran casos aislados de problemas de liquidez (o al menos así se consideraba y como a tales se les daba respuesta). 
+
+Sin embargo, la crisis de los años 80's fue una crisis sistémica que afectó al conjunto del SFI. La crisis de deuda de los años 80 estalló cuando, en agosto de 1982, México anunció que no disponía de reservas para hacer frente a sus obligaciones de deuda externa. El volumen de deuda de México era de 80.000 millones de dólares, solo menor que el de Brasil. Previamente, se había dado un fuerte endeudamiento en los 70, y con el primer y segundo shock del petróleo, el aumento de la inflación y el endurecimiento de la política monetaria, se encareció significativamente el servicio de la deuda (ver Anexo 7). 
+
+Resulta paradójico que el primer país víctima de la crisis de deuda fuera un país productor y exportador de petróleo como México, en el que más de la mitad de los ingresos por exportaciones provenían del petróleo (y eran ingresos públicos por ser la industria petrolífera del gobierno). Sin embargo, como se ha dicho, muchos países productores de petróleo aprovecharon la bonanza en los precios de esta materia prima para emprender diversos programas públicos sociales y de obras públicas. Éste fue el caso de México en el que el gasto público llegó a ser mucho mayor que los ingresos, partiendo del supuesto de que· el precio del -petróleo continuaría subiendo o, cuando menos, no bajaría. Para financiar ese déficit se recurrió a una doble vía:
+\begin{la}
+    \item Monetización del déficit. El aumento de la oferta monetaria tuvo rápidamente un fuerte impacto inflacionista de modo que el peso se apreció en términos reales ( el tipo de cambio nominal era fijo respecto al dólar) con el consiguiente deterioro de la balanza de pagos; y,
+    \item Aumento de la deuda externa. Dados los precios del petróleo y el carácter de país exportador de México, la banca comercial continuó prestando a México hasta muy poco antes del estallido de la crisis. En el momento de la suspensión de pagos, México era el PEO mayor deudor de la banca comercial representando casi la mitad de la exposición de este.grupo de acreedores.
+\end{la}
+
+Con la recesión mundial del 81 se produjo una contracción de la demanda de petróleo y una caída de su precio. Para México esto supuso una reducción de sus ingresos y una mayor necesidad de endeudamiento. Asimismo, la recesión de EEUU tuvo consecuencias directas para México puesto que ambos países están muy relacionados comercialmente.
+
+En febrero de 1982 México no pudo seguir defendiendo la paridad del peso (las expectativas de devaluación estaban provocando masivas salidas de capitales) y devaluó el peso. Sin embargo, esta medida no fue acompaña de políticas de desviación del gasto (reducción de la demanda interna), por lo que la devaluación rápidamente se transformó en más inflación sin apenas impacto en la balanza de pagos ni en el nivel de renta. Las expectativas de una nueva devaluación no hicieron sino agravar la situación financiera de México, más salidas de capitales y restricción de nueva financiación. Finalmente, en agosto de 1 982, México declaró unilateralmente su incapacidad para atender el servicio de la deuda.
+
+Se observa que están presentes todos los elementos que se mencionaban al hablar de los problemas de sostenibilidad de la deuda (aumento del volumen de deuda, contracción del crecimiento, fuerte absorción interna, aumento de los tipos de interés, etc.). 
+
+Tras México muchos otros países, productores y no productores de petróleo. se vieron incapaces de continuar atendiendo el servicio de la deuda. de modo que la crisis se propagó rápidamente. A finales de 1986 más de 40 países, de América Latina y África principalmente, se enfrentaban o habían pasado por serios problemas de deuda externa. Los países del sudeste asiático (salvo Filipinas) lograron mantener fuertes ritmos de crecimiento y no necesitaron negociar reestructuraciones de su deuda. Comenzaba así la que, para muchos PED, sería bautizada como década perdida del desarrollo. La mayor parte de los países de América Latina experimentaron un crecimiento real negativo entre 1981 y 1990.
+
+
+\textbf{Cambios políticos}; \textbf{Consenso teórico}; \textbf{Flujos financieros internacionales}
+
+
+
+
+\paragraph{Solución (I): Enfoque convencional (1981)}
+La comunidad internacional no llegó inmediatamente a una perfecta comprensión de la magnitud de la crisis. En un principio se pensó que se trataba de un problema de liquidez y no de solvencia. Sin embargo, sí se entendía que la situación era grave y que era necesario dar una solución coordinada.
+
+La estrategia inicial de solución se basó en la concesión de nueva financiación (\textit{new money}) a los países con problemas, con objeto de ganar tiempo y basada en programas de ajuste del FMI (reducción de la absorción interna).
+
+Sobre esta base se construyó la solución inicial al problema de la deuda: el \textbf{enfoque convencional}, actuación conjunta de bancos, gobiernos y el FMI para seguir financiando los desequilibrios existentes mientras se adoptaban medidas correctoras. No se trata de un enfoque de solución general a la crisis de deuda sino que es un enfoque país por país. Los bancos alargaron los vencimientos de la deuda y proporcionaron nueva financiación a los PED (Club de Londres), en gran parte debido a presiones gubernamentales, especialmente de EE.UU. para que los bancos también participaran en la solución. Los gobiernos reestructuraron su deuda en el Club de París. En este marco cabe destacar el nuevo protagonismo que recupera el FMI.
+
+El FMI pasa a desempeñar un papel clave. Esto se debe a que la condicionalidad de sus préstamos se consideró una garantía de la disciplina del ajuste de los países deudores. Por ello la banca y los acreedores públicos a través del Club de París, condicionan la renegociación de la deuda a que el país obtuviera préstamos del FMI sometiéndose así a su condicionalidad. El FMI en sus programas fija una serie de medidas internas de ajuste que reducen la absorción interna y por tanto liberan recursos para el servicio de la deuda. Tras estimar el impacto de esas medidas se calcula si existe todavía un gap financiero entre ingresos previstos -incluida la financiación del FMI y pagos previstos. Ese gap financiero es el que debe ser cubierto mediante la reestructuración de deuda, por parte de cada acreedor según su grado de exposición. El dilema entre cuánto ajuste interno realizar y cuánta parte del ajuste realizar mediante tratamientos de deuda, se soluciona en la práctica a través de los programas del FMI. Se entiende que esos programas recogen todas las medidas de ajuste interno que el país puede realizar sin llegar a exigencias irrealizables.
+
+Esta estrategia inicial solo funcionó aceptablemente en los primeros años. Se consideró la crisis un problema de liquidez y no de solvencia. Además, la difícil situación económica mundial no contribuyó a facilitar la recuperación de los deudores y la coincidencia de intereses que había facilitado la acción coordinada fue desvaneciéndose.
+
+Los deudores recibían cada vez menos financiación y, sin ella, disminuían los incentivos para aceptar los severos planes de ajuste, que tenían un elevado coste social y con resultados decepcionantes. Comenzó a generalizarse la oposición a las medidas del FMI. Además, la propia lógica de los préstamos del FMI hizo que esta institución tuviera que empezar a drenar capitales y recobrar sus préstamos. Los bancos comerciales, por su parte, iban saneando su cuenta de resultados y por lo tanto ya no tenían incentivos para participar en nuevas financiaciones concertadas. El balance de esta primera etapa es positivo para la banca. Sin embargo, la situación de los países endeudados no mejoró. 
+
+\paragraph{Solución (II): Plan Baker (1985)}
+En este contexto, el Secretario del Tesoro americano James Baker presentó su plan basado en el \textbf{principio de ajuste con crecimiento} (1985). Partiendo del supuesto de que el problema de la deuda era un problema a largo plazo que solo podía resolverse en ese horizonte temporal, se consideró improcedente buscar soluciones que pusieran en peligro el crecimiento a largo plazo de los países endeudados. 
+
+Al contrario, había que promover soluciones que favorecieran el crecimiento y que este sirviera para contrarrestar la menor disponibilidad de nuevos créditos. Sobre este argumento, se pidió a los países endeudados que realizaran reformas estructurales en áreas que se consideraron básicas para mejorar sus posibilidades de crecimiento a largo plazo: (i) planes de liberalización comercial; (ii) fomento de la inversión, nacional y extranjera; y, (iii) reducción del papel del Sector Público (no-intervención). En síntesis: \textbf{adoptar las tésis del fundamentalismo de mercado}. A cambio se les ofrecía financiación, que se esperaba proviniera tanto de las instituciones financieras internacionales como de la banca comercial. 
+
+En suma, el Plan Baker fue un avance en cuanto a una mejor comprensión de la naturaleza y gravedad de la crisis. Sin embargo, no logró estimular los flujos de inversión/financiación prevista: ni el FMI ni el Banco Mundial lograron los niveles de transferencias previstas y la banca comercial continuó disminuyendo sus operaciones. Tampoco se obtuvo el resultado previsto en términos de crecimiento de los países deudores.
+
+En 1987 Brasil anunció la suspensión de sus pagos de deuda y mantuvo esa postura hasta finales del año, lo que supuso la muerte definitiva del Plan Baker.
+
+Ese año la banca comercial comenzó a experimentar con nuevas formas de reestructuración de deuda que, por primera vez, incluían elementos de reducción de deuda. Ese nuevo elemento constituyó un precedente del enfoque adoptado en el Plan Brady.
+
+\paragraph{Solución (III): Plan Brady (1989)}
+En 1989 el secretario de Tesoro americano, BRADY presentó su plan como una estrategia de salida dado que permitiría superar definitivamente la crisis. Este plan supuso el primer reconocimiento expreso de que el problema de la deuda no podía resolverse sin un sacrificio explícito de los acreedores, por lo que se aceptó la condonación de parte de la deuda.
+
+No obstante, el Club de París continuó realizando reestructuraciones de deuda con los países con problemas, pero seguía sin admitir la posibilidad de la reducción de deuda. Eso sí, en 1990, se crean los llamados \textbf{Términos Houston} dirigidos a los países de renta media. Este tratamiento, aunque no conllevaba condonación (solo reprogramación de vencimientos en términos más generosos que los tratamientos anteriores) sí permitía la posibilidad de que los países acreedores voluntariamente y de forma bilateral firmaran acuerdos de conversión de deuda con los países deudores. La conversión de deuda suponía la transformación de la obligación en una posibilidad de inversión. Estas operaciones implican un porcentaje de condonación. Normalmente el Club de París no las permitía porque también conllevan un prepago de deuda y por tanto podían afectar a la capacidad de pago del deudor. El hecho de que el Club de París pase a admitir este tipo de operaciones también representa un progreso.
+
+Mayor ajuste estructural. Solo así se ganaba legitimidad para pedir a la banca que aceptara reducción de deuda. 2. Menú con distintas alternativas para la reestructuración de la deuda de la banca comercial. Entre los mecanismos ofrecidos se incluía: - Canje de deuda anterior por nueva deuda de menor valor nominal, pero con mayores garantías de pago - Canje de deuda con mismo nominal, pero con menores intereses - Recompra de deuda con descuento - Canje de deuda por bienes o activos 3. "New money" por parte de fuentes oficiales. El FMI y otras instituciones financieras internacionales proporcionaban financiación para la recompra de deuda. Además, muchos de los nuevos ��onos emitidos por los países deudores como resultado de los canjes anteriores estaban garantizados por el tesoro americano.
+
+
+En definitiva, el Plan Brady supuso un gran avance en la resolución de la crisis de la deuda al reconocer explícitamente la necesidad de reducción de la deuda. Asimismo, fue un paso fundamental para restablecer la confianza en el sistema financiero internacional. Aun así, para muchos, seguía siendo demasiado exigente pues mantenía el énfasis en las necesidades de ajuste interno. A partir de principios de los 90 la financiación privada volvió a dirigirse hacia muchos de los países latinoamericanos que habían sido protagonistas de la crisis de deuda, en clara señal de que volvía a confiarse en sus posibilidades y en su estabilidad. De hecho, a principios de los 90 se consideró que la crisis de deuda de los 80 estaba superada.
+
+\subsubsection{Crisis de deuda (II): Años 90's}
+A principios de los 90 se dio por resuelta la crisis de deuda de los 80, y se desarrolló la iniciativa HIPC para solucionar el sobreendeudamiento de los países más pobres. No obstante, desde mediados de los años 90 se han producido una serie de crisis de balanza de pagos en países de renta media que afectaron al conjunto del sistema financiero internacional poniendo de nuevo de manifiesto los peligros de una excesiva vulnerabilidad exterior: México 1994, la crisis asiática de 1997 , la crisis rusa de 1998, la crisis argentina de 2001, 1 mpago y posterior canje de Ecuador en 2008 (Ver Anexo 12).
+
+\paragraph{Solución (I): Sovereign Debt Restructuring Mechanism (2002)}
+Todos estos episodios lanzaron al primer plano del debate sobre la nueva arquitectura financiera internacional (NAFI) la posibilidad de que se creara un mecanismo permanentes para la resolución de crisis de deuda, en vez del sistema descentralizado y ad hoc existente basado en el FMI, el Club de París y la actuación de los acreedores privados.
+
+Así, el FMI llegó a proponer la creación de un mecanismo de reestructuración de la deuda soberana que integraría a acreedores, FMI y deudores: \textbf{Sovereign Debt Restructuring Mechanism} (SDRM). Aunque nunca llegó a aprobarse, fue debatida durante los años 2002 y 2003, sí permanecieron la idea de que era necesario mejorar la eficiencia de la gestión y la resolución de las crisis. 
+
+\paragraph{Solución (II): Enfoque Evian y MICs}
+En este linea, el Club de París, retomando esa idea, y ante la existencia de numerosos casos de países de renta media que venían acudiendo persistentemente (casi de manera periódica) a este foro para recibir alivios de deuda, se planteó la necesidad de diseñar un tratamiento de salida para estos países. Así, en octubre del 2003 el Club de París adoptó el llamado "enfoque Evian" dirigido a los países de renta media. Este enfoque pretende dar a cada deudor un tratamiento hecho a su medida y dirigido a garantizar la sostenibilidad de su deuda de modo que no tenga que acudir recurrentemente a París. 
+
+Los tratamientos bajo este enfoque se concederían dos fases. En la primera fase se otorga una mera reprogramación de vencimiento. Esta fase dura de uno a tres años. Durante ese periodo el deudor debe consolidar una trayectoria de pagos y de cumplimiento de sus programas con el FMI. En la segunda fase se proporciona un tratamiento más amplio dirigido a garantizar la sostenibilidad y que puede incluso llegar a incluir condonación de deuda.
+
+\subsection{HIPC: El lastre de la deuda} 
+Las estrategias de solución de los problemas de deuda durante los años 80 se centraron en los PED con economías mayores y de renta media, cuyos problemas financieros podían llegar a desestabilizar el sistema financiero internacional. 
+
+Sin embargo, los problemas de sobreendeudamiento eran también endémicos entre los países más pequeños y menos avanzados. Una vez que se considera superada la crisis de los PED más avanzados, la comunidad internacional dirigió su atención a las dificultades de deuda de los países más pobres. Estos países son sobre todo del África Subsahariana. El impacto que la crisis de estos países puede tener sobre el SFI es prácticamente inexistente pues viven al margen de él, pero se consideró que era de justicia resolver también su problema y contribuir a eliminar el obstáculo que el sobreendeudamiento pudiera constituir para su desarrollo. 
+
+En estos casos, el endeudamiento era principalmente con acreedores públicos e instituciones financieras internacionales, por lo que la solución debía venir por parte del Club de París y de las IFI. Durante los años 80's el club de París había ido realizando reestructuraciones de deuda con los países en crisis, pero seguía sin admitir la posibilidad de la reducción de deuda. Cuando se reconoció la necesidad de hacer algo para aliviar la carga de la deuda de los países más pobres, el Club de París decidió cambiar esta política. Así, en octubre de 1988, el Club de París acordó la creación del llamado \textbf{Tratamiento Toronto}, dirigido a los países más pobres y que implicaba un 33\% de condonación. 
+
+Aun así, y a pesar de los sucesivos aumentos del nivel de condonación, queda claro que estos tratamientos continúan siendo insuficientes para que estos países alcancen la sostenibilidad de la deuda, pues entre otras razones deja fuera la condonación de la deuda con las IFI que, para estos países representa un importante porcentaje de la deuda total.\footnote{En diciembre de 1991 el tratamiento Toronto es sustituido por el \textbf{Tratamiento Londres} también conocido como \textbf{Tratamiento Trinidad}: el nivel de condonación se aumenta del 33\% al 50\%. Posteriomiente, en 1994, se crean los \textbf{Términos Nápoles} que sustituyen al tratamiento Londres e implican una condonación del 67\%.
+}
+
+
+\subsubsection{Solución (I): Iniciativas HIPCs (1996; 1999; )}
+La iniciativa HIPC (Heavify Indebted Poor Countries) de alivio de la deuda de los países pobres altamente endeudados fue diseñada y lanzada en 1996 por el FMI en coordinación con el Banco Mundial, con el objetivo de reducir el endeudamiento externo hasta niveles sostenibles, estableciendo unos umbrales de sostenibilidad de la carga. No obstante, ante la insuficiencia de la primera iniciativa y tras una amplia revisión, se aprobaron poco tiempo después (1999) una serie de modificaciones para proporcionar un alivio de la deuda más amplio y acelerado y fortalecer los vínculos entre el alivio de la deuda, la reducción de la pobreza y las medidas de carácter social.\footnote{Tres años después de lanzarse la iniciativa solo dos de los 41 países identificados habían comenzado a beneficiarse de la iniciativa (Uganda y Bolivia).
+} Se desarrolla así la llamada HIPC II o HIPC reforzada.
+
+En términos generales, la iniciativa HIPC pretende alcanzar su amplio abanico de objetivos complementando dos tipos de medidas: (i) fuerte reducción de deuda por parte de todos los acreedores (incluidas las IFI); y, (ii) la aplicación de una serie de medidas de reforma económica dirigidas a la promoción del desarrollo y a la reducción de la pobreza. Por ello, se trata de un proceso en dos etapas.
+
+\textbf{Primera etapa: Punto de decisión} (condiciones y compromisos). La primera etapa se culmina con el punto de decisión. En primer lugar, para que se considere la posibilidad de que reciba asistencia en el marco de la Iniciativa HIPC, un país debe cumplir las cuatro condiciones siguientes: (i) reunir las \textbf{condiciones} para recibir financiamiento de la Asociación Internacional de Fomento del Banco Mundial, que ofrece préstamos sin interés y donaciones a los países más pobres del mundo y del Fondo Fiduciario para el Crecimiento y la Lucha contra la Pobreza del FMI, que otorga préstamos a países de bajo ingreso a tasas subvencionadas (ventanillas blandas); (ii) enfrentar una situación de \textbf{sobrendeudamiento insostenible}, que supere el alcance de los mecanismos de alivio de la deuda tradicionalmente disponibles; (iii) tener una \textbf{trayectoria satisfactoria de reforma} y aplicación de políticas adecuadas en el marco de programas respaldados por el FMI y el Banco Mundial; y, (iv) haber elaborado un \textbf{Documento de Estrategia de Lucha contra la Pobreza} (DELP), siguiendo un proceso participativo de base amplia en el país.\footnote{Como se puede apreciar, su incorporación/elegibilidad a la iniciativa HIPC y el consecuente alivio de la deuda es solo una parte de un esfuerzo mucho mayor. Lo que se busca garantizar es que la reducción de la deuda tenga un impacto material, real y tangible, sobre la pobreza, salud, educación y los servicios sociales. 
+
+
+Antes de la Iniciativa HIPC, los países habilitados tenían, en promedio, un gasto en servicio de la deuda levemente superior al gasto en salud y educación combinados. Desde entonces, los países miembros han aumentado considerablemente dicho gasto, que equivale ahora a alrededor de cinco veces el monto de los pagos de servicio de la deuda. No obstante, el país beneficiario debe mostrar siempre una trayectoria positiva en la ejecución de esos programas. 
+} Una vez que el país cumple estos cuatro criterios o ha avanzado lo suficiente en su cumplimiento, los Directorios Ejecutivos del FMI y el Banco Mundial deben decidir su habilitación para entrar al programa en función de si su deuda es o no sostenible (solo entrarán si no es sostenible). Para llegar a esta se siguen los criterios de elegibilidad:\footnote{Los umbrales de sostenibilidad eran superiores en la HIPC inicial y se redujeron en la HIPC reforzada (en la inicial, la ratio deuda/exportaciones considerado sostenible se situaba entre $200$ y $250\%$, según la vulnerabilidad externa del país, los criterios para definir los países muy abiertos eran más restrictivos, y la ratio deuda/ingresos fiscales considerado sostenible se situaba en $280\%$).
+}
+\begin{la}
+    \item \textbf{Criterio de sostenibilidad}. El criterio de sostenibilidad básico utilizado es la ratio deuda/exportaciones. En este sentido, se considera que si $\frac{\text{VAN Deuda}}{\text{Exportaciones}}>150\%$ la deuda no es sostenible. 
+    \item \textbf{Ventanilla fiscal}. Este indicador general se complementa con un criterio de sostenibilidad fiscal (ventanilla fiscal), puesto que países con una amplia base exportadora (países muy abiertos) la ratio anterior puede resultar muy baja y no reflejar adecuadamente la sostenibilidad de la deuda. Los países elegibles por esta ventanilla fiscal deben cumplir:
+    $$\begin{aligned}
+        &\underset{\equiv\scriptsize{\text{país tiene amplia base exportadora}}}{\frac{\text{Exportaciones}}{\text{PIB}}\geq 30\%}\\[0.5em]
+        &\underset{\equiv\scriptsize{\text{ingresos fiscales suficientes}}}{\frac{\text{Ingresos fiscales}}{\text{PIB}}\geq 15\%}\quad\Longrightarrow\quad \frac{\text{VAN Deuda}}{\text{Ingresos fiscales}}\geq 250\%
+    \end{aligned}$$
+    En definitiva, se trata de verificar que el país no tiene capacidad de afrontar la deuda a través de su superávit por Cuenta Corriente y/o que el problema de la sostenibilidad sea el elevado endeudamiento y no la incapacidad recaudatoria. 
+\end{la}
+
+Decidida la elegibilidad del país para su entrada en la iniciativa, el Banco Mundial elabora un informe de estrategia de reducción de la pobreza (Poverty Reduction Strategy Paper o PRSP). En línea con el informe el FMI concede al país financiación bajo la línea de financiación para la reducción de la pobreza y ayuda al crecimiento (PRGF según sus siglas en inglés), que se vincula a la existencia de un programa de política económica en línea con el informe. 
+
+\textbf{Segunda etapa: Punto de culminación}. Para recibir una \textbf{reducción completa e irrevocable de la deuda} en virtud de la iniciativa HIPC, un país debe: (i) establecer una trayectoria ulterior de buenos resultados en el marco de programas respaldados por préstamos del FMI y el Banco Mundial; (ii) aplicar satisfactoriamente las reformas fundamentales acordadas en el Punto de decisión; (iii) adoptar e implementar un Documento de Estrategia de Lucha contra la Pobreza por un año como mínimo. Si los países cumplen satisfactoriamente las condiciones, el país deudor alcanza el punto de culminación en el que recibe el alivio definitivo. Por tanto, no existe un calendario prefijado para alcanzarlo sino que es flotante y depende del grado del cumplimiento del país.\footnote{No obstante, a partir del cumplimiento de las condiciones y en el periodo interino que transcurre desde el punto de decisión hasta el Punto de culminación, los países beneficiarios ya reciben por parte del Club de París una reducción de deuda inicial consistente en la condonación del 90\% (80\% en la HIPC inicial) de los vencimientos cuyos acreedores forman parte del Club de París.
+} El tratamiento de deuda definitivo consiste en la aplicación de la reducción de deuda necesaria para que la ratio deuda/exportaciones ( o ratio deuda/ingresos fiscales en su caso) llegue al 150\% (250\% para la ventanilla fiscal).
+
+Una vez concedido ese tratamiento definitivo el FMI insiste mucho a los países HIPC que vigilen con extremada precaución su política de endeudamiento y que incluso durante unos años se basen fundamentalmente en financiación concesional.
+
+Es importante señalar que en la condonación de deuda participan también las IFI abandonando por primera vez su condición de acreedor preferente. La deuda de muchos de estos países era en gran parte con IFI y por tanto su participación es fundamental para lograr el objetivo de sostenibilidad. Esto supone un coste grande para estas instituciones y puede llegar a empeorar su calidad crediticia. Por eso se han creado los llamados "HIPC Trust Funds" para financiar la participación de las IFI en la HIPC. Estos fondos son alimentados con donaciones de los países miembros.
+
+
+\subsubsection{Solución (II): Iniciativa para el alivio de la deuda multilateral (IADM)}
+En 2005, la iniciativa HIPC se complementó con la iniciativa para el \textbf{alivio de la deuda multilateral} (IADM), a propuesta del G8.
+
+Esta iniciativa pretendía que tres instituciones multilaterales (FMI, AIF (AIF; WBG y el FAfD) condonaran el $100\%$ la deuda de los países que habían alcanzado (o previsiblemente alcanzarían) el punto de culminación en el marco de la Iniciativa HIPC. Por tanto, como se puede apreciar la IADM va un paso más allá que la inciativa HIPC: ofrece alivio total de la deuda para que estos países puedan aprovechar los recursos que quedan así libres y puedan avanzar hacia los Objetivos de Desarrollo Sostenible (ODS). Además, a diferencia de la HIPC, la IADM no conlleva ningún tipo de alivio paralelo por parte de los acreedores privados o bilaterales oficiales ni de otras instituciones multilaterales con excepción del FMI, la AIF y el BAfD. Sin embargo, a principios de 2007, el Banco Interamericano de Desarrollo decidió también ofrecer un alivio de la deuda similar a los cinco HIPC de América.
+
+Aunque la IADM es una iniciativa en común de varias instituciones financieras internacionales, la decisión de conceder alivio de la deuda es en última instancia responsabilidad propia de cada una, de modo que la cobertura y la implementación quizá sean distintas. En esta iniciativa, el uso de los recursos debía regirse por el principio de la uniformidad de trato. Por lo tanto, se acordó que todos los países con un ingreso per cápita de $380\$$ al año o menos (fueran o no HIPC) recibirían el alivio contemplado en la IADM, financiado con los propios recursos del FMI a través de la Cuenta Fiduciaria IADM-1. Los HIPC con un ingreso per cápita superior a esa cifra recibirían alivio en el marco de la IADM gracias a aportes bilaterales administrados por el FMI a través de la Cuenta Fiduciaria IADM-11. El alivio contemplado en la IADM abarca el saldo total de la deuda asumida frente al FMI hasta fines de 2004 que se encuentre pendiente en el momento en que el respectivo país quede amparado por la Iniciativa; es decir, no habrá alivio para la deuda desembolsada después del 1 de enero de 2005.
+
+Hasta la fecha (septiembre 2023) 37 países (31 de ellos en África) han recibido condonaciones a través de la HIPC y la IADM. En marzo de 2020, el Banco Mundial y el FMI concluyeron que Somalia había tomado los pasos necesarios para recibir alivio de deuda. En marzo de 2021 sumaron como elegible a Sudán.
+
+\subsubsection{¿Es suficiente? Valoración de la HIPC}
+La aplicación del alivio de la deuda ha supuesto en los países beneficiados una reducción del servicio de la deuda y la mejora en su gestión. Por un lado, el alivio de la deuda ha mejorado considerablemente la situación de endeudamiento de los países que ya han alcanzado el punto de culminación, y los indicadores de deuda de estos países se han reducido a un nivel inferior a los de otros HIPC o a los de los países que no participan en la Iniciativa. No obstante, muchos de ellos siguen siendo vulnerables a los shocks. En cuanto al impacto de la HIPC sobre la pobreza hay que tener presente el objetivo de la HIPC es liberar recursos para poder dedicarlos al desarrollo y a la reducción de la pobreza, pero la aplicación práctica de las medidas necesarias corresponde al país beneficiario.
+
+\paragraph{Críticas: ¿Cómo ha sido su proyección material?}
+Sin embargo, la iniciativa HIPC ha sido severamente criticada desde diversos puntos de vista: (i) lentitud; (ii) falta de generosidad; (iii) poco impacto en la reducción de la pobreza; y, (iv) falta de eficiencia. 
+
+Como se ha dicho, dado que la participación en la Iniciativa HIPC es voluntaria, el desafio consiste en garantizar que los países habilitados reciban todo el alivio de la deuda pertinente de todos los acreedores. De esta forma, aunque los acreedores principales han brindado el alivio que les corresponde en su totalidad, otros acreedores que conjuntamente deberían aportar alrededor del $26\%$ de las condonaciones/costes totales han proporcionado solamente una pequeña proporción del alivio previsto. Lo que evidentemente afecta de forma negativa a la velocidad de ejecución y los compromisos adquiridos.\footnote{Además, es necesario destacar que, a priori, los recursos disponibles actualmente en el fondo fiduciario son \textbf{insuficientes para financiar el coste} del alivio de la deuda de todos los países que cumplan las condiciones iniciales y alcancen el punto de decisión. 
+
+Esto se debe a que el coste del alivio de la deuda de Somalia y Sudán, así como el de otros países que entraron en la Iniciativa después de 2006, no se incluyó en el plan de financiamiento original.
+}
+
+Por otro lado, en cuanto a la falta de eficiencia se señala que lo que debe hacerse es concederles donaciones, pero exigirles el pago de la deuda, y mantener así la cultura crediticia. Probablemente la crítica es correcta desde el punto de vista teórico y si no se aplica en la práctica es porque existe una cierta fatiga del donante y porque presupuestariamente es más fácil condonar deuda que conceder donaciones. Por tanto, y aceptando la corrección teórica de la crítica, los efectos prácticos son muy similares. 
+
+
+V.IV.IV. Situación actual
+Según el último infonne del Banco Mundial sobre la deuda internacional de diciembre de 2022, la ratio deuda ingresos en los países más pobres se encuentra en la proporción más alta desde 2000, es decir, poco tiempo después de la creación de la Iniciativa HIPC. En realidad, los riesgos relacionados con la deuda han aumentado en todas las economías en desarrollo, habiéndose casi triplicado de 2011-2021.
+
+El aumento de las tasas de interés y la desaceleración del crecimiento mundial amenazan con llevar a un gran número de países a una crisis de la deuda. Cerca del $60\%$ de los países más pobres muestra ya un alto riesgo de sobreendeudamiento o ya se encuentra en esa situación. Se espera que China represente el $66\%$ de los pagos del servicio de la deuda que realizarán los países clientes de IDA en su deuda bilateral oficial.
+
+Por otro lado, las perspectivas económicas se han deteriorado considerablemente. En medio de uno de los episodios de endurecimiento de las políticas monetarias y fiscales más sincrónicos a nivel internacional de los últimos cincuenta años, el riesgo de que se produzca una recesión mundial el próximo año ha ido en aumento. Las depreciaciones monetarias han empeorado la situación de muchos países en desarrollo con deudas denominadas en dólares estadounidenses. Como consecuencia, es probable que la mejora de la relación entre deuda y renta nacional bruta registrada en 2021 sea temporal. Por tanto, el Banco Mundial señala que se necesita un enfoque integral para reducir la deuda, aumentar la transparencia y facilitar reestructuraciones más rápidas, de modo que los países puedan centrarse en los gastos que respaldan el crecimiento y reducen la pobreza.
+
+
+
+
+\clearpage
+\section{Instrumentos concesionales: Ayuda}
+\puntosclave{
+La Ayuda Oficial al Desarrollo, menor en volumen, se dirige a catalizar otras fuentes de financiación. por ejemplo privadas.
+}
+
+Ahora que conocemos las principales fuentes de financiación y los posibles (y probables) problemas en los que puede derivar, es necesario hacer mención especial a otra clase de instrumentos que utiliza la comunidad internacional para promover el desarrollo económico y, en especial, la convergencia de los países más desfavorecidos. Esta gama de instrumentos puedes agruparse ajo el paraguas de lo que se conoce como: \textbf{cooperación al desarrollo}.\footnote{Por ejemplo. el sistema de preferencias arancelarias generalizadas (SPG) que otorga rebajas arnncelarias a los productos procedentes de los PED: no supone transferencia de recursos por lo que es cooperación. pero no ayuda oficial.
+}
+
+Dentro de la cooperación puede hablarse de ayuda al desarrollo: la transferencia de recursos realizada en términos concesionales. Además, n grupo particular de este tipo de cooperación, más institucional, sería la \textbf{ayuda oficial al desarrollo} (AOD), que el CAD define con las siguientes características:
+\begin{lnum}
+    \item \textbf{Fondos soberanos presupuestados}. Son provistos por organismos oficiales (procedencia pública), derivar de los fondos presupuestarios del Estado donante (independientemente del nivel o instancia pública que aporte los recursos);
+    \item \textbf{Beneficiarios tasados}. Dirigidos a países que figuran en la lista de países receptores del CAD y a instituciones multilaterales de desarrollo. La lista de países es revisada anualmente por el CAD y acoge a la mayor parte de PEO y en transición;
+    \item \textbf{Objetivo definido}. Con el principal objetivo de promover el desarrollo económico y el bienestar de los países en desarrollo. Dada la dificultad que encierra definir ese criterio de manera incuestionable, el CAD ha fijado una serie de actividades (básicamente relacionadas con la seguridad militar) que quedan excluidas del campo de la AOD;
+    \item \textbf{Concesionalidad}. Tienen carácter concesional y un elemento de donación mínimo.\footnote{Cuando los créditos no llegan al grado de concesionalidad mínimo engloban otro concepto definido por el 13M como Financiación Oficial de Desarrollo.
+    } La concesionalidad es plena en el caso de las donaciones. por lo que el problema se circunscribe a la cooperación reembolsable (la definición y cómputo de este requisito ha sido modificado en 2014). 
+\end{lnum}
+
+Para los PED la ayuda oficial al desarrollo es una fuente de financiación exterior muy importante, llegando a ser en algunos casos (PMA) alrededor de dos tercios de la financiación exterior disponible y más de un tercio de su ingresos y gastos públicos. En ocasiones es la única fuente de financiación disponible.\footnote{El sistema internacional de ayuda al desarrollo es un producto del orden internacional que se configura tras la Segunda Guerra Mundial, en linea con lo que se podía dar dentro de las estructuras metropoli-colonias en el periodo previo. En esas fechas surge todo un conjunto de instituciones que irá dando una importancia creciente al fomento del desarrollo: 
+\begin{lnum}
+    \item Naciones Unidas (NN.UU.), con una serie de fondos dirigidos a los países más pobres y con un entramado institucional en el que destaca el "Programa de las NN.UU. para el desarrollo" (PNUD), cuyo precedente, el Fondo Especial de NN.UU., fue creado en 1 958;
+    \item Las instituciones de Bretton Woods (FMI y Banco Mundial que han ido transfonnándose en pilares básicos de la promoción del desarrollo). El desarrollo adquiere un papel central en el funcionarniento del Banco Mundial y empieza a pennear las labores del FMI: la vigilancia de las. políticas económicas y la prestación de apoyo financiero a países en dificultades;
+    \item En 1 956, el Banco Mundial crea la Asociación Internacional de Fomento (su ventanilla blanda). Pero no será hasta la década de los sesenta cuando el sistema de ayuda al desarrollo se institucionalice y adquiera la configuración actual.
+\end{lnum}
+
+En esa década se amplía el número de los países que deciden comprometerse activamente con la política de ayuda, al tiempo que muchos de ellos crean las primeras agencias públicas especializadas para gestionar las intervenciones de desarrollo. La década comienza, además, con la conformación del Comité de Ayuda al Desarrollo (CAD) en el seno de la OCDE para coordinar los esfuerzos de los donantes bilaterales. También se avanza en el ámbito multilateral. Así, en el seno de las NN.UU. se crea en 1964, la Conferencia de Naciones Unidas para el Comercio y el Desarrollo (UNCTAD) y en 1965 el PNUD. En 1959 se crea el Banco Interamericano de Desarrollo. Y avanzada la década de los años sesenta se crean, a imagen y semejanza del Banco Mundial, los Bancos Africano de Desarrollo y Asiático de Desarrollo.
+}
+
+
+\begin{specialblock}{Objetivos Cuantitativos}
+    Así, la UNCT AD en 1964 planteó que los países desarrollados transfirieran un $1\%$ de su PIB a los PEO. En 1 970 una resolución de la ONU acordó que dentro de la meta del $1\%$: Cada país económicamente avanzado, aumentará progresivamente su asistencia oficial para el desarrollo a los países en desarrollo y hará sus mejores esfuerzos para alcanzar un importe neto mínimo de 0,7 por ciento de su PNB a precios de mercado por medio de la década". En 1980 se añadió como subobjetivo que el $0,15\%$ del PIB se dirigiera en forma de AOD a los PMA. Desde entonces, muchos países han hecho compromisos específicos para hacer frente a estos u otros objetivos. En la Conferencia Internacional de 2002 sobre la Financiación para el Desarrollo, celebrada en Monterrey, se insistió en el objetivo del 0,7\%. En julio de 2015, la Tercera Conferencia Internacional de Financiación al desarrollo de NN.UU. aprobó la Agenda de Acción de Addis Abeba para la financiación al desarrollo después de 2015, los Estados declararon su firme compromiso político de hacer frente al problema de la financiación y de la creación de un entorno propicio a todos los niveles para el desarrollo sostenible. En cuanto a la AOD, reafirman sus respectivos compromisos respecto a la asistencia oficial para el desarrollo, incluido el compromiso de numerosos países desarrollados de alcanzar el objetivo de destinar el 0,7\% del ingreso nacional bruto a la asistencia oficial para el desarrollo
+\end{specialblock}
+
+\subsection{¿Qué es y cómo se analiza la AOD?}
+La Ayuda Oficial al Desarrollo se puede clasificar i) por su origen -bilateral . o multilateral-; ii) por el grado de concesionalidad o iii) por el destino de los fondos (ligada a financiar proyectos realizados por empresas del país proveedor o no ligada). 
+
+El Comité de Ayuda al Desarrollo de la OCDE (CAD) lleva el cómputo y seguimiento de la AOD de modo que el esfuerzo de los donantes es calculado teniendo en cuenta la variedad de recursos disponibles para el desarrollo. Además, se identifica los objetivos fundamentales a los que se debe dirigir la ayuda y se ofrece una imagen más realista de los flujos financieros a los países en desarrollo. 
+
+El CAD ha estado trabajando para actualizar y modernizar su sistema estadístico para asegurar la uniformidad del reporte entre los miembros, recoger los nuevos y más complejos instrumentos financieros y crear incentivos para movilizar recursos adicionáles y asignar la escasa AOD donde existe más necesidad.
+
+\subsubsection{Financiación concesional: Cuantificación y tipologías}
+El grado de concesionalidad, recoge el esfuerzo del donante y el coste para el receptor.
+
+ii) financiación reembolsable (ijpropiada para financiar inversiones con rentabilidad futura, como infraestructuras o instalaciones productivas/energéticas) y iii) financiación combinada o blending que permiten utilizar las donaciones de forma estratégica para atraer financiación adicional para inversiones importantes reduciendo la exposición al riesgo.
+
+
+
+Préstamos concesionales. En diciembre de 2014 el CAD llegó a un importante consenso para modernizar su sistema estadístico para medir la financiación internacional al desarrollo, afectando fundamentalmente a los préstamos concesionales, de modo que mejore su concesionalidad e incentivar su destino a los PMA: o Los créditos concesionales ya no computarán por su valor nominal, sino solo la parte concesional. Por tanto, computarán como AOD el valor nominal de las donaciones y solo la proporción de donación de los créditos concesionales (no todo su valor nominal), lo que implicará una comparación mucho más apropiada de los créditos y las donaciones e impulsará la provisión de donaciones y créditos altamente concesionales.
+
+Se ha precisado la definición de lo que implicaba que un crédito fuera de carácter concesional, que detem1ina el hecho de que un crédito pueda ser computado como AOD. Hasta ahora estaba abierto a interpretación y resultaba en inconsistencias al comparar los reportes de AOD de los distintos Estados miembros del CAD. 
+
+El elemento donación será calculado utilizando tasas de descuento menores y diferenciadas por el grupo de ingresos al que pertenezca el país receptor (incentivando la concesión a los PMA), y también los umbrales para la calificación de concesional han sido modificados9.
+
+
+\paragraph{Donaciones: Cuantificación y tipologías}
+pudiendo ser i) donaciones (concesionalidad 100\%, limitadas por el esfuerzo presupuestario para el proveedor); 
+
+Las donaciones pueden adoptar diversas formas para apoyar los proyectos de inversión: ayuda a la inversión y bonificación de intereses, que reduce la inversión inicial y el coste del proyecto global; asistencia técnica, que garantiza la calidad, la eficiencia y la sostenibilidad del proyecto; capital riesgo ( es decir, capital y cuasi capital), que atrae financiación adicional, o garantías, que desbloquean la financiación al desarrollo reduciendo el riesgo. Se considera que la ayuda multilateral está más coordinada y además tiende a darse a los países que más la necesitan o que más méritos hacen, mientras que la ayuda bilateral se basa mucho más en relaciones políticas, lazos históricos, interés en la visibilidad o internacionalización.
+
+
+
+\subsubsection{Instrumentos del Sector Privado: Cuantificación y tipologías}
+Instrumentos del sector privado. El objetivo del instrumento, su cartera de inversiones y la estrategia de inversión serán los elementos en los que se base su calificación como "promotor de desarrollo". En cuanto a la valoración: o Los préstamos serán computados en base al equivalente donación, calculado con una tasa de descuento ajustada al riesgo por grupo de países como en los préstamos al sector público, pero con una prima por riesgo adicional reflejando el hecho de que en general es más arriesgado prestar a entidades privadas. o Las participaciones de capital en instituciones financieras de desarrollo (IFD) u otros vehículos serán tratados como un coste hundido, contabilizadas. en la AOD por su valor nominal y los reembolsos como AOD negativa. o Las participaciones de capital de las IFD u otros vehículos en entidades privadas en PEO serán contabilizadas según el equivalente de donación ex post, es decir, inicialmente serán contabilizadas por su valor nominal y los reembolsos serándescontados a medida que se vayan obteniendo, hasta la salida de la inversión.o Las garantías también serán valoradas según el equivalente donación, aplicando una tasa de descuento diferenciada y, cuando sea apropiado, una prima adicional de riesgo por sector privado, en principio solo aplicados a los costes operativos de las garantías. 
+
+
+\subsubsection{La Asistencia Oficial Total para el Desarrollo Sostenible (TOSSD)} 
+Adicionalmente, y como complemento a la Ayuda Oficial al Desarrollo, se ha desarrollado la \textit{Total Official Support for Sustainable Development} (TOSSD), un nuevo marco internacional de medición que proporciona una imagen completa de todos los recursos oficiales y la financiación privada movilizada a través de intervenciones oficiales en apoyo del desarrollo sostenible y de los ODS. 
+
+En el grupo de trabajo TOSSD participan veinticinco expertos de países proveedores en colaboración con otros actores y donantes de fuera de la OCDE. Se trata de un marco estadístico para recopilar datos coherentes, comparables y transparentes sobre el apoyo oficial total para promover el desarrollo sostenible.\footnote{Complementa la AOD al capturar también otros tipos de apoyo incluidos los flujos no concesionales, la cooperación Sur-Sur, la cooperación triangular, las actividades para hacer frente a los desafíos mundiales y la financiación privada movilizada a través de intervenciones oficiales. 
+} Los datos de TOSSD se presentarán en dos categorías: recursos transfronterizos (Pilar 1) y apoyo a los bienes públicos internacionales y desafíos globales (Pilar 11). Se trata de obtener una imagen más completa y real (la encuesta de datos de 2019 pudo documentar un 60\% más de volumen recibido por Indonesia).
+
+En la reunión del G20 en junio de 2023 en India los países del G20 se comprometieron a reforzar sus esfuerzos para reportar datos al TOSSD como marco voluntario, e impulsar la adhesión de más miembros.
+
+\subsection{¿Cómo ha evolucionado? Impacto y críticas}
+Los objetivos de la AOD han ido evolucionando de la mano del propio debate sobre la naturaleza de los procesos de desarrollo y las variables asociadas al mismo. En un primer momento, la AOD fue concebida como complemento (en algunos países) y suplemento (en otros) a los flujos de carácter privado, que se consideraban necesarios para el impulso del crecimiento económico ante la insuficiencia del ahorro interno en dichos países. Los modelos de crecimiento imperantes en la época, el de Harrod Domar en un primer momento, y el de las dos brechas de Chenery y Strout posterionnente, constituían las referencias teóricas y condicionaron los primeros análisis sobre el impacto de la AOD cuyo éxito o fracaso se plasmaría en dos indicadores fundamentales: la disminución de la pobreza en ténninos absolutos en los PEO y la disminución de la pobreza relativa a escala internacional, expresada en ténninos de brecha de ingresos entre unos y otros países. De esta manera, la eliminación de la pobreza y el cierre de la denominada brecha NorteSur constituyeron los dos grandes iconos de los esfuerzos internacionales del desarrollo. 
+
+Con el paso del tiempo al constatarse la simplicidad de algunos supuestos relativos al crecimiento, y que, pese a los buenos datos reflejados de crecimiento durante dos décadas consecutivas, no había servido, ni para absorber la pobreza, ni para disminuir la brecha Norte-Sur, se plantearon serias dudas sobre la efectividad de la AOD en la lucha contra la pobreza.\footnote{Tal como reflejaron algunos importantes estudios en los arios 70 (Morawctz) y 80 (Cassen)
+} 
+
+Algunos autores, se centraron en el estudio de las relaciones entre la AOD y el crecimiento, o en su impacto sobre variables asociadas al mismo, como el ahorro o la inversión, sin llegar tampoco a resultados concluyentes (GRIFFIN, 1986; MOSLEY, 1987; LEVY, 1987). Ello dió lugar a un giro en el debate sobre los objetivos de la AOD que pasó a estar dominado por dos grandes tipos de preocupaciones. Por un lado, la necesidad de una nueva visión sobre el crecimiento más acorde con los nuevos modelos teóricos y con la importancia de factores distintos al capital físico. Sin cuestionar la centralidad del crecimiento, se trataba de tener en cuenta distintos condicionantes del mismo, para ser objeto de atención en las políticas de ayuda y ser considerados al mismo tiempo en los estudios sobre su eficacia e impacto. Paralelamente, se abría camino el interés de estudiar la AOD desde su contribución al Desarrollo Humano o a la superación de la pobreza. más allá de considerar los logros registrados en términos de crecimiento. Ello estaba en consonancia con las nuevas perspectivas abiertas en el debate sobre el desarrollo, y con la constatación por parte del PNUD que las tasas de crecimiento en unos y otros países no se correspondían necesariamente con los avances logrados por los mismos en materia de desarrollo humano. 
+
+Además, en los primeros años del siglo XXI, distintos trabajos (BOURGUIGNON, 2000; 2004) han puesto de manifiesto que pobreza, desigualdad y crecimiento son fenómenos conectados entre sí y que la desigualdad dificulta el avance en la lucha contra la pobreza y limita decisivamente los efectos que sobre esta puede tener el crecimiento económico. Otros trabajos han venido apuntando la necesidad de nuevos horizontes y nuevas perspectivas a la hora de analizar los objetivos de las políticas de ayuda, tales como su contribución al impulso del sector privado, la conveniencia de vincular la misma a la financiación de los bienes públicos globales, la necesidad de asociar la ayuda al entorno de políticas, o la preocupación por su incidencia en la pobreza extrema, perspectiva ésta última que se plasmaría en los Objetivos de Desarrollo del Milenio (ODM). Es interesante resaltar que, en este nuevo contexto sobre los objetivos de la AOD, han ido paulatinamente desapareciendo las referencias a la desigualdad internacional y el cierre de la llamada brecha Norte-Sur.
+
+Finalmente los Objetivos de Desarrollo Sostenible y la Agenda 2030 marcan una nueva hoja de ruta poniendo en el centro: (i) la sostenibilidad; (ii) la equidad, reflejar mejor la realidad; (iii) la universalidad, los problemas están interconectados y debiendo abordarlos desde todos los países; (iv) compromiso, de todos los países del mundo, por lo que todos los países tienen que aplicar la Agenda 2030 en sus políticas internas; y, (v) alcance, diecisiete ODS y $169$ metas frenta a los ocho ODM, incluyendo cuestiones claves como el empleo digno o el cambio climático. 
+
+En cualquier caso, para la consecución de estos objetivos, la AOD puede desempeñar un papel muy importante como complemento de otras fuentes de financiación para el desarrollo ya que puede ayudar a los PED a aumentar su capacidad productiva y a mejorar el entorno para las actividades del sector privado, y de este modo, sentar las bases para su desarrollo. Es especialmente importante para los países cuya capacidad para atraer inversiones directas y capital privado es mínima. Sin embargo, la aspiración de cualquier PED debe ser el no tener que depender de esta fuente de financiación y poder tener acceso a financiación ordinaria a través de los mercados financieros internacionales. Mientras que la AOD depende de las decisiones y restricciones presupuestarias de los países donantes y a menudo de la corrupción del receptor, los ingresos por otras fuentes de financiación como el comercio, el turismo o la recepción de inversiones se inyectan directamente en el tejido económico y no están sujetas a decisiones administrativas de terceros países 11
+
+En este contexto se generó el clima apropiado para lo que se denominó la \textbf{fatiga de la ayuda}, término acuñado en algunas agencias de cooperación para enfatizar el escepticismo generado por los escasos logros obtenidos.
+
+
+\subsubsection{Críticas: La fatiga de la ayuda}
+Un conocido informe del Banco Mundial publicado en 1998 señalaba que \textit{en diferente momento y en diferentes lugares la ayuda exterior ha sido altamente eficaz, totalmente ineficaz y cualquiera de las opciones intermedias}. 
+
+Algunos autores (BURNSIDE y DOLLAR, 1997, COLLIER y DOLLAR, 2002) plantearon la existencia de vínculos entre la posible contribución de la Ayuda al Desarrollo a la superación de la pobreza y el seguimiento de políticas adecuadas basadas en la estabilidad macroeconómica y el impulso del crecimiento. Así, la idea de que las políticas ortodoxas ayudan a que la AOD tenga un impacto positivo pasó entonces a constituir la base de la nueva filosofía de ayuda, establecida finalmente en la Cumbre de Monterrey de 2002. Esta cumbre significó el comienzo de una nueva era en los debates sobre la financiación del desarrollo, en la que la pertinencia de los flujos de AOD debía ser analizada en relación no sólo a sus posibles objetivos finales (lucha contra la pobreza u otros) sino también desde el punto de vista de su contribución a la gobernanza y la estabilidad macroeconómica, así como de su complementariedad con otros flujos externos de carácter privado. Enfoque que fue mantenido en Doha (2008) y Addis Abeba (2015). 
+
+Por último, uno de los debates más intensos en el seno de múltiples foros internacionales sobre financiación al desarrollo ha sido sobre la eficacia de la ayuda. En este sentido, desde algunos sectores se ha apostado por la desvinculaciónde la ayuda: romper el vínculo entre la concesión de la ayuda y la adquisición de bienes y servicios. Es decir, desligar la ayuda de la compra de bienes y servicios del país donante y abriendo las licitaciones financiadas con AOD a empresas de otros países. Igualmente, la desvinculación tiene sus detractores, al estimarse que puede conllevar una reducción de los flujos de ayuda o que puede hacer la tramitación de ésta mucho más compleja. Los avances en la desvinculación se han producido lentamente, ante el riesgo cierto de que la ayuda ligada no sea sustituida por ayuda desligada sino por no ayuda. El Acuerdo sobre crédito a la exportación con apoyo oficial, comúnmente conocido como Consenso OCDE, es un acuerdo que desde 1976 regula las condiciones en que los países participantes pueden apoyar financieramente la exportación. El objetivo es evitar distorsiones en el comercio internacional como consecuencia de ganancias de competitividad artificiales provocadas por unos apoyos oficiales excesivos. Así, se regulan las condiciones financieras del apoyo oficial a la exportación y las primas que pueden cargar las agencias de créditos a la exportación.
+
+El Consenso OCDE es un acuerdo alcanzado en el Grupo de Crédito a la Exportación de la OCDE. Es decir, no se enmarca dentro del CAD, pero sí que regula la ayuda ligada en cuanto que es apoyo a la exportación. Por lo tanto, aunque no sea un consenso sobre los créditos ligados sí que los regula. El Consenso ha ido variando sus normas en cuanto a la ayuda ligada endureciendo las condiciones para su concesión. En 1 987 en el llamado "paquete Wallen" se introducen las primeras restricciones a la ayuda ligada, que debe limitarse a países de renta baja y en condiciones de concesionalidad muy favorables. En 1992 se acuerda el llamado "paquete Helsinki" que supone una normativa más restrictiva para la concesión de ayuda ligada y una selección más exigente de los países potencialmente beneficiarios. Los criterios fijados son los siguientes: No se pennite la financiación de proyectos comercialmente viables. Existen excepciones a esta regla: proyectos con un importe inferior a 2M de derechos especiales de giro (DEG) y créditos con un elemento de liberalidad superior al $80\%$. Los países elegibles son los países con renta per cápita inferior a $3,125\$$. La liberalidad mínima en la financiación ligada debe ser superior al $35\%$ general o al $50\%$ para los PMA. En 1 996, tras 4 años de experiencia en la aplicación del paquete Helsinki se llega a un acuerdo sobre "Orientaciones relativas a la ayuda ligada" que tienen por objeto ayudar a quien concibe los proyectos a prever con antelación si van a ser considerados por el CAD como comercialmente viables o no. En el año 2002, tras varios años de negociaciones en el seno del Comité de Ayuda al Desarrollo se acordó desvincular la ayuda a los Países Menos Avanzados (PMA), esto es, al segmento de países más desfavorecidos dentro de los países en desarrollo. Dicho acuerdo no es otro que la Recomendación de Desvinculación de la Ayuda a los Países Menos Avanzados. La Recomendación es un compromiso moralmente vinculante que afecta a los compromisos de ayuda adquiridos a partir de su entrada en vigor en enero de 2002. Los proyectos financiados con ayuda concesional en los PMA deben, con carácter general, ser adjudicados a través de licitaciones abiertas intemacionales.\footnote{La Recomendación sólo afecta a las actividades con un valor superior a los 700.000 DE;G ( 130.000 DEG en el caso de la asistencia técnica asociada a proyectos). Se deduce, por tanto, que aquellos proyectos por debajo del umbral deberán, de acuerdo con el Consenso de la OCDE, tener una concesión mínima del $50\%$
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+\end{document}
