@@ -1,0 +1,1088 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Tema 3.A.40 -- Efectividad e interrelación de las Políticas Monetarias y Fiscales\\
+\large En las principales economías desarrollaas desde la Gran Recesión de 2008. El valor de los multiplicadores fiscales}
+\author{Marcelo Ortega}
+\date{Enero 2026}
+\newcommand{\TemaCode}{3A40}
+
+\oldtitle{\textit{Tema nuevo}}
+\changerationale{Se introduce un tema sobre herramientas analíticas y la evidencia empírica de la efectividad de las políticas monetaria y fiscal; en especial después de que la crisis de 2008 haya hecho cuestionar varias premisas económicas que se creían ciertas.}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     
+     
+    }
+\vspace{1cm}
+
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+\clearpage
+\section{Política Fiscal y Política Monetaria: Interrelación}
+Estudiar la efectividad de la Política Fiscal y la Política Monetaria desde una perspectiva conjunta exige hacerse una pregunta anterior, ¿cñomo se interrelacionan entre ellas? ¿influye una sobre la otra y viceversa? 
+
+Para empezar empezar, debemos tener en cuenta que en la mayoría de Economías desarrolladas existen dos agentes que tienen (o pueden tener) una gran influencia sobre el comportamiento agregado y la salud de la economía: el Gobierno y la Autoridad Monetaria. Cada uno ostenta unas prerrogativas legales y cumple unas función en mayor o menor medida regladas. No obstante, la independencia juega un papel fundamental en el sistema y se proyecta desde dos perspectivas: (i) los objetivos de cada institución pueden estar alineados o no en un determinado momento, pero es imperativo que no exista comportamiento colusorio alguno que menoscabe la persecución de sus objetivos últimos;; y, (ii) esta interdependencia entre instituciones obliga a considerar las respuestas del otro en las acciones de uno mismo (rama de la literatura económica que estudia las ventajas e inconvenientes de un escenario de \textit{dominancia fiscal} o de \textit{dominancia monetaria}). Y, ¿cómo podemos ejemplificar lo anterior? La manera más sencilla es entendiendo las restricciones y funciones de reacción a las que se enfrenta cada uno:
+
+\eqblock{
+\begin{aligned}
+    \begin{aligned}
+        &\hspace{6em}\begin{aligned}
+            &\hspace{13em}\text{\textbf{GOBIERNO}}\\[1em]
+            &\text{RPG:}\qquad \underbrace{\underbrace{P_tG_t+iB_{t-1}}_{\substack{\text{\scriptsize Déficit Público}\\\text{\scriptsize (Conceptos)}}}=\underbrace{P_tT_t+(B_t-B_{t-1})}_{\substack{\text{\scriptsize Financiación y consecuencias macroeconómicas}}}+\underbrace{(M_t-M_{t-1})}_{\text{\scriptsize Aspectos Monetarios de la Financiación}}}_{\text{\scriptsize Dinámica de la Deuda y su Sostenibilidad}}\\[1em]
+            &\Longrightarrow\qquad \underset{\text{\scriptsize En términos \textbf{reales}. $e\equiv$ Ratio (efectivo)/(deuda); tenencia de dinero en manos del público}}{b_t=(1+\overbrace{i+\pi_t}^{{r_t}}-g_t)b_{t-1}+x_t-e\;\frac{m_t}{1+\pi_t}}
+        \end{aligned}
+        \\[1em]
+        &\rule{\displaywidth}{0.6pt}
+        \\[1em]
+        &\hspace{9em}\begin{aligned}
+            &\hspace{7em}\text{\textbf{AUTORIDAD MONETARIA}}\\[1em]
+            &\underset{\text{\scriptsize $\sim$ Regla de TAYLOR}}{\text{Función de Reacción (baseline):}}\qquad i_t=\delta\;\pi_t+\underbrace{v_t}_{\text{\scriptsize Shock monetario AR(1)}}\\[0.5em]
+            &\underset{\text{Operaciones Mcdo. Abierto (por ejemplo)}}{\text{Instrumentos cuantitativos ($BM_t\to M_{t,1}$):}}\qquad M_{t,1}=\frac{1+e}{e+r}BM_t\\[0.5em]
+        \end{aligned}
+    \end{aligned}
+\end{aligned}
+}{Restricciones de la Política Fiscal y de la Política Monetaria. Interrelación}
+
+Sobre las restricciones y objetivos que enfrentan estas dos instituciones construiremos nuestra exposición. Por ello, vamos a analizar brevemente sus componentes y como éstas se interrelacionan:
+\begin{la}
+    \item \textbf{Gobierno}. El Gobierno se compromete a la sostenibilidad fiscal del déficit público. ¿Esto que implica? Como vemos, la expresión está expresada en términos reales y, en consecuencia, el déficit público ($x_t$, positivo implica más gastos que ingresos) más el coste real de la deuda herededa ($(1+r_t-g_t)b_{t-1}$) debe ser igual a la emisión de deuda nueva y/o los ingresos obtenidos por el impuesto inflacionario (la disminución del valor real de las cantidades pasadas en virtud de la inflación experimentada). Ahora bien, el coste de la deuda herededa aumentará con la inflación y el tipo de interés, pues a partir de ellos se compone el interés real, ya que contrarrestarán el crecimiento real de la economía. También, la capacidad de monetizar el déficit se reducirá cuanto menor grado de inflación experimente la economía. Por tanto, la capacidad de incrementar el déficit se verá reducida a la capacidad de emitir deuda nueva: (i) cuánto más moderada sea la inflación; (ii) menor crecimiento real experimente la economía; y, (iii) más elevados sean los tipos de interés nominal (y, en consecuencia, el real); y, por otro lado;
+    \item \textbf{Autoridad Monetaria}. Sabemos que, históricamente, el objetivo principal de la Autoridad Monetaria ha sido el control de la inflación, de hecho, ha llegado a ganarse reputación de \textit{enemiga principal de ésta}. La Autoridad Monetaria cuenta con explícitamente con el Tipo de interés nominal dentro de su función de reacción, aversa al incremento de la inflación y, en cierto grado, a los shocks monetarios pasados. Por otro lado, ostenta la capacidad de alterar (expandir/contraer) los agregados monetarios a través de la expansión de la Base Monetaria y/o reducción de los coeficientes legales de reservas. Aunque, como sabemos, la capacidad de influir en los agregados monetarios se ha visto reducida a lo largo de los últimos cuarenta años debido a: (i) innovacinoes financiera; y, (ii) coeficientes de reserva superiores al mínimo.
+\end{la}
+
+Por tanto, ¿cómo se interrelaciona el comportamiento de estos agentes? Principalmente, a través del Tipo de Interés nominal. Ilustrémoslo con un ejemplo sencillo. Bajo el supuesto de control de la inflación cercano al objetivo y donde las expectativas de los agentes respecto a la capacidad de pago del Gobierno son sólidad, imaginémos que la economía esta experimentando un periodo de ligera desaceleración y el Gobierno decide ejecutar un programa de expansión de Gasto para volver a relanzar el crecimiento. Desde una perspectiva téorica, la dinámica sería la siguiente:
+
+\eqblock{
+\begin{aligned}
+    &\overset{\bar T}{\Longrightarrow}\;{\uparrow x_t}\;\Longrightarrow
+    \begin{cases}
+        \substack{
+        \text{Perspectiva}\\
+        \text{de costes}}:\quad \uparrow b_t\;\Rightarrow\;\uparrow i_t\\[2em]
+        \substack{
+        \text{Perspectiva}\\
+        \text{de impacto}}:\quad 
+        \begin{cases}
+            \overset{(\uparrow \text{tr}_t)}{\uparrow c_t}\\[0.5em]
+            \uparrow i_{G,t}^o
+        \end{cases}\;\Rightarrow\;\uparrow y_t\;\Rightarrow\;\underbrace{m_t^s<\left(\frac{m_t}{p_t}\right)^d}_{\text{\tiny Déficit de saldos reales: $\uparrow m_t^d$}}\;\Rightarrow
+        \begin{cases}
+            (\uparrow y_t\;\;\text{ERD})\quad \Rightarrow\;\uparrow c_t+\uparrow i^o_{P,t}\\[0.5em]
+            (\uparrow i_t\;\;\text{ES})\quad\Rightarrow\;\downarrow i_{P,t}^o+\downarrow c_t\\[0.5em]            
+        \end{cases}
+    \end{cases}\\[2em]
+    &\;\Rightarrow\;\text{¿}\uparrow\downarrow\;\text{?}\;\,y_t\;\Rightarrow\;\substack{\text{Autoridad}\\\text{Monetaria}}\;
+    \left\{\begin{aligned}
+        &\uparrow m_t^s+\bar i_t\;\Rightarrow\;
+        \begin{cases}
+            {(\pi_{t+1}-\pi_t>0)}\\
+            {(y_t-y_{t-1}>0)}\\
+            {((1+r_t-g_t)b_{t-1}\sim(1+r_{t+1}-g_{t+1})b_{t})}
+        \end{cases}\\[1em]
+        &\bar m_t^s+\uparrow i_t\;\Rightarrow\;
+        \begin{cases}
+            {(\pi_{t+1}\sim\pi_t)}\\
+            {(y_{t}\sim y_{t-1})}\\
+            {((1+r_t-g_t)b_{t-1}<(1+r_{t+1}-g_{t+1})b_{t})}
+        \end{cases}
+    \end{aligned}\right.
+\end{aligned}
+}{Actuaciones de la Política Fiscal y Política Monetaria: Activa o Pasiva. Interrelación}
+
+Con esta dinámica vemos claramente qué impacto tiene la Política Fiscal sobre la Política Monetaria, y vicerverversa. EL principal instrumento por el que la actuación de ambas instituciones se interrelaciona es el de los Tipos de Interés: los Tipos de Interes (o más bien su modificación) constituyen uno de las variables instrumentales convencionales, más utilizados para perseguir los objetivos de la Autoridad Monetaria, y a su vez inciden directamente tanto en la sostenibilidad de la deuda como en la solvencia del Gobierno, aumentando o disminuyendo los costes del déficit. Por ello, la consecución de unos u otros intereses generará circulos viciosos/virtuosos atendiendo a la reacción de cada uno de los agentes en respuesta a una acciónó del otro. De hecho, el carácter de lider o seguidor de cada una de las instituciones será el factor determinante para establecer si estamos ante Dominancia Fiscal y Dominancia Monetaria. 
+
+Pero, de la dinámica también observamos algunos fenómenos ambiguos, vemos como la Política Fiscal tiene efectos sobre el consumo, pero también sobre la inversión. Vemos también como el Efecto agregado de una Política Fiscal dependerá, en gran medida, de la composición de esta expansión (transferencias, impuestos o inversión, por citar algunos). Además, los efectos varían en función del marco temporal de análisis. Así que, ¿cómo podemos decir con seguridad el impacto real/nominal de una Política Fiscal y, en consecuencia, su efectividad? Este es precisamente un ámbito de análisis dentro de la Teoría Económica: la Teoría del Multiplicador del Gasto. Area que, además, ha suscitado un interés renovado en los últimos años (a raíz de la crisis financiera y la crisis de las puntocom) por razones que veremos al final. 
+
+\section{Multiplicador Fiscal: Marco Teórico}
+\puntosclave{
+    La política fiscal tiene efectos directos e indirectos sobre el producto que la teoría macroeconómica ha explicado de diversos modos.
+    
+    La teoría keynesiana explica los efectos del multiplicador fiscal por el lado de la demanda. La política fiscal afecta a la renta disponible y a través de la propensión marginal a consumir de los hogares extiende sus efectos a lo largo del tiempo.
+    
+    La teoría de los ciclos económicos reales explica los efectos del multiplicador fiscal por el lado de la oferta. Variaciones en las variables de política fiscal desencadenan efectos riqueza que alteran no sólo el consumo sino también la oferta de trabajo por parte de los hogares, alterando así la oferta agregada.
+    
+    Las teorías neo-keynesianas, partiendo de un marco microfundado, combinan los mecanismos de demanda y oferta de las teorías anteriores para explicar los efectos de la política fiscal.
+}
+
+
+\subsection{Multiplicador Fiscal: Modelo keynesiano básico}
+Empecemos revisando el marco teórico del multiplicador fiscal desde una perspectiva agregada, es decir, sin tener en cuenta la microfundamentación exigida en la construcción de modelos que expliquen el comportamiento agregado de la Economía, para ver sencilla e intuitivamente cómo opera el multiplicador fiscal. Partiremos de la descomposición del PIB desde el enfoque del gasto:
+
+\eqblock{
+\begin{aligned}
+    &Y=C+I+G\\[1em]
+    &\uparrow b_t\;\Longrightarrow\;\uparrow G\;\Longrightarrow\;
+\end{aligned}
+}{}
+
+Una Política Fiscal expansiva de aumento del gasto público ($\uparrow G$) tendrá efectos directos e indirectos sobre el producto:
+\begin{la}
+    \item \textbf{Efecto Renta Directo} (ERD). El efecto renta directo, o efecto en impacto, recoge el aumento del producto generado por el aumento del gasto público, tal y como muestra la ecuación anterior. Es decir, antes de que cualquier otra variable reaccione, un aumento de $\uparrow G$, genera un aumento de $\uparrow Y$, en impacto, es decir, un efecto directo por el mero incremento del gasto público: $\Delta Y=C+I+\Delta G$; y, también,
+    \item \textbf{Efecto Renta Indirecta} (ERI). El efecto renta indirecto se refiere al impacto que tendrá este incremento del gasto, habida cuenta de que otras variables dependen del nivel de renta: tanto el consumo privado como la inversión privada aumentarán debido al aumento de la renta. Estos cambios a su vez volverán a generar un aumento del producto y así sucesivamente (\textit{a priori}).
+\end{la}
+
+Ahora bien, ¿es este supuesto realista? Existe un mecanismo virtuoso a través del cual los Gobiernos pueden inducir indefinidamente el crecimiento económico a través del incremento constante del Gasto Público (en términos nominales). \textit{A priori}, parece demasiado excesivo y es precisamante porque existen algunas limitaciones evidentes.
+
+\subsubsection{Capacidad de absorción: Apertura económica}
+En primer lugar, consideremos el caso de economías abiertas. ¿Podría presumirse que todo el incrmento del Gasto quedaría circunscrito a las fronteras nacionales? De hecho, ¿existe alguna economía con total capacidad de absorción? 
+
+Lo habitual es precisamente lo contrario. Sería de esperar que aumentos en la renta se viesen atenuados por el aumento de las importaciones, dependientes estas (en gran medida) del nivel de renta. Por ello, es de esperar que los multiplicadores fiscales sean menores en economías abiertas, en particular: (i) cuanto mayor sea la propensión marginal a importar; y/o, (ii) de forma equivalente, cuanto mayor sea la elasticidad renta que presenten las importaciones. 
+
+De hecho, la evidencia empírica parece indicar que cuanto mayor es el grado de apertura de la economía, mayor será la pérdida de cualquier impulso fiscal vía importaciones. Esto es lo que se conoce como \textbf{los efectos desbordamiento de la Política Fiscal entre países} (similares, conceptualmente, a los efectos desbordamiento del crecimiento económico).
+
+Por otro lado, atendiendo a lo que hemos expuesto antes, ¿no encarecería la emisión de deuda la senda de gasto que presenta la economía? Dicho de otra forma, ¿no incide este aumento de Gasto en el Tipo de Interés?
+
+\subsubsection{Interrelación con la Política Monetaria: Tipo de Interés}
+Esta constituye otra de las limitaciones más evidentes a la hora de intentar explotar las supuestas virtudes de este círculo virtusoso teórico. Sin embargo, cabe hacer un apunte al respecto. La mayoría de economías desarrollados mantuvieron un sistema de Dominancia Fiscal hasta finales de los años 70's (con excepciones muy particulares, como Alemania y Canada, entre otras). Periodo donde se inició una progresiva separación entre Gobierno y Bancos Centrales que se consolidaría entre los años 80's y 90's. Por esta razón, no debe extrañar que lo que ahora expondremos se entienda contrario al problema de compatibilidad de objetivos presentado al inicio.
+
+Dentro del marco expuesto, la acción en términos de Política Monetaria viene condicionada por la elasticidad que presente la demanda de dinero por parte de los agentes respecto al Tipo de Interés. Dicho de otra forma, cuán efectiva sea la Autoridad Monetaria de influir sobre el Tipo de Interés y cuánta preferencia presenten los agentes por la tenencia de dinero. En síntesis, cuánto déficit de saldos reales deba y pueda generar un incremento del Gasto Público. Introduciendo esto analíticamente en el Multiplicador de Gasto, tendríamos la siguiente fórmula:
+
+\eqblock{
+\begin{aligned}
+    &\hspace{18em}\boxed{\uparrow g_t\iff\uparrow b_t}\\[2em]
+    &\text{\scriptsize $
+    \begin{aligned}
+        &\begin{aligned}
+            &\hspace{5em}\text{\textbf{KEYNESIANISMO}}\\[1em]
+            &\overbrace{m_t^d(y_t,i_t)}^{\text{\scriptsize$m_t^D=k\;[m_t^T(y_t)+m_t^P(y_t)]+h\;m_t^E(i_t)$}}\;\Rightarrow\;
+            \begin{cases}
+                \frac{\partial m_t^d}{\partial y_t}=k>0\\[0.5em]
+                \frac{\partial m_t^d}{\partial i_t}=h<0\quad \text{\scriptsize(volátil)}
+            \end{cases}\\[0.5em]
+            &\hspace{9em}\Downarrow\\[0.5em]
+            &\underbrace{m_t^s\sim\left(\frac{m_t^d}{\bar{p_t}}\right)}_{
+            \left\downarrow\substack{
+                \text{\scriptsize Motivo}\\
+                \text{\scriptsize \textbf{especulación} ($E$)}}\right.
+                \;\Rightarrow\;
+                \left.\substack{\text{\scriptsize Motivo \textbf{precuación} ($P$)}\\
+                \text{\scriptsize y \textbf{transacción} ($T$)}}\right\uparrow}
+                \;+\;\underbrace{i_t=i(\substack{\text{\scriptsize animal}\\\text{\scriptsize spirits}})}_{i_t\sim i_{t-1}}\\[0.5em]
+                &\hspace{9em}\Downarrow\\[0.5em]
+                &\text{Eq}:\qquad \uparrow y\;+\;\uparrow c\;+\;\underbrace{
+                \begin{cases}
+                    \uparrow i_{P}^o\\[0.5em]
+                    \sim i_{P}^o
+                \end{cases}
+                }_{\text{\scriptsize Depende gasto}}\;+\underbrace{\uparrow\uparrow y_t}_{\text{\scriptsize $\cdots$ hasta $\uparrow P$}}
+        \end{aligned}
+        &&\left|\hspace{1em}\begin{aligned}
+            &\hspace{7em}\text{\textbf{MONETARISMO}}\\[1em]
+                &\underbrace{m_t^d=\left(\frac{M_t}{P_t}\right)^d}_{\text{\scriptsize No ilusión monetaria}}=m(y^P,i_t,r_K,\dots)\;\Rightarrow
+                \begin{cases}
+                    \frac{\partial m_t^d}{\partial y^P}=>0\\[0.5em]
+                    \frac{\partial m_t^d}{\partial i_t}<0\\[0.5em]
+                    \frac{\partial m_t^d}{\partial r_t^K}<0
+                \end{cases}\\[1em]
+                &\hspace{10.5em}\Downarrow\\[1em]
+                &\hspace{3em}\left(\begin{aligned}
+                    &\overbrace{\underbrace{m_t^s\leq\left(\frac{m_t^d}{\bar{p_t}}\right)}_{
+                    \left\downarrow
+                    \substack{
+                        \text{\scriptsize Motivo}\\
+                        \text{\scriptsize \textbf{especulación} ($E$)}}
+                    \right.
+                    \;\not\Rightarrow\;
+                    \left.
+                    \substack{
+                        \text{\scriptsize Motivo \textbf{precuación} ($P$)}\\
+                        \text{\scriptsize y \textbf{transacción} ($T$)}}
+                    \right\uparrow}}^{\text{\scriptsize Recomposición de cartera}}
+                \;\Rightarrow\;\uparrow i_t\\[1em]
+                &\hspace{7em}\;+\;\\[1em]
+                &\hspace{2em}i_t=i(r_K, r_A,\pi^e,\cdots )\;\Rightarrow\uparrow i_t
+                \end{aligned}\right)\\[1em]
+                &\hspace{10.5em}\Downarrow\\[1em]
+                &\text{Eq}:\qquad \uparrow y\;+\;\uparrow c\;+\downarrow\downarrow i_{P}^o(\uparrow i_t)\;\Rightarrow\;\sim y_t
+        \end{aligned}\right.
+    \end{aligned}
+    $}\\[1em]
+    &\hspace{20.5em}\Downarrow\\[1em]
+    &\hspace{15.5em}\boxed{\alpha_{G,t}=\frac{1}{(1-c)(1-b\;\frac{k}{h})}}
+\end{aligned}
+}{Modelo IS-LM: Tipo de Interés. Multiplicadores Fiscales}
+
+Las interacciones de la Política Monetaria en el modelo IS-LM afectan al multiplicador a través de las elasticidades de la inversión a variaciones del tipo de interés ($b$), y a las elasticidades de la demanda de saldos reales respecto al producto ($k$) y al tipo de interés ($h$):
+\begin{la}
+    \item \textbf{Tipo de Interés fenómeno monetario}. Desde la óptica keynesiana clásica, el Tipo de Interés dería un fenómeno monetario, por lo que los agentes tienen muy presente el riesgo que supone ostentar los títulos de deuda del estado. No obstante, estarían dispuestos a aumentar su tenencia amortizando dinero del que disponen como depósito de valor. Esta reducción y aumento, financiaría el gasto del Estado que tendría un impacto doble: (i) aumento del consumo, aumento de la renta y estabilidad de la demanda de dinero; (ii) efecto \textit{crowding-out} parcial o nulo, en función de la variación en los tipos de interés nominal (que se explicita, no sufrirán mucha variación); y, por otro lado,
+    \item \textbf{Tipo de Interés fenómeno real}. Si el Tipo de Interés nominal es un fenómeno real, puesto que viene marcado por la diversificación y distribución de los valores en cartera de los agentes, que ponderan también los rendimientos reales y otros activos, experimentariamos un aumento de la renta actual con su impacto positivo en el consumo, pero seguidamente el aumento del tipo de interés provocaría un efecto \textit{crowding-out} total que compensaría los efectos expansivos de la Política Fiscal.
+\end{la}
+
+Cabe destacar que ambos enfoques estaban decididamente convencidos en que la opción óptima era la monetización del déficit, pues dotaba a la Política Fiscal de mayor efectividad. Sin embargo, por estar esta situación, aparentemente, obsoleta, obviaremos las consideraciones y efectos relativos a la monetización del déficit. Lo que sí resulíta ilustrativo es que, salvando las distancias, ambos enfoques parecen indicar que la actuación de la Política Monetaria debería ser, en cierta medida, acomodaticia (no expansiva, pero si acomodar la actuación de la Política Fiscal si se ejecuta), de manera que una posible subida de Tipos de Interés no disuelva ningún posible efecto \textbf{crowding-out} (parcial o completo) que pueda acarrear la Política Fiscal.
+
+De igual forma, ambos enfoques tienen en cuenta una noción básica que no sería formalizada hasta más adelante: la importancia de las creencias/expectativas de los agentes. ¿Cómo se podemos verlo? Desde el punto de vista keynesiano, los \textit{animal spirits} que guían al mercado financiero (su concepción de cuasi-probabilidad), puede interpretarse (salvando de nuevo las distancias) como las creencias de los agentes sobre el comportamiento futuro del mercado. Desde el punto de vista del monetarismo, la posibilidad de acomodar la Política Fiscal por parte de la Autoridad Monetaria se ve directamente condicionada por las expectativas inflacionistas de los agentes. En definitiva: es imperativo que los agentes esperen que este gasto tenga un impacto real en la economía y cumpla la condición de sostenibilidad del déficit. 
+
+Además, considerados individualmente, cada uno de los multiplicadores presentados aquí miden los efectos de políticas fiscales financiadas con deuda/monetización. Sin embargo, los gobiernos pueden llevar a cabo políticas fiscales de presupuesto equilibrado. Un ejemplo sería un aumento del gasto público financiado con impuestos, es decir, $\Delta G=\Delta T$. En este caso, parte del impulso inicial sobre la renta se pierde al aumentar los impuestos, ya que éstos reducen la renta disponible de los hogares. El tamaño del multiplicador fiscal en este caso se reduce a 1. De igual modo, bajo este enfoque, es fácil comprobar que una política fiscal expansiva de aumento de las transferencias financiada con un aumento de los impuestos no generaría ningún efecto sobre el consumo ni sobre la renta, resultando en un multiplicador fiscal igual a $0$ (por la propensión marginal a consumir). 
+
+\subsubsection{Estabilizadores automáticos: Balance estructural}
+Este último elemento, nos permite introducir uno de los elementos básicos de la estabilización del ciclo dentro del multiplicador de gasto: los \textbf{estabilizadores áutomaticos}. Los estabilizadores automáticos son mecanismos que operan en la economía y que reducen las fluctuaciones del producto. Entre los estabilizadores automáticos encontramos, por ejemplo, los impuestos indirectos sobre el consumo y las prestaciones/subsidios por desempleo. A partir de la ecuación anterior, introduciendo impuestos proporcionales, ($T=tY, \text{con}\;\; 0<t<1$), generaríamos los siguientes multiplicadores:
+
+\eqblock{
+\begin{aligned}
+    \text{Impuestos proporcionales y Transferencias de Suma Fija}\\[2em]
+    {\begin{aligned}
+        \left.\begin{aligned}
+            \alpha_{G}=\frac{1}{1-c(1-\tau)+b\;\frac{k}{h}}
+        \end{aligned}\hspace{2em}\right|
+        \hspace{2em}\begin{aligned}
+            \alpha_{TR}=\frac{c}{1-c(1-\tau)+b\;\frac{k}{h}}
+        \end{aligned}
+    \end{aligned}}
+\end{aligned}
+}{Estabilizadores automáticos: Impuestos Indirectos y Transferencias. Multiplicador Fiscal}
+
+Como vemos, algunos de los estabilizadores automáticos más importantes menoscaban el efecto de los multiplicadores; pero consiguen suavizar las fluctuaciones e impacto del ciclo económico. 
+
+\subsubsection{Limitaciones}
+Si bien el enfoque presentado proporciona la intuición básica para entender los efectos de la política fiscal en la macroeconomía y cómo medirlos, tiene serias limitaciones:
+\begin{lnum}
+    \item \textbf{Demanda}. En primer lugar, se centra únicamente en las implicaciones por el lado de la demanda. Sin embargo, variaciones de los impuestos, por ejemplo, tienen fuertes implicaciones en la oferta de bienes a través del empleo, un aspecto ausente en este modelo;
+    \item \textbf{Microfundamentación}. En segundo lugar, y quizás la más relevante, el modelo presentado no tiene en cuenta las decisiones prospectivas de los agentes. Es decir, el comportamiento de los agentes se considera exógno (parametrizado, no optimizador) y determinado de una forma estrictamente lineal, sin que puedan alterar sus decisiones en función de las expectativas futuras que estos forman, más allá de las dinámicas de ajuste expresadas.
+\end{lnum}
+
+En virtud de estas críticas y a raíz de la conocida crítica de LUCAS y la consecuente revolución metodológica que supuso para la ciencia económica, surgieron varias aportaciones muy importantes en relación al análisis teórico de la efectividad e interrelación de la Política Monetaria y Fiscal.
+
+\subsection{Multiplicador Fiscal: Teorúa de Ciclos Reales (NMC)}
+Una de las primeras fue la Teoría de los Ciclos Económicos Reales (CER), prevalente en los años 80's.\footnote{Los principales modelos de referencia encuentran multiplicadores fiscales positivos pero menores que uno, en claro contraste con las predicciones anteriores del modelo keynesiano (BARRO, 1990; BAXTER y KING, 1993; BUMSIDE, EICHENBAUM y FISHER, 2004, por citar algunos ejemplos).
+} 
+
+Bajo un marco de:
+\begin{lnum}
+    \item \textbf{Modelo de Horizonte Ininfito}. Optimización dinámica con altruismo intergeneracional;
+    \item \textbf{Equilibrio dinámico}. Vaciamiento continuo de mercados (Equilibrio General);
+    \item \textbf{Ausencia de rigideces nominales o reales}. Perfecta flexibilidad de variables nominales y ausencia de rigideces reales;
+    \item \textbf{Hipótesis de Expectativas Racionales e información perfecta}. Y, con agentes que forman sus expectativas en base a la HER e información perfecta.
+\end{lnum}
+
+Estos autores concluyen que las Políticas Fiscales financiadas con déficit generan unos efectos sustitución intertemporales en el consumo y oferta de trabajo de los hogares que pueden llegar a anular e incluso alterar el signo del cambio en el producto. Véamos por qué.
+
+\subsubsection{Equivalencia Ricardiana: Política Fiscal expansiva (ejemplo)}
+Consideremos un aumento del gasto público financiado con déficit. Este cambio implica una mayor deuda pública que habrá que pagar en el futuro.
+
+\eqblock{
+\begin{aligned}
+    &\uparrow g_t\;\Longrightarrow\;
+    \begin{cases}
+        E[x_{t+s}<0\;|\;\Omega_t]\\[0.5em]
+        S_N=\downarrow S_G+\uparrow S_P\\[0.5em]
+        \text{Efecto Riqueza}<0
+    \end{cases}\;\Longrightarrow\;
+    \begin{cases}
+        \uparrow s_t^P\\[0.5em]
+        ¿?\;\; i_t^o
+    \end{cases}\;\Longrightarrow\; \downarrow c_t\\[1em]
+    &\text{ER}<0\;\Longrightarrow\;\underbrace{\uparrow l_t}_{\text{\scriptsize$\frac{PMg_L}{PMg_K}=\frac{w}{\uparrow r}\to \frac{PMg_L}{\downarrow w}\sim\frac{PMg_K}{\uparrow r}$}}\;\Longrightarrow\;\underbrace{\uparrow y_t}_{\text{\scriptsize$\frac{\partial Y}{\partial L}>0$}}
+\end{aligned}
+}{Efectos de una Política Fiscal expansiva: Marco de la NMC. Multiplicadores de Gasto}
+
+Como vemos, el impacto de una Política Fiscal expansiva en una economía con estas especificaciones es díficil de cuantificar.\footnote{El análisis de BARRO (1974) también indica que la equivalencia ricardiana se puede dar cuando los individuos tienen un horizonte finito pero están motivados por una forma especial de altruismo intergeneracional (altruismo dinástico). Según este altruismo dinástico, los individuos tienen preocupaciones altruistas por sus hijos, quienes a la vez tienen sentimientos altruistas por sus hijos, y así sucesivamente. De esta forma a través de las dinastías los sentimientos altruistas se enlazan a lo largo del tiempo a través de transferencias intergeneracionales, anulando cualquier intento por parte del gobierno de redistribuir recursos entre generaciones.
+} El incremento del gasto público conduce a los agentes a reducir su consumo actual en vistas de poder disfrutar de un consumo futuro (sin desahorro forzoso por incremento de impuestos), este efecto riqueza negativo afecta a la oferta de trabajo ya que los hogares deciden renunciar a su ocio para trabajar más. Esta mayor oferta de trabajo aumenta el producto pues las empresas contratan más trabajo para satisfacer la mayor demanda por parte del sector público, lo que conduce a una disminución de los salarios reales debido al aumento en el corto plazo de la productividad marginal (se produce en fase extensiva en trabajo). La inversión puede aumentar o disminuir dependiendo de la persistencia del estímulo fiscal. 
+
+Además, este enfoque resalta la diferencia entre variaciones temporales frente a permanentes de las variables fiscales. El mecanismo subyacente es la hipótesis de la renta permanente. En este sentido, las decisiones de los agentes de consumo e inversión no responden significativamente ante cambios transitorios de la renta disponible. Por lo tanto, cambios temporales o transitorios de los impuestos, gasto público o transferencias, en tanto en cuanto generan variaciones pequeñas en la restricción presupuestaria intertemporal de los agentes, no producen cambios importantes en el consumo. Por el contrario, variaciones permanentes de las variables fiscales sí.
+
+\subsubsection{Implicaciones de Política Económica}
+No obstante, en términos de Política Económica, el modelo de CER indica que, ante una Política Fiscal expansiva:
+\begin{lnum}
+    \item \textbf{Sustución intertemporal de consumo-trabajo}. Los agentes, \textit{ricardianos},\footnote{Podemos definir a los consumidores ricardianos como aquellos que tienen un horizonte de decisión infinito e internalizan los cambios presentes en su restricción presupuestaria. Para estos consumidores se cumple la equivalencia ricardiana, según la cual una reducción de los impuestos no altera el consumo de los h ogares porque éstos anticipan que esta reducción de los impuestos actuales vendrá seguida de aumentos en los impuestos futuros del mismo valor presente. Este resultado establecido por David Ricardo se retomó por Barro ( 1974) ) se cumple siempre y cuando los impuestos sean de suma fija. los mercados de capitales sean perfectos y todos los individuos tengan un motivo altruista (Barsky et al .. 1986)
+    } son conscientes de que el Gobierno aumentará su recaudación en el futuro para hacer frente a los niveles de deuda emitida. Por tanto, como prevén que en el futuro la política fiscal será contractiva para compensar este déficit actual, deciden ahorrar más en el presente por motivo de este efecto riqueza negativo, anulando así cualquier impacto expansivo sobre la renta por el lado de la demanda. Además, variaciones en el tipo de interés por la mayor demanda generada por un mayor consumo público, provocan un aumento del ahorro y una caída del consumo presente a favor de mayor consumo futuro. Esta caída del consumo puede llegar a anular losefectos expansivos de la política fiscal;
+    \item \textbf{Efecto crowding-out indeterminado}. La identidad contable del ahorro nacional implica que un aumento del consumo público necesariamente debe conllevar un aumento del tipo de interés real (en el modelo sólo se concibe éste), este aumento del Tipo de Interés afecta negativamente a la inversión. Sin embargo, el aumento del consumo público y el aumento en el corto plazo de la productividad marginal del capital afectan positivamente a la inversión, por lo que el efecto crowding-out queda indeterminado;
+    \item \textbf{Aumento del producto (Oferta)}. Los trabajadores estarán dispuestos a aceptar salarios reales más bajos puesto que el cociente de productividades marginales (tras el incremento del tipo de interés) ya se ha desplazado del óptimo. No obstante, como la productividad marginal del trabajo sigue siendo positiva (por la Función de Producción de tipo COB-DOUGLAS), la política fiscal expansiva aumentará el producto a través del incremento del trabajo.
+\end{lnum}
+
+De esta forma, el modelo de CER predice multiplicadores del gasto público positivos (y de los impuestos negativos) pero menores que los multiplicadores keynesianos y sobre todo, generados por un mecanismo de oferta. 
+
+\subsubsection{Limitaciones}
+Sin embargo, cuando se confrontan con la evidencia empírica, la literatura aporta una serie de trabajos que predicen aumentos del consumo y de los salarios reales ante un estímulo fiscal, lo cual implica multipl icadores del gasto público mayores que uno (RAMEY, 2011). Además, estos autores no incorporan al modelo otra institución clave en la economía, la Autoridad Monetaria, por tanto, no solo no se puede cuantifcar ni valorar los efectos de la interrelación en las Políticas Económicas, sino que el sector nominal no existe en esta economía por lo que el dinero \textbf{super-neutral} y las expectativas inflacionistas o el Tipo de Interés nominal no tienen influencia en el proceso de decisión de los agentes. 
+
+También cabe recordar que las predicciones del modelo keynesiano básico se basan en un mecanismo de demanda agregada (DA) ausente en el modelo de CER: la existencia de precios rígidos hace que las empresas ajusten cantidades y no sólo precios ante un estímulo fiscal. 
+
+Por ello, con el fin de aproximar las predicciones teóricas a los datos, muchos investigadores abogan por incorporar rigideces nominales con el fin de abrir la puerta al mecanismo de DA.
+
+\subsection{Multiplicador Fiscal: NEK-2}
+Esta es precisamente la piedra angular de los modelos de la NEK-2, cuyas defensa al uso activo de la Política Económica (monetaria y fiscal) y aportaciones relativas a la microfundamentación de modelos macroeconómicos en presencia de rigideces reales y nominales volvieron a poner de manifiesto la importancia de la Política Fiscal a lo largo del ciclo económico, y en particular, el concepto del multiplicador fiscal, a mitad de los años 90's. 
+
+El modelo básico de la NEK-2 se basa en un mecanismo de demanda agregada (DA). Según este mecanismo:
+\begin{la}
+    \item \textbf{Rigideces nominales}. Por el lado de las rigideces nominales, la existencia de precios rígidos hace que las empresas ajusten cantidades y no sólo precios, potenciando los efectos de la política fiscal en el tiempo. Además, muchos autores incorporan también rigideces en el mercado de trabajo para acercar el modelo a las predicciones empíricas;
+    \item \textbf{Rigideces reales}. Por el lado de las rigideces reales, entre otras, la existencia de imperfecciones en los mercados de crédito\footnote{Por rigideces reales entendemos no sólo las imperfecciones en los mercados de crédito sino también los costes de aj uste de las carteras de activos. de la inversión, etc ... , complementariedades estratégicas en los precios, rigideces de salarios reales, así como fricciones en el mercado de trabajo. En general. rigideces reales son todos aquellos factores que limitan la respuesta en términos de cambios en los precios de las empresas ante variaciones del producto debidas a cambios en la demanda (Romer. 2008). De esta forma, se amplifica la respuesta del producto ante perturbaciones exógenas.
+} impiden a los individuos prestar y pedir prestado cuando necesitan, menoscabando la eficiencia (vaciamiento) continuo de los mercados sobre los que se construye la Teoría de CER.
+\end{la} 
+
+Sin embargo, aún es necesario incorporar otro mecanismo clave para reproducir los efectos de la Política Fiscal que vemos en los datos: es importante permitir agentes cuya propensión marginal a consumir ante cambios temporales sea alta.\footnote{
+El modelo de CER asume individuos para los cuales se cumple la hipótesis de la renta pennanente. Según esta hipótesis, el consumo de los hogares se puede explicar principalmente por la renta pennanente, es decir, cambios transitorios en la renta de los hogares no tienen a penas ningún efecto sobre el consumo. Esta hipótesis, sin embargo, no se ve refrendada en los datos en el momento que incorporamos mercados incompletos e imperfectos. Por ello, es importante incorporar desviaciones de la hipótesis de la renta permanente, permitiendo distintas propensiones marginales a consumir en los agentes. 
+} Uno de los principales trabajos en esta área es GALÍ et al. (2007), donde los autores incorporan dos tipos de agentes:
+\begin{la}
+    \item \textbf{Ricardianos/Optimizadores}. Por un lado, agentes ricardianos que optimizan teniendo en cuenta su restricción presupuestaria intertemporal; y,
+    \item \textbf{No-Ricardianos}. Por otro lado, individuos cuyo consumo se determina por una regla \textit{ad-hoc} en función de su renta disponible (consumidores rule-of-thumb o hand-to-mouth), concretamente, presentan una mayor propensión marginal a consumir de su renta actual.
+\end{la}
+
+Estos últimos agentes son los que incorporan las rigideces reales garantizando un mayor efecto del multiplicador fiscal y con este marco, los multiplicadores del gasto público sobre el PIB se sitúan en torno a $1$ en impacto y mayores que $1$ tras dos años. En cuanto al multiplicador del gasto público sobre el consumo, las simulaciones muestran siempre valores positivos, cercanos a cero en impacto, pero cercanos a $1$ pasados $2$ años.
+
+\subsection{Multiplicador Fiscal: Determinantes}
+Hasta ahora hemos presentado los principales desarrollos teóricos respecto a la Política Fiscal, sus efectos y su interrelación con la Política Monetaria. También hemos introducido el concepto de Multiplicador de Gasto y hemos visto como nos proporciona información muy relevante sobre el impacto de la Política Fiscal, los efectos que esto genera sobre las decisiones de los agentes y la economía y como se proyecta en el tiempo su impacto. Ahora bien, estos desarrollos teóricos son limitados y constreñidos a un marco metódico muy particular, por lo que se ven impedidos de incorporar muchos de los determinantes que (\textit{a priori}) podríamos considerar válidos, y que inciden tanto en la efectividad como en la interrelación de la Política Económica. 
+
+¿Cuáles son estos determinantes? ¿Cómo inciden en el Multiplicador de Gasto? En general, el tamaño y la duración del multiplicador fiscal dependen de un amplio conjunto de factores.
+
+\subsubsection{Marco económico: Coyuntural}
+Desde una perspectiva económica, los efectos de la Política Fiscal y su cuantificación a través del Multiplicador de Gasto difieren enormemente en función de la fase del ciclo en la que nos encontremos. Es por ello que debemos entender cuál es el momemento óptimo en la que la Política Fiscal debe actuar, cómo afecta la situación/contexto económico a su efectividad y durante cuánto tiempo debe esta insuflar aire a la economía. 
+
+\paragraph{Fase del Ciclo: ¿Procilicidad o Contraciclicidad?}
+Como hemos visto, la existencia de estabilizadores automáticos, por su propio carácter suavizan las fluctuaciones del producto, por lo que tienden a reducir el tamaño de los multiplicadores fiscales.\footnote{
+BATINI et al. (2014) y DOLLS et al. (2012) son algunos de los trabajos que abordan este punto. 
+}
+
+No obstante, la Política Fiscal puede, en función de la fase del ciclo, actuar de manera más o menos intensa. ¿Cómo debería hacerlo? En primer lugar, debemos comprender que al igual que ocurre con la política monetaria, la política fiscal no tiene efectos simétricos. Es decir, no tienen los mismos efectos políticas fiscales expansivas que políticas fiscales contractivas. 
+
+BAMICHON, DEBORTOLI y MATTHES (2022) encuentran que los efectos del multiplicador fiscal contractivo sobre el PIB son mayores (y mayores que $1$) que los expansivos (alrededor de $0.5$). Al mismo tiempo estos autores indican que los multiplicadores difieren entre expansiones y recesiones. Los autores argumentan dos posibles razones:
+\begin{lnum}
+    \item Por un  lado, los agentes que sufren restricciones de crédito consumen una mayor parte de su renta actual;
+    \item Por otro lado, la existencia de rigideces de precios y salarios impiden el vaciado de los mercados ante cambios en la oferta y la demanda, manteniendo el desajuste en cantidades tanto tiempo como dure la rigidez. 
+\end{lnum}
+
+En ambos casos, el efecto multiplicador sobre el producto es mayor. Además, la literatura prece coincidir en que Políticas fiscales expansivas pueden generar un mayor impacto en el PIB durante recesiones que durante expansiones, ya que en épocas de crisis los tipos de interés son bajos y hay más margen de mejora, por lo que los efectos expulsión que se puedan dar son menores.\footnote{
+AUERBACH y GORODNICHENKO, 2012; NAKAMURA y STÉINSSON, 2014; HERNÁNDEZ DE COS y MORAL-BENITO, 2016
+}
+
+\paragraph{Duración de la intervención: ¿transitorio o persistente?}
+Cambios permanentes de los impuestos pueden generar resultados muy distintos de cambios transitorios. Estas diferencias surgen cuando consideramos un horizonte largo de toma de decisiones para los agentes. Entran en juego entonces los efectos renta y sustitución, en ocasiones con efectos sobre el PIB en sentido contratio. 
+
+COENEN et al. (2012) ofrecen un análisis sobre los efectos de shocks fiscales persistentes. La razón por la que shocks más persistentes pueden llegar a tener un menor efecto se debe no sólo al efecto riqueza negativo, sino también a que si genera más inflación, y el banco central responde aumentando los tipos de interés, se reducirá el efecto sobre la demanda agregada.
+
+\paragraph{Componentes del Gasto Público: Formación de capital o Transferencias}
+Concretamente respecto al multiplicador del gasto público, su tamaño difiere de si se trata de gasto público productivo o no. Por ejemplo, cuando el gasto público no es productivo (consumo público), los efectos de políticas fiscales expansivas operan a través de la demanda agregada: mayor demanda, mayores tipos de interés, menor consumo e inversión. Cuando el gasto público es productivo, una política fiscal expansiva aumenta la productividad de otros factores productios (capital y trabajo). Esta mayor productividad afecta positivamente a la inversión privada, generando un efecto inclusión (crowding-in). El papel productivo del gasto público en algunos modelos como generador de crecimiento altera sustancialmente el tamaño del multiplicador (Canova y Pappa, 2021 ).
+
+\paragraph{Mercados Reales: Imperfectos y Abiertos}
+En economías con precios rígidos, los efectos de los multiplicadores sobre las cantidades son mayores. De igual forma, la existencia de rigideces reales que ralentizan la respuesta de la inversión y el consumo a variaciones del tipo de interés tienden a favorecer mayores multiplicadores. Este tipo de mecanismos son los que encontramos en modelos neo-keynesianos (por ejemplo, Galí et al., 2007; Ravn et al., 2007). Cuanto mayor sea el grado de rigideces nominales (precios y salarios) o reales (costes de ajuste o fricciones en el mercado de trabajo) menor será la respuesta de los precios y la oferta ante cambios en las variables fiscales y por lo tanto, mayores serán los multiplicadores fiscales.
+
+El grado de apertura y régimen de tipo de cambio. Cuanto mayor el grado de apertura de la economía, mayor pérdida de cualquier impulso fiscal vía importaciones. Asimismo, una economía con tipo de cambio fijo genera mayores multiplicadores. Aquí también podemos incluir los efectos desbordamiento de la política fiscal entre países (Auerbach y Gorodnichenko, 2013; Cacciatore y Traum, 2020; 1 lzetzki et al. 20 1 3 ).
+
+\subsubsection{Marco Institucional}
+Por otro lado, no debemos menoscabar la incidencia que puede tener el marco legal/institucional a través del que opera la Política Fiscal en la efectividad última de ésta en incidir sobre la economía real y alcanzar los objetivos planteados.
+
+\paragraph{Financiación, Instrumentos y Sostenibilidad}
+Sobre la financiación del Gasto Público, cabe destacar que la literatura acostumbre a coincidir en que aumentos del gasto público financiados con déficit tienen efectos menos expansivos que un aumento del gasto público financiado con impuestos. (KRAAY, 2012).
+
+Por otro lado, en función del instrumento de política fiscal seleccionado, los efectos finales sobre las variables macroeconómicas diferirán lo que nos lleva a distinguir, entre otros, los diferentes multiplicadores que hemos visto: (i) el multiplicador del Gasto Público (consumo e inversión pública); (ii) el multiplicador de los Impuestos; y/o, (iii) o el multiplicador de las Transferencias. 
+
+Las diferencias entre los multiplicadores surgen de los diversos mecanismos que cada instrumento de Política Fiscal desencadena sobre la oferta y la demanda:
+\begin{la}
+    \item \textbf{Enfoque keynesiano}. ANDRÉS y DOMÉNECH (2013) encuentran valores del multiplicador medio sobre el PIB entre $0,5$ y $1$ dependiendo de qué instrumento fiscal se emplee. En una breve revisión de la literatura, estos autores encuentran que las propuestas con un punto de vista keynesiano ofrecen valores del multiplicador mayores que $1,5$. Según estas teorías, el impulso fiscal afecta principalmente por el lado de la demanda (gasto público, renta disponible) y abogan por un uso activo de estímulos fiscales en el corto plazo. Por ejemplo, variaciones en el gasto público afectan directamente a la demanda agregada y su efecto será mayor que el de los impuestos ya que estos últimos entran vía la renta disponible de los agentes;
+    \item \textbf{Enfoque no-keynesiano}. Por otro lado, la escuela que enfatiza factores por el lado de la oferta encuentra multiplicadores fiscales menores que $1$, y en ocasiones negativos. Según este enfoque, los cambios fiscales generan efectos riqueza que afectan a la oferta de trabajo y por extensión a la oferta de producto.
+\end{la}
+
+\paragraph{Transparencia y Proceso de aprobación: Anticipación y retardos}
+En ocasiones, políticas fiscales expansivas previamente anunciadas no tienen los efectos expansivos esperados, precisamente porque los agentes reaccionan antes de que se implemente la política. Por ejemplo, MERTENS y RAVN (2008) analizan en detalle los efectos de reducciones de los impuestos anticipados y no anticipados para Estados Unidos y muestran que:
+\begin{la}
+    \item \textbf{No anticipadas}. Las subidas no anticipadas de los impuestos tienen un efecto negativo y persistente sobre el producto;
+    \item \textbf{ANticipadad}. Si son anticipados, el efecto es positivo antes de la implementación, ya que los individuos anticipan la subida de impuestos. Esto genera un efecto riqueza negativo que aumenta la oferta de trabajo y la productividad marginal del capital. En consecuencia, aumenta el producto y la inversión. Una vez implementada la subida de impuestos, el efecto sobre el producto se vuelve de signo negativo.
+\end{la}
+
+Por otro lado, a diferencia de la política monetaria, la política fiscal muestra retardos notables en su implementación. Este punto está muy ligado a los efectos de la anticipación o no de la Política Fiscal, ya que desde el anuncio de la política hasta que finalmente se lleve a cabo la medida, los agentes puedne anticipar sus efectos, llegando a anular los objetivos inicialmente planificados cuando éstos finalmente se lleven a cabo: retardos en políticas fiscales que se anuncian previamente desencadenan una serie de efectos antes de su implementación que pueden alterar considerablemente los efectos inicialmente buscados por el shock fiscal.  
+
+Por ejemplo, LEEPER, WALKER y YANG (2008) analizan las implicaciones econométricas de este aspecto que califican como previsión fiscal (\textit{fiscal foresight}). Según estos autores se trata del fenómeno que hace que los retardos legislativos y de implementación envíen señales claras al sector privado sobre los tipos impositivos que estarán vigentes en el futuro. 
+
+\paragraph{Sostenibilidad: Deduda, consolidaciones fiscales y credibilidad}
+El nivel de deuda pública y, particular, su sostenibilidad, juegan también son un determinante clave en la efectividad de la Política Fiscal. Políticas fiscales expansivas en economías con ratios de (Deuda Pública)/(PIB) altos, generan efectos multiplicadores menores que si las cuentas públicas están saneadas. 
+
+Incluso, los efectos de esfuerzos de consolidación fiscal varían si las finanzas públicas son débiles. De hecho, cuando uno de los objetivos es reducir el déficit público, los efectos de la política fiscal dependen de cuándo se vaya a implementa la consolidación:
+\begin{la}
+    \item \textbf{\textit{Front-loaded}}. Si las consolidaciones ficales son implementadas desde el principio pueden suponer un fuerte ajuste inicial que posteriormente sienta las bases de más crecimiento; y,
+    \item \textbf{\textit{Back-loades}}. Si las consolidaciones fiscales se pretenden realizar a lo largo del tiempo, es probable que la credibilidad de estas se vea menoscabada e induzca menor crecimiento.
+\end{la}
+
+Parte de la literatura argumenta que las consolidaciones fiscales basadas en ajustes del gasto público pueden ser expansivas incluso en el corto plazo, precisamente por el efecto sobre la credibilidad, que reduce los tipos de interés y aumenta la inversión privada.\footnote{
+BATINI et al. (2014) se plantean si las consolidaciones fiscales pueden ser expansivas.
+
+También: GIAVAZZI y PAGANO, 1990; ALESINA y PEROTTI, 1996.
+} Por otro lado, parece ser que estos efectos de la consolidación fiscal son sensibles a la definición de ésta y que en realidad las expansiones observadas tras esos procesos de consolidación fiscal fueron en gran parte generadas por aumentos de la demanda externa.\footnote{JORDA y TAYLOR, 2013; GUAJARDO et al. 2014
+} Por último, otros autores encuentran menores multiplicadores fiscales cuando los procesos de consolidación fiscal son permanentes.\footnote{BARRELL et al. (2012)
+}
+
+En definitiva, la credibilidad de la política fiscal es un aspecto clave a la hora de determinar el tamaño del multiplicador en general y en procesos de consolidación fiscal en particular. Cuanto más creíble sea una política fiscal, menor efecto multiplicador en el corto plazo ya que los mercados creen que las medidas de consolidación se llevarán a cabo.\footnote{
+Véase: WARMEDINGER, 2015
+}
+
+Un trabajo clave que pone en relación el nivel de deuda, con esfuerzos de consolidación y credibilidad es ILZETZKI et al. (2013). Estos autores analizan los efectos de la Política Fiscal para un amplio conjunto de países controlando por varios determinantes, entre otros, si los países tienen un nivel inicial de deuda pública alto. Un proceso de consolidación fiscal aumenta la credibilidad y confianza de los mercados de crédito en el país, reduciendo el coste de su deuda. Este menor coste, favorece la demanda agregada al reducir las primas de riesgo. Y viceversa, estímulos fiscales llevados a cabo por un país con un nivel alto de deuda pública tiene efectos negativos, al reducir la credibilidad y confianza en el país. En consecuencia, aumentan las primas de riesgo y se reduce la demanda agregada.
+
+\paragraph{Independencia de la Autoridad Monetaria}
+Por último, en condiciones normales, aumentos de la demanda agregada generan aumentos de los Tipos de Interés, pudiendo frenar el impulso buscado con la política fiscal expansiva. Sin embargo, si la política monetaria no responde a variaciones en producto o precios, la política fiscal expansiva se vuelve mucho más fuerte. 
+
+Sin embargo, si la política monetaria no responde a variaciones en producto o precios, por ejemplo, si el tipo de interés nominal alcanza el límite cero, la política fiscal expansiva se vuelve mucho más fuerte. Este aspecto fue clave a partir de la Crisis Financiera de 2008 y es por ello que vamos a ver cómo podemos cuantificar o analizar la eficacia e interrelación de las Políticas Económicas en el contexto actual de las economías desarrolladas.
+
+\clearpage
+\section{Interrelación: Política monetaria no-convencional}
+Uno de los factores en los que hemos incidido más a la hora de analizar los efectos de la Política Fiscal es su incidencia sobre el Tipo de Interés, que a su vez formaba un vínculo crucial de interreleación con la Política Monetaria (\textit{aritmética desagradable}). Sin embargo, las economías desarrolladas se encuentran en una situación especialmente particular desde finales de la década de los 2000's: bajos tipos de interés, fuertes niveles de deuda, inflación sostenida pero ancladaa la baja y bajas tasas de crecimiento. ¿Qué podemos hacer entonces? Muchos coincidirán en que, en este contexto, la formalización teórica de los Multiplicadores de Gasto expuestos hasta ahora presenta fuertes limitaciones.
+
+A consecuencia de alcanzar tipos de interés históricamente bajos y que estos no tenían incidencia suficiente como paa relanzar la economía por sí mismo, surgieron dos fenómenos en paralelo: (i) tanto Gobiernos como académicos pusieron el foco en la política fiscal, proliferando las estimaciones de los multiplicadores fiscales, con muy variados resultados; y, (ii) las Autoridades Monetarias pusieron en marcha instrumentos no convencionales con el objetivo de estimular la economía, entre ellos, \textit{forward guidance}, \textit{quantitative-easing}, \textit{Yield Control Curves}, recientemente Tipos de Interés negativos e incluso debates abiertos y serios acerca del \textit{Helicopter Money}. 
+
+Con la trayectoria vivida desde entonces, cabe ahora preguntarnos, ¿cuáles son los efectos de la Política Fiscal cuando los tipos de interés son bajos, incluso negativos? ¿Cómo afectaron a la Política Fiscal el resto de medidas de política monetaria no convencionales?
+
+\subsection{\textit{Zero-Lower-Bound}: Efectos sobre la Política Fiscal}
+Sobre un modelo \textit{baseline} de la NEK-2 de tres ecuaciones: si introducimos el Gasto Público exógeno no productivo financiado con impuestos de suma fija (se cumple la Equivalencia Ricardiana) y una Política Monetaria formalizada a través de una Regla de Taylor (para valores positivos del Tipo de Interés Nominal), como el modelo presentado al principio la literatura muestra como:
+
+\eqblock{
+\begin{aligned}
+    &\uparrow G_t\;\Rightarrow \; \underset{\text{donde, } g\equiv\text{Tamaño SP}}{\boxed{\frac{\partial y_t}{\partial G_t}=1+\frac{1-g}{g}\frac{\partial c_t}{\partial G_t}}}\qquad\overbrace{\Longrightarrow}^{\text{\scriptsize Situación normal}}\;\uparrow G_t\;\underset{\uparrow E[\pi_{t+1}\;|\;\Omega_t]}{\Rightarrow}\;\uparrow i_t\;\Rightarrow\;\underset{\frac{\partial y_t}{\partial G_t}<0}{(\downarrow c_t)\; + \;(\downarrow i_t^o)}\\[1em]
+    &\text{Pero, si $\;\;\bar i_t=0$}\;\quad \Longrightarrow\;\uparrow G_t\;\Rightarrow
+    \begin{cases}
+        \uparrow G_t\;\;(\uparrow y_t)\\[0.5em]
+        \uparrow E[\pi_{t+1}\;|\;\Omega_t]
+    \end{cases}
+    \;\Rightarrow\;\downarrow r_t\;\underset{
+    \substack{
+        \text{\scriptsize Efecto}\\
+        \text{\scriptsize Sustitución}\\
+        \text{\scriptsize Intertemporal}}
+    }{\Rightarrow}\;\uparrow c_t\;\Rightarrow\;\boxed{\frac{\partial y_t}{\partial G_t}\geq 1}
+\end{aligned}
+}{Zero-Lower-Bound y Multiplicador del Gasto. Interrelación: Política Monetaria no-convencional}
+
+
+Aunque el modelo original se abstrae de la inversión\footnote{
+CHRISTIANO, EICHENBAUM y REBELO (2011)
+} y pone el foco en los efectos sobre consumo y producto, las conclusiones son parecidas:
+\begin{la}
+    \item \textbf{Situacioón convencional}. Siempre y cuando la Autoridad Monetaria reaccione ante expectativas inflacionistas, habrá efecto expulsión del gasto público sobre el consumo privado y el multiplicador será menor que uno; y,
+    \item \textbf{Situación no-convencional}. Este multiplicador varía cuando el Tipo de Interés nominal alcanza el límite cero. En este punto, variaciones en la demanda agregada no generan cambios en el tipo de interés nominal, que se encuentran en cero, por lo que una expansión fiscal que aumenta la demanda y genera inflación, no produciría ningún cambio en el tipo de interés nominal y el tipo de interés real caerá. Esta reducción genera un efecto sustitución intertemporal que fomenta el consumo hoy y aumenta la demanda agregada. Así, los efectos sustitución intertemporal sobre el consumo se reducen y el multiplicador del gasto público puede llegar a ser mayor que 1.
+\end{la}
+
+MIYAMOTO et al. (2018) estiman para Japón multiplicadores mayores que $1$ en impacto (es decir, el efecto sobre el producto justo en el momento en que se produce el estímulo fiscal) bajo el limite cero de tipos de interés y menores que $1$ con tipos de interés nominales positivos. Estos autores encuentran claros efectos inclusión (\textit{crowding-in}) en el consumo y la inversión cuando los tipos de interés alcanzan su límite cero. En una línea similar encontramos RAMEY y ZUBAIRY (2018) con estimaciones de los multiplicadores alrededor de $1,5$ para una muestra histórica de los EE.UU.
+
+\subsection{\textit{Helicopter-Money}: ¿Optimalidad?} 
+Otra forma en la que pueden verse fuertemente interrelacionadas la Política Monetaria y la Política Fiscal a través de instrumentos no-convencionales es el \textit{Helicopter Money} (dindero helicóptero). Esto es, la financiación de impulsos fiscales con un aumento permanente de la cantidad de dinero. 
+
+La literatura apunta a que el multiplicador del gasto público sobre el producto en este caso resulta mayor que el multiplicador de los impuestos.\footnote{Galí (2020) analiza los efectos de un impulso fiscal financiado con dinero y lo compara con el márco estándar de impulso fiscal financiado con déficit (es decir, con deuda). Su análisis considera tanto una reducción de los impuestos de suma fija como un aumento del gasto público dentro de un modelo estándar neo-keynesiano sin capital. Sus resultados muestran mayores multiplicadores cuando la política fiscal se financia con dinero, precisamente por el papel acomodaticio de la Política Monetaria, que genera fuertes efectos inclusión en el consumo. 
+} Por eso, desde el punto de vista teórico el dinero helicóptero parece ser un instrumento muy eficaz, incluso si el nivel de deuda pública es alto o si los tipos de interés nominales son cero o negativos. Los canales por los que opera en la economía son varios:
+\begin{lnum}
+    \item Por un lado, tenemos los efectos directos de un mayor gasto público sobre la renta, el empleo y el producto;
+    \item Por otro lado, la renta de los hogares aumenta, lo que les permite consumir más. Ante esta situación, si los individuos anticipan una mayor inflación futura, al tener los tipos de interés a nivel cero o negativos, el tipo de interés real será menor, fomentando la inversión en capital o en otros tipos de gasto;
+    \item Por último, a diferencia de los estímulos fiscales financiados con deuda, estas políticas fiscales no implican mayores impuestos futuros, por lo que el mecanismo ricardiano a través del efecto riqueza negativo se diluye.
+\end{lnum}
+
+Sin embargo, el dinero helicóptero plantea algunos inconvenientes en su aplicación, que pueden explicar por qué aún no se ha implementado por ningún Banco Central en economías avanzadas.\footnote{El único caso que se asemeja al uso de dinero helicóptero es el \textit{Quantitative and Qualitative Easing} realizado por el Banco de Japón en 2016. Si bien no se trató exactamente del uso de dinero helicóptero. este programa supuso una compra masiva de bonos del estado de tal magnitud que redujo fuertemente los tipos de interés a largo plazo. reduciendo el coste de pedir prestado para el gobierno. 'Esto permitió al gobierno nipón llevar a cabo políticas fiscales expansivas al tiempo que financió la deuda pública sin necesidad de subir impuestos.
+} Entre otras, se incluyen cuestiones de implementación, de gobernanza y posibles conflictos en la implementación. 
+
+La clave para la efectividad del dinero helicóptero es que el aumento en la oferta monetaria debe ser percibido como permanente para los individuos. La mayoría de los bancos determinan conjuntamente tipo de interés y oferta monetaria, no únicamente la cantidad de dinero, por lo que determinar la cantidad de dinero del helicóptero puede interferir en la operativa de los Bancos Centrales. 
+
+El segundo obstáculo importante hace referencia a la Gobernanza. Si bien la coordinación de políticas monetaria y fiscal es deseable, en lo referente al dinero helicóptero, ¿quién decidiría qué? Uno de los principales éxitos de la política monetaria ha sido establecer y mantener la independencia de los bancos centrales. El dinero helicóptero podría poner en duda dicha independencia.
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+\clearpage
+\anexo{Análisis de la Deuda Pública en España}\label{anx:deuda_españa}
+
+
+
+\end{document}
