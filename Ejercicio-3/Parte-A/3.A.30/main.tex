@@ -1,0 +1,1302 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Tema 3.A.30 -- Magnitudes macroeconómicas y contabilidad nacional\\
+\large }
+\author{Marcelo Ortega}
+\date{Diciembre 2025}
+\newcommand{\TemaCode}{3A30}
+
+\oldtitle{Tema 3.A.26. Magnitudes macroeconómicas y contabilidad nacional según el SEC-2010}
+\changerationale{Se elimina la referencia al Reglamento (UE) nº549/2013, por trivial y para evitar futuras actualizaciones del título de aprobarse una nueva norma europea.}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+    }
+\vspace{1cm}
+
+\modificaciones{
+    Última modificación 16/12: Cuentas de distribución secundaria y ajuste de Renta Bruta Disponible (falta complementar, seguir apuntes Victor Gutierrez)
+
+    Falta añadir absolutamente todo lo relativo a la última parte del tema, en particular:
+    \begin{lnum}
+        \item Cuenta: Resto del Mundo y otras cuentas;
+        \item Valoración
+        \item Limitaciones
+        \item Extensiones;
+    \end{lnum}
+
+    Todas estas partes se pueden encontrar tanto en los Apuntes de CECO como en los Apuntes de Victor Gutierrez. 
+
+    También falta revisar si todas las Macromagnitudes relevantes se desarrollan y expresan con suficiente detalle
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}\label{intro}
+
+
+\subsection{Contextualización}\label{context}
+Mediante un reglamento de la UE de 2013 (Reglamento nº 549/2013), se ha adoptado en 2014 el sistema SEC 2010, por lo que este será el sistema en el que nos vamos a centrar en nuestra exposición. El SEC-2010 constituye un marco contable comparable a escala internacional cuyo fin es realizar una descripción sistemática y detallada del total de una economía (una región, un país o un grupo de países), sus componentes y sus relaciones con otras economías. El Sistema Europeo de Cuentas Nacionales y Regionales (SEC-2010) sustituye al anterior SEC-95 y se constituye en el marco central de referencia para las estadísticas de síntesis económica de la Unión Europea y sus Estados miembros. De forma general, se puede considerar que la estructura y esqueleto básico del sistema apenas se ha modificado en relación al SEC-95, si bien en un segundo nivel sí que existen diferencias tanto en alcance como en conceptos [ver Anexo A.1].
+
+En España, el Sistema de Cuentas Nacionales está adaptado al SEC 2010 desde 2014, que ha sido aplicado de forma armonizada por todos los países miembros de la UE. 
+
+\subsubsection{Relevancia}\label{importance}
+Como se puede intuir, la armonización y comparabilidad son muy importantes:
+\begin{la}
+    \item A nivel general, son vitales en un mundo globalizado donde los capitales se mueven con relativa facilidad y libertad; y,
+    \item En particular, en la actual UEM, y concretamente a través del Semestre Europeo y el Pacto de Estabilidad y Crecimiento, se ve reflejada la importancia de la coordinación y el control de las políticas públicas de cara a garantizar la sostenibilidad de la moneda común. Sin la armonización y homogeneización de las cuentas esto no sería posible.
+\end{la}
+
+Para obtener un buen equilibrio entre la necesidad y la disponibilidad de la información, las cuentas incluidas en el SEC 2010 tienen varias características importantes:
+\begin{lnum}
+    \item Son compatibles a escala internacional, ya que son coherentes con el SCN 2008; 
+    \item Están armonizadas con otros sistemas de estadísticas sociales y económicas, ya que utilizan conceptos y clasificaciones que también se utilizan para otras estadísticas económicas y sociales de los Estados miembros (además, estos conceptos y clasificaciones también están armonizados con los de las Naciones Unidas);
+    \item Son coherentes, permitiendo obtener estimaciones por vía residual; 
+    \item Son operativas, ya que, en la práctica, pueden medirse porque los conceptos que figuran en el SEC 2010 se han definido de forma que faciliten la recogida de datos y la medición;
+    \item Difieren de la mayoría de los conceptos administrativos para facilitar la compatibilidad de los conceptos administrativos entre los distintos Estados y a lo largo del tiempo; 
+    \item Están reconocidas y establecidas para un largo período de tiempo; 
+    \item Se centran en la descripción del proceso económico en términos monetarios y fácilmente observables; y,
+    \item Son aplicables en distintas situaciones y para fines diferentes.
+\end{lnum}
+
+Estas características garantizan la calidad de los datos de las cuentas nacionales, facilitando la conexión y comparación de los datos que figuran en ellas. De este modo, el marco del SEC es de gran utilidad para analizar y evaluar los siguientes elementos:
+\begin{lnum}
+    \item La estructura del total de la economía;
+    \item Sectores o aspectos específicos de una economía;
+    \item El desarrollo en el tiempo de una economía; y,
+    \item El total de una economía en relación con otras economías.
+\end{lnum}
+
+\subsubsection{Historia}\label{history}
+El germen del Sistema de Cuentas se encuentra en el interés por la comparabilidad internacional de las mediciones económicas. 
+
+Este interés aparece de manera oficiosa en 1928 en la Conferencia Internacional Sobre Estadísticas Económicas mantenida por la Liga de las Naciones dando lugar a estimaciones del ingreso nacional. El interés por la armonización se vio impulsado poco después en el contexto de la Gran Depresión y por la evolución de la teoría macroeconómica. Finalmente, tras la Segunda Guerra Mundial hubo una necesidad inmediata de mediciones comparables del ingreso nacional como base para la distribución de los gastos de las organizaciones internacionales. Así. en Europa y en los primeros años de la posguerra las cuentas nacionales sirvieron como marco para la información relativa a las condiciones y resultados económicos que se utilizó para administrar la ayuda de la posguerra y para estimular el crecimiento económico. La ONU comienza un proceso norn1alizador publicando en 1953: "Un sistema de Cuentas Nacionales y sus correspondientes cuadros estadísticos". El sistema es revisado en 1968 y sirve como base para la elaboración del primer Sistema Europeo de Cuentas (SEC 1970 y SEC 1979). Se reforma a partir de las opiniones de los países que habían implementado las versiones anteriores y teniendo en cuenta las preocupaciones de los países en desarrollo (SCN-1993 y SEC- 1995). 
+
+Desde septiembre de 2014 la UE ha adoptado su sistema actual SEC-2010 basado en el SCN-2008. Los procesos de revisión, desde el inicial de 1953 hasta el actual, han estado orientados hacia la clarificación. simplificación y armonización.
+
+\subsubsection{Problemática}\label{problem} 
+
+
+\subsection{Estructura de la exposición}\label{structure}
+
+
+
+\clearpage
+\section{Principales características y arquitecturas del SCN}
+\puntosclave{
+Dos tipos de clasificaciones para dos tipos de análisis: institucional y funcional.
+
+Las operaciones se registran en el sistema de cuentas.
+
+Las anotaciones se realizan en tablas de dos columnas, según el principio de devengo, a precios básicos o a precios de adquisición y con anotaciones por partida doble o cuádruple.
+
+Los flujos permiten pasar del stock al inicio del periodo contable al stock al final del periodo. Los stocks se registran en los balances.
+
+El territorio económico permite diferenciar las unidades residentes de las no residentes y las mediciones interiores de las nacionales.
+A partir de los conceptos anteriores se deducen las estimaciones del producto o renta de la economía.
+}
+
+El marco del SEC 2010,\footnote{\href{https://www.boe.es/doue/2013/174/L00001-00727.pdf}{BOE -- SEC-2010}} está constituido por 24 capítulos, en los que se describen dos conjuntos principales de cuentas:
+\begin{lnum}
+    \item Las cuentas del sector institucional;
+    \item El análisis Input-Output y las cuentas por ramas de actividad [ver tema 3.A.31].
+\end{lnum} 
+
+En esta exposición, nos centraremos en las cuentas sectoriales que proporcionan para cada sector institucional una descripción sistemática de las diferentes fases del proceso económico: 
+\begin{lnum}
+    \item Producción;
+    \item Generación de la renta;
+    \item Distribución de la renta;
+    \item Redistribución de la renta;
+    \item Utilización de la renta;
+    \item Acumulación financiera; y,
+    \item Acumulación no financiera
+\end{lnum}
+
+En primer lugar, describiremos los elementos que conforman la arquitectura del Sistema de Cuentas: las unidades estadísticas, las operaciones, el criterio de residencia, la valoración y el registro, para, finalmente, deducir el cálculo del producto o renta de una economía.
+
+\subsection{Unidades estadísticas}
+Como se ha dicho, el SEC considera dos tipos de clasificaciones que dan lugar a dos tipos de análisis: las unidades institucionales que se utilizan para el análisis institucional y las unidades de actividad económica dentro del análisis funcional.\footnote{
+Para más información acerca de la clasificación funcional [\authorfont{Ver Tema 3.A.31}]\\
+
+\textbf{Definición.-} Las Unidades Funcionales son unidades productoras que concurren al ejercicio de una actividad siguiendo la Clasificación Nacional de Actividades Económicas a 4 dígitos (CNAE). 
+
+Esta clasificación es la utilizada en el análisis funcional que describe y analiza los procesos de producción e incluye el análisis input-output. Lógicamente y al igual que con el análisis institucional, la agregación de operaciones por ramas de actividad proporciona el valor para el total de la economía. La coherencia del sistema pennite que las operaciones para el total de la economía nacional coincidan tanto si se obtienen como agregación de sectores institucionales como por agregación de ramas de actividad.
+}
+
+\subsubsection{Unidades Institucionales}
+Para describir la renta, el gasto y los flujos financieros, y los balances, el sistema agrupa las unidades institucionales por sectores, atendiendo a sus funciones principales, su comportamiento y sus objetivos.
+
+\begin{specialblock}{\textbf{Definición.-} Unidades Institucionales}
+    Las unidades institucionales son un centro de decisión económica caracterizado por una uniformidad de comportamiento y una autonomía de decisión en el ejercicio de su actividad. Por tanto, son entidades económicas capaces de ser propietarias de bienes y activos, contraer pasivos y participar en actividades y operaciones económicas con otras unidades, en nombre propio.
+
+    Ahora bien, la autonomía de un sector institucional no implica la ausencia de interrelaciones con otros, todo lo contrario.
+\end{specialblock}
+
+A efectos del sistema, las unidades institucionales se agrupan en cinco sectores institucionales mutuamente exluyentes:\footnote{
+Ahora bien, cuando las unidades institucionales desarrollan más de una actividad, es preciso dividirlas según el tipo de actividad. Las unidades de actividad económica a nivel local permiten realizar esa presentación.
+
+\textbf{Definición.-} Una UAE local agrupa todas las partes de una unidad institucional en su condición de productora que están situadas en una única localización o en emplazamientos próximos y que concurren al ejercicio de una actividad del nivel de clase (4 cifras) de la NACE Rev. 2. Las UAE locales que desarrollan la misma actividad económica u otra similar constituyen una rama de actividad.
+
+Sin embargo, por ser objeto de otro tema no se entrará a valorar dicha consideración.
+}
+\begin{lnum}
+    \item \textit{Sociedades no financieras}. Productores de mercado cuya función principal es la producción de bienes y servicios no financieros de mercado. Estos obtienen sus recursos principalmente de las ventas;\footnote{Se considera que una producción es de mercado cuando el valor de venta cubre el 50\% de los costes de producción.
+    }\textsuperscript{,}\footnote{La distinción entre entes públicos y privados tanto en las sociedades no financieras como en las instituciones financieras se hace acorde a lo recogido en el Manual sobre el déficit público y la deuda pública del SEC-2010: una unidad institucional se considera pública cuando es conlrolada por las Administraciones Públicas, es decir, cuando éstas tienen la capacidad para determinar la política general de dicha entidad.
+    } 
+    \item \textit{Instituciones financieras}. Productores de mercado cuya función principal es prestar servicios financieros de mercado, incluido el seguro y las actividades auxiliares de la intermediación financiera. Estos obtienen sus recursos principalmente de las comisiones e ingresos derivados de la intermediación financiera;
+    \item \textit{Administraciones públicas}. Productores cuya función principal es producir: (i) bienes y servicios no de mercado destinados a la comunidad en general o a los hogares; y, (ii) redistribuir el ingreso/renta. Obtienen sus recursos principalmente de pagos obligatorios de los agentes económicos y de otros ingresos como la emisión de deuda;
+    \item \textit{Hogares}. Presentan una doble vertiente como consumidores o como productores.\footnote{
+    En su condición de consumidores, los hogares pueden definirse como pequeños grupos de personas que comparten una misma vivienda y ponen en común sus rentas y su patrimonio y consumen colectivamente determinados bienes y servicios (principalmente la vivienda y la alimentación).
+    } Por tanto, sus funciones principales son el consumo para uso final propio y proporcionar fuerza de trabajo. Obtienen sus recursos principalmente de la remuneración de los factores productivos; y,
+    \item \textit{Instituciones sin fines de lucro al servicio de los hogares} (ISFLSH). Productores cuya función principal es proporcionar bienes y servicios no de mercado a los hogares y a la comunidad. Obtienen sus recursos principalmente de contribuciones voluntarias en efectivo o en especia efectuadas por hogares y administraciones públicas.
+\end{lnum} 
+
+El conjunto de estos cinco sectores constituye el total de la economía nacional.\footnote{Cada sector está dividido a su vez en subsectores y el sistema permite elaborar una serie completa de cuentas de flujos y de balances para cada sector.
+} Por tanto, una primer macromagnitud de interés se desprende directamente de esta clasificación por sectores:
+
+\eqblock{
+\begin{aligned}
+    \text{Producto Nacional (Producción Total de la Economía)}:\qquad \boxed{\sum_iVP_i=VP_{\text{\scriptsize Total de la Economía}}}
+\end{aligned}
+}{Producto Nacional. Macromagnitudes}
+
+\subsubsection{Criterio de residencia}
+Ahora bien, como podemos intuir, las unidades no residentes pueden interactuar con estos cinco sectores (término que utilizaremos a partir de aquí como alternativo a unidad institucional), dando lugar a un sexto sector: el \textbf{resto del mundo}.\footnote{Estos sectores institucionales aparecen también en el Sexto Manual de la Balanza de Pagos (6MBP) del FMI, pero la forma de agruparlos difiere [\authorfont{ver tema 3.B.11}]. A diferencia de la clasificación funcional de sectores que aparece en el 6MBP, que privilegia una clasificación en función de que sectores interactúan más con el resto del mundo, el SEC 2010 privilegia una clasificación que resalta cuáles son los sectores institucionales que interactúan dentro de la economía nacional.
+} La distinción entre residentes y no residentes es, por tanto, crucial para el SNC. Por ello, se recurre al criterio de residencia.
+
+\textbf{Definición.-} (Criterio de residencia) El SEC establece que una unidad es residente en un país cuando tiene un centro de interés económico en el territorio económico de ese país; se presume que esto se cumple de realizarse actividades económicas en el territorio durante un año o más.
+
+\imagenfit{EsquemaUAE_Residencia.png}{Clasificación por unidades sectoriales y criterio de residencia}
+
+
+\subsection{Las operaciones}
+El resultado de la interacción entre los agentes de una economía, descritos en el apartado anterior, son las operaciones.\footnote{Aunque también pueden ser las acciones que se producen dentro de una misma unidad.
+}
+
+\textbf{Definición.-} (Operaciones) Las operaciones son flujos, es decir son las acciones y resultados ocurridos durante un período de tiempo que recogen la creación, transformación, intercambio, transferencia o extinción de valor económico y suponen variaciones del valor de los activos o de los pasivos de una unidad. 
+
+Las operaciones se clasifican en cuatro grupos:
+\begin{lnum}
+    \item \textit{Operaciones con bienes y servicios}. Recogen el origen y el destino de los bienes y servicios. El origen son los procesos de producción e importación y los destinos incluyen el consumo tanto intermedio como final, la formación de capital y las exportaciones;
+    \item \textit{Operaciones de distribución}. Registran la distribución del valor añadido generado en el proceso de producción entre factores de producción y su redistribución. Incluye la remuneración de asalariados, las rentas de la propiedad, los impuestos sobre la producción y las transferencias corrientes;
+    \item \textit{Operaciones financieras}. Muestra la contraparte financiera de las operaciones reales o de otras operaciones financieras. Es decir, son operaciones con activos y pasivos financieros; y,
+    \item \textit{Operaciones no incluidas en los tres grupos anteriores}. Incluye las adquisiciones menos cesiones de activos no financieros y no producidos. Las operaciones no financieras se registran en las cuentas corrientes y en las cuentas de acumulación no financiera.
+\end{lnum}  
+
+Y, además, una tercera distinción atendiendo al criterio de residencia antes mentado: 
+\begin{la}
+    \item \textit{Operaciones interiores}. Las operaciones interiores incluyen los flujos de los residentes y de los no residentes en el territorio; y,
+    \item \textit{Operaciones nacionales}. Las mediciones nacionales incluyen únicamente a los residentes ya sea en el territorio económico o en el resto del mundo.
+\end{la}
+
+\subsubsection{Registro: Flujos o Stock}
+La información estadística económica generada por las operaciones queda registrada en el SEC 2010 mediante dos tipos de variables:
+\begin{la}
+    \item \textit{Flujos}. Se refieren a las acciones y los resultados de los acontecimientos que tienen lugar a lo largo de un periodo determinado de tiempo;
+    \item \textit{Stocks}. Los stocks se refieren a la situación en un momento concreto.
+\end{la}
+
+\imagenfit{Flujo_Stock.png}{Diferencias entre variables flujo y variables stock. Clasificación de operaciones}{Apuntes Víctor Gutiérrez Marcos. Tema 3.A.30}
+
+\paragraph{Flujos}
+Las operaciones entendidas como flujo reflejan la creación, transformación, intercambio, transferencia o extinción de valor económico y suponen variaciones de valor de los activos o pasivos de una unidad institucional. 
+
+Las variables flujo pueden registrarse a partir de:
+\begin{la}
+    \item \textit{Operaciones}. Son flujos económicos que suponen la interacción entre unidades institucionales, o acciones que se realizan dentro de una misma unidad institucional y que resulta útil tratar como una operación porque la unidad desarrolla dos funciones distintas; o,
+    \item \textit{Otras variaciones de los activos no debidas a operaciones}. Se registran las variaciones que no se deben a operaciones:
+    \begin{lnum}
+        \item \textit{Otras variaciones del volumen de activos y pasivos}. Como: (i) apariciones y desapariciones normales de activos debidas a factores distintos de las operaciones; (ii) variaciones de activos y pasivos debidas a acontecimientos excepcionales e imprevistos que no son de carácter económico; y, (iii) cambios de clasificación y estructura; y,
+        \item \textit{Ganancias y pérdidas de posesión}. Debidas a variaciones de los precios de los activos (financieros y no financieros). Las ganancias y pérdidas de posesión medidas con arreglo a los precios de mercado corrientes se denominan ganancias y pérdidas de posesión nominales y pueden ser divididas en: (i) ganancias y pérdidas de posesión neutrales, como variaciones en el nivel general de precios; o, (ii) ganancias y pérdidas de posesión reales, como variaciones de los precios de los activos aparte de las variaciones del nivel general de precios.
+    \end{lnum}
+\end{la}
+
+\paragraph{Stocks}
+Los stocks son los activos y los pasivos que se poseen en un momento concreto. Se registran al principio y al final de cada ejercicio contable y las cuentas en que figuran este tipo de variables se denominan balances. 
+
+\textbf{Definición.-} (Stocks) La acumulación de los flujos a lo largo del tiempo proporciona los stocks que muestran la situación en un momento determinado.
+
+Se refieren a los activos y pasivos financieros y a los activos no financieros, sean o no resultado de un proceso de producción, y su variación se justifica por los flujos contabilizados en la sucesión de cuentas (que se verán en el siguiente apartado). Una particularidad es que en el sistema también se registran los stocks de población y empleo, si bien, tales stocks se contabilizan por su valor medio en el ejercicio contable.
+
+\subsection{Las cuentas: principios contables}
+Una cuenta registra las variaciones del valor de un sector de acuerdo con la naturaleza de los flujos económicos a que se refiere la cuenta. Distinguimos dos tipos:
+\begin{la}
+    \item Las cuentas corrientes son aquellas que muestran la producción, la generación y la asignación de la renta, la distribución y la redistribución de la renta y su utilización; y,
+    \item Las cuentas de acumulación son las cuentas de capital y financiera, y las cuentas de otras variaciones del volumen de activos.
+\end{la}
+
+\subsubsection{Prinicpio de valoración}
+En el SEC 2010 se reflejan los flujos y stocks en términos monetarios (salvo algunas variables relativas a la población y a la mano de obra). Es decir, se medirán con arreglo al valor al que los flujos y stocks se cambian o podrían cambiarse por efectivo. Por lo tanto y por orden de preferencia:
+\begin{la}
+    \item Los precios de mercado son la referencia del SEC para la valoración;
+    \item Cuando la operación no se realice en el mercado el mejor método de valoración se establece por referencia a los precios de mercado de bienes, servicios o activos análogos (e.g. trueques o servicios de alquiler de viviendas ocupadas por sus propietarios);\footnote{Es necesario realizar imputaciones para calcular el servicio de alojamiento que los propietarios proveen para ellos mismos. Si no lo hacemos, un cambio en el porcentaje de los hogares propietarios cambiaría el PIB.
+    }
+    \item Cuando no se dispone de precios de mercado de productos análogos (e.g. servicios no de mercado producidos por las administraciones públicas), la valoración se realiza según los costes de producción; y,
+    \item Finalmente, cuando no se dispone de los precios de mercado y se desconocen los costes, es posible valorar los stocks y los flujos al valor actual de los rendimientos futuros esperados. Este último método sólo debe utilizarse como último recurso.\footnote{La valoración a precios constantes significa que los flujos y los stocks en un ejercicio contable se valoran a los precios vigentes en un ejercicio anterior fijado como base. Su utilidad reside en que se pueden descomponer las variaciones a lo largo del tiempo de los valores de los flujos y stocks en variaciones de precios y variaciones de volumen. Se dice que los flujos y stocks a precios constantes se expresan en términos de volumen.\\
+    Un cambio en el volumen no es lo mismo que un cambio en cantidad. El cambio en volumen tiene en consideración diferencias en la calidad y en los niveles de precio de los productos. Por eso, el año base tiene que estar cerca o si no se utiliza una regla de la cadena (es decir, se realizan los cálculos a precio base del año pasado y luego se referencian al año base inicial). Muchos flujos y stocks (p.ej. la renta) no tienen sus propias dimensiones de precio y cantidad (por lo que su variación nominal no se puede descomponer directamente en variaciones de volumen y variaciones de precios). No obstante, en estas circunstancias, la variación en volumen se aproxima por el poder de compra de tales variables deflactando los valore }
+\end{la}
+
+Debido a los gastos de transporte, márgenes comerciales y los impuestos y subvenciones sobre los productos, normalmente, el productor y el consumidor de un bien o servicio determinado perciben su valor de forma diferente. Para respetar en la mayor medida posible esta diferencia de percepción, en el sistema SEC 2010 se distinguen dos tipos de valoración.
+
+\paragraph{Precios básicos}
+Todos los \textbf{empleos} se registran a precios básicos, que son los que perciben los \textbf{productores} e incluyen los costes de producción junto con los otros impuestos (netos de subvenciones) sobre la producción.\footnote{Estos impuestos y subvenciones los soportan las empresas como resultado de su participación en la producción, independientemente de la cantidad o del valor de los bienes y servicios producidos o vendidos. Un ejemplo de estos impuestos en sistema fiscal español sería el Impuesto sobre Actividades Económicas.
+} 
+
+\eqblock{
+\begin{aligned}
+    \text{Precios básicos}\; (pb)=\text{Costes Producción}+\underbrace{\text{Impuestos}}_{\substack{\text{\scriptsize Netos de subvenciones}\\\text{\scriptsize sobre la producción}}}
+\end{aligned}
+}{Valoración a precios básicos. Anotación contable}
+
+\paragraph{Precios de adquisición}
+Todos los \textbf{recursos} se registrarán a precios de adquisición, que son los pagados por el \textbf{consumidor} que adquiere los productos. Los precios de adquisición incluyen los precios básicos y se añaden los márgenes de distribución y comercio junto con los impuestos (netos de subvenciones) sobre los productos.\footnote{Estos impuestos se pagan por unidad producida como es el caso de los Impuestos Especiales.
+}
+
+\eqblock{
+\begin{aligned}
+    \text{Precios adquisición}\; (pa)=\text{Precio básico}+\underbrace{\text{Impuestos}}_{\substack{\text{\scriptsize Netos de subvenciones}\\\text{\scriptsize sobre los productos}}}+\overbrace{\text{Márgenes}}^{\substack{\text{\scriptsize Distribución y}\\\text{\scriptsize comercio}}}
+\end{aligned}
+}{Valoración a precios de adquisición. Anotación contable}
+
+\begin{specialblock}{Impuestos y subvenciones sobre la producción y el producto}
+    \imagenfit{Impuestos_Producción.png}{Esquema impuestos sobre la producción}{Apuntes Víctor Gutiérrez- Tema 3.A.30}
+
+    De esta forma, cabe distinguir entre:
+    \begin{la}
+       \item  \textit{Precios básicos}. Son los precios al salir de las unidades productivas y, por convención, incluyen los costes estrictos (consumos intermedios, remuneración de salariados y excedente o renta mixta), además de otros impuestos netos sobre la producción; y,
+       \item \textit{Precios de adquisición}. Son los que pagan los compradores al adquirir los productos, por lo que llevarán incorporado, además de cualquier margen (comercial o de transporte), todos los impuestos netos sobre la producción y la importación.
+    \end{la}
+
+    \imagenfit{Impuestos_Subvenciones_Tipos.png}{Los impuestos sobre la producción y la importación}{Apuntes Víctor Gutiérrez. Tema 3.A.30}
+    
+\end{specialblock}
+
+\subsubsection{Principio del devengo}
+Otra cuestión a tener en cuenta es el momento de registro de las operaciones. Estas se anotan conforme al principio de devengo, es decir, cuando se crea, transforma o extingue el valor económico, o cuando nacen, se transforman o se cancelan los derechos y las obligaciones. Es decir, la producción se registra en el momento en que tiene lugar y no en el momento en que el comprador la paga. La venta de un activo se registra cuando este cambia de manos y no cuando se efectúa el pago correspondiente, finalmente, los intereses se registran en el ejercicio contable en que se devengan independientemente de que se paguen o no durante dicho ejercicio.
+
+\subsubsection{Principio de partida doble}
+\paragraph{Cuentas sectoriales}
+Para cada unidad o sector, cada operación debe registrarse con el mismo valor dos veces (principio de la partida doble):
+
+\imagenfit{Cuentas_Anotaciones_Doble.png}{Clasificación de cuentas y tipo de asientos para cada una}{Elaboración propia}
+
+La diferencia entre la suma de ambos lados de una cuenta será lo que constituya su saldo contable. Este principio permite comprobar la consistencia y el equilibrio de las cuentas.
+
+\paragraph{Cuentas nacionales}
+Las cuentas nacionales (con todas las unidades y todos los sectores) se basarán en el principio de la partida cuádruple, ya que en la mayoría de las operaciones intervienen dos unidades institucionales.\footnote{Por ejemplo, una prestación social en efectivo pagada por una unidad de las administraciones públicas a un hogar se registra en las cuentas de las administraciones públicas como un empleo en la rúbrica transferencias y como una adquisición negativa de activos en la partida efectivo y depósitos; en las cuentas del sector hogares se registra como un recurso en la rúbrica transferencias y como una adquisición de activos en la partida efectivo y depósitos.
+} Para operaciones internas (como el consumo de producción propia por la misma unidad que la produce) sólo se necesitan dos partidas, cuyos valores han de estimarse.
+
+\subsection{La sucesión de cuentas}
+En los siguientes apartados vamos a ver la sucesión de las cuentas nacionales haciendo hincapié en la explicación de los distintos agregados macroeconómicos.
+
+\textbf{Definición.-} Los agregados son indicadores que sintetizan el resultado de la actividad del total de la economía y constituyen magnitudes esenciales para realizar análisis macroeconómicos y comparaciones en el tiempo y el espacio.
+
+Un ejemplo muy ilustrativo de un agregado macroeconómico podemos extraerlo en base a todo lo expuesto en esta primera sección introducitoria.
+
+\eqblock{
+\begin{aligned}
+    &\hspace{2em}\underbrace{\hat Y^{pb}=\sum_iVP_i^{pb}}_{\text{Producto total}}\quad \Longrightarrow\\[1em]
+    &\left.\begin{aligned}
+        &\text{Producción:}\quad  \hat Y^{pa}_{P}=\sum_i\underbrace{\underbrace{(VP_i^{pb}-CI_i^{pa})}_{\substack{\text{\scriptsize Para evitar doble}\\\text{\scriptsize contabilización: VAB}}}+\overbrace{T}^{\substack{\text{\scriptsize Netos de subvenciones}\\\text{\scriptsize sobre los productos}}}}_{\text{\scriptsize Para obtener valoración a precios de mercado ($pa$)}}\\[0.5em]
+        &\text{Gasto:}\quad \hat Y^{pa}_G=\underbrace{GCF}_{\substack{\text{\scriptsize Gasto en consumo}\\ \text{\scriptsize final a $pa$}}}+\overbrace{FBC}^{\substack{\text{\scriptsize Gasto en inversión}\\ \text{\scriptsize no financiera a $pa$}}}+\underbrace{X-M}_{\text{\scriptsize A $pa$}}
+    \end{aligned}\quad\right\}
+    \quad \underbrace{\hat Y_P^{pa}=\hat Y_G^{pa}}_{\text{\scriptsize Total de la Economía}}\\[2em]
+    &\text{Atendiendo al criterio de \textbf{residencia}:}\\[0.5em]
+    &\begin{aligned}
+        &\underbrace{\text{Magnitud interior}}_{\text{\scriptsize Residentes + No residentes}}\;\Longrightarrow\quad 
+        \left\{\begin{aligned}
+            &\text{Producción:}\quad &&PIB_{P}^{pa}=\sum_i\underbrace{(VAB_i)}_{\text{\tiny $VP_i^{pb}-CI_i^{pa}$}}+\overbrace{T}^{\substack{\text{\tiny Netos de S}\\\text{\tiny sobre productos}}}\\[0.5em]
+            &\text{Gasto:}\quad &&PIB^{pa}_G=GCF+FBC+X-M
+        \end{aligned}\right\}\quad \underbrace{PIB_P^{pa}=PIB_G^{pa}}_{\text{\scriptsize Interior}}\\[1em]
+        &\underbrace{\text{Magnitud nacional}}_{\text{\scriptsize Residentes +/- No residentes}}\;\Longrightarrow\quad 
+        RNB^{pa}=PIB_i^{pa}+\underbrace{\text{Rentas de $L$ y $K$ recibidas}- \text{Rentas $L$ y $K$ pagadas}}_{\text{A resto del mundo: Unidades no residentes}}
+    \end{aligned}
+\end{aligned}
+}{Producción Total, PIB y RNB. Macromagnitudes}
+
+El Producto Interior Bruto\footnote{El Producto Interior Bruto (PIB) es un concepto creado por el economista ruso-estadounidense SIMON KUZNETS en 1932. Tras la Segunda Guerra Mundial se usó como base para calcular las transferencias monetarias del Plan Marshall (así es como se convirtió en la medida estándar).
+} es el indicador de la contabilidad nacional más frecuentemente utilizado y se encuentra en el corazón de todo el sistema de contabilidad nacional. Éste combina en una sola cifra y sin duplicaciones, toda la producción (o el producto) obtenida por todas las empresas, las instituciones sin ánimo de lucro, las entidades gubernamentales y los hogares de un país determinado, en un periodo definido, independientemente del tipo de bienes y servicios producidos, siempre y cuando la producción tenga lugar dentro del territorio económico del país. 
+
+Hay que señalar que además de medirse el PIB en términos nominales (PIB a precios corrientes) suele representarse también en términos reales (PIB a precios constantes). Para su obtención se aplica un deflactor a los términos nominales con objeto de eliminar el componente inflacionista, averiguando así cuánto ha aumentado la producción material del país en el período de referencia. El PIB a precios corrientes es, sin embargo, usado como denominador para estandarizar importantes agregados como el déficit público.\footnote{También se puede registrar el PIB en términos per cápita dividiendo el PIB entre la población total.
+} Si al PIB se le resta el consumo de capital fijo (que representa el montante de los activos fijos consumidos como consecuencia del desgaste y la obsolescencia) se obtiene el Producto Interior Neto a precios de mercado (PIN). No obstante, se suele utilizar el PIB ante la dificultad de medición del consumo de capital fijo.\footnote{
+El consumo de capital fijo representa el montante de los activos fijos consumidos como consecuente del desgaste y la obsolescencia.
+}
+
+El SEC 2010 sigue a grandes rasgos la siguiente estructura [ver anexo A.8]:
+\begin{lnum}
+    \item Cuenta de bienes y servicios;
+    \item Cuentas corrientes;
+    \item Cuentas de acumulación;
+    \item Balances; y,
+    \item Cuentas del resto del mundo.
+\end{lnum} 
+
+\begin{specialblock}{Cuenta de bienes y servicios (C.0)}
+    La cuenta de bienes y servicios muestra el total de recursos en términos de producción e importaciones y los usos de bienes y servicios en términos de consumo intermedio, consumo final, formación bruta de capital fijo, variaciones de existencias y exportaciones para la economía en su conjunto y para grupos de productos. 
+    \imagenfit{C_0_BienesyServicios.png}{Cuenta de bienes y servicios (C.0)}{Apuntes Víctor Gutiérrez Marcos. Tema 3.A.30}
+    
+    Como vemos, supone una igualdad contable que refleja la igualdad entre el PIB desde el punto de vista de la producción y el PIB desde el punto de vista del gasto. Cabe definir los consumos intermedios como los gastos corrientes de explotación, es decir, los bienes y servicios consumidos en el proceso productivo excluidos los activos fijos (p.ej. suministros, marketing, contabilidad, transporte, alquiler de activos fijos, etc.).\footnote{Se produce un cambio en el SEC 2010 respecto al SEC-95: el gasto en I+D se considera ahora formación bruta de capital fijo y no un bien intermedio. Este cambio obedece a que el gasto en intangibles está cobrando una mayor importancia en las cuentas de explotación de las empresas. Esto tiene repercusiones sobre la distribución de la renta: aumenta la parte de la renta que va para los capitalistas. Las rentas del trabajo como porcentaje del PIB están ahora cerca del 62\%, mientras que antes rondaba el 66\%.}
+\end{specialblock}
+
+\clearpage
+\section{Cuentas corrientes}
+\puntosclave{
+    Las cuentas no financieras incluyen las cuentas corrientes, de acumulación no financiera y las de operaciones de bienes y servicios.
+    
+    Las cuentas corrientes recogen las operaciones de producción, generación, distribución y redistribución de renta para finalmente utilizarlas en operaciones de consumo final.
+    
+    El saldo final de la sucesión de las cuentas corrientes es el ahorro que se utiliza en la adquisición de activos no financieros dentro de las cuentas de acumulación no financiera.
+    
+    El sistema se cierra con la capacidad o necesidad de financiación en función de si el ahorro más el resto de variaciones del patrimonio pem1iten cubrir la adquisición de activos no financieros o no.
+    
+    La cuenta de operaciones de bienes y servicios registra las operaciones desde un punto de vista de los flujos de productos.
+    
+    Estas cuentas proporcionan la mayoria de los agregados macroeconómicos más relevantes.
+}
+
+Las cuentas corrientes recogen las operaciones de producción, generación, distribución y redistribución de renta y su utilización en operaciones de consumo final. Todo ello por sectores y para el total de la economía.
+
+El orden y clasificación de las cuentas se realiza en función de las operaciones corrientes:
+\begin{lnum}
+    \item \textit{Cuentas de producción y explotación}. Se parte de las operaciones de producción y de explotación, es decir de reparto del V AB entre los factores productivos;
+    \item \textit{Cuentas de asignación primaria}. A continuación, se asigna la renta;
+    \item \textit{Cuentas de asignación secundaria}. Tras realizar la asignación de renta, se procede a su redistribución; y,
+    \item \textit{Cuenta de utilización}. Una vex redistribuida la renta, se muestra cómo se distribuye entre consumo final y ahorro. 
+\end{lnum}
+
+No obstante, debe entenderse que se trata de una sucesión de cuentas donde se parte de la producción, ya que la producción es el recurso germinal a partir del cual se puede financiar a toda la economía.
+
+\subsection{Cuenta de producción}
+La primera cuenta corriente es la de producción y muestra los flujos relativos a dicha operación. La cuenta de producción registra cómo el proceso de producción, caracterizado por emplear consumos intermedios, determina la magnitud del PIB de la economía.
+
+\begin{specialblock}{\textbf{Definición.-} Producción según el SEC-2010}
+    La producción es una actividad que utiliza trabajo, capital y bienes y servicios para producir otros bienes y servicios. El SEC-2010 diferencia tres tipos: 
+    \begin{la}
+        \item \textit{De mercado.} Productos vendidos a precios económicamente significativos, es decir que su precio cubre más del 50\% de los costes de producción;
+        \item \textit{De uso final propio}. Bienes o servicios que una unidad institucional conserva para su formación bruta de capital (FBC); y,
+        \item \textit{No de mercado}. Suministrada a otras unidades institucionales de forma gratuita o a precios no significativos, es decir que su precio no cubre el 50\% de los costes de producción.
+    \end{la}
+\end{specialblock}
+
+En las cuentas por sectores se registra la producción a precios básicos en recursos y los consumos intermedios a precios de adquisición en empleos:
+
+\imagenfit{CuentaProducción_2.png}{Cuenta de producción (C.1)}{Apuntes Víctor Gutiérrez Marcos. Tema 3.A.30}
+
+Por construcción, si atendemos a lo expuesto antes en el primer apartado: (i) el saldo por sectores sería el Valor Añadido Bruto (VAB) a precios básicos; y, (ii) para el total de la economía el saldo es el PIB y será necesario incluir en los recursos los impuestos (netos de subvenciones) sobre los productos para pasar de una valoración de precios básicos a una valoración a precios de mercado.  Si incluimos el consumo de capital fijo (CCF) obtenemos los saldos netos.\footnote{Pérdida de valor de los activos resultado del desgaste y obsolescencia
+}
+
+\subsection{Proceso de distribución (C.II): Factores de Producción y Administraciones Públicas}
+Las siguientes cuentas describen el proceso de distribución de la renta generada en el proceso de producción entre los factores de producción y las AAPP. Se distingue entre la cuenta de explotación (C.II.1.1) y la cuenta de asignación de la renta primaria (C.II.1.2).
+
+Tanto en la cuenta de explotación como en la de asignación se registran la remuneración y los impuestos, pero los importes son diferentes ya que en la primera son de ámbito interior y en la segunda nacional:\footnote{En el caso de los Impuestos netos de subvenciones sobre la producción e importación de ámbito nacional se excluyen los impuestos sobre la producción y las importaciones pagados a las instituciones de la Unión Europea.
+}
+\begin{la}
+    \item La \textbf{remuneración de asalariados nacional} son las rentas recibidas por las unidades residentes, por tanto, serán un recurso solo del sector hogares (cuenta de asignación de rentas primarias); y,
+    \item La \textbf{remuneración de asalariados interior} son las rentas pagadas registrándose por tanto en los empleos de los diferentes sectores institucionales (cuenta de explotación).
+\end{la} 
+
+\subsubsection{Cuenta de explotación}
+\textbf{Definición.-} La cuenta de explotación registra la generación de la renta a partir de la contribución a la producción de los factores productivos, así como los impuestos menos subvenciones sobre la producción y las importaciones adeudados a las administraciones públicas (p.ej. IVA, derechos sobre importaciones, etc.). 
+
+Es decir, analiza en qué medida el valor añadido engloba la remuneración de asalariados nacional y otros impuestos a la producción:
+\begin{la}
+    \item \textit{Sector}. A nivel sectorial, la cuenta de explotación muestra: (i) el VAB como recurso; y, (ii) la remuneración de asalariados interior y el pago de otros impuestos (netos de subvenciones) sobre la producción en empleos;\footnote{Se parte del saldo de la cuenta de producción (i.e. del VAB), que se registra en recursos y se anotan en empleos la generación de la renta a partir de la contribución a la producción de los factores productivos, así como los impuestos menos subvenciones sobre la producción y las importaciones adeudadas a las administraciones públicas (IVA, derechos sobre importaciones). Es decir, analiza en qué medida el valor añadido engloba la remuneración de asalariados nacional y otros impuestos a la producción.
+    } y,
+    \item \textit{Agregado}. Para el total de la economía se parte del PIB en recursos y se detrae la remuneración de asalariados y los otros impuestos netos registrados en los empleos. Adicionalmente se detraen los impuestos netos de subvenciones sobre los productos, ya que en los recursos se parte de una valoración del PIB a precios de adquisición que los incluye. La suma de los otros impuestos netos de subvenciones sobre la producción y los impuestos netos de subvenciones sobre los productos son los impuestos netos de subvenciones sobre la producción y las importaciones. 
+\end{la}
+
+\imagenfit{CuentaExplotacion.png}{Cuenta de epxlotación (C.II.1.1)}{Apuntes Víctor Gutiérrez Marcos. Tema 3.A.30}
+
+El saldo muestra:
+\begin{la}
+    \item \textit{Excedete Bruto de Explotación}. El excedente o déficit de las actividades de producción de cada sector institucional y se denomina Excedente Bruto de Explotación por sectores; y,
+    \item \textit{Renta Mixta Bruta}. Adicionalmente se incluye para el sector hogares otro saldo denominado Renta Mixta Bruta (RMB), es un concepto similar al EBE pero que se utiliza cuando no se puede separar el beneficio de la remuneración en empresas no constituidas como sociedades pertenecientes a los hogares (por ejemplo, en el caso de los trabajadores por cuenta propia o autónomos). Por tanto, la RMB del total de la economía será la del sector hogares, el saldo de los demás sectores será nulo.
+\end{la}
+
+Además, si con las cuentas vistas hasta ahora podíamos obtener la producción desde el punto de vista del gasto y de la producción, con esta cuenta podemos obtener también el PIB desde el enfoque de la renta.
+
+\eqblock{
+\begin{aligned}
+    PIB_R^{pa}=\text{Remuneración asalariados}+\frac{EBE}{RMB}+\overbrace{T_{\text{\scriptsize Producción}}}^{\substack{\text{\scriptsize Neto de S}}}
+\end{aligned}
+}{PIB enfoque de la renta. Macromagnitudes: Cuenta de explotación}
+
+El PIB desde el enfoque de la renta queda definido como el total de todas las rentas obtenidas en el proceso de producción de bienes y servicios más los impuestos sobre la producción y las importaciones menos las subvenciones.
+
+\subsubsection{Cuenta de asignación primaria}
+A diferencia de la cuenta de explotación, que se centra en la condición de productores cuyas actividades generan unas remuneraciones:
+
+\textbf{Definición.-} La cuenta de asignación primaria de la renta muestra a las unidades institucionales como perceptoras de rentas primarias (siendo los ingresos primarios un concepto más amplio de remuneraciones y no necesariamente ligado con los ingresos de la producción).\footnote{La renta primaria es la percibida por los propietarios de los factores de producción trabajo y capital.
+}
+
+Además, las anotaciones se hacen desde una perspectiva nacional, es decir son las rentas que reciben las unidades institucionales residentes, mientras que la cuenta de explotación se realizaba desde una perspectiva interior. Las anotaciones se harán:
+\begin{la}
+    \item \textit{Sector}. En las cuentas por sectores se registra en recursos el EBE y la RMB, la remuneración de asalariados nacional, los impuestos (netos de subvenciones) sobre la producción y las importaciones de las AAPP nacionales y las rentas de la propiedad a cobrar; y, (ii) en empleos las rentas de la propiedad a pagar-
+    \item \textit{Agregado}. Para el total nacional se registran los mismos conceptos y el saldo es la Renta Nacional Bruta (RNB) que se obtiene de la suma de las rentas que reciben los sectores \textbf{residentes}. Los saldos de rentas de la propiedad para el total de la economía (una vez descontados los flujos entre sectores) corresponden a la diferencia de lo recibido menos pagado con el resto del mundo. La diferencia entre el PIB y la RNB es que el primero es el Valor Añadido generado en un territorio económico (interior, residentes y no residentes) mientras que el segundo son las rentas que pertenecen a los agentes residentes en un territorio y obtenidas en el mismo o en otros territorios:
+\end{la}
+
+\imagenfit{Cuenta_AsignacionPrimaria.png}{Cuenta de asignación primaria (C.II.1.2)}{Apuntes Víctor Gutiérrez Marcos. Tema 3.A.30}
+
+Como saldo contable obtenemos la Renta Nacional Bruta ($pa$) que representa la renta primaria total a cobrar por las unidades institucionales residentes\footnote{El Producto Nacional Bruto (PNB) sería el valor de los bienes y servicios finales producidos por los residentes de un país.}: remuneración de los asalariados, impuestos menos subvenciones a la producción y las importaciones, rentas de la propiedad (la diferencia entre las rentas a cobrar y a pagar), excedente bruto de explotación y renta mixta bruta.
+
+\eqblock{
+\begin{aligned}
+    \underbrace{\text{Renta Nacional Bruta (RNB)}}_{\text{\scriptsize Saldo de Rentas Primarias}}=\text{Producto Interior Bruto (PIB)}+\text{Saldo de Rentas Primarias}
+\end{aligned}
+}{Equivalencia RNB $\sim$ PIB. Cuenta de asignación de rentas primaria}
+
+La Renta Nacional Bruta es igual al PIB más el saldo de rentas primarias (las rentas primarias del resto del mundo a cobrar por las unidades institucionales residentes menoslas rentas primarias a pagar por las unidades institucionales residentes a unidades institucionales no residentes). Además, debemos destacar que no es un concepto de producción sino un concepto de renta, que resulta más significativo si se expresa en términos netos, es decir, después de deducir el consumo de capital fijo.
+
+\subsection{Cuenta de distribución secundaria}
+Tras contabilizar la asignación de renta se procede a contabilizar su redistribución.
+
+\textbf{Definición.-} La cuenta de distribución secundaria de la renta muestra cómo se asigna el saldo de las rentas primarias de un sector institucional por medio de la redistribución. 
+
+Debemos entender que hay otros intercambios de renta que no responden, como en los casos anteriores, a un \textit{quid pro quo} (renta frente a producto o frente a servicios de factores) sino a una transferencia de rentas de un sector (o país) a otro, bien por obligación (el gobierno recauda impuestos de los hogares o entrega rentas a colectivos como los pensionistas) o bien porque se producen transferencias en el ámbito interior o internacional, como las que tienen lugar entre particulares o en el marco de la Unión Europea. Estas transferencias de redistribución de las rentas primarias se registran en la cuenta de distribución secundaria de la renta y permiten que la renta de la que dispone un sector difiera de su generación de renta, o que parte de las rentas generadas en un país se transfieran a otros. 
+
+\begin{specialblock}{\textbf{Definición.-} Redistribución}
+    La redistribución son operaciones sin contrapartida, transferencias corrientes entre sectores. En esta cuenta juegan un papel importante las administraciones públicas como perceptores de impuestos y como donantes de transferencias a los hogares y con el resto del mundo, que incluyen: 
+    \begin{lnum}
+        \item Los impuestos corrientes. Pagos obligatorios sin contrapartida directa realizados por las unidades institucionales a las administraciones públicas. Constituyen, por lo general, la mayor parte de los ingresos de las administraciones públicas. Se introducen en esta cuenta porque tienen finalidad redistributiva.;
+        \item Las cotizaciones sociales. Pagos de los hogares a los sistemas sociales con el fin de asegurar el pago de prestaciones sociales. Comprenden cotizaciones a cargo de los empleadores y cotizaciones a cargo de los hogares;\footnote{Cotizaciones sociales imputadas. Cuando el empleador es la propia administración pública se imputan las cotizaciones sociales que la administración pública debería pagarse a sí misma.
+        }
+        \item Las prestaciones sociales excluidas las transferencias sociales en especie. Se trata de transferencias corrientes que reciben los hogares bajo ciertas circunstancias como por ejemplo enfermedad, desempleo, jubilación, etc.; y,
+        \item Otras transferencias corrientes. Son aquellas transferencias que no son de capital, es decir que no se vinculan a la adquisición de un activo (ya sea financiero o no financiero). Estas transferencias sí que afectan directamente el nivel de ingreso primario ya que suponen más renta para el receptor.
+    \end{lnum}
+\end{specialblock} 
+
+Las anotaciones en esta cuenta se realizarán de la siguiente manera:
+\begin{la}
+    \item \textit{Sector}. En las cuentas por sectores se anotan: (i) en recursos los saldos de rentas primarias y las transferencias corrientes recibidas; y, (ii) en empleos las transferencias corrientes pagadas; y,
+    \item \textit{Agregado}. Para el conjunto de la economía la mayoría de estas operaciones de redistribución se cancelan entre sí y sólo sobreviven las transferencias corrientes con el resto del mundo. El saldo de la cuenta muestra la \textbf{renta que efectivamente tienen los sectores para su gasto y ahorro}.
+\end{la}
+
+\imagenfit{Distribución secundaria.png}{Cuenta de distribución secundaria (C.II.2)}{Apuntes Víctor Gutiérrez Marcos. Tema 3.A.30}
+
+El saldo sectorial es la \textbf{Renta Disponible Bruta} (RDB). El saldo del total de la economía sería la \textbf{Renta Nacional Bruta Disponible}, que es la suma de las rentas disponibles brutas de los sectores institucionales. La renta nacional disponible bruta es igual a la renta nacional bruta menos las transferencias corrientes a pagar a unidades no residentes, más las transferencias corrientes del resto del mundo a cobrar por las unidades residentes.
+
+\eqblock{
+\begin{aligned}
+    \text{Renta Nacional Bruta Disponible (RNBD)}=\text{Renta Nacional Bruta (RNB)}+\underbrace{\text{T corrientes con el RM}}_{\text{\scriptsize Saldo de la maginitud}}\\[1em]
+    \underbrace{\text{Renta Nacional Bruta Disponible (RRNBD)}=\text{Renta Nacional Bruta Disponible Ajustada (RNBDA)}}_{\text{Para el caso del total de la economía, pues es una redistribución entre uds. institucionales /sectores}}
+\end{aligned}
+}{Equivalencia RNB $\sim$ RNBD. Cuenta de distribución secundaria}
+
+\subsubsection{Ajustes intersectoriales: Transferencias sociales en especie (C.II.3)} 
+La cuenta de redistribución de la renta en especie tiene como finalidad registrar las transferencias sociales en especie realizadas desde el sector AAPP e ISFLSH al sector de los hogares.\footnote{Por transferencias en especie hablamos de prestaciones de seguridad social (tratamientos médicos, estancias hospitalarias, etc.), prestaciones de asistencia social (guarderías infantiles, ayudas para alojamiento, etc.). Es decir, se trata de bienes y servicios transferidos gratuitamente (servicios no de mercado). 
+}
+
+Es muy relevante a nivel sectorial porque da una visión más completa de la renta de los hogares al incluir la utilización de bienes que reciben de forma gratuita como prestaciones sociales en especie y las transferencias de bienes y servicios no de mercado individuales, como sanidad o educación, servicios por los que el consumidor no paga. Por tanto, la finalidad de esta cuenta es \textit{transformar} la Renta Disponible Bruta en Renta Disponible Bruta Ajustada (RDBA) y surge por la disyuntiva entre gasto público y consumo colectivo: 
+\begin{la}
+    \item \textit{Consumo colectivo}. Consumo realizado de forma colectiva por todos los miembros de una comunidad (o parte de ella, como una región). Son servicios que: (i) se prestan de forma colectiva; (ii) su uso es público; (iii) no requieren un acuerdo explícito de participación; y (iv) no excluye de su uso a otros miembros (no rivalidad); y,
+    \item \textit{Gasto público}. Incluye el consumo colectivo y otras categorías de gasto público de consumo que no tienen las características anteriores y que denominaremos transferencias sociales en especie (p.ej. sanidad, educación, asistencia social y asuntos culturales). Estos gastos, por ser susceptibles de individualización, dejan de incluirse en el consumo colectivo, y se incluirán en el consumo individual efectivo de los hogares. Mientras que forman parte del consumo colectivo, por ejemplo, la administración general, defensa, orden público, investigación y desarrollo.
+\end{la}
+
+Para ello, parte del saldo de la cuenta anterior, la Renta Disponible Bruta, en los recursos, y se añaden o sustraen las transferencias sociales en especie (se añaden en el caso de los hogares (recursos) se sustraen en el caso de las Administraciones Públicas y las ISFLSH (empleos)).
+
+\imagenfit{AjustesDistribucionSecundaria.png}{Cuenta de redistribución de la renta en especie (C.II.3)}{Apuntes ICEX-CECO. Tema 3.A.30}
+
+Para el total de la economía las anotaciones son equivalentes únicamente se parte de la RNBD en vez de la renta disponible por sectores y se llega a la RNBDA pues, como consiste en una redistribución entre sectores, el saldo agregado para el total nacional coincide con el de la cuenta de distribución secundaria de la renta. Es decir, únicamente se diferencia entre el sector que realiza el gasto y el sector que realiza el consumo:
+
+$$RNBD=RNBDA$$
+
+\subsection{Cuenta de utilización}
+Una vez realizada la redistribución la cuenta de utilización de la renta disponible muestra para los sectores institucionales que tienen consumo final cómo se distribuye la renta entre el gasto en consumo final y el ahorro. Dependiendo de si se parte de la RNBD o de la RNBDA se utiliza la cuenta de utilización de la renta disponible o la cuenta de utilización de la renta disponible ajustada respectivamente. 
+
+Si se analiza a nivel de unidad institucional o sector, en ambos casos el saldo sería el ahorro bruto por sectores. El saldo agregado para el total de la economía nacional de las dos cuentas coincide, es el Ahorro Nacional Bruto (ANB), por construcción ($RNBD=RNBDA$)
+
+\subsubsection{Cuenta de utilización: Renta Disponible (C.II.4.1)}
+La finalidad de la cuenta de utilización de la renta disponible es mostrar la forma en que los hogares, las AAPP y las ISFLSH reparten su renta disponible entre gasto en consumo final y ahorro. Se anota de la siguiente manera:
+\begin{la}
+    \item \textit{Recursos}. En recursos, de parte del saldo de la cuenta de distribución secundaria de la renta (i.e. la Renta Disponible Bruta) y un ajuste por la participación en fondos de pensiones\footnote{Concretamente, se considera que los hogares son los propietarios de las reservas de los sistemas privados de pensiones y, por lo tanto, que las variaciones de éstas forman parte de su ahorro. Por ello, la partida de ajuste figura en la cuenta de utilización de la renta de los hogares sumando en recursos, con lo que el saldo de la cuenta (i.e. ahorro bruto) se incrementará en la cuantía de la misma. En las cuentas de utilización de rentas de las instituciones financieras y de las sociedades no financieras figurará en empleos, con lo que el ahorro bruto de las mismas se verá reducido en la cuantía del citado ajuste.
+} (aparecerá en recursos para hogares y en empleos para instituciones financieras y, en algunos casos, sociedades no financieras); y,
+    \item \textit{Empleos}. Se reflejará el gasto en consumo final, entendido como el monto destinado a la adquisición de bienes y servicios de consumo que satisfacen las necesidades corrientes.\footnote{
+    No incluye compras de vivienda (consideradas formación bruta de capital fijo).
+    }
+\end{la}
+
+\imagenfit{Dist_RentaEspecie.png}{Cuenta de distribución de la disponible (C.II.4.1.)}{Apuntes Víctor Gutiérrez Marcos. Tema 3.A.30}
+
+El saldo contable es el ahorro bruto, que mide la parte de la renta disponible de cada sector institucional que no se utiliza en gastos de consumo final. El ahorro nacional bruto es la suma de los ahorros brutos de los diversos sectores institucionales y, por lo tanto, mide la parte de la renta nacional disponible que no se utiliza en gastos de consumo final. El ahorro bruto puede ser positivo o negativo, según si el ingreso disponible supera a los gastos en consumo final o viceversa:
+\begin{la}
+    \item \textit{Positivo}. Asumiendo que el ahorro es positivo (y en ausencia de transferencias de capital) el ingreso no gastado tiene que destinarse a la adquisición de activos o la reducción de pasivos; o,
+    \item \textit{Negativo}. Si el ahorro es negativo, algunos activos financieros o no financieros se han tenido que liquidar o se han incrementado algunos pasivos. 
+\end{la}
+
+Por tanto, el ahorro constituye el vínculo entre las cuentas corrientes del Sistema de Cuentas Nacionales y las cuentas de acumulación subsiguientes.
+
+\subsubsection{Cuenta de utilización: Renta Disponible Ajustada}
+Los hogares adquieren bienes y servicios que forman parte de su consumo individual, pero también reciben bienes y sobre todo servicios, financiados fundamentalmente por las administraciones públicas. Para reflejar esta situación, el SEC 2010 incorpora el concepto de consumo efectivo, señalando cuál es efectivamente el consumo de una unidad, al margen de que se financiación se haya efectuado por otra. Es decir, está cuenta se refiere a la utilización de la renta en especie. 
+
+El consumo efectivo de los hogares será su propio gasto en consumo más el gasto en consumo individualizable de las AAPP e ISFLSH. Los gastos en consumo individual de las AAPP y de las ISFLSH se denominan transferencias sociales en especie. El gasto no individualizable de las AAPP es el consumo colectivo. Esta fórmula tiene una doble ventaja: a) es más expresiva del bienestar de los consumidores; y b) permite una mejor comparación del nivel de consumo entre países con independencia de quién efectúa su financiación.
+
+\imagenfit{RDA_Cuenta.png}{Cuenta de utilización de la renta disponible ajustada}{Apuntes Víctor Gutiérrez Marcos. Tema 3.A.30} 
+
+El saldo contable de esta cuenta es el mismo que el de la anterior, el ahorro bruto, que mide la parte de la renta disponible de cada sector institucional que no se utiliza en gastos de consumo final. ▪ Puede ser positivo o negativo, según si el ingreso disponible supera a los gastos en consumo final o viceversa. Asumiendo que el ahorro es positivo (y en ausencia de transferencias de capital) el ingreso no gastado tiene que destinarse a la adquisición de activos o la reducción de pasivos. Si el ahorro es negativo, algunos activos financieros o no financieros se han tenido que liquidar o se han incrementado algunos pasivos. Por tanto, el ahorro constituye el vínculo entre las cuentas corrientes del Sistema de Cuentas Nacionales y las cuentas de acumulación subsiguientes.
+
+
+
+\clearpage
+\section{Cuentas de acumulación}
+\puntosclave{
+    La contraparte de las cuentas reales son las cuentas financieras que muestran la capacidad o necesidad de financiación por instrumentos financieros. 
+    
+    Los flujos de acumulación financiera y no financiera junto con otras variaciones de los activos permiten pasar del balance inicial al balance final. Estos recogen los stocks de la economía en la apertura y cierre del periodo contable. 
+    
+    La contraparte exterior de la economía nacional se recoge en las cuentas del resto del mundo. 
+    
+    El sistema esta cuadrado por definición, los saldos reales coinciden con los financieros y estos dos con los del resto del mundo con el signo cambiado.
+}   
+
+Mientras que las cuentas corrientes se ocupan de los flujos que tienen lugar durante el período contable, las cuentas de acumulación registran las causas de las variaciones de los activos y pasivos, así como del patrimonio neto, de las distintas unidades institucionales. 
+
+Así, una vez realizadas las operaciones corrientes se registran los procesos de acumulación como variaciones de activos y variaciones de pasivos y del patrimonio neto.\footnote{La referencia a los pasivos en las cuentas de acumulación no financiera puede sorprender al opositor en tanto que los pasivos únicamente pueden ser linancieros y se registrarían en la cuenta financiera. Sin embargo. en el SEC-2010 por coherencia con el resto de cuadros de las cuen1as de acumulación se hace mención a los pasivos dentro de la cuenta de capital : así aparece también en los cuadros de la contabilidad nacional del INE.
+} Por tanto, las cuentas de acumulación muestran las variaciones de los activos en la parte izquierda y las variaciones de los pasivos y del patrimonio neto en la parte derecha, siendo el saldo la diferencia entre el lado derecho e izquierdo y, al igual que en el caso de las cuentas corrientes, se trata de una sucesión de cuentas que parte del ahorro neto (obtenido de la sucesión de las cuentas corrientes) y que determina la variación de activos y pasivos.
+
+Existen tres tipos de cuentas de acumulación: capital, financiera y otras variaciones de activos.
+
+\subsection{Cuenta de capital}
+La primera cuenta de acumulación es la cuenta de capital, esta registra las adquisiciones menos las cesiones de activos no financieros realizadas por unidades residentes y mide la variación del patrimonio neto debida al ahorro y a las transferencias de capital. 
+
+Esta cuenta parte del ahorro neto (restando al saldo de la cuenta anterior el consumo de capital fijo), y su finalidad es obtener las variaciones del patrimonio neto del conjunto de la economía. Concretamente, la cuenta de capital permite determinar en qué medida las adquisiciones menos las cesiones de activos no financieros han sido financiadas con cargo al ahorro (saldo contable final de las cuentas corrientes) y las transferencias de capital cuyo último fin es determinar si: la economía muestra, o bien una capacidad de financiación, que corresponde al importe de que dispone una unidad o un sector para financiar, directa o indirectamente, a otras unidades o sectores, o bien una necesidad de financiación que corresponde al importe que una unidad o sector se ve obligado a pedir prestado a otras unidades o sectores.
+
+Por tanto, el saldo de esta cuenta (a nivel agregado) es determinar la capacidad o necesidad de financiación de la economía, es decir, si con el ahorro generado más las transferencias de capital que ha recibido: (i) es capaz de financiar la adquisición de activos no financieros (Formación Bruta de Capital, FBC) y las adquisiciones menos cesiones de activos no financieros y no producidos; o, (ii) requiere de financiación exterior para hacer frente a sus necesidades. La cuenta de capital se puede dividir a su vez en dos cuentas.
+
+\subsubsection{Cuenta de capital (I): Variaciones del PN debidas al ahorro y a las transferencias de capital}
+Esta cuenta corrige el ahorro neto por las transferencias de capital desde y hacia los sectores. Se diferencian de las transferencias corrientes en que suponen la adquisición o cesión de activos por al menos una de las partes que intervienen en la operación.
+
+Todas las anotaciones se realizan en la parte de las variaciones de pasivos y del patrimonio neto. En las cuentas por sectores se registra en el lado derecho el ahorro neto (obtenido de las cuentas corrientes), las transferencias de capital a cobrar (+) y las transferencias de capital a pagar (-). 
+
+\imagenfit{Capital_I.png}{Cuenta de variaciones del patrimonio neto debidas al ahorro y a las transferencias de capital}{Apuntes ICEX-CECO. Tema 3.A.30}
+
+En la cuenta para el total nacional se parte del ahorro nacional neto (ANN). El saldo de la cuenta serán las variaciones del patrimonio neto debidas al ahorro y a las transferencias de capital.
+
+\subsubsection{Cuenta de Capital (II): Adquisiciones de activos no financieros}
+Esta cuenta se sucede a la anterior en el sentido de que parte del cierre en variaciones del patrimonio neto debidas al ahorro y a las transferencias de capital y, anotando únicamente en la columna de variaciones de activos (izquierda), determinamos el destino de dichas variaciones tanto a nivel sectorial como nacional: las adquisiciones menos las cesiones de activos no financieros:\footnote{
+Los activos no financieros se dividen en:
+\begin{la}
+    \item \textit{Producidos}. Activos fijos y existencias;
+    \item \textit{No producidos}. Recursos naturales y fondo de comercio.
+\end{la}
+El fondo de comercio (goodwill) corresponde al valor inmaterial derivado de factores como la clientela, la eficiencia, la organización, el crédito, el prestigio, la experiencia, etc.
+}
+\begin{lnum}
+    \item \textit{Formación bruta de capital fijo}. Se mide por el valor total de las adquisiciones menos las disposiciones (cesiones) de activos fijos efectuadas por los productores residentes sin incluir las existencias. Los activos fijos son activos producidos utilizados en la producción durante más de un año. Distinguimos entre activos tangibles (edificios, equipos, maquinaria, etc.) y activos intangibles (marcas, patentes, etc.);
+    \item \textit{Consumo de capital fijo} (con signo negativo). La formación bruta de capital fijo ha de ser aminorada por el consumo de capital fijo, es decir, hay que tener en cuenta la depreciación, para así tener en cuenta la formación neta de capital fijo;
+    \item \textit{Variación de existencias}; y,
+    \item \textit{Adquisiciones menos cesiones de activos no financieros no producidos}. Son transacciones relacionadas con activos que pueden utilizarse para la producción de bienes y servicios, pero en sí no han sido producidos como por ejemplo arrendamientos de recursos naturales, patentes, derechos de autor, marcas, etc.
+\end{lnum}
+
+\imagenfit{Capital_II.png}{Cuenta de adquisiciones de activos no financieros}{Apuntes ICEX-CECO. Tema 3.A.30}
+
+Como saldo contable obtenemos la capacidad o necesidad de financiación, que viene dada por la diferencia entre el ahorro (corregido por las transferencias de capital) y la adquisición de activos no financieros:
+\begin{la}
+    \item \textit{Si el monto es negativo}. Existe un endeudamiento neto y una necesidad de financiación (aumento neto de pasivos financieros) y el saldo reflejará el montante de recursos necesarios para pedir prestados frente al exterior;
+    \item \textit{Si el monto es positivo}. Se trata de una capacidad de financiación (adquisición neta de activos financieros) y el saldo reflejará el montante de recursos disponibles para adquirir activos financieros.
+\end{la} 
+
+Para las AAPP, la capacidad/necesidad de financiación representa el principal indicador de las finanzas gubernamentales.\footnote{Por superávit (déficit) se entiende la capacidad (necesidad) de financiación del sector Administraciones Públicas. El déficit/superávit es la diferencia entre los ingresos y gastos no financieros y se obtiene como saldo de la cuenta de capital de las AAPP. En cualquier caso, es importante hacer un disclaimer:\\
+El déficit en términos de contabilidad nacional (necesidad de financiación) no es lo mismo que el déficit de caja. El déficit de caja se obtiene a partir de la Ejecución del Presupuesto, como diferencia de cobros y pagos no financieros realizados durante el período.
+}
+
+\subsection{Cuenta financiera}
+La cuenta financiera muestra cómo se traslada la capacidad o necesidad de financiación a la variación de activos y pasivos financieros.
+
+\textbf{Definición.-} (Instrumentos financieros básicos) Un \textbf{activo} financiero es un depósito de valor que genera un beneficio para su propietario por su posesión o uso durante un período. Por otro lado, un \textbf{pasivo} financiero es una obligación de su poseedor de realizar un pago a un acreedor.
+ 
+Por tanto, en esta cuenta se analizan los instrumentos a través de los cuales aumenta la posición deudora o acreedora de un sector o para el total de la economía. Las anotaciones se hacen de manera similar a los de la cuenta de capital, la variación de pasivos en el lado derecho y la variación de activos en el lado izquierdo, pero en este caso se trata de activos y pasivos financieros que recogen el trasvase de recursos financieros entre agentes económicos a través de instrumentos financieros.\footnote{Cada activo financiero tiene su contrapartida en el pasivo, con la excepción del componente de oro en lingotes dentro del oro monetario en poder de las autoridades monetarias que es mantenido como activo de reserva. 
+}
+
+\imagenfit{CuentaFinanciera.png}{(Izq.) Los ocho tipos de instrumentos financieros previstos por el SEC-2010; (Dch.) Cuenta financiera}
+
+Una diferencia fundamental con la cuenta de capital es que el saldo se calcula al revés. Esto se debe a que:
+\begin{la}
+    \item \textit{Cuentas de acumulación no financiera}. Se registran flujos monetarios;
+    \item \textit{Cuentas de acumulación financiera}. Se registran los flujos de derechos y obligaciones que son la contrapartida financiera de las operaciones reales: se registra la adquisición o contracción de instrumentos financieros atendiendo al aumento o disminución de la posición acreedora/deudora.
+\end{la}
+
+Teniendo en cuenta que la contrapartida de una operación financiera puede ser:
+\begin{la}
+    \item Una operación financiera. Entonces, pueden modificarse los totales de activos y pasivos financieros, pero no varía su capacidad o necesidad de financiación ni su patrimonio neto;
+    \item Una operación no financiera. Donde se modifica la capacidad o necesidad de financiación de las unidades institucionales.
+\end{la}
+Por tanto, cada operación ya sea real o financiera tiene una contrapartida financiera y se registra dos veces. Este sistema garantiza la simetría conceptual del sistema de cuentas y permite que el saldo de las cuentas reales coincida con el saldo de las cuentas financieras. Es decir, la capacidad o necesidad de financiación de las cuentas de acumulación no financiera debe de coincidir con el saldo de la cuenta financiera, dado que estas deberían corresponderse con los saldos contables financieros excedentarios o deficitarios. Por lo tanto, no hablaremos de saldo contable en esta cuenta, hablaremos de \textbf{identidad contable}.\footnote{
+Existe una controversia semántica entre el SEC 2010 y el SCN-2008:
+\begin{la}
+    \item Según el SEC 2010 esta cuenta refleja una identidad contable que registra como la capacidad necesidad de financiación se traslada a la variación de activos y pasivos financieros, de modo que no existe saldo contable;
+    \item Según el SCN-2008 esta cuenta registra la variación de activos y pasivos financieros, por lo que el saldo contable será de nuevo la capacidad o necesidad de financiación.
+\end{la}
+} La diferencia entre la variación de los activos financieros y la variación de pasivos financieros es equivalente a la capacidad o necesidad de financiación de esta economía. Esta cuenta es la contrapartida financiera (en términos de instrumentos financieros) de las cuentas de la economía real. Esta cuenta nos permite llegar a una de las identidades clave de la contabilidad nacional:\footnote{En la práctica, lograr esta identidad es una de las tareas más difíciles de lograr en la elaboración de la contabilidad nacional.
+}
+
+\eqblock{
+\begin{aligned}
+    \underbrace{\text{Saldo de la cuenta de capital}}_{\text{\scriptsize Capacidad (+) o necesidad (-) de financiación}}=\overbrace{\text{Saldo de la cuenta financiera}}^{\text{\scriptsize Capacidad (+) o necesidad (-) de financiación}}
+\end{aligned}
+}{Identidad contable: Saldo Cuenta de Capital $\sim$ Saldo Cuenta Financiera. Cuentas de acumulación}
+
+Si existe una diferencia será imputable a discrepancias entre las mediciones de las operaciones reales y las financieras.
+
+\imagenfit{Ej_IdentidadContable.png}{Cuenta financiera de la economía española 2018 (millones de euros)}{Banco de España | Apuntes ICEX-CECO. Tema 3.A.30}
+
+\subsection{Cuentas de otras variaciones de los activos}
+Una vez cerradas las cuentas corrientes, de acumulación no financiera y financiera hay que tener en cuenta otros flujos que modifican el valor de los activos y pasivos a lo largo del ejercicio, que no constituyen trasacciones (intercambios o transferencias), ni variaciones de existencias ni depeciación del capital ordinario. 
+
+Estos flujos son otras variaciones de los activos y pueden ser tanto variaciones en el volumen como ganancias y pérdidas de posesión nominales (revalorizaciones nominales). Estos flujos se registran: o (i) en la cuenta de otras variaciones del volumen de activos, o bien (ii) en la cuenta de revalorización.
+
+\subsubsection{Cuenta de otras variaciones del volumen de los activos}
+\textbf{Definición.-} Recogen anotaciones positivas o negativas de activos y pasivos como consecuencia de acontencimientos excepcionales. 
+
+Por ejemplo: entradas y salidas por el descubrimiento, agotamiento y degradación de activos naturales, el efecto de sucesos externos que no son de naturaleza económica (terremotos, guerras, etc.) y los  cambios resultantes de la reclasificación o reestructuración de unidades institucionales o deactivos y pasivos. Las partidas correspondientes a las variaciones de los activos se registran en el lado izquierdo y las partidas para las variaciones de los pasivos y el patrimonio neto se registran en el lado derecho. Como saldo contable se obtienen las variaciones del valor neto debidas a otras variaciones del volumen de activos.
+
+\subsubsection{Cuentas de revalorización}
+\textbf{Definición.-} Las cuentas de revalorización registran las ganancias y pérdidas que se producen en el valor nominal de los activos reales y financieros ya existentes al principio del periodo.\footnote{En el caso de los activos y pasivos denominados en moneda extranjera se tienen en cuenta las variaciones en el valor por variaciones en el tipo de cambio.
+} 
+
+En concreto, una ganancia o pérdida de posesión surge de un aumento o disminución en el valor de un activo o de una disminución o aumento en el valor de un pasivo y se clasifican en ganancias y pérdidas de posesión neutrales y reales.
+
+\paragraph{Cuenta de ganancias y pérdidas de posesión neutrales}
+Revalorización proporcional al nivel general de precios que se obtiene aplicando un índice de la variación del nivel general de precios al valor inicial de todos los activos y pasivos. Afecta a todos los activos y pasivos de la misma forma.
+
+\paragraph{Cuenta de ganancias y pérdidas de posesión reales}
+Las ganancias y pérdidas de posesión reales miden la diferencia entre las ganancias y las pérdidas de posesión nominales y las ganancias y pérdidas de posesión neutrales. Se refiere a incrementos y disminuciones del precio relativo de un activo, es decir, si el precio efectivo del activo ha aumentado más rápidamente que el nivel general de precios.
+
+
+\clearpage
+\section{Balances}
+Las cuentas de otras variaciones de los activos junto con las cuentas de acumulación financiera y no financiera permiten realizar los ajustes previos al cierre del balance de un ejercicio contable que cierra el sistema de cuentas de la economía nacional.
+
+Los balances son el estado contable que registra el valor a precios de mercado de:
+\begin{lnum}
+    \item Los activos no financieros y financieros poseídos;
+    \item Los pasivos incurridos en un momento concreto del tiempo; y,
+    \item Siendo la diferencia entre ambos el patrimonio neto.
+\end{lnum} 
+
+Por tanto, tienen por objetivo describir los activos, los pasivos y el patrimonio neto de las unidades al principio y al final del ejercicio contable, así como las variaciones que tienen lugar durante dicho periodo. 
+
+\subsection{Fases del Balance: Periodificación}
+Se distinguen por tanto tres tipos de balance: inicial, de variaciones y final. El SEC recoge la elaboración de balances para los distintos sectores institucionales, para el total de la economía y para el resto del mundo, sin embargo, de manera general los activos se registran en el lado izquierdo y los pasivos y el patrimonio neto lo hacen en el lado derecho, al igual que en las cuentas de acumulación. 
+
+\subsubsection{Balance inicial}
+Registra el valor de los activos y pasivos que poseen las unidades al principio del ejercicio contable. La diferencia entre los activos y los pasivos (el saldo contable) es el patrimonio inicial neto.
+
+\subsubsection{Variaciones del balance}
+Registran las variaciones del valor de los activos y pasivos durante el ejercicio contable y agregan los montantes registrados en las diversas cuentas de acumulación, es decir, las variaciones del patrimonio neto debidas al ahorro y a las transferencias de capital, las variaciones del patrimonio neto debidas a otras variaciones del volumen de los activos y las variaciones del patrimonio neto debidas a ganancias y pérdidas de posesión nominales.
+
+\subsubsection{Balance final}
+Registra el valor de los activos y pasivos que poseen las unidades al final del ejercicio contable. Estas partidas se clasifican según la misma nomenclatura utilizada en el balance inicial y se valoran a precios corrientes de final del periodo. La diferencia entre los activos y los pasivos (el saldo contable) es el patrimonio final neto. El valor de un activo o pasivo en el balance final será igual a la suma de su valor en el balance inicial y del importe registrado para dicho activo o pasivo en la cuenta de variaciones del balance.
+
+\subsection{Macromagnitudes relavantes}
+Para la economía en su conjunto el saldo contable del Balance se denomina riqueza nacional.\footnote{El patrimonio neto y la riqueza nacional hacen referencia al saldo de los balances. El primer concepto se utiliza en el análisis de los sectores institucionales mientras que el segundo se suele utilizar cuando se analiza el total de la economía.
+} y es la suma de los activos no financieros y activos financieros netos de pasivos\footnote{Por su naturaleza los pasivos únicamente son financieros
+} con respecto al Resto del Mundo:
+
+\eqblock{
+\begin{aligned}
+    &\underbrace{\text{Riqueza Nacinoal}}_{\text{\scriptsize Saldo del Balance $\sim$ Patrimonio Neto}}=\text{Activos no financieros}+\overbrace{\text{Activos financieros}}^{\text{\scriptsize Netos de pasivo financiero}}\\[2em]
+    &\text{Desde la perspectiva del Patrimonio Neto,}\\[0.5em]
+    &\hspace{1em}\left.\begin{aligned}
+        PN(t)=PN(t-1)+\Delta PN(t-1,t)\\
+        AR(t)=AR(t-1)+\Delta AR(t-1,t)\\
+        BF(t)=BF(t-1)+\Delta BF(t-1,t)\\
+    \end{aligned}\right\}\qquad \boxed{PN(t)=\underbrace{AR(t)}_{\substack{\text{\scriptsize Activos reales}\\\text{\scriptsize en periodo $t$}}}+\overbrace{BF(t)}^{\substack{\text{\scriptsize Balanza financiera}\\\text{\scriptsize en periodo $t$}}}}
+\end{aligned}
+}{Riqueza Nacional. Balances}
+
+Por tanto, el patrimonio neto al final del periodo contable será igual al patrimonio neto al principio del periodo más las variaciones en el patrimonio. En el patrimonio neto se distingue la parte real de la parte financiera. La parte real incluye los stocks de activos reales al principio y al final del periodo contable junto con su variación. La parte financiera incluye los balances financieros al principio y final del periodo contable más las variaciones de la cuenta financiera.
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+
+
+\subsection{Recapitulación}
+
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+\MyBibItem{Autor}{Título}{Año}{DOI -- LINK}
+
+
+% --- Anexos (no aparecen en el índice) ---
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+
+\end{document}
