@@ -1,0 +1,1303 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Tema 3.A.6 -- La nueva macroeconomía clásica\\
+\large La hipótesis de las expectativas racionales; la crítica de Lucas; el surgimiento de los modelos dinámicos estocásticos de equilibrio general}
+\author{Marcelo Ortega}
+\date{Noviembre 2025}
+\newcommand{\TemaCode}{3A06}
+
+\oldtitle{Tema 3.A.29. La nueva macroeconomía clásica}
+\changerationale{Se desplaza su posición en el temario para aclarar el tipo de aproximación al estudio de la escuela que se espera del opositor: no se recomienda realizar una sucesión de modelos (ya que éstos son objeto de estudio en los temas de Macroeconomía), sino una caracterización general de la escuela en términos de supuestos-resultados-recomendaciones de política económica, así como su impacto revolucionario y aportaciones a la Economía, limitaciones del enfoque, relevancia en la literatura, etc.}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+    }
+\vspace{1cm}
+
+\modificaciones{
+    Es imprescindible añadir el modelo de ciclos reales de la NMC, de hecho, es probablemente el más importante a la hora de exponerlo!!!
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}\label{intro}
+En primer lugar, podríamos preguntarnos porque es importante estudiar la Nueva Economía Keynesiana desde un punto de vista histórico. 
+
+Para responder a esta pregunta puede resultar muy ilustrativo el Premio Nobel de Economía de 2024, en particular, el concepto de \textit{destrucción creativa}. Un autor, o autores, puede encuadrarse en una época, resultar ser el contorno entre épocas o precisamente las ideas germinales de cambio que motivan el nacimiento de otra época, pero lo que es innegable es que ese autor es fruto del conocimiento previo que la ciencia ha alcanzado.
+
+\imagenfit{DestruccionCreativa.png}{Ilustración: Destrucción creativa}{\href{https://www.nobelprize.org/prizes/economic-sciences/2025/press-release/}{Nobel Prize Outreach 2025. Nov 2025.}}
+
+Si visualizamos el conocemiento económico como una escalera que se ha ido desarrollando a lo largo de su breve historia, es imprescindible conocer en que momento (peldaño) nos encontramos, es decir, cuál es la frontera del conocimiento, para poder avanzar, pero no por ello es menos importante entender y conocer el camino que nos ha traído hasta aquí, puesto que este conocimiento previo es condición necesaria para la innovación.
+
+\imagenfit{PrescriptiveKnowledgeVSPropositionalKnowledge.png}{Ilustración: Conocimiento Prescriptivo y Conocimiento Proposicional}{\href{https://www.nobelprize.org/prizes/economic-sciences/2025/press-release/}{Nobel Prize Outreach 2025. Nov 2025.}}
+
+\subsection{Contextualización}\label{context}
+En este caso Tema nos centrararemos en el estudio de la macroeconomía, por ser el objeto de estudio principal de la NEK.
+
+\subsubsection{Relevancia}\label{importance}
+La macroeconomía es la rama de la economía que estudia los fenómenos económicos de gran escala. 
+
+Es decir, aquellos que involucran a decenas de miles, cientos de millones de agentes que toman decisiones con contenido económico que se repercuten mutuamente y que a su vez inducen nuevos cambios respecto las decisiones iniciales.  Para estudiar estos fenómenos, la macroeconomía hace uso de variables agregadas, como el empleo ($L$), la inflación ($\pi$) o la renta ($Y$); y serán diferentes escuelas macroeconómicas las que tratarán de dar explicación a los fenómenos que se observan en relación a estas variables agregadas, teniendo cada una su particular punto de vista. 
+
+Éstos fenómenos a explicar conciernen fundamentalmente los cambios en esas variables agregadas tanto en el largo plazo como en el corto plazo. Para ello, los macroeconomistas utilizan diferentes herramientas que han sido objeto de transformación gradual y que, junto con conjuntos de modelos y sus implicaciones, han dado lugar a paradigmas en el sentido de KUHN. 
+
+\subsubsection{Historia}\label{history}
+Desde una perspectiva histórica, podemos decir que la publicación de KEYNES en 1936 \textit{Teoría General del Empleo, la inflación y el dinero} fue el punto de divergencia entre el estudio separado de las variables macroeconómicas y su comportamiento y del estudio a nivel microeconómico de los agentes económicos. Es decir, esta obra marco la separación e inicio de la Teoría Macroeconómica como rama separada de la Economía que centra su estudio en los fenómenos a gran escala. 
+
+\subsubsection{Problemática}\label{problem} 
+El objeto de esta exposición es presentar una escuela macroeconómica surgida en los años 70's que supuso una revolución metodológica en la macroeconomía. Ello se concretatará dando respuesta a las siguientes preguntas: 
+\begin{lnum}
+    \item ¿Qué es la Nueva Macroeconomía Clásica? 
+    \item ¿A qué autores se asocia? 
+    \item ¿Qué herramientas teóricas utiliza e introduce? 
+    \item ¿Qué aporta al estudio de la macroeconomía? 
+    \item ¿Qué implicaciones de política económica se derivan?
+\end{lnum} 
+
+\subsection{Estructura de la exposición}\label{structure}
+Estructuraremos nuestra exposición en tres partes:
+\begin{lnum}
+    \item En primer lugar presentaremos el contexto histórico en el que se desarrolla, sus principales autores (y universidades) y sus principales aportaciones;
+    \item En segundo lugar, presentaremos sus principales aportaciones en términos de lineas de investigación, en particular la construcción de la oferta agregada, la formación de precios y el contexto informacional de los agentes, la Teoría de los Ciclos Reales y sus principales indicaciones en términos de Política Económica; y,
+    \item Por último, a modo de conclusión, haremos una breve recapitulación y hablaremos de algunos críticas formuladas contra esta Escuela o corriente de pensamiento. 
+\end{lnum}
+
+\clearpage
+\section{Contexto histórico} 
+La expansión económica posterior a la Segunda Guerra Mundial en las economías occidentales, caracterizada por un bajo desempleo y un crecimiento estable, validó inicialmente las políticas macroeconómicas de la SNC que enfatizaban la gestión de la demanda agregada mediante intervenciones fiscales y monetarias. Sin embargo, a finales de la década de 1960 surgieron presiones inflacionarias persistentes a pesar del aumento del desempleo, lo que cuestionó el \textit{trade-off} entre desempleo e inflación, visible a través curva de Phillips.\footnote{Cabe recordar que la corriente ortodoxo dominante hasta el momento será la ya estudiada Síntesis Neoclásica, inspirada futilmente en las ideas de KEYNES [\authorfont{Ver Tema 3.A.5}], los modelos macroeconómicos se caracterizaban por la imposición de supuestos \textit{ad hoc} a partir de los cuales se formulaban sistemas de ecuaciones que trataban de representar el comportamiento de la macroeconomía, lo que conocemos como Modelos Macroeconométricos, Véase: \href{https://repositorio.uam.es/entities/publication/256ba000-dcff-41e2-8801-40b03ad037f7}{A. ESPACE (1973), \textit{Modelos Macroeconométricos: Simultaneidad y recursividad, estimación y observaciones escasas}}. \textit{Grosso modo}, podemos decir que las dificultades que estos modelos presentaban serán:
+\begin{lnum}
+    \item \textit{Ausencia de principios subyacentes del comportamiento de los agentes}. A pesar de los esfuerzos por microfundamentar diferentes mercados de forma separada tales como la demanda de consumo o de dinero experimentada durante los años 60's, la presentación global de los modelos seguía teniendo carácter \textit{ad hoc} y no era capaz de integrar de forma satisfactoria las interacciones entre mercados y, a menudo, no era compatible con comportamiento optimizador generalizado. Como resultado de estas aproximaciones teóricas, se formulaban grandes modelos econométricos que estimaban formas reducidas que expresaban la relación entre variables sin atender en modo alguno a los procesos subyacentes que determinaban el valor de los parámetros estimados;
+    \item \textit{Carácter eminentemente estático}. Otra de las características de los modelos de la SNC de los años 60's era su carácter eminentemente estático (Cabe recordar que la introducción de los Modelos ARMA se realiza con el fin de introducir el dinamismo en los Modelos de la SNC). A pesar de algunos intentos por modelizar el ajuste dinámico de unos equilibrios a otros, la metodología predominante no era adecuada para introducir la dimensión temporal de las decisiones económicas precisamente por la falta de microfundamentación referida anteriormente. 
+    \item \textit{Inalteración de las expectativas a los cambios del marco definidor}. En modelos de la SNC trataban de incorporar la adaptabilidad, pero era relativamente habitual postular expectativas miopes (Hipótesis de las Expectatvas Estáticas), de modo que los agentes asumían que las variables de estado tomarían en el futuro el mismo valor que en el último momento conocido. De hecho, será FRIEDMAN (y otros autores) quien populizará la alternativa hipótesis de expectativas adaptativas (HEA): los agentes ajustan las estimaciones teniendo en cuenta la desviación entre los valores esperados y observados de periodos anteriores; y,
+    \item \textit{Equilibrio parcial y criterio ceteris paribus}. Aunque algunos autores como Patinkin habían tratado de entender los modelos de la SNC como modelos de equilibrio general, e incluso intentaron caracterizarlo en un contexto walrasiano, el paradigma dominante tendía a preferir el equilibrio parcial, formulando modelos que consideraban el efecto de un número reducido de variables y aplicaban el supuesto de \textit{ceteris paribus} al resto.
+\end{lnum}
+} Los intentos de racionalización de la curva de PHILLIPS de FRIEDMAN y PHELPS\footnote{Véase [\authorfont{Ver Tema 3.A.5}] para la crítica de FRIEDMAN y el concepto de ilusión monetaria en el mercado de trabajo
+} inspirará, entre otras ideas, a los autores de la Nueva Macroeconomía Clásica: es posible explicar fenómenos macroeconómicos a partir de construcciones teóricas basadas en el comportamiento de agentes racionales. 
+
+La crisis de estanflación de los años setenta intensificó estas anomalías. La espiral inflacionaria sumida al estancamiento económico y altos niveles de desempleo,\footnote{Provocada, en parte, por el embargo petrolero de la OPEP en 1973, que cuadruplicó los precios del crudo y seguida por el shock de la Revolución iraní de 1979, la inflación estadounidense alcanzó su máximo en 1980.} provocó una crisis de confianza enorme en las predicciones mediante Modelos Macroeconómetricos  que defendía la SNC: un estímulo de la demanda podía corregir las recesiones sin acelerar indefinidamente los precios. 
+
+\imagenfit{PetroBarrelUS.png}{(Izq.) Evolución de los precios del barril de petroleo en Estados Unidos | (Dcha.) Producción de ptroleo de países seleccionados. Periodo 1973-2015: Caída exportaciones Iranís de crudo en 1978 (\href{https://es.wikipedia.org/wiki/Viernes_Negro_(1978)}{Crísis del Petroleo de 1979})}{(Izq.) \href{https://es.wikipedia.org/wiki/Crisis_del_petróleo_de_1973}{Crisis del petróleo de 1973. Wikipedia.org} | (Dcha.) \href{https://es.wikipedia.org/wiki/Crisis_del_petróleo_de_1979}{Crisis del petroleo de 1979. Wikipedia.org}}
+
+\imagenfit{Inflacion-DesempleoUS.png}{(Izq.) CPI interanual, Estados Unidos | (Dcha.) Tasa de desempleo, Estados Unidos. Zonas grises señalan periodos de recesión económica}{(Ambas) FRED, St. Louis Federal Reserve}
+
+Este contexto económico de inflación creciente y desempleo, como resultado de la crisis del petróleo y de alta volatilidad en los mercados financieros internacionales tras la descomposición del Sistema de Bretton Woods alimentó tanto una traslación política a los postulados Monetaristas como una pérdida de confianza generalizada en el mundo académico a los postulados de la SNC.
+
+\subsection{Autores y Universidad de referencia}
+Ya a finales de los años 60's pero, sobretodo, durante la década de los 70's confluyeron una generación de prominentes economistes en una serie de Universidades americanas. Escépticos respecto a las conclusiones de la SNC y con cierta afinidad hacia los resultados teóricos de la corriente monetarista, su trabajo se centrará en conciliar la Teoría Macroeconómica y, en especial, la construcción de sus variables agregadas, con el comportamiento (teórico) de los agentes defendido por la Teoría Microeconómica dominante.\footnote{La siguiente clasificación simplemente es una aproximación que pretende evidenciar cuáles son las influencias y las relaciones existentes entre los autores más influyentes de esta corriente económica, pues, como es de sobra sabido, cada vida es un mundo y estos autores no centran únicamente su investigación docente en los desarrollos en los que ahora se van a enmarcar.
+}
+
+\subsubsection{Universidad de Chicago}
+\paragraph{LUCAS}
+Nacido en 1937 en Yakima, Washington, Lucas creció en una familia modesta que tras la Gran Depresión sufrió dificultades económicas. Estudió Historia y en 1959 se licenció en la University of Chicago. Sin embargo, decidió dedicarse a la economía, y tras un breve paso por Berkeley, regresó a Chicago, donde obtuvo su doctorado en Economía en 1964. Su tesis doctoral, titulada \textit{Substitution Between Labor and Capital in U.S. Manufacturing: 1929–1958}, fue dirigida por H. GREGG LEWIS y DALE JORGENSON. Tras doctorarse enseñó en la Carnegie Mellon University hasta 1975, cuando regresó a Chicago, donde pasó el resto de su carrera.
+
+Aunque sus inicios no fueron en macroeconomía pura, pronto se volcó a ella. En los años 70's emergió como la figura central de lo que hoy llamamos la Nueva Macroeconomía Clásica. Entre sus aportaciones más relevantes está su artículo de 1972, \textit{Expectations and the Neutrality of Money}, donde mostró que si los agentes anticipan correctamente la política monetaria, los cambios en la oferta de dinero no tienen efectos reales permanentes: el dinero se vuelve neutral salvo sorpresa. Más tarde, su famosa \textit{crítica de Lucas} (1976) dirigida al uso de modelos econométricos para evaluar políticas generó un quiebre metodológico: una política que funcione hoy puede dejar de hacerlo si los agentes cambian sus expectativas (problemas de inconsistencia dinámica). LUCAS exploró también temas de crecimiento, estructura urbana, comercio internacional, activos financieros, consumo, etc.
+
+Su enorme impacto quedó reconocido cuando en 1995 recibió el Premio Nobel de Económicas \textit{Por haber desarrollado y aplicado la hipótesis de las expectativas racionales, transformando así el análisis macroeconómico y profundizando nuestra comprensión de la política económica}. 
+
+Como veremos, Lucas cambió radicalmente el paradigma, ya no bastaba con relaciones empíricas estables; era necesaria una teoría microfundada, con agentes racionales anticipando la política. Esto convirtió a la macroeconomía en algo mucho más riguroso, interpretando los ciclos, la oferta agregada y la neutralidad del dinero desde una nueva óptica.
+
+\paragraph{SARGEANT}
+Thomas SARGENT nació en 1943 en Pasadena, California. Realizó su licenciatura en la University of California, Berkeley, donde se graduó en 1964 con distinción. Posteriormente obtuvo su Ph.D. en 1968 en Harvard; su tesis se tituló \textit{The structure of interest rates}, bajo la supervisión de JOHN R. MEYER. Tras su PhD, pasó por distintos puestos en varias universidades (Pennsylvania, Minnesota, Chicago, Stanford), siendo hoy es profesor de economía en la New York University, donde continúa siendo muy influyente. 
+
+SARGENT es considerado uno de los líderes de la revolución de las expectativas racionales, y su contribución fue decisiva para consolidar la Nueva Macroeconomía Clásica. Junto con WALLACE desarrolló en 1975 resultados fundamentales sobre la imposibilidad de usar la política monetaria de forma sistemática para manipular la producción o el empleo, demostrando que si los agentes forman expectativas racionales y conocen la regla de política, cualquier estímulo monetario anticipado se descarga en precios, sin efectos reales.  A lo largo de su carrera, ha combinado macroeconomía, economía monetaria y econometría de series temporales, desarrollando metodologías matemáticamente sofisticadas para trabajar con expectativas racionales y modelos dinámicos estocásticos. Entre sus libros fundamentales están \textit{Macroeconomic Theory} y \textit{Dynamic Macroeconomic Theory}.
+
+Gracias a su obra, quedó claro que los economistas debían ser mucho más cautos, ya que cualquier análisis de política macro debía tener en cuenta cómo los agentes anticipan la política. Sus técnicas de modelos dinámicos estocásticos (con expectativas racionales) siguen siendo la base de la macro moderna.
+
+En 2011 recibió el Premio Nobel de Economía (junto con SIMS) \textit{Por investigaciones empíricas sobre causa y efecto en la macroeconomía}.
+
+\paragraph{WALLACE}
+En 1975, junto con SARGENT, publicó resultados clave que demostraban que bajo expectativas racionales no existe la posibilidad de usar la política monetaria sistemáticamente para estabilizar la producción o el empleo: lo que conocemos como la \textit{proposición de ineficacia} o \textit{insuficiencia de la política monetaria anticipada},  mostrando que si los agentes económicos conocen la regla de política monetaria y actúan racionalmente, anticiparán los efectos de esa política en precios, de modo que cualquier estímulo será neutralizado. 
+
+Aunque su biografía no destaca por un Nobel u honores públicos tan mediáticos, su trabajo técnico es básico. Junto con SARGENT, sentó las bases formales de un marco macroeconómico riguroso: mercados con expectativas racionales, equilibrio, neutralidad del dinero salvo sorpresa, y la imposibilidad de manipulación sistemática. Esa conclusión obligó a reformular la política monetaria (más reglas, menos discreción) y originó la práctica moderna de reglas monetarias (como la regla-TAYLOR).
+
+\subsubsection{Universidad de Minnesota}
+
+\paragraph{PRESCOTT}
+Edward PRESCOTT fue una figura clave para consolidar una segunda ola de la Nueva Macroeconomía Clásica, especialmente orientada al lado de la oferta y a los ciclos reales. Obtuvo su doctorado en la Carnegie Mellon University (PhD), y trabajó después como profesor en la University of Minnesota, donde desarrolló buena parte de sus contribuciones más influyentes.
+
+Prescott es co-autor con KYDLAND de trabajos fundamentales (como \textit{Time to Build and Aggregate Fluctuations}, 1982) que dieron lugar a la Teoría de Ciclos Reales (TCR). En esta teoría los ciclos económicos no resultan de fallas nominales, rigideces o shocks monetarios, sino de cambios reales como avances tecnológicos o productividad; es decir, las oscilaciones en la producción y empleo se deben a cambios en la eficiencia, no a intervenciones monetarias o de demanda.  Además, junto con KYDLAND, desarrolló el concepto de \textit{inconsistencia dinámica} o \textit{time inconsistency}: muestran que una política óptima anunciada (ex ante) hoy puede dejar de ser óptima en el futuro (ex post), lo que socava la credibilidad de las autoridades que actúan discrecionalmente. Esa idea transformó la forma en que se piensa la política monetaria y fiscal, en favor de reglas claras y consistentes en el tiempo.
+
+PRESCOTT recibió en 2004 el Premio Nobel de Economía,  junto con KYDLAND), \textit{Por sus contribuciones a la macroeconomía dinámica: la consistencia en el tiempo de la política económica y las fuerzas impulsoras detrás del ciclo económico}. Gracias a él, la Nueva Macroeconomía Clásica dio un giro de enfocarse solo en expectativas, neutralidad del dinero y microfundamentos nominales, a dar un papel central al lado real (tecnología, productividad, estructura real) y a la credibilidad institucional.
+
+\paragraph{FINN KYDLAND}
+KYDLAND nació en 1943 en una zona rural de Noruega, creciendo en el seno de una familia de agricultores. Su educación universitaria comenzó en la Norwegian School of Economics (NHH), de donde se graduó en 1968. Luego viajó a Estados Unidos para hacer su doctorado en la Carnegie Mellon University, el cual obtuvo en 1973 con una tesis titulada \textit{Decentralized Macroeconomic Planning}.  Después de regresar brevemente al NHH, regresó a Carnegie Mellon como profesor, trasladándose a los Estados Unidos. A lo largo de su trayectoria participó en el desarrollo de la TCR junto a PRESCOTT, y asimismo exploró las implicaciones de la \textit{inconsistencia dinámica} de la política.
+
+En 2004, junto con PRESCOTT, recibió el Premio Nobel de Economía \textit{Por sus contribuciones a la macroeconomía dinámica: la consistencia en el tiempo de la política económica y las fuerzas impulsoras detrás del ciclo económico}.
+
+KYDLAND aportó una visión radicalmente diferente a la macro, ya no fue suficiente con centrarse en la política monetaria, expectativas o rigideces nominales. Propuso que los ciclos pueden generarse por cambios reales, tecnológicos, estructurales; y que una política económica eficaz requiere credibilidad, reglas, compromis: la no dicrecionalidad; ampliando el alcance de la Nueva Macroeconomía Clásica hacia una teoría del ciclo real y de la estructura institucional.
+
+\paragraph{SIMS}
+Sims desarrolló junto con SARGENT técnicas que permiten evaluar políticas macroeconómicas e identificar efectos de shocks estructurales usando datos reales, respetando la formación de expectativas racionales. Su labor contribuyó a que los modelos macroeconómicos fueran no solo teóricos, sino también cuantitativos y empíricos, permitiendo separar causa y efecto (por ejemplo, distinguir si una recesión se debe a política monetaria, shocks reales, expectativas, etc.). Esto consolidó la base metodológica de la macro moderna —al menos en su vertiente neoclásica.
+
+SIMS obtuvo el Premio Nobel de Economía en 2011, junto con SARGENT, \textit{Por haber desarrollado y aplicado la hipótesis de las expectativas racionales, transformando así el análisis macroeconómico y profundizando nuestra comprensión de la política económica}. 
+
+Como resultado de la situación geográfica de estas universidades, ROBERT HALL acuñó el término \textit{freshwater economics} o economía de agua dulce, que se solapa de forma parcial con el concepto de Nueva Macroeconomía Clásica.
+
+\subsection{Revolución metodológica: Supuestos fundamentales y Características}
+La Nueva Macroeconomía Clásica debe estudiarse únicamente como una revolución metodológica. Podría decirse que se trata del cénit de la visión macroeconómica clásica, preservando la visión del agente económico (\textit{homos economicus}) que caracterizaba, ya desde los MILL, la corriente académica dominante (Escuela de Cambridge, SNC, Monterarismo, etc.). 
+
+\begin{adjustwidth}{2cm}{0pt}
+    \raggedright 
+    \textit{What I am going lo describe lo you is a revolution in macroeconomics, a transformation in \textbf{melhodology} that has reshaped how we conduct our science}\\
+    \raggedleft{PRESCOTT. Discurso del Premio Nobel, 2004}
+\end{adjustwidth}
+
+\subsubsection{Microfundamentación}
+Las aportaciones pioneras de ANDO y MODIGLIANI (1963), JORGENSON (1967), BAUMOL (1952) y TOBIN (1956) abrieron la puerta a la modelización de las principales decisiones de demanda (consumo, inversión y dinero, respectivamente) como resultado del comportamiento optimizador de los agentes económicos. 
+
+LUCAS y RAPPING (1969) replican este enfoque para el mercado de trabajo [\authorfont{Ver Tema 3.A.25}]. Los oferentes de trabajo son considerados agentes que optimizan sus decisiones de trabajo-ocio de forma intertemporal, para maximizar su utilidad, por ejemplo aumentando su oferta de trabajo cuando los salarios presentes son mayores que los esperados en el futuro.\footnote{La elasticidad de la oferta de trabajo ante variaciones en las condiciones macroeconómicas permanece como una de las principales aportaciones de la NMC. En la actualidad, persiste, sin embargo, un debate intenso sobre la magnitud de la misma. Desde un punto de vista macroeconómico, la elasticidad se considera elevada, en base a estudios sobre las fluctuaciones entre países y a través del tiempo, de los tipos impositivos y las horas trabajadas totales. Además, los modelos de equilibrio general desarrollados a raíz de las aportaciones de la NMC (TCR y modelos DSGE Neo-Keynesianos) necesitan de una elasticidad alta para poder reproducir los principales hechos estilizados relacionados con los ciclos económicos. Sin embargo, desde un punto de vista microeconómico, la evidencia apunta a elasticidades muy por debajo de la unidad, sobre la base de la respuesta de los salarios y las horas trabajadas de los hombres en el segmento central de la distribución de edad (25 - 54 años). Estudios más recientes que incluyen a mujeres o trabaJadores jóvenes tienden a revelar elasticidades más elevadas.
+}
+
+Como vemos, esta aportación resulta fundamental, pues consiste en primer lugar en la decisión intertemporal de los ofertantes de trabajo (microfundamentación) que, mediante agregación de un agenterepresentativo, alcanza a obtener la oferta total y dinámica del mercado de trabajo (variable agregada: macroeconomía).  
+
+\subsubsection{Conducta de los Agentes Económicos: Hipótesis de las Expectativas Racionales} 
+La Nueva Macroeconomía Clasica no se separa (sin pérdida de generalidad) de los supuestos Neoclásicos del comportamiento de los agentes, por lo tanto, desarrollarán su visión dentro del siguiente marco:
+\begin{lnum}
+        \item \textit{Racionalidad ilimitada}. Los agentes actúan guiados por la razón y, en consecuencia, sus decisiones son plenamente racionales;
+         \item \textit{Economía basada en la escasez y el intercambio}. Los agentes son optimizadores de su función objetivo, que se ve limitada tanto por la escasez natural (restricción global) como por la escasez individual (restricción individual);
+        \item \textit{Individualismo metodológico}. Al ser el comportamiento de los agentes racional y optimizador, el comportamiento global de la economía (variables agregadas: macroeconomía) puede ser explicado mediante la agregación de los agentes que la conforman (microeconomía), pues la economía en su conjunto se comporta de manera agregada (no hay propiedades que emergen).\footnote{Esta característica resulta fundamental para entender la crítica dirigida por parte de los defensores de otras ramas teóricas heterodoxas, en particular, de los economistas de la Economía de la Complejidad.\\El concepto de \textit{propiedad emergente} puede entenderse con un ejemplo: \\Una neurona tiene unas características intrínsecas y y unas propiedades a título individual. Podemos conjeturar que una neurona se comporta de manera racional (supongamos que es así) y de manera optimizadora (supongamos también que es así). Un cerebro está formado por más de 80 mil millones de neuronas, ahora bien, ¿podemos representar el funcionamiento de un cerebro como la mera agregación de neuronas? O, por el contrario, ¿podemos decir que hay ciertas \textit{propiedades que emergen} cuando observamos el comportamiento del cerebro en su conjunto que no son explicables mediante la mera agregación de sus componentes? ¿Si construimos un cerebro con solo la mitad de neuronas, tendríamos un cerebro \textit{más incapacitado} o, simplemente, no tendríamos un cerebro? \textbf{Pista.-} Un cerebro de elefante tiene 257 mil millones de neuronas (más de tres veces superior), pero no están distribuidas de la misma forma pues el 97,5\% se concentran la coordinación de la capacidad psicomotriz (cerebelo).
+        }
+\end{lnum}
+
+Sin embargo, añade un elemento clave que condiciona el comportamiento temporal de los agentes, la Hipótesis de Expectativas Racionales (HER).\footnote{El concepto fue introducido por MUTH (1961), referido a los mercados de productos agrícolas y aplicado a la formalización de un modelo, inicialmente por LUCAS y PRESCOTT (1971) en un contexto macroeconómico referido a las decisiones de inversión.\\Si bien LUCAS y RAPPING (1969) era un artículo rompedor en cuanto a la microfundamentación de las decisiones de oferta de trabajo y la consideración de vaciado o equilibrio continuo, era convencional en la formación de expectativas de los agentes, que se realizaba de forma adaptativa (HEA).\\
+En aquel momento, las hipótesis dominantes sobre la formación de expectativas eran de dos tipos, estáticas y adaptativas:
+\begin{la}
+    \item \textit{Expectativas Estáticas.}\footnote{Véase SNC \author{[Ver Tema 3.A.5]}} Los agentes actúan de forma miope, como si el valor futuro de cualquier variable fuese igual al observado en el presente:
+    $$\dot P_t^e=\dot P_{t-1}$$
+    \item \textit{Expectativas Adaptativas}.\footnote{Véase FRIEDMAN y Monetarismo \author{[Ver Tema 3.A.5]}} Los agentes económicos incorporan la información proporcionada por los valores presentes y los pasados. Existen tres tipos básicos:
+    \begin{lnum}
+        \item Con Aprendizaje: se incorpora como infonnación relevante el error cometido en la previsión de valores pasados (la diferencia entre el valor realizado y el esperado en el período previo)
+        \item Extrapolativas: pondera la infonnación procedente de los valores pasados. La ponderación disminuye a medida que se consideran valores más lejanos en el pasado
+        \item Regresivas: además de incluir los valores pasados ponderados, los agentes tienen un ancla o valor de largo plazo que esperan alcanzar
+    \end{lnum}
+\end{la}
+} Esta se fundamenta en que:
+\begin{lnum}
+    \item \textit{Los agentes tomas decisiones en función de Variables Reales} (no nominales), por tanto, no existe \textit{ilusión monetaria};
+    \item \textit{La información de los agentes es incompleta.}\footnote{Originado en PHELPS (1970), bajo esta formulación, este supuesto implica que en un contexto de mercados descentralizados, los participantes en cada uno de ellos tienen información limitada sobre lo que ocurre en el resto y toman sus decisiones de producción en base a sus precios relativos ($p_t^i/p_t$). En este contexto, los agentes tienden a malinterpretar las señales de precios, confundiendo movimientos en el nivel general de precios con subidas en sus precios relativos. La falta de información completa conlleva, por lo tanto, una respuesta de los productores al confundir el shock agregado con uno específico de su sector, ligando output e inflación.
+    } De hecho, disponen información acerca de sus $P_{locales}$ (relativos) pero no sobre los $P_{absolutos}$ agregados de la economía. En particular, esto se manifiesta mediante el \textit{problema de extracción de señales}\footnote{Véase: \textit{\href{https://www.almendron.com/tribuna/wp-content/uploads/2019/01/expectations-and-the-neutrality-of-money-2.pdf}{Expectations and the Neutrality of Money}, LUCAS (1972)}
+    } que, entre otras, se manifiesta de la siguiente forma: Como los agentes observan un precio específico, su precio relativo, si estos observan un aumento (disminución de éste), no pueden distinguir si este se ocasiona por: 
+    \begin{la}
+        \item Un cambio real relativo, por ejemplo, debido a un aumento de la demanda de su bien, un cambio tecnológico, desplazamiento sectorial; o,
+        \item Un shock nominal general, por ejemplo, un aumento de la oferta monetaria que está aumentando todos los precios.
+    \end{la}
+    Por lo tanto, deben extraer señales de la información disponible para decidir si el cambio observado representa una señal real (cambiar su producción) o una señal nominal (no cambiar nada).
+    \item \textit{Utilizan toda la información disponible óptimamente.} Por tanto, no cometen errores sistemáticos.
+\end{lnum}
+
+Matemáticamente, represantamos estas Expectativas de manera que:\footnote{En su artículo, LUCAS y PRESCOTT consideran que si las perturbaciones de demanda que afectan a los inversores en cada período tienen un carácter estocástico subyacente regular, las expectativas adaptativas generan una distribución de precios distinta con cada innovación o shock. Este error predictivo será persistente y sistemático. Para impedir este desajuste, se propone la utilización de expectativas racionales, según las cuales los agentes conocen la estructura económica (modelo), esto es, actúan como si conocieran las reglas de política económica futuras, consideran que los mercados se vacían y todo este conocimiento es común. Gracias a ello, se utiliza toda la información relevante ($\Omega_{t-1}^*$) y no se cometen errores sistemáticos (el error de predicción será un ruido blanco, de media cero y varianza finita y constante)
+}
+\eqblock{
+\begin{aligned}
+    P_t^e=E[P_t\;|\;\Omega_{t-1}]\quad &\to\qquad \text{Para obtener $P_t^e$ utilizan toda la información disponible en $t-1$}\\[1em]
+    E[P_t-E[P_t\;|\;\Omega_{t-1}]]\quad &\to\qquad \text{Se puede equivocar puntualmente, pero se espera que NO}\\[1em]
+    P_t-P_t^e=\varepsilon_t\quad &\to\qquad \text{Término de error: RB (no sistemático): $\quad \varepsilon_t\sim N(0, \sigma<\infty)$}\\[1em]
+\end{aligned}
+}{Hipótesis de las Expetativas Racionales. NMC}
+
+\subsubsection{Funcionamiento del Mercado} 
+Por lo que respecta al funcionamiento del mercado, los autores de la Nueva Macroeconomía Clásica, probablemente influenciados por la economía neo-paretiana y las importantes aportaciones que autores como ARROW o DEBREU habían realizado poco antes, consideraran que los mercados se encuentran:
+\begin{lnum}
+    \item \textit{Equilibrio dinámico con precios perfectamente flexibles}. Los precios serán considerados flexibles en el marco de la NMC y por tanto, defenderán el ajuste vía precios de manera que el mercado se encuentre constantemente en equilibrio (en línea con la visión de la Teoría Neoclásica de la Producción);
+    \item \textit{Competencia perfecta}. Los mercados se encuentran en competencia perfecta, por tanto se alcanza el Equilibrio Competitivo y cualquier asignación es Pareto Óptima (Primer Teorema Fundamental de la Economía del Bienestar); y,
+    \item Vaciado continuo de mercados. Aunque es una consecuencia directa de los dos supuestos anteriores, cabe recalcar que en el marco de la NMC se producirá el vaciado continuo de mercados y, por tanto, esto tendrá especial relevancia en la Economía Laboral puesto que conlleva la inexistencia de desempleo involuntario.
+\end{lnum}
+
+\paragraph{Modelos dinámicos estocásticos de equilibrio general}
+La modelización, teniendo todas las propiedades previamente mentadas, se llevará a cabo entonces mediante los Modelos Dinámicos Estocásticos de Equilibrio General. 
+
+
+
+
+\clearpage
+\section{Objeto: la vuelta de la Economía neoclásica}
+En su artículo de 1972, \textit{Expectations and the Neutrality of Money}, Lucas amplía el contenido de LUCAS y RAPPING (1969), conservando las ideas de equilibrio continuo de los mercados y optimización intertemporal pero enmarcadas en un contexto de equilibrio general en el cual los agentes forman sus expectativas de forma racional.\footnote{Nótese la conjunción de todos los cambios metodológicos que caracterizan a la Nueva Macroeconomía Clásica frente a los Modelos Macroeconométricos propios de la Síntesis Neoclásica.
+} 
+
+Poco después, en 1973, la aportación de LUCAS tuvo importantes consecuencias para el debate de política económica dominante: la pendiente de la curva de Phillips. El modelo de información imperfecta de Lucas sirvió para fundamentar las ideas, presentadas previamente por FRIEDMAN (PHELPS-FRIEDMAN), en contra de la explotación de la relación de intercambio entre inflación y output, abogando por la neutralidad del dinero y la ineficacia de la política monetaria. A lo largo de la década, siguió trabajando en el desarrollo de su metodología, aplicado por ejemplo a teorizar sobre los Ciclos Reales (1975, \href{https://knowledge.uchicago.edu/record/6014/files/Equilibrium-Model-of-the-Business-Cycle.pdf}{An Equilibrium Model of Bussiness Cycle}; o 1976, \href{https://untdfdinero.wordpress.com/wp-content/uploads/2019/05/lucas-1976.pdf}{Understanding the Bussiness Cycle}), siendo, como hemos dicho, su publicación más reconocida en 1976. 
+
+Sin embargo, vamos a centrar nuestra exposición en presentar, formal pero simplificadamente las principales ideas de LUCAS que inician la Nueva Macroeconomía Clásica.
+
+\subsection{Función de Oferta Agregada de LUCAS (1972)}
+En 1972, LUCAS presenta un modelo, muy representativo, que propone una formación alternativa de la Función de Oferta Agregada, microfundamentada y en presencia de información incompleta.\footnote{La curva de oferta de LUCAS se presenta de maneras muy diversas en diferentes artículos suyos, sin embargo, todas comparten características similares y conducen a conclusiones semejantes: la formación racional de las expectativas invalida la política monetaria como mecanismo de impulso de la economía real, en la mayoría de supuestos. Veamos porque a través del razonamiento en \href{https://www.aeaweb.org/aer/top20/63.3.326-334.pdf}{\textit{Some International Evidence on Output-Inflation Tradeoffs} (LUCAS, 1973)}
+}
+
+\subsubsection{Supuestos}
+Supongamos que:
+\begin{lnum}
+    \item \textit{Microfundamentación}. Existe un amplio número de mercados ($z$), en los cuales los agentes se encuentran distribuidos de manera aletoria. Estos agentes se enfrentan a dos decisiones: 
+    \begin{la}
+        \item Vender su producción en el mercado local al precio observado; o,
+        \item Comprar bienes de otros mercados a un precio promedio.
+    \end{la}
+    La decisión de producción se basará en la idea de sustitución intertemporal entre ocio y trabajo. Los agentes productores se esforzarán para conseguir el mayor consumo posible dadas sus horas trabajadas y para ello sacrificarán ocio a cambio de mayor producción en los períodos de mayor precio relativo (mayor demanda en su mercado respecto a los demás) y viceversa cuando el precio relativo de su bien producido respecto a los que consume disminuya; y,
+    \item \textit{Información incompleta}. Cada productor conoce el precio ($P(z)_t$) de su mercado pero no el nivel general de precios ($P_t$). Por tanto, existe falta de información de las variables agregadas;
+    enfrentan a dos decisiones: 
+    \item Los agentes formarán sus expectativas en base a la Hipótesis de las Expectativas Racionales. Por tanto, su decisión dependerá tanto de sus expetativas, que se proyectarán en una dimensión real (en su mercado) y en una dimensión nominal (en términos agregados).
+\end{lnum} 
+
+Por tanto, la variable que los agantes querrán estimar es el precio agregado ya que conocen el precio de su mercado y lo harán en base a un conjunto de creencias, tanto en base al histórico (conjunto de información) como de las perturbaciones propias al sistema:
+\eqblock{
+\begin{aligned}
+    \text{Creencia sobre el precio agregado:}& \quad \mathbb E_t[p_t]\\[1em]
+    \text{Precio agregado $\sim$ Precio mercado:}& \quad p(z)_t=p_t+z_t;\qquad z_t\sim N(0\;,\; \sigma_z^2)\\[1em]
+\end{aligned}
+}{Conjunto de creencias: HER. Función de Oferta de LUCAS}
+
+\subsubsection{Actualización de las expectativas y reacción}
+Cuando los productores observen el precio de su mercado local, actuarán en consecuencia, adaptando su creencia sobre el comportamiento económico general y en particular, sobre la posibilidad de variar su producción:
+\eqblock{
+\begin{aligned}
+    &\text{Observan:}\qquad p(z)_t\\[1em]
+    &\text{Actualizan sus creencias agregadas: (Regla de BAYES)}\\[0.5em]
+    &f(p_t\;|\;p(z)_t)\propto f(p(z)_t\;|\;p_t)\;f(p_t)\quad \Longrightarrow\quad \underbrace{E[p_t\;|\;p(z)_t]=\left(1-\frac{\sigma_p^2}{\sigma_p^2+\sigma_z^2}\right)E[p_t\;|\;\Omega_t]+\frac{\sigma_p^2}{\sigma_p^2+\sigma_z^2}\;p(z)_t}_{\text{Es la clave: *}}\\[1em]
+    \text{*}&\begin{cases}
+        1-\frac{\sigma_p^2}{\sigma_p^2+\sigma_z^2}\quad\to\quad\frac{\sigma_z^2}{\sigma_p^2+\sigma_z^2}&:=\text{Cuánto peso pone a $E[p_t\;|\;\Omega_t]$ (creencia previa), porque cree que $\sigma_z^2$ es grande}\\[0.5em]
+        \frac{\sigma_p^2}{\sigma_p^2+\sigma_z^2}\quad&:=\text{Cuánto peso pone a $p(z)_t$ (observación), porque cree que $\sigma_p^2$ es grande}
+    \end{cases}\\[2em]
+    &\text{Y la Función de Oferta de mercado:}\quad y^s(z)_t=\beta\frac{\sigma_z^2}{\sigma_z^2+\sigma_p^2}(p(z)_t-E[p_t\;|\;\Omega_t])
+\end{aligned}
+}{Actualización de creencias y extracción de señales. Función de Oferta de LUCAS}
+
+Por tanto, como vemos, la Función de Oferta de mercado de LUCAS dependerá, en gran medida del peso relativo que los agentes asignen a las variaciones provenientes de shocks reales ($\sigma_z^2$) respecto a los shocks agregados ($\sigma_p^2$). Aunque no podemos decir, con rigor, que los agentes asignen \textit{probabilidades subjetivas ad hoc} a cada uno de estos fenómenos, sí lo hacen por estar estos parámetros construidos en base al conjunto de información (de variables reales/nominales agregadas y variables locales) y siendo esta procesada de manera racional por los agentes. Ante una variación, por tanto, podemos decir que a nivel local los agentes reaccionarán de las siguientes formas:
+
+\eqblock{
+\begin{aligned}
+    &\text{Si observa $p(z)_t-p_t>0$, esto es, un incremento de los precios relativos,}\\[1em]
+    &\text{(1) Si el productor confía poco en el precio local como señal (de $P_t$)}\Longrightarrow (1-\theta)=\frac{\sigma_z^2}{\sigma_p^2+\sigma_z^2}\approx1
+    \\&\hspace{3em} \Longrightarrow\text{Schocks reales: decisón $\Delta Y(z)_t$}\\[1em]
+    &\text{(2) Si el productor confía mucho en el precio local como señal (de $P_t$)}\Longrightarrow \frac{\sigma_p^2}{\sigma_p^2+\sigma_z^2}\approx1
+    \\&\hspace{3em} \Longrightarrow\text{Schocks nominales: decisón $Y(z)_t\sim Y(z)_{t-1}$}\\[1em]
+\end{aligned}
+}{Reacción ante incremento de los precios relativos. Función de Oferta de LUCAS}
+
+\subsubsection{Función de Oferta Agregada de LUCAS: Reacción conjunta}
+Por otro lado, si agregamos todas las curvas de oferta individual de mercado, contruyendo la Función de Oferta Agregada de LUCAS, obtenemos lo siguiente:
+
+\eqblock{
+\begin{aligned}
+    &\text{Consideramos que los shocks idiosincráticos/locales se cancelan en promedio:}\quad \int z_t\mathrm{d}z=0\\[1em]
+    &\text{Entonces,}\qquad \boxed{y_t^s=\beta(1-\theta)[p_t-E[p_t\;|\;\Omega_t]]}, \quad \beta\equiv\varepsilon_{S}\qquad \text{[OA]}\\[2em]
+    &\text{Si los agentes aprecian un $\Delta P(z)_t/P_t$, el efecto en términos agregados, será:}\\[1em]
+    &\begin{cases}
+        \text{Anticipado:} \quad p_t -E[p_t\;|\;\Omega_t]=0\quad &\Longrightarrow\; Y_t\sim Y_{t-1}\\[0.5em]
+        \text{No anticipado:} \quad p_t -E[p_t\;|\;\Omega_t]>0 \quad \text{(error de previsión)}\quad &\Longrightarrow\; \Delta Y_t
+    \end{cases}
+\end{aligned}
+}{Reacción agregada. Función de Oferta Agregada de LUCAS}
+
+\paragraph{Explicación del ciclo económico}
+Dadas las características de los desarrollos originales de LUCAS, la extensión de su modelo a un análisis explícito de los ciclos económicos resultó bastante sencilla y en dos artículos estrechamente relacionados LUCAS (1975, 1977) sienta las bases de su visión sobre la modelización de éstos.
+
+De acuerdo con Lucas, los ciclos se pueden explicar mediante perturbaciones nominales que, en presencia de información imperfecta, se desarrollan alrededor de una tendencia ($\bar y$), descritos por una ecuación con perturbaciones estocásticas: $\varepsilon_t=p_t-E[p_t\;|\;\Omega_t]$ funcionando este como componente propagador, con poca oscilación y persistencia. El ciclo, entonces, dependerá de la elasticidad de la función de oferta ($\beta$) y del peso relativo que los agentes asignen entre las variaciones locales y las varaciones agregadas:\footnote{…}
+\begin{la}
+    \item Si los agentes asignan una volatilidad mayor a los precios observados en su entorno local $\sigma_z^2>\sigma_p^2$, entonces la efectividad de un shock nominal será mayor; y,
+    \item Si los agentes asignan una volatilidad mayor a los precios agregados, considerando una buena referencia sus precios observados ($\sigma_p^2>\sigma_z^2$), entonces los agentes no modificarán su comportamiento a raíz de la observación de un incremento de los precios locales, por lo que la política monetaria será ineficaz.
+\end{la}
+
+Sin embargo, aunque muchos autores verificaron sus conclusiones anteriores, el propio BARRO (1989) y otros autores como SIMS (1980) o NELSON y PLOSSER (1982) refutaron la validez empírica del modelo de Ciclos Reales de LUCAS, señalando que las perturbaciones monetarias sólo eran capaces de reproducir una pequeña parte de la variabilidad existente en las series de desempleo y producción.\footnote{Además se puso en duda la existencia en la práctica del problema de extracción de señales respecto a las perturbaciones monetarias, ya que los datos sobre los agregados monetarios resultaban disponibles de forma rápida y transparente. El propio LUCAS en una entrevista en 1999 reconoce las limitaciones de su aproximación y abre la vía a la Teoría de Ciclos Reales: \textit{That 75 paper was a dead end. I mean, it was an attempt to introduce sorne kind of usual dynamics into my 72 paper, and it didn't work. I think that KYDLAND and PRESCOTT's 1982 followed from that.}
+}
+
+Poco después, una teoría explicativa alternativa (que veremos después) se convertirá en el marco de referencia de la Teoría de Ciclos dentro del marco de la NMC.
+
+\paragraph{Crítica de LUCAS}
+En 1976, LUCAS formalizará definitivamente su reticencia a la metodología seguida por los Modelos Macroeconómetricos, en \href{https://people.sabanciuniv.edu/atilgan/FE500_Fall2013/2Nov2013_CevdetAkcay/LucasCritique_1976.pdf}{\textit{Econometric Policy Evaluation: A Critique}}; sintetizando perfectamente la crítica hacia estos y exponiendo la razón por las cuáles él (y otros autores) exigían una formalización más microfundamenta. Esta crítica irá principalmente dirigida a la puesta en práctica de estos modelos en la evaluación de Políticas Económicas.
+
+En particular, la crítica de LUCAS destacará la importancia de la  microfundamentación en los modelos macroeconómicos y destacará dos tipos de parámetros que deberían tenerse en cuenta a la hora de formularlos:
+\begin{lnum}
+    \item \textit{Parámetros profundos o estructurales}. Definen las reglas de comportamiento de los agentes y son invariantes a las medidas de política económica. Serán los más relevantes en términos de política económica, por ejemplo, como los agentes tienen en cuenta en la formación de sus expectativas la volatilidad de las variables agregadas ($\sigma_p^2$) y su influencia sobre la efectividad de ésta; y,
+    \item \textit{Parámetros que definen la formación de expectativas}. Dependen del régimen de política económica (HER).\footnote{Aquellos modelos, como el IS-LM, cuyos parámetros son una combinación de ambos tipos, se verán afectados por las medidas de política económica, que influirán en la posición e inclinación de las curvas a través de las expectativas incorporadas en los parámetros.
+    }
+\end{lnum} 
+
+\begin{specialblock}{Extractos interesantes del Paper}
+    Veamos algunos extractos del paper original, que, en puridad, da el pistoletazo de salida a la Nueva Macroeconomía Clásica:
+
+    \begin{adjustwidth}{2cm}{0pt}
+    \raggedright 
+    \textit{El hecho de que los precios y salarios nominales tiendan a aumentar con mayor rapidez en el punto máximo del ciclo económico que en el mínimo ha sido bien reconocido desde que el ciclo fue percibido por primera vez como un fenómeno distinto. La inferencia de que una inflación permanente inducirá, por lo tanto, una expansión económica permanente es sin duda igual de antigua; sin embargo, solo recientemente esta noción ha sufrido la misteriosa transformación de una falacia obvia a convertirse en una piedra angular de la teoría de la política económica.}
+    
+    \textit{Esta transformación no surgió de nuevos desarrollos en la teoría económica. (...) Surgió, en cambio, de la tradición más reciente de los modelos econométricos de predicción y del compromiso, por parte de una gran fracción de economistas, con el uso de estos modelos para la evaluación cuantitativa de políticas.}
+    
+    \textit{(...) Este conflicto tan claro entre dos tradiciones justamente respetadas —la teórica y la econométrica— tomó por sorpresa a quienes veíamos ambas como complementarias de manera armoniosa.}
+    
+    \textit{(...) La tesis de este ensayo es que es la tradición econométrica, o más precisamente, la “teoría de la política económica” basada en esta tradición, la que necesita una revisión profunda. Más concretamente, sostendré que las características que conducen al éxito en la predicción a corto plazo no están relacionadas con la evaluación cuantitativa de políticas, que los principales modelos econométricos están diseñados (y bien diseñados) únicamente para realizar la primera tarea, y que las simulaciones utilizando estos modelos pueden, en principio, proporcionar ninguna información útil sobre las consecuencias reales de políticas económicas alternativas. Estas afirmaciones no se basarán en desviaciones entre la estructura estimada y la estructura “verdadera” antes del cambio de política, sino en las desviaciones entre la estructura “verdadera” anterior y la estructura “verdadera” vigente después del cambio.}
+    
+    \textit{Hay poco en este ensayo que no esté implícito (y quizá, para lectores más perspicaces, explícito) en FRIEDMAN, MUTH y, aún antes, en KNIGHT. De hecho, las críticas que plantearé contra las aplicaciones actualmente populares de la teoría econométrica han sido, en su mayor parte, anticipadas por los principales contribuyentes originales a dicha teoría.}\\
+    \raggedleft{ROBERT LUCAS. "\textit{Econometric Policy Evaluation: A critique}", 1956}
+    \end{adjustwidth}
+
+    ¿Qué quiere decir LUCAS? Empieza recordando algo que era observación empírica desde siempre: en los picos del ciclo económico (expansiones), precios y salarios tienden a subir más rápido; mientras que en los valles o recesiones, suben más lentamente. A partir de esta observación, muchos economistas concluyeron lo siguiente: Si la inflación aparece cuando la economía está bien, entonces si mantenemos inflación de manera permanente, también mantendremos crecimiento, empleo alto y prosperidad permanente. A lo que el autor llama una falacia obvia, porque confunde una correlación cíclica de corto plazo con una relación de equilibrio permanente. A partir de aquí, identifica dos tradiciones económicas preedominantes (SNC y Monetarismo) que debiendo haber sido complementarias (por su instrumental y metodología común) terminan chocando ya que, mientras unos abogaban por intervenciones estatales justificadas en el comportamiento sintético de modelos macroeconómetricos aplicados (y la correción de desajustes en base al comportamiento apreciado \textit{ceteris paribus}), los otros argumetaban que no había (muchas) relaciones económicas estables y explotables a largo plazo, que había tendencias naturales y necesidad de considerar la adaptabilidad de los agentes al contexto en el que se desarrollan.
+
+    Por tanto, a suerte de compatibilizar estas dos vertientes (por las que siente afinidad mutua) y proponer una alternativa razonable que se ajuste a la realidad, es necesario cambiar la metodología utilizada para la formación de los modelos macroeconométricos y ajustarlo a los cambios de conducta de los agentes del modelo (microfundamentación). Se basa en un único silogismo: si la estructura y los parámetros de los modelos econométricos es resultado de una regla de decisión óptima de los agentes involucrados, y esas reglas de decisión varían cuando cambian las reglas de política económica relevantes, los cambios en las políticas económicas alterarán la estructura y los parámetros de los modelos econométricos. Y, continúa:
+    \begin{adjustwidth}{2cm}{0pt}
+    \raggedright 
+    \textit{En cuanto a la cuestión de la capacidad de los modelos econométricos para realizar predicciones o seguimientos a corto plazo, (esto) tiene una importancia solamente ocasional. En contraste, para asuntos relacionados con la evaluación de políticas, es fundamental; porque implica que las comparaciones entre los efectos de reglas de política alternativas utilizando los modelos macroeconométricos actuales son inválidas, independientemente del rendimiento de estos modelos durante el período muestral o en las predicciones ex ante a corto plazo.}
+    
+    \textit{[P]arece que los responsables de la política económica, si desean prever la respuesta de los ciudadanos, deben tomar a estos últimos en su confianza. Esta conclusión, aunque poco adecuada para la práctica econométrica actual, parece concordar bien con una preferencia por la toma de decisiones democrática.}\\
+    \raggedleft{ROBERT LUCAS. "\textit{Econometric Policy Evaluation: A critique}", 1956}
+\end{adjustwidth}
+\end{specialblock}
+
+\subsection{Teoría del Ciclo Real}
+Paralelamente, durante los años 70's, otra gran linea de investigación dentre del marco de la NMC tomó impulso: la Teoría de los Ciclos Reales (TCR). Estas se debieron a la ineficacia de los modelos existentes a la hora de evaluar o explicar los ciclos económicos, pues consideraban que estos estaban fundamentalmente basados en los shocks de demanda agregada, asumiendo rígideces nominales. Como ya hemos visto la explicación ofrecida por LUCAS respecto al origen de los shocks, veamos ahora el que se considera el modelo de referencia dentro del marco de la NMC. 
+
+El trabajo seminal de KYDLAND y PRESCOTT, \textit{Time to Build and Aggregate Fluctuations} de 1982, junto con la aportación de LONG y PLOSSER \textit{Real Business Cycles} (1983), sientan las bases de la Teoría del Ciclo Real intentando replicar la dinámica observada en la economía americana entre 1950 y 1975 en un modelo en que las fluctuaciones se generan por el comportamiento optimizador de los agentes ante \textbf{perturbaciones exógenas}; y, si bien difieren en aspectos cruciales respecto a las aportaciones de LUCAS, retienen el núcleo de sus aportaciones novedosas.\footnote{En efecto, basan su modelo en agentes con expectativas racionales y optimizadores de acuerdo a la función de oferta de LUCAS-RAPPING. Se suponen mercados que se vacían de forma continua, con precios y salarios perfectamente flexibles.
+}
+
+\subsubsection{Modelo: Optimización intertemporal Ocio-Consumo}
+Este modelo se diferencia de las Teoría de los Ciclos Nominales en las siguientes características:
+\begin{lnum}
+    \item En primer lugar, las perturbaciones se deben a factores que pueden ser o bien exógenos ($\theta$, tecnología) o endógenos (el endeudamiento público, $GP$), pero no se originan en la sorpresa monetaria;
+    \item El mecanismo de transmisión del shock (perturbación) tiene su origen en un problema de sustitución intertemporal Ocio-Consumo que, además, es persistente;
+    \item Tomarán un enfoque de Equilibrio General Walrasiano en unión con el Modelo de RAMSEY de crecimiento.
+\end{lnum}
+
+Considerando un marco temporal de dos periodos y una cantidad total de tiempo normalizado a $1$, podemos formular analíticamente una versión muy sencilla del modelo como sigue:
+\eqblock{
+\begin{aligned}
+   &\boxed{\begin{aligned}
+        &\max_{\{c_1, c_2, L_1, L_2\}}{U}=u(c_1, 1- L_1)+\beta(c_2, 1-L_2)\\[1em]
+        &\text{s.a.}\quad c_1+\frac{1}{1+r}c_2=w_1L_1+\frac{1}{1+r}w_2L_2
+    \end{aligned}}\to\text{Resolvemos por}\; \mathcal{L}\;\text{y obtenemos CPO's}\\[1em]
+    &\boxed{\frac{u'(1-L_1)}{u'(1-L_2)}=\frac{w_1}{w_2}(1+r)\beta}\to \text{Condición intertemporal de Ocio}
+\end{aligned}
+}{}
+
+Como la oferta de trabajo depende del cociente intertemporal de salarios, un shock transitorio que incremente los salarios (por ejemplo, aumento de la demanda) aumentará, en consecuencia, la oferta agregada de empleo en el periodo $1$, disminuyendo la cantidad de ocio en este periodo. No obstante, cuando el shock desaparezca, el salario en el periodo $2$ disminuirá y con él la oferta agregada de trabajo (no tiene persistencia). En este caso, predomina el Efecto Sustitución, por lo que los agentes alterarán sus decisiones por ser un marco intertemporal. Si pretendemos aumentar de manera no transitoria la oferta agregada de trabaja, deberemos contar con un componente de persistencia que altere de forma permanente y positiva la en la Productividad Marginal del trabajo, por ejemplo la \textit{tecnología}. 
+
+Estos autores demuestran que el componente tecnológico y, sobretodo, como éste se tralada a la Productividad Total de los Factores llega a explicar hasta el 75\% de los ciclos observados en la economía americana durante el periodo mencionado. Sin embargo, muchos autores criticaron esta visión pues aunque había consenso al considerar la tecnología un causante de los ciclos positivos, era mucho más controvertida asociarla a la existencia de ciclos negativos. Otros autores también constatarón las dificultades de medida que podía observar la Productividad Total de los Factores (pues muchas otras variables afectaban también de forma significativa sobre ésta, negando en consecuencia la relación causal subyacente) o, incluso considerando que se sobrevaloraba el componente tecnológico (GALÍ).
+
+\subsubsection{Implicaciones}
+No obstante, este modelo proporciona grandes ventajas pues, por un lado relaciona la Teoría de los Ciclos Económicos con la Teoría del Crecimiento Económico; y, por otro lado considera los ciclos como ajustes óptimos de una Economía siempre en Equilibrio por lo que, en términos de Política Económica, se desaconsejaba la intervención con motivo estabilizador.
+
+\subsection{Diseño e implementación de la Política Económica}
+Quizás lo más notorio del marco proporcionado por la Nueva Macroeconomía Clásica son sus aportaciones en término de diseño e implementación de Política Económica. Destacaremos únicamente algunos de sus indicaciones y desarrollos propuestos. 
+
+\subsubsection{Inefectividad de la Política Estabilizadora Sistemática} 
+LUCAS demuestra con esto, la ineficacia de la política monetaria, pues incorporando la HER, los agentes reaccionarán ante el incremento de precios esperado de forma coherente y los errores de medida serán pocos y, de hecho, cada vez menores a nivel agregado: \textit{Me engañaras una vez, pero no más veces}.
+
+\paragraph{Curva de PHILLIPS y sorpresa monetaria}
+Con las aportaciones posteriores, en particular su su famosa \textit{crítica de LUCAS}, demostrará analíticamente la existencia de un trade-off a corto plazo entre inflación y desempleo. Sin embargo, esta relación corresponderá únicamente a los parámetros no sistemáticos de la oferta monetaria, por lo que invalidará su utilización en la práctica. Una derivación rápida de esto se puede representar analíticamente como:
+
+\eqblock{
+\begin{aligned}
+    &\text{Dada:} \qquad y^d_t=m_t+p_t\qquad \text{[DA]}\\[1em]
+    &\text{Y considerando que $m_t$ puede reescribirse como:}\\[1em]
+    &m^s_t=m^s_{t-1}+c+u_t\qquad \text{con}, \;
+    \begin{cases}
+        &\text{Dependencia de valores pasados}:\quad m_{t-1}\\[0.5em]
+        &\text{Tendencia:}\quad  c\\[0.5em]
+        &\text{V.A (R.B)}: \quad u_t\sim N\left(\;0\;,\;\frac{1}{(1+\beta(1-\theta))^2}\;\sigma_p^2\right)
+    \end{cases}\\[1em]
+    &\text{Entonces, definimos sorpresa monetaria como:}\quad u_t=m^s_t-E[m_t\;|\;\Omega_t]\\[0.5em]
+    \text{Cconsiderando que}:\;&E[p_t\;|\;\Omega_t]=E[m_t\;|\;\Omega_t],\;\text{en equilibrio,}\quad 
+    \begin{cases}
+        \text{(1)}&\; y_t=\frac{\gamma}{1+\gamma}u_t\\[0.5em]
+        \text{(2)}&\; p_t=m_{t-1}+c+\frac{\gamma}{1+\gamma}u_t\\[0.5em]
+        \text{(3)}&\; \pi_t=c+\frac{\gamma}{1+\gamma}u_t+..._{(t-1)}\;\; \text{y,}\quad u_t\nsim u_{t-1}
+    \end{cases}
+\end{aligned}
+}{Curva de PHILLIPS. LUCAS}
+
+Por lo tanto, al analizar separadamente los componentes de la política monetaria ($m_t$):
+\begin{la}
+    \item Por un lado, el\textit{componente sistemático de la demanda de dinero}, $c$, solo tiene efectos sobre el nivel de precios y no puede utilizarse para provocar efectos reales en la producción; y,
+    \item Por otro lado, el \textit{componente no sistemático de la demanda de dinero}, $u_t$, tiene efectos reales a través de la \textit{sorpresa monetaria} y, por tanto, la política monetaria puede utilizarse para estabilizar la producción sólo si la autoridad monetaria posee información relevante que los agentes desconocen. Sin embargo, la existencia de expectativas racionales y perfecta flexibilidad en el ajuste de los precios limita el uso de esta relación de intercambio como instrumento de política económica.\footnote{Además, una política monetaria sorpresiva que aumentase la variabilidad de los precios reduciría el valor del parámetro $\gamma$ (por estar expresado en función de $\sigma_p^2$) y, por tanto, el impacto sobre el output ($y$). Si las políticas inflacionistas aumentan las expectativas de inflación de los agentes, se producirá un desplazamiento vertical de la curva de Phillips a corto plazo, anulando los efectos reales de las medidas monetarias.
+    }\textsuperscript{,}\footnote{Siempre que las políticas respondan a información de conocimiento público (como los principales indicadores macroeconómicos), serán ineficaces en la estabilización de la producción. Los agentes racionales aprenden a anticipar posibles reglas de estabilización contracíclica, siempre que sean usadas de forma consistente por los Bancos Centrales. Siguiendo a SARGENT y WALLACE (1975) puede hablarse de \textit{superneutralidad del dinero}, ya que los cambios en la variable monetaria no tendrán efectos reales, independientemente de si afectan al nivel o a su tasa de variación
+    }
+\end{la} 
+
+Los primeros trabajos empíricos confirmaron las conclusiones principales de LUCAS: sólo los cambios no anticipados en la oferta monetaria afectan a las variables reales.\footnote{Por ejemplo, BARRO (1977) obtiene que los cambios no anticipados en el crecimiento de la oferta de dinero (contemporáneos y con un retardo) tienen un alto poder explicativo sobre las variaciones del desempleo.
+}
+
+Tal y como señalan KING y REBELO (1999), esta predicción se mantiene incluso en las versiones que introducen explícitamente consideraciones monetarias, como los modelos con restricciones de \textit{Cash in Advance} (Requisitos de pago en Efectivo) que generan una demanda de dinero (COOLEY y HANSEN, 1989).
+
+\subsubsection{Políticas de anclaje: consistencia dinámica} 
+Probablemente, una de las aportaciones más populares y reconocida dentro de la NMC es el \textit{problema de la inconsistencia dinámica}. Este ha sido utilizado y analizado en multitud de campos (principalmente en ciencias sociales) para comprender los comportamientos \textit{sub-óptimos} que los agentes tienen tendencia a realizar. 
+
+\textbf{Definición.-} La inconsistencia dinámica es un problema que emerge en el momento en el que debemos tomar una decisión a lo largo de un marco temporal. En concreto, se centra en el estudio de las situaciones en las que una decisión tomada (ex ante), beneficiosa y preferida al resto, es relegada por otra (ex post) en un momento diferente de tiempo donde ésta última deviene mejor y preferida por el decisor. 
+
+STROTZ (1956), economista de la Escuela de Chicago, fue quien probablemente desarrolló el primer estudio moderno de las opciones que varían en el tiempo, de preferencias dinámicamente inconsistentes. Sin embargo, el pionero formulado en el ámbito económico (que vamos a analizar brevemente) se atribuye a KYDLAND y PRESCOTT (1977), un trabajo en el que tocaban el término de la inconsistencia dinámica en la política monetaria. 
+
+\textsc{Modelo: KYDLAND y PRESCOTT}
+Sobre un marco de juegos repetidos, considerando así las interacciones estratégicas que surgen entre los agentes, KYDLAND y PRESCOTT formulan el problema de inconsistencia temporal en las decisiones de política monetaria: Una autoridad monetaria racional y previsora (\textit{forward-looking}) elige inicialmente una senda de comportamiento que maximice el bienestar social. Sin embargo, dada la opción de volver a optimizar en un momento posterior, la autoridad deseará cambiar sus planes. Sin embargo, esta decisión no es el resultado de un conflicto de objetivos respecto a los planes de los agentes económicos o debido a su habilidad para reaccionar ante shocks imprevistos, sino simplemente debido a las restricciones en materia de política económica que han sido generadas por la formación de las expectativas del sector privado. Ilustremos la dinámica de ajuste gráficamente
+
+\paragraph{Curva de PHILLIPS a largo plazo}
+Como vimos anteriormente, existe una relación de intercambio negativa en el muy corto plazo entre inflación y desempleo para cada nivel esperado de inflación, mientras que en el largo plazo la relación desaparece conforme los agentes ajustan sus expectativas, y la curva se vuelve vertical en el nivel de desempleo determinado por la tasa natural.
+Entonces, la curva de largo plazo viene definida por el conjunto de puntos para los cuales las expectativas de inflación se igualan con la inflación observada:
+
+\imagenfit{CurvaPhillips.png}{Curva de PHILLIPS}{Apuntes ICEX-CECO. Tema 3.A.5}
+
+Por tanto, la modificación oportunista de la política monetaria no alterará de ninguna forma el nivel de empleo (de forma permanente), por el contrario, podría generar, sino es contenida, una fenómeno acelaracionista de la inflación que acabe minando la confianza de los agentes. Sin embargo, al encontrar los autores dicha inconsistencia dinámica en el marco temporal 1950-1975 en la economía estaounidenses, proponen el siguiente análisis. 
+
+\paragraph{Función de Pérdida Social}
+Supongamos que existe un óptimo social en ambas variables $(\pi^*, U^*)$ y cualquier desvío de este óptimo representa una pérdida social que deben asumir las autoridades. Éstas intentarán, por tanto, minimizar la Función objetivo (Función de Pérdida Social) que podemos representar de la siguiente forma:
+
+\eqblock{
+\begin{aligned}
+    &\boxed{\begin{aligned}
+        &\min_{\{\pi, U\}}{L(\pi, U)}=(U^*-U_t)+\alpha(\pi^*-\pi_t)\\[1em]
+        &\text{s.a}\quad \underbrace{U=U_n+\frac{1}{\alpha}(\pi-\pi^e)}_{\text{Curva de PHILLIPS}}
+    \end{aligned}}\\[1em]
+    &\text{Y,}\quad \exists(\pi, U)\;\;\forall\pi^e
+\end{aligned}
+L=(U_t-U^*)^2+\alpha(\pi_t-\pi^*)^2
+}{Función de Pérdida Social. KYDLAND y PRESCOTT}
+
+La sociedad tendrá mayor utilidad cuanto más cerca estén la inflación, $\pi_t$ y el desempleo $U_t$ de sus objetivos, $(U^*, \pi^*)$, respectivamente. El parámetro $\alpha$ determinará la importancia relativa de los dos objetivos:
+\begin{la}
+    \item Si su valor es alto, la sociedad le asigna un coste relativamente mayor a las tasas de inflación elevadas (Gobierno \textit{hard-nosed}); y,
+    \item Por el contrario, si el valor de $\alpha$ es bajo, la importancia relativa del objetivo estabilizador del ciclo será mayor.
+\end{la}
+
+\imagenfit{preferenciasSociales.png}{Preferencias sociales}{Apuntes ICEX-CECO. Tema 3.A.5}
+
+La dudosa validez de las políticas monetarias a corto plazo para el ajuste de variables reales, debido a la formación de expectativas de los agentes, tal y como demuestra el modelo básico de LUCAS, conduce a pensar que las autoridades monetarias (y la sociedad en su conjunto) tenderá, de manera racional, a tener unas preferencias más ajustadas al \textit{hard-nosed}.
+
+\paragraph{Equilibrio}
+El Equilibrio de Nash, $E$, dependerá: (i) de las preferencias sociales y del coste de reducir el desempleo (pendientes de las curvas); y, (ii) nivel de desempleo natural. Este se econtrará situado sobre la función de reacción de las autoridades monetarias, curva que une los puntos $BDE$.
+
+\imagenfit{EquilibrioPrefSociales_PHILLIPS.png}{Equilibrio: Función de Prefencias Sociales y Curva de PHILLIPS (corto plazo)}{Apuntes ICEX-CECO. Tema 3.A.5}
+
+El proceso de llegada al equilibrio a través de las interacciones entre agentes privados y autoridades monetarias que actúan de forma racional viene definido por los siguientes pasos: 
+\begin{lnum}
+    \item Partiendo del punto A, el anuncio de una política de inflación cero no es creíble puesto que las autoridades preferirán el punto B, que está situado en una curva de indiferencia interior (peor), pero sobre la misma curva de Phillips de corto plazo (reduciendo el desempleo);\footnote{Para una misma inflación esperada. el Gobierno prefiere reducir la tasa de desempleo por debajo de su nivel natural. Entro otras j ystificaciones a este comportamiento. puede citarse la posible presión de los agentes sociales o teorías referidas al ciclo político.
+} 
+    \item Los agentes son conscientes del primer paso, con lo que ajustan sus expectativas de inflación a la inflación existente en $B$, con lo cual se desplaza la curva de PHILLIPS de forma vertical, hasta el punto $C$. 
+    \item Este proceso se repite hasta el punto $E$, tangencia entre la curva de indiferencia, la curva de PHILLIPS a corto plazo e intersección con ambas de la curva de PHILLIPS a largo plazo, donde ninguno de los agentes tiene incentivos a desviarse.
+\end{lnum}
+
+\paragraph{Implicaciones} 
+Aunque lo óptimo para el gobierno sea el punto B, este no es creíble y la única solución a largo plazo será el punto $E$. Este punto implica una inflación mayor a la prometida inicialmente ($A$) y sin haber conseguido una disminución del desempleo, dando lugar a una solución sub-óptima.
+
+\paragraph{Soluciones}
+La literatura propone varias soluciones al problema de inconsistencia temporal:
+\begin{lnum}
+    \item \textit{Política económica reglada}. (BARRO) Si las reglas de política monetaria están especificadas a priori, los agentes privados pueden deducir las características de las reglas de juego, y éstas definirán sus expectativas: si las políticas monetarias están predeterminadas (\textit{precommitted}), los agentes esperarán que la decisión de las autoridades esté en consonancia con las reglas definidas. Sin embargo, esto no solucionará el problema pues siempre persistirán incentivos para desviarse.\footnote{El equilibrio incluye: (i) una regla de decisión para los agentes privados en base a su información  disponible; (ii) una función que determine las expectativas de los agentes en base a su información  disponible; y (iii) una regla de política monetaria que especifica las acciones de las autoridades en base a su información disponible. 
+Para que el resultado final sea considerado como un equilibrio racional, deben darse dos condiciones:
+\begin{lnum}
+    \item La regla definida en (i) debe ser óptima para los agentes, dadas sus expectativas definidas en (ii); y,
+    \item Es óptimo para las autoridades monetarias, cuyas acciones vienen definidas en (iii), actuar de acuerdo a las expectativas definidas en (ii), dado que conocen las reglas de comportamiento privadas definidas en (i).
+\end{lnum}
+
+Por lo tanto, dado que las autoridades monetarias eligen sus acciones de modo secuencial, una vez que los agentes privados han formado sus expectativas, la igualación de las expectativas privadas con la realización final de las autoridades pasa a ser una característica del equilibrio y puede no darse a priori. En este contexto, la credibilidad de las acciones de las autoridades monetarias resulta clave para detem1inar la coherencia temporal y la efectividad de las medidas llevadas a cabo. Si las autoridades no pueden comprometerse de forma creíble a mantener una inflación baja, ésta aumentará, pese a no existir relación de intercambio en el largo plazo entre inflación y producción.
+}\textsuperscript{,}\footnote{Un entorno reglado, sin embargo tiene problemas en cuanto a la flexibilidad necesaria para hacer frente a situaciones o perturbaciones imprevistas. En aras de cubrir distintas eventualidades, las reglas de política económica tienden a hacerse excesivamente complejas y pierden con ello parte de su efectividad.\\
+Este debate entre reglas y discrecionalidad tiene su reflejo también en el ámbito fiscal. La concepción de reglas como mecanismo para reducir el sesgo deficitario de los Gobiernos está en el núcleo de la concepción de la Unión Económica y Monetaria, a través de su Pacto de Estabilidad y Crecimiento. Algunas referencias básicas de esta literatura incluyen CASTELLANI y DEBRUN (2005), DEBRUN y KUMAR (2007), BEETSMA y DEBRUN (2016) y CALMFORS (2011).
+} 
+    \item \textit{Delegación}. Se basa en que el Gobierno nombra a un Banco Central con reputación conservadora (mayor peso asociado a la función de control de la inflación) y lo dote de independencia para conducir la política monetaria.\footnote{
+    Este factor introduce costes ante la existencia de perturbaciones económicas. pues la respuesta estabilizadora de las autoridades estará por debajo de lo óptimo según las preferencias establecidas en la función de preferencias sociales.\\
+    Desde finales de la década de los 80's, apareció numerosa evidencia empírica confirmando la existencia de una relación estrecha y negativa entre la inflación y la independencia de los Bancos Centrales (medida de la delegación de responsabilidad de la política monetaria).\\ 
+    Sin embargo, tal y como recuerda POSEN (1993), correlación no significa que la independencia del Banco Central sea la causa de la inflación moderada. Las instituciones monetarias independientes pueden ser un producto de preferencias sociales y culturales particularmente contrarias a la inflación (por ejemplo, el caso alemán en el cual se generó en la ciudadanía una aversión muy elevada a la inflación a raíz de los períodos de hiperinflación que siguieron a la Primera Guerra Mundial). Además, suele criticarse también la propia construcción de los indicadores de independencia, que conceden cierto peso a la presencia de la contención de la inflación como objetivo constitutivo de la institución monetaria. Ello conlleva un sesgo en la relación entre tasas bajas de inflación y la independencia de los Bancos Centrales.\\
+    Estas ideas tienen un paralelismo en el terreno fiscal desde los años 90's, con discusiones sobre la necesidad de delegar la política fiscal a autoridades fiscales independientes para minimizar el sesgo deficitario de los Gobiernos. CALMFORS (2011) realiza un resumen amplio de estas aportaciones.
+    }
+    \item \textit{Credibilidad y reputación}. Considerando que el juego entre los agentes y la autoridad monetaria se juega repetidas veces, es posible que las autoridades estén dispuestas a sacrificar el corto plazo, invirtiendo en reputación para recoger las ganancias en el futuro; por el contrario, si estas no resultan creíbes es de esperar que la secuencia jugada otrora se repita con represalias;\footnote{La modelización de estos efectos reputacionales se deriva de la aportación de BARRO y GORDON (1983), según la cual los agentes privados harán demandas de salarios contenidas (i.e. bajas expectativas de inflación), mientras las autoridades mantengan una inflación baja. Tan pronto como las autoridades intenten aprovechar la relación implícita en las curvas de PHILLIPS en el muy corto plazo, los agentes privados le penalizarán aumentando sus demandas salariales (mayores expectativas de inflación). En definitiva, las expectativas sobre la inflación futura serán menores cuanto menor sea la inflación actual. Las autoridades tienen pues incentivos a mantener la inflación baja. Además, el efecto de la reputación sobre la inflación será mayor cuanto mayor peso asignen las autoridades a los períodos futuros (menor tasa de descuento). Uno de los ejemplos que suele citarse en este contexto es la actuación de la Reserva Federal bajo el mandato de PAUL VOLCKER entre 1979 y 1987.
+    }
+    \item \textit{Contratos}. Permite alcanzar el \textit{second-best} mediante el establecimiento de contratos entre el Gobierno y el Banco Central, encargado de la política monetaria.\footnote{Siguiendo a WALSH (1995) o PERSSON y TABELLINI (1993), se modifica la función de pérdida de las autoridades monetarias, añadiendo un término de coste adicional, determinado por el contrato entre las dos partes. La cuantificación óptima del coste asociado al contrato vendrá determinada por el sesgo inflacionario que existía en el caso de las políticas discrecionales.\\
+    Aportaciones posteriores (SVENSSON, 1997) demuestran que la implementación del contrato óptimo de inflación será factible si se exige a la autoridad monetaria tener un objetivo de inflación por debajo de la tasa socialmente óptima.
+    }
+\end{lnum}
+
+\subsubsection{Equivalencia RICARDIANA}
+La Teoría del Ciclo Real permite estudiar también los efectos de la financiación del déficit público, incorporando en el análisis la Equivalencia Ricardiana.\footnote{Una conclusión innovadora que surge de las aportaciones de BARRO es la existencia de efectos no keynesianos de la política fiscal, esgrimidos como argumento en favor de las recientes experiencias de consolidación en numerosos países del área euro. Con agentes que forman sus expectativas de forma racional, conociendo la restricción presupuestaria del Gobierno, una política fiscal contractiva puede tener efectos expansivos al acompañar las reducciones de gasto de reducciones (creíbles) equivalentes en impuestos a través de un \textit{crowding-in} de la actividad del sector privado o incluso reducciones en las primas de riesgo.
+} El análisis de BARRO (1974) marca un punto de inflexión dentro de las consideraciones sobre el análisis de la política fiscal, en esencia, que la financiación de un aumento del gasto público con deuda, impuestos y monetización será equivalente siempre que se cumplan una serie de supuestos: 
+\begin{lnum}
+    \item Agentes racionales, formando sus expectativas de acuerdo a la hipótesis de expectativas racionales;
+    \item Certidumbre perfecta sobre los impuestos futuros;
+    \item Figuras impositivas neutrales en las decisiones consumo-ocio;\footnote{Cabe destacar que el único impuesto neutral en las decisiones de consumo-ocio es el impuesto de suma-fija, por lo tanto esta condición nunca se cumple ya que contradice la Primera Norma de Public Finance.\\
+    Para ser neutrales deben ser no-distorsionantes, es decir, no alterar la restricción del problema de maximiazación, no alterando la decisión del agente entre consumo u ocio (IVA, Renta, etc. afectan)} 
+    \item Mercados de capitales perfectos; y,
+    \item La política de gasto se ejecuta en gastos corrientes,\footnote{No en gastos de inversión productiva que pudieran generar un rendimiento adicional que permitiera una autofinanciación completa mediante un mayor crecimiento potencial y unos mayores ingresos asociados.
+    } esto es los títulos de deuda pública no son considerados riqueza neta.
+\end{lnum}
+
+El impacto de una política fiscal expansiva vendrá entonces determinado por la composición del gasto público, independientemente de su forma de financiación:
+\begin{lnum}
+    \item \textit{Títulos de deuda}. Generan un aumento del ahorro privado para hacer frente a un previsible aumento de impuestos en el futuro; 
+    \item \textit{Reducción de impuestos}. Esta reducción será ahorrada por los agentes de forma completa; y,
+    \item \textit{Monetización}. Las expectativas de emisión continua en el futuro generan un aumento del ahorro en previsión del impuesto inflacionario asociado.
+\end{lnum}
+
+
+
+
+
+
+
+\clearpage
+\section{Críticas} 
+La irrupción de LUCAS supuso el inicio de una revolución metodológica, un nuevo paradigma, rompiendo con lo anterior, de forma radical y muchas veces vehemente. 
+
+En su artículo de 1979 titulado \textit{The Death of Keynesian Economics}, LUCAS intenta poner punto y final a las líneas de investigación Keynesianas, con aseveraciones tan contundentes como las incluidas en su párrafo inicial:
+\begin{lnum}
+    \item La economía keynesiana está muerta (o desaparecida);
+    \item No es posible encontrar un buen economista menor de 40 años que se identifique como Keynesiano;
+    \item Las revistas punteras no aceptan artículos Keynesianos; y,
+    \item La teoría Keynesiana ya no es tomada en serio en los seminarios de investigación.
+\end{lnum} 
+
+\subsubsection{Enfrentamiento y divergencia de escuelas: Los neo-keynesianos}
+Como era de esperar, la reacción de los economistas que seguían los postulados de KEYNES en alguna de sus vertientes\footnote{Recordar que existen muchas interpretaciones de KEYNES, no solo las consideraciones de la economía propia de la SNC sino también todas las vertientes post-keynesianas e institucionalistas.
+} no tardaron en llegar. Algunos figuras eminentes, como MODIGLIANI o TOBIN, rechazaron de plano el marco de LUCAS, argumentando que se había reemplazo la verdad difusa (\textit{messy truth}) contenida en las aportaciones de KEYNES por errores precisos (\textit{precise error}) procedentes de los modelos à la LUCAS. 
+
+Frente a esta posición, los economistas Neo-Keynesianos de la primera oleada tratan de rehabilitar la visión de KEYNES (existencia de desempleo involuntario, no-neutralidad del dinero y la lentitud del ajuste de en el mercado), aceptando las bondades de algunas de las innovaciones traídas por LUCAS, como la necesidad de microfundamentar las decisiones de los agentes y la hipótesis de expectativas racionales.\footnote{No existía un programa de investigación único, sino más bien un conjunto de aportaciones variadas, que compartían una serie de características comunes. Tal y como recogen MANKIW y ROMER (1991), los modelos neo-keynesianos comparten dos proposiciones principales:
+\begin{lnum}
+    \item En primer lugar, el \textit{dinero no es neutral}. La existencia de rigideces provoca que las perturbaciones en las variables nominales tengan efectos reales;
+    \item En segundo lugar, las imperfecciones de mercado, la competencia imperfecta y/o la rigidez de precios y salarios son elementos centrales en la explicación del ciclo económico, endogeneizando, de esta forma, los fenómenos causantes del ciclo.
+\end{lnum} 
+Se trataba, en definitiva, de modelos de equilibrio parcial, generalmente estáticos, con mercados de competencia imperfecta (agentes no totalmente precio-aceptantes) y rigidez de precios o salarios.
+Los principales modelos que se desarrollaron desde finales de la década de los 70 y durante los 80, son: (i) Contratos implícitos (Baily, 1 974, Gordon, 1974 y Azariadis, (1975); (ii) Ajuste de salarios escalonados (FISCHER, 1977, TAYLOR, 1979); (iii) Salarios de eficiencia (SALOP, 1979, SHAPIRO y STIGLITZ, 1984); y (iv) Costes de menú (MANKIW, 1985, AKERLOF y YELLEN, 1985).
+} Sin embargo, aunque sus aportaciones constituyeron contribuciones relevantes al análisis de las fluctuaciones económicas, no consiguieron parar el tren de la NMC, iniciado por LUCAS y completado por los autores de la TCR (como KYDLAND y PRESCOTT), viéndose superadas por por la agenda de ésta última centrada en modelos que son juzgados por su grado de validez empírica y donde las perturbaciones monetarias se ven relegadas a un segundo lugar. No fue hasta la llegada, una década más tarde, de la segunda oleada de economistas neo-keynesianos cuando se pudieron tener estos aspectos en cuenta.
+
+\subsection{Controversia sobre los supuestos}
+
+\subsubsection{Objeto}
+\paragraph{Equilibrio General dinámico}
+Supuesto de vaciado continuo de los mercados. Una de las implicaciones más controvertidas de este supuesto radica en la inexistencia de desempleo involuntario, es decir trabajadores desempleados que quisieran trabajar a los salarios existentes. Este supuesto alejaba también al modelo de la evidencia empírica, pues la mayor parte de las fluctuaciones en las horas trabajadas a nivel agregado vienen explicadas por movimientos entre empleo y desempleo y no por los cambios en las horas trabajadas de los trabajadores empleados. 
+
+\paragraph{Exogeneidad de los shocks}
+Existen multitud de ejemplos sobre esta crítica (particularmente dura a raíz de la crisis de 2008):
+\begin{lnum}
+    \item En el primer modelo propuesto por LUCAS, el nivel de producción está aislado de sus niveles pasados y futuros, con lo que no permite replicar la correlación serial positiva existente en los datos de producción;\footnote{En definitiva, el modelo de Lucas, con una combinación de perturbaciones monetarias e información imperfecta no consigue replicar los principales hechos estilizados del ciclo económico, ni su volatilidad ni su persistencia en fases repetidas de auge y recesión, tal y como muestran COOLEY y HANSEN al calibrar un modelo \textit{à la LUCAS} en base a los datos estadounidenses y contrastarlo con los principales hechos estilizados de la economía americana.
+}
+    \item En la Teoría de Ciclos Reales del marco de la NMC, en particular del modelo propuesto por KYDLAND y PRESCOTT (de referencia), los shocks generadores de ciclos vienen principalmente causados por shocks tecnológicos (exógenos) a través de la Productividad Total de los Factores.\footnote{Siguiendo a PRESCOTT (1986), las perturbaciones tecnológicas llegan a explicar hasta el 75\% de las fluctuaciones económicas en la economía americana de posguerra. PRESCOTT identifica la perturbación a través de la PTF.} SIn embargo, existen varios problemas al respecto:
+    \begin{lnum}
+        \item Existe evidencia que señala que la PTF es una medición imperfecta de perturbaciones tecnológicas, pues se ve afectada por otros factores, como gasto militar o indicadores de política monetaria y por tanto no puede ser considerada como una perturbación puramente exógena;\footnote{Factores adicionales como la introducción de la variabilidad en la utilización de capital o la intensidad del esfuerzo (BURNSIDE, EICHENBAUM y REBELO, 1993) introducen una cuña entre la PTF y los shocks tecnológicos, significativamente menores. Este efecto tiene un doble impacto positivo: (i) por un lado se reduce la volatilidad de las perturbaciones tecnológicas frente a la PTF; y, (ii) se consigue amplificar la respuesta de la producción a la tecnología, generando la volatilidad de las series de PIB mediante shocks más pequeños que los originales.
+        }
+        \item Un segundo problema relacionado con las perturbaciones tecnológicas como agente director del ciclo económico radica en la explicación de las recesiones. Si bien suele haber un acuerdo generalizado sobre el impacto del progreso tecnológico en la generación de las etapas expansivas, generó mucha controversia la explicación de las recesiones como períodos de regresión tecnológica;\footnote{Una posible solución seria considerar que un shock tecnológico negativo incluye otros factores exógenos que afectan a la productividad margin al del trabajo, como el precio del petróleo, el clima, aspectos legislativos, etc.
+        } y,
+        \item Las aportaciones de autores como GALÍ ( 1999) señalan un problema de origen cualitativo en la generación de ciclos a través de los impulsos tecnológicos.\footnote{GALÍ estima un VAR en el cual identifica los shocks tecnológicos como la única fuente de fluctuación en el largo plazo. Sorprendentemente, sus resultados indican que en el corto plazo las horas trabajadas caerán en respuesta a un shock tecnológico positivo, contradiciendo las predicciones teóricas de los modelos de Ciclo Real. Resultados empíricos posteriores han puesto en duda los resultados de GALÍ, bien señalando que no son robustos a la especificación de las series modelizadas (CHRISTIANO, EICHENBAUM y VIGFUSSON, 2003) o que pueden ser debidos a problemas de especificación (CHARI, KEHOE y McGRATTAN, 2004). 
+        }
+    \end{lnum}
+\end{lnum}
+
+\paragraph{Neutralidad del dinero}
+El análisis empírico de los efectos de las innovaciones monetarias en la producción permite comprobar la veracidad o falsedad de las predicciones de los modelos del Ciclo Real sobre la neutralidad del dinero. 
+
+Los trabajos en este campo han sido numerosos y apuntan a la existencia de efectos reales como consecuencia de las perturbaciones monetarias, en contra de las predicciones de la TCR. Es conveniente repasar los resultados más importantes de esta literatura:
+\begin{lnum}
+    \item \textit{La Ecuación de San Luis} (ANDERSEN y JORDAN, 1968). Se regresa la variación del PIB real respecto a los cambios en el stock de dinero y a una tendencia lineal, reflejan un impacto significativo de las variaciones del stock monetario (M2) en la tasa de crecimiento del PIB de $0,25$ (un aumento del $0,25$\% por cada aumento en la cantidad de dinero del $1$\%);\footnote{Este análisis adolece de dos problemas principales:
+    \begin{lnum}
+        \item En primer lugar la correlación puede no significar causalidad. Las medidas agregadas de la cantidad de dinero pueden verse afectadas por el comportamiento de los agentes productores y consumidores a través de cambios en la demanda de dinero, que a su vez se originan en un mayor crecimiento; y,
+        \item En segundo lugar (más conceptual) está relacionado con el uso de la política monetaria como elemento estabilizador del ciclo. Si la política monetaria tiene efectos reales y su función estabilizadora es eficaz, los cambios en la oferta monetaria puede que no fueran asociados a variaciones significativas en el crecimiento de la producción.
+    \end{lnum} 
+    }
+    \item \textit{Análisis histórico}. FRIEDMAN y SCHWARTZ (1963)  demuestran que la mayoría de los movimientos monetarios fueron debidos a desarrollos en el sector monetario y fueron seguidos de efectos reales (movimientos de la producción) en la misma dirección;\footnote{Los autores analizan los determinantes de los movimientos en el stock monetario desde finales de la guerra civil hasta 1960.\\
+    En la misma línea, ROMER y ROMER (1989) encuentran evidencia sobre la existencia de causalidad entre las innovaciones monetarias y variaciones en la producción. Para ello identifican en el período de post-WWII seis episodios de movimientos en los tipos de interés que no fueron motivados por desarrollos de la economía real sino por deseos de reducir la inflación (por ejemplo, tras la llegada de PAUL VOLCKER a la reserva Federal en 1979).\\
+    Pese a posibles desacuerdos sobre la definición de los episodios seleccionados como innovaciones monetarias independientes, estos experimentos son generalmente aceptados como evidencia empírica desfavorable a la neutralidad del dinero.\\
+    Sin embargo, estos experimentos aislados no permiten obtener estimaciones cuantitativas precisas sobre el impacto de la política monetaria, por lo que se desarrollan modelos más sofisticados.
+    }
+    \item \textit{Modelos VAR Estructurales}. Los trabajos de SIMS (1992) o CHRISTIANO, EICHENBAUM y EVANS (1996) permiten situar el análisis del impacto de la política monetaria en un contexto multivariante.\footnote{Respecto a los primeros análisis, estos autores cambian la instrumentación de las medidas de política monetaria y pasan a identificarlas con cambios en los tipos de interés y además introducen cierta estructura teórica en los co-movimientos de las variables. Estos modelos no superan, sin embargo, la crítica sobre el origen de las fluctuaciones monetarias, pues los movimientos en los tipos de interés podrían estar respondiendo a información que posee la autoridad monetaria sobre la evolución futura de la economía, como ocurrió con la bajada de tipos que se produjo en 2007.
+    }\textsuperscript{,}\footnote{Aportaciones más recientes (ROMER y ROMER, 2004) intentan un maridaje de ambos métodos, prestando especial atención a las fuentes de los cambios en la política monetaria y a la vez sacando partido de la potencia estadística e inferencia de los modelos VAR. Su análisis estima impactos mayores y más inmediatos de las medidas de política monetaria sobre la producción y los precios.}
+\end{lnum}
+ 
+
+\subsubsection{Método}
+\paragraph{Aproximación cualitativa: demasiada Teoría}
+SIMS mantuvo desde el principio una visión contrapuesta a la modelización propuesta por LUCAS, centrándose en el análisis de los ciclos con la menor carga de teoría posible, dejando hablar a los datos y fundando y liderando la estimación e identificación de modelos VAR (Vectores Auto Regresivos). Según SIMS, la influencia de la crítica de Lucas sobre la profesión fue excesiva, relegando a un segundo plano al análisis cuantitativo. En sí la aportación de Lucas tenía algunas deficiencias. Por ejemplo, destaca su ataque al concepto de \textit{cambio de régimen de política económica}. Estos cambios suelen ser, en su mayoría, modificaciones dentro de una regla establecida y no cambios en el régimen en sí (como asumía LUCAS). Cambios en los tipos de interés o modificaciones en los tipos impositivos no tendrían consecuencias tan radicales en las reglas de juego ni invalidarían, en principio, los análisis de política económica de los modelos tradicionales. Uno de los ejemplos más claros sobre esta controversia es la incosistencia respecto a la evidencia microeconómica sobre la elasticidad de la oferta de trabajo. 
+
+Para la TCR y la NMC, las variaciones del empleo proceden del comportamiento optimizador de los oferentes de trabajo, a través de los cambios que se producen en relación trabajo-ocio y, por tanto, para generar fluctuacionesa agregadas. Sin embargo, la evidencia microeconómica sugiere una elasticidad de oferta de trabajo relativamente baja.\footnote{Para hacer compatible esta evidencia con las predicciones teóricas de los modelos de la TCR, Rogerson (1988) y Hansen (1985) introducen la indivisibilidad del factor trabajo. Los trabajadores deben decidir entre trabajar a tiempo completo o no trabajar. Las variaciones en las horas trabajadas se dan en el margen extensivo (trabajadores entrando y saliendo de la fuerza laboral). En esta situación, la elasticidad de la oferta individual de los trabajadores se vuelva irrelevante pues el número de horas trabajadas ya no es una variable de decisión. El modelo de ROGERSON-HANSEN no sólo justifica y genera una mayor elasticidad de la oferta de trabajo agregada, sino que justifica la existencia de desempleo.
+}
+
+
+\paragraph{Expectativas e información}
+Supuesto de expectativas racionales. Inicialmente fue uno de los supuestos más controvertidos. La HER aplica el principio del comportamiento racional de los agentes a la consecución de información y su procesamiento para la formación de sus expectativas. Se distinguen tres tipos de críticas:
+\begin{lnum}
+    \item En primer lugar, las relacionadas con la posibilidad de que los agentes no actúen de modo racional, como resaltan las aportaciones de la economía experimental, que introduce conceptos como el altruismo o la justicia en la toma de decisiones de los agentes individuales;\footnote{Estos resultados van en línea con las aportaciones de otras ramas de desarrollo más reciente, como los trabajos de PAUL GLIMCHER, que estudian las bases neurológicas del comportamiento económico asignando un papel clave a las emociones.
+    }
+    \item En segundo lugar, autores como TOBIN, SHILLER o FRIEDMAN señalaban que la HER suponía la existencia de conocimientos demasiados elevados por parte de los agentes privados, tanto sobre el modelo subyacente como sobre las reglas de política económica; y,
+    \item En tercer lugar, autores como MODIGLIANI critican su falta de validez empírica, señalando que debería ceñirse a mercados específicos como los especulativos, pero no supone un supuesto realista de mercados como el laboral.
+\end{lnum}   
+
+Pese a las reticencias iniciales, la controversia respecto a la HER se frenó. Como señala TOBIN, de los dos pilares fundamentales de la Nueva Macroeconomía Clásica, la HER y el vaciado continuo del mercado, el segundo era el que tenía mayores consecuencias en términos de política económica. En efecto, la flexibilidad de precios y salarios se volvió el elemento clave en las discusiones sobre la efectividad de las políticas de demanda. 
+
+Supuesto de información imperfecta. Dados los avances en la difusión de estadísticas y el procesamiento de datos, se antoja difícil pensar que los individuos no puedan estimar los movimientos en los precios agregados con precisión y a bajo coste. 
+
+
+
+
+\clearpage
+\section{Conclusión} 
+El tema ha presentado una visión general de lamacroeconomía clásica, sus modelos centrales y finalmente, sus implicaciones sobre el policy-making y la teoría macroeconómica. Las controversias a las que ha dado lugar laNueva Macroeconomía Clásica son múltiples y perennes. Grandes nombres de la economía han criticado referentes de la escuela tales como el modelo del ciclo real y la hipótesis de expectativas racionales. Además, se le ha atribuido una agenda ideológica al programa de investigación de la NuevaMacroeconomía Clásica y la imposición de supuestos poco realistas. En cualquier caso, la historia de la NMC es la historia de una victoria metodológica sin apenas matices. La macroeconomía mainstream ha adoptado la práctica totalidad de las herramientas de la NMC. Los resultados que contradicen a laNMCparten de su marcometodológico e introducen modificaciones quemantienen intactos los principios básicos demodelización. El paradigma DSGE se abre poco a poco paso en el policy-making, a pesar de su complejidad analítica, y se ha consolidado como la herramienta central de modelización teórica en el contexto académico a pesar de las numerosas críticas. En definitiva, la Nueva Macroeconomía Clásica es un paradigma de pensamiento económico sin el cual no es posible comprender la macroeconomía actual.
+
+
+
+\subsection{Recapitulación}
+
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+\MyBibItem{Autor}{Título}{Año}{DOI -- LINK}
+
+
+% --- Anexos (no aparecen en el índice) ---
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+\clearpage
+\anexo{Curvas de Oferta y Demanda Agregada. LUCAS}\label{anx:OA_LUCAS}
+
+\textsc{Oferta Agregada}
+
+Asumiendo el supuesto de información imperfecta, los agentes se encuentran distribuidos de forma aleatoria en mercados/islas. Sólo poseen información perfecta sobre el precio de equilibrio en su propio mercado y se enfrentan a dos decisiones: (i) vender su producción en el mercado local al precio observado; y (ii) comprar bienes de otros mercados/islas a un precio promedio, sobre el cual no existe información perfecta. La decisión de producción está basada en la idea de sustitución intertemporal entre ocio y trabajo. Los. agentes productores se esforzarán para conseguir el mayor consumo posible dadas sus horas trabajadas. Para ello sacrificarán ocio a cambio de mayor producción en los períodos de mayor precio relativo (mayor demanda en su mercado respecto a los demás) y viceversa cuando el precio relativo de su bien producido respecto a los que consume disminuya. La decisión de producción dependerá, por tanto, de la relación entre su precio local observado y sus expectativas de precios agregados.
+
+La función de producción individual viene por tanto definida como:\footnote{Las minúsculas representan variables definidas en logaritmos.
+}\textsuperscript{,}\footnote{La formulación original de Lucas (1973) incluye igualmente un componente tendencial, omitido en esta exposición por razones de simplificación analítica.
+}
+
+$$y^s(z_t)=\beta\left(p(z)_t-E_t(z)\;[p_t]\;\right)\qquad \text{donde,}
+\begin{cases}
+    y^s(z_t)&\equiv\;\text{Cantidad producida en el mercado $z$ en el momento $t$}\\[0.5em]
+    p(z)_t&\equiv\;\text{Precio de la producción de $z$}\\[0.5em]
+    E_t[z]\;p_t&\equiv\;\;\;
+    \begin{aligned}
+        &\text{Expectativas al ppio del periodo $t$, de productores de $z$}\\
+        &\text{sobre el precio agregado $p_t$}
+    \end{aligned}\\[0.5em]
+\end{cases}$$
+
+Los oferentes, al no percibir el nivel de precios de forma directa, deben formar sus expectativas sobre el nivel de precios agregado. Este proceso puede dividirse en tres partes:
+\begin{lnum}
+    \item Partiendo de una distribución a priori de $p_t$, considerada normal, de media $E[p_t\;|\;\Omega_t]$ y varianza $\sigma_p$. Siendo $\Omega_t$ el conjunto de información disponible sobre la economía hasta el período $t-1$.
+    \item Se observan los precios del mercado local, $p (z)_t$, con el conocimiento de que se desvían del nivel agregado de precios, según el siguiente proceso:
+    $$p(z)_t=p_t+z_t$$
+    Siendo $z_t\sim N(0,\sigma_p)$, una perturbación específica al mercado $z$ (ruido blanco, camino aleatorio);\footnote{Se cumple también que la suma de las perturbaciones especificas para todos los mercados es igual a O.} y,
+    \item  Aplicando la Regla de Bayes, los productores forman un valor medio esperado para la distribución posterior de $p_t$ como la media ponderada del prior y el valor observado en el mercado local: 8
+    $$E_t(z)[p_t]=(1-\theta)E[p_t/\Omega_t]+\theta p(z)_t, \; \text{siendo}\;\theta=\frac{\sigma_p^2}{\sigma_p^2+\sigma_z^2}$$
+    Los pesos, dependerán, por lo tanto, de las varianzas relativas de la distribución a priori de los precios agregados ($\sigma_p^2$) (perturbación agregada o shock de oferta monetaria) y de la perturbación específica o local ($\sigma_z^2$).
+\end{lnum}  
+
+Sustituyendo esta expresión en la función de oferta individual se obtiene: 
+$$y^s(z_t)=\beta(1-\theta)(p(z)_t-E[p_t\;|\;\Omega_t])=\frac{\beta\;\sigma_z^2}{\sigma_p^2+\sigma_z^2}(p(z)_t-E[p_t\;|\;\Omega_t])$$
+
+Por último, agregando para todos los mercados locales, se obtiene la Función de Oferta Agregada de LUCAS, que dependerá de forma positivade la sorpresa monetaria en la formación de precios, el aumento no anticipado en el nivel agregado de precios:
+$$y_t^s=\frac{\beta\;\sigma_z^2}{\sigma_p^2+\sigma_z^2}(p(z)_t-E[p_t\;|\;\Omega_t])=\gamma(p_t-E[p_t\;|\;\Omega_t]), \quad \gamma=\frac{\beta\;\sigma_z^2}{\sigma_p^2+\sigma_z^2}\quad [\text{OA}]$$
+
+\textsc{Demanda Agregada}
+
+De forma simplificada, se supone una relación entre la cantidad de dinero nominal ($m_t$), el nivel de precios ($p_t$) y la demanda de bienes ($y_t^d$), partiendo de la conocida Teoría Cuantitativa del Dinero:
+$$m_t+v_t=p_t+y_t^d$$
+Suponiendo un comportamiento de la velocidad del dinero ($v_t$) constante e igual a $0$, la demanda queda definida como una función de los saldos monetarios expresados en términos reales:\footnote{La variable m no representa estrictamente la oferta monetaria sino una variable que impacta en la demanda agregada.
+}
+$$y_t^d=m_t-p_t\qquad [\text{DA}]$$
+
+\textsc{Equilibrio}
+
+Sustituyendo la ecuación de DA en la OA y resolviendo para el nivel esperado de precios asociado a la distribución a priori, $E[p_t\;|\;\Omega_t]$, se obtiene la siguiente igualdad:
+$$E[p_t\;|\;\Omega_t]=E[m_t\;|\;\Omega_t]$$
+Sustituyendo en las ecuaciones de OA y DA se obtiene la expresión de equili brio de precios y output en función de la cantidad de dinero observada y la esperada o anticipada:
+$$\begin{aligned}
+    y_t=\frac{\gamma}{1+\gamma}(m_t-E[m_t\;|\;\Omega_t])\\[0.5em]
+    p_t=\frac{\gamma}{1+\gamma}(m_t+\gamma\;E[m_t\;|\;\Omega_t])
+\end{aligned}$$
+
+Si además se reorganizan las ecuaciones, teniendo en cuenta que la cantidad de dinero puede dividirse en un componente observado, $m_t$, y otro esperado, $E[m_t\;|\;\Omega_t]$, con lo que $m_t=E[m_t\;|\;\Omega_t]+(m-E[m_t\;|\;\Omega_t])$, la ecuación de precios puede ponerse también en función de las sorpresas monetarias:
+
+$$p_t=E[m_t\;|\;\Omega_t]+\frac{\gamma}{1+\gamma}(m_t-E[m_t\;|\;\Omega_t])$$
+
+El componente observado de la demanda agregada ($m_t$) afecta a los precios, no teniendo efectos reales ya que la producción responde sólo a los cambios no anticipados en la cantidad nominal de dinero, $m_t-E[m_t\;|\;\Omega_t]$.
+
+La cantidad producida cambia ante perturbaciones nominales no anticipadas con una elasticidad, $\frac{\gamma}{1+\gamma}$, que depende positivamente de la elasticidad de la función de producción agregada ($\gamma$). A su vez, puede constatarse que dicha elasticidad será una función creciente de la volatilidad de las perturbaciones específicas ($\sigma_z^2$) y decreciente de la varianza de las sorpresas monetarias, $\sigma_e^2$.
+
+Para ello se definen las sorpresas monetarias como $u_t=m_t-E[m_t\;|\;\Omega_t]$, que siguen una distribución normal de varianza $\sigma_e^2=\frac{1}{(1+\gamma)^2}\;\sigma_p^2$, derivada de la ecuación de equilibrio de precios.
+
+\textsc{Equilibrio con Ecuación de Dinero}
+
+Para resolver el modelo, además de la oferta y la demanda agregada, es necesaria una ecuación de comportamiento de la cantidad de dinero, $m_t$. Si suponemos que sigue un paseo semi-aleatorio con: (i) dependencia de valores pasados; (ii) deriva; y, (iii) ruido blanco o componente inobservado.\footnote{Una deriva, $c$, que actúa a modo de tendencia y un ruido blanco, $u_t$, que es el componente no observado de $m_t$
+} Entonces, aplicando estos cambios en las ecuaciones de output y precios:\footnote{Véase Apuntes ICEX-CECO (Tema 3.A.6) para la derivación de estas ecuaciones
+}
+$$\begin{aligned}
+    \text{(1)}&\qquad y_t=\frac{\gamma}{1+\gamma}u_t\\[2em]
+    \text{(2)}&\qquad \pi_t=c+\frac{\gamma}{1+\gamma}u_t+\frac{\gamma}{1+\gamma}u_{t-1}\\
+\end{aligned}$$
+
+Como vemos, el componente aleatorio aparece con signo positivo tanto en la ecuación de la inflación (obtenida retrasando la ecuación de precios un periodo) como en la de producción, existiendo una relación positiva entre producción e inflación y por tanto, validando la existencia (teórica) de una curva de PHILLIPS con pendiente negativa. 
+
+Sin embargo, al analizar separadamente los componentes de la política monetaria ($m_t$):
+\begin{la}
+    \item \textit{Componente sistemático de la demanda de dinero}, $u_t\equiv$ componente aleatorio. Como solamente las perturbaciones no observadas ($u_t$) tienen efectos reales, la política monetaria puede utilizarse para estabilizar la producción sólo si la autoridad monetaria posee información relevante que los agentes desconocen;\footnote{Es decir, siempre que las políticas respondan a información de conocimiento público (como los principales indicadores macroeconómicos), serán ineficaces en la estabilización de la producción. Los agentes racionales aprenden a anticipar posibles reglas de estabilización contracíclica, siempre que sean usadas de forma consistente por los Bancos Centrales. Siguiendo a SARGENT y WALLACE (1975) puede hablarse de \textit{superneutralidad del dinero}, ya que los cambios en la variable monetaria no tendrán efectos reales, independientemente de si afectan al nivel o a su tasa de variación
+    } y, por otro lado,
+    \item \textit{Componente no sistemático de la demanda de dinero}, $\gamma\equiv$ elasticidad de la Función de Producción Agregada. Es el único que influye en la renta real. Sin embargo, la existencia de expectativas racionales y perfecta flexibilidad en el ajuste de los precios limita el uso de esta relación de intercambio como instrumento de política económica. Además, una política monetaria sorpresiva que aumentase la variabilidad de los precios reduciría el valor del parámetro $\gamma$ y, por tanto, el impacto sobre el output ($y$). Si las políticas inflacionistas aumentan las expectativas de inflación de los agentes, se producirá un desplazamiento vertical de la curva de Phillips a corto plazo, anulando los efectos reales de las medidas monetarias. 
+\end{la} 
+
+En definitiva, el intento continuado por parte de las autoridades de explotar la relación estadística existente entre inflación y output conllevará un ajuste de las expectativas de los agentes, invalidando los efectos de las medidas de política económica. Esta es la conocida crítica de Lucas (Lucas, 1976), que supuso un nuevo estándar al que deberían ajustarse los modelos macroeconómicos a partir de entonces. 
+
+Según Lucas (1976), los modelos macroeconómicos deben construirse en base a dos tipos de parámetros: 
+\begin{lnum}
+    \item P\textit{arámetros profundos o estructurales}. Definen las reglas de comportamiento de los agentes y son invariantes a las medidas de política económica (preferencia temporal, grade de aversión al riesgo, etc.); y,
+    \item \textit{Parámetros que definen la formación de expectativas}. Dependen del régimen de política económica.\footnote{Aquellos modelos, como el IS-LM, cuyos parámetros son una combinación de ambos tipos, se verán afectados por las medidas de política económica, que influirán en la posición e inclinación de las curvas a través de las expectativas incorporadas en los parámetros.
+    }
+\end{lnum} 
+
+
+\end{document}
