@@ -1,0 +1,998 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+\usepackage{multirow} 
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Coordinación internacional de Políticas Económicas\\
+\large Aspectos teóricos y prácticos. El G-20, la OCDE y otros foros internacionales}
+\author{Marcelo Ortega}
+\date{Marzo 2026}
+\newcommand{\TemaCode}{3B19}
+
+\oldtitle{
+    B.20. La coordinación internacional de las políticas macroeconómicas
+}
+\changerationale{
+    Se desplaza aquí parte del contenido del antiguo 36B, por estar más relacionado con este tema. Se busca por tanto un cierto equilibrio entre un enfoque económico por un lado, e institucional por otro.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     De cara a la exposición, el opositor puede aligerar la parte de Teoría de Juegos, y ahondar en la de los organismos internacionales, que en esta versión del tema se explican sólo superficialmente. Esta estructura resulta del último cambio en los títulos del temario de la oposición; por tanto, se señala al opositor que se espera cumplir con dos objetivos diferenciados:
+     \begin{lnum}
+         \item Demostrar conocer con soltura la teoría de la economía abierta (de la cual éste es el último tema), y de macroeconomía (en especial el modelo de tres ecuaciones de la NEK); y,
+         \item Aplicar este conocimiento (así como la Teoría de Juegos) de manera aplicada al estudio de una cuestión de relevancia económica como es el diseño de instituciones internacionales.
+     \end{lnum}
+
+    De cara a profundizar más en el estudio de este tema, se recomienda, por un lado, profundizar en el análisis completo realizado por los profesores Corsetti y Pesenti, en el que se consideran distintas fonnas de modelizar la economía. Por otro lado, también es importante estar al día en cuanto a los avances en materia de coordinación de políticas económicas que se dan a nivel global, y tratar de aplicar la teoría de juegos a estas situaciones. Por último, es recomendable actualizar la evidencia empírica respecto a los beneficios de este proceso.
+    }
+\vspace{1cm}
+
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+
+
+\clearpage
+\section{Cordinación internacional: ¿Por qué?}
+
+
+
+
+
+\subsection{Aproximación analítica (NEK-2): Efecto desbordamiento}
+Los modelos neokeynesianos toman como punto de partida la existencia de rigideces en el mercado de trabajo, poniendo de manifiesto cómo la modificación en los salarios reales puede generar efectos desbordamiento adicionales. La reducción de costes laborales, o devaluación interna, es una medida de política económica muy utilizada también como fonna de mejorar la competitividad de la economía, en particular cuando se agotan las posibilidades de utilizar políticas convencionales, y como ha sido el caso en algunos países (como España) durante la presente crisis. 
+
+Se analiza a continuación la interdependencia económica con un modelo de la NOEM formulado por CORSETTI y PESENTI (2005).\footnote{Este Modelo, como cualquiera de la NOEM, sucede al marco neoclásico formulado por MUNDELL y FLEMMING, que predominó durante los años 40 y 60. Aunque surgieron criticas a este paradigma, como, por ejemplo, la monetarista. Poco después surgiría la Nueva Macroeconomía Clásica que analizaba la economía por el lado de la oferta y cambió el marco metodológico. Posteriormente la NEK tomaría este marco, adaptando sus aspectos teóricos a los postulados de KEYNES. Así, el modelo de CORSETTI y PESENTI se basa en el modelo de ciclos de tres ecuaciones de la NEK, y trata de modelizar economías abiertas. Se analiza una versión simplificada.
+} A diferencia el modelo de MUNDELL y FLERNING este modelo considera: agentes optimizadores, la oferta agregada, y competencia imperfecta y rigideces. 
+
+Se consideran dos economías, el país A y el país B. Corno en el modelo anterior, B es el país extranjero y sus variables se identifican con un asterisco. Además, cada país tiene tres agentes. Los hogares son idénticos para ambos países, y se asume una población normalizada a 1. Sus preferencias vienen dadas por una función de utilidad donde, de forma simplificada, C es una cesta de bienes nacionales y extranjeros, l son las horas que emplean en trabajar (que genera desutilidad), y k es la relación marginal de sustitución entre trabajo y ocio:
+
+
+Los hogares tratarán de maximizar su utilidad considerando una restricción presupuestaria donde pagan impuestos al Sector Público, adquieren bienes de consumo, mantienen bonos y dinero, y obtienen un salario y dividendos por parte de las empresas. 
+
+Por tanto, el modelo incluye a las empresas, que venden sus productos en los dos países. Se introduce competencia imperfecta al suponer que cada empresa produce una variedad única que es sustituto imperfecto de las demás variedades, de manera que existe poder de mercado. Así, se define 0 como la elasticidad de sustitución entre variedades, y se asume que es mayor a la elasticidad de sustitución de los bienes de A y B. Con esto, las empresas trataran de maximizar sus beneficios de acuerdo a una tecnología: Y = Z · L Y' = Z' • L' 
+
+Por tanto, las empresas obtienen una producción empleando solo el factor productivo trabajo, que tiene una productividad marginal igual a Z. Se observa que, igual que ocurre en el modelo de tres ecuaciones de la NEK, no se considera la inversión. Por último, cabe destacar que, aunque existe competencia imperfecta en el mercado de bienes, se trata el mercado de trabajo como perfectamente competitivo. 
+
+Y, en último lugar, los autores incluyen el Sector Público, que es el encargado de llevar a cabo las políticas económicas. Denominan μ al efecto de la política monetaria en la demanda agregada, y g a la proporción de gasto del Sector Público respecto al consumo total. El modelo inicial de Corsetti y Pesenti se basa en la política monetaria. Si se resuelven los problemas de optimización de hogares y empresas, considerando variables exógenas a la productividad marginal del trabajo, el estímulo de la política monetaria, y el nivel de precios nacionales y extranjeros en cada mercado, se obtienen las ecuaciones fundamentales del modelo. 
+
+En primer lugar, la demanda agregada, que en el espacio consumo-trabajo, será una recta perfectamente elástica. Así, tendremos que el consumo depende positivamente de μ, y negativamente del precio del bien compuesto. 
+
+
+Como señalamos, las empresas, en sus mercados, establecen los precios de los bienes que producen de acuerdo a un mark-up sobre sus costes marginales. Asumiendo que establecen estos precios al principio de cada periodo, y que existen rigideces a corto plazo, tenemos: 
+
+
+Sin las rigideces, los precios flexibles no dependen de los costes marginales esperados, ya que éstos serán conocidos. 
+
+Por otro lado, se define la oferta agregada, o curva de tecnología. En una economía cerrada vendrá dada por la igualdad entre consumo y producción. Sin embargo, en una economía abierta se debe tener en cuenta que se consumen bienes de ambos países. De esta forma, suponiendo mercados completos sin costes de transacción - de forma que el consumo de A es igual al de B, y el tipo de cambio nominal E = ;., tenemos que el tipo de cambio nominal solo depende del efecto de las políticas monetarias: E = μ• La oferta agregada dependerá del tipo de cambio nominal, y de la relación real de intercambio. Concretamente, considerando que la producción total del país A se destina tanto a consumo en A como consumo en el país B, y considerando esto en la restricción de los agentes, tenemos: Y = C = Z · L · r  Donde r es una variable endógena. Es el precio del output doméstico en términos del consumo doméstico, y se reducirá si empeora la relación real de intercambio, y aumentará si se aprecia el tipo de cambio: 1 T = p 1 1 2 [pA + . eP'] A La oferta agregada será entones un rayo vector cuya pendiente es igual a la productividad marginal del trabajo. Por último, si operamos con las ecuaciones de la demanda y la oferta agregadas, y considerando los precios flexibles, se obtiene el empleo de equilibrio !, que es constante. Depende de las preferencias de los agentes sobre el ocio, ya que, si se reducen, aumenta la oferta de empleo de los agentes; y de las distorsiones que surgen del poder de mercado de las empresas, ya que a menor mark-up mayor será en nivel de empleo en equilibrio. Viene dado por una recta inelástica. Estos autores introducen además las curvas de indiferencia de los agentes, que tendrán pendiente negativa y no serán tangentes a la oferta agregada al existir rigideces nominales. Es decir, la pendiente de las curvas de indiferencia, la relación marginal de sustitución, será menor a la relación marginal de transformación, dada por la pendiente de la oferta agregada. Estas relaciones se representan en el gráfico 5:
+
+\textbf{INTRODUCIR GRÁFICO EQUILIBRIO}
+
+Por lo tanto, de acuerdo a Corsetti y Pesenti, con rigideces el equilibrio se determina a través de la oferta y la demanda agregadas, y según esto, se obtiene un nivel de empleo que puede ser distinto al de equilibrio. Un aspecto interesante del trabajo de estos autores es que, al analizar los efectos de una política monetaria, consideran distintos tipos de fijación de precios en los mercados extranjeros.
+
+\subsubsection{Política Monetaria: Implicaciones}
+
+
+
+\paragraph{Condición PPA: Fijación de precios con referencia al Tipo de Cambio (nominal)}
+Si el país A lleva a cabo una política monetaria expansiva, aumenta el estímulo monetario μ, y se produce un aumento en la demanda agregada que desplaza la curva para el país A. También se deprecia el tipo de cambio, y se reduce r, con lo que la curva de la tecnología rota hacia la derecha. Si no hay un shock positivo de productividad que revierta este último efecto, que puede obtenerse a través de políticas de oferta, el nivel de empleo final será superior al del equilibrio y se reducirá el bienestar social (nos situamos en una curva de indiferencia inferior a la inicial, aunque éstas no se representan por una mayor claridad). Dado que la relación real de intercambio empeora para el país A, ésta mejora para el país B, conlo que aumenta la variable r y la curva de tecnología rota hacia arriba. Si las empresas fijan los precios en el mercado extranjero de acuerdo al tipo de cambio nominal, dada la depreciación de la moneda de A, las importaciones se abaratan en el país B, reduciéndose el nivel de precios de las cestas de consumo, y aumentando la demanda agregada.
+
+\textbf{INTRODUCIR GRÁFICO POLÍTICA MONETARIA (2)}
+
+En definitiva, se produce un efecto locomotora sobre el país B, que aumenta su consumo sin aumentar el nivel de empleo, y aumenta así su bienestar social.
+
+
+\paragraph{Incumplimiento PPA: Discriminación de precios: }
+Pero, en la práctica, muchas empresas discriminan y establecen distintos precios para los diferentes mercados, de manera que los precios de los bienes importados suelen ser inelásticos a los movimientos del tipo de cambio. Considerando este caso, tendemos que el efecto clave de los movimientos del tipo de cambio se encuentra en los márgenes de las empresas y en sus beneficios. Ante una política monetaria expansiva en A, se deprecia la moneda. Esto hace que aumente el beneficio de las empresas por cada unidad exportada vendida (ya que se obtienen más unidades monetarias nacionales), y aumenta el mark-up sobre el coste. El impacto de la política monetaria en la demanda es ahora mayor, y, como el precio de las exportaciones de A en el país B es rígido, se produce una mejora en la relación real de intercambio que predomina respecto al efecto de la depreciación del tipo de cambio, de manera que en A aumenta la variable r, y la curva de tecnología rota hacia la izquierda, llegando a un equilibrio en el que aumenta el bienestar social. Sin embargo, se trata de una política de empobrecimiento del vecino para el país B. ya que su relación marginal empeora, y no hay ningún efecto sobre la demanda al mantenerse los precios constantes. Se alcanza un equilibrio en el que los agentes deben trabajar más horas, con un menor bienestar social.
+
+\textbf{INTRODUCIR GRÁFICO POLÍTICA MONETARIA (2)}
+
+El país B debería llevar a cabo políticas de oferta que aumenten la productividad marginal del trabajo, o una política monetaria expansiva que mejore la relación real de intercambio para recuperar el equilibrio inicial.
+
+
+
+\paragraph{Caso particular: Dolarización}
+Los autores consideran una última alternativa en cuanto a la fijación de los precios de las, la dolarización o dollar pricing. En este caso, las importaciones del país B, y sus exportaciones, se establecen en la moneda del país A. La clave es que, con la política monetaria expansiva, cuando se deprecia la moneda de A, no hay ningún efecto sobre la relación real de intercambio, ya que la relación entre el precio de las exportaciones y de las importaciones se mantiene constante. Así, en el país A solo se produce un aumento en la demanda agregada. En el país B, esta depreciación de la moneda de A hace que se reduzca el nivel de precios de la cesta de consumo, desplazándose también la curva de la oferta agregada.
+
+\textbf{INTRODUCIR GRÁFICO POLÍTICA MONETARIA (3)}
+
+En este caso se reduce el bienestar social en ambos países.
+
+
+\subsubsection{Política Fiscal: Implicaciones}
+Estos autores también analizaron en una extensión de su modelo original los efectos que tiene la política fiscal, para lo que incluyen la variable g, que representa la proporción de gasto del Sector Público respecto al consumo total. Asumen que el gasto público se financia con impuestos de suma fija. De esta manera, aunque la demanda agregada es igual al caso anterior, sí hay algunas variaciones en las otras ecuaciones. En el caso de la oferta agregada, se tiene que considerar que la producción total de una economía, se destina al consumo de los hogares y también al consumo del Sector Público, de manera que tenemos: Y = C(l + g) = Z • L • T Donde el gasto público será igual a C-g, y si aumenta, deberán aumentar los impuestos que pagan los hogares, y el número de horas que trabajan. Por esto, ahora el empleo de equilibrio no será constante y dependerá positivamente de g. Por lo tanto, ante una política fiscal expansiva del país A, con un aumento de g permanente, el Sector Público aumenta su demanda de bienes, reduciendo la disponibilidad para las exportaciones. En el corto plazo, la curva de la oferta agregada rota hacia la derecha, aumenta también el nivel del empleo de equilibrio, y aumenta el output. Suponiendo que la fijación de precios se realiza según el tipo de cambio nominal, en un mayor plazo, se producirá un aumento del nivel de precios de la cesta de consumo en A, desplazando hacia abajo la curva de demanda agregada. Esto hace que se aprecie la moneda y aumente r, con lo que la oferta agregada rota ahora ligeramente hacia la izquierda. Esto hace que se reduzcan las horas trabajadas, y mejore ligeramente el bienestar social.
+
+\textbf{INTRODUCIR GRÁFICO POLÍTICA FISCAL}
+
+No obstante, es importante señalar que este efecto dependerá de la sustituibilidad entre los bienes nacionales y extranjeros, ya que cuánto más sustitutivos sean, menor será el aumento del nivel de precios ya que parte del consumo se podrá satisfacer con importaciones, y menor será el efecto de mejora de bienestar. Los efectos sobre el país B son nulos en el corto plazo. Pero una vez se produce la apreciación del tipo de cambio, empeorará la relación real de intercambio del país B, reduciéndose r y rotando la curva de tecnología a la derecha. Se reducirá el bienestar social de B. Pero, además, por la apreciación de la moneda de A, aumentará el nivel de precios de la cesta de consumo en el país B, desplazando la curva de la demanda agregada hacia abajo. Este efecto dependerá, como antes, del grado de sustituibilidad de los bienes nacionales y extranjeros.
+
+
+\subsection{Aproximación práctica: Mutualización del riesgo}
+En la práctica, la motivación para la coordinación de las políticas económicas es doble: evitar los efectos desbordamiento negativos, y la mutualización del riesgo internacional. El argumento de la mutualización del riesgo se refiere a que la coordinación entre países puede ser beneficiosa para ellos si se aseguran mutuamente ante los efectos de shocks negativos. En el año 2002, Obstfeld y Rogoff calibraron un modelo con distribución de riesgo imperfecta que incluía rigideces nominales, y llegaron a la misma conclusión que Oudiz y Sachs en 1984: las ganancias de la coordinación son demasiado bajas como para justificar los esfuerzos que supone. En general, las aportaciones de la NOEM trajeron un gran escepticismo sobre la deseabilidad de la coordinación. Benigno y Benigno en 2006 cuantificaron las ganancias de bienestar debido a la coordinación, considerando la discriminación y la no discriminación entre mercados, y considerando una política monetaria idéntica en el caso de que los policy makers actuaran tanto de forma independiente como de fom1a coordinada. Con esto, las ganancias volvían a ser escasas. No obstante, hay estudios, como, por ejemplo, de Tchakarov en 2004, que sí encuentran mayores beneficios al considerar otras características más realistas de las economías. Estas características se refieren, por ejemplo, a considerar las importaciones de bienes intermedios necesarios para la producción nacional, y cómo se ven afectados por las fluctuaciones del tipo de cambio. En este sentido, otro ejemplo sería diferenciar el sector de bienes no comercializables y el de los comercializables, y los distintos efectos que tienen los shocks de productividad en ambos sectores, ya que dificulta el aseguramiento del sector no comercializable. En definitiva, podemos decir que la existencia de efectos de es una condición necesaria para justificar la coordinación, pero la condición suficiente es que existan beneficios derivadas de ella. Sin embargo, es importante señalar, que los modelos teóricos y la evidencia empírica analizados se centran en políticas macroeconómicas de demanda, donde vemos que no existe un consenso claro en cuanto a la deseabilidad de la coordinación. Sin embargo, sí existe consenso en el caso de algunsa políticas de oferta. Aquí cabe destacar algunos ejemplos claros de gran actualidad, como es la provisión de estabilidad financiera, o de otros bienes públicos globales.
+
+
+
+\clearpage
+\section{Coordinación internacional: ¿Cómo?}
+\puntosclave{
+    En términos de la teoría de juegos, la coordinación permite evitar situaciones de dilema del prisionero y alcanzar soluciones óptimas en sentido Pareto. Sin embargo, los resultados dependen del tipo de juego planteado. Así, por ejemplo, con juegos dinámicos la credibilidad de las amenazas de incumplir un acuerdo de coordinación es fundamental. 
+    
+    Existen importantes dificultades a la hora de implementar la coordinación internacional, como distintos tipos de incertidumbre en la fijación de los objetivos de ésta, el establecimiento de la distribución de costes y beneficios asociados, y el propio cumplimiento de los acuerdos. Además, existen distintas formas de coordinación con sus ventajas y desventajas, sin que exista una forma superior al resto. 
+    
+    En la actualidad existen importantes ejemplos de coordinación internacional en materia de políticas de oferta, como es el caso de la provisión de bienes públicos globales como la estabilidad financiera y la lucha contra el cambio climático. Gran parte de esta coordinación se realiza a través de la creación de foros donde participan distintos países. Algunos que cabe destacar por su gran relevancia en el contexto global son: la OCDE, el G20, y el FSB.
+}
+
+Hasta ahora hemos presentado algunas aproximaciones que nos permiten evaluar la necesidad e impacto de la coordinación de políticas económicas. Todas ellas, independientemente de sus conclusiones, exigen que los Gobiernos se coordinen para alcanzar estos objetivos compartidos, potenciar los beneficios y disminuir sus efectos negativos, en tanto limitan la capacidad autónoma de éstos a actuar frente a los \textit{shocks}. 
+
+Por tanto, resulta natural presentar otra cuestión: ¿cómo implementar dicha cooperación? Si resulta deseable implementarla desde una perspectiva tanto teórica como práctica, ¿qué mecanismos nos permiten establecer dicha cooperación y de qué manera podemos alcanzarla?
+
+Esto requiere pensar: (i) cómo los Gobiernos responden a shocks experimentados en su economía, bien sea por efectos desbordamientos o una coyuntura local; y, (ii) cómo y con qué fin reaccionaran el resto de jugadores, valorando los costes y beneficios que cada uno enfrenta y la consecución de sus objetivos propios. Dicho de otra forma, requiere estudiar la interdependencia política asumiendo que los policymakers determinan estratégicamente la política macroeconómica para alcanzar determinados objetivos internos. 
+
+\textbf{¿Qué queremos decir?} Para analizar esta interdependencia estratégica es común emplear Teoría de Juegos:\footnote{Este análisis fue inicialmenté introducido por COOPER (1969) y HAMADA (1976), aunque en nuestra modelización seguiremos las aportaciones realizadas por FRANKEL (2015), quien analiza los conflictos de política entre países considerando unos pocos ejemplos simples.
+} los jugadores (Gobiernos) planifican y ejecutan sus estrategias (acciones de Política Económica) para conseguir sus propios objetivos, interiorizando las reacciones del resto de los jugadores. 
+
+
+Cada gobierno i tiene el trata de maximizar una función de bienestar social W que depende de unos objetivos propios T, y cuyo resultado depende de las estrategias de otro gobierno j:
+
+\subsection{Aproximación estática: }
+Una primera aproximación a la modelización de esta interacción estratégica y la factibilidad o no de la coordinación es mediante la modelización estática de un juego.
+
+Es, por ejemplo, el enfoque adoptado por FRANKEL (2016). Supongamos que un shock ecónomico afecta a múltiples países de una manera relativamente homogenea y simétrica. (Restringimos nuestro análisis a dos). Tras una serie de deliberaciones, ambos Gobiernos llegan a la conclusión de que la mejor manera de estimular la economía es mediante la implementación de una Política Fiscal expansiva. No obstante, si tenemos en cuenta los \textbf{efectos desbordamiento} que hemos presentado en el apartado anterior, sería razonable suponer que, en un contexto de interrelación (apertura comercial) y estraetegia (interdependencia), cada uno de los Gobiernos deseará maximizar el impacto positivo sobre su economía generando el menor coste (déficit) nacional. Es decir, deseará valerse de la acción del otro para estimular su propia economía aprovechando los efectos desbordamiento esperados. Podemos representar esta situación gráficamente de la siguiente forma:\footnote{El eje horizontal mide la orientación de la política económica, que aquí definimos como estímulo fiscal, para el país extranjero. El eje vertical mide la expansión fiscal del país doméstico. Supongamos que, en el punto inicial $N$ (Equilibrio de NASH), cada país elige su política fiscal de manera independiente. Desde el punto $N$, cada país preferiría que el otro expandiera su política fiscal, pero ambos se abstienen de expandirse por sí mismos debido al temor a las consecuencias adversas sobre su balanza comercial.
+
+Las curvas de indiferencia que se expanden desde cada Óptimo Doméstico representan niveles sucesivamente menores de satisfacción. La línea que representa la función de reacción doméstica se traza como la secuencia de puntos donde las curvas de indiferencia son tangentes a líneas verticales, porque cada punto representa la elección de política fiscal estadounidense que alcanza el mayor nivel de satisfacción correspondiente a una determinada configuración de política fiscal alemana. Tiene pendiente negativa porque cuanto menor sea la demanda proporcionada por Alemania, mayor será la necesidad de que Estados Unidos sustituya esa demanda mediante estímulo propio. (Las políticas son \textbf{sustitutos estratégicos}.) La pendiente es relativamente plana porque un determinado estímulo fiscal estadounidense tiene un efecto mayor sobre la economía de Estados Unidos que el impacto que tendría un estímulo fiscal alemán de igual magnitud sobre la economía estadounidense. La función de reacción de Alemania comienza en la esquina superior izquierda y presenta una pendiente fuertemente negativa.
+}
+
+\imagenfit{Fig1.png}{Juego de la locomotora: Orientación de la Política Fiscal e interacción estratégica}{\href{https://www.nber.org/system/files/working_papers/w21878/w21878.pdf}{\textit{INTERNATIONAL COORDINATION}. FRANKEL (2016)}}
+
+Supongamos que el país doméstico es Estados Unidos y el país extranjero la Alemania. Hipotéticamente, si Estados Unidos pudiera elegir egoístamente la configuración de política económica de ambos países de acuerdo con sus propias preferencias internas, su óptimo estaría en la esquina inferior derecha, donde la Alemania y otros países emprenden una fuerte expansión fiscal, de modo que Estados Unidos disfrute de crecimiento impulsado por una fuerte demanda neta de exportaciones y pueda contener su propia política fiscal, evitando así los problemas futuros asociados al endeudamiento. No obstante, Alemania ciertamente elegiría un nivel de expansión fiscal inferior a ese óptimo, y Estados Unidos reaccionaría ajustará en consecuencia. Esta interacción (implícita) conduce al equilibrio no cooperativo de NASH ($N$), donde cada país ha fijado su política de manera óptima tomando como dada la política del otro.
+
+Imaginemos que Estados Unidos ejerce cierto liderazgo global y propone en una cumbre internacional que todas las partes implementen simultáneamente estímulos fiscales, desplazándose hacia el noreste en el gráfico, como indica la flecha. Esta sería la solución \textbf{locomotora}: ningún país necesita experimentar un cambio en su balanza comercial, pero la expansión coordinada saca a la economía mundial de la recesión. De esta forma, un programa cooperativo especialmente bien diseñado trasladará la economía global hacia un punto como el indicado, alcanzándose un Óptimo de PARETO.
+
+Evidentemente, esta es la historia tal como la ven Estados Unidos y algunos otros países. Pero probablemente no sea el marco conceptual a través del cual todos interpreten la situación. Alemania podría perfectamente considerar que, en relación con los efectos de desbordamiento (spillovers) y las propuestas de coordinación: lo que para alguien constituye un vicio fiscal (mejor prodigalidad), para otra puede constituir una virtud fiscal (mejor austeridad).\footnote{Para ver el enfoque alternativo (disciplina fiscal), puede consultarse: \href{https://www.nber.org/system/files/working_papers/w21878/w21878.pdf}{\textit{INTERNATIONAL COORDINATION}. FRANKEL (2016)}.
+
+En esencia, la visión alemana podría sostener que el déficit presupuestario de un país es el causante de la externalidad negativa generada sobre sus vecinos. Este juego, denominado el de la \textbf{disciplina fiscal}, se puede racionalizar mediante dos vías:
+\begin{la}
+    \item \textbf{Recursos financieros escasos}. Si los países o sus gobiernos compiten por fondos en el mercado financiero global (CHANG, 1990), cada país que incurre en déficit ejerce presión al alza sobre los tipos de interés globales y, por tanto, dificulta la financiación para todos los demás;
+    \item \textbf{Riesgo moral}. Otra forma de verlo es que, si aumenta la probabilidad de rescate por parte de sus vecinos, el incentivo de cada país para mantener prudencia fiscal se debilita y se origina un problema de riesgo moral. En el caso de la Eurozona, la mayoría de los ciudadanos alemanes y de otros países del norte de Europa parecen claramente inclinados a pensar que la prodigalidad fiscal de los países mediterráneos constituye una externalidad negativa, y no positiva. La sospecha entre los contribuyentes del norte de Europa de que acabarían siendo llamados a rescatar a sus vecinos derrochadores explica por qué los acuerdos cooperativos intentaron imponer límites a los déficits y deudas públicas de los países. En ausencia de restricciones internacionalmente acordadas sobre los déficits presupuestarios, el conocimiento de posibles rescates ex post debilita el incentivo a actuar prudentemente ex ante. Como resultado, todos los países incurren en déficits excesivos, situándose en la esquina inferior de manera persistente. Esto puede aplicarse a nivel global si se considera que una institución como el FMI constituye una fuente de riesgo moral, lo que explicaría por qué el Fondo ha otorgado tradicionalmente tanta importancia, en sus procedimientos, a la imposición de disciplina presupuestaria.
+\end{la}
+}
+
+\subsection{Aproximación dinámica: }
+Sin embargo, estas diferencias cognitivas no son las únicas que pueden generar problemas y enfrentamientos. Incluso si las versiones coinciden para todos los integrantes, ¿qué impediría el incumplimiento por parte de alguno? Pensémoslo. Una vez acordada la coordinación e implementación de los paquetes de estímulo fiscal, cualquier representante podría perfectamente regresar a su país con un fuerte incentivo de incumplir el contrato. Al fin y al cabo, si todos los países lo cumplen, los potenciales efectos desbordamiento serán desproporcinoadamente superiores teniendo en cuenta la reducción de costes en términos internos. 
+
+Esta es una serie limitación de las aproximaciones estáticas: los jugadores tienen incentivos a romper el acuerdo, pues ello les supondría, inicialmente, una mejora de su bienestar. Para sortear esta dificultad metodológicamente podemos recurrir a los juegos dinámicos.
+
+Supongamos que: (i) el mismo juego anterior se repite un número indeterminado de veces; y, (ii) los países pueden acordar sanciones por incumplimiento.\footnote{Si el juego se jugase un número finito de veces, por inducción podríamos demostrar fácilmente que el único equilibrio de NASH (y ENPS) es la no cooperación, es decir, hacer \textit{free rider}. Esto se debe a que en todo momento, todo jugador sabría que la opción no cooperativa es la estrategia dominante tanto para el como para el resto en el último periodo, ergo por anticipación acabaríamos alcanzando la misma dominación en cada uno de los periodos anteriores. 
+} Hay dos formas de interpretar esto:
+\begin{la}
+    \item \textbf{Interpretación literal}. Si el juego se repite infinitos durante infinitos periodos, cuando un jugador compara una estrategia con otra debería comparar el valor presente descontado de las respectivas ganancias (y pérdidas);
+    \item \textbf{Interpretación informacional}. Si no se conoce la duración del juego, en cada etapa del juego existe una probabilidad positiva de que el juego continúe. En este marco, cada jugador debería comparar el pago esperado (que también se podría descontar) de las diferentes estrategias y, en consecuencia, especificará su comportamiento en cada periodo $t$ como una función de la historia pasada del juego. 
+\end{la}
+
+Independientemente de la forma que adopte, los resultados serán bastante similares. Para demostrarlo, adoptemos una representación formal del juego de la locomotora representado gráficamente:
+
+\begin{center}
+\begin{tabular}{|p{0.25\linewidth}|p{0.25\linewidth}|p{0.10\linewidth}|p{0.25\linewidth}|}
+\hline
+ \multicolumn{2}{|c|}{\textbf{Matriz de pagos básica}: Juego estático} & & \textbf{Matriz de pagos}: Represalía \\
+\hline
+ Locomotora & Free-rider (Estados Unidos) & \multirow{2}{*}{} & \multirow{2}{*}{Represalía} \\
+\cline{1-2}
+Free-rider (Alemania) & Disciplina & & \\
+\hline
+\end{tabular}
+\end{center}
+
+Suponiendo que los beneficios futuros se descuentan a una tasa de descuento homogena y uniforme, $\delta$, podemos comprobar que el Equilibrio Cooperativo será sostenible en el tiempo siempre y cuando los beneficios esperados de la cooperación sean mayores que los beneficios esperados intentando aprovechar cualquier estragema. Analíticamente:
+
+\eqblock{
+\begin{aligned}
+    &\left\{
+    \begin{aligned}
+        &L_i\equiv \text{Pago por cooperar}\\[0.5em]
+        &F_i\equiv \text{Pago por desviarse}\\[0.5em]
+        &R_i\equiv \text{Pago bajo represalia}
+    \end{aligned}\right\}\quad\Longrightarrow\quad \text{Equilibrio biperiodo}: \quad \frac{L_i}{1-\delta}\geq F_i+\delta\frac{R_i}{1+\delta}\\[1em]
+    &\text{Reordenando}:\quad \delta(F_i-R_i)\geq F_i-L_i\quad\Longrightarrow\quad \boxed{\delta \geq\frac{F_i-L_i}{F_i-R_i},\,\,\forall i}\quad\Longrightarrow\quad F_i> L_i>R_i
+\end{aligned}
+}{}
+
+El análisis anterior sirve como ejemplo de un principio general que ocurre en situaciones de juegos dinámicos: es posible sostener como equilibrio comportamientos que no son de equilibrio en el corto plazo siempre y cuando los países valoren suficientemente el futuro y la brecha entre el rendimiento de la cooperación y el rendimiento bajo represalia sea suficientemente grande. Esto se produce gracias a las estructuras y reacciones dinámicas que emergen y conllevan que en caso de incumplimiento del acuerdo los jugadores pueden reaccionar, represaliando dicha desviación durante el resto del juego. De modo que el aumento de beneficios (derivado de la violación del acuerdo) a corto plazo no compensa la pérdida de beneficios durante el resto del juego.
+
+\subsection{Aproximación de la Economía Política: Costes de transacción}
+Con esto hemos puesto de manifiesto como el mero hecho de incorporar un horizonte temporal puede eliminar los incentivos a romper los acuerdos.
+
+No obstante, los acuerdos no pueden abordarse únicamente desde una perspectiva económica. Muchos otros factores, en ocasiones relacionados con aspectos económicos entran en juego al considerar la factibilidad de un acuerdo cooperativo óptimo entre los jugadores y, más en particular, la credibilidad de su mantenimiento. Es decir, aunque las circunstancias que ocasionan la coordinación constituyen un primer paso importante, esta no es una cuestión suficiente para la aparición de un acuerdo y su mantenimiento.
+
+Para abordar otras casuísticas que pueden generar obstáculos se adopta la genérica noción de los costes de negociación o transacción, que suelen aumentar aumentar/disminuir por diversos factores, distinguiéndose aquellos vinculados a: obstáculos políticos y obstáculos económicos. 
+
+\subsubsection{Obstáculos políticos}
+Entre los obstáculos políticos que influyen en el coste de la negociación pueden citarse: la pérdida de soberanía entre los países implicados en el proceso; las diferencias en la situación política de cada uno de ellos; las prioridades electorales que tengan; y los compromisos del gobierno con el sector privado (que suelen frenar en muchas oportunidades el margen de maniobra de las negociaciones). 
+
+\paragraph{Cumplimiento: Credibilidad}
+La cuestión que se plantea en este último caso es, si las autoridades económicas cumplirán lo acordado, o si por al contrario lo incumplirán, volviendo a diseftar su política, una vez que el resto ha cumplido el acuerdo.
+
+En este caso estaríamos ante la presencia de free rider, es decir, de un participante que se beneficia de los efectos externos de las políticas aplicadas por otros países, pero sin asumir ningún coste. Sin embargo, esta situación en realidad puede suponer costes importantes desde el momento en que los restantes se dan cuenta de su incumplimiento y adoptan una postura contraria a los intereses de aquel, siendo la nueva situación en términos de bienestar muy inferior a cualquier otra situación, lo que provoca que no se produzcan actuaciones de este tipo. Relacionado con todo esto, surge el problema de la credibilidad del gobierno frente al sector privado y el de la consistencia temporal. La inconsistencia temporal, concepto introducido por Kydland y Prescott, se refiere al problema asociado con la posibilidad de que las autoridades económicas encuentren ventajoso cambiar sus planes en el futuro. Si suponemos que un gobierno desea reducir la inflación mediante el endurecimiento de la política monetaria, partiendo de la existencia de un sector privado con expectativas racionales. el simple hecho de anunciar que se llevará a cabo en el futuro una política monetaria restrictiva es suficiente  para reducir las expectativas de inflación, y más tarde la propia inflación, pero si esto se produce deja de haber un incentivo para aplicar tal política monetaria. Sin embargo, como hemos supuesto que el sector privado actúa racionalmente, se puede pensar que la política monetaria no va a ser aplicada por las autoridades, no reduciendo, por lo tanto, sus expectativas de inflación. En definitiva, cuando se instrumentan políticas que son temporalmente inconsistentes, no son creíbles por el sector privado. Este es el razonamiento seguido por Rogoffpara mostrar que la coordinación internacional de las políticas económicas puede reducir el bienestar, ya que aumenta los problemas de credibilidad del gobierno frente al sector privado. Pero a pesar de que la inconsistencia temporal puede ser un obstáculo al comportamiento cooperativo a nivel internacional, existen algunas consideraciones que limitan su importancia
+
+
+\subsubsection{Obstáculos económicos}
+Los obstáculos económicos aparecen en todas las fases (o momentos) de la negociación y serán diferentes según el caso. Son los más relevantes, y precisamente desde una perspectiva económica conviene destacar que en un proceso de coordinación internacional de las políticas económicas se pueden diferenciar tres fases. En primer lugar, se debe real izar la definición de los objetivos que se desean alcanzar y la decisión de los cambios que desean que el otro u otros países establezcan en sus políticas y de lo que se está dispuesto a dar a cambio. Posterionnente tenemos la negociación de cómo deben ser distribuidas las ganancias que se obtiene mediante la coordinación internacional. Por último, encontramos el cumplimiento del acuerdo y el establecimiento de unas nonnas que hagan respetar el mismo, fijándose en su caso las posibles sanciones siempre que el acuerdo sea incumplido. A lo largo de este proceso de negociación, y en las distintas fases, surgen diversos problemas que vamos a analizar a continuación.
+
+\paragraph{Mutualización: Costes y beneficios}
+Pudiendo haber coincidencia en los objetivos a alcanzar y en el modelo representativo de la economía, pueden existir diferencias relativas a la adecuada distribución entre los países de los beneficios y costes asociados a la coordinación internacional. Este es un obstáculo muy importante porque todas las partes pueden desear llevar a cabo la cooperación, pero cada una querrá el menor coste posible para sí misma. Los resultados que se han obtenido de los modelos econométricos más importantes, han mostrado que las ganancias derivadas de la coordinación, se distribuyen de forma asimétrica. 
+
+Esta distribución asimétrica supone un obstáculo importante, pues si los países que obtienen la mayor parte de los beneficios y los que incurren o asumen los mayores costes son distintos, cualquier acuerdo sería difícil de establecer. La manera de resolver estos problemas de distribución sería mediante algún mecanismo de compensación, pero que complicaría el proceso negociador.
+
+
+\subsubsection{Implementación: Democrática o coercitiva}
+Teniendo en cuenta los obstáculos que pueden surgir en las fases de coordinación, se plantea la cuestión relacionada con las características que,el proceso de coordinación debe tener con objeto de maximizar los beneficios de la misma. En este sentido nos encontramos con las siguientes variables dentro del proceso: (i) la amplitud y profundidad de las políticas a coordinar; (ii) la frecuencia de la coordinación; (iii) el tamaño del grupo a coordinar; y, (iv) los métodos de coordinación a utilizar.
+
+Aunque la amplitud y profundidad de las Políticas a coordinar resulta a la vez interesente e importante, la literatura dista mucho de proporcionar conclusiones consensuadas sobre este aspecto y se presenta excesivamente superficial (recurriendo excesivamente a juicios subjetivos de valor). Por tanto, una exposición de las posiciones enfrentadas no arrojaría mucha luz sobre el tema (siendo además una cuestión en la que la oportunidad juega un papel especialmente relevante).\footnote{Brevemente: Autores como PUTNAM y BAYNE abogan por un enfoque amplio de las políticas a coordinar ya que ello aumenta la probabilidad de que se llegue a acuerdos que beneficien a todas las partes. Un ejemplo de este enfoque amplio lo representa la cumbre de Bonn de 1978, donde las discusiones no se limitaron a las políticas macroeconómicas a aplicar, sino que también se alcanzaron acuerdos en materia energética y comercial. En contraposición autores como ARTIS y OSTRI argumentan que coordinarse en temas muy diversos aumenta los costes de la negociación, disminuyendo las posibilidades de llegar a acuerdos. La coordinación del patrón oro, representa un claro ejemplo de éxito en el que la coordinación se limitaba únicamente a un ámbito de actuación. Respecto a la profundidad de la coordinación (es decir, si la coordinación se fundamenta únicamente en el establecimiento de los objetivos a alcanzar o se profundiza en los \textbf{medios} para alcanzar los mismos), en general la doctrina se decanta por permitir que los distintos países utilicen los instrumentos que consideren más adecuados para alcanzar los objetivos planteados. 
+} Sin embargo, tanto el tamaño del grupo como los métodos de implementación de la coordinación son, además de mucho más tratadas por la literatura (permite establecer diferencias más claras y tratables), cuestiones de especial relevancia en la actualidad. Veamos por qué.
+
+Una vez fijados el alcance, la profundidad, y el tamaño surge el debate de la frecuencia con la que se debe coordinar. DINI defiende que, dadas las divergencias de intereses de los países, cabe esperar que la coordinación efectiva se dé esporádicamente en fases de auténtica necesidad. En contraposición a esta visión se encuentran aquellos que defienden que una mayor frecuencia aumenta la credibilidad de los agentes y aumenta las probabilidades de alcanzar acuerdos beneficiosos para todos los integrantes. Una vez analizado, quien, cuándo y qué se debe coordinar, resulta necesario plantearse cómo se puede llevar a cabo la coordinación internacional. Entre los métodos alternativos conviene distinguir las reglas y la discrecionalidad.
+
+\paragraph{Multilateralismo: Orden basado en reglas}
+La forma más ampliamente conocida de coordinación internacional es el multilateralismo. En este contexto, un grupo a priori indefinido de países establecen una serie de reglas con el fin de conseguir una serie de objetivos comunes y garantizar el cumplimiento de los pactos acaecidos. Se trata, por tanto, de un enfoque normativo que intenta imponer disciplina entre los países involucrados.
+
+Los que defienden un enfoque basado en reglas apoyan su argumentación, entre otras, porque:
+\begin{lnum}
+    \item \textbf{Simplificación}. En primer lugar, el establecimiento de reglas sencillas (como puede ser el mantenimiento de tipos de cambio fijo) reduce las necesidades de coordinación, con lo que se logra eliminar cualquier posible exceso de demanda de coordinación;
+    \item \textbf{Costes de negociación}. Además, reduce los costes de negociación y reduce los conflictos inherentes al reparto de cargas. Esto se debe a que, al ser un conjunto de reglas aceptadas por todos, no se generarían (idealmente) conflictos derivados de su cumplimiento, puesto que de ser así no se hubieran aceptado en primer lugar; y,
+    \item \textbf{Inconsistencia temporal}. Quizás más importante, porque las reglas reducen los problemas de inconsistencia temporal planteados, reduciendo las posibilidades de que los instrumentos sean manipulados, y elevan la predictibilidad de las acciones, lo que supone una mejora de la habilidad los agentes a la hora de tomar sus decisiones.
+\end{lnum}
+
+Si bien estos argumentos son poderosos, esta sujeto a severas limitaciones (esencialmente prácticas). La primera, y quizás más importante, es el carácter eminentemente dispositivo del Derecho Internacional. Aunque se quiera proporcionar la apariencia de un orden imperativo, no existe ningún órgano capaz de ejercer coerción para garantizar el cumplimiento de las reglas acordadas. Si bien es cierto que los países pueden establecer mecanismos sancionadores en caso de incumplimiento, incluso los más elaborados de todos estos están sujetos a la última frontera: la voluntad. Además, los sistemas basados en reglas resultan ser a menudo menos automáticos en la práctica que en teoría, como se puso de manifiesto en la aplicación del Pacto de Estabilidad y Crecimiento. Por último, la capacidad de profundizar la coordinación mediante estos marcos es se encuentra directamente limitada por los compromisos aceptables en un entorno incierto y cambiante.\footnote{Pero, incluso después de decidir el método de coordinación más conveniente, queda la disyuntiva de si se debe coordinar con respecto a un solo indicador o a un conjunto de ellos. Un régimen de tipo de cambio fijo constituye un ejemplo del primer enfoque, mientras que el procedimiento de desequilibrios macroeconómicos en el seno de la UE constituye un ejemplo del segundo enfoque. Nonnalmente se utilizan dos consideraciones para apoyar el enfoque basado en un solo indicador. En primer lugar, cuando se coordina con respecto a un solo indicador, se evita la coordinación excesiva de políticas. En segundo lugar, la existencia de un solo indicador facilitará una señal nítida sobre el desempeño. 
+
+Sin embargo, coordinar con respecto a un solo indicador también tiene inconvenientes, pues un único indicador puede no captar adecuadamente el verdadero enfoque macroeconómico adoptado. Vemos pues como son muchas las variables a considerar en el proceso de coordinación, a las que se puede añadir la posibilidad o no de institucionalizar el proceso. No existe, por tanto, una forma de coordinación que en principio se configure como superior al resto.
+}
+
+\paragraph{Discrecionalidad: élite o hegemón}
+Existe una proposición general ampliamente conocida: \textit{los costes de negociación se incrementan con el tamaño del grupo}. Con lo mencionado hasta ahora, podemos comprender las razones que suscitan dicha afirmación y comprender a los defensores de otros sistemas. Mientras el enfoque multilateral basado en reglas, adoptaba una aproximación más inclusiva y democrática, un enfoque más reducido y discrecional permite sortear las dificultades presentadas y operar con una mayor flexibilidad en ese sentido. 
+
+Dentro de este marco de implementación encontraríamos dos formas principales de entablar mecanismos de coordinación y garantizar su cumplimiento:
+\begin{la}
+    \item \textbf{Grupos de coordinación reducidos}. El primero persigue la reducción del tamaño del grupo al óptimo, sin especificar claramente cuál sería. Por ejemplo, FRANKEL, GOLDSTEIN y MASSON ponen de manifiesto que, dado que la razón de ser de la coordinación reside en la internalización de las externalidades, el grupo debería incluir únicamente a aquellos países que ocasionan externalidades relevantes. No obstante, debe tenerse también en cuenta que un grupo pequeño corre el riesgo de adoptar acuerdos que sean beneficiosos para sus integrantes pero perniciosos para el resto de países; y, 
+    \item \textbf{Hegemón}. Otra segunda forma es el reconocimiento de la existencia de un líder. A través de esta forma se realizan contratos implícitos entre éste y el resto de los países. En este contexto, el hegemón dee ser capaz de ejercer una influencia estabilizadora imponiendo en cierta manera la coordinación mediante coerción, mientras que el resto de países sacrifican parte de la autonomía de su política económica.
+\end{la}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Foros Internacionales de Coordinación: Recopilación práctica}
+
+
+Hasta ahora, hemos mencionado algunos ejemplos de coordinación internacional a nivel mundial. Sin embargo, vamos a ver en más detalle, en último lugar, algunos de los principales foros de coordinación que se dan en la actualidad: la OCDE, el G20, y el FSB.
+
+\subsection{Organización para la Cooperación y Desarrollo Económico: OCDE}
+La Organización para la Cooperación y Desarrollo Económicos (OCDE) es un foro de consulta y de cooperación intergubernamental de países con economías de mercado, en el que se discuten las diferentes políticas (económicas, educativas, ambientales, tecnológicas, etc.) de sus miembros y de otros países no miembros que estén interesados en las recomendaciones de la OCDE. La OCDE se fundó en 1 960 con la Convención de París, que fue firmada por 1 8 Estados europeos además de Estados Unidos y Canadá. Su origen se debe a la Organización Europea para la Cooperación Económica (OECE), fundada en 1 947, y creada para: gestionar la ayuda del Plan Marshall; normalizar el sistema de pagos; y lograr la convertibilidad de las monedas. El éxito de esta organización animó a Estados Unidos y Canadá a construir una organización similar a escala más amplia, y de este modo surge la OCDE.
+
+La OCDE tiene su sede en París. Es un organismo intergubernamental con personalidad jurídica propia, cuyos principales objetivos son: la promoción del crecimiento económico y del desarrollo, y contribuir al comercio internacional sobre bases multilaterales y no discriminatorias. En la actualidad, una de sus metas principales es alcanzar los 1 7 Objetivos del Desarrollo Sostenible. Sus miembros son los países más desarrollados que cuentan con sistemas políticos de democracia pluralista y economías de mercado. En la actualidad, cuenta con 38 miembros (existiendo otros en proceso de adhesión). Todos los miembros de la OCDE deben guiarse por los principios de: trato nacional y no discriminación; y liberalización, tanto interna como externa. Además, existen socios clave o key partners como, por ejemplo, Brasil, China, Indonesia. India, y Sudáfrica. Estos socios y los miembros representan el 80\% de flujos comerciales y de inversión. En cuanto a su estructura institucional, se distinguen tres órganos. El Consejo de la OCDE es la máxima autoridad. Este órgano de gobierno está constituido por representantes pennanentes (embajadores) de cada país miembro. Además, la Comisión Europea tiene carácter de "cuasimiembro", ya que participa en el conjunto de trabajos y estrategias, manteniendo una delegación permanente ante esta institución, pero no tiene derecho a voto en las decisiones del Consejo, y no está obligada a las contribuciones presupuestarias. El Consejo está presidido por el Secretario General de la OCDE, Mathias Corman desde 202 1 . El Consejo se reúne una vez al año. Se encarga de marcar las orientaciones estratégicas, y toma, por consenso, las decisiones más importantes, como el presupuesto. Éste se financia con aportaciones nacionales en función del tamaño de la economía de cada miembro. Además, se pueden hacer aportaciones voluntarias para programas específicos. Por otro lado, continuando con la estructura institucional, encontramos los comités. Existen más de 300 comités y grupos de trabajo que se encargan de ámbitos específicos. Permiten compartir experiencias y opiniones de políticas económicas, y revisar su impacto. Por último, debemos hablar del secretariado, el órgano ejecutivo, que está formado por 3.300 trabajadores. Se basa en el mandato del Consejo, y apoya la labor de los comités con la recopilación de información y la realización de análisis. Cada año se celebra una Conferencia Ministerial donde se reúnen ministros de economía o exteriores y donde se suele difundir el mandato del Consejo (decisiones y recomendaciones llevadas a cabo). En cuanto a las funciones de la OCDE, podemos destacar algunas. En primer lugar, el apoyo a los gobiernos, a través de la compartición de experiencias de políticas económicas de distintos países para identificar buenas prácticas y emitir recomendaciones. De esta manera, un papel importante de la OCDE es la provisión de información de cara a la toma de decisiones en materia de política económica. Esto además se realiza a través de distintas vías, como, por ejemplo, informes, publicaciones, debates, etc. Por otro lado, cabe destacar la consecución de acuerdos, ya que promociona acuerdos de convergencia de las políticas y marcos reguladores de los países en distintas áreas. Para ello adopta "acuerdos de caballeros·•, que son decisiones vinculantes para todos los miembros, que deben tomar medidas para aplicarlas. Algunas se remontan a los inicios de la OCDE como el Código de Liberalización de Movimientos de Capital ( 1961 ). También realiza recomendaciones, que no son vinculantes, pero son para que los países miembros lo implementen (como, por ejemplo, la Recomendación para la Transparencia e Integridad del Gobierno). La OCDE también lleva a cabo una importante función de análisis: reúne información estadística, realiza el seguimiento de países, y participa en la literatura económica. Esta labor se realiza a través de la labor de los comités y de grupos de trabajo. Y, además, tienen una importante función en la fijación de estándares en colaboración con los países miembros.
+
+\subsection{Grupo de los X: } 
+Además de la OCDE, existen numerosos foros de cooperación que no tienen una estructura institucional tan definida, pero que juegan una importante labor en promover la cooperación económica mundial, aquí encontramos al Grupo de los 20, G20. El G20 es un foro informal de cooperación intergubemamental, fundamentalmente, en relación con el sistema financiero internacional, promoviendo la estabilidad financiera. Agrupa más del 80\% PIB mundial, 75\% comercio internacional, y 60\% de la población mundial. Aunque España no es miembro de pleno derecho, tiene el status de invitado permanente. La UE sí es miembro de pleno derecho. Está formado por los miembros del G8 (Alemania, Canadá, Estados Unidos, Francia, Reino Unido, Italia, Japón y Rusia) más la Unión Europea, Arabia Saudí, Argentina, Australia, Brasil, China, Corea del Sur, India, Indonesia, México, Sudáfrica y Turquía. El G20 fue creado en 1 999. Surgió como respuesta a la crisis financiera de finales de los 90 para dar voz a los países emergentes, que hasta ese momento habían quedado fuera de las discusiones (que se habían canalizado a través del G8). Así, ha ganado importancia durante los últimos años, en detrimento del Grupo de los 8 o G8, debido al mayor peso de las economías emergentes en la economía mundial. Las reuniones son anuales y se celebran en el país que ostenta la presidencia de tumo, que también tiene carácter anual. Acuden a ellas los ministros de finanzas y los gobernadores de los bancos centrales de los países miembros, así como el presidente del Banco Mundial y el director del Fondo Monetario lntemacional, y los representantes de los Comités Conjuntos de estos dos organismos. No obstante, a raíz del estallido de la crisis financiera, y de la crisis del coronavirus, se han celebrado cumbres más frecuentes, y en las que han participado los Jefes de Estado y de Gobierno. A diferencia de otras organizaciones no tiene staffpropio. La presidencia rota entre los miembros (para lo que la Unión Europea no se considera), y es parte de un mandato conjunto de la antigua, actual, y futura presidencia. Desde su nacimiento, el G20 ha promovido la adopción de estándares internacionales como los Acuerdos de Basilea, y ha luchado contra la evasión fiscal fomentando el intercambio de información sobre asuntos fiscales. Para combatir la última crisis financiera ha promovido una profunda ampliación de la regulación financiera y la coordinación internacional de las políticas económicas. En este sentido, fue promotor de la creación del Consejo de Estabilidad Financiera (FSB), que se analiza a continuación. Cabe destacar el proyecto de Erosión de la Base Imponible y Traslado de Beneficios (BEPS por sus siglas en inglés), entre el G20 y la OCDE, que nació en 2014 y trata de combatir la elusión fiscal a nivel internacional. 
+
+Además, uno de los aspectos más importantes en la actualidad, es la potencial elusión de impuestos que surge el proceso de digitalización que se experimenta a nivel global. En este sentido, en 2021 se produjeron importantes avances en el marco del G20 y la OCDE al establecer una solución basada en dos pilares a la que se han adherido más de 135 países. Se trata de una refonna histórica para el sistema fiscal internacional, que asegurará que determinadas multinacionales estén sujetas a un tipo impositivo mínimo del 15\% a partir de 2023.
+
+\subsection{Consejo de Estabilidad Financiera: FSB}
+Por último, podemos presentar el Consejo de Estabilidad Financiera (FSB por sus siglas en inglés). Fue fundado en abril de 2009 como continuación del Foro de Estabilidad Financiera. Este último se creó en 1999 para promover la estabilidad financiera. El objetivo de crear el FSB fue ampliar y reforzar el papel de este foro, para aumentar su efectividad. 
+
+Además, desde 2013 tiene personalidad jurídica. Reúne autoridades nacionales responsables de la estabilidad financiera (bancos centrales, autoridades supervisoras y departamentos del tesoro), instituciones financieras internacionales, agrupaciones internacionales de reguladores y supervisores, comités de expertos de los bancos centrales y el Banco Central Europeo. 
+
+Su finalidad es promover la estabilidad financiera internacional a través del aumento de intercan1bio de infonnación y cooperación en la supervisión y vigilancia financieras. Su secretariado tiene sede en Basilea, donde el Banco Internacional de Pagos acoge sus reuniones que, en principio, tienen lugar dos veces al año. El mandato del FSB es evaluar las vulnerabilidades que afectan al sistema financiero, identificar e inspeccionar las actuaciones necesarias para determinarlas, promover la coordinación y el intercambio de infonnación entre autoridades responsables de la estabilidad financiera, supervisar y asesorar los desarrollos de los mercados y sus implicaciones en cuestiones regulatorias, vigilar las buenas prácticas en el cumplimiento de los estándares regulatorios, llevar a cabo revisiones estratégicas de las políticas de las instituciones financieras internacionales, redactar guías para la supervisión, gestionar planes de contingencia para situaciones de crisis internacionales y colaborar con el Fondo Monetario Internacional en los ejercicios de evaluación. 
+
+Algunas de las prioridades actuales para el FSB son los riesgos financieros asociados al cambio climático, los pagos transfronterizos, los criptoactivos y las \textit{stablecoins}, la resiliencia digital, las \textit{fintech}, y la intermediación no bancaria (\textit{no banking financial intermediation}, o NBFI por sus siglas en inglés).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+
+\clearpage
+\anexo{Modelo MUNDELL-FLEMING: Entrelazamiento y necesidad de coordinación}\label{anx:mundell_fleming}
+
+
+En la década de 1960, J. Marcus Fleming y Robert Mundell extendieron independientemente el modelo keynesiano de economía abierta de la política macroeconómica para incorporar sistemáticamente el papel de los flujos de capital.\footnote{Ambas contribucibncs se convirtieron rápidamente en iníluycntes, y durante más de una década desarrolló una literatura diversificada en la cual Fleming y Mundell eran vistos como importantes contribuyentes a la temática general. En 1976. Rudiger Dornbusch publicó una serie de artículos sobre la política cambiaría que codificaba estos aportes a los que él llamo el modelo Mundell-Fleming. Desde entonces. esa terminologia y esa versión del modelo han domirn¡do la literatura sobre macroeconomía en economía abierta.
+} 
+
+En este sentido el marco conceptual de análisis será el modelo $IS-LM$ incluyendo el equilibrio exterior, $BP$. Los supuestos del modelo básico son: se supone la existencia de únicamente dos países que denominaremos A y B. Supondremos que A es nuestro país de referencia, es decir, aquel donde se van a aplicar las distintas políticas económicas (B el extranjero, señalado con asteriscos). No se consideran los efectos de \textit{retroalimentación} generados por las variaciones del output del país B. En el corto plazo los valores de P* y P permanecen constantes o sus variaciones son irrelevantes en el modelo por lo que se consideran constantes. Con esta condición las variaciones del tipo de cambio nominal tienen relación directa con el tipo de cambio real. No existe ni se espera inflación en el futuro. Por lo tanto, la tasa de interés nominal y la tasa de interés real son iguales. Supone que un incremento de la tasa de interés doméstica induce un flujo continuo de capitales desde el exterior. Se cumple la condición Marshall-Lemer. Ignora las restricciones presupuestarias de largo plazo del sector privado y sector público.
+
+La curva IS viene del equilibrio en el mercado de bienes: Y= C0 + C(Y -T + TR) + l(r) + G + XN(Y, Y*, R)Donde Ces la función del consumo, Co el consumo autónomo, Y el nivel de producción, T losimpuestos, TR las transferencias corrientes, 1 la función de la inversión, r el rendimiento de losbonos o tipo de interés, G el gasto público, XN la función de las exportaciones netas, y R el tipode cambio real.El equilibrio en el mercado monetario permite obtener la curva LM:- = kY-hr p Donde r representa el tipo de interés, Y la renta. M la cantidad de dinero, P el nivel precios, y k y h las sensibilidades de la demanda de dinero respecto a la renta y el tipo de interés respectivamente. La curva de la balanza de pagos se obtiene del equilibrio en la balanza de pagos: SBP == XN(Y, Y', R) + FC(r - r' - 0)
+
+Dónde SBP es el saldo de la balanza de pagos, FC el flujo de capitales, y 0 es el riesgo del activo doméstico (riesgo país).Si la tasa de interés doméstica se eleva, el rendimiento relativo de los activos domésticos es mayor que el de los extranjeros. Esto resulta atractivo a los inversionistas y constituye un incentivo para la entrada de capitales. Si el rendimiento relativo de los activos extranjeros es mayor que el de los domésticos, los inversionistas llevarán sus capitales al exterior. Finalmente, si se espera una devaluación de la moneda doméstica, el retomo de invertir en activos externos aumentará, lo que originará una salida de capitales. Un importante supuesto del modelo es que no existen transferencias ni renta neta de factores, por lo que la cuenta corriente será igual a la comercial, es decir, a las exportaciones netas de importaciones de bienes y servicios. Debido a la relación positiva existente entre las importaciones y el ingreso doméstico, las exportaciones netas dependen negativamente del ingreso doméstico. XN=X( Y,Y*,R). El efecto del tipo de cambio sobre las exportaciones netas es positivo porque se cumple la condición Marshal-Lerner. La pendiente de la curva de Balanza de Pagos es en general positiva porque un ingreso más alto origina un mayor déficit en la cuenta corriente; lo que requiere una tasa de interés más alta para generar una compensación con un superávit en la cuenta de capitales. Todos los puntos de la curva de la balanza de pagos son puntos de equilibrio entre la cuenta corriente y la cuenta financiera y de capitales. Esta relación positiva desaparece cuando hay perfecta movilidad de capitales, es decir, cuando la cuenta de capitales es infinitamente elástica a un nivel de tasa de interés doméstica que iguala al rendimiento de los activos extranjeros. Cambios en la política fiscal y monetaria que afectan a las curvas IS o LM también afectan a la Balanza de Pagos a través de los cambios en la tasa de interés y el producto. Es por ello· que cuando se presume perfecta movilidad de capitales no es necesaria la representación de la curva.
+
+$$\text{\textbf{Tipo de Cambio Flexible}}$$
+
+Se puede comenzar a analizar qué efectos hay con tipos de cambio flexibles, por ejemplo, con una política fiscal expansiva. Si el país A adopta una política fiscal expansiva, se produce, por un lado, un efecto renta. En el país A, el mayor nivel de renta genera presiones deficitarias por cuenta corriente, por vía de mayores importaciones del país B. El país B experimenta, por tanto, un efecto renta expansivo que gráficamente queda expresado por una nueva situación de equilibrio (2) con un nivel de renta (y2*) superior a la inicial (y 1 *). La curva IS del país B desplaza a la derecha como consecuencia en la mejora de las exportaciones netas. Además, aparece un efecto monetario que se deriva de los movimientos de capitales entre ambos países como consecuencia de las diferencias en los tipos de interés. Los nuevos tipos de interés generan un flujo de capitales desde el país B, con menor rentabilidad, hacia el país A (r2a> r2b). 
+
+\textbf{INTRODUCIR GRÁFICO ESTÁTICA COMPARATIVA: Política Fiscal}
+
+En el contexto de tipos de cambio flexibles, se apreciará la moneda del país A (Vea) y se depreciará la moneda del país B (t.eb). Las exportaciones netas del país B aumentan, reforzando el efecto renta, por lo que la curva IS se desplaza a la derecha. En su equilibrio final en (3), A y B tienen unos niveles de renta y tipo de interés superiores a los de partida, produciéndose un efecto desbordamiento positivo, denominado "efecto locomotora".
+
+Se considera ahora el caso de una política monetaria expansiva por parte del país A. En este caso se produce también un efecto renta. En el país A el mayor nivel de renta (y2a) genera presiones deficitarias por cuenta corriente por vía de mayores importaciones del país B. El país B experimenta, por tanto, un efecto renta expansivo que gráficamente queda expresado por una nueva situación de equilibrio (2) con un nivel de renta (y2b) superior al inicial {y I b). La curva IS del país B tiende a desplazarse hacia la derecha como consecuencia en la mejora de las exportaciones netas. Por otro lado, el efecto monetario se deriva de los movimientos de capitales entre ambos países como consecuencia de las diferencias en los tipos de interés. Los nuevos tipos de interés generan un flujo de capitales desde el país A, con menor rentabilidad, hacia el país B (r2a< r2b). 
+
+\textbf{INTRODUCIR GRÁFICO ESTÁTICA COMPARATIVA: Política Monetaria}
+
+En el contexto de tipos de cambio flexibles, se depreciará la moneda del país A (L\ea) y se apreciará la moneda del país B (v'eb). Las exportaciones netas del país B se reducen, más que compensando el efecto renta, por lo que las curva IS se desplaza a la izquierda. En su equilibrio final en (3), B tiene unos niveles de renta y tipo de interés inferiores a los de partida, produciéndose el denominado ''empobrecimiento del vecino" ("beggar thy neighbour").
+
+$$\text{\textbf{Tipo de Cambio Fijo}}$$
+
+Si el país A lleva a cabo una política fiscal expansiva en un entorno de tipos de cambio fijo hay un efecto renta. Un aumento en el gasto fiscal aumenta el producto doméstico en el país A, el mayor nivel de renta (y2a) genera presiones deficitarias por cuenta corriente por vía de mayores importaciones del país B. El país B experimenta, por tanto, un efecto renta expansivo que gráficamente qu��da expresado por una nueva situación de equilibrio (2) con un nivel de renta (y2b) superior al inicial (y 1 b). La curva IS del pais B tiende a desplazarse hacia la derecha como consecuencia en la mejora de las exportaciones netas. También hay un efecto monetario: la expansión fiscal aumenta las tasas de interés. Los nuevos tipos de interés generan un flujo de capitales desde el país B, con menor rentabilidad, hacia el país A, lo cual supondrá tensiones de apreciación de la moneda del país A. En un entorno de tipos cambio fijos, esta situación provocará la intervención del Banco Central comprando moneda extranjera y vendiendo moneda local, ocasionando un aumento de la oferta monetaria y provocando una caída en los tipos de interés, y una disminución de la demanda de dinero del país 2 (LM* 1 a LM*2) provocándose un aumento de la renta del país 2 como consecuencia del nuevo efecto expansivo en A y un efecto contractivo como consecuencia del desplazamiento de la curva LM*. En el equilibrio final en (3), B tiene unos niveles de renta y tipos de interés superiores a los de partida.
+
+\textbf{INTRODUCIR GRÁFICO ESTÁTICA COMPARATIVA: Política Fiscal}
+
+Por-último, con una política monetaria expansiva surge el efecto renta: en el país A el mayor nivel de renta (y2a) genera presiones deficitarias por cuenta corriente por vía de mayores importaciones del país B. El país B experimenta, por tanto, un efecto renta expansivo que gráficamente queda expresado por una nueva situación de equilibrio (2) con un nivel de renta (y2b) superior al inicial {ylb). La curva IS se desplaza hacia la derecha como consecuencia en la mejora de las exportaciones netas. Respecto al efecto monetario, el intento por expandir la oferta doméstica de dinero bajo un tipo de cambio fijo supone una caída en la tasa de interés doméstica que conduce a una salida de capitales c.¡ue induce a una depreciación incipiente de la moneda doméstica. El banco central nacional debe vender divisas para defender el tipo de cambio y en este proceso da· marcha atrás a la expansión inicial en la oferta monetaria. La salida de reservas internacionales reduce el componente de reserva del stock de moneda doméstica generándose un desplazamiento de LM2 a LM3, mientras que en el país B se produce el efecto contrario como consecuencia del aumento de su oferta monetaria. El efecto final sobre B es indeterminado.
+
+\textbf{INTRODUCIR GRÁFICO ESTÁTICA COMPARATIVA: Política Monetaria}
+
+En el caso de que hubiéramos supuesto un contexto de imperfecta movilidad de capitales se limitaría la importancia del efecto monetario y cobraría mayor importancia relativa el efecto renta. Es importante señalar que, junto al efecto renta y al efecto monetario, cabría incluir un tercer efecto desbordamiento: el efecto precio derivado de la variación de los precios relativos. En la medida en que la política económica aplicada por el país implique una modificación de sus precios relativos, cambiará su relación real de intercambio con el resto del mundo y con el la sus flujos comerciales. En este contexto, no sólo nos referimos a los precios de los bienes y servicios sino al efecto que el tipo de cambio tiene sobre los precios relativos a nivel internacional. Es decir, cuando un país aplica una política de depreciación de su moneda para ganar competitividad está alterando los precios relativos de sus bienes respecto de los del resto del mundo y afectando a otros países cuyas monedas se apreciarán. Así, el efecto precio se ha configurado como uno de los principales canales de transmisión asociados a las políticas de "Quantitative Easing·• que llevó a cabo por EEUU durante los últimos años.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
