@@ -1,0 +1,687 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Tema 3.A.45 -- Teorías del crecimiento económico (III)\\
+\large Evidencia empírica sobre el crecimiento económica y la distribución de la renta entre los factores de producción. Contabilidad del crecimiento, con especial referencia a la productividad total de los factores. Convergencia económica internacional.}
+\author{Marcelo Ortega}
+\date{Enero 2026}
+\newcommand{\TemaCode}{3A45}
+
+\oldtitle{Tema 3.A.44. Evidencia empírica sobre el crecimiento económico: análisis de contabilidad del crecimiento, impacto de los distintos factores que influyen sobre el crecimiento económico y evidencia empírica sobre convergencia}
+\changerationale{El modelo neoclásico, tanto estático como dinámico, contiene unas predicciones fuertes sobre distribución funcional de la renta. La modificación en el título del tema invita a ampliar el análisis empírico del crecimiento con estudios sobre esta cuestión, en línea con uno de los principales debates actuales en economía.}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     De cada diferente aportación que mencione, debe darse prioridad a explicar adecuadamente: (i) la cuestión a la que el autor trata de responder; (ii) la especificación de la regresión utilizada; (iii) el método de estimación utilizado; (iv) cuáles son los resultados obtenidos; y, (v) cuáles son sus limitaciones y principales críticas.
+
+     También será fundamental que el opositor haga un uso inteligente y estratégico de la pizarra. Debido a que se van a presentar numerosas aportaciones y que todas ellas tienen un marcado carácter empírico, el opositor deberá hacer uso de la pizarra para transmitir de manera ordenada y clara las ideas principales de cada apartado. Un uso recurrente y adecuado de la pizarra no solo facilitará la labor comunicativa al opositor, sino que evitará que el cante se vuelva una mera sucesión de resultados transmitidos oralmente al tribunal, facilitando el correcto seguimiento de la exposición por parte este. 
+     
+     Del mismo modo, se recomienda al opositor que recapitule brevemente las principales ideas transmitidas en cada apartado antes de continuar con el siguiente.
+
+     Respecto al reparto de tiempos, se propone la siguiente distribución: introducción (3 minutos), regularidades empíricas del crecimiento económico (5 minutos), medición del crecimiento económico (10 minutos), estudio de convergencia (7 minutos), factores del crecimiento (4 minutos), conclusión (1 minuto).
+    }
+\vspace{1cm}
+
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+A finales del siglo XVIII, tras la Guerra de Independencia de Estados Unidos, el PIB per cápita de la economía estadounidense era de unos 1.000 dólares actuales. Tras haber registrado un crecimiento medio anual del 1,6\% desde entonces, hoy esta cifra es 35 veces superior. Sin embargo, si dicho crecimiento medio anual hubiese variado ligeramente la situación de la economía de Estados Unidos sería hoy muy distinta. A modo de ejemplo, si el crecimiento medio anual hubiese sido del 0,6\%, tan solo 1p.p inferior al registrado, el PIB per cápita de Estados Unidos sería hoy similar al de Panamá. 
+
+Este ejemplo pone de manifiesto que pequeñas diferencias en las tasas de crecimiento del PIB per cápita de los países, sostenidas durante largos períodos de tiempo, acaban causando grandes diferencias en los niveles de renta per cápita. Por ello, no es de extrañar que la literatura económica haya prestado una gran atención a comprender en profundidad el proceso de crecimiento económico. En concreto, cuestiones como por qué crecen los países, por qué unos crecen más que otros o qué papel puede jugar el sector público en f?mentar este proceso de crecimiento son preguntas cruciales para el policy maker.
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+\clearpage
+\section{Análisis de la Contabilidad del Crecimiento}
+\puntosclave{
+    La contabilidad del crecimiento penn ite comprender cómo crecen los países, cuantificando las contribuciones al crecimiento del capital, del trabajo y de la tecnología. Esta última se obtiene de manera residual y se denomina residuo de Solow. 
+    
+    El método primal de la contabilidad del crecimiento requiere medir la cantidad de factores productivos utilizados. Debido a las dificultades y limitaciones a este respecto, surge el método dual, el cual hace uso de la remuneración de los factores.
+    
+    MANKIW, ROMER y WEIL desarrollan el modelo de SOLOW ampliado incorporando capital humano al modelo original. Cerca del 80\% de las diferencias en la renta per cápita entre países es explicado por este modelo ampliado.
+    
+    HALL y JONES incorporan una medición del capital humano diferente a la de MANKIW, ROMER y WEIL. Para estos autores no todos los años de educación mejoran por igual el capital humano. En su modelo, el residuo explica la mayor parte de las diferencias en renta per cápita entre países.
+}
+
+
+
+
+\clearpage
+\section{Evidencia empírica del crecimiento económico y distribución de la renta entre los factores de producción}
+
+
+
+\clearpage
+\section{Evidencia empírica de convergencia económica internacional}
+\puntosclave{
+    El proceso de convergencia puede producirse en un doble sentido: $\beta$ convergencia y $\sigma$ convergencia. La primera es condición necesaria pero no suficiente de la segunda. 
+    
+    Los primeros estudios no encontraron evidencia de convergencia en sentido $\beta$. Esto fue considerado una prueba de la mayor validez de los modelos de crecimiento endógeno frente a los modelos de crecimiento exógeno.
+    
+    Diferentes autores argumentaron que los estudios realizados hasta el momento eran erróneos pues no estaban incorporando los diferentes estados estacionarios a los que se aproximan los países. Surge así el concepto de p convergencia condicionada.
+    
+    La literatura sí encontró evidencia de $\beta$ convergencia condicionada. Esto se observó tanto en estudios que analizaban economías con estados estacionarios similares, como en regresiones en las que se controlaba por las diferencias en el estado estacionario entre economías.
+    
+    La velocidad de convergencia encontrada era considerablemente menor a la que cabría esperar según el modelo de SOLOW. Para que dicho modelo incorpore una velocidad de convergencia como la que se observaba en la realidad es necesario incrementar la productividad marginal del capital.
+}
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+
+
+\subsection{Recapitulación}
+
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+\MyBibItem{Agent-Based Computational Economics}{Agent-Based Computational Economics}{2003}{https://www.researchgate.net/profile/Leigh-Tesfatsion-2/publication/228732927_Agent-based_computational_economics/links/541bd54d0cf2218008c4c247/Agent-based-computational-economics.pdf}
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% --- Anexos ---
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+
+\clearpage
+\anexo{Historia del desarrollo teórico}\label{anx:historia}
+
+
+\end{document}
