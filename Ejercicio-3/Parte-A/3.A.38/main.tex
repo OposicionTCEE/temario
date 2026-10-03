@@ -1,0 +1,1193 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Tema 3.A.38 -- Política Fiscal\\
+\large Efectos sobre el crecimiento económico y el ahorro}
+\author{Marcelo Ortega}
+\date{Enero 2026}
+\newcommand{\TemaCode}{3A38}
+
+\oldtitle{Tema 3.A.37. La política fiscal: Efectos sobre el crecimiento económico y el ahorro}
+\changerationale{Sin cambios.}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     En lo que atañe al presente tema, su objeto de estudio son los efectos de la política fiscal en el largo plazo:
+     \begin{lnum}
+         \item ¿Es efectiva la política fiscal (en general)? Este primer apartado debe de presentarse brevemente ante el Tribunal, ya que aborda la política fiscal en el ciclo, en vez de en los niveles estacionarios de las variables.
+         \item El resto de apartados consisten en, por un lado, las principales aportaciones teóricas a esta problemática y por otro los resultados de la evidencia empírica. A éstos ha de dedicarse el grosso de la exposición, ya que es donde trata de manera específica la política fiscal en el largo plazo.
+     \end{lnum}
+
+     Se hacen los siguientes apuntes. Sobre los modelos de agente representativo con horizonte infinito: por claridad expositiva, no se recomienda explicar analíticamente los tres modelos que aquí se incluyen (se deja a juicio del opositor elegir cuál desarrolla formalmente y cuáles presenta oralmente). Sobre el modelo de generaciones solapadas: sería recomendable centrarse en los sistemas de pensiones, sin explicar la derivación del modelo sin sistema de pensiones.
+     
+    }
+\vspace{1cm}
+
+\modificaciones{
+    Última modificación: 22/01/2026:
+    \begin{lnum}
+        \item La primera parte está completa y se ajusta a lo comentado después del cante (máximo llegar al minuto 11-12 en la parte teórica)
+        \item La hemos dividido en tres partes: Falta incorporar mucho contenido en la segunda. Principalmente, modelos de TCR y (puede que) el modelo de la NEK-2 con gasto público. Además, hay que desarrollar el apartado posterior a los modelos relativos a Sistemas de Provisión Social e incluir los diferentes Sistemas de Provisión Social que existen.
+        \item La última parte está bien pero reestructurar acordemente
+    \end{lnum}
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+Dividir en tres partes:
+\begin{lnum}
+    \item Política Fiscal Teoría (estabilizadora)
+    \item Política Fiscal: Efectos sobre el ahorro
+    \item Política Fiscal: Efectos sobre el crecimiento
+\end{lnum}
+
+
+
+
+\clearpage
+\section{Política Fiscal: Teoría}
+Hasta la revolución de la Nueva Macroeconomía Clasica, el enfoque tradicional sobre la efectividad de la Política Fiscal se había centrado en el corto plazo, enmarcado dentro del análisis estático y atendiendo a que su objetivo principal era servir de estabilizador del output.
+
+Para exponer brevemente las conclusiones teóricas de estos enfoques, supongamos que nos encontramos en una economía cerrada y que podemos descomponer la Demanda Agregada y la Demanda de Dinero de la siguiente forma:
+
+\eqblock{
+\begin{aligned}
+    &\text{Curva IS:}\qquad &&Y^d=C(c)+I(b,i)+G\\[0.5em]
+    &\text{Curva LM:}\qquad &&M^d=k\;Y-h\;i
+\end{aligned}
+}{Curvas del Modelo IS-LM. Teoría efectividad de la Política Fiscal}
+
+A partir de estas ecuaciones, podemos ver como la Política Fiscal tiene incidencia sobre los componentes de la Demanda Agregada y, en función de su forma de financiación, afectará al consumo, Tipo de Interés y/o Inversión. ¿Cómo podemos reflejar el impacto que tendría un shock de Política Fiscal? La manera más adecuada es a través de los Multiplicadores de Gasto. Si suponemos que, en todo momento, nos encontramos en una situación de Equilibrio Presupuestario, véamos la forma de cuantificar éstos efectos a través de dos de los Multiplicadores más importantes:
+
+\eqblock{
+\begin{aligned}
+    &\text{Multiplicador de Gasto Público:}\qquad &&{\boxed{g=\frac{\partial Y}{\partial G}=\frac{1}{1-c(1-t)+b (k/h)}>0}}\\[1em]
+    &\text{Multiplicador de Impuestos ($T$)}:\qquad &&\boxed{\tau=\frac{\partial Y}{\partial T}=\frac{-c}{1-c(1-t)+b (k/h)}<0}
+\end{aligned}
+}{Multiplicadores la Política Fiscal: Efectividad de la Política Fiscal. Análisis tradicional}
+
+A partir de estas dos ecuaciones, podemos presentar dos de los enfoques teóricos más relevantes a la hora de analizar el impacto de la Política Fiscal.
+
+\subsection{Enfoque keynesiano: Ineficiencia de los Mercados}
+Desde la persepectiva keynesiana, la Política Fiscal tiene efectos amplios y persistentes que se derivan de una de sus aportaciones más relevantes: el incumplimiento de la Ley de SAY. 
+
+\subsubsection{Insuficiencia del consumo privado: \textit{Ley psicológica fundamental}}
+Según KEYNES, atendiendo a lo que denomina como \textit{ley psicológica fundamental}, la aportación marginal del consumo sobre la renta es cóncava. Es decir, tiene primera derivada positiva pero segunda negativa. Esto se debe a que los agentes tienen \textit{preferencia por la liquidez} o, de forma equivalente, no mantienen una relación proporcional de consumo respecto a su renta disponible.
+
+Este valor o propensión marginal a consumir es, para KEYNES, estríctamente menor que cero, pues los agentes mantendrán (o intentarán mantener) saldos positivos de su renta como ahorro (motivo especulación) y no se verán motivados directamente a consumir la totalidad de su renta por el simple hecho de disponer de más renta. 
+
+\paragraph{\textit{Animal spirits}: Ineficiencia en los mercados financieros}
+Sin embargo, un exceso de ahorro, coyuntural o no, tiene también cabida dentro del marco clásico/neoclásico, ya que esto se traduciría en un aumento de la inversión que, consecuentemente, conduciría a un aumento de la renta agregada por otros medios. Pero para KEYNES esto no es así. 
+
+Si la inversión en capital físico como una decisión que depende del coste del capital (i.e. del Tipo de Interés), un aumento (disminución) del coste de capital conduciría a un disminución (aumento) de la inversión. Pero, para KEYNES, esta es una visión demasiado benévola del funcionamiento de los Mercados Financieros. 
+
+Considerando que el Tipo de Interés nominal no se aproxima al comportamiento del tipo de interés real, y existe una valoración imperfecta de los activos debido a una conducta emocional/sentimental que guía a los agentes (\textit{animal spirits}), entonces no se puede decir que un exceso de ahorro conduzca directamene a un aumento de la inversión por la reasignación eficiente de los recursos productivos ($S\neq I$). De hecho, para KEYNES esto se daría en un casos muy particulares, casi aleatorios, y no de manera sistemática. Por el contrario, para KEYNES la inversión depende mucho de las emociones/sentimientos de los agentes (nótese la relación con el concepto de \textit{expectativas}) y, relativamente, del tipo de interés (coste del capital, que a su vez viene también fijado por los sentimientos/emociones en el mercado financiero.
+
+\paragraph{Política fiscal: Gasto e Impuestos}
+Por tanto, si los dos componentes de la Demanda Agregada que hemos visto anteriormente se presentan: (i) o bien incapaces de presentar un comportamiento de crecimiento sostenido, incluso en situaciones de bonanza en términos reales (por ejemplo, depresión de la demanda por posponer las decisiones de consumo); y, (ii) poco fiables por depender de comportamientos cuasi-irracionales. KEYNES se pregunta, ¿qué es lo que debe hacer el planificador público?
+
+\eqblock{
+\begin{aligned}
+    &\text{Enfoque keynesiano:}\quad \tilde k\;\;;\;\;i(\substack{\text{\scriptsize Fenómeno}\\\text{\scriptsize Monetario}})\;\Rightarrow  
+    \begin{cases}
+        \varepsilon_{m^d,i}\gg1\\
+        \varepsilon_{I,i}\sim0
+    \end{cases}\;\Rightarrow \underbrace{\frac{\partial m^d}{\partial\; i}\gg\frac{\partial I}{\partial \;i}}_{
+    \left\downarrow\substack{
+    \text{\scriptsize Tenencia dinero}\\
+    \text{\scriptsize especulatorio}
+    }\right.\to \underbrace{M\bar V\sim PY}_{\substack{\text{\scriptsize Transacciones}\\
+    \text{\scriptsize poco afectadas}}}
+    }\Longrightarrow\;b\left(\frac{k}{h}\right)\overset{
+    \substack{
+        \text{\scriptsize Caso extremo}\\
+        \text{\scriptsize igual a 0}}}{\sim}0\\[0.5em]
+    &\hspace{20em}\Downarrow\\[0.5em]
+    &\text{Multiplicador de Gasto Público:}\qquad {\boxed{g=\frac{\partial Y}{\partial G}=\frac{1}{1-c(1-t)+b (k/h)}\gg0}}\\[1em]
+    &\text{Multiplicador de Impuestos ($T$)}:\qquad \boxed{\tau=\frac{\partial Y}{\partial T}=\frac{-c}{1-c(1-t)+b (k/h)}<0}
+\end{aligned}
+}{Multiplicadores la Política Fiscal: Enfoque keynesiano. Análisis tradicional}
+
+Como vemos, un aumento del Gasto Público tendrá un efecto sobre la renta agregada más que propocional. Esto se debe a que: (i) el Gasto Público incide directamente sobre la renta a través de diferentes vías sin mostrar un comportamiento de ahorro precautorio o no-asignación de recursos (todo lo que entra sale); y, (ii) este aumento de la renta generado por un impulso fiscal se traducirá en un aumento menos que proporcional sobre el consumo, aumentando la renta agregada en un factor proporcinonal a la Propensión Marginal a Consumir sobre el incremento de la renta. Por lo que la combinación de ambos se traducirá en este aumento más que proporcional sobre la renta (sin entrar a valorar los posibles efectos en la asignación en los mercados de capitales). Por otro lado, una reducción de impuestos aumentaría la renta de los agentes, pero como bien sabemos, esta no mantiene una relación proporcional con el consumo por lo que el efecto conjunto aumentaría la renta en un factor menos que proporcional (de hecho, alteraría simplemente la pendiente de la recta).
+
+De hecho, una combinación de ambos (financiación de un aumento del gasto público mediante un incremento de impuestos) se traduciría, por construcción, en una incremento de la renta agregada de la economía.
+
+\subsubsection{Implicaciones de Política Fiscal}
+Por todo lo expuesto, desde una perspectiva de Política Económica, KEYNES argumenta que el Gasto Público es un medio eficaz y esencial para contrarrestar los efectos del ciclo económico (posibilidad de realizar \textit{fine tuning}). Por tanto, el planificador Público debe aumentar el Gasto en momentos de recesión para poder, no solo estabilizar el impacto del ciclo sino también reconducir la economía a su crecimiento previo mediante la retroalimentación virtuoso que generan las Políticas Fiscales expansivas. 
+
+Además, teniendo en cuenta la existencia de rigideces nominales que impiden la reasignación eficiente inmediata de los mercados (no existe vaciado inmediato de los mercados en el corto plazo) y habida cuenta de la estructura real de la economía (producción y empleo) que condicionan el lado de la oferta, hacen que la Política Fiscal sea más efectiva y tenga efectos prolongados en el tiempo. De hecho, desde una perspectiva más abstracta, la conclusión principal de KEYNES relativa a la efectividad de la Política Fiscal emerge de la refutación, como ya hemos dicho, de la Ley de SAY (consenso económico de la época) y la aceptación de que existe una insuficiencia crónica desde la óptica de la demanda que debe contrarrestar el \textit{policy maker} activamente a través de Políticas de demanda (incialmente propuesta por MALTHUS pero con graves inconsistencias).\footnote{
+Recordemos que la Ley de SAY era, básicamente, la respuesta de la economía clásica al argumento de la insuficiencia de demanda agregada utilizado por Sismondi y Malthus para explicar la posibilidad de que una situación de sobreproducción generalizada y desempleo de recursos productivos se extendiera indefinidamente en el tiempo. Un extracto de la obra de J.S. MILL ilustra muy bien la concepción de la Ley de SAY:
+
+\textit{[..]Cada porción del valor de la producción anual de un país se distribuye en forma de ingreso de algún individuo. Y cada individuo del país hace compras, o algo que es equivalente a hacer compras, con cada céntimo que llega a sus manos. La parte que se destina al consumo se emplea, evidentemente, en hacer compras. Y la parte que se emplea en capital también. O bien se paga en forma de salarios a los trabajadores, que inmediatamente compran alimentos y otros bienes necesarios, o bien se emplea en la compra de materias primas. La totalidad del producto anual del país es, de este modo, empleado en hacer compras. Como la totalidad de la producción anual del país se pone en venta, entonces toda la renta nacional se emplea en comprar la totalidad de la producción ; por grande que pueda ser la producción anual, siempre creará un mercado para ella.}
+
+Esta cita se puede resumir diciendo que la propensión al gasto es igual a uno para todo el mundo. En otras palabras, los planes de gasto de cada individuo coinciden siempre y en todo momento con sus expectativas de ingreso. Esto, automáticamente, implica la identidad entre la oferta y la demanda agregadas. Dicha identidad se conoce habitualmente como identidad de SAY.
+\href{https://www.eumed.net/tesis-doctorales/jcrc/C-05.pdf}{\textit{Ley de SAY. Capítulo 5}. EUMED}
+}
+
+\subsection{Enfoque Monetarista}
+Toda gran Teoría tiene una gran replica, y en este caso, se presentará una de las más influyentes tanto en el diseño de la Política Económica como en el ámbito académico. Desde una perspectiva diametralmente opuesta encontramos el enfoque monetarista sobre los canales de incidencia de la Política Fiscal y los sobre la economía real. 
+
+En síntesis, estos autores:
+\begin{lnum}
+    \item \textbf{Curva IS}. Refutan la concepción keynesiana sobre la inestabilidad de la inversión debido a la influencia que sobre esta ejerce el tipo de interés nominal (de los bonos, en este caso) y aproximan el comportamiento de la inversión al tipo de interés real de la economía. De este manera, la Curva IS se presenta más elástica respecto al tipo de interés real de la ecomía (que es el condicionante de la inversión); y,
+    \item \textbf{Curva LM}. Rechazan que la demanda de dinero sea tan inestable ya que, argumentan, depende esencialmente de la renta permanente y poco del tipo de interés nominal, puesto que los agentes pueden distribuir su riqueza entre una multitud de activos financieros (y físicos) y no en bonos o en dinero. 
+\end{lnum}
+
+El impacto analítico que esto tiene sobre los Multiplicadores de Gasto se puede entender realizando las siguientes modificaciones:
+
+\eqblock{
+\begin{aligned}
+    &\text{Enfoque keynesiano:}\quad \tilde k\;\;;\;\;i(\substack{\text{\scriptsize Fenómeno}\\\text{\scriptsize Real}})\sim r\;\Rightarrow  
+    \begin{cases}
+        \varepsilon_{m^d,i}\sim 0\;\;\left(\substack{\text{\scriptsize Los agentes cuentas}\\\text{\scriptsize con otras alternativas}\\\text{\scriptsize de inversión, no solo bonos}}\right)\\
+        \varepsilon_{I,r(i)}\gg1
+    \end{cases}\;\Rightarrow \underbrace{\frac{\partial m^d}{\partial\; i}\ll\frac{\partial I}{\partial \;r(i)}}_{
+    \substack{
+    \text{\scriptsize Tenencia dinero}\\
+    \text{\scriptsize especulatorio}
+    }\sim 0\;\Rightarrow\underbrace{M\bar V\leq PY}_{\substack{\text{\scriptsize Déficit saldos}\\
+    \text{\scriptsize reales}}}
+    }\Longrightarrow\;b\left(\frac{k}{h}\right)\gg0\\[0.5em]
+    &\hspace{20em}\Downarrow\\[0.5em]
+    &\underbrace{\text{Multiplicador de Gasto Público:}}_{\substack{\text{\scriptsize Siempre financiado con Deuda (es la opción óptima)}\\\text{\scriptsize porque para monetaristas los bonos son riqueza neta}}}\qquad {\boxed{\alpha_G=\frac{\partial Y}{\partial G}=\frac{1}{1-c(1-\tau)+b (k/h)}\sim0}}
+    \qquad \begin{cases}
+        \text{ERD (+)}\\[0.5em]
+        \text{ERI (-)}\\[0.5em]
+        \text{Efecto \textit{crowding-out} total}
+    \end{cases}\\[1em]
+    &\text{Multiplicador de Impuestos ($T$)}:\qquad \boxed{\alpha_\tau=\frac{\partial Y}{\partial T}=\frac{-c}{1-c(1-\tau)+b (k/h)}<0}
+\end{aligned}
+}{Multiplicadores la Política Fiscal: Enfoque Monetarista. Análisis tradicional}
+
+Por tanto, para éstos existen diferentes efectos que inciden directamente sobre la (in)efectividad de la Política Fiscal:
+\begin{lnum}
+    \item \textbf{A corto plazo.} Un aumento del gasto público (que conduce a un aumento de la emisión de bonos, deuda pública, para financiarlo) producirá: (efecto ambiguo)
+    \begin{la}
+        \item \textbf{Efecto Renta Directo}. (Efecto PIGOU) Aumentará la riqueza de los agentes, lo que aumentará el consumo y, consecuentemente la renta; pero,
+        \item \textbf{Efecto Renta Indirecto}. También aumentará el tipo de interés real de la economía (puesto que aumentará el tipo de interés nominal), lo que disminuirá el precio de las acciones que afectará (negativamente) sobre la riqueza de los individuos y acabará disminuyendo el consumo de estos.
+    \end{la}
+    \item \textbf{A largo plazo}. Prevalecerá el Efecto Cartera que induce un \textit{crowding-out} total de la inversión. ¿Por qué? Un incremento del gasto público financiado a través de la emisión de bonos, aumentará las tenencias de dinero iliquido (bonos), respecto a las tenencias de dinero líquido (efectivo). Los agentes desean mantener una proporción estable entre activos ilíquidos y líquidos por lo que, a largo plazo: (i) aumentará la demanda de dinero; y/o, (ii) aumentará la rentabilidad ofrecida por los títulos de deuda (por una disminución de la su demanda). En cualquiera de los dos casos, este \textit{desequilibrio} de cartera conduciría a un aumento del tipo de interés nominal, incrementando el interés real y encareciendo los costes de financiación que harían disminuir la inversión total, provocando un descenso de la demanda agregada proporcional al aumento experimentado a corto plazo (la renta se mantendría constante en la situación inicial pero con un tipo de interés mayor al inicial).
+\end{lnum}
+
+\subsubsection{Implicaciones de Política Fiscal: Monetarismo}
+Por todo lo expuesto, los monetaristas consideran que la Política Fiscal resulta ineficaz (o, más bien, subóptimo) para contrarrestar el ciclo económico ya que sustituye gasto privado por gasto público. 
+
+Además, estos autores argumentan que, dado que lo óptimo para el planificador es mantener un tipo de interés nominal tal que reduzca al mínimo los costes privados de mantener efectivo (puesto que esto disminuiría a su vez el tipo de interés real), la Política Fiscal no es solo ineficiente a corto plazo sino también perjudicial para la economía a largo plazo, ya que disminuiría la inversión en capacidad productiva de la economía a través del efecto \textit{crowding-out}.
+
+\subsection{Economía abierta: Modelo MUNDELL-FLEMING}
+Una vez analizados los efectos sobre un economía cerrada desde diferentes perspectivas, podríamos preguntarnos ¿qué pasaría en un contexto abierto donde existe movilidad de capitales y régimen cambiario? Sobretodo, habida cuenta de la importante discrepancia relativa a los efectos sobre la inversión que estos dos enfoques presentados tienen.
+
+Para ello, emplearemos el Modelo MUNDELL-FLEMING para ilustrar las conclusiones que se alcanzan una vez introducimos estos supuestos. Sobre la misma base del Modelo IS-LM presentado, realizamos las siguientes modeificaciones:
+
+\eqblock{
+\begin{aligned}
+    \text{Curva BP:}\quad \underbrace{\boxed{BP=X_0(q,Y^*)-q\;m\;Y+\beta(i-i^*)}}_{BP=CC+CK=0\quad \text{Eq. Mercado Exterior}}
+\end{aligned}
+}{Economía abierta: Curva BP. Análisis tradicional}
+
+Desde esta perspectiva, vemos que el equilibrio en el mercado exterior viene determinado por el saldo por cuenta corriente ($X_0(q,Y^*)-q\;m\;Y$) y el saldo por la cuenta de capital, que se simplifica en función del diferencial entre el tipo de interés nominal del mercado nacional y el tipo de interés nominal de referencia (mundial). Si asumimos que la curva BP es completamente elástica (horizontal), es decir, que el tipo de interés del mercado nacional es igual al de referencia y que existe movilidad perfecta de capitales, podemos valorar los efectos de una Política Fiscal expansiva en función de si el tipo de cambio es fijo o es flexible:
+
+\textbf{INCLUIR DOS GRÁFICO}
+
+Como vemos, en función del régimen cambiarios los efectos serán muy diferentes:
+\begin{la}
+    \item \textbf{Cambio flexible}. Los efectos de una Política Fiscal expansiva en un contexto de Tipo de Cambio flexible son nulos. Esto se debe a que el incremento del gasto público desplazaría la curva IS y aumentaría el tipo de interés nacional. La diferencia en el rendimiento entre el mercado nacional y el interés de referencia conduciría a un aumento sustancial de capitales en el país, lo que disminuiría el Tipo de Cambio Real efectivo y acabaría perjudicando el saldo en la balanza por cuenta corriente (encarecimiento de las importaciones); lo que acabaría conduciendo a una situación final igual a la del equilibrio inicial; y, por otro lado,
+    \item \textbf{Cambio fijo}. En régimen de Tipo de Cambio Flexible, un aumento del gasto público aumentaría el tipo de interés nacional en términos relativos pero, para evitar las variaciones del Tipo de Cambio, el BC se vería obligado a realizar una depreciación artificial, aumentando la Base Monetaria (por ejemplo), lo que desplazaría la curva LM, alcanzando un nuevo equilibrio en un nivel de renta sustancialmente mayor. Por lo tanto, la Política Fiscal sería muy efectiva en esta situación.
+\end{la}
+
+No obstante, cabe destacar que si la Economía es lo suficientemente grande, bajo Tipo de Cambio Flexible la Política Fiscal sería más efectiva puesto que tendrá mayor peso en la fijación del tipo de interés de referencia y acabaría desplazando verticalmente el recta BP.
+
+\clearpage
+\section{Política Fiscal: Efectos sobre el ahorro}
+\begin{specialblock}{Conexión con lo anterior: Reformular tras haber modificado la parte teórica}
+    Si hasta ahora hemos expuesto el análisis de la Política Fiscal desde la óptica de la Historia del Pensamiento Económico es, precisamente, porque la crítica de los Monetaristas dió, indirectamente, el pistoletazo de salida a lo que es el análisis sobre este objeto de estudio.
+
+    El análisis actual enfatiza en el estudio del impacto a largo plazo de la Política Fiscal. En particular, cuál es su incidencia en el ahorro ($S$) y el crecimiento económico ($\Delta Y$). Este surge a raíz de las aportaciones de la Nueva Macroeconomía Clásico (NMC) que, durante los años 70's llevaron a cabo una revolución metodológica en el análisis de las variables agregadas (macroeconomía).
+    
+    El nuevo enfoque presentado por estos autores girará en torno a dos elementos esenciales:
+    \begin{lnum}
+        \item \textbf{Crítica a KEYNES}. Refutarán todas las tésis keynesianas, tanto su marco analítico como los resultados obtenidos, y reformularan el concepto de HEA de los monetaristas para racionalizarlo, a través de la HER; y,
+        \item \textbf{Supuestos esenciales}. Enfatizarán:
+        \begin{lnum}
+            \item \textbf{Microfundamentación}. La necesidad de microfundamentar los modelos macroeconómicos, de manera que el comportamiento agregado sea el resultado del comportamiento optimizador de los agentes que interactúan en la economía; 
+            \item \textbf{Mercados perfectos y ausencia de rigideces}. La consideración de mercados perfectos y ausencia de rigideces nominales (precios y salarios flexibles), de manera que se de un vaciado continuo de mercados;
+            \item \textbf{Dinámica}. Introducirán la perspectiva dinámica en la modelización, es decir, introducirán explícitamente el tiempo como un determinantes del comportamiento de los agentes. 
+        \end{lnum}
+    \end{lnum}
+    
+    Presentemos las conclusiones más importantes de este nuevo enfoque analítico.
+\end{specialblock}
+
+¿Qué es el ahorro? ¿Cómo toman los agentes sus decisiones sobre el ahorro? ¿Por qué es importante ahorrar? ¿Cómo afecta la Política Fiscal sobre el ahorro?
+
+\begin{specialblock}{Importancia del ahorro}
+    Richard Thaler asesoró / estuvo vinculado como experto al lanzamiento y al trabajo de la Behavioural Insights Team (BIT, “Nudge Unit”) del Gobierno británico.
+
+    \href{https://ifs.org.uk/sites/default/files/output_url_files/wp1619.pdf}{\textit{What happens when employers are obliged to nudge?Automatic enrolment and pension saving in the UK}. IFS (2019)}
+
+    \href{https://www.gov.uk/government/publications/evaluation-of-the-help-to-save-scheme/research-report-evaluation-of-help-to-save-qualitative-interviews-with-users-and-eligible-non-users-of-help-to-save}{\textit{Research report: Evaluation of Help to Save – Qualitative interviews with Users and eligible Non-users of Help to Save} GovUK (2025)}
+
+    Desarrollar una introducción que muestre la importancia del ahorro, en términos de previsión futura, la incidencia de la Política Fiscal y su relación con la economía conductual. 
+
+    \textbf{Es importante hacer una introducción consistente sobre porqué es importante ahorrar: Este apartado tendría que ir del minuto 10 al minuto 22, aproximadamente}
+\end{specialblock}
+
+
+
+\subsection{Financiación del gasto: Equivalencia Ricardiana}
+Sobre esto, uno de los modelos más influyentes es el presentado por BARRO con el fin de formalizar lo que hasta entonces se conocía como el \textit{principio de equivalencia ricardiana}.\footnote{\textit{Are Government Bonds net Wealth?} BARRO (1974)
+}
+
+Considerando un Modelo de Horizonte Infinito, racionalizado a través de la existencia de \textit{altruismo intergeneracional} (esto es, los agentes distribuyen renta entre generaciones y ponderan la utilidad de éstas, descontadas al presente), sobre una economía cerrada, donde los impuestos y transferencias son de suma fija (no generan efectos distorsionantes en las decisiones de consumo, trabajo y/o inversión), existen mercados de capitales perfectos e información perfecta en el mercado;\footnote{
+En este caso, que si los agentes anticipan cuando aumentarán los impuestos ($\uparrow T$) y en qué cuantía, internalizan la Restricción Presupuestaria del Gasto Público haciéndosela suya.
+} planteamos las restricciones que enfrenta cada uno de los agentes de la siguiente forma:
+
+\eqblock{
+\begin{aligned}
+    \boxed{
+    \begin{aligned}
+        &\text{RPG:}\quad &&G_1+\frac{G_2}{1+r}=\tau_1+\frac{\tau_2}{1+r}\\[1em]
+        &\text{RPI:}\quad &&C_1+\frac{C_2}{1+r}=\underbrace{(Y_1-\tau_1)+\frac{(Y_2-\tau_2)}{1+r}}_{W}\\[1em]
+        &\text{SN}_1:\quad &&\overbrace{S^*_{G,t}}^{\tau_t-G_t}+\overbrace{S_{P,t}}^{Y_t-C_t-\tau_t}
+    \end{aligned}
+    }
+\end{aligned}
+}{BARRO: Equivalencia Ricardiana. Análisis moderno}
+
+¿Qué implican estas restricciones y cómo cuantifican la efectividad de la PF? Veámoslo con un ejemplo, supongamos que se produce una reducción de impuestos en $t=1$:
+\begin{lnum}
+    \item Una reducción de impuestos en $t=1$ implicaría una disminución de la proporción de renta ingresada al Estado ($\downarrow \tau$);
+    \item Esta disminución en $t=1$ exige que, si no varía el valor absoluto del Gasto Público en ninguno de los dos periodos ($\Delta G_1=\Delta G_2=0$), deba ser compensado con un aumento de la recaudación en $t=2$ descontada al presente, es decir, $\uparrow \tau_2/(1+r)$; y,
+    \item Además, también conduce a una reducción del ahorro público ($S_{G,t}$) que, dada la igualdad restrictiva de la suma de ahorro nacional, debe ser compensado con un aumento del ahorro privado ($S_{P,t}$), es decir, $Y_1-C_1-\downarrow \tau_1\cdot Y_1=\uparrow S_{P,1}$.
+\end{lnum}
+
+Debido a que los impuestos se conciben como \textbf{no distorsionantes} (de suma fija) y la riqueza (descontada) se considera también un valor constante, la disminución en $t=1\longrightarrow\;\downarrow\tau_1$ no afecta al consumo $C_1$, por lo que no se experimenta ningún incremento. 
+
+\paragraph{Implicaciones de Política Económica}
+Las implicaciones en términos de Política Económica se desprenden directamente del cumplimiento de las condiciones impuestas:
+\begin{lnum}
+    \item \textbf{Los bonos no son riqueza neta}. Si los agentes no consumen más, dado el descenso en la carga tributaria en el periodo ($t=1$), ¿qué hacen con esos recursos? Los agentes ahorraran ese exceso de recursos disponibles y demandarán más títulos de deuda pública ($\uparrow B^d$) en vistas a hacer frente al incremento de impuestos que anticipan en el periodo siguiente. Como hemos visto, la riqueza descontada al presente se mentiene constantes ante cualquier variación, por tanto, los bonos no constituyen riqueza neta para los agentes, simplemente es una manera de trasladar ese ahorro al futuro de forma que no pierdan poder adquisitivo en el periodo siguiente, habida cuenta del coste real de manetener su riqueza, por ejemplo, en dinero en efectivo;
+    \item \textbf{Equivalencia Ricardiana}. Dado que la forma en la que el Estado financia el Gasto Público es mediante la emisión de títulos de deuda, y estos: (i) se demandan en vistas al pago futuro de impuestos; y, (ii) únicamente se demandan por se un vehículo para preservar el valor real de la riqueza del agente; (iii) la forma en la que financie el Estado el Gasto es irrelevante para los agentes. Podría aumentar la recaudación o emitir títulos de deuda, obteniendo ambos los mismos resultados para el Agente ya que el Ahorro Nacional es, en todo caso, constante; y,
+    \item \textbf{Ineficacia a largo plazo de la Política Fiscal}. Si el objetivo perseguido por el \textit{policy maker} es incidir mediante un aumento del Gasto Público en el sector real de la economía, el modelo muestra como esta incidencia es nula: (i) no hay un incremento del consumo en ninguno de los periodos; y, (ii) la riqueza de los agentes se mantiene constante, descontada al presente.
+\end{lnum}
+
+En definitiva, los títulos de deuda pública no son considerados riqueza neta, siendo el déficit público neutral independientemente de su financiación. El impacto de una política fiscal expansiva viene determinado por la composición del gasto público, independientemente de su forma de financiación:
+\begin{la}
+    \item \textbf{Títulos de deuda}. Generan un aumento del ahorro privado para hacer frente a un previsible aumento de impuestos en el futuro;
+    \item \textbf{Recaudación de impuestos}. Esta recaudación disminuirá la renta disponible de los agentes y por lo tanto el ahorro en comparación con la financiación mediante títulos de deuda; y,
+    \item \textbf{Monetización}. Las expectativas de emisión continua en el futuro generan un aumento del ahorro en previsión del impuesto inflacionario asociado.
+\end{la}
+
+En una economía abierta, el resultado de la equivalencia ricardiana se mantiene. Además, implica que el reparto del endeudamiento frente al exterior entre hogares y sector público no tiene importancia, y lo relevante para las decisiones de consumo e inversión es la posición de la economía en su conjunto frente al exterior. Por ejemplo, dada una senda de gasto público, una reducción de impuestos no afectaría al saldo de la cuenta corriente, ya que el aumento del endeudamiento del sector público se vería compensado por el aumento del ahorro del sector privado, sin que fuese necesario recurrir a la financiación exterior (SCHMITT-GROHE et al., 2016).
+
+Sin embargo, es importante destacar que la equivalencia ricardiana no implica que el gasto público no tenga efectos sobre el output, sobre el consumo o el empleo (de hecho, en un modelo de ciclo real como este sí que los tiene), sino que estos efectos serán los mismos independientemente de cómo se financia este gasto.\footnote{No obstante, en caso de que la política fiscal expansiva se lleve a cabo mediante una reducción de impuestos, financiada vía deuda, el efecto será nulo.
+}\textsuperscript{,}\footnote{
+Sin embargo, la proposición de equivalencia ricardiana ha provocado que algunos autores, siguiendo un razonamiento similar al de BARRO, defiendan la existencia de efectos no keynesianos en la política fiscal.
+
+Los efectos no keynesianos de la política fiscal han sido esgrimidos como argumento en favor de las recientes experiencias de consolidación en numerosos países de la zona euro. Con agentes que forman sus expectativas de forma racional, conociendo la Restricción Presupuestaria del Gobierno, una política fiscal contractiva puede tener efectos expansivos al acompañar las reducciones de gasto de reducciones creíbles equivalentes en impuestos a través de un \textit{crowding-in} de la actividad del sector privado o incluso reducciones en las primas de riesgo.
+
+En este tipo de modelos, una consolidación fiscal (i.e. política fiscal restrictiva) puede ir acompañada de una expansión de la actividad agregada. El mecanismo fundamental detrás de este tipo de efectos es el siguiente:
+\begin{lnum}
+    \item Los agentes privados son conscientes de la restricción intertemporal a la que se enfrenta el gobierno;
+    \item Ante las dudas sobre la sostenibilidad de las finanzas públicas, una consolidación fiscal hoy (siempre que resulte creíble), puede despejar dicha incertidumbre y generar confianza sobre el futuro; y,
+    \item De esta manera, dicha política será percibida por los agentes como unos menores pagos de impuestos en el futuro. La riqueza disponible de los agentes aumentaría y al mismo tiempo se reduciría la incertidumbre sobre su renta futura ya que los agentes confían en un saneamiento de las cuentas públicas. Ambos efectos tendrían un impacto positivo sobre el consumo que podría compensar el efecto de la reducción inicial del gasto público.
+\end{lnum}
+
+El razonamiento anterior es tanto como suponer un multiplicador keynesiano negativo.
+} 
+
+No obstante, la conclusión más clara (y aceptada) que otorga el modelo es la noción de que la Política Fiscal no es tan efectiva como anticipaban los keynesianas. Los agentes se comportan de manera racional y, en consecuencia, tienen en cuenta el comportamiento del resto de los agentes a la hora de tomar sus decisiones. Cuando el Gobierno decida llevar a cabo una Política Fiscal muy expansiva, es normal y coherente pensar que los agentes anticiparán un aumento de la recaudación del Estado en un periodo posterior para hacer frente a esta, lo que conduciría a un aumento del ahorro y un impacto menor de la Política Fiscal en el crecimiento a largo plazo (llevado al límite, las conclusiones del modelo).
+
+\paragraph{Limitaciones: Supuestos}
+Ahora bien, ¿son estos resultados concluyentes y determinantes a la hora de verificar la ineficacia de la Política Fiscal? No del todo. Para que se verifique la equivalencia ricardiana es necesario que se cumplan una serie de supuestos de carácter muy restrictivo. Por ejemplo, algunas posibles razones del incumplimiento de la equivalencia ricardiana serían las siguientes (ver HEIJDRA, 2017, pág 192):
+\begin{la}
+    \item \textbf{Vidas finitas} (MGS). Si los individuos tienen un horizonte finito o sólo son parcialmente altruistas anticiparán que parte de la carga fiscal recaerá en generaciones futuras. Esto conducirá a que los hogares incrementen el consumo en el momento presente y reduzcan los recursos destinados a la acumulación de capital (por tanto, modificando las decisiones);
+    \item \textbf{Coste de endeudamiento heterogeneo}. Si, por ejemplo, el coste de endeudamiento (el coste del capital) no es homogeneo, en particular, si es más bajo para el Sector Público ($r_{\text{Público}}$) que para el Sector Privado ($r_{\text{Privado}}$), enntonces los títulos de deuda sí que serán riqueza neta ya que, endeudándose el Sector Público, los agentes esperarán pagar menos impuestos para hacer frente a esa deuda futuro de lo que deberían en caso de aumentar la recaudación ya y tener que endeudarse los agentes para hacer frente al consumo.
+    \item \textbf{Impuestos distorsionantes} (no de suma fija). En presencia de impuestos distorsionantes, que incorporen efecto sustitución (p.ej. sobre las rentas del trabajo o de capital), no se cumplirá la equivalencia ricardiana y el momento de pagar el impuesto importa porque afecta a los incentivos para ahorrar y la oferta de trabajo relativa. Ante una bajade se los impuestos al trabajo se espera una mayor oferta de trabajo, lo que daría lugar a un mayor empleo y mayor output. o Hilar con la imposición óptima de Ramsey (regla de la elasticidad inversa);
+    \item \textbf{Política de gasto ejecutada en gastos de inversión productiva}. La equivalencia ricardiana se cumple asumiendo que la política de gasto se ejecuta en gastos corrientes, no en gastos de inversión productiva que pudieran generar un rendimiento adicional que permitiera una autofinanciación completa mediante un mayor crecimiento potencial y unos mayores ingresos asociados;
+    \item \textbf{Restricciones de liquidez y mercados de capitales no completos o imperfectos}. BARRO supone mercados de capitales completos y perfectos, de manera que el tipo de interés es igual para los agentes privados y el sector público y además no hay restricciones de créditos. Si los mercados de capitales no son perfectos, en presencia de restricciones de liquidez, el consumo de los individuos será más sensible a la renta actual; y,
+    \item \textbf{Racionalidad limitada, comportamiento miope o falta de información} (CAMPBELL y MANKIW y THALER): Aunque los mercados de capital fueran perfectos, si una fracción de los consumidores son miopes y consumen su renta actual, tampoco se cumplirá la equivalencia ricardiana porque el consumo aumentaría inmediatamente tras una bajada de impuestos. Por otro lado, si la deuda fuese sostenible en el tiempo, los Agentes no tendrían porque esperar un incremento futuro de impuestos.
+\end{la}
+
+Por tanto, ¿se ajustan las conclusiones anteriores a la realidad? Por ejemplo, poniendo enfásis en uno de los supuestos, ¿pueden los agentes transferir renta, consumo, inversión y ahorro entre periodos sin ningún tipo de limitación? La realidad es que no. Entre otras cosas, los agentes viven una cantidad finita de periodos y no disponen del mismo abanico de decisiones/oportunidades a lo largo de toda su vida, ¿es coherente pensar que una persona con 80 años enfrenta también una decisión de consumo-trabajo?
+
+\subsection{Incidencia sobre las decisiones: Efectos distorsionantes}
+\begin{specialblock}{Ahorro y Gasto Público}
+    Si en el apartado anterior introdujimos la Equivalencia Ricardiana: Modelo de BARRO; con sus principales conclusiones: (i) es indiferente cómo financie el Gasto Público el Gobierno pues no tendrá, de ninguna forma, un impacto sobre la economía real.
+
+    Ahora introducimos un análisis desde la persepectiva del Gasto Público. Para ello debemos incluir uno o los dos siguientes modelos (los dos son de la TCR, \textbf{atento cuando se estudi}):
+
+    CHRISTIANO y EICHENBAUM
+
+    BAXTER y KING (\textbf{recomendación de ROSELL})
+\end{specialblock}
+
+
+\subsection{Rigideces y Autoridad Monetaria: NEK-2}
+\textbf{Introducir Modelo DE la NEK-2} (\textbf{Tema 3.a.38} CECP)
+
+
+\subsection{Sistemas de Provisión Social: Modelo Generaciones Solapadas}
+Este es el elemento sobre el cual se contruye una linea de investigación alternativa que trata de resaltar la importancia y efectividad de la Política Fiscal, contrariando las conclusiones alcanzadas por el modelo anterior. 
+
+\subsubsection{Economía sin Sector Público: Ahorro voluntario}
+Imaginemos una economía de intercambio en la que los agentes viven dos periodos, en uno son jóvenes y en otro son viejos. Los bienes de esta economía son perecederos y cada cohorte poblacional mantiene las mismas preferencias sobre estos a lo largo de sus dos periodos de vida. Además, supongamos que no existe crecimiento poblacional y cada cohorte convive con otra durante un periodo de vida, en la que tienen edades distintas. Por último, imaginemos que existe un único vehiculo de ahorro (es decir, de transferencia de renta entre periodos) que proporciona un rendimiento natural ($r$). Podemos representar esto mediante un Modelo de Generaciones Solapadas que, analíticamente, se presenta como:
+
+\eqblock{
+\begin{aligned}
+    \boxed{
+    \begin{aligned}
+        &\max_{c_t^J,c_t^V}\;\;U(c_t^J,c_t^V)=u(c_t^J)+\beta \;u(c_t^V)\\[0.5em]
+        &\text{s.a.}\;
+        \begin{cases}
+            c_t^J+s_1=\tilde e_1\\[0.5em]
+            c_t^V=s_1(1+r)
+        \end{cases}
+    \end{aligned}
+    }
+\end{aligned}
+}{MGS: Optimización del agente representativo. Análisis moderno}
+
+Asumimos que la FUI es de tipo isoelástica y, por tanto, que el máximo deseo del agente es la suavización del consumo, es decir:
+
+\eqblock{
+\begin{aligned}
+    \text{Condición de EULER:}\quad \boxed{c_t^J=c_t^V\quad \longrightarrow\quad u(c_t^J)=\beta \;u(c_t^V)}
+\end{aligned}
+}{MGS: Condición de EULER. Análisis moderno}
+
+Este óptimo podría alcanzarse: (i) con mercados de capitales perfectos (o análogo en este tipo de economía simplificada) que permiten la transferencia intertemporal de renta sin problemas; o, (ii) con la interveción del Sector Público. Analicemos dos sistemas alternativos de intervención para ilustrar sus conclusiones.
+
+\subsubsection{Neutralidad del Sector Público: Sistema de Capitalización}
+Supongamos que el Sector Público obliga a todos los agentes a depositar un porcentaje de sus rentas (dotacionales) en un depósito común que proporciona un rendimiento de $r$. (Introducimos esta característica en el problema de optimización)
+
+\eqblock{
+\begin{aligned}
+    \boxed{
+    \begin{aligned}
+        &\max_{c_t^J,c_t^V}\;\;U(c_t^J,c_t^V)=u(c_t^J)+\beta \;u(c_t^V)\\[0.5em]
+        &\text{s.a.}\;
+        \begin{cases}
+            c_t^J+s_1=(1+\tau)w_1\\[0.5em]
+            c_t^V=\overbrace{s_1(1+r)+w_1\tau(1+r)}^{\text{\scriptsize Ahorro Total en el periodo 1}}
+        \end{cases}
+    \end{aligned}
+    }
+\end{aligned}
+}{MGS: Sistemas de capitalización. Análisis moderno}
+
+Esto es lo que conocemos como \textbf{Sistemas de Capitalización}. En éstos, como vemos, el Sector Público actúa como \textbf{ahorrador forzoso} y el agente ajusta su ahorro privado de tal forma que el ahorro total permanezca constante a lo largo de toda su vida. El nivel de consumo en el primer periodo y el segundo es el mismo y se alcanzan las mismas conclusiones tanto a través del ahorro privado como de el ahorro forzoso (impuesto por el Estado), por lo que la intervención del Sector Público es neutral y no genera distorsiones en la economía. 
+
+No obstante, estos resultados se derivan de asumir que: (i) los mercados de capitales son perfectos; (ii) que el ahorro privado y el ahorro forzoso proporcionan el mismo rendimiento; y, (iii) que el agente es averso a la sustitución intertemporal de consumo, por lo que óptimo para éste es la suavización del consumo.
+
+\paragraph{Intervención del Sector Público: Sistema de Reparto}
+No obstante, este no es el único sistema de previsión que puede contemplar el planificador público. De hecho, no es el sistema de previsión que contempla nuestro ordenamiento jurídico. ¿Cuál es? ¿Qué alternativa hay?
+
+Imaginemos que el planificador público impone la obligación a la generación joven de transferir recursos a la generación vieja con la que están conviviendo en ese preciso periodo. Imagenimos también que la población crece a un ritmo constante $n$. Bajo estas premisas, es evidente que la redistribución no genera rendimiento, pues la transferencia derecursos se lleva a cabo en el mismo periodo (de la población joven a la población vieja), es decir:
+
+\eqblock{
+\begin{aligned}
+    \boxed{
+    \begin{aligned}
+        &\max_{c_t^J,c_t^V}\;\;U(c_t^J,c_t^V)=u(c_t^J)+\beta \;u(c_t^V)\\[0.5em]
+        &\text{s.a.}\;
+        \begin{cases}
+            c_t^J+s_1=(1+\tau)w_1\\[0.5em]
+            c_t^V=\overbrace{s_1(1+r)+w_1\tau\; [\underbrace{(1+g)}_{\text{\scriptsize Transferencias}}\;\; \underbrace{(1+n)}_{\text{\scriptsize Crecimiento pob}}]}^{\text{\scriptsize Medios de consumo en el periodo $t=2$}}
+        \end{cases}
+    \end{aligned}
+    }
+\end{aligned}
+}{MGS: Sistemas de reparto. Análisis moderno}
+
+La primera implicación que salta a la vista de este tipo de intervención es que el Sistema de Provisión Social (o Seguridad Social) impuesto ya no es un sustituto perfecto del ahorro privado (no genera los mismos rendimientos). De hecho, encontraremos dos casos particulares:
+\begin{la}
+    \item \textbf{Crecimiento poblacional positivo}. Cuando el crecimiento poblacional sea (muy) positivo, el producto del rendimiento derivado del crecimiento poblacional y de las transferencias impuestas resulta mayor que el rendimiento ofrecido por el ahorro privado ($1+r$). Esto conducirá a una disminución del ahorro privado por el elevado rendimiento que ofrece el Sistema y, por tanto, el consumo en ambos periodos será mayor que en cualquiera de los otros dos sistemas presentados anteriormente; pero,
+    \item \textbf{Crecimiento poblacional muy bajo (o negativo)}. Si el producto del crecimiento poblacional y las transferencias es menor al rendimiento ofrecido por el ahorro privado: tenemos un problema. Esto conducirá a un aumento del ahorro privado (previsiones/expectativas negativas) con el objetivo de compensar los bajos rendimientos proporcionados por el Sistema de Provición Social y, en consecuencia, a una disminución del consumo agregado en ambos periodos.
+\end{la}
+
+\paragraph{Sistema de Reparto: Limitaciones (crecimiento poblacional)}
+¿Nos suena esto familiar? Precisamente, es una de las limitaciones que enfrenta en la actualidad el Sistema de Seguridad Social en España. Nuestro sistema es, fundamentalmente, un sistema de reparto en el que se redistribuyen los recursos de manera directa entre generaciones convivientes. Debido a:
+\begin{lnum}
+    \item \textbf{Descenso de la natalidad}. El continuo descenso de la natalidad en España (actualmente, el crecimiento poblacional nacional es negativo, en torno a los -200.000) solo se ve compensado por el continuo saldo migratorio positivo que se viene experimentando desde inicios de los 2000's (aunque con fuertes oscilaciones);
+    \item \textbf{Descenso en las tasas de crecimiento de los salarios}. El sostenido descenso (estancamiento) de la Productivad Total de Los Factores en España ha conducido a una fuerte desaceleración de las tasas de crecimiento de los salarios, lo que deterioro el Fondo de Pensiones por ser estas (cuasi)proporcionales a las retribuciones de los asalariados en activo;
+    \item \textbf{Incremento de la esperanza de vida}. Algunas previsiones señalan que a mediados de los años 30's, España se situará como uno de los cinco países con mayor esperanza de vida: es tremendamente positivo, pero también indudable que el Sistema de Previsión Social enfrenta fuertes limitaciones para hacer frente a sus obligaciones en este nuevo contexto.
+\end{lnum}
+
+Para ilustrar el problema:
+
+\imagenfit{Sistema_PS_España.png}{Resultados estimados del Sistema de Pensiones en España}{\href{https://www.iese.edu/media/research/pdfs/DI-0367.pdf}{\textit{Reparto frente a capitalización en la Reforma del Sistema de Pensiones en España}. IESE}}
+
+\subsubsection{Intervención del Sector Público: Otros Sistemas de Provisión Social}
+Es necesario introducir una descripción de cada uno de los siguientes modelos de Provisión Social desde un enfoque conceptual y resaltando las diferencias. 
+
+\begin{specialblock}{Referencias a consultar}
+    \href{https://nadaesgratis.es/juan-francisco-jimeno/sirven-las-cuentas-nocionales-para-algo}{\textit{¿Sirven las Cuentas Nocionales para algo?} Nada es Gratis (blog)}
+
+    \href{http://revecap.com/revista/numeros/33/pdf/jimeno.pdf}{\textit{La equidad intergeneracional de los Sitemas de Pensiones} JUAN FRANCISCO JIMENO SERRANO (2003)}
+
+    \href{https://nadaesgratis.es/felgueroso/el-fondo-de-capitalizacion-a-la-austriaca-¿seria-realmente-tan-costoso}{\textit{El fondo de capitalización a la austríaca ¿sería realmente tan costoso?} JUAN FRANCISCO JIMENO SERRANO (2003)}
+
+    \href{https://www.bankinter.com/blog/finanzas-personales/que-tasa-sustitucion-pensiones}{\textit{¿Qué es la Tasa de sustitución de las pensiones?} Bankinter}
+
+    \href{https://www.bankinter.com/blog/finanzas-personales/mochila-austriaca-pensiones-espana}{\textit{¿Qué es la mochila austríaca?} Bankinter}
+
+    \href{https://nadaesgratis.es/j-ignacio-conde-ruiz/mas-pensiones-mas-ninos}{\textit{Más niños, Más pensiones} Nada es Gratis}
+
+    \href{https://www.iese.edu/es/insight/articulos/pensiones-reforma-sistema-espana/}{\textit{Sistema mixto} IESE}
+\end{specialblock}
+
+\begin{lnum}
+    \item Cuentas nocionales;
+    \item Mochila austríaca;
+    \item Sistemas mixtos, etc.
+\end{lnum}
+
+\textbf{Nos lo podrían preguntar fácilmente en el cante}
+
+\subsection{\textbf{Comodín.-} Tipo Impositivo Óptimo}
+Otra de las grandes aportaciones del análisis moderno de la Política Fiscal y, en particular, su incidencia sobre el ahorro, se encuentra en el ámbito de la tributación: la estructura del sistema impositivo.
+
+Se ha hecho especial énfasis en el supuesto de \textbf{no distorsión} presente en el Modelo de BARRO, cuyas conclusiones eran profundamente desalentadoras en términos de actuación del planificador público. Ahora bien, ¿son los impuestos completamente neutrales? ¿no afectan éstos a las decisiones de los agentes? De hecho, sí. Este es uno de los supuestos menos aceptados del modelo ya que precisamente la figura de impuesto \textbf{no distorsionante} choca frontalmente con la Primera Ley de \textit{Public Finance}: la inexistencia de impuestos de suma fija. 
+
+La mayoría de impuestos (por no decir todos) son impuestos distorsionantes. Es decir, inciden directamente en las decisiones óptimas de los agentes. Por esta razón, el mismo BARRO se alejará de este supuesto y buscará determinar la estructura detributación óptima que minimice la pérdida social dado un nivel fijo (exógeno) de Gasto Público. Para ello, se basará en la Teoría de la Imposición Óptima de RAMSEY (1927) y sus resultados se pueden extraer del siguiente problema de minimización (versión simplificada). 
+
+Supongamos que el Gobierno quiere minimizar una Función de Pérdida Social:
+
+\eqblock{
+\begin{aligned}
+    &\boxed{
+    \begin{aligned}
+        \min_{T_0, T_1, ...} E_t\sum_{t=0}^\infty\beta^tL\underbrace{\left(\frac{T_t}{Y_t}\right)}_{\text{\scriptsize $\equiv\tau_t:$ Tipo impositivo}}\\[1em]
+        \text{s.a.}\quad \sum_{t=0}^\infty\beta^tT_t=\sum_{t=0}^\infty\beta^tG_t+B_0
+    \end{aligned}
+    }\\[2em]
+    &\text{Donde,}\quad L\equiv\text{Función de pérdida social:}\;
+    \begin{cases}
+        L'(\cdot)>0\\[0.5em]
+        L''(\cdot)>0
+    \end{cases}
+\end{aligned}
+}{BARRO: Minimización Pérdida Social. Análisis moderno}
+
+\subsubsection{Implicaciones de Política Económica: Suavización de la senda impositiva}
+Por tanto, vemos como la distorsión es creciente aceleradamente. A partir de las CPO's, obtenemos:
+
+\eqblock{
+\begin{aligned}
+    \boxed{\frac{T_t}{Y_t}=E_t\left(\frac{T_{t+1}}{Y_{t+1}}\right)}\quad \Longrightarrow\quad \text{Suavicación impositiva}
+\end{aligned}
+}{BARRO: Suavización Impositiva. Análisis moderno}
+
+Como vemos, esta condición nos indica que lo óptimo es buscar la suavización de la senda impositiva ($\tau_t=\tau_{t+1}$). Es decir, lo óptimo es tratar de hallar un tipo impositivo constante dados los $CMgs$ crecientes de la Función de Pérdida. Es Teoría concluye en la necesidad de suavizar el tipo impositivo a lo largo del tiempo dado un nivel de Gasto, que podrá ser conseguido por el Gobierno a través de la emisión de Deuda Pública (con el fin de no alterar el tipo).
+
+
+\clearpage
+\section{Política Fiscal: Efectos sobre el crecimiento}
+\textbf{Importante introducir una introducción coherente}
+
+Ahora que hemos visto cuáles son los efectos de la Política Fiscal sobre el ahorro, tanto directos (gasto y sistemas de previsión social) como indirectos (efectos distorsionantes), cabe preguntarnos ¿cuál es entonces el nivel óptimo de Gasto Público? En particular, ¿cuál es el nivel que induce o, como mínimo, no menoscaba el crecimiento a largo plazo de la economía?
+
+La respuesta directa, quizás más intuitiva y obvia es: el nivel de Gasto Pública óptimo depende de cuál sea su detino final. De manera general, el Gasto Público es positivo para la actividad económica y el crecimiento a largo plazo en tanto se dedique a actividades productivas. 
+
+\subsection{Modelo de BARRO: Gasto Público Productivo}
+Uno de los modelos más sobresalientes al respecto es el formulado por BARRO. En el, \textbf{BARRO concibe un \textit{trade-off} entre Impuestos y Gasto Público}: los impuestos tendrán incidencia inversa sobre el ahorro, la inversión y en consecuencia la renta; mientras que el Gasto Público tendrá un incidencia positiva sobre la productividad, la renta y en consecuencia el consumo de los Hogares. 
+
+\subsubsection{Desarrollo analítico}
+Supongamos un Hogar representativo con comportamiento optimizador y con Función de Utilidad Intertemporal Isoelástica, en horizonte infinito y tiempo continuo. Supongamos, además, que una Función de Producción, que presenta Rendimietos Constantes a Escala y decrecientes en cada factor productivo, que incluye como argumento un nivel dado de Gasto Público productivo. Este factor productivo producido por el Gobierno es un bien que presenta características de bien privado: rival y excluible. Podemos formular el siguiente problema de optimización:
+
+\eqblock{
+\begin{aligned}
+    \boxed{
+    \begin{aligned}
+        &\max_{c_t}\;U(0)=\int_0^\infty e^{-(\rho-n)t}\left(\frac{c_t^{1-\theta}-1}{1-\theta}\right)\\[1em]
+        &\text{s.a.}\quad
+        \begin{cases}
+            y=Ak^{\alpha}g^{1-\alpha}\qquad &&\text{Restricción de Producción}\\[0.5em]
+            g=\tau \;y\qquad &&\text{Restricción Presupuesto Equilibrado}\\[0.5em]
+            \dot k_{t+1}=(1-\tau)y_t-c_t-(\delta-n)k_t\qquad &&\text{Ecuación dinámica de equilibrio}\\[0.5em]
+        \end{cases}
+    \end{aligned}
+    }
+\end{aligned}
+}{BARRO: Optimización Planificador Benevolente (MHI, tiempo continuo). Análisis moderno}
+
+Como vemos, el Sector Público debe financiarse con impuestos, siendo estos distorsionantes sobre la renta. Además, debe mantener en todo momento un presupuesto equilibrado (imposibilidad de déficit). Resolviendo (mediante Programación Lineal: Hamiltoniano), obtenemos las CPO's y, a partir de ellas, las sendas óptimas (tasas de crecimiento óptimas) para cada una de las variables objetivo:
+
+\eqblock{
+\begin{aligned}
+    \boxed{\gamma_y=\gamma_c=\gamma_k=\gamma_g=f(\underbrace{\tau^{\frac{1-\alpha}{\alpha}}}_{+}, \overbrace{(1-\tau)}^{-})}
+\end{aligned}
+}{BARRO: Sendas óptimas de consumo, producción e inversión. Análisis moderno}
+
+Gráficamente, las tasas de crecimiento óptimas (alcanzadas en el Estado Estacionario) se pueden representar como función del tipo impositivo ($\tau$), dado el parámetro tecnológico, $\alpha$:
+
+\textbf{INCLUIR GRÁFICO ÓPTIMO TASAS DE VARIACIÓN}
+
+\subsubsection{Conclusiones}
+\textbf{NOTA.-} Nótese que el modelo concluye que no existe dinámica de transición. Es decir, obetenemos conclusiones equivalentes a los Modelos de tecnología AK ([\authorfont{Ver Tema 3.A.44}]), con tasas de crecimiento constantes. Para ilustrar el por qué, veamos la relación entre la tasa de crecimiento del capital (inversión) y el gasto público: $\uparrow k\;\underbrace{\Longrightarrow}_{y=Ak^\alpha g^{1-\alpha}}\;\uparrow y\;\Longrightarrow\;\uparrow\tau\;y\;\overbrace{\Longrightarrow}^{g=\tau\;y}\;\uparrow g\;\Longrightarrow\;\uparrow\dot k$ (hasta los límites impuestos por la tecnología). Además, permite superar las limitacinoes de los modelos de crecimiento exógeno, pues se trata de un modelo de crecimiento endógeno. 
+
+El modelo nos permite extraer, entre otras, las siguientes conclusiones:
+\begin{lnum}
+    \item \textbf{Relación del tamaño del Sector Público y el nivel de Renta}. La expresión de las tasas de crecimiento muestra que el tipo impositivo ($\tau$) tiene un doble impacto sobre el crecimiento de la renta (crecimiento económico):
+    \begin{la}
+        \item \textbf{Positivo}. Tiene un efecto positivo que surge a raíz de la relación entre la recaudación y el nivel de gasto ($\tau\;y=g$), puesto que el aumento del gasto aumenta la capacidad productiva de la economía (hasta los límites tecnológicos) y, por tanto, también la capacidad de ahorrar en invertir de los agentes;
+        \item \textbf{Negativo}. Tal y como se muestra en el Gráfico, al aumentar el tipo impositivo ($\tau$) a partir de un cierto umbral máximo, la demanda agregada de la economía caerá, por ser un efecto distorsionante, y con ello también la capacidad de ahorro e inversión que ostenten los agentes. 
+    \end{la}
+    \item \textbf{Límites inferior y superior}. Por lo que respecta a los límites de intervención, vemos que cuando: (i) el tipo impositivo es cero ($\tau=0$) el Sector Público es incapaz de gastar y, por tanto, la renta de la economía es cero (por nula provisión de factor productivo necesario), el capital se depreciará a una tasa ($(1/\theta)-\rho-\delta$) equivalente a la que crece la economía, negativa en este caso; y, en el límite superior, (ii) si el tipo impositivo fuese del 100\% ($\tau=1$), entonces los agentes no ahorrarán ni invertirán porque los Hogares no manifestarán demanda alguna de consumo ($Y^d=0$), por lo que la economía crecerá a una tasa negativa igual a la situación anterior; y,
+    \item \textbf{Optimalidad}. El objetivo del planificador será buscar el equilibrio entre estos dos efectos citados anteriormente: para tipos impositivos pequeños, predominará el efecto positivo sobre el crecimiento, mientras que para valores elevados predominará el efecto negativo sobre el crecimiento.
+\end{lnum}
+
+\subsubsection{Implicaciones de Política Económica}
+Desde la óptica del \textit{policy-maker}, las implicaciones en términos de Política Económica se pueden dividir en:
+\begin{la}
+    \item \textbf{Cuantitativas}. El tamaño del Sector Público debe ser tal que maximice el crecimiento a largo plazo de la Economía. En particular, el Sector Público deberá elegir su tamaño eficiente que vendrá dado precisamente por la tecnología ($1-\alpha$), el tipo impositivo óptimo que maximice el crecimiento a largo plazo será: \textbf{$\tau=1-\alpha$}, que puede ser \textbf{interpretado como}:
+    \begin{la}
+        \item Elasticidad renta-gasto, por lo que nuestra intención es alcanzar el valor óptimo: $1$; o,
+        \item Porcentaje óptimo de Gasto Público respecto al PIB. Es decir, el valor óptimo del cociente (DP)/PIB
+    \end{la}; y,
+    \item \textbf{Cualitativas}. Desde una perspectiva cualitativa, el modelo indica que no solo importa el tamaño del Sector Público, ya que importará también su composión: (i) desde la óptica de los ingresos es importante tener en cuenta los efectos distorsionantes que estos generan sobre las decisiones de los agentes; y, (ii) desde la óptica del Gasto Público el modelo enfatiza en la importancia del Gasto Productivo, mermando cualquier otro tipo la capacidad productiva de la economía y con ello el crecimiento.
+\end{la}
+
+\textbf{(Cerrar el círculo con lo comentado al principio, Evidencia Empírica resalta la importancia de la composión del Gasto Público en la Efectividad de la Política Fiscal)}
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+
+
+
+\clearpage
+\anexo{Temas de Política Fiscal}\label{anx:temario_PF}
+Éste es el primer tema del bloque de política fiscal en el temario. Si bien ésta fue la principal herramienta macroeconómica de los gobiernos desde el final de la segunda guerra mundial hasta los shocks petrolíferos de los años 70 del pasado siglo, a partir de ese momento tiene lugar un cambio radical de paradigma que plantea: (i) la inefectividad de la política fiscal como política estabilizadora ante el ciclo; (ii) la importancia de una política fiscal cuyo objetivo sea garantizar la sostenibilidad presupuestaria. 
+
+Esta pérdida de relevancia en la literatura tuvo un impacto también en el temario de la oposición: hoy los títulos de política fiscal están dispersos y no es evidente la relación que existe entre ellos. Dicho esto, en el contexto del \textit{low-for-long} de la década de los 2010's primero, y tras la crisis de la pandemia después, la política fiscal ha recuperado prevalencia tanto en la literatura como en \textit{policy}. 
+
+A continuación, tratamos de lanzar cierta luz sobre cómo recoge el temario esta rama tan importante para un futuro TCEE: 
+
+\textsc{Los efectos de la política fiscal}
+
+\begin{lnum}
+    \item Tema 4.B.4. Este tema, pese a encontrarse junto con los títulos de Economía Pública. estudia la cuestión nuclear de la política fiscal como herramienta macroeconómica: la capacidad estabilizadora de la política fiscal; es decir, su utilidad para mitigar la dispersión de las oscilaciones cíclicas agregadas en una economía. Se recomienda al opositor de primera vuelta empezar el bloque de política fiscal con este tema;
+    \item Tema 3.A.40. Mientras que la aproximación del anterior título es teórica, éste estudia la efectividad de la Política Fiscal en el ciclo desde una perspectiva empírica. En especial, se recogen los modelos cuantitativos empleados en la actualidad para esta labor. Siguiendo el título, se hace especial referencia a los desarrollos más recientes, en especial cómo la efectividad de cada una de las dos políticas de demanda está relacionada entre sí;
+    \item Tema 3.A.38. Frente a los dos anteriores, este tema trata los efectos de la política fiscal sobre los niveles potenciales (i.e. de largo plazo) de las variables macroeconómicas de una economía. Por tanto, se apoya en modelos de crecimiento económico, en los que la acumulación de capital (y por tanto, el ahorro) tiene un papel fundamental. No existen modelos cuantitativos exclusivamente para el estudio de la política fiscal en el largo plazo, por lo que este tema recoge tanto la teoría como la evidencia empírica. Se recomienda al opositor de primera vuelta empezar estudiar este tema después de los de crecimiento económico (Tema 3.A.43 a Tema 3.A.45); y,
+    \item Tema 4.B.10. En los años 70's del pasado siglo, los denominados Economistas de la Oferta postularon que la política fiscal tenía un mayor impacto sobre el lado de la oferta agregada que sobre la demanda agregada (especialmente a través de los tipos marginales de los tributos). Hoy, otros autores defienden también la efectividad de la política fiscal por el lado de la oferta, con visiones muy diferentes. Dado que todos estos autores centran el estudio en cuestiones tributarias, estos modelos están a caballo entre la macroeconomía y la Economía Pública.
+\end{lnum}
+
+\textsc{La financiación de la política fiscal}
+
+\begin{lnum}
+    \item Tema 3.A.39. Existen varias vías de financiar el gasto público, y es relevante conocer si i) tienen diferentes efectos, y ii) están interrelacionadas.
+\end{lnum}
+
+\textsc{La política fiscal, desde la Economía Pública}
+
+\begin{lnum}
+    \item Tema 4.B.5. Se estudia tanto el tamaño del gasto público, como su composición. En especial, ¿existe algo similar a una estructura óptima? 
+    \item Tema 4.B.3. La política fiscal, además de herramienta macroeconómica estabilizadora, cumple una función capital: la de servir de instrumento para la provisión pública de ciertos bienes y servicios, y/o de realizar transferencias monetarias entre individuos. Es decir, la política fiscal tiene una importante función redistributiva.
+\end{lnum}
+
+
+\end{document}
