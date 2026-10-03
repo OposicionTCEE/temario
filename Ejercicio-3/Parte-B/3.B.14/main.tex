@@ -1,0 +1,1549 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Tema 3.B.14 -- Teorías de la determinación del Tipo de Cambio\\
+\large }
+\author{Marcelo Ortega}
+\date{Enero 2026}
+\newcommand{\TemaCode}{3B14}
+
+\oldtitle{Tema 3.B.15. Teorías de la determinación del tipo de cambio
+}
+\changerationale{Sin cambios.}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     
+    }
+\vspace{1cm}
+
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+
+\subsection{Contextualización}
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+
+
+\clearpage
+\section{Teorías Tradicionales: Flujos y Paridades}
+
+\textbf{¿Qué queremos acabar diciendo?}
+
+Hasta la caída del sistema de Bretton Woods (1973), el enfoque predominante sobre la determinación del tipo de cambio fue el de flujos, según el cual el tipo de cambio varía para igualar este tipo de variables:
+\begin{la}
+    \item \textbf{Paridad de Poder Adquisitivo}. El poder de compra de las monedas. Es decir, los flujos de bienes; y/o,
+    \item \textbf{Paridad de Intereses}. Las rentabilidades de inversión en activos nacionales y extranjeros. Es decir, los flujos de capitales.
+\end{la}
+
+Por ello, no es de extrañas que este enfoque se centre en el análisis de la Balanza de Pagos, como elemento equilibrador de la oferta y la demanda de divisas. Es decir, la interacción conjunta y sistemática de los flujos bi/multilaterales (demanda/oferta) de bienes y de capitales.
+
+No obstante, las teorías de ajuste surgieron en un contexto enel que los movimientos de capitales no eran significativos y, por tanto, centraron su análisis en la cuenta corriente. Esto hizo que fuese más relevante estudiar los mecanismos de ajuste bajo un régimen de tipos de cambio fijos, que era el que imperaba bajo los acuerdos de Bretton Woods (1944-1973), ya que se consideraba el más apropiado para garantizar la estabilidad del comercio internacional de bienes y servicios [\authorfont{Ver Tema 3.B.15}]. 
+
+\subsection{Paridad de Poder Adquisitivo}
+Posiblemente, la teoría más antigua de determinación de tipo de cambio es la teoría de la Paridad de Poder Adquisitivo (PPA). El origen de esta teoría se remonta a la Escuela de Salamanca.\footnote{La teoría de la paridad de poder adquisitivo es una teoría simple que sugiere que el tipo de cambio nominal entre dos países debe igualarse al ratio del nivel de precios agregado de ambos países, de tal forma que la moneda de un países tenga el mismo poder adquisitivo en ambos países. 
+
+TAYLOR y TAYLOR (2004) discuten el origen de la teoría del poder adquisitivo: Si bien el concepto ya había sido propuesto por los autores de la Escuela de Salamanca en el siglo XVI, el término \textit{paridad de poder adquisitivo} comenzó a usarse tras la Primera Guerra Mundial en el contexto del debate acerca de los tipos de cambio que debían ser fijados entre los países industrializados tras las hiperinflaciones (\href{https://doi.org/10.1257/0895330042632744}{\textit{The Purchasing Power Parity Debate}. TAYLOR y TAYLOR (2004). Journal of Economic Debate}).
+} Sin embargo, ha sido comúnmente atribuida a GUSTAV CASSEL (1918), quien señaló que una misma cesta de bienes debería costar lo mismo en todos los países, y por tanto, el tipo de cambio nominal debería depender de los niveles de precios en los diferentes países. Es decir, el tipo de cambio nominal se ajusta para igualas el poder de compra de las diferentes monedas.\footnote{CASSEL (1922) escribió: 
+
+\textit{Our willingness to pay a certain price for foreign money must ultimately and essentially be due to the fact that this money possesses a purchasing power as against commodities and services in that country. On the other hand, when we offer so and so much of our own money, we are actually offering a purchasing power as against commodities and services in our own country. Our valuation of a foreign currency in terms of our own, therefore, mainly depends on the relative purchasing power of the two currencies in their respective countries.}
+}
+
+\imagenfit{GDP_PPA.png}{Paridad del poder adquisitivo (PPA). 2014}{\href{http://www.imf.org}{International Monetary Fund (IMF), World Economic Outlook Database, October 2015}}
+
+\subsubsection{Desarrollo formal}
+La teoría de la Paridad de Poder Adquisitivo, en su verión más simple, parte de los siguientes supuestos:
+\begin{lnum}
+    \item Libre movilidad de bienes (i.e. no hay barreras al comercio); 
+    \item Mercados perfectamente competitivos (i.e. las empresas no tienen poder de mercado y, por lo tanto, no pueden recurrir a estrategias como la discriminación de precios); y,
+    \item Bienes homogéneos y comercializables. 
+\end{lnum}
+
+Dados los anteriores supuestos, por construcción lógica no existirían oportunidades de arbitraje (en el mercado de bienes y servicios), por lo que se impondría la ley del precio único. De esta forma, independientemente del Tipo de Cambio que fijemos, el Equilibrio General Competitivo (internacional), conduciría a que la Cuenta Corriente estuviese en equilibrio. 
+
+No obstante, esto resulta insuficiente ya que, como vemos, aunque nos garantiza la existencia de equilibrio por Cuenta Corriente, no nos proporciona una guía para la fijación del Tipo de Cambio (en esete marco, resulta indiferente en términos agregados, un país que sobrevalore su moneda saldría perjudicado, y viceversa, pero no se generan desequilibrios por Cuenta Corriente). 
+
+Por ello, necesitamos una aplicación más práctica que nos proporcione información acerca del TC óptimo que debemos fijar; lo que precisamente surgió de las sucesivas contrastaciones que se han ido realizando con la evidencia empírica (sin llegar aún a ser concluyentes). En la actualidad, podemos concebir dos marcos de referencia generales en la Teoría de la Paridad de Poder Adquisitivo: la Paridad absoluta y la Paridad relativa
+
+\paragraph{Paridad de Poder Adquisitivo: Absoluta}
+La paridad de poder adquisitivo absoluta establece que, una vez que se han intercambiado dos divisas, una cesta de bienes debería tener el mismo valor, de manera que los niveles de precios ajustados por el tipo de cambio sean iguales en todos los países:
+
+\eqblock{
+\begin{aligned}
+    \underset{\text{\scriptsize (nacional)}}{P}=E\;\cdot\;\underset{\text{\scriptsize (internacional)}}{P^*}\;\Longrightarrow\;\boxed{E=\frac{P}{P^*}}\;\Longrightarrow\;e=\frac{E\;\cdot\;P^*}{P}=1
+\end{aligned}
+}{Paridad de Poder Adquisitivo: Versión absoluta. Teorías tradicionales: Enfoque de flujos}
+
+Por tanto, la PPA (absoluta) establece que, dados los supuestos anteriores (esto es: en ausencia de fricciones), el precio de un bien debería ser el mismo en todo lugar. Es decir, que una unidad monetaria tenga el mismo poder de compra en Nueva York que en Hong Kong.\footnote{Por ejemplo, si el precio de un ordenador es de 500 dólares estadounidenses en Nueva York y el mismo ordenador vale 2000 dólares hongkoneses en Hong Kong, el tipo de cambio debería ser de 4 dólares hongkoneses por cada dólar estadounidense.
+} Otra conclusión es que, cuanto mayor sea el nivel de precios relativo de un país, más depreciada deberá estar su moneda para mantener la igualdad del poder adquisitivo. Es decir, la versión absoluta de la PPA implica que el Tipo de Cambio Real ($e$) es (o debe ser) siempre constante e igual a uno.
+
+Resulta obvio que la versión absoluta es poco clarificadora, ya que en la práctica los supuestos antes mencionados no se dan (existen barreras al comercio, los bienes no son homogéneos, etc.). No debe extrañarnos, por tanto, que la evidencia empírica no respalde el cumplimiento de la PPA absoluta. No obstante, fue un paso fundamental para el desarrollo de su versión alternativa: la paridad relativa.
+
+\paragraph{Paridad de Poder Adquisitivo: Relativa}
+La PPA relativa plantea que, en la medida en que las limitaciones que impiden el cumplimiento de la versión absoluta permanezcan constantes a lo largo del tiempo, los diferenciales de inflación determinarán las variaciones que habrán de realizarse sobre el Tipo de Cambio:\footnote{Una rama de la literatura iniciada por ROLL (1979) mantiene que los mercados financieros internacionales son eficientes y por eso las desviaciones de la PPA (el Tipo de Cambio Real) deben seguir un paseo aleatorio. A veces se le denomina PPA \textit{ex ante} o PPA de mercados eficientes. Parte de los supuestos de expectativas racionales (HER) y cumplimiento de la PNCI. 
+
+Siguiendo a ROLL, supongamos que los agentes forman sus expectativas racionalmente y que participan en la compra especulativa de bienes. Un agente nacional puede comprar un bien extranjero y mantenerlo un periodo. El rendimiento nominal esperado de esa estrategia, expresado en moneda extranjera será igual a la inflación esperada en el extranjero. Para expresarlo en moneda doméstica habrá que tener en cuenta los cambios esperados en el tipo de cambio y en los precios domésticos de forma que el rendimiento esperado para un residente nacional al especular con un bien extranjero será: 
+$$E[\Delta p_{t+1}^*\;|\;\Omega_t]+E[\Delta s_{t+1}\;|\;\Omega_t]-E[\Delta p_{t+1}\;|\;\Omega_t]$$
+Teniendo en cuenta la definición del tipo de cambio real (en logaritmos): 
+$$\ln{\chi_t}=s_t-p_t+p_t^*$$
+Y, obtenemos: $E[\Delta \ln{\chi_t}\;|\;\Omega_t]=0$. Lo que implica que $\chi_t$ sigue un paseo aleatorio: $\ln{\chi_{t+1}}=\ln{\chi_t}+\eta_{t+1}$, donde $\eta_{t+1}$ es un error de previsión con expectativas racionales tal que $E[\eta_{t+1}\;|\;\Omega_t]=0$. Esto significa que la mejor predicción del tipo de cambio real futuro será el tipo de cambio real actual y que ante cualquier desviación de la PPA, no se producirá un proceso de reajuste o reversión a la media. Un shock que afecte al tipo de cambio real tendrá efectos permanentes. De acuerdo con este enfoque, el cumplimiento de la PPA a largo plazo sería incompatible con la eficiencia de los mercados (otros autores no comparten esta conclusión).
+}\textsuperscript{,}\footnote{Se llega a esta expresión partiendo de la expresión del tipo de cambio real, hallándose la tasa de variación porcentual del tipo de cambio real tomando logaritmos neperianos y diferenciando con respecto al tiempo, y se iguala a cero.
+}
+
+\eqblock{
+\begin{aligned}
+    &\gamma P=\gamma E+\gamma P^*\Longrightarrow\pi=\gamma E+\pi^*\Longrightarrow\boxed{\gamma E=\pi-\pi^*}\\[2em]
+    &e=\frac{E\;\cdot\;P^*}{P}\;\Longrightarrow\;\ln{e}=\ln{E}+\ln{P^*}-\ln{P}\\[1em]
+    &\overset{\partial t}{\Longrightarrow}\;\frac{\dot e}{e}=\frac{\dot E}{E}+\frac{\dot P^*}{P^*}-\frac{\dot P}{ P}\;\Longrightarrow\;
+    \boxed{\gamma e=\gamma E+\underbrace{\gamma P^*-\gamma P}_{\equiv \quad \pi^*-\pi}=0}
+\end{aligned}
+}{Paridad de Poder Adquisitivo: Versión relativa. Teorías tradicionales: Enfoque de flujos}
+
+Así: (i) la variación porcentual del tipo de cambio va a depender de la diferencia entre las variaciones porcentuales de los precios (i.e. de los diferenciales de inflación); y, (ii) el tipo de cambio real será constante (variación nula).\footnote{La PPA relativa no requiere que el tipo de cambio real sea uno, sino tan solo que sea constante entre períodos. Por lo tanto es una hipótesis menos restrictiva que se dará siempre que los factores que causen desviaciones de la PPA absoluta sean estables en el tiempo. Si se cumple la PPA absoluta el tipo de cambio real es constante e igual a uno (i.e. se cumple también la PPA relativa), en cambio, si se cumple la PPA relativa no tiene por qué cumplirse la PPA absoluta, ya que valdría con que el tipo de cambio sea constante en cualquier nivel (aunque este sea distinto de uno). Por tanto, la PPA absoluta es un caso concreto de la PPA relativa.
+} Por tanto, con altas tasas de inflación (comparadas con el resto del mundo) el tipo de cambio nominal tenderá a subir (se depreciará la moneda nacional) para mantener constante el tipo de cambio real. 
+
+\subsubsection{Implicaciones de Política Económica}
+Por tanto, el modelo de la PPA absoulta nos indica que el determinante del Tipo de Cambio nominal ($E$) son los niveles de precios. Por el contrario, la PPA en su versión relativo, aún no ser una Teoría de determinación propiamente dicha, sí nos indica que las variaciones porcentuales de los precios serán determinantes en la variación del Tipo de Cambio nominal. Entonces, dado un Tipo de Cambio:
+\begin{la}
+    \item \textbf{No intervención}. Ante una desviación del Tipo de Cambio por un shock, si se decide no intervenir, la dinámica del comercio global, generá reversión a la media. Es decir, los flujos se reajustarán en virtud de la Ley del Precio Único y, en consecuencia, en términos relativos todo quedará igual;
+    \item \textbf{Intervención}. Por el contrario, si no se desea perder la posición ostentada, las Autoridades deberán intervenir para mantener el Tipo de Cambio en su nivel adecuado dada la naturaleza y consecuencias del shock experimentado.
+\end{la}
+
+Es decir, si el régimen cambiario es flexible, el escenario que obersvaríamos sería análogo al de la no intervención. Por tanto, ante una desviación del Tipo de Cambio por un shock, dados los determinantes del Tipo de Cambio, la dinámica de los mercados (tanto de divisas como del comercio) acabaría generando esta reversión a la media.
+
+\paragraph{Limitaciones: Evidencia Empírica}
+Precisamente esto es lo que parece más díficil de probar en la práctica: la volatilidad de los Tipos de Cambio nominales comparada con la relativa estabilidad de los índices generales de precios hace evidente que el tipo de cambio real no es constante y, por tanto, la paridad de poder adquisitivo no se cumple de manera continua, sino que se producen desviaciones considerables, al menos en el corto plazo. No obstante, esto no es suficiente para su refutación completa y por ello estudios empíricos han intentado encontrar su aplicabilidad a largo plazo, principalmente en su versión relativa.\footnote{Por ejemplo, TAYLOR y TAYLOR (2004), que apoyan únicamente la versión relativa en el largo plazo, indican que la tasa de variación del tipo de cambio nominal se explica por los diferenciales de la inflación (que es lo mismo que decir que el tipo de cambio real se mantiene constante).
+
+Una técnica econométrica interesante aplicada para estudiar estas cuestiones es examinar si el tipo de cambio nominal y el nivel relativo de precios entre dos países comparten una tendencia común, manteniendo una relación estable a largo plazo (i.e. si son variables cointegradas).
+} 
+
+Aunque existe una amplísima literatura práctica sobre la PPA, la evidencia en favor de la PPA en cualquiera de sus formas es pobre e incluso en los casos en los que el tipo de cambio muestra una tendencia a revertir hacia su valor de PPA de largo plazo tras un shock, se ha demostrado que esta reversión no es monotónica.\footnote{La evidencia empírica muestra que: 
+\begin{lnum}
+    \item Existe reversión a la media pero únicamente en el muy largo plazo;
+    \item La velocidad de ajuste hacia la PPA es extremadamente lenta; y,
+    \item Las desviaciones en el corto plazo de la PPA parecen ser grandes y volátiles.
+\end{lnum}
+
+Pocos economistas defenderían el cumplimiento continuo de la PPA, aunque algunos defienden que variantes de la PPA sirven en cierta medida como ancla o referencia del tipo de cambio real en el largo plazo (siempre en su versión relativa).
+
+} En cualquier caso, de entre las razones por las que se podría incumplir la PPA, muchos destacan: 
+\begin{lnum}
+    \item \textbf{Existencia de barreras al comercio}. El hecho de que haya barreras al comercio puede causar que el tipo de cambio se desvíe de la PPA (esto ya fue mencionado por el propio CASSEL);
+    \item \textbf{Competencia imperfecta}. En un contexto de competencia imperfecta un mismo bien puede ser ofrecido a un precio distinto en diferentes países si las empresas oferentes son oligopolísticas (\textit{pricing to market}), tal y como estudian KRUGMAN (1987) y DORNBUSCH (1987); y,
+    \item \textbf{Heterogeneidad de los bienes}. No todos los bienes son idénticos y la existencia de bienes no comercializables conlleva al incumplimiento de la teoría de la PPA. 
+\end{lnum}
+
+\paragraph{Paradoja de BALASSA-SAMUELSON}
+De hecho, muchos coinciden en que la refutación formal de esta teoría viene dada por el Modelo de BALASSA-SAMUELSON en base, precisamente, a esta última razón.\footnote{Este modelo fue propuesto de manera independiente por BALASSA (1964) y SAMUELSON (1964) y previamente por HARROD (1933).
+} 
+
+Si consideramos la existencia de bienes no comercializables (servicios) y sí comercializables (manufacturas), si la productividad crece más en el sector de las manufacturas pero el correspondiente aumento salarial se traslada a toda la economía (porque hay libertad de movimiento de factores entre sectores), los precios crecerán en exceso en el sector aislado de la competencia internacional y se producirá una apreciación del tipo de cambio real. La secuencia sería la siguiente:
+\begin{lnum}
+    \item \textbf{Productividad}. Un aumento de la productividad en el sector comercializable doméstico provocará que aumenten los salarios reales (debido al supuesto de competencia perfecta); 
+    \item \textbf{Efecto \textit{spillover}}. Como los salarios reales son iguales a su producto marginal y son los mismos para toda la economía, el aumento de productividad en el sector de las manufacturas se traslada al sector servicios (por la libre movilidad de factores entre sectores);
+    \item \textbf{Precio único}. El precio de los bienes comercializables se mantiene constante (no puede cambiar porque se cumple la ley de precio único). Sin embargo, el aumento de salarios, llevará a que las empresas del sector servicios eleven sus precios para igualarlos al nuevo coste marginal del sector que incluye costes laborales más altos; y,
+    \item \textbf{Subida del nivel de precios}. Esto da lugar a un incremento del nivel agregado de precios de la economía nacional, provocando una apreciación del tipo de cambio real de la economía doméstica.
+\end{lnum}
+
+Como vemos, este modelo permite explicar por qué los países ricos tienen unos niveles de precios y salarios superiores (mayor productividad y sector servicios con más peso), lo que explica a su vez que el Tipo de Cambio Real de los países desarrollados esté más apreciado y, en consecuencia, que se refute la Teoría de la PPA como determinante del Tipo de Cambio.\footnote{Esta explicación ha sido usada varias veces a lo largo de la historia: (i) Durante la apreciación real del Yen japonés frente al dólar, a medida que en las décadas de 1970 y 1980 Japón atrapaba en crecimiento a Estados Unidos, se presentó como una evidencia a favor de la hipótesis de BALASSA-SAMUELSON; (ii) más recientemente se ha debatido su aplicabilidad a países en rápido crecimiento como China; y, (iii) también se ha intentado aplicar este efecto para dar explicaciones tranquilizadoras según las cuales una apreciación del tipo de cambio real podría no ser preocupante para la competitividad de un país si su causa fuese realmente una mejor evolución de la productividad. 
+} 
+
+De hecho, de ser cierto, la apreciación sería meramente un efecto colateral de un fenómeno positivo (mayor productividad) y el tipo de cambio real sería función del diferencial entre la productividad relativa de cada país.\footnote{Existe poca evidencia empírica favorable a una relación entre productividad y tipo de cambio real. Esto podría ser, por ejemplo, porque no se cumple la ley de precio único de los bienes comercializables (por diferenciación del producto). Además, no tiene en cuenta que los precios relativos pueden verse afectados por factores de demanda (p.ej. a largo plazo, la creciente preferencia por los servicios puede inducir un incremento de su precio relativo).
+}
+
+\begin{specialblock}{\textbf{Big Mac Index} -- The Economist}
+    Este mismo fenómeno permite explicar algunas observaciones, aparentemente anómales, en uno de los índices de Poder Adquisitivo más conocidos del mundo.
+
+    El \href{https://www.economist.com/interactive/big-mac-index}{Índice Big Mac} es un índice publicado por la revista The Economist desde 1986, que permite comparar el poder adquisitivo de distintos países donde se vende la hamburguesa Big Mac de McDonald’s. 
+    
+    El índice basa su sistema en la teoría de la Paridad del Poder Adquisitivo, que sostiene el concepto de que el dólar debe comprar la misma cantidad de bienes o servicios en todos los países.\footnote{
+    \href{https://es.wikipedia.org/wiki/Índice_Big_Mac}{Índice Big Mac. Wikipedia.org}
+    } El bien y servicio propuesto por el índice es una hamburguesa Big Mac. De esta manera, la PPA Big Mac manifiesta el tipo de cambio que lograría significar que dicha hamburguesa costase lo mismo en los Estados Unidos y en el extranjero. Al comparar el cambio real con la PPA, se llega a observar una subvaluación o sobrevaloración de la moneda del país que se analiza. La finalidad del índice es comparar, mediante el valor referencial de venta de la hamburguesa Big Mac perteneciente a la cadena de comida rápida McDonald's, el costo de vida de los países donde se vende la hamburguesa, junto con establecer si las monedas locales están sobrevaloradas en relación al dólar estadounidense. El nombre del índice, por lo tanto, se toma a partir del nombre de la hamburguesa.
+    
+    \imagenfit{BigMac-EN2.jpg}{Índice Big Mac}{\href{https://fxssi.com/big-mac-index\#google_vignette}{The Big Mac Index in 2026}}
+
+\end{specialblock}
+
+\subsection{Balanza de Pagos: Flujos de Bienes y Capital}
+Los precios relativos de los bienes no son apropiados para explicar el Tipo de Cambio y, en última instancia, dar respuesta a los desequilibrios que existen en la fijación de éste, pero ¿por qué?
+
+Que el tipo de cambio se determina en virtud de la ley de la oferta y la demanda es una verdad irrefutable. Ahora bien, ¿es el comercio internacional de bienes y servicios el único relevante? Como hemos visto, la Teoría de la PPA entiende esta oferta y demanda como puros flujos que se derivan de las importaciones y exportaciones de bienes, que a su vez dependen del tipo de cambio. Si este fuera el caso, el equilibrio en el mercado cambiario se alcanzaría con el equilibrio en la balanza por cuenta corriente: $NX=0$ (ambos en precios nacionales), lo cual resulta un poco inusual. De hecho, McKINNON describió este tipo de enfoque como el de una economía insular en la que las transacciones internacionales estaban constituidas por mercancías, pero no por movimientos de capitales. 
+
+\subsubsection{Desarrollo formal: el Aspa Keynesiana}
+Las deficiencias observadas por las teorías anteriores resultarán en la introducción formal , en los años 60's, de un importante componente (ya anticipado por KEYNES) en el Modelo MUNDELL-FLEMING: la cuenta financiera. De esta forma, con la interacción de ambos flujos el tipo de cambio de vaciado siempre asegurará el equilibrio de la Balanza de Pagos, sin que necesariamente exista equilibrio en todas sus sub-balanzas ($CC$ y $CF$):
+
+\eqblock{
+\begin{aligned}
+    &\left(\begin{aligned}
+        &\underset{\text{\scriptsize Equilibrio: comercial $\Rightarrow$ total}}{\text{Economía insular:}} &&BP=E\left(\underbrace{\frac{E\;P^*}{P}}_{e}, \;Y,\;Y^*\right)=0\;\Longrightarrow\;E=X(e, \;Y^*)-M(e,\;Y)\\[1em]
+        &\text{Pero, } &&e=\frac{E\;P^*}{P}=1\not\Longrightarrow\;BP=0\\[1em]
+    \end{aligned}\right)\\[1em]    
+    &\Longrightarrow\hspace{2em}
+    \left.\begin{aligned}
+        &\underset{\text{\scriptsize Equilibrio: CC y CF $\Rightarrow$ total}}{\text{Flujos de capital:}}\hspace{3em}BP=\underset{\text{\scriptsize (Pueden existen desequilibrios en las subbalanzas, pero no en la BP)}}{CC\left(\frac{E\;P^*}{P},\;Y, \;Y^*\right)-CF(i,i^*)}=0\\[1em]
+        &\hspace{7em}\underbrace{(X-M)}_{\text{Cuenta Corriente}}=\underbrace{(\text{Salida}_K-\text{Entrada}_K)}_{\text{Cuenta Financiera}}
+    \end{aligned}\right.\\[2em]
+    &\text{\textbf{Aspa Keynesiana}:}\hspace{4em}\boxed{\underbrace{(X+\text{Entrada}_K)}_{\text{Oferta de divisas}}=\underbrace{(M+\text{Salida}_K)}_{\text{Demanda de divisas}}}\\[2em]
+\end{aligned}
+}{Desarrollo del equilibrio exterior. Teorías tradicionales: Enfoque de bienes}
+
+El resultado del equilibrio en el mercado cambiario vendrá dado por la interacción, como hemos dicho, de la oferta y la demanda de divisas, siendo sus determinantes: 
+\begin{la}
+    \item \textbf{Demanda}. La demanda vendrá determinada por sus importaciones y por sus salidas de capital, pues los bienes y los activos extranjeros se pagan en divisa. Por tanto, la demanda de divisas será decreciente con el tipo de cambio nominal directo, pues: si la moneda nacional se devalúa frente a la divisa ($\uparrow E$), la moneda nacional tendrá menor poder adquisitivo y, en consecuencia, los bienes y activos extranjeros se encarecerán en términos de moneda nacional, disminuyendo las importaciones y las salidas de capital (disminuyendo la demanda de divisas); y, por otro lado,
+    \item \textbf{Oferta}. La oferta de divisas que haga un país vendrá determinada por sus exportaciones y por sus entradas de capital, pues al está exportando y recibiendo capital, estos influjos se reciben en moneda nacional por parte de inversores extranjeros. Por tanto, la oferta de divisas será creciente con el tipo de cambio nominal directo, pues si la moneda nacional se devalúa frente a la divisa ($\uparrow E$), la divisa tendrá mayor poder adquisitivo, por lo que los bienes y activos nacionales se abaratarán en términos de la divisa. 
+\end{la}
+
+\imagenfit{Equilibrio_MD_ExportUE.png}{Dinámica de transición al equilibrio por crecimiento de la actividad exportadora desde Europa hacia Estados Unidos. Podemos observar como ésta altera el equilibrio desde ambos puntos de vista, el mercado americano y el europeo}{Elaboración propia}
+
+Entonces, ¿cuáles serían entonces los determinantes del tipo de cambio? Serán los determinantes de las importaciones, exportaciones y flujos de capital, es decir:
+\begin{lnum}
+    \item \textbf{Niveles relativos de renta}. A mayor renta doméstica más importaciones, a mayor renta extranjera más exportaciones. Por tanto, un incremento del nivel de renta nacional respecto al nivel de renta extranjero generaría una depreciación del tipo de cambio como consecuencia del aumento de importaciones y, por tanto, de la demanda de divisas;
+    \item \textbf{Niveles relativos de precios}. A mayor nivel de precios domésticos, más caros son los productos, y por tanto menos exportaré. Un aumento del nivel de precios de la economía nacional en relación a la economía extranjera dará lugar a menores exportaciones y, por tanto, a una depreciación del tipo de cambio como consecuencia de la menor oferta de divisas; y,
+    \item \textbf{Diferenciales de tipos de interés}. Cuanto mayor sea el tipo de interés doméstico, mayor será la entrada de capitales en mi economía, por lo que la oferta de divisas se incrementará, provocando una apreciación del tipo de cambio nominal. 
+\end{lnum}
+
+Por tanto, el tipo de cambio se determina gracias a los flujos de entrada y salida tanto de bienes y servicios como de capitales. El tipo de cambio tiene que ajustarse para garantizar el equilibrio en la BP, de tal manera que no haya variación de reservas alguna.
+
+\subsubsection{Implicaciones de Política Económica}
+Por tanto, vemos como, en este contexto el equilibrio de la Balanza de Pagos solo puede mantenerse mediante un ajuste continuo del tipo de cambio. Aunque se trata de una gran aportación, una de las primeras y más influyentes sin duda, este modelo no proporciona fundamento suficiente sobre los determinantes del Tipo de Cambio. No obstante, más allá de las Teorías de determinación del Tipo de Cambio, este enfoque resultó ser una aportación incommensurable en el ámbito del análisis y la contabilidad nacional, en la medida en que nos proporciona sistemáticamente información acerca del origen de los desequilibrios exteriores y cómo influyen sobre las variaciones del Tipo de Cambio.
+
+\paragraph{Limitaciones: Ajuste de capital limitado}
+De hecho, contrariamente a lo supuesto, se pueden producir temporalmente (o sistemáticamente) desequilibrios en la Balanza de Pagos si el tipo de cambio no coincide con el de vaciado del mercado de divisas. Por ejemplo, en el mercado anterior podemos habernos desviado temporalmente del Tipo de Cambio de vaciado de mercado por un superávit notable por Cuenta Corriente que no se viera compensado por Cuenta Financiera. De hecho, en Bretton Woods se observó muy claramente porque, al ser la movilidad de capitales limitada, el ajuste por Cuenta Financiera era limitado y el desequilibrio acababa gestionándose mediante modificaciones en reservas. 
+
+\eqblock{
+\begin{aligned}
+    &\underset{\text{\scriptsize Escesivamente valuada}}{(E<E^*)}:\quad&&\underbrace{(X+\text{Entrada}_K)}_{\text{Oferta de divisas}}-\underbrace{(M+\text{Salida}_K)}_{\text{Demanda de divisas}}&&>0\\[0.5em]
+    &\underset{\text{\scriptsize Excesivamente devaluada}}{(E>E^*)}:\quad&&\underbrace{(X+\text{Entrada}_K)}_{\text{Oferta de divisas}}-\underbrace{(M+\text{Salida}_K)}_{\text{Demanda de divisas}}&&<0\\
+\end{aligned}
+}{Desequilibrios de la Balanza de Pagos: Ajuste limitado por Cuenta Financiera. Teorías tradicionales: Enfoque de flujos}
+
+En términos formales, si la moneda nacional está excesivamente valuada ($E<E^*$), habrá un exceso de oferta de divisas (pues la moneda nacional es excesivamente cara y la divisa excesivamente barata), y se producirá un superávit comercial y/o un déficit en la cuenta financiera. Un ejemplo clásico fue Estados Unidos en los años 60's. El saldo corriente podía seguir en superávit, pero hubo fuertes salidas privadas de capital, de modo que el conjunto era deficitario y se traducía en pérdidas de oro/reservas bajo el compromiso de convertibilidad. Un ejemplo simétrico fue Alemania, que mantenían paridades que el mercado percibía como demasiado bajas, acumulaban superávits y recibían presiones de entrada. 
+
+\subsection{Paridad de Intereses: PCI y PCNI} 
+Por tanto, como vemos, la cuenta financiera iba adquiriendo una importancia cada vez mayor hacia el final del paradigma Bretton-Woods. Por tanto, algunos académicos adoptaron un enfoque sustancialmente diferente al enunciado hasta ahora.
+
+Hemos visto que tanto la Teoría de la PPA como el enfoque de flujos keynesiano otorga una importancia relevante a los flujos comerciales, pero era a los flujos de capital a los que se les atribuía la causa principal de los desequilibrios exteriores, durante los años 60's y principios de los 70's (en adelante, la importancia que adquieren dejará completamente relagado el comercio de bienes como veremos).
+
+En este contexto adquiere una importancia creciente la Teoría de la Paridad de Intereses. Esta teoría, que aplica la misma lógica del arbitraje de bienes a los activos financieros, fue popularizada inicialmente por KEYNES en su \textit{Breve tratado sobre la reforma monetaria} (1923) (en particular, el desarrollo de la Paridad Cubierta de Intereses en relación al arbitraje con \textit{forward}). En su forma más completa, los modelos de Paridad de Intereses postulan que: el tipo de cambio se ajusta para igualar la rentabilidad de inversión en activos domésticos y extranjeros, es decir, para que no existan oportunidades de arbitraje ni de especulación. Por tanto, sus fundamentales son nominales y viene determinado por el diferencial en rentabilidad de los activos ofrecido en los distintos países. 
+
+\subsubsection{Desarrollo formal}
+Partiremos de los siguientes supuestos:\footnote{Para evitar confusión recordamos la diferencia entre movilidad perfecta de capital y sustituibilidad perfecta: 
+\begin{la}
+    \item \textbf{Movilidad perfecta}. La movilidad perfecta de capital significa que la composición actual de la cartera se ajusta instantáneamente a la deseada. Esto implica que, si asumimos que no hay riesgo de impago o controles de capital futuros, etc., la Paridad Cubierta de Intereses debe prevalecer; y,
+    \item \textbf{Sustituibilidad perfecta}. La sustituibilidad perfecta es un supuesto más fuerte, ya que significa que los tenedores de bonos se muestran indiferentes acerca de la composición de su cartera (por supuesto, siempre que tengan la misma tasa de rentabilidad esperada). Por lo tanto, la sustituibilidad perfecta implica que la Paridad No Cubierta de Intereses debe prevalecer. 
+\end{la}
+}
+\begin{lnum}
+    \item Libre movilidad de capitales;
+    \item Perfecta sustituibilidad entre activos nacionales y extranjeros;
+    \item Neutralidad al riesgo cambiario; y,
+    \item Expectativas no sesgadas.
+\end{lnum}
+
+Supongamos que un inversor, que posee una determinada cantidad de su moneda nacional, desea invertir en mercado financiero. Se enfrenta a dos opciones:
+\begin{la}
+    \item \textbf{Activo nacional}. Invertir 1 u.m. en un activo nacional (denominado en moneda nacional), con lo que obtendría $(1+i)$ de rendimiento bruto; o,
+    \item \textbf{Activo extranjero}. Invertir 1 u.m. en un activo extranjero (denominado en divisa), con lo que obtendría 
+    $$(1+i^*)\cdot \frac{E_{t+1}}{E_t}$$ 
+    de rendimiento bruto.\footnote{¿Por qué? Para realizar la segunda inversión, el inversor deberá comprar, en primer lugar, moneda extranjera hoy al tipo spot actual: $\underbrace{XXX}_{\text{divisa}}\;/\;\underbrace{YYY}_{\text{nacional}}\;\Rightarrow\;1^{YYY}_\text{u.m}=E_t\;1^{XXX}_\text{u.m}\;\Rightarrow\;\frac{1}{E_t}$. Después, intertirá esa cantidad en moneda extranjera en el país extranjero, con lo que se obtendría $(1+i_t^*)\frac{1}{E_t}$ extranjeras. Y, por último, convertir en moneda nacional los ingresos al tipo de cambio spot futuro, con lo que se obtendría $(1+i_t^*)\frac{E_{t+1}}{E_t}$.
+    }
+\end{la}
+
+Ahora bien, introduciendo los supuestos de libre movilidad de capitales y perfecta sustituibilidad entre activos, obtenemos los siguientes rendimientos esperados e, igualando, la condición de paridad de intereses:\footnote{Para algunos autores (véase HELLIWELL y BOOTHE, 1983) la condición de paridad cubierta de intereses se convierte en sí misma en una teoría de la determinación del tipo de cambio (el modelo de paridad de intereses, donde la paridad de intereses puede expresarse en términos nominales o reales), si se supone que el tipo de cambio a plazo es un predictor exacto e imparcial del tipo de cambio al contado futuro: de hecho, en este caso, bastaría con encontrar los determinantes del tipo de cambio al contado futuro esperado para poder determinar, dadas las tasas de interés, el tipo de cambio al contado actual (GANDOLFO, pág. 337).
+}
+
+\eqblock{
+\begin{aligned}
+    &\underset{\text{\scriptsize Principal unitario}}{\text{Activo nacional:}}&&\Pi_{t+1}\;|\;\Omega_t=(1+i) \\[0.5em]
+    &\underset{\text{\scriptsize Principal unitario en moneda nacional}}{\text{Activo extranjero:}}&&\Pi_{t+1}^*=(1+i^*)\frac{E_{t+1}}{E_t} \\[0.5em]
+    &\overset{\text{\scriptsize Por construcción lógica}}{\underset{
+    \left(\substack{
+    \text{\scriptsize Libre movilidad } +\\
+    \text{\scriptsize Perfecta sustituibilidad}
+    }\right)}{\Longrightarrow}}&&\underbrace{\boxed{(1+i_t)=(1+i_t^*)\frac{E_{t+1}}{E_t}}}_{\Pi_{t+1}^*=\Pi_{t+1}}
+\end{aligned}
+}{Paridad de Intereses: Condición de ausencia de oportunidades de arbitraje. Teorías tradicionales: Enfoque de flujos}
+
+Si suponemos PERFECTA certidumbre sobre la evolución futura de los TC, las valoraciones se realizarían atendiendo a las depreciaciones y/o apreciaciones que experimente la moneda nacional y únicamente se considerarán más o menos rentables en base a esta información. Dicho de otra forma:
+\begin{la}
+    \item \textbf{Divisa extranjera}. Si el inversor sabe que la moneda nacional experimentará una depreciación frente a otra divisa, pero los rendimientos de los activos denominados en esa divisa aún así ofrecen mejor rendimiento, el inversor (y el mercado) invertirá en dichos activos hasta que se cumpla la paridad de intereses. De la misma forma, si el inversor sabe que la moneda nacional experimentará una apreciación frente a otra divisa, pero los rendimientos de los activos denominados en esa divisa aún así ofrecen mejor rendimiento, el inversor (y el mercado) invertirá en dichos activos hasta que se cumpla la paridad de intereses;
+    \item \textbf{Moneda nacional}. Si por el contrario son los activos denominados en moneda nacional los que ofrecen mejores rendimientos, los influjos de capitales impondrán el cumplimiento de la paridad de intereses.
+\end{la}
+
+Sin embargo, la valoración no se realiza en perfecta certidumbre ya que se enfrenta un riesgo evidente: el riesgo cambiario. Por tanto falta un elemento clave para cerrar el círculo de la paridad de intereses: no sabemos cuál será el tipo de cambio spot en el futuro. ¿Cómo podemos probar, entonces, el cumplimiento de esta condición? Para responder a esto, debemos primero introducir dos posibles escenarios.
+
+\paragraph{Paridad Cubierta de Intereses: \textit{Forward}}
+Si el inversor desea evitar el riesgo cambiario comprará un forward sobre el tipo de cambio futuro (\textit{foreign exchange forward}). De esta forma, en el período $t+1$ podrá convertir su retorno en moneda nacional a un precio (TC) predeterminado, $E_{t+1}^f$:\footnote{Nótese que, si los mercados creen con fuerza en la estabilidad cambiaria, podría incluso darse el supuesto extremo en el que:
+$$\text{Si, }\:E^f_{t+1}=E_t\;\Longrightarrow(i-i^*)=\frac{E_{t+1}^f-E_t}{E_t}=0\;\Longrightarrow\;(1+i)=(1+i^*)\underset{(=1)}{\frac{E_{t+1}^f}{E_t}}=(1+i^*)$$
+}
+
+\eqblock{
+\begin{aligned}
+    &\hspace{8em}\left(\begin{aligned}
+        &\left.\begin{aligned}
+            &\underset{\text{\scriptsize Principal unitario en moneda nacional}}{\text{Activo extranjero}}\\
+            &\Pi_{t+1}^*=(1+i^*)\frac{F_t^{t+1}}{E_t}
+        \end{aligned}\hspace{2em}\right|
+        &\begin{aligned}
+            &\underset{\text{\scriptsize Principal unitario}}{\text{Activo nacional}}\\[1em]
+            &\Pi_{t+1}=(1+i)
+        \end{aligned}
+    \end{aligned}\right)\\[2em]
+    &\begin{aligned}
+        &\overset{\text{\scriptsize Paridad Cubierta de Intereses}}{\Longrightarrow}&&(1+i_t)=(1+i_t^*)\frac{F_t^{t+1}}{E_t}\\[0.5em]
+        &\underset{\substack{\text{\scriptsize Aproximando por}\\\text{\scriptsize serie de Taylor}}}{\Longrightarrow}&&\boxed{(i_t-i_t^*)\simeq{\frac{F_t^{t+1}-E_t}{E_t}}}\;\underset{\text{\scriptsize $\text{MF}_t=\frac{F_t^{t+1}-E_t}{E_t}$}}{\Longrightarrow}\;
+        \begin{cases}
+            \text{MF}_t>0\Longrightarrow\;\underset{\text{\scriptsize Se espera depreciación de la moneda en el futuro}}{\text{Divisa cotiza con prima}}\\[0.5em]
+            \text{MF}_t<0\Longrightarrow\;\underset{\text{\scriptsize Se espera apreciación de la moneda en el futuro}}{\text{Divisa cotiza con descuento}}\\[0.5em]
+        \end{cases}
+    \end{aligned}
+\end{aligned}
+}{Paridad Cubierta de Intereses: Margen forward. Teorías tradicionales: Enfoque de flujos}
+
+Cuando estamos ante este escenario, hablamos de Paridad Cubierta de Intereses (PCI) ya que el inversor ha cerrado en el mercado spot tanto su compra de divisa extranjera al TC corriente como su compra futura de moneda nacional al TC previsto a futuro.
+
+\paragraph{Paridad No Cubierta de Intereses: \textit{Especulación}}
+Si el inversor está dispuesto a asumir el riesgo cambiario, entonces convertirá su retorno en moneda nacional al tipo de cambio spot vigente cuando venza la inversión, es decir, $E_{t+1}$. Como no conoce con certidumbre este tipo de cambio, para calcular la rentabilidad futura de su inversión formará sus expectativas sobre el tipo de cambio futro en base a la HER, $E[E_{t+1}\;|\;\Omega_t]$, en el momento actual:\footnote{Nótese que, con expectativas racionales sobre la estabilidad cambiaria, podría darse el supuesto extremo en el que:
+$$\text{Si, }\:E[E_{t+1}\;|\;\Omega_t]=E_t\;\Longrightarrow(i-i^*)=\frac{E[E_{t+1}\;|\;\Omega_t]-E_t}{E_t}=0\;\Longrightarrow\;(1+i)=(1+i^*)\underset{(=1)}{\frac{E[E_{t+1}\;|\;\Omega_t]}{E_t}}=(1+i^*)$$
+}
+
+\eqblock{
+\begin{aligned}
+    &\hspace{8em}\left(\begin{aligned}
+        &\left.\begin{aligned}
+            &\underset{\text{\scriptsize Principal unitario en moneda nacional}}{\text{Activo extranjero}}\\
+            &E[\Pi_{t+1}^*\;|\;\Omega_t]=(1+i^*)\frac{E[E_{t+1}\;|\;\Omega_t]}{E_t}
+        \end{aligned}\hspace{2em}\right|
+        &\begin{aligned}
+            &\underset{\text{\scriptsize Principal unitario}}{\text{Activo nacional}}\\[1em]
+            &\Pi_{t+1}=(1+i)
+        \end{aligned}
+    \end{aligned}\right)\\[2em]
+    &\begin{aligned}
+        &\overset{\text{\scriptsize Paridad Cubierta de Intereses}}{\Longrightarrow}&&(1+i_t)=(1+i_t^*)\frac{E[E_{t+1}\;|\;\Omega_t]}{E_t}\\[0.5em]
+        &\underset{\substack{\text{\scriptsize Aproximando por}\\\text{\scriptsize serie de Taylor}}}{\Longrightarrow}&&\boxed{(i_t-i_t^*)\simeq\frac{E[E_{t+1}\;|\;\Omega_t]-E_t}{E_t}}\;\underset{\text{\scriptsize $\text{TDE}_t=\frac{E[E_{t+1}\;|\;\Omega_t]-E_t}{E_t}$}}{\Longrightarrow}\;
+        \begin{cases}
+            \text{TDE}_t>0\Longrightarrow\;\text{ Depreciación esperada}\\[0.5em]
+            \text{TDE}_t<0\Longrightarrow\;\text{Apreciación esperada}
+        \end{cases}
+    \end{aligned}
+\end{aligned}
+}{Paridad Cubierta de Intereses: Margen forward. Teorías tradicionales: Enfoque de flujos}
+
+Cuando estamos ante este escenario, hablamos de Paridad No Cubierta de Intereses (PNCI, alguna ocasión: Paridad Descubierta de Intereses, PDI) ya que el inversor cierra la compra spot al Tipo de Cambio actual siempre, teniendo presente sus expectativas sobre la evolución del TC a la hora de calcular la rentabilidad de su inversión.
+
+\subsubsection{Implicaciones de Política Económica}
+Ahora que conocemos las dos alternativas de las que dispone el inversor para hacer frente al riesgo cambiario cabe recordar uno de los supuestos de partida: la neutralidad al riesgo. 
+
+Como ambas se forman en base al mismo valor fundamental y a través del mismo mecanismo racional (en el primer caso por el mercado y en el segundo por el agente) cabe esperar que arrojen resultados muy parecidos. Por tanto, a este respecto, al ser un agente neutral al riesgo, optará por escoger la alternativa que le resulta más beneficiosa. 
+
+Entonces, habida cuenta de lo anterior, nos quedaría que \textbf{los determinantes últimos del tipo de cambio son el tipo de interés nacional y el tipo de interés extranjero}. Por tanto, podemos expresar el diferencial de los tipos de interés:\footnote{$(1+i)=(1+i^*)\frac{E_{t+1}}{E_t}\Longrightarrow\frac{(1+i)}{(1+i^*)}=\frac{E_{t+1}}{E_t}\overset{\frac{(1+i)}{(1+i^*)}\simeq1+i-i^*}{\Longrightarrow}1+i-1^*\simeq\frac{E_{t+1}}{E_t}\Longrightarrow i-i^*\simeq\frac{E_{t+1}}{E_t}-1\Longrightarrow i-i^*\simeq \frac{E_{t+1}-E_t}{E_t}$
+} 
+
+\eqblock{
+\begin{aligned}
+    (1+i_t)=(1+i_t^*)\frac{E_{t+1}}{E_t}\;\Longrightarrow\;\boxed{(i-i^*)\simeq \frac{E_{t+1}-E_t}{E_t}\Longrightarrow\;i=i^*+E[\text{TDE}_{t}\;|\;\Omega_t]}
+\end{aligned}
+}{Paridad Cubierta de Intereses: Diferencial. Teorías tradicionales: Enfoque de flujos}
+
+De este modo, un aumento en el tipo de interés nacional o una disminución del tipo de interés extranjero causarán un aumento en la tasa de depreciación esperada, ya que entrarán capitales en nuestro país en busca de mayor rentabilidad, con lo que la moneda se apreciará hoy ($\downarrow E_t$) y aumentará la tasa de depreciación esperada hasta que se cumpla la paridad y se eliminen las rentabilidades extraordinarias. Por el contrario, una disminución en el tipo de interés nacional o un aumento del tipo de interés extranjero causarán una disminución en la tasa de depreciación esperada, ya que saldrán capitales hacia el extranjero en busca de mayor rentabilidad, con lo que la moneda se depreciará hoy ($\uparrow E_t$) y caerá la tasa de depreciación esperada hasta que se cumpla la paridad y se eliminen las rentabilidades extraordinarias.
+
+\paragraph{Limitaciones: Evidencia Empírica}
+No obstante, la contrastación empírica de este desarrollo no resulta del todo concluyente. Por lo que respecta a las paridades:
+\begin{la}
+    \item \textbf{Paridad Cubierta de Intereses}. La PCI se cumple continuamente con mucha precisión, aunque existen incumplimientos puntuales relacionados con la ruptura del supuesto de libre movilidad de capitales o la existencia de comisiones y/o costes de transacción: y,
+    \item \textbf{Paridad No Cubierta de Intereses}. La PNCI no se cumple, principalmente porque no se cumple el supuesto inicial de neutralidad al riesgo de los agentes. De manera que, al ser los agentes aversos al riesgo, solo lo asumirán a cambio de una prima, es decir, si la rentabilidad esperada que reciban de los activos extranjeros es igual a la rentabilidad esperada de los activos nacionales más una prima.\footnote{Para tener en consideración la prima de riesgo ($\delta$), la incluiríamos en la ecuación de la siguiente manera: $(1+i)=(1+i^*)\frac{E[E_{t+1}\;|\;\Omega_t]}{E_t}+\delta\;\Longrightarrow\;i\simeq i^*+\frac{E[E_{t+1}\;|\;\Omega_t]-E_t}{E_t}+\delta$
+    } Las divergencias respecto de la PNCI podrían reflejar por tanto esta prima de riesgo. 
+\end{la}
+
+Ahora bien, recordemos que, dadas las definiciones de PCI y PNCI dentro del marco axiomático de esta Teoría, lo que esperaríamos es que la imposibilidad de realir ni arbitraje ni movimientos especulativos surja, directamente, de la buena predicción que supone para el Tipo de Cambio futuro el Margen Forward.\footnote{Como hemos dicho, si los agentes son neutrales al riesgo y sus expectativas no están sesgada, entonces cabe esperar que el Margen Forward sea equivalente a la Tasa de depreciación esperada, pues sino, los agentes explotarían esta misma diferencia para ganar dinero y, por tanto, reconducirlo a su cumplimiento continuo.
+} Y este resultado no se valida empíricamente.
+
+La evidencia muestra que el tipo de cambio forward es un mal predictor del Tipo de Cambio futuro (no sólo no acierta la magnitud del cambio, sino que tiende a fallar su dirección). Aunque se trata de uno de los resultados más sobresalientes de esta rama de la literatura, la conocida \textbf{paradoja del margen forward}, resulta ser su caballo de Troya, puesto que atenta contra los mismos fundamentos axiomáticos del modelo. 
+
+De hecho, se ha observado que frecuentemente las monedas con tasas de interés altas (que deberían depreciarse) se aprecian, lo que genera rentabilidades contrarias a lo esperado (contradice PCI) y, por otro lado, la divisa con un tipo de interés más alto tiende a apreciarse (contradice PNCI). Además, algunos estudios estiman que las divergencias son muchas veces mayores que una hipotética prima de riesgo, por lo que en este caso las divergencias podrían deberse a expectativas sesgadas. 
+
+\clearpage
+\section{Teoría Moderna: Enfoque de activos}
+Hasta aquí hemos visto los desarrollos relativos a la fijación del Tipo de Cambio sobre la base de las variables flujos. Sin embargo, la naturaleza de este enfoque es criticable en su conjunto. 
+
+Al prestar únicamente atención a los movimientos coyunturales (flujos), no ofrece ninguna visión relativa al equilibrio en el stock. ¿Qué significa esto? Por ejemplo un aumento del diferencial del tipo de interés va a generar una entrada de capitales en mi economía. Dado que solo estamos considerando el flujo, si este diferencial permaneciera constante, el influjo de capitales sería constante y permanente. 
+
+Resulta evidente que esta no es la forma de proceder de los inversores: en todo caso, habría un ajuste de posiciones de inversión que finalizaría cuando se hubiese ajustado al nivel deseado. La única forma plausible de que el influjo fuese perpetuo es que el diferencial fuese creciente en el tiempo, modificando la composición óptima de los agentes en cada periodo y conduciéndolos a seguir inyectando capital en la economía (sin entrar a valorar el riesgo asociado a esta operación, que evidentemente crece en proporción al diferencial , cuánto menos). 
+
+Ante estas limitaciones surge el denominado enfoque de activos, que prestará atención al ajuste en la composición de la cartera de activos de los agentes, lo que viene a ser lo mismo a la Posición de Inversión Internacional que tanta importancia ha adquirido tanto a nivel práctico como a nivel institucional (6MBP del FMI). Más aún tras la ruptura del Sistema Monetario Internacional bajo el paradigma Bretton Woods en 1973. 
+
+Sin pérdida de generalidad, podemos decir que el enfoque de activos pretende probar que el determinante último (el fundamental) del tipo de cambio es, o bien el precio relativo del dinero (enfoque monetario), o bien el precio relativo de los bonos (enfoque de cartera). 
+
+Estas dos vertientes difieren únicamente en lo que respecta al grado de sustituibilidad entre localización de activos:\footnote{Dado que las clasificaciones son en gran medida una cuestión de conveniencia (y quizá de gusto personal), hemos optado por seguir la dicotomía basada en la perfecta o imperfecta sustituibilidad entre los bonos nacionales y extranjeros, dentro del supuesto común de perfecta movilidad de capitales (GANDOLFO, pág. 337).
+
+Para evitar confusión recordamos la diferencia entre movilidad perfecta de capital y sustituibilidad perfecta: 
+\begin{la}
+    \item \textbf{Movilidad perfecta}. La movilidad perfecta de capital significa que, dado un conjunto de activos disponibles y reglas vigentes, cualquier inversor puede recomponer su cartera sin costes, sin cuantías limitantes y sin retrasos (no hay controles, márgenes, restricciones de balance, costes de transacción relevantes). En ese entorno, si existiera una desviación de la Paridad Cubierta de Intereses (PCI), es decir, si el rendimiento doméstico $1+i_t$ no coincidiera con el rendimiento de una inversión extranjera cubierta $(1+i_t^*)F_t^{t+1}/E_t$, aparecería un arbitraje puro y sin riesgo. Podría pedir prestado en el activo de menor retorno, prestar en el de mayor retorno y cubrir el tipo de cambio con un forward eliminando toda incertidumbre. Con movilidad perfecta, ese arbitraje puede hacerse a escala y de forma inmediata, de modo que la demanda/oferta en \textit{spot}, \textit{forward} y activos ajusta hasta que el diferencial desaparece. 
+    
+    Por eso la movilidad perfecta es suficiente para que la Paridad Cubierta de Intereses se cumpla ya que es, esencialmente, una condición de no-arbitraje contemporánea en mercados integrados.
+    \item \textbf{Sustituibilidad perfecta}. La sustituibilidad perfecta es más fuerte porque no habla de la facilidad de mover capital hoy, sino de cómo valoran los agentes el riesgo de activos que no son idénticos. 
+    
+    Decir que dos activos (un bono doméstico y uno extranjero sin cobertura) son sustitutos perfectos equivale a decir que los inversores son indiferentes a cuál mantener siempre que tengan la misma rentabilidad esperada en moneda común: no exigen ninguna prima por riesgo cambiario, riesgo de liquidez o riesgo de peso de cartera. Formalmente, la prima de riesgo es cero y no depende del estado. 
+    
+    En ese caso, el único motivo para preferir un activo a otro sería su rentabilidad esperada, así que, si el bono doméstico ofreciera un rendimiento esperado mayor que el bono extranjero no cubierto, todos querrían moverse al primero, y viceversa, hasta igualarlos. 
+    
+    Esa igualación en expectativas es exactamente la Paridad No Cubierta de Intereses (PNCI): $1+i_t=(1+i_t^*)\;\mathbb E[E_{t+1}\;|\;\Omega_t]/E_t$ (o su aproximación $i_t-i_t^*\approx \mathbb E[\Delta E_{t+1}]\;|\;\Omega_t]=\text{TDE}_t$). Sin sustituibilidad perfecta (aversión al riesgo, primas variables, restricciones de balance), puede existir una prima de riesgo que haga que la igualdad no se sostenga aunque haya movilidad perfecta. Por todo esto, la sustituibilidad perfecta implica el cumplimiento de la PNCI.
+\end{la}
+} 
+\begin{la}
+    \item \textbf{Enfoque monteario}.\footnote{Este enfoque es también estudiado en el [\authorfont{Ver Tema 3.B.12}] para el caso de tipos de cambio fijos. 
+    
+    Bajo este supuesto, el enfoque monetario determina los efectos de (cambios en) el stock de dinero (que es una variable endógena) en la balanza de pagos y viceversa. Si asumimos tipos de cambio flexibles, el mismo enfoque (tomando el stock de dinero como una variable exógena) se convierte en una teoría de determinación del tipo de cambio.
+    } El enfoque monetario supone perfecta sustituibilidad entre bonos domésticos y extranjeros. Con esto, podemos homogeneizar el mercado de activos en un único mercado y, en consecuencia, resolver el Tipo de Cambio de equilibrio únicamente para el mercado del dinero; y,
+    \item \textbf{Enfoque de cartera}. En el enfoque de cartera, los bonos domésticos y los extranjeros son sustitutos imperfectos y por lo tanto deberemos resolver el equilibrio en los diferentes mercados, dando lugar a una dinámica hacia el equilibrio de la que emergerá la \textit{prima de riego} asociada a los activos extranjeros.
+\end{la}
+
+\subsection{Enfoque de precios: Equilibrio en el Mercado de Dinero}
+Veámos en primer lugar el enfoque monetario. Como venimos diciendo, dada la perfecta sustituibilidad de activos extranjeros y nacionales, homogeneizando el mercado de activos en uno único y, por tanto, en un escenario dual: mercado monetario y mercado financiero. Si resolvemos el Tipo de Cambio de equilibrio para uno de ellos, en cumplimiento de la Ley de Walras quedará resuelto para todos.
+
+\subsubsection{Precios flexibles: FRENKEL y MUSSA (1976)}
+Siguiendo el modelo formulado por FRENKEL y MUSSA (1976), consideremos un escenario a largo plazo, con precios y salarios perfectamente flexibles. Supongamos que se cumple:
+\begin{lnum}
+    \item \textbf{Paridad de Poder Adquisitivo (absoluta $\rightarrow$ relativa)}. La condición de paridad de poder adquisitivo por: (i) libre movilidad de bienes (ausencia de barreras comerciales); (ii) mercados perfectamente competetivos (las empresas no tienen poder de mercado y no pueden recurrir a estrategias como la disriminación de precios); y, (iii) existe un único bien homogéneo y comercializable; y,
+    \item \textbf{Paridad de Intereses}. La condición de paridad de intereses porque: (iv) existe libre movilidad de capitales; (v) perfecta sustituibilidad entre activos nacionales y extranjeros;\footnote{La macroeconomía de una economía abierta se centra en seis mercados: bienes, trabajo, dinero doméstico, dinero extranjero, bonos domésticos y bonos extranjeros. 
+    
+    Se puede interpretar el enfoque monetario de precios flexibles implícitamente como un enfoque de equilibrio general en el que todos los mercados están en equilibrio. Precios y salarios flexibles vacían los mercados de bienes y trabajo. El tipo de cambio flexible equilibra el mercado de divisas (lo que nos permite unificar el mercado de dinero), y la sustituibilidad perfecta implica que bonos nacionales y extranjeros sean iguales (lo que nos permite unificar el mercado de bonos), de forma que si se alcanza el equilibrio en el mercado de dinero, tenemos $n−1$ mercados en equilibrio y, por la ley de WALRAS, el $n$-ésimo mercado deberá también vaciarse. De este modo, como suponemos el cumplimiento continuo de la PPA, podemos concentrarnos sólo en el mercado de dinero y sólo es necesario fijarse en los determinantes del equilibrio en el mercado de dinero.
+    } (vi) neutralidad al riesgo de los agentes; y, (vii) expectativas no sesgadas.
+\end{lnum} 
+
+Los precios se determina conforme a la oferta y la demanda de dinero (Teoría Cuantitativa del Dinero), y este precio determina a su vez el tipo de cambio nominal a través de la PPA, por lo que la oferta y la demanda de dinero serán las que determinen el tipo de cambio nominal. Si consideramos que partimos del equilibrio en el mercado monetario y que la demanda de saldos reales depende positivamente del nivel de la renta real y negativamente del tipo de interés. Podemos desarrollar la ecuación del enfoque de precios de la siguiente forma:\footnote{Así, la función de demanda de dinero muestra las siguientes elasticidades: 
+$$
+\begin{aligned}
+    \varepsilon_{(M/P)^d,Y}=\frac{\partial (M/P)^d}{\partial Y}\frac{Y}{(M/P)^d}=k\;\cdot Y^{k-1}\;e^{-(h\cdot i)}\frac{Y}{(M/P)^d}=k\cdot Y^{k-1}\cdot e^{-(h\cdot i)}\frac{Y}{Y^k\cdot e^{-(h\cdot i)}}=k\\[0.5em]
+    \varepsilon_{(M/P)^d,i}=\frac{\partial (M/P)^d}{\partial i}\frac{i}{(M/P)^d}=k\;\cdot Y^{k-1}\;e^{-(h\cdot i)}\frac{i}{(M/P)^d}=k\cdot Y^{k-1}\cdot e^{-(h\cdot i)}\frac{i}{Y^k\cdot e^{-(h\cdot i)}}=-(h\cdot i)
+\end{aligned}$$
+}
+
+\eqblock{
+\begin{aligned}
+    &\text{Paso (1). Expandimos ecuaciones}\\[1em]
+    &\left(\begin{aligned}
+        &\overbrace{\left(\frac{M}{P}\right)^s=\left(\frac{M}{P}\right)^d}^{\text{\scriptsize Equilibrio mercado monetario}}\;\Longrightarrow\;\boxed{\left(\frac{M}{P}\right)^s=\overbrace{Y^k\;\cdot e^{-(h\cdot i)}}^{\text{\scriptsize$\equiv (M/P)^d$. Función demanda Cambridge}}}\\[0.5em]
+        &\underset{\substack{\text{\scriptsize Tomamos ($\ln$)}\\\text{\scriptsize sobre equilibrio}\\\text{\scriptsize anterior}}}{\Longrightarrow}
+        \begin{cases}
+            m-p=k\cdot y-h\cdot i\\[0.5em]
+            m^*-p^*=k\cdot y^*-h\cdot i^*
+        \end{cases}\Longrightarrow
+        \begin{cases}
+        p=m-k\cdot y-h\cdot i\\[0.5em]
+        p=m-k\cdot y^*-h\cdot i^*
+        \end{cases}\\[0.5em]
+        &\underset{\substack{\text{\scriptsize Igualamos y}\\\text{\scriptsize resolvemos}}}{\Longrightarrow}\;\boxed{p-p^*=(m-m^*)-k\cdot (y-y^*)+h\cdot (i-i^*)}
+    \end{aligned}\right)\\[1em]
+    &\text{Paso (2). Imponemos supuestos}\\[0.5em]
+    &\left(\begin{aligned}
+        &\underset{\text{\scriptsize Supuesto, se cumple}}{\text{Como PPA (absoluta),}}\;E=\frac{P}{P^*}:\quad\underset{\text{\scriptsize Tomamos ($\ln$)}}{\Rightarrow}\;\ln{E}=p-p^*\\[1em]
+        &\underset{\text{\scriptsize Modelo monetario determinación TC}}{\text{Ecuación Baseline:}}\qquad \boxed{\ln{E}=(m-m^*)-k\cdot (y-y^*)+h\cdot (i-i^*)}\\[1em]
+        &\over\underset{\text{\scriptsize Supuestos, se cumplen}}{\text{Como PNCI y PPA (relativa)}}\;\;
+        \left\{\begin{aligned}
+            &\text{PNCI:} &&\text{TDE}_t=\gamma E[E_{t+1}\;|\;\Omega_t]\simeq (i-i^*)\\[0.5em]
+            &\text{PPA (relativa):} &&\text{TDE}_t=\gamma E[E_{t+1}\;|\;\Omega_t]\simeq (\pi-\pi^*)
+        \end{aligned}\right.\\[0.5em]
+        &\Rightarrow\;
+        \left.\begin{aligned}
+            &\gamma E[E_{t+1}\;|\;\Omega_t]\simeq (i-i^*)\\[0.5em]
+            &\gamma E[E_{t+1}\;|\;\Omega_t]\simeq (\pi-\pi^*)
+        \end{aligned}\right\}\;\Rightarrow\;(\pi-\pi^*)=(i-i^*)\\[2em]
+    \end{aligned}\right)\\[2em]
+    &\underset{\text{\scriptsize Modelo monetario determinación TC}}{\text{Ecuación completa:}}\qquad \boxed{\ln{E}=(m-m^*)-k\cdot (y-y^*)+h\cdot (\pi-\pi^*)}
+\end{aligned}
+}{Ecuación básica del Enfoque Monetario: Precios flexibles (largo plazo). Teorías modernas: Enfoque de stocks}
+
+Por tanto, el enfoque presentado establece una relación entre el Tipo de Cambio y una serie de diferenciales ponderadas, en algunos casos, por sus elasticidades en sus funciones de origen:
+\begin{lnum}
+    \item \textbf{Diferencial de agregados monetarios relativos}. El primer componente es la oferta monetaria nacional en relación a la extranjera ($m-m^*$). Una mayor oferta monetaria relativa impacta doblemente en el Tipo de Cambio: (i) introduce más oferta monetaria nacional, ahora relativamente más abundante que la divisa; y, (ii) efectos de segunda vuelta aumentando el diferencial de inflación, lo que provoca una depreciación del tipo de cambio (por la PPA);
+    \item \textbf{Diferencial de rentas/producción relativa}. La renta nacional en relación a la extranjera ($y-y^*$). Una mayor renta relativa provoca una mayor demanda de dinero y, por tanto, un déficit de saldos reales. Para recomponer el equilibrio (sin intervención, oferta monetaria nominal se mantiene constante), se experimentará una disminución del nivel de precios lo que provocará una apreciación (por la PPA, absoluta y relativa);
+    $$
+    \begin{aligned}
+        \bar M^s\;(+)\;\uparrow M^d\;\Rightarrow\;\left\frac{M}{P}\right)^s<M^d\;\text{(genera un déficit de Saldos Reales)}\\[0.5em]
+        \Rightarrow\;\downarrow P\;\Longrightarrow\;\left(\frac{M}{\downarrow \;P}\right)^s=\;\uparrow Y^k\;e^{-(h\cdot i)}
+    \end{aligned}$$
+    \item \textbf{Diferencial de tipos de interés relativos}. La relación del Tipo de interés nacional frenta al extranjero ($i−i^*$) implica que un mayor tipo de interés relativo reduce la demanda de dinero generando un exceso de saldos reales. Para restaurar el equilibrio, se experimentará un incremento de precios que dará lugar a una depreciación: 
+    $$\left(\frac{M}{\uparrow \;P}\right)^s=\; Y^k\;e^{-(h\cdot\;\; \uparrow \;i)}\;\Longrightarrow\;\downarrow(M/P)^d$$
+    Bajo este enfoque, un diferencial creciente de intereses irá asociado a una moneda cada vez más débil.\footnote{No obstante, esta predicción es contraria a la evidencia salvo durante episodios de inflación excepcionalmente alta.
+    } El motivo último es que el diferencial de interés surge de un diferencial en la inflación (vía relación de FISHER). De modo que cuanto más rápido pierde valor una moneda en relación a una cesta real de bienes ($\uparrow(P/P^*)$), más rápido se depreciará también respecto a otra divisa ($\uparrow E$); y,
+    \item \textbf{Diferencial de inflaciones relativas}. Por último, y análogo al anterior, una mayor inflación relativa provocará una depreciación del tipo de cambio.\footnote{
+    La ecuación $\pi-\pi^*=i-i^*$, expresa la relación a largo plazo entre las tasas de inflación y los tipos de interés que necesitamos para explicar las predicciones del enfoque monetario acerca de cómo influyen los tipos de interés en los tipos de cambio. La ecuación nos dice que si todo lo demás permanece constante, un aumento de la tasa de inflación esperada en un país origina a la larga un incremento igual de los tipos de interés que ofrecen los depósitos denominados en su moneda. Análogamente, una disminución de la tasa de inflación esperada terminará por dar lugar a una reducción de los tipos de interés. Esta relación a largo plazo entre la tasa de inflación y los tipos de interés se conoce como efecto FISHER.
+
+    Este efecto implica, por ejemplo, que si la tasa de inflación de Estados Unidos pasa de un nivel constante del 5\% anual a un nivel constante del 10\% anual, los tipos de interés del dólar se terminarán por acomodar al nuevo nivel de la tasa de inflación, con un incremento en 5 puntos porcentuales anuales a partir de su nivel inicial.
+
+    Nótese que la igualdad $\pi-\pi^*=i-i^*$ implica, por la ecuación de FISHER, que el tipo de cambio real es igual entre países (para evitar la posibilidad de arbitraje):
+    $$
+    \begin{aligned}
+        \left.\begin{aligned}
+            &\pi-\pi^*=i-i^*\\[0.5em]
+            &1+i=(1+r)(1+\pi)
+        \end{aligned}\right\}\;\Longrightarrow\;r=r^*
+    \end{aligned}$$
+
+    Estas variaciones dejarían inalterada la tasa de rentabilidad real de los depósitos en dólares, expresada en términos de bienes y servicios de los Estados Unidos. Fuente: Krugman, P. R., Obstfeld, M. \& Melitz, M. J. (2016). Economía internacional: Teoría y política (10ª edición). Pearson. (pág. 420) 
+
+    \textbf{Nota}: En este libro trabajan con una versión esperada de la PPA relativa, de modo que , si se cumple la PPA relativa, los agentes del mercado también esperarán que ésta se cumpla, por lo que se pueden sustituir las tasas de depreciación e inflación reales por los valores que se espera que determine el mercado.
+    }
+\end{lnum}
+
+Por ejemplo, podemos representar gráficamente los efectos de un aumento de la oferta monetaria a través de los diferentes canales de la siguiente forma:
+
+\imagenfit{FRENKEL_MUSSA.png}{Efectos de un aumento de la oferta monetaria en el modelo monetario de FRENKEL y MUSSA (1976)}{KRUGMAN, P. R., OBSTFELD, M. \& MELITZ, M. J. (2018). \textit{International economics: Theory \& policy} (Eleventh Edition). Pearson. (pág. 458)}
+
+\paragraph{Implicaciones de Política Económica}
+Como vemos, según el enfoque de FRENKEL y MUSSA (1976), los determinantes últimos del tipo de cambio nominal son la oferta y la demanda monetaria. 
+
+Como el lado izquierdo de la ecuación mide el exceso de oferta monetaria relativo, un mayor exceso de oferta monetaria relativo generará una depreciación del tipo de cambio, por lo que cualquier aumento la oferta monetaria relativa generará una depreciación y cualquier aumento de la demanda de dinero relativa generará una apreciación.
+
+Por tanto, en términos de Política Económica, la estabilidad del Tipo de Cambio pasa por una Política Monetaria bien conducida que asegure estabilidad relativa de precios con el fin de evitar presiones inflacionarias o subidas/bajadas abruptas de Tipos de interés que hagan variar cuantiosamente los diferenciales. 
+
+\paragraph{Limitaciones}
+No obstante, aunque el modelo monetario con precios flexibles es atractivo por su simplicidad, se apoya en una serie de supuestos muy exigentes, como el cumplimiento de la PPA (absoluta y relativa) en su forma continua, la sustituibilidad perfecta entre activos (nacionales/extranjeros), la movilidad perfecta de capitales y la perfecta flexibilidad de precios y salarios.
+
+Con el fin de sortear algunas de estas limitaciones, se han desarrollado formulaciones posteriores más avanzadas que relajan alguno (o varios) de estos supuestos. 
+
+\subsubsection{Precios rígidos: DORNBUSCH, 1976. \textit{Overshooting}}
+Presentemos brevemente una versión alternativa, siguiendo el modelo propuesto por DORNBUSCH (1976). Sobre los mismos supuestos del modelo anterior, distinguimos dos diferencias: (i) los precios, en el mercado de bienes y servicios, son rígidos en el corto plazo; (ii) por tanto, no se cumple la PPA c/p;\footnote{El hecho de que no se cumpla la PPA en el corto plazo pero sí que se cumpla la PNCI implica que los ajustes en el mercado de bienes son más lentos que los ajustes en los mercados financieros (cuyos ajustes se realizan de forma casi inmediata). En otras palabras, los precios de los bienes se ajustan más lentamente que los tipos de interés. 
+
+Por lo tanto, a corto plazo, el tipo de cambio puede sobrerreaccionar ante cambios en los fundamentales (en este caso: oferta monetaria) a causa de dicha rigidez de precios. Esta sobrerreacción se conoce como \textit{overshooting}. 
+} y, (iii) los agentes forman sus expectativas conforme a la HER.
+
+Partimos de un equilibrio inicial en el que el tipo de cambio nominal es $E$, el tipo de interés es $i$ y los saldos monetarios reales son $m−p$:
+
+\imagenfit{Overshooting_Eq_Inicial.png}{Equilibrio inicial en el Modelo de DORBUSCH}{Apuntes Víctor Gutiérrez Marcos. Tema 3.B.15}
+
+Supongamos que se produce un aumento de la oferta monetaria doméstica \textbf{no anticipada} y permanente ($\uparrow m$).\footnote{Si el aumento de la oferta monetaria fuese anticipado y permanente, los resultados cambiarían. 
+
+Aunque esto se entiende mejor después de ver el modelo, sucede como sigue: en $t_0$ se anticipa la política monetaria expansiva (por ejemplo, porque se anuncia una política monetaria futura), en $t_1$ se implementa, y en $t_n$ se llega al estado estacionario. Entonces lo que vemos es que el tipo de cambio se deprecia instantáneamente con el anuncio, y continúa depreciándose hasta que se implementa la política, momento en que empieza a apreciarse hasta situarse en un nivel por encima del original. Como hemos dicho, DORNBUSCH asume que se cumple la Hipótesis de Expectativas Racionales (HER).
+}
+
+\paragraph{Efectos a Corto Plazo: Aumento no anticipado ($M^s$)}
+En el corto plazo, los precios son rígidos, por lo que el aumento de la oferta monetaria se va a traducir en un aumento de la oferta en términos reales (generando exceso). 
+
+Dado que los precios son rígidos, se produce un \textit{efecto liquidez} que hace que el tipo de interés disminuya para que la demanda de dinero aumente y se reequilibre en el mercado de dinero. Al disminuir el tipo de interés nacional, y de acuerdo con la Paridad No Cubierta de Intereses (que se cumplirá siempre): 
+
+$$\text{TDE}_t=\gamma \mathbb E[E_{t+1}\;|\;\Omega_t]\approx(i-i^*)\;\Longrightarrow\;i\approx i^*+\underbrace{\frac{\mathbb E[E_{t+1}\;|\;\Omega_t]-E_t}{E_t}}_{\equiv \text{TDE}_t}$$
+
+En este escenario, es necesario que la Tasa de Depreciación Esperada disminuya: en el corto plazo $\downarrow i\Rightarrow\;\downarrow E_t$, salen capitales del país al disminuir el Tipo de Interés y la moneda se deprecia hoy mismo:
+
+$$\downarrow i\approx i^*+\underbrace{\frac{\mathbb E[E_{t+1}\;|\;\Omega_t]-\;\uparrow E_t}{\uparrow E_t}}_{\equiv\;\downarrow \text{TDE}_t}$$
+
+Pero hay que recordar que también hay expectativas de depreciación en el largo plazo, $\uparrow \mathbb E[E_{t+1}\;|\;\Omega_t]$, ya que en el largo plazo los precios son flexibles, por lo que el aumento de la oferta monetaria se va a traducir en un aumento proporcional de los precios (inflación). Esta inflación implica que, debido a la PPA relativa, sea necesario que aumente la tasa de depreciación esperada ($\uparrow\mathbb E[E_{t+1}\;|\;\Omega_t]$):\footnote{Al estar los agentes dotados con HER y conocer los efectos de una Política Monetaria expansiva, aumentarán sus expectativas de inflación y, por ende, sus expectativas de depreciación del tipo de cambio. Esto provocará que la PNCI se desplace hacia la derecha.
+    } 
+    
+$$(\text{l/p})\;\text{TDE}_t=\gamma \mathbb E[E_{t+1}\;|\;\Omega_t]\approx(\pi-\pi^*)\;\Longrightarrow\;\pi\approx \pi^*+\underbrace{\frac{\uparrow \mathbb E[E_{t+1}\;|\;\Omega_t]-E_t}{E_t}}_{\equiv\;\uparrow \text{TDE}_t}$$
+
+Esto implica que para que se siga cumpliendo la PNCI es necesario que la depreciación en el corto plazo sea mayor que la del largo plazo:\footnote{En la representación gráfica, la condición de la PNCI tiene pendiente negativa, ya que dados $i^*$ y $\mathbb E[E_{t+1}\;|\;\Omega_t]$, $i$ depende negativamente de $E$, y se desplaza a la derecha al aumentar $m$, ya que esto generará expectativas de depreciación, aumentando $\mathbb E[E_{t+1}\;|\;\Omega_t]$ y por lo tanto generando un desplazamiento de la curva hacia la derecha.
+    } 
+
+$$(\text{c/p})\;\downarrow i\approx i^*+\underbrace{\frac{\uparrow \mathbb E[E_{t+1}\;|\;\Omega_t]-\;\uparrow\uparrow E_t}{\uparrow\uparrow E_t}}_{\equiv\;\downarrow \text{TDE}_t}$$
+
+Es precisamente esto lo que explica la sobrerreacción del tipo de cambio en el corto plazo: en el corto plazo se deprecia más de lo que exigen sus fundamentales.\footnote{Nótese que la posibilidad de sobrerreacción del tipo de cambio depende de la sensibilidad de la demanda de dinero al tipo de interés. Cuanto mayor sea la sensibilidad de la demanda de dinero al tipo de interés, mayor será la caída del tipo de interés ante un aumento en la oferta monetaria y mayor será el efecto sobre el overshooting.
+}
+
+\imagenfit{Overshooting_Eq_CortoPlazo.png}{Equilibrio a corto plazo en el modelo de DORNBUSCH}{Apuntes Vícor Gutiérrez Marcos. Tema 3.B.16}
+
+\paragraph{Efectos a largo plazo: Aumento no anticipado ($M^s$)}
+Tras la sobrerreacción a corto plazo, en el medio plazo la moneda se va a ir apreciando conforme aumenten los precios y el tipo de interés. En el largo plazo, la flexibilidad de precios garantiza que la oferta de saldos reales se mantenga constante y se retorne al tipo de interés inicial, aunque con un tipo de cambio menor (pero más apreciado que el del corto plazo por la sobrerreacción). 
+
+\imagenfit{Overshooting_Eq_LargoPlazo.png}{Equilibrio a largo plazo en el modelo de DORNBUSCH}{Apuntes Victor Gutierrez Marcos. Tema 3.B.14}
+
+De esta forma, experimentamos una dinámica a dicha política monetaria no anticipada y permanente como la siguiente: 
+
+\imagenfit{Dinamica_Ajuste_Overshooting.png}{Dinámica de ajuste de los parámetros del modelo}{Apuntes Victor Gutierrez. Tema 3.B.14}
+
+\paragraph{Implicaciones: Política Económica}
+Por tanto, este modelo muestra cómo el tipo de cambio puede ser muy volátil en el corto plazo y, al mismo tiempo, moverse de modo consistente con sus fundamentos. Puede ser muy difícil identificar movimientos especulativos desestabilizadores del tipo de cambio, pues cambios bruscos pueden ser el resultado de acciones racionales y consistentes con el largo plazo.
+
+En términos de Política Económica, el modelo de DORNBUSCH muestra que en un régimen de tipo de cambio flexible , la Política Monetaria es muy eficaz (al igual que en el modelo MUNDELL-FLEMING). No obstante, cabe tener siempre muy presente los problemas que pueden generarse debido al overshooting en el corto plazo, que pueden perfectamente provocar efectos reales negativos debido a la distorsión.
+
+Varios estudios sugieren que la volatilidad del tipo de cambio nominal se traduce con inercia en el tipo de cambio real, el cual es persistente tras un shock del tipo nominal. La razón es la rigidez en los precios y el resultado es que el tipo de cambio flexible provoca shocks reales debido a la combinación de su volatilidad con la inercia en el tipo de cambio real. Para paliar los efectos reales de la volatilidad cambiaria, el país debe tener flexibilidad interna de precios. 
+
+Las conclusiones del modelo a largo plazo son similares a las del modelo de FRENKEL y MUSSA (1976), pero como valor añadido, este modelo permite explicar el overshooting a corto plazo. De hecho, dicho overshooting fue una de las principales razones para la implementación del Sistema Monetario Europeo (SME, casos de constante apreciación del Franco Alemán con respecto al resto de monedas del sistema).
+
+\begin{specialblock}{Extensiones -- WOLF (1987). Utilización de la Hipótesis de BALASSA-SAMUELSON}
+    WOLF (1987) desarrolla una variante de este modelo en la que se permiten desviaciones de la PPA también a largo plazo (en línea con la hipótesis de BALASSA-SAMUELSON) y esto permite que entren variables reales en la determinación del tipo de cambio. 
+
+    Para ello, supone que la PPA sólo se cumple para los bienes comerciables y obtiene como resultado que, además de los factores monetarios habituales, hay factores reales que afectan al tipo de cambio nominal. Por ejemplo, cualquier factor que provoque cambios en el diferencial entre países del precio relativo de comerciables y no comerciables.\footnote{Pueden ser tanto factores de oferta (cambios en las dotaciones de factores o en el crecimiento de la productividad) como de demanda (modificaciones en las preferencias o en el gasto público).
+} 
+\end{specialblock}
+
+\subsection{Enfoque de cartera: Stock dinero y activos}
+A diferencia del modelo monetario, el modelo de cartera parte de la idea de que el tipo de cambio no sólo fluctúa cuando se producen perturbaciones en el mercado monetario, sino también cuando se producen perturbaciones en los mercados de otros activos financieros (pues operan como activos alternativos al dinero que el agente tiene muy presente y que son heterogéneos). Esto es así porque se distancia del modelo anterior en dos elementos esenciales:
+\begin{lnum}
+    \item \textbf{Sustituibilidad imperfecta de los activos}. Los activos nacionales y extranjeros no se conciben como sustitutos perfectos a causa de factores como la existencia de restricciones a su movilidad, \textit{home market bias}, información imperfecta, riesgo cambiario, político, etc.). Es decir, no se cumple la PNCI pero si la PCI (ya que hay movilidad perfecta de capitales); y,
+    \item \textbf{Demanda de dinero depende de la riqueza}. La demanda de dinero no depende de la renta, sino de la riqueza que es la suma del stock de dinero, bonos nacionales y de bonos extranjeros en moneda nacional. Se trata, fundamentalmente, de la incorporación de la hipótesis de la renta permanente.
+\end{lnum}
+
+\subsubsection{Desarrollo formal: McKINNON y BRANSON}
+Presentemos una versión simple del modelo propuesto por McKINNON y BRANSON. Supongamos que estamos valorando la situación de una economía pequeña pero abierta, lo que tiene tres implicaciones: (i) el tipo de interés de referencia internacional se fija de manera exógena (nula influencia); (ii) los bonos nacionales no se comercializan a nivel internacional y no son canjeables por bonos extranjeros (por lo que las salidas de capitales vendrán dadas por compras de bonos extranjeros, y viceversa) y un aumento de los bonos extranjeros se compensa reduciendo la cantidad de dinero, no de bonos nacionales. 
+
+Además, supongamos que existen precios rígidos en el corto plazo (rigideces nominales), que el Tipo de Cambio es fijo y que los activos son sustitutos imperfectos entre activos nacionales y extranjeros (fenómeno que se observa en la realidad incluso en países con libre circulación de capitales; por ejemplo, el famoso \textit{home bias} de los bancos de la zona euro respecto a los bonos soberanos).
+
+Definimos dos mercados: el mercado de activos y el mercado de bienes y servicios. 
+
+\paragraph{Mercado de Activos: Cuenta Financiera}
+Los agentes domésticos poseen una riqueza que está distribuida entre dinero, bonos nacionales y bonos extranjeros. Analíticamente:
+
+\eqblock{
+\begin{aligned}
+    &\hspace{2em}\begin{aligned}
+        \boxed{W=M+B+\underbrace{eF}_{\substack{\text{\scriptsize Bonos extranjeros}\\\text{\scriptsize denominados en}\\\text{\scriptsize $M$ nacional}}}}\quad 
+        \begin{cases}
+            M^d=f(\underset{(-)}{r}, \overset{(-)}{r^*})\\[0.5em]
+            B^d=f(\underset{(+)}{r},\overset{(-)}{r^*})\\[0.5em]
+            F^d=f(\underset{(-)}{r},\overset{(+)}{r^*})
+        \end{cases}
+    &\end{aligned}\\[2em]
+    &(\checkmark)
+    \left(\begin{aligned}
+        &\underset{\text{\scriptsize Restricción Hoja de Balance}}{\text{Agregación de ENGEL:}}\qquad &&\uparrow W\Rightarrow \;\;\uparrow D_{\text{Total}}^{\text{Activos}}\\[0.5em]
+        &\underset{\text{\scriptsize Restricción Aditiva}}{\text{Agregación de COURNOT:}}\qquad &&\uparrow P\underset{\substack{\text{\scriptsize Por ejemplo,}\\\uparrow\; i}}{\Rightarrow} \;\;\not\uparrow D_{\text{Total}}^{\text{Activos}}\;\Rightarrow\;\substack{\text{Recomposición }\\\text{de cartera}}
+    \end{aligned}\right)
+\end{aligned}
+}{Mercado de Activos: Riqueza, determinantes y cumplimiento de condiciones. Teorías modernas: Enfoque de stocks}
+
+Por tanto, como vemos, los agentes disponen de tres alternativas de inversión. De hecho, un modelo simplificado podría acabar aquí ya que al repartirse la riqueza totalmente entre los distintos activos contemplados, se puede plantear la condición de vaciado del mercado de activos (Ley de WALRAS).
+
+\paragraph{Mercado de Bienes: Cuenta Corriente}
+No obstante, resulta más enriquecedor si lo complementamos definiendo el Mercado de Bienes con el fin de saber que desequilibrios se generan \textit{en otra partes de la Balanza de Pagos} y como se alcanza el nuevo equilibrio. Definimos estos mercados analíticamente de la siguiente forma:
+
+\eqblock{
+\begin{aligned}
+    &Y^d=f(\underset{(+)}{W},\overset{(-)}{r})\;\Rightarrow\;\text{Mercado de Bienes ($C,I$) función de la $W$}\\[0.5em]
+    &CC=f(\underset{(-)}{Y^d}(W,r))=\Delta M+\Delta F\;\qquad (CC\perp TC: \;\;\text{ es fijo, no influye})\\[0.5em]
+    &\underset{\text{Entonces, si}}{\Longrightarrow}\;\boxed{CC>0\;\iff\;\uparrow \underset{\text{\scriptsize$B$ no son comerciables}}{W_\text{Activos}^{M,F}}}
+\end{aligned}
+}{Mercado de Bienes: Cuenta Corriente, determinantes. Teorías modernas: Enfoque de stocks}
+
+Ahora que tenemos los dos componentes principales de la Balanza de Pagos. Podemos analizar como influirá un shock de diversa índole en nuestro equilibrio de cartera.
+
+\subsubsection{Dinámica: Política Monetaria expansiva}
+En el equilibrio inicial, la Balanza de Pagos es igual a cero ya que el saldo por cuenta corriente se contrarresta con la composición de la cartera de los agentes (el mercado de activos se vacía). Estudiemos, por ejemplo, el impacto que tendría en el equilibrio final una Política Monetaria expansiva. Gráficamente, podemos ver el equilibrio inicial y la transición al equilibrio tras el shock:
+
+\textbf{INCLUIR GRÁFICOS DE DINÁMICA DE TRANSICIÓN VÍCTOR}
+
+Tras el aumento de la oferta monetaria, existe un exceso de liquidez en el mercado de dinero, disminuyen los tipos de interés y aumenta la riqueza derivado del aumento de la tenencia de bonos extranjeros (curva $MF$ se desplaza a la derecha). Este nuevo equilibrio de cartera queda por debajo de la curva de saldo por cuenta corriente, lo que implica que existe un déficit comercial. Esto necesariamente tiene que verse compensado con una disminución de la oferta moneraria o una disminución de los bonos extranjeros en posesión de los agentes domésticos. 
+
+Como no se puede reducir la oferta monetaria (por estar en régimen cambiario fijo), necesariamente debe provocar la disminución de los activos extranjeros de posesión doméstica, desplazando de nuevo la Curva BP hacia la izquierda, al equilibrio inicial. Por tanto, no se cumple la Paridad No cubierta de intereses debido a que existen primas de riesgo sobre la tenencia de bonos extranjeros (imperfecta sustituibilidad).
+
+\subsubsection{Críticas y Limitaciones}
+El modelo de cartera añade mayor realismo al enfoque de activos, pero las ideas son similares. Los desequilibrios de la balanza de pagos provendrán de un desequilibrio en los mercados financieros que se corregirá automáticamente si no se ponen trabas al reajuste de carteras, aunque en este caso de forma más lenta y dando más margen para la intervención pública que en el caso de los modelos monetarios. 
+
+En general, una crítica al enfoque de activos (monetario y de cartera) es que en la práctica se observan problemas de balanza de pagos de origen real (como la falta de competitividad). Aun así, podemos entender estos modelos como complementarios al modelizar la posibilidad de que los problemas de balanza de pagos tengan origen financiero. 
+
+Una crítica particular al enfoque de cartera es que no muestra la conexión de la riqueza con la parte real de la economía (la riqueza es exógena, no pudiéndose formar a través de un mayor ahorro e inversión).\footnote{Sin embargo, otros modelos de cartera (p.ej. BRANSON) sí introducen esta posibilidad. En ese caso, los excesos de oferta en los mercados financieros nacionales se podrían utilizar para aumentar la absorción interna, provocando un déficit corriente en lugar de salidas de capitales. 
+} Por último, estos modelos llevan implícita la hipótesis de eficiencia de los mercados financieros, sin embargo, en la práctica se ha visto cómo se pueden producir burbujas y otros comportamientos que pueden distorsionar el precio de los activos, dificultando el ajuste automático y condenando a las economías a un ajuste mucho más brusco.
+
+
+\clearpage
+\section{Desarrollos recientes}
+
+
+\subsection{¿Qué pasa en realidad? -- Evidencia Empírica}
+
+MUSSA (1979) destacó los siguientes hechos empíricos relativos a los tipos de cambio en un marco de flotación:
+
+\eqblock{
+\begin{aligned}
+    &\text{Relaciones (C/P)}\\[0.5em]
+    &\begin{aligned}
+        &\text{(1) Base diaria: las \textbf{variaciones} en los tipos de cambio nominales son altamente \textbf{impredecibles}}&&;\\[0.5em]
+        &\text{(2) Base mensual: más del 90\% de los movimientos en los tipos de cambio son \textbf{inesperados}}&&;\\[0.5em]
+        &\underset{\text{\scriptsize En otras palabras, los tipos de cambio nominales son demasiado volátiles para ser explicados mediante ajustes hacia la paridad de poder de compra.}
+        }{\text{(3) }
+        \begin{aligned}
+            &\text{Las variaciones en el tipo de cambio spot tienden a \textbf{sobrerreaccionar} respecto a variaciones}\\
+            &\text{de los fundamentos económicos}
+        \end{aligned}}&&;\\[0.5em]
+    \end{aligned}\\[1em]
+    &\over
+    \begin{aligned}
+        \\
+        &\text{Relaciones (L/P)}\\[0.5em]
+        &\begin{aligned}
+            &\text{(4) Los países con elevadas tasas de \textbf{inflación} experimentan \textbf{depreciaciones} de su tipo de cambio.}&&;\\[0.5em]
+            &\underset{\text{\scriptsize  Esto implica que, a largo plazo, se cumple la paridad de intereses. A corto plazo, esta relación es mucho más tenue.}}{\text{(5) El \textbf{diferencial de tipos} de interés entre dos economías es ($\approx$) igual a la tasa de \textbf{depreciación}.}}&&;\\[0.5em]
+            &\text{(6) }
+            \begin{aligned}
+                &\text{Las monedas de los países con fuerte crecimiento de la oferta monetaria tienden a depreciarse }\\
+                &\text{respecto a la de los países con menor crecimiento monetario.}
+            \end{aligned}&&;\\[0.5em]
+            &\text{(7) Las economías con grandes \textbf{déficits comerciales} tienden a experimentar \textbf{depreciaciones} de sus monedas.}&&;\\[0.5em]
+        \end{aligned}
+        \end{aligned}
+\end{aligned}
+}{Hechos estilizados: MUSSA (1979). Desarrollos recientes}
+
+Un modelo de determinación del tipo de cambio debería ser capaz de explicar estos hechos observados en la realidad. Es más, la capacidad para explicarlos sería un criterio para valorar la idoneidad de un modelo de tipo de cambio, cosa que ninguno de los modelos de los años 70 era capaz de hacer. Por tanto, es inevitable hacer la pregunta: ¿por qué son importantes? ¿por qué se reconocieron, no solo en su época sino hoy en día?
+
+Siguiendo a BLAUG (1980): \textit{cuando se nos da una explicación que no nos provee de una predicción, ¿es porque no podemos estar seguros de toda la información relevante acerca de las condiciones iniciales, o es porque nos están dando gato por liebre?} 
+
+La determinación del tipo de cambio ofrece un buen ejemplo de este dilema. Sorprendentemente, no se realizó ningún test riguroso de la capacidad predictiva de los modelos estructurales de la determinación del tipo de cambio que constituyen la teoría moderna hasta el artículo de MEESE y ROGOFF (1983). 
+
+\subsubsection{Metodología: Contrastación (MEESE y ROGOFF, 1983)}
+El estudio empírico de MEESE y ROGOFF (1983) destaca por su carácter pionero a la hora de examinar la capacidad predictiva de los modelos de determinación de tipo de cambio fuera de la muestra y comparar los resultados de los modelos con el resultado de un paseo aleatorio.
+
+Para los autores, la capacidad predictiva sobre la muestra no debía ser considerado un buen test, ya que simplemente nos diría si el modelo se ajusta a los datos de manera aceptable. Por tanto, MEESE y ROGOFF examinaron la capacidad predictiva de estos modelos fuera de la muestra. 
+
+\paragraph{Metodoloía: \textit{Out of the sample} y \textit{random walk}}
+Esto consiste en que, dada una muestra de datos temporales (por ejemplo, entre 1970 y 2020), se utiliza una submuestra de los datos (por ejemplo, entre 1970 y 1995) para estimar las ecuaciones del modelo y estas son usadas para generar predicciones fuera de la muestra a lo largo del período restante en la muestra (1996-2020). 
+
+Además, incorporaron otro modelo a la su experimento: un simple modelo de paseo aleatorio. Este modelo realiza una predicción en el período $t$ sobre el valor de la misma en el período $t+1$, tomando como valor base su valor en el período $t$ y una pequeña varianza/shock estocástico.\footnote{Para evitar una posible confusión es importante remarcar que comparar las previsiones de un modelo con las predicciones de un paseo aleatorio no significa que estemos asumiendo que el tipo de cambio este siguiendo un paseo aleatorio (podría seguirlo o no). Simplemente significa tomar como modelo de base el modelo más simple de predicción, que es un paseo aleatorio. Este modelo de base asume un agente ingenuo que no tiene ni idea de cómo va a evolucionar el tipo de cambio y considera que existe la misma posibilidad de una apreciación que de una depreciación.
+} Por tanto, como es de sobra conocido, la capacidad predictiva de un paseo aleatorio disminuye a medida que el número de periodos disminuye, y no debería ser difícil conseguir una mejor predicción que la de este modelo. 
+
+Sorprendentemente (o no) MEESE y ROGOFF hallaron que los modelos estructurales tienen peor capacidad predictiva que el modelo de paseo aleatorio incluso cuando se usaban los valores materializados de las variables explicativas (es decir, con valores \textit{ex-post} de los determinantes).\footnote{Dada una muestra de datos temporales (p.ej. entre 1970 y 2020), las predicciones ex-post consisten en utilizar una submuestra de los datos (p.ej. entre 1970 y 1995) para estimar las ecuaciones del modelo. Las ecuaciones estimadas son usadas para generar predicciones fuera de la muestra a lo largo del período restante en la muestra (1996-2020), pero usando los valores actuales de las variables exógenas observados en esos períodos.
+
+En otras palabras, es como si un agente actuando en 1995 poseyera una previsión perfecta sobre los explicativos, debiendo únicamente pronosticar la variable endógena (en nuestro caso, el tipo de cambio), utilizando las ecuaciones estimadas con los datos de los años 1970-1995.
+} Precisamente, los autores optaron por incluir los valores \textit{ex post} reales de los explicativos, para prevenir cualquier posible defensa de los modelos estructurales: que no funcionan bien solo por los errores de predicción de las variables exógenas que han de ser usadas para pronosticar el tipo de cambio como una variable endógena.
+
+\paragraph{Implicaciones}
+La evidencia hallada por MEESE y ROGOFF es devastadora. Los modelos no funcionan bien en la práctica, y, por lo tanto, nos están dando gato por liebre.
+
+Esta visión metodológica ha permitido que se siga el procedimiento de MEESE y ROGOFF como estándar en muchos estudios empíricos del tipo de cambio. De hecho, este artículo fue una de las manifestaciones más destacadas de lo que luego OBSTFELD y ROGOFF (2001) han popularizado como la paradoja de la desconexión entre el tipo de cambio y los fundamentos macroeconómicos (\textit{exchange rate disconnect puzzle}). 
+
+En definitiva, los resultados de MEESE y ROGOFF (1983) han sido actualizados y confirmados por múltiples estudios posteriores, y han llevado a dos categorías opuestas de reacciones:
+\begin{la}
+    \item Por un lado, hay algunos autores que buscan mejorar el funcionamiento de los modelos estructurales como sea (por ejemplo, usando técnicas más sofisticadas como modelos de corrección de errores, coeficientes que varían en el tiempo, técnicas de cointegración, etc.), pero sin mejoras apreciables en la mayoría de los casos;
+    \item Por otro lado, hay economistas que toman el fallo de los modelos estructurales como un fallo de la teoría económica y consideran la necesidad de moverse hacia un análisis técnico puro, consistente en una serie de procedimientos para identificar patrones en la evolución del tipo de cambio y utilizarlos para su predicción (predicción sin explicación). Los analistas que utilizan análisis técnico son a menudo llamados chartistas en contraposición con los fundamentalistas que confían en los fundamentales propuestos por la teoría económica.\footnote{Generalmente, se habla indistintamente de análisis técnico y análisis chartista. Sin embargo, mientras que el análisis chartista se basa únicamente en el estudio de gráficos, el análisis técnico incorpora herramientas de análisis matemáticas o estadísticas como medias móviles o indicadores de fortaleza de la tendencia [\authorfont{Ver Tema 3.B.23}].
+    }
+\end{la}
+
+Antes de presentar las nuevas lineas de investigación formal, veamos rápidamente tres paradojas muy relevantes introducidas por los estudios empíricos.
+
+\subsection{Paradoja de la desconexión: \textit{exchange rate disconnect puzzle}}
+La paradoja de la desconexión se refiere al hecho empírico de que los tipos de cambio, tanto nominales como reales, exhiben una volatilidad muy elevada y persistente que no guarda una relación sistemática con los fundamentos macroeconómicos estándar. Variables como el consumo relativo, la producción, la inflación, los diferenciales de tipos de interés o la posición externa, que en los modelos de economía abierta deberían anclar el tipo de cambio, explican muy poco de sus movimientos observados, incluso en horizontes donde la teoría predice convergencia hacia el equilibrio.
+
+El punto central de los autores es que esta desconexión no es solo de corto plazo ni un problema de ruido transitorio, sino un fallo estructural de los modelos de equilibrio general intertemporal dominantes en macroeconomía internacional. En dichos modelos, el tipo de cambio es un precio clave que ajusta para igualar condiciones de arbitraje y asignación intertemporal; por tanto, debería reflejar de forma cercana y estable los fundamentales reales. Sin embargo, la evidencia muestra que el tipo de cambio se comporta casi como un random walk, con episodios de grandes desviaciones prolongadas respecto a paridades como la PPP, sin que los fundamentos muestren dinámicas comparables.
+
+Obstfeld y Rogoff interpretan esta paradoja como una señal de que faltan fricciones y mecanismos esenciales en los modelos estándar, en particular rigideces nominales, costes de ajuste, segmentación de mercados financieros y comerciales, y problemas de formación de expectativas. La desconexión no implica que los fundamentos sean irrelevantes en sentido último, sino que el canal de transmisión entre fundamentos y tipo de cambio es débil, indirecto y mediado por fricciones, lo que impide que los modelos convencionales expliquen simultáneamente la volatilidad cambiaria y la relativa estabilidad de las variables reales. Esta paradoja, para los autores, es uno de los principales desafíos abiertos de la macroeconomía internacional moderna.
+
+\subsubsection{ENGEL y WEST (2004): Paseo aleatorio subyacente}
+ENGEL y WEST (2004) consideran que una posible explicación para la naturaleza de paseo aleatorio del tipo de cambio es que existe algún fundamento no observable que también sigue un paseo aleatorio (no observable porque los fundamentos señalados por los modelos expuestos sabemos que no siguen un paseo aleatorio). ENGEL y WEST (2004) dan una nueva perspectiva sobre la previsibilidad de los tipos de cambio al demostrar que, bajo ciertos supuestos plausibles, el tipo de cambio puede comportarse de forma muy parecida a un paseo aleatorio. Finalmente, ENGEL y WEST proponen la introducción de una regla de Taylor en el modelo de determinación del tipo de cambio, iniciando una interesante línea de trabajo. 
+
+\paragraph{SARNO y SCHMELING (2014): Posible validación (relaciones nominales y enfoque de activos)}
+De hecho, SARNO y SCHMELING (2014) presentan evidencia que respalda la tesis de ENGEL y WEST: encuentran relación entre el tipo de cambio y los fundamentos macroeconómicos, con una muestra muy amplia, particularmente sobre los fundamentos nominales (IPC, oferta monetaria y PIB nominal). No obstante, con las variables reales hay, en general, escasa relación (PIB real, saldos monetarios reales). Por tanto, sería es compatible con el enfoque de activos (tipo de cambio como valor presente de fundamentos actuales y esperados) y también con que las variaciones en el tipo de cambio actual afecten a variables macroeconómicas futuras. 
+
+\subsection{Paradoja de la apreciación: Incumplimiento de la Paridad de Poder Adquisitivo} 
+Otra paradoja muy relevante en el estudio de los detemrinantes del Tipo de Cambio es la paradoja de la apreciación. Hasta ahora, hemos visto que países con altas tasas de inflación verán su tipo de cambio depreciarse. Sin embargo, encontramos algunos estudios empíricos que señalan precisamente lo contrario, dando lugar a esta paradoja.
+
+CLARIDA encuentran para una muestra de divisas que, noticias de que la inflación es sorpresivamente alta, llevan a que la moneda se aprecie (en contra de las predicciones que hemos hecho hasta ahora, según las cuales se depreciaría). Esto es inconsistente con los modelos expuestos y requiere una explicación. 
+
+\subsubsection{Endogeneización de la Política Monetaria: Regla de TAYLOR (ENGEL y WEST, 2004)}
+No obstante, también hemos supuesto hasta ahora que los shock monetarios vienen dados de manera exógena. 
+
+No obstante, como elemento central de la linea de investigación abierta por ENGEL y WEST (2004), la Política Monetaria es endógena y sigue una regla de tipo TAYLOR (de ahí su nombre). De este modo, al seguir una regla de tipo de interés y actuas ante cambios en el output gap y desviaciones de la inflación con respecto al objetivo, si el Banco Central aumenta los tipos de interés cuando la inflación aumenta, se producirá una entrada de capitales y una apreciación de la moneda.\footnote{\href{https://www.ft.com/content/51e52c04-090c-11dc-a349-000b5df10621}{Garnham, P. (2007) \textit{Inflation drives Canadian dollar higher}. Financial Times.}
+} De esta forma, la endogeneización de la política monetaria permite resolver la paradoja de la apreciación. 
+
+La evidencia reciente sugiere que este enfoque aumenta de forma significativa la capacidad predictiva (particularmente a corto plazo) de los modelos de tipo de cambio tradicionales (PPA y PI). De media, para las diez divisas que estudia (CLARIDA), observa que la inflación inesperadamente alta conduce a una apreciación de la moneda del país y no a una depreciación.
+
+\subsection{Paradoja del Margen Forward: Hipótesis de los Mercados Eficientes}
+
+\begin{specialblock}{Hipótesis de los Mercados Eficientes -- FAMA}
+    EUGENE FAMA recibe el Premio Nobel de Economía en 2013 precisamente por su trabajo en el análisis empírico de precios de posesiones capitales, es decir, por sus contribuciones con respecto a la hipótesis de los mercados eficientes.\footnote{En el debate desarrollado entre 2008 y 2009 en torno al estímulo fiscal y la política monetaria expansiva aplicada por los gobiernos para contener la crisis en el mundo occidental y en los países asiáticos, los argumentos más utilizados fueron de tipo histórico. Los polemistas reconocían que la teoría actual tenía poco (o nada) que ofrecer para solucionar la crisis. Toda la parafernalia matemática de los modelos de los mercados eficientes y de las expectativas racionales, que habían servido de base para las políticas liberales de las tres décadas previas, se derrumbaron como un castillo de naipes con la crisis iniciada en 2007. No obstante, aunque JUSTIN FOX (2009) consideró que esa teoría formulada por EUGENE FAMA sobre los mercados eficientes, que inspiró la doctrina desreguladora de ALAN GREENSPAN y del consenso de Washington, quedó refutada por la catástrofe financiera de 2008, JOHN QUIGGIN (2010) la incluye entre las doctrinas zombie, caracterizadas poque siguen vivas entre los académicos universitarios, a pesar de haber sido desacreditadas por la realidad económica.
+    } En su discurso de recepción del Premio Nobel menciona lo que él ha denominado la joint hypothesis. Según esta, para que los mercados financieros sean eficientes es necesario que se cumplan dos condiciones: 
+    \begin{lnum}
+        \item Que exista un modelo de valoración de activos por arbitraje (por ejemplo, el CAPM o el APT);
+        \item Que los activos reflejen toda la información disponible.
+    \end{lnum} 
+
+    Testar la validez de dicha hipótesis es, evidentemente, difícil (FAMA no tuvo muy en cuenta a POPPER, como tampoco el Comité del Nobel), ya que no sabemos si los incumplimientos se deben a que estamos trabajando con un modelo de valoración de activos incompleto o si efectivamente la hipótesis de los mercados eficientes no se cumple. Por otro lado, también complica el análisis la coexistencia de distintas maneras de entender que es eficiencia en el mercado financiero. Concretamente, siguiendo el libro de valoración de activos de DARRELL DUFFIE, la palabra eficiencia se usa en tres sentidos: 
+    \begin{la}
+        \item \textbf{Ausencia de posibilidad de arbitraje}. Significa que en un mercado en equilibrio no deben existir oportunidades de inversión sin explotar, es decir, que ningún inversor que cambie la composición de la cartera podrá obtener mediante arbitraje una rentabilidad superior a la que venía consiguiendo con el mismo riesgo;\footnote{Que no existan posibilidades de arbitrar no quita que se puedan obtener remuneraciones positivas a largo plazo. Los agentes que mejor absorban el riesgo o que invierten a un plazo mayor podrán obtener rendimientos positivos. Sin embargo, no tendría fundamento la gestión activa de carteras.
+        } 
+        \item \textbf{Transmisión de toda la información}. Según esta definición el mercado será eficiente cuando el precio determinado por la oferta y la demanda sea una buena forma de estimar el valor real del activo, es decir, su valor intrínseco. Esto supone que el precio incluye toda la información necesaria y es la principal y más fiable señal del mercado y que éste funciona sin distorsiones.\footnote{Una rama de la literatura iniciada por ROLL (1977) mantiene que los mercados financieros internacionales son eficientes y por eso las desviaciones de la PPA (el tipo de cambio real) deben seguir un paseo aleatorio. A veces se le denomina PPA ex ante o PPA de mercados eficientes. Parte de los supuestos de expectativas racionales y cumplimiento de la PNCI.
+    
+        Siguiendo a ROLL, supongamos que los agentes forman sus expectativas racionalmente y que participan en la compra especulativa de bienes. Un agente  nacional puede comprar un bien extranjero y mantenerlo un periodo. El rendimiento nominal esperado de esa estrategia, expresado en moneda extranjera será igual a la inflación esperada en el extranjero. Para expresarlo en moneda doméstica habrá que tener en cuenta los cambios esperados en el tipo de cambio y en los precios domésticos de forma que el rendimiento esperado para un residente nacional al especular con un bien extranjero será: Et[Δp*t+1]+Et[Δst+1]−Et[Δpt+1] Teniendo en cuenta la definición del tipo de cambio real (en logs): qt=st−pt+p*t obtenemos: Et[Δqt+1]=0 Lo que implica que qt sigue un paseo aleatorio: qt+1=qt+ηt+1, donde ηt+1 es un error de previsión con expectativas racionales tal que Et[ηt+1]=0. Esto significa que la mejor predicción del tipo de cambio real futuro será el tipo de cambio real actual y que ante cualquier desviación de la PPA, no se producirá un proceso de reajuste o reversión a la media. Un shock que afecte al tipo de cambio real tendrá efectos permanentes. De acuerdo con este enfoque, el cumplimiento de la PPA a largo plazo sería incompatible con la eficiencia de los mercados (otros autores no comparten esta conclusión). Los resultados empíricos sugieren que la PPA es una buena primera aproximación al comportamiento a largo plazo de los tipos de cambio y que el proceso de ajuste hacia ese nivel parece presentar no linealidades. Estos modelos no lineales parecen la línea de trabajo más prometedora en estos momentos. La mayoría de los modelos del tipo de cambio real se centran en los determinantes reales (frente a los nominales) del tipo de cambio ajustado por el nivel de precios. La PPA es una versión particularmente simple donde se supone que el tipo de cambio real es constante. https://en.wikipedia.org/wiki/Roll%27s_critique https://www.investopedia.com/terms/r/rollscritique.asp
+        } La eficiencia con la que el precio cumpla su función en el mercado está en función de la cantidad de información que incorpora y de la velocidad con la que ésta se incorpora. El profesor HARRY ROBERTS (1967) clasificó la información en tres grupos: 
+        \begin{lnum}
+            \item \textbf{Información histórica}. Aquella que se puede conseguir en bases de datos y en medios de comunicación, fundamentalmente contiene series históricas;
+            \item \textbf{Información pública}. Toda la información referida a la empresa, desde cuentas anuales a hechos y circunstancias de la empresa; y,
+            \item \textbf{Información privada}. Información privilegiada en manos de muy pocas personas y que, en general, no trasciende al público.
+        \end{lnum}
+        Basándonos en esta clasificación, y en función de la información que se maneja en el mercado para valorar los activos, podemos clasificar la eficiencia de ese mercado como:
+        \begin{la}
+            \item \textbf{Hipótesis fuerte}. Implica que los precios indican toda la información disponible (privada, pública e histórica), de forma que nadie puede obtener un rendimiento superior al de mercado;
+            \item \textbf{Hipótesis semifuerte}. Implica que los inversores no son capaces de superar el rendimiento del mercado usando información histórica y pública, ya que dicha información se incorpora directamente en el precio. Las técnicas de análisis fundamental no serán capaces de lograr rendimientos superiores a los de mercado, ya que éstos sólo se podrán obtener con información privada; y,
+            \item \textbf{Hipótesis débil}. Supone que la cotización de los títulos refleja la información pasada obtenida de las series históricas de precios.
+        \end{la}
+        En consecuencia, no es posible hallar estrategias de inversión basadas en los precios históricos de las acciones. Esto implica que el análisis técnico no es útil, pero el análisis fundamental sí (siendo esta definición de eficiencia la única que abre la puerta a una racionalidad de gestión activa de carteras); y,
+        \item \textbf{Eficiencia como optimalidad de Pareto}. Este criterio es el que se aplica habitualmente en Economía del Bienestar para valorar los mercados financieros. Es la más restrictiva de las tres definiciones pues requiere que no exista una asignación de los recursos de la sociedad alternativa a la que genera el mercado que permita al menos a un agente mejorar su situación sin empeorar la situación de nadie. Esta situación es muy poco plausible ya que existen una serie de fenómenos como externalidades o información asimétrica que impedirán que se cumpla el 1TFEB [\authorfont{Ver Tema 3.A.22}].
+    \end{la}
+\end{specialblock}
+
+La última paradoja que presentaremos, especialmente relevante en el mercado de divisas, es la conocida como paradoja del margen forward, que resulta en contradicción (aparente) con la Hipótesis de los mercados eficientes (FAMA). 
+
+En nuestro análisis del mercado de divisas, la mejor forma de concebir esta hipótesis (o la única) es desde una perspectiva informativa. Por lo tanto, diremos que el mercado de divisas es eficiente si y solo si el tipo de cambio refleja toda la información disponible en un momento determinado. 
+
+De la anterior conclusión se desprende un elemento fundamental: si el mercado de divisas es un mercado eficiente, el tipo de cambio forward debe, de entre todos los predictores disponibles, el mejor predictor del tipo de cambio spot esperado. Y, de ser así, tanto la PCI como la PNCI deben ser aplicables.\footnote{Si los inversionistas son neutrales al riesgo y tienen expectativas racionales, entonces el pronóstico del mercado sobre el tipo de cambio futuro está implícito en las diferencias internacionales en las tasas de interés. 
+
+Para ver esto, supongamos que la tasa de interés en dólares a un año es del 10\% y que la tasa de interés comparable en marcos alemanes es del 7\%. Entonces se dice que el diferencial de interés a favor del dólar es del 3\%. Inversionistas neutrales al riesgo y racionales deben, por lo tanto, esperar que el dólar se deprecie frente al marco en un 3\% durante el próximo año. Esta magnitud de depreciación sería exactamente suficiente para igualar los rendimientos esperados de los depósitos denominados en dólares y en marcos. 
+
+Si, en cambio, estos inversionistas esperaran una tasa de depreciación del dólar diferente, digamos del 4\%, todos desearían endeudarse en dólares y prestar en marcos. En consecuencia, las tasas de interés en dólares tenderían a subir y las tasas de interés en marcos tenderían a bajar hasta que el diferencial de interés también fuera del 4\%. Esta relación simple entre los diferenciales de interés y la depreciación esperada de la moneda se denomina paridad descubierta de tasas de interés (descubierta porque no se utilizan los mercados a plazo como cobertura). 
+
+Así, la paridad descubierta de tasas de interés implica que el diferencial de tasas de interés es una estimación del cambio futuro en el tipo de cambio. Si las expectativas son racionales, entonces esta estimación de los cambios futuros en el tipo de cambio proporcionada por el diferencial de tasas de interés debería ser imparcial. Habitualmente, la ausencia de sesgo se pone a prueba regresando el cambio en el tipo de cambio sobre el diferencial de tasas de interés.
+}
+
+Esta hipótesis fue testada por FROOT y THALER (1990) mediante la siguiente regresión:
+
+\eqblock{
+\begin{aligned}
+    \boxed{\Delta E_{t+1}=\beta_0+\beta_1(F_t^{t+1}-E_t)+\varepsilon_{t+1}}
+\end{aligned}
+}{Regresión de contrastación Hipótesis de Mercados eficiente. Desarrollos recientes: Paradoja del margen forward}
+
+Vemos cómo el diferencial entre forward y spot afectan a la depreciación del tipo de cambio. Por tanto, si el tipo forward fuese un predictor insesgado del tipo spot, en esta contrastación, esperaríamos que $\beta_1=1$. Como podíamos suponer, los resultados son también desoladores (como mínimo para FAMA) ya que la mayoría de estudios empíricos rechazan la hipótesis de eficiencia en el mercado de divisas. 
+
+Es más, es un hecho estilizado que las estimaciones de $\beta_1$ están más cerca de $−1$ que de $+1$ (FROOT y THALER, 1990),\footnote{\textit{El coeficiente promedio en unas 75 estimaciones publicadas es de −0,88. Algunas son positivas, pero ninguna es igual o superior a la hipótesis nula de $\beta_1=1$}. FROOT y THALER (Anomalies: Foreign Exchange, 1990)
+} por lo que suele decirse que el tipo forward es, \textit{de facto}, un mal predictor, no ya de la magnitud del cambio en los tipos spot futuros, sino incluso de su dirección (la llamada \textit{paradoja del margen forward}). 
+
+En esencia, esta anomalía reflejaría el hecho de que los países con tipos de interés relativamente más altos parecen experimentar apreciaciones en su tipo de cambio nominal, mientras que la PCI señalaría que estos altos tipos de interés deberían estar asociados a depreciaciones del tipo de cambio nominal.\footnote{Otro fenómeno que señala al incumplimiento de la PNCI (y por tanto indica que el tipo de cambio forward no es un buen predictor del tipo de cambio esperado futuro) es el éxito empírico de operaciones de carry trade. El carry trade consiste en endeudarse en una divisa con bajos tipos de interés para invertir en activos denominados en una divisa con altos tipos de interés. Según la PNCI, el diferencial de tipos de interés debe ser igual a la depreciación esperada de la divisa cuyos tipos de interés son más elevados. Por tanto, si se cumpliese la Paridad No Cubierta de Intereses, una operación de carry trade debería esperar unas ganancias netas nulas. Esta práctica cuenta con cierto éxito debido a la paradoja del margen forward (las divisas con tipos de interés más elevados tienden a apreciarse y no a depreciarse). En consecuencia, históricamente las estrategias de carry trade se han visto recompensadas con rendimientos positivos.
+} 
+
+\subsubsection{\textit{Overshooting} del Margen forward: HODRICK (1990)}
+No obstante, HODRICK (1990) señala que dicha paradoja podría no darse si se tiene en cuenta el término constante de la regresión. 
+
+El autor argumenta que un valor negativo de $\beta_1$ no indica que haya apreciación esperada cuando la moneda está a descuento; lo único que dice es que la depreciación esperada es menor cuanto mayor es el descuento forward. Es decir, para que haya apreciación esperada ($\mathbb E[\Delta e_{t+1}]<0$) se necesita que el valor total $\beta_0+\beta_1(f_t-e_t)$ sea negativo y no basta con que $\beta_1<0$.
+
+Por tanto, si el término independiente, $\beta_0$, es positivo y lo suficientemente alto podría darse la depreciación esperada. De hecho, en la práctica, el valor de $\beta_0$ suele ser positivo y alto. Ya que implicaría que incluso cuando la moneda está a descuento ($F_t^{t+1}-E_t>0$), la expresión completa puede seguir siendo positiva, es decir, la moneda todavía se espera que se deprecie, solo que menos. Por tanto, según HODRICK, muchos resultados empíricos no implican literalmente una apreciación esperada de monedas con tipos de interés altos, sino simplemente que el margen forward sobrerreacciona respecto a la depreciación esperada.
+
+\subsubsection{Margen forward: Prima implícita de riesgo}
+FAMA propone que las diferencias entre el tipo de cambio forward y el tipo de cambio spot futuro reflejan la existencia de una prima de riesgo, es decir, el tipo de cambio forward era igual al tipo de cambio spot futuro más una prima de riesgo. 
+
+Sin embargo, algunos estudios reflejan que estas divergencias no pueden explicarse únicamente mediante la inclusión de la prima de riesgo, por lo que el mercado en realidad refleja que los inversores tienen expectativas sesgadas. Esto puede ocurrir, por ejemplo, cuando los inversores esperan una devaluación de la moneda pero no saben cuándo ocurrirá con exactitud (peso problems).\footnote{El problema del peso en finanzas es un problema que surge cuando “la posibilidad de que ocurra algún acontecimiento poco frecuente o sin precedentes afecta a los precios de los activos”. La dificultad o imposibilidad de predecir dicho acontecimiento crea problemas a la hora de modelizar la economía y los mercados financieros utilizando datos del pasado. Es útil en diversos contextos, en particular para analizar la anomalía de la prima a plazo.
+} 
+
+\subsubsection{Agentes heterogeneos: Expectativas sesgadas}
+Por su parte, FROOT y THALER sugieren que las divergencias vienen de expectativas heterogéneas de los agentes. En este sentido, señalan que por un lado están los chartistas, que se mueven por inercia o se basan en comportamientos pasados del tipo de cambio. Y, por otro lado, están los fundamentalistas, que se mueven por el valor intrínseco de las divisas.
+
+Como los fundamentalistas saben cuál va a ser el comportamiento de los chartistas, pueden dudar de que el tipo de cambio vaya a retornar a su valor de equilibrio. Estas dudas pueden hacerlos desistir de apostar por el retorno al equilibrio, lo que explicaría que durante períodos largos de tiempo el tipo de cambio se separe considerablemente del que vendría dado por los fundamentales. 
+
+\subsection{Modelaje Moderno: Determinación del Tipo de Cambio}
+El aparente fracaso empírico de los modelos anteriores propició en la literatura una gran cantidad de líneas de investigación alternativas. Estas trataban de justificar por qué el tipo de cambio presenta la elevada volatilidad que le caracteriza, y por qué los modelos basados en fundamentales (renta, oferta de dinero, etc.) presentan una capacidad predictiva tan reducida. 
+
+\subsubsection{Expectativas heterogeneas: GRIMALDI y DE GRAUWE}
+Las aportaciones de FOOT y THALER fueron modelizadas por GRIMALDI y DE GRAUWE. Los autores, sobre la base de modelo de cartera del enfoque de activos, proponen una versión alterativa partiendo de los siguientes supuestos:\footnote{
+\href{https://www.ifo.de/DocDL/cesifo1_wp1849.pdf}{\textit{The exchange rate in a behavioral finance framework}. 2006}
+
+
+Siguen la línea de los modelos de cartera (comparten el mismo espíritu, entienden el tipo de cambio como el precio de un activo) pero incluyen desviaciones de racionalidad de los agentes y microfundamentan el modelo. Los agentes confrontados a situaciones de riesgo e incertidumbre no se comportan siguiendo los postulados de la Teoría de la Utilidad Esperada y pueden usar reglas de comportamiento basada en \textit{rules of thumb} para simplificar la complejidad de la realidad [\authorfont{Ver Tema 3.A.10}].
+} 
+\begin{lnum}
+    \item \textbf{Agentes heterogeneos}. La existencia de agentes heterogéneos permite que actúen difernte a la hora de confrontar la incertidumbre (no conocer el tipo de cambio futuro);
+    \item \textbf{Maximizadores de utilidad: riqueza}. Los agentes maximizan su utilidad dependiente de la riqueza. Cada tipo de agente maximiza su utilidad y selecciona una cartera que está formada por activos domésticos y por activos denominados en moneda extranjera. La utilidad depende de forma positiva del rendimiento esperado de la cartera y de forma negativa de la varianza y de un parámetro de aversión al riesgo. Se asume que la riqueza en $t+1$ viene dada del rendimiento ponderado por lo que ha invertido en activos nacionales y extranjeros;
+    \item \textbf{Oferta activos extranjeros exógena}. Se asume que la oferta de activos extranjeros es exógena; y,
+    \item \textbf{Reglas de decisión}. La proporción que cada agente invierte en el activo nacional depende de: 
+    \begin{lnum}
+        \item Diferencial de tipos de interés ($i-i^*$, de manera positiva); y,
+        \item Expectativas de depreciación de la moneda doméstica ($\mathbb E[E_{t+1}\;|\;\Omega_t]=E_{t+1}-E_t$), que viene dado por la diferencia entre el tipo de cambio en el periodo $t+1$ y el tipo de cambio hoy.
+    \end{lnum} 
+    De manera residual, considerando la demanda nacional de todos los agentes de la economía, hallamos la demanda de activos extranjeros.
+\end{lnum}
+
+Por tanto, el tipo de cambio sale de igualar demanda de activos extranjeros y oferta de activos extranjeros.
+
+\paragraph{Formación de Expectativas: \textit{Rules of thumb} y Racionalidad}
+Pero, ¿cómo se forman esas expectativas? Hay dos tipos de agentes: 
+\begin{la}
+    \item \textbf{Fundamentalistas}. Los fundamentalistas tratan de predecir el tipo de cambio futuro en base a la diferencia entre el tipo de cambio de mercado y el tipo de cambio fundamental, teórico, basado en el enfoque de activos (prevén que el tipo de cambio de mercado regrese al tipo de cambio fundamental en el futuro). Por tanto, estos introducen una dinámica de reversión a la media del tipo de cambio. Por tanto, su valor esperado de la variación del tipo de cambio futuro vendrá dado por la diferencia entre el valor observado de mercado y el valor fundamental del tipo de cambio;
+    \item \textbf{Chartistas}. Los chartistas tratan de predecir el tipo de cambio futuro en base a información histórica sobre el tipo de cambio; se basan en gráficas para analizar movimientos del tipo de cambio. A diferencia de los fundamentalistas, no tienen en cuenta información sobre el tipo de cambio fundamental.
+\end{la}
+
+\eqblock{
+\begin{aligned}
+    &E_{t+1}^{\text{\scriptsize F}}=E_t+\left(E[V^{f}_{t+s}\;|\;\Omega_t]-E_t\right)\\[0.5em]
+    &E_{t+1}^{\text{\scriptsize C}}=E_t+\sum_{h=s+1}^t(E_h-E_{h-1})=E_t+(E_t-E_s)\\[0.5em]
+    &E_{t+1}=\alpha E_{t+1}^{\text{\scriptsize F}}+\beta E_{t+1}^{\text{\scriptsize C}}
+\end{aligned}
+}{Burbujas especulativas: Asuencia condición de transverslidad (BLANCHARD). Desarrollos recientes}
+
+\paragraph{Equilibrio: Equilibrios dominantes (múltiples)}
+Por tanto, ¿cómo se determina el equilibrio (TC)? Los autores conciben dos tipos de equilibrio:
+\begin{la}
+    \item Coexistencia fundamentales y chartistas. Donde las variaciones respecto al valor fundamental no son muy grandes; y,
+    \item Charistas se imponen. GRIMALDI y DE GRAUWE consideran que el hecho de que los fundamentalistas observen la pujanza de los chartistas puede hacerlos desistir de apostar por el retorno al equilibrio, lo que explicaría que durante períodos largos de tiempo, el tipo de cambio se separe considerablemente del que vendría dado por los fundamentales.
+\end{la}
+
+En definitiva, estos modelos las interacciones entre agentes heterogéneos puede dar lugar a dinámicas complejas y a un tipo de cambio muy volátil y posiblemente desconectado con los fundamentos económicos. 
+
+\subsubsection{Burbujas especulativas: BLANCHARD}
+Otra linea de investigación alternativa que trata de explicar, principalmente, la volatilidad en los mercados de cambio se basa en la posible existencia de burbujas especulativas: una variable cuyo valor se desvía sistemáticamente y de manera progresiva (al alza o a la baja) de su valor fundamental. 
+
+\eqblock{
+\begin{aligned}
+    E_t=\frac{1}{1+\lambda}\sum_{s=0}^\infty \left(\frac{\lambda}{1+\lambda}\right)^s\mathbb E[V^{f}_{t+s}\;|\;\Omega_t]+C_t\qquad \text{donde,}\;\;C_t=\lim_{s\to\infty}\left(\frac{\lambda}{1+\lambda}\right)^s\mathbb E[E_{t+s}\;|\;\Omega_t]
+\end{aligned}
+}{Burbujas especulativas: Asuencia condición de transverslidad (BLANCHARD). Desarrollos recientes}
+
+Por tanto, el valor actual del Tipo de Cambio será una función del valor esperado descontado al presente de la evolución futuro de sus valores fundamentales y un término de \textit{error} que en este caso viene determinado por el valor descontado al presente de la expectativas sobre la evolución del Tipo de Cambio futuro (curiosamente, si esto fuese igual a cero sería precisamente la condición de transversalidad). De hecho, podemos observar, sin pérdida de generalidad, que esto es precisamente un enfoque analítico del presentado descriptivamente en la alternativa anterior. Los fundamentalistas serían el primer término y el segundo término los chartistas pero desde una perspectiva \textit{forward looking}. Es por eso que las burbujas especulativas pueden surgir, entre otras cosas, debido a la existencia de imperfecciones que acaban generalizándose en el mercado. Una vez se descubre lo incorrecto de dichas percepciones la burbuja estallaría y el tipo de cambio volvería al valor de sus determinantes (con un rápido ajuste). 
+
+En este caso, BLANCHARD considera como que estas imperfecciones emergen debido a los sesgos informativos. Bajo esta situación, los agentes no saben si la perturbación que ha desviado al tipo de cambio de su fundamental va a perdurar o no. Si hay cierta probabilidad de que la burbuja perdure, los agentes pueden obtener ganancias entrando al mercado, aprovechándose de ella y saliendo antes de que estalle. Pero precisamente este comportamiento puede acabar generando una desviación persistente del tipo de cambio con respecto a su fundamental. 
+
+Esta línea de investigación justificaría por tanto a la existencia de burbujas especulativas, su evolución y sus estallidos la explicación por la que el tipo de cambio presenta tal volatilidad y los fundamentales no son capaces de predecir bien (porque hay desviaciones con respecto a estos), pero fue una línea limitada en términos empíricos ante la \textbf{equivalencia observacional}: la imposibilidad de distinguir cambios fundamentales o burbuja.
+
+\subsection{Economía de la Complejidad: Caos}
+
+\begin{specialblock}{Introducción a los ABM y recopilatorio de uso -- Guía Banco de España}
+    Abstract:
+
+    En la última década, los modelos basados en agentes (ABM, por sus siglas en inglés) se han empleado cada vez más como herramientas analíticas dentro de las instituciones de política económica. Este artículo documenta esta tendencia mediante un análisis de la investigación y de los productos de política relacionados con ABM de los bancos centrales y otras instituciones afines de política económica. Clasificamos estos estudios e informes en tres categorías principales: (i) investigación aplicada vinculada a los mandatos de los bancos centrales; (ii) investigación técnica y metodológica que respalda el desarrollo de los ABM; y (iii) ejemplos de la integración de los ABM en el trabajo de formulación de políticas. Nuestros hallazgos indican que los ABM han surgido como herramientas complementarias eficaces para que los bancos centrales cumplan con sus responsabilidades, especialmente tras la ampliación de sus mandatos después de la crisis financiera global de 2007-2009. Si bien reconocemos que aún hay margen de mejora, sostenemos que la integración de los ABM en los marcos analíticos de los bancos centrales puede respaldar respuestas de política más eficaces frente a los desafíos económicos existentes y emergentes, incluidas la innovación financiera y el cambio climático.
+
+    \href{https://www.bde.es/f/webbe/SES/Secciones/Publicaciones/PublicacionesSeriadas/DocumentosOcasionales/25/Files/do2503e.pdf}{\textit{AGENT-BASED MODELING AT CENTRAL BANKS: RECENT DEVELOPMENTS AND NEW CHALLENGES}. Banco de España (2025)}
+\end{specialblock}
+
+Por último, cabe destacar las aportaciones de una rama de la ciencia económica aún en pañales pero que ya ha dado grandes aportaciones tanto teóricas como práctica: la Economía de la Complejidad y sus Modelos Basados en Agentes.
+
+Hasta ahora hemos visto diferentes alternativas que pretenden explicar los determinantes del Tipo de Cambio desde diferentes enfoque. Ahora bien, todos estos comparten un punto común muy claro: optan por un enfoque \textit{top-down}. Es decir, todos ellos construyen el Tipo de Cambio como un precio compuesto de diferentes variables. Por tanto, subyace la idea de que el Tipo de Cambio tiene un precio/valor de equilibrio o natural y que las desviaciones de este valor pueden atribuirse a shocks estocásticos, cambio de los determinantes o, en última instancia, mala especificación o base teórica. (con la única excepción, aunque tampoco del todo , del Modelo de Agentes Heterogeneos)
+
+Ahora bien, ¿y si el Tipo de Cambio no fuese más que el resultado de una serie de comportamientos endógenos que poco, o nada, tienen que ver con éste pero en última instancia emerge como una propiedad del sistema? Es decir, ¿y si no existiera un equilibrio sino, más bien, un resultado en constante mutación/variación/alteración? Este es precisamente el enfoque que toman los Modelos Basados en Agentes, que dicen ser \textit{bottom-up}.
+
+El más célebre de estos en la materia es el recientemente publicado por un grupo interuniversitario asociado a la Universidad de Pise (\href{https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4903314}{\textit{The interplay between real and exchange rate market: an agent-based model approach}. DOMENICO et al., 2024}), referente en este campo.
+
+\subsubsection{Tipo de Cambio: Naturaleza dual}
+El planteamiento central del paper es que el tipo de cambio tiene una naturaleza dual. No solo refleja fundamentos reales (balanza comercial, competitividad), sino que también es un activo financiero determinado por decisiones especulativas de agentes con expectativas heterogéneas (fundamentalistas y chartistas). Estas expectativas generan dinámicas endógenas (burbujas, crashes, persistencia y volatilidad) que el enfoque de equilibrio no puede reproducir. En el modelo, los flujos comerciales y la demanda financiera de divisas interactúan de forma altamente no lineal, creando mecanismos de retroalimentación entre el sector financiero y el real.
+
+\subsubsection{Desarrollo formal: Multi-país, multi-sector y multi-agente}
+Para esto, los autores construyen un modelo macroeconómico agent-based (MABM), multi-país y multi-sector, que integra simultáneamente comercio internacional, innovación, expectativas heterogéneas en el mercado de divisas y la actuación del Banco Central, extendiendo el marco de Dosi et al. (2019).
+
+\imagenfit{MABM_2024_EsquemaEcoReal.png}{Proceso de interacción entre la economía real y el comportamiento financiero del tipo de cambio. Dinámica multi-país, multi-sector y multi-agente}{\href{https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4903314}{\textit{The interplay between real and exchange rate market: an agent-based model approach}. DOMENICO et al. (2024)}}
+
+En cada período de tiempo $t$, la secuencia de eventos en el modelo es la siguiente:
+\begin{lnum}
+    \item Las empresas de las industrias de bienes de consumo realizan I+D para descubrir nuevas técnicas e imitar a los competidores más cercanos a la frontera tecnológica (análisis envolvente de datos: DEA). Las empresas pueden mejorar su productividad laboral si la innovación o la imitación tienen éxito;
+    \item Tienen lugar las decisiones de producción y empleo. Las empresas de bienes de consumo fijan su producción deseada dado su nivel de demanda esperada. En consecuencia, contratan trabajadores y amplían su capacidad productiva si es necesario;
+    \item Se fijan los salarios monetarios y los precios;
+    \item El tipo de cambio bilateral viene determinado por las decisiones de comportamiento de los operadores comerciales en el mercado de divisas;
+    \item Se abren los mercados internacionales de bienes de consumo con competencia imperfecta. Los trabajadores gastan sus ingresos en bienes nacionales e importados. Las cuotas de mercado de las empresas evolucionan según su competitividad en precios;
+    \item Tiene lugar la entrada y salida de empresas. Nuevas empresas sustituyen a las empresas con cuotas de mercado casi nulas que abandonan el mercado.
+\end{lnum}
+
+Al final de cada paso de tiempo, se calculan las variables agregadas (por ejemplo, producción, consumo, exportaciones, importaciones, etc.), sumando las correspondientes variables microeconómicas.\footnote{Para ver las normas/procesos de decisión; las probabilidades asociadas y las dinámicas de cada etapa consultar el paper.
+}
+
+\imagenfit{Dinamica_MABMEcoFinanciera.png}{Diagrama de flujo que ilustra los principales pasos diferenciadores entre el modelo de referencia (blanco + azul) y el modelo con comportamiento especulativo (amarillo + azul) y el Banco Central (verde)}{\href{https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4903314}{\textit{The interplay between real and exchange rate market: an agent-based model approach}. DOMENICO et al. (2024)}}
+
+Una prticularidad del modelo es que no permite soluciones \textit{closed-form}, una característica común de los modelos basados en agentes. Esta limitación surge de las no linealidades inherentes en las reglas de decisión de los agentes y en los patrones de sus interacciones. En consecuencia, para investigar la dinámica de las variables micro y macro, es necesario recurrir a simulaciones. Se imponen parámetros estructurales idénticos en torno a países, industrias y empresas. La dinámica evolutiva es un resultado endógeno. 
+
+Los autores realizan simulaciones durante 600 períodos (50 períodos transitorios y 550 períodos considerados) y evalúan la significación empírica del modelo basándose en simulaciones de Monte Carlo con 200 réplicas de 600 períodos.
+
+\subsubsection{Resultados: Implicaciones de Política Económica}
+Las simulaciones muestran, como resultado principal, que la introducción de comportamiento especulativo permite reproducir de manera conjunta una amplia batería de hechos estilizados empíricos: colas gruesas, clustering de volatilidad, efectos de apalancamiento, presencia de raíz unitaria, burbujas y crashes en el tipo de cambio, así como el conocido \textit{disconnect puzzle} entre tipos de cambio y fundamentos. 
+
+Además, proponen que los chartistas (seguidores de tendencias) son un factor clave de inestabilidad ya que aumentan la duración y la amplitud de los ciclos financieros y, a través del canal cambiario, amplifican las fluctuaciones reales, afectando al crecimiento, al comercio y a la sincronización internacional de los ciclos.
+
+Un segundo bloque de resultados se refiere a la política económica. El banco central, incorporado explícitamente como actor en el mercado de divisas, puede reducir la amplitud de los ciclos y limitar la especulación mediante intervenciones esterilizadas del tipo \textit{leaning against the wind}. Sin embargo, el paper subraya con fuerza que su eficacia es limitada y dependiente del diseño: las intervenciones continuas logran frenar burbujas, pero pueden aumentar la volatilidad real; las intervenciones esporádicas con objetivos amplios resultan prácticamente ineficaces. El banco central, por tanto, enfrenta \textit{trade-offs} inevitables y no puede eliminar la inestabilidad endógena generada por expectativas heterogéneas.
+
+En conclusión, el paper sostiene que la inestabilidad financiera y cambiaria no es exógena ni accidental, sino una propiedad emergente de economías abiertas con agentes heterogéneos y comportamiento especulativo. 
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+
+%ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+\end{document}
