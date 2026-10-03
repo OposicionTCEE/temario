@@ -1,0 +1,1639 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Tema 3.A.29 -- Modelización dinámica de las tomas de decisiones\\
+\large Modelos de horizonte infinito y modelos de generaciones solapadas}
+\author{Marcelo Ortega}
+\date{Noviembre 2025}
+\newcommand{\TemaCode}{3A29}
+
+\oldtitle{Tema 3.A.12. Decisiones intertemporales de consumidores y empresas. Modelos de horizonte infinito y modelos de generaciones solapadas}
+\changerationale{Se aclara el título y se desplaza al apartado de macroeconomía, en el que son especialmente frecuentes los modelos intertemporales de horizonte infinito y los modelos de generaciones solapadas, clara prueba de la microfundamentación de la macroeconomía moderna.}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+    Junto con el 3A14 de Teoría de Juegos, éste es el único tema del Tercer y Cuarto Ejercicio que versa sobre Métodos (frente al dominio absoluto de los de Teoría económica). Así, como ocurre también con los pocos centrados en evidencia empírica, exponerlos puede suponer un pequeño nivel de dificultad añadido para el opositor, por falta de práctica. 
+    
+    \textbf{IMPORTANTE:} Se ha de ser consciente de que lo más relevante no son los modelos concretos que se exponen, sino las metodologías que se utilizan para conseguir introducir explícitamente el tiempo en la modelización.
+
+    En cuanto a la estructura y la distribución de minutos en la exposición:
+    \begin{lnum}
+        \item Los apartados 3 (Modelización dinámica en economía) y 4 (Aplicaciones típicas en macroeconomía: modelos de agente representativo) son indudablemente los más importantes;
+        \item El apartado 2 tiene una naturaleza de contextualización y el nivel de profundidad es introductorio (el opositor más aventajado podría refinarlo, por ejemplo mencionando procesos típicos como los paseos aleatorios o los MA(1), sin entrar eso sí en análisis econométrico avanzado); y,
+        \item De manera similar, la introducción de interdependencia estratégica en el apartado 5 ha de entenderse como una mera extensión, y la visión provista es general y en algunos casos un mero recordatorio sobre el cual el opositor podría inyectar más profundidad.
+    \end{lnum}  
+    }
+\vspace{1cm}
+
+\modificaciones{
+    INCLUIR MODELO R-C-K en MHI
+
+    Cambiar MGS a Victor con los Apuntes que tengo en el IPAD ($e$) es endowmente y hace referencia a las dotaciones iniciales de recursos de las que disponen los agentes de una isla, desierta, cuya economía es de intercambio puro (sin dinero) y en ausencia de Estado. Las personas no prestarán. 
+
+    Mover todas las herramientas metodológicas al final y utilizarlas de comodín de tiempo, no desarrollarlas.
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}\label{intro}
+¿Qué es estática y qué es dinámica en Economía? Según Hicks, si se consigue definir una quedará definida la otra. 
+
+En la primera mitad del siglo XX varios autores trataron de dar dichas definiciones, a veces incompatibles entre sí. La razón de este interés radicaba en que fue entonces cuando se empezaron a poner las bases de análisis económico dinámico.
+
+\subsection{Contextualización}\label{context}
+La clave formal para identificar un análisis dinámico sería la existencia de variables con subíndices temporales referidos a distintos momentos del tiempo. No es, por tanto, estática comparativa ni análisis de cómo se alcanza el equilibrio desde una situación de desequilibrio.\footnote{La estática comparativa, desarrollada por SAMUELSON, tiene un mayor interés, pues puede considerarse como la técnica a medio camino entre la estática y la dinámica. Consiste en comparar dos equilibrios estáticos, uno inicial con un conjunto de datos y otro final con unos datos distintos, cuando el sistema se ha ajustado a los nuevos datos. Permite analizar el efecto de cambios en los parámetros sobre los niveles de las variables en equilibrio, pero haciendo abstracción de lo que ocurre realmente entre ambos equilibrios, de la senda temporal que recorren las variables en el proceso de reajuste, aunque puede darse una estrecha relación entre dinámica y estática comparativa en virtud del “principio de correspondencia de SAMUELSON (1947). 
+} Tampoco es (exactamente) un análisis del proceso de reajuste tras la pérdida del equilibrio ante una perturbación; la dinámica es en realidad una sucesión de diferentes equilibrios en distintos instantes o períodos del tiempo, de modo que no hay situaciones de no vaciado del mercado con precios falsos ni reglas de racionamiento. Por tanto, el análisis dinámico o intertemporal puede definirse ante todo, como señalaba TINBERGEN, como una manera de pensar o enfoque del análisis económico, de modo que no queda definido por el estudio de unas variables concretas sino por el análisis desde una perspectiva temporal de cualquier variable económica. Cuestión distinta es que dicho análisis aporte resultados de valor por encima del análisis estático, para lo que es condición necesaria que el problema tenga un carácter genuinamente dinámico o intertemporal, es decir, que las decisiones de un período estén condicionadas por las decisiones en períodos distintos.
+
+\paragraph{Características básicas}
+Una característica diferencial de los problemas dinámicos es la posibilidad de clasificación de las variables económicas de decisión en dos categorías en función de su referencia temporal:
+\begin{la}
+    \item \textit{Variables flujo}. Una variable flujo siempe tiene, como característica esencial, una dimensión temporal; son las referidad un intervalo de tiempo. Suelen ser aquéllas sobre las que se decide directamente y que se utilizan como variables de control en los problemas de optimización dinámica. Por ejemplo, el consumo; y,
+    \item \textit{Variables stock}. Una variable stock nunca tiene una dimensión temporal; son las referidas a un instante del tiempo, su evolución queda determinada por las variables flujo y se corresponden a las variables de estado en los problemas de optimización dinámica. Por ejemplo, la riqueza.
+\end{la}
+
+\imagenfit{FlowANDstock.png}{Variables flujo y variables stock. Caracterización}{Elaboración propia}
+
+Además, el análisis dinámico, independientemente de la metodología utilizada para formularlo, comparte una serie de características/especificaciones comunes:
+\begin{lnum}
+    \item \textbf{Horizonte temporal}. El horizonte temporal puede ser finito o infinito;
+    \item \textit{Unidades de tiempo}. Las unidades de tiempo se pueden medir de forma continua (cuando no hay intervalos claramente definidos), o de forma discreta, cuando cada periodo corresponde a una unidad claramente definida y no contigua a la anterior, solo sucesiva. 
+\end{lnum}
+
+Centrandonos ahora en los programas de optimización, la vertiente metodológica ortodoxa en análisis dinámico, se sostiene sobre los siguientes supuestos:
+\begin{lnum}
+    \item \textit{Hipótesis ergódica}. El sistema posee una estructura estable en el tiempo, de modo que las regularidades observadas no dependen de una historia particular, sino que reflejan propiedades generales del propio sistema (el valor esperado del sistema es igual a su valor a largo plazo). Por tanto, la ergodicidad no es una descripción empírica del mundo, es una hipótesis metodológica que permite tratar la economía como un sistema gobernado por regularidades generales, no como un proceso históricamente singular o dependiente del camino seguido;\footnote{Su rechazo implica aceptar que la historia importa de manera no resumible, que las trayectorias no son intercambiables y que el futuro no está estadísticamente contenido en el pasado
+    }
+    \item \textit{Individualismo metodológico}. Los fenómenos económicos deben explicarse a partir de las acciones, decisiones e interacciones de los individuos, y no mediante entidades colectivas tratadas como agentes autónomos: el comportamiento agregado del sistema debe (y puede) explicarse a través de la agregación de los agentes que lo conforman;\footnote{Desde este enfoque, una explicación económica es satisfactoria solo si muestra cómo las regularidades observadas a nivel agregado emergen de decisiones individuales, tomadas bajo restricciones y con expectativas determinadas. Las variables macroeconómicas no se niegan, pero se consideran legítimas únicamente en la medida en que pueden vincularse, al menos en principio, a mecanismos microeconómicos.
+    } 
+    \item \textbf{Racionalidad}. Los agentes económicos eligen de manera sistemática y coherente entre las alternativas disponibles, utilizando la información que poseen y actuando conforme a un criterio estable de valoración. Las decisiones no se consideran arbitrarias, sino el resultado de un proceso de elección;
+    \item \textbf{Escasez o economía basada en el intercambio}. Los agentes económicos actúan en un entorno en el que los recursos disponibles son limitados en relación con los fines que pueden perseguirse: no es posible satisfacer simultáneamente todos los objetivos deseables. Desde este punto de vista, la escasez no es un hecho empírico contingente, sino una condición estructural del análisis económico ya que, sin escasez no habría costes de oportunidad ni decisiones propiamente económicas. La escasez convierte la elección en el verdadero problema económico, dando a la Teoría Económica su razón última de existir.
+\end{lnum}
+
+\imagenfit{Hipotesis_Basicas.png}{Las hipótesis básicas de la metodología económica}{De derecha a izquierda: \href{https://www.youtube.com/watch?v=VCb2AMN87cg}{What is ergodicity? (Ergodicity Channel. Youtube)}; \href{https://www.nytimes.com/2023/07/10/opinion/economic-modeling-hank-representative-agent.html}{\textit{The representative agent is always rational. The rest of Us are not.}. (The New York Times)}; \href{http://www.marcopangallo.it/blog/2024/04/}{\textit{Making sense of chaos. A better Economics for a Better World}. J. DOYNE FARMER}; \href{https://easy-peasy.ai/ai-image-generator/images/scarcity-opportunity-cost-interactive-editorial-cartoon}{Generado por IA}}
+
+Por lo que estos se considerarán válidos durante la exposición salvo que expresamente se diga lo contrario.
+
+\subsubsection{Relevancia}\label{importance}
+Por lo que respecta a la relevancia que tiene la revisión de la metodología aplicada a la modelización dinámica de las decisiones de los agentes, cabe destacar que la microeconomía ha aplicado frecuentemente el enfoque dinámico a los problemas económicos, por lo que a lo largo de este tema trataremos de poner en valor las verdaderas aportaciones del análisis dinámico, esto es, la obtención de resultados o ideas novedosas que le están vedados al análisis estático por su mayor simplicidad material y formal.\footnote{En efecto, hay problemas que sólo pueden entenderse desde una óptica intertemporal y otros que se enriquecen cuando pasan de estudiarse con herramientas dinámicas. 
+} Pero ante todo, la relevancia de este tema radica en que el análisis microeconómico dinámico ha sido la base del gran desarrollo de la macroeconomía microfundamentada, y en concreto de los modelos de agente representativo, nada menos que la ortodoxia metodológica en la actualidad.\footnote{
+Sin embargo, este enfoque es susceptible de cada vez mayores críticas hasta el punto que podrían considerarse signos de su posible agotamiento, como son la aparición de enfoques de análisis macroeconómico alternativos. Pero también podría considerarse (aunque es debatible) que otro signo de reconocimiento de esas limitaciones y de una limitada desconfianza por la macroeconomía microfundamentada sea una cierta resistencia a \textit{barrer debajo de la alfombra} de manera definitiva los viejos modelos de la síntesis keynesiana (que son de conocimiento obligado en el currículo de cualquier universidad) que buscaban relaciones entre macromagnitudes directamente en el agregado, sin pasar por la microfundamentación.
+}
+
+\subsubsection{Problemática}\label{problem}
+A lo largo de esta exposición intentaremos responder las siguientes preguntas:
+\begin{lnum}
+    \item ¿Cómo deciden los agentes económicos en un contexto intertemporal?
+    \item ¿Cómo se modeliza el efecto del tiempo sobre las decisiones de los agentes?
+    \item ¿Qué técnicas matemáticas se utilizan?
+    \item ¿Cuáles son las características principales de los modelos de horizonte infinito?
+    \item ¿En qué consisten los modelos de generaciones solapadas?
+\end{lnum}
+
+\subsection{Estructura de la exposición}\label{structure}
+En este tema se van a analizar las diferentes aplicaciones del enfoque dinámico o intertemporal. Dada la naturaleza de este título del temario (es un tema sobre métodos):
+\begin{lnum}
+    \item Empezaremos presentando la herramienta \textit{baseline} para analizar las decisiones desde una perspectiva temporal: los programas de optimización dinámica o modelización dinámica de las decisiones;
+    \item Posteriormente presentaremos los dos modelos de referencia que usan como base la modelización dinámica: modelo de Horizonte Infinito y su extensión, el Modelo de Generaciones Solapadas; y,
+    \item \textit{Comodín}: Por último, presentaremos otras aproximaciones metodológicas alternativas para estudiar las decisiones dentro de un marco temporal.
+\end{lnum}
+
+\clearpage
+\section{Modelización dinámica en economía}
+\puntosclave{
+    Hablamos de un modelo dinámico en términos formales cuando el tiempo es una variable explícita del modelo matemático. Además, en un modelo dinámico, las decisiones de los agentes económicos y por tanto los equilibrios se caracterizarán no por un vector con diferentes variables, sino por una matriz en que cada variable toma un valor para cada valor del tiempo. Es decir, las variables serán secuencias de valores.
+    
+    Las variables económicas en los modelos dinámicos se clasificarán típicamente como variables de control (sobre las que deciden los agentes), y variables de estado (que condicionan la evolución del sistema económico en el tiempo.
+    
+    Una microfundamentación basada en la Teoría de la Elección Racional será, en esencia, equivalente a los problemas estáticos: se basarán en un programa de optimización. Sin embargo, la complejidad matemática será mayor, por lo que existen requisitos sobre la función objetivo y las restricciones, y métodos avanzados para resolver estos problemas.
+}
+
+En los modelos de decisión intertemporal los equilibrios se caracterizan en forma de secuencias o funciones del tiempo que representan el valor de equilibrio en cada instante temporal.\footnote{A diferencia de los problemas de decisión estáticos, en los que el equilibrio se puede caracterizar con un simple vector de variables que represente las asignaciones y los precios de equilibrio.
+} Las funciones objetivo a maximizar representan las preferencias del agente en cuestión por una trayectoria u otro de las variables relevantes y los agentes eligen sendas, trayectorias o corrientes intertemporales de la variable de elección (consumo, activos, ocio, dinero, ...). Además, existe un denominador común a toda la gran variedad de modelos dinámicos alternativos: las decisiones presentes tienen algún tipo de consecuencia sobre el resto de futuros periodos, de tal manera que las decisiones en un periodo dado se ven condicionadas por las que se toman en el resto de períodos. Este óptimo se representa, generalmente, a través de una \textbf{condición de Euler} y una \textbf{condición de transversalidad}.\footnote{La condición de Euler caracteriza la trayectoria a seguir por las variables de decisión, y la condición de transversalidad restringe el valor terminal de alguna de las variables relevantes.
+}
+
+Entrando en materia, resulta evidente que ciertos fenómenos solo pueden estudiarse desde una óptica dinámica. Este es el caso de las decisiones de ahorro, donde un individuo decide guardar una parte de su renta actual para consumirla en el futuro. Si no tenemos en cuenta esta naturaleza dinámica y realizamos un análisis puramente estático, el ahorro no tendría ningún sentido, pues supondría guardar renta que, debido a la naturaleza estática no se va a utilizar porque no hay más períodos, y que por tanto supone alcanzar un menor nivel de utilidad dado el axioma de no saciabilidad. 
+
+Con el fin de presentar formalmente los problemas de optimización dinámica, base estructural del análisis dinámica actual, recurriremos a un modelo muy sencillo, de horizonte temporal finito (podría ser infinito) y de tiempo discreto (podría ser continuo): el modelo de decisión intertemporal de consumo de FISCHER.
+
+\subsection{Componentes}
+Al igual que ocurría en el caso de la Teoría de la Demanda en su vertiente estática, la modelización de las decisiones del consumidor en una perspectiva dinámica se puede entender mediante el análisis de los componentes que constituyen el problema de optimización.
+
+\subsubsection{Preferencias Intertemporales: Función de Utilidad Intertemporal}
+Partimos de un conjunto de elección formado por diferentes sendas intertemporales. En este caso, por simplicidad, nos basaremos en sendas de consumo, pero podría extenderse a sendas de activos, a sendas de ocio, a sendas de dinero, etc. De esta manera, cada componente de una senda intertemporal nos indica cuál es la cantidad del bien de consumo que el agente consumiría en cada momento si opta por esa senda concreta.
+
+Sobre el conjunto de esas sendas factibles el agente establece unas preferencias intertemporales que pueden representarse por medio de una Función de Utilidad Intertemporal (FUI, de ahora en adelante). Ésta nos indicaría el valor (descontado al momento actual) asociado a cada senda factible de consumo, de tal manera que a mayor valor mayor será la satisfacción del agente. La forma estándar de esta función de utilidad intertemporal es la propuesta por SAMUELSON:
+
+\eqblock{
+\begin{aligned}
+    &\boxed{U(i)=\sum_{t=i}^T\beta^tu(c_t)}\\[1em]
+    &\text{donde,}\;\;
+    \begin{cases}
+        \beta&\equiv\quad \text{Factor de desuento exponencial}\quad\underbrace{\Longrightarrow}_{\text{\scriptsize Se aproxima por}}\quad \beta=\frac{1}{1+\rho}\\[0.5em]
+        u(c_t)&\equiv\quad \text{Función de Utilidad instantánea}
+    \end{cases}
+\end{aligned}
+}{Función de Utilidad Intertemporal de SAMUELSON. Modelización dinámica}
+
+Que como vemos tiene dos componentes:
+\begin{lnum}
+    \item \textbf{Factor de descuento, objetivo, intertemporal y exponencial}. Corresponde al factor de de descuento objetivo del consumo y se aproxima a través del factor de descuento subjetivo del consumidor. Este es necesario matemáticamente para descontar el valor futuro del consumo y permitir acotar dicha función, y está validado empíricamente por la ciencia ya que representa el supuesto fundamental de que los individuos valoran más el consumo y la renta presente que la futura (impaciencia en el consumo). En consecuencia, dicha función de descuento es débilmente decreciente conforme el consumo se aleja en el futuro; y,
+    \item \textbf{Función de utilidad instantánea}. Se asume que es estrictamente creciente y cóncava (al igual que las utilidades estáticas).
+\end{lnum}
+
+Nótese que en el análisis dinámico no entramos a analizar la especificación rigurosa de la axiomática de unas preferencias binarias. Ésta se suele obviar ya que el modelo de utilidad descontada es tan ampliamente utilizado que no se entra a valorar estas cuestiones.
+
+\begin{specialblock}{\textbf{Importante.-} Descuento hiperbólico}
+    El descuento exponencial no es compatible con varias regularidades empíricas, en concreto que el factor decrece a mayores tasas en el corto que en el largo plazo, es decir, que los agentes se muestran más impacientes ante comparaciones en el corto plazo (hoy-mañana) que en el largo plazo (hoy-dentro de un año). El principal motivo de su uso tan extendido es que permite el cumplimiento de propiedades muy deseables de las preferencias como son la estacionariedad y la consistencia intertemporal (que veremos más adelante), que se verán más adelante. De modo que, desde el análisis seminal de R. H. Strotz (Myopia and inconsistency in dynamic utility maximization, Review of Economic Studies 23, 165–80, 1956) se han buscado otras funciones de descuento subjetivo. Así, a diferencia del descuento exponencial, el descuento hiperbólico tiene la siguiente forma:
+    $$D(t)=\frac{1}{1+k\cdot t}$$
+    donde $k$ es un parámetro que rige el grado de descuento (por ejemplo, la tasa de interés de mercado $r$ o el tipo de descuento subjetivo $\rho$). Nótese que, a diferencia del descuento exponencial, $t$ multiplica $k$ en vez de elevar la fracción completa. Esto permite alinearlo mejor con la regularidad empírica, en tanto que el descuento es más alto para los períodos próximos al presente, y apenas aplicando descuento en los períodos del futuro lejano.
+
+    Paradójicamente, esta virtud implica directamente un problema metodológico importante: el descuento entre periodos es, como vemos, variable. Por tanto, las preferencias \textbf{no son temporalmente consistentes}.
+\end{specialblock}
+
+\paragraph{Propiedades}
+Esta FUI tiene un serie de propiedades: 
+\begin{lnum}
+    \item \textit{Impaciencia}. Debido al factor de descuento inferior a la unidad, de modo que, dada una senda de consumo no nula, la senda de consumo desplazada un período es estrictamente peor. De hecho, cuanto mayor sea $\rho$ (o menor $\beta$) más impaciente será eál consumidor;\footnote{Esta propiedad implica que una senda de consumo acotada, incluso en tiempo infinito, tiene valor finito en términos de utilidad, lo que a su vez permite comparar dos sendas de consumo cualesquiera (completitud) y aplicar herramientas de cálculo a la resolución del problema
+    }
+    \item \textit{Estacionariedad}.\footnote{Comprobará el opositor la similitud con el concepto de estacionariedad en series temporales: en ambos casos, la variable tiempo no afectará a la estructura de nuestra variable de interés. Sin embargo, mientras que en el caso de análisis de series temporales la no dependencia del tiempo se refiere a los momentos estadísticos de la propia serie (media y autocovarianza), en este caso se refiere a los argumentos de las preferencias.
+    } Dadas dos sendas de consumo idénticas hasta cierto período $T$ y diferentes después, la preferencia hoy entre ambas no cambia si adelantamos todas las cantidades consumidas en ambas sendas esos $T$ períodos. Es decir, las preferencias sobre el futuro son independientes de la edad del consumidor;
+    \item \textit{Separabilidad aditiva}.\footnote{La forma correcta de denominar a estas funciones es separables y aditivas o aditivamente separables, pero NUNCA aditivas y separables, pues es señal de desconocimiento al ser la aditividad un caso particular (extremo) de la separabilidad, por lo que toda función aditiva es necesariamente separable.
+    } La función exhibe dos propiedades de separabilidad, en toda fecha $T$: 
+    \begin{la}
+        \item La ordenación de cestas a partir de $T+1$ es independiente del consumo entre $0$ y $T$; y,
+        \item La ordenación de cestas entre $0$ y $T$ es independiente de las expectativas de consumo partir de $T+1$. 
+    \end{la}
+    Conjuntamente, ambas implican aditividad, de modo que si la ordenación de preferencias cumple ambas, entonces dichas preferencias pueden representarse por una función de utilidad de la forma $U(c)=\sum u_t(c_t)$; y,
+    \item \textit{Recursividad}. Dada la forma de la función, el flujo de utilidad intertemporal puede descomponerse en la utilidad del consumo hoy y todo el flujo de utilidades futuras evaluadas en el período siguiente.
+\end{lnum}
+
+\paragraph{Representación gráfica}
+Además, por las propiedades que acabamos de especificar (en particular, las dos últimas), las preferencias sobre entre dos periodos inmediatamente continuos (por ejemplo, hoy y mañana) se pueden representar gráficamente mediante curvas de indiferencia convexas al origen:\footnote{Siendo la pendiente de las curvas de indiferencia lo que conocemos como \textit{relación marginal de sustitución intertemporal}
+}
+
+\imagenfit{CI_HTI.png}{Curvas de indiferencia. Modelo de Horizonte Infinito -- Dos periodos}{Elaboración propia}
+
+Como es obvio, por tanto, el agente querrá elegir aquella senda de consumo intertemporal que le permita maximizar su función de utilidad intertemporal (utilidad descontada al momento presente). Sin embargo, de esta formulación de la utilidad intertemporal puede deducirse una característica fundamental: el problema del agente (consumidor), por el momento, no es un problema genuinamente intertemporal, pues la utilidad de un período es independiente de la utilidad de cualquier otro y, además, tal y como ocurría en la teoría estática del consumidor, no todas las sendas factibles van a ser realmente elegibles.  Por lo tanto, es necesario tanto para otorgarle el carácter intertemporal al modelo como para restringir las sendas factibles del agente la introducción de la restricción de recursos intertemporal.
+
+\subsubsection{Restricciones}
+En los problemas de optimización dinámica, sin embargo, distinguimos varios tipos de \textit{restricciones} que jugarán un papel fundamental. Empecemos analizando la restricción clásica de recursos, lo que se conoce como: restricción presupuestaria intertemporal.
+
+\paragraph{Ecuaciones de estado: recursos (RPI)}
+Las restricciones de recursos, ecuaciones de estado o ecuaciones dinámicas (todas equivalentes), describen el cambio de un período a otro de cada una de las variables de estado o stock. El ejemplo más habitual es la restricción presupuestaria intertemporal que describe la evolución del stock de activos de un consumidor de un período a otro. 
+
+En cada momento del tiempo, los individuos disponen de una determinada cantidad de recursos que pueden consumir o ahorrar, por tanto, la cantidad ahorrada en el primer periodo formará parte de la renta disponible en el segundo periodo, pero capitalizada a un tipo de interés $r_t$ dado que se supone que dicho ahorro podrá ser invertido en activos financieros como, por ejemplo, depósitos. Por tanto, la restricciones presupuestarias intertemporales es: 
+
+\eqblock{
+\begin{aligned}
+    &\boxed{
+    \begin{aligned}
+        c_t+&a_{t+1}= w_t\\[0.5em]
+        a_{t+1}-a_t&=w_t+a_t\;r_t-c_t
+    \end{aligned}}\\[1em]
+    \text{Donde,}
+    &\begin{cases}
+        a_{t+1}&\equiv\quad \substack{\text{Stock de activos netos que el consumidor acumulaen el}\\
+        \text{periodo $t$ y han generado un rendimiento de $r$ en $t+1$}}\\
+        &\to \text{\scriptsize Pueden ahorrar o endeudarse indistintamente (Mcdos. Perfectos)}\\[0.5em]
+        r&\equiv\quad \text{Coste financiero del préstamo, a devolver en $t+1$}
+    \end{cases}\\[1em]
+\end{aligned}
+}{Restricción Presupuestria Intratemporal. Optimización dinámica}
+
+Hay una \textit{ecuación dinámica} o RPI para cada par de periodos, aunque se pueden agregar en una sola iterando a través de la variable de estado de modo que ésta desaparece, excepto su valor inicial y terminal. 
+
+Como vemos, esta variable de estado, en este caso el ahorro ($a$), es la que conecta un período con otro, pues es la única en todo el problema que para un período dado incorpora un subíndice de un período distinto. El equivalente de esta característica en tiempo continuo es la presencia de la derivada con respecto del tiempo.  
+
+Podemos representar gráficamente esta restricción (la primera, por pares de periodos) de la siguiente manera:
+
+\imagenfit{Opt_ConsumoSenda.png}{Optimización problema del consumo intertemporal. Comparación por pares de periodos}{Apuntes Víctor Begué. Tema 3.A.12}
+
+\paragraph{Condiciones (iniciales y terminales). Condición de transversalidad} 
+Sin embargo, es necesario añadir un par de restricciones adicionales.
+
+Estas restricciones son la restricción inicial y la restricción terminal, e indican las variables de estado iniciales de las que partimos y finales que debemos alcanzar en el último período de optimización
+
+\eqblock{
+\begin{aligned}
+    \begin{aligned}
+    &\text{Condición inicial:}\\[3em]
+    &\text{Condición de transversalidad:}
+    \end{aligned}
+    \qquad
+    \boxed{\begin{aligned}
+        &a_0=A\\[1em]
+        &\left\{\begin{aligned}
+            &\text{(discreto)}\qquad a_T=0\\[0.5em]
+            &\text{(continuo)}\qquad \lim_{t\to\infty}\left(\frac{1}{1+r}\right)^ta_{t+1}=0
+        \end{aligned}\right.
+    \end{aligned}}
+\end{aligned}
+}{Condiciones iniciales y finales. Optimización dinámica}
+
+Por tanto, estas restricciones se imponen para restringir el conjunto posible de las variables flujo dada una senda determinada por la ecuación dinámica (de las variables estado). Además, la condición terminal o condición de transversalidad restringe el resultado a uno factible en términos económicos, ya que:
+\begin{la}
+    \item Si dicho límite es mayor que cero, se está realizando una aportación innecesaria a los acreedores;
+    \item Si dicho límite es menor que cero, se está invirtiendo en un esquema PONZI, en el que el agente está permanentemente pidiendo prestado y en el que los acreedores aceptan esta decisión; y,
+    \item Si dicho límite es cero, el individuo agota los recursos permitidos por su restricción presupuestaria. 
+\end{la}
+
+\subsubsection{Problema de maximización: Agrupación}
+Por tanto, con todos los componentes descritos, se plantea el problema de optimización intertemporal del consumidor en tiempo \textbf{discreto} y horizonte \textbf{inifito} de la siguiente forma:
+
+\eqblock{
+    \begin{aligned}
+       &\boxed{
+       \begin{aligned}
+            &\max_{U}{U(0)}=\sum_{t=0}^T\beta^tu(c_t)\\[1em]
+            \text{s.a.}\quad 
+            &\begin{cases}
+                a_{t+1}-a_t=w_t+a_t\;r_t-c_t\\[1em]
+                a_0=A\\[1em]
+                a_T=0
+            \end{cases}
+        \end{aligned}}
+    \end{aligned}
+}{Problema de optimización. Modelización dinámica}
+
+Como vemos, se pretende alcanzar la máxima utilidad descontada al momento presente eligiendo para ello la senda de consumo (es decir, la cantidad del bien de consumo en cada período) que, cumpliendo con la RPI y las condiciones iniciales y terminales, maximice la utilidad intertemporal del consumidor. Nótese que la variable de elección es siempre la variable de control, es decir el consumo, pues el consumidor no tiene capacidad para incidir sobre la variable estado, ya que esta es el resultado de las decisiones anteriores. 
+
+Una vez planteado el problema podemos pasar a resolverlo y ver cómo el agente toma sus decisiones de consumo/ahorro.
+
+\subsubsection{Herramientas matemáticas para la optimización dinámica}
+Hallar la decisión óptima implica conocer también la trayectoria de la variable de stock (estado) a lo largo del tiempo, y el valor de la función objetivo (flujo) en el óptimo. Encontrar estos valores es el objetivo último, pues en ellos se resume el comportamiento que adoptaría un agente racional sujeto al contexto institucional dado. No obstante, se necesitan una serie de técnicas matemáticas adaptadas al problema concreto.\footnote{Debemos tener muy en cuenta que actualmente, debido a las altas capacidades computacionales de cualquier ordenador, los problemas de optimización dinámica se resuelven siempre por ordenador.
+}
+
+\paragraph{Lagrangiano}
+Cuando el problema de maximización se formula en términos de \textbf{periodos discretos} y \textbf{horizonte finito}, es posible hallar el máximo mediante métodos convencionales como el multiplicador de Lagrange. 
+
+La resolución de modelos en tiempo continuo u horizontes temporales infinitos limita el uso de los multiplicadores de Lagrange en su versión simple. Se trata, en estos casos, de encontrar secuencias con un número infinito de valores, por lo que el método de Lagrange no permite resolver el problema.\footnote{Para resolverlos, EULER y LAGRANGE introdujeron el cálculo de variaciones. Consultar The New Palgrave Dictionary (Entrada: \textit{calculus of variations})
+}
+
+\paragraph{Control óptimo: Óptimo de PONTRYAGIN}
+El control óptimo consiste en transformar el problema de optimización en otro problema equivalente del cual es posible derivar unas condiciones de óptimo. 
+
+Para ello, se construye un objeto matemático denominado \textbf{Hamiltoniano}, consistente en la suma de (i) el beneficio instantáneo y (ii) el efecto sobre el beneficio total de una unidad adicional de la variable de control. Al existir un trade-off entre ambos, la función permite incorporar ambos efectos.
+
+\eqblock{
+\begin{aligned}
+    H(c(t), k(t), t)=u(c(t), k(t), t)+\lambda(t)\;\cdot \;g(c(t), k(t), t)\\[2em]
+    \text{\textbf{Óptimo de PONTRYAGIN}}
+    \begin{cases}
+        \frac{\partial H}{\partial c}=\frac{\partial u}{\partial c}+\lambda\;\frac{\partial g}{\partial c}=0\\[0.5em]
+        \frac{\partial H}{\partial k}=\frac{\partial u}{\partial k}+\lambda\;\frac{\partial g}{\partial k}=0\\[0.5em]
+        \frac{\partial H}{\partial \lambda}=g(c(t), k(t), t)
+    \end{cases}
+\end{aligned}
+}{Método de Control Óptimo (Hamiltoniano). Modelización dinámica}
+
+Como vemos, el principio del óptimo de PONTRYAGIN establece tres ecuaciones diferenciales en relación al Hamiltoniano que caracterizan las decisiones óptimas de los agentes y a partir de las cuales pueden hallarse estados estacionarios (de existir) y representar en forma de diagramas de fase, por tanto se trata de un método generalmente aplicable en tiempo continuo, tanto con horizonte finito como con horizonte infinito.
+
+\paragraph{Programación dinámica}
+La programación dinámica es un método de resolución consistente en descomponer el problema de optimización en subproblemas recursivos; es decir, que se resuelven de manera similar a lo que en Teoría de Juegos se denomina inducción hacia atrás, que se fundamentan en el principio de optimalidad de BELLMAN.
+
+\textbf{Definición.-} (Principio de optimalidad de BELLMAN). Una secuencia de decisión será óptima s.i.i. todas las políticas a partir de $t$ son óptimas, independientemente de decisión tomada en $t$.\footnote{En primer lugar, se caracteriza la decisión óptima en el periodo terminal dadas todas las decisiones anteriores. Posteriormente, se halla el óptimo en el periodo anterior y se repite el proceso sucesivamente hasta el periodo inicial. Los métodos de computación son variados, y pueden emplearse entre otros la optimización numérica (iterativa) o teoremas del punto fijo.
+} La ecuación del Bellman es la siguiente:
+
+\eqblock{
+\begin{aligned}
+    U(\{\;\overrightarrow x\;\}_t^T)=\max{[u(c(t),x(t))+ U(\{\;\overrightarrow x\;\}_{t+1}^T)]}
+\end{aligned}
+}{Programación dinámica (Optimalidad de BELLMAN). Modelización dinámica}
+
+Los métodos de programación dinámica son en la actualidad los más utilizados por las características deseables de las soluciones en términos de Teoría de Juegos.\footnote{Que señalaron Kydland y Prescott (1977): cada decisión en un periodo determinado es un equilibrio de Nash perfecto en subjuegos. Tienden a utilizarse en problemas discretos aunque son también utilizables en tiempo continuo.
+} Además, es especialmente adecuada para hallar soluciones de modelos intertemporales en los que intervienen variables estocásticas.
+
+\subsubsection{Resolución}
+Nuestro problema de optimización no presenta grandes complicaciones, es una versión muy sencilla de un problema de optimización de las decisiones intertemporales de consumo de los agentes. Por tanto, se pueden utilizar métodos simples como el de los multiplicadores de Lagrange o el método de la sustitución para resolverlo sin dificultad.
+
+\paragraph{Condición de EULER}
+A raís de la resolución del Lagrangiano, y combinando las CPO's de cualquier par de periodos contiguos, por ejemplo $t=0$ y $t=1$, obtendríamos \textbf{la condición de EULER}.
+
+\eqblock{
+\begin{aligned}
+        &\text{Condición de Euler} \quad \boxed{\underbrace{\frac{u'(c_t)}{\beta u'(c_{t+1})}}_{\text{RMSI}}=\overbrace{(1+r)}^{\text{\scriptsize Pendiente RPI}}\longrightarrow\frac{u'(c_t)}{u'(c_{t+1})}=\frac{(1+r_t)}{(1+\rho)}\underbrace{\longrightarrow}_{$t=0,1$} u'(c_0)=\beta(1+r_0)u(c_1)}\\[1em]
+\end{aligned}
+}{Condición de EULER (o KEYNES-RAMSEY). Optimización dinámica}
+
+Ésta tiene una interpretación muy sencilla: en el óptimo, todo agente presenta una senda de consumo tal que la utilidad marginal de una unidad de consumo sacrificada hoy ($u'(c_t)$) se debe igualar con la utilidad marginal que esto le reportaría en el período siguiente.\footnote{Dicha unidad, que se ha ahorrado y ha generado una renta de capital ($(1+r_t)$), valorada en términos de utilidad ($(1+r_t)u'(c_{t+1})$) pero para que sea comparable con la utilidad hoy debe descontarse al tipo subjetivo ($((1+r_t)/(1+\rho))\;u'(c_{t+1})$). De no cumplirse, el consumidor siempre podría trasladar consumo entre períodos y aumentar su nivel de utilidad total.
+} El equilibrio corresponde entonces al punto de tangencia entre la curva de indiferencia y la restricción presupuestaria intertemporal, con pendiente $-(1+r_t)$.
+
+\textbf{Incluir Gráfico tangencia}
+
+\paragraph{Relación Marginal de Sustitución Intertemporal}
+Esta restricción presupuestaria intertemporal tiene una pendiente que conocemos como \textbf{Relación Marginal de Sustitución Intertemporal}, que, al igual que en el caso estático, nos indica la relación a la que podemos sustituir consumo presente por consumo futuro dejando inalterada la utilidad intertemporal del agente.
+
+\eqblock{
+\begin{aligned}
+    \boxed{RMSI=\frac{u'(c_t)}{u'(c_{t+1})}=-\frac{u'(c_t)}{\beta u'(c_{t+1})}}\qquad\underbrace{\Longrightarrow}_{\text{\scriptsize En el óptimo}}\qquad \boxed{RMSI=\overbrace{-(1+r_t)}^{\text{\scriptsize Pendiente RPI}}}
+\end{aligned}
+}{Relación Marginal de Sustitución Intertemporal (RMSI). Optimización dinámica}
+
+Por tanto, el equilibrio se produce en el punto de tangencia de nuestra curva de indiferencia y de nuestra restricción presupuestaria intertemporal, o lo que es lo mismo, donde sus pendientes se igualan.
+
+\subsubsection{Sendas de consumo}
+Si asumimos que la tasa de descuento y el tipo de interés son constantes a lo largo del tiempo, podremos analizar la senda de consumo, una de las implicaciones más importantes del análisis dinámico.
+
+\paragraph{Pendiente de la senda de consumo: perfil del agente}
+El consumo crecerá, permanecerá constante o decrecerá a lo largo del tiempo en función de la relación que haya entre el tipo de interés ($r$, i.e. el valor al que se paga la \textit{paciencia}) y la tasa de descuento subjetiva ($\rho$, i.e. el valor de la \textbf{impaciencia}):\footnote{Aunque su interpretación económica es engañosa pues no es posible comparar directamente tipos de interés y de descuento subjetivo ya que \textbf{ambos son precios relativos, pero son precios de cosas distintas, consumo y utilidad respectivamente}
+}
+\begin{la}
+    \item $r>\rho$. Si el tipo de interés es superior al de descuento subjetivo, el consumo futuro será superior al presente, produciendo un aumento de la tasa de crecimiento del consumo en ese instante, lo que implica que el consumidor será oferente de factor capital o ahorro o tendrá capacidad de financiación;
+    \item $r<\rho$. Si el tipo de descuento subjetivo es superior al de interés, se dará la situación opuesta, siendo el consumidor demandante de factor capital o ahorro, o dicho de otra manera, tendrá necesidad de financiación; y,
+    \item $r=\rho$. Si el tipo de interés y de descuento subjetivo coinciden, el consumo permanecerá estable en ese período.
+\end{la} 
+
+Esto nos permite llevar a cabo lo que se conoce como un \textbf{perfilado del agente}. 
+
+\imagenfit{SendasConsumo.png}{Evolución de las sendas de consumo atendiendo a los parámetros definidores}{Elaboración propia}
+
+\paragraph{Alisamiento del consumo y restricción de liquidez}
+Sin embargo, la implicación más importante es que, sea cual sea la pendiente de la senda de consumo, el consumidor tiene una tendencia por alisar su consumo: al agente le da igual lo que ocurra con el resto de variables (fundamentalmente la renta) porque su senda de consumo va a tener una pendiente que no va a cambiar.\footnote{Sólo en el caso particular de que el tipo de interés sea constante en el tiempo, este perfil creciente/decreciente del consumo detectado entre dos períodos consecutivos cualesquiera se mantiene para toda la senda intertemporal
+} Por ejemplo, si $\rho<r$, estas dos variables ya son suficientes para garantizar que la senda de consumo del agente va a ser creciente.\footnote{Date cuenta que nos da igual cuál sea su perfil de renta. ¡Este es el concepto de alisamiento de consumo! El perfil de renta podrá variar a lo largo del tiempo, e incluso tener la pendiente contraria, pero el perfil de consumo va a ser creciente y estable a lo largo del tiempo.
+} 
+
+¿Por qué? La clave es que el consumidor tiene acceso a un \textbf{mercado de capitales perfecto}, lo que le permite transferir renta entre períodos logrando ese alisamiento y haciendo que su senda de consumo sea independiente del perfil de renta. 
+
+Por tanto, el alisamiento de la senda de consumo tiene cuatro características principales:
+\begin{lnum}
+    \item Aumentos o disminuciones en dichas tasas de crecimiento sólo pueden venir de cambios en los tipos de interés;
+    \item Si el agente tiene acceso a mercados de capital perfectos, entonces podrá trasladar cualquier cantidad de renta entre períodos, manteniendo estable (en tasas) dicho perfil de consumo;
+    \item Los niveles concretos de consumo en los distintos períodos sí van a depender de los recursos del consumidor, pues por la misma razón que antes (mercados de capitales perfectos), dichos niveles no dependerán de los recursos del período, sino de la riqueza total del agente, que comprende lo acumulado en activos hasta dicho instante más todas las rentas futuras actualizadas;
+    \item Si el consumidor se enfrenta a mercados de capitales imperfectos, entonces tendrá lo que conocemos como \textit{restricción de liquidez}, y el óptimo alcanzado en el periodo dependerá no solo del tipo de interés y su tasa de desecuento subjetiva sino también de un umbral de consumo en el periodo actual que no podrá rebasar: la \textit{restricción de liquidez}.
+\end{lnum}
+
+\subsubsection{Variaciones en los parámetros del modelo}
+Por último, puede resultar interesante analizar cómo se altera el equilibrio alcanzado ante cambios en una variable relevante. Estudiaremos únicamente las variaciones en algunos de los parámetros (no exhaustivo).
+
+Empecemos por las variaciones en el tipo de interés.
+
+\paragraph{Variaciones en el tipo de interés: Elasticidad de Sustitución Intertemporal}
+El efecto de variaciones en el tipo de interés sobre las sendas óptimas de consumo va a quedar, en general, indeterminado por la existencia de tres efectos:
+\begin{lnum}
+    \item \textbf{Efecto sustitución}. Un aumento del tipo de interés encarece el consumo actual con respecto al futuro. Por ello, el consumo actual debería disminuir y aumentar el ahorro/consumo futuro;
+    \item \textbf{Efecto renta}. Un aumento del tipo permite alcanzar un mayor consumo futuro ahorrando una cantidad menor, lo que haría que se ahorre menos y se consuma más hoy; y,
+    \item \textbf{Efecto riqueza}. Un aumento del tipo de interés reduce el valor de las rentas futuras, reduciendo la riqueza presente y llevando a un menor consumo y a un mayor ahorro. 
+\end{lnum}
+
+Por lo tanto, el efecto neto es a priori ambiguo, pues los efectos sustitución y riqueza se contrarrestan con el efecto renta. No obstante, atendiendo a los perfiles del agente que hemos expuesto antes y si restringimos nuestro análisis a un modelo de dos períodos, podemos encontrar dos situaciones:
+\begin{la}
+    \item \textbf{Si el Agente es prestamista.} El consumo del primer período puede aumentar o disminuir (es más atractivo ahorrar, pero también necesito ahorrar menos); pero el consumo futuro aumenta con certeza; y,
+    \item \textbf{Si el Agente es prestatario}. El consumo del primer período disminuye (es más atractivo ahorrar y el mayor tipo de interés encarece mis deudas, lo que reduce mi renta); el consumo futuro quedará indeterminado (estoy ahorrando más, pero mis deudas son más caras).
+\end{la}
+
+Por tanto, tal y como veníamos reiterando, el tipo de interés tiene un efecto directo (aunque dificilmente mesurable) sobre el consumo, ya que transfiere consumo entre periodos debido a la remuneración de la paciencia. Directamente relacionado con el efecto que tiene el cambio del tipo de interés sobre las decisiones de consumo de los agentes, tenemos el concepto de Elasticidad de Sustitución Intertemporal (ESI, de ahora en adelante). 
+
+\eqblock{
+\begin{aligned}
+    ESI=\frac{\partial \left(\frac{c_{t+1}}{c_t}\right)}{\partial (1+r)}\;\cdot\;\frac{(1+r)}{\left(\frac{c_{t+1}}{c_t}\right)}\qquad \Longrightarrow\qquad \boxed{ESI=\frac{\partial \log{\left(\frac{c_{t+1}}{c_t}\right)}}{\partial \log{(1+r)}}=\sigma}
+\end{aligned}
+}{Elasticidad de Sustitución Intertemporal (ESI). Optimización dinámica}
+
+La ESI mide la variación porcentual del ratio entre consumo futuro y consumo presente ante una variación porcentual del tipo de interés. Nos indica, por tanto, cómo responde la senda de consumo intertemporal a variación del tipo de interés. En consecuencia, nos indica también el grado de curvatura de la curva de indiferencia, de modo que a mayor ESI menor será la curvatura pues para un mismo cambio de pendiente cambiaría más el ratio entre consumo futuro y presente. 
+
+La forma de la función de utilidad instantanea más utilizada en la literatura es la función de utilidad isoelástica, con ESI constante:
+
+\eqblock{
+\begin{aligned}
+    &u(c_t)=\frac{c_t^{1-\theta}-1}{1-\theta}\qquad \longrightarrow\qquad ESI=\sigma=\frac{1}{\theta},\;\;\text{donde:}\;\underbrace{\theta=-\frac{c_tu''(c_t)}{u'(c_t)}}_{\text{\scriptsize Coeficiente de aversión relativa al riesgo}}\\[1em]
+    &\text{Condición de EULER:}\quad \boxed{\dot c_t=\left(\frac{1+r}{1+\rho}\right)^{\sigma}}
+\end{aligned}
+}{Función de Utilidad (instantanea) Isoelástica. Optimización dinámica}
+
+La ESI nos permitirá analizar un elemento crucial del comportamiento intertemporal del consumo: la \textbf{volatilidad del consumo}. Daods los tipos de interés y descuento, cuanto mayor sea la ESI, mayor será la variabilidad de la tasa de crecimiento óptima del consumo. Esto es lógico, pues un consumidor más flexible (elevada ESI) tolera\footnote{El verbo “tolerar” no está elegido casualmente, pues las propiedades genéricas de la función de utilidad instantánea implican que en todo caso el agente desea “alisar” su consumo, repartirlo en una senda más bien estable (no necesariamente constante). Por ello, mayor ESI no implica “amor por la variabilidad” del consumo, sino simplemente menor aversión o desutilidad ante dicha variabilidad.
+} mayores cambios en sus niveles de consumo entre distintos períodos de tiempo, por lo que la tasa de cambio del consumo será más elevada o más reducida, pero en ambos casos con un mismo efecto de mayor volatilidad en los niveles de consumo. Por tanto, a mayor ESI mayor será la pendiente de la senda de consumo para un $\rho$ y $r$ determinados. 
+
+\paragraph{Variaciones en la renta ($w$)}
+Por otro lado, y en linea con lo mecionado antes, podemos estudiar las variaciones en la renta pero teniendo en cuenta que la senda de consumo no depende del perfil de renta sino de la relación entre $\rho$ y $r$. 
+
+¿Qué significa eso? Los cambios en la renta van a provocar un cambio en el nivel de consumo, pero \textbf{no cambiarán la ratio} entre $c_t$ y $c_{t+1}$ que viene determinado únicamente por las dos variables antes mencionadas. Entonces, ¿cómo cambiará el nivel de consumo ante variaciones en la renta? Estos modelos intertemporales nos permiten descubrir que el consumo en un instante no solo depende de la renta en ese instante, sino del valor actual del total de la renta que el agente va a percibir a lo largo de su vida. 
+
+Esto está muy relacionado con la idea de la renta permanente de FRIEDMAN: el efecto de un aumento en la renta será diferente si el aumento se produce solo en la actualidad (cambio transitorio) o en el total de períodos (cambio permanente):\footnote{
+Tiene que ser un bien normal, no puede ser inferior en todos los períodos.
+}
+\begin{lnum}
+    \item \textbf{Aumento transitorio}. El impacto sobre el consumo sería reducido, ya que el agente tiene preferencia, dada la concavidad de la FUI por el consumo equilibrado (diferente de la estabilidad de la senda). Como el agente sabe que el aumento de la renta es transitorio, hará uso del mercado de capitales para enviar parte de esa renta a períodos futuros donde la renta no ha aumentado, por tanto el aumento del consumo será reducido; y,
+    \item \textbf{Aumento permanente}. En este caso el aumento del consumo será mucho más pronunciado, pues la renta aumentaría en todos los períodos y puede aumentar el consumo hoy sabiendo que también lo podrá hacer en el futuro y, por tanto, tener un consumo equilibrado.
+\end{lnum}
+
+Sin conocer la forma exacta de la función de utilidad instantánea y hacer simplificaciones adicionales no puede deducirse una senda de consumo óptima conveniente que ilustre este punto pero, si consideramos que es isoelástica y si $\rho=r_t=r$, entonces, la senda de consumo se podrá expresar como función de la fenta permanente de la siguiente forma:
+
+\eqblock{
+\begin{aligned}
+    &\text{Consumo si $\rho=r_t=r$:}\qquad c_t=\bar c=\left(\frac{r}{1+r}\right)\;\alpha\;W_t\\
+    &\text{\scriptsize donde $W_t$ la riqueza total del consumidor (rentas acumuladas y rentas futuras actualizadas)}\\
+\end{aligned}
+}{Senda de consumo y renta permanente. Optimización dinámica.}
+
+\paragraph{Imperfecciones en el mercado de capitales}
+Por último, si consideramos que el mercado de capitales no es perfecto y está sujeto a restricciones de liquidez, podemos estudiar como esto afectará al consumidor atendiendo a su perfil y la magnitud de esta restricción.
+
+\eqblock{
+\begin{aligned}
+    [2em]
+    &\text{Consumo con \textbf{restricción de liquidez}:}\;\underbrace{c_t= w_t+a_t}_{\text{\scriptsize No endeudamiento posible}};\\[2em]
+    &\hspace{2em}\text{La restriccón operara siempre y cuando:}\quad c_t^*>w_t+a_t
+\end{aligned}
+}{Restricciones de liquidez y operabilidad. Optimización dinámica}
+
+Gráficamente, esta restricción quedaría representada como:
+
+\imagenfit{RestriccionLiquidez.png}{Restricción de liquidez y nuevo óptimo de consumo intertemporal}{Apuntes Víctor Begue. Tema 3.A.12.}
+
+Y para evitar que esta afecte al equilibrio del Agente, es decir, que conduzca a un equilibrio subóptimo, entonces se podría aumentar el tipo de interés de manera que el nuevo óptimo se alcance en la región no afectada por dicha restricción.
+
+\subsubsection{Limitaciones}
+No obstante, ya en una etapa temprana de este desarrollo, distintos autores señalaron numerosos aspectos problemáticos asociados al uso de tales modelizaciones.
+
+En particular, podemos destacar las siguientes limitaciones:
+\begin{lnum}
+    \item \textit{Agente representativo}. La mayoría de los modelos no admite hogar representativo y la razón que hay detrás de esta dificultad de agregación son los potencialmente \textbf{fuertes efectos renta} derivados de cambios en los precios, pues estos pueden producir serias variaciones en las rentas de los agentes (por ser típicamente rentas dotacionales).\footnote{Esto es consecuencia un célebre resultado de la teoría del Equilibrio General, el Teorema SONNENSCHEIN-MANTEL-DEBREU, que demuestra que los comportamientos optimizadores que se imponen a los hogares individuales en general no restringen (ni mucho menos se trasladan) a la demanda agregada.
+    };
+    \item \textit{Equilibrio y coordinación}. Una extensa corriente de la literatura ha mostrado que, bajo \textbf{supuestos informativos razonables}, construir procesos de ajuste que garanticen una \textbf{convergencia general al equilibrio resulta imposible}. Por tanto, la suposición de coordinación de todos los agentes en un equilibrio es muy fuerte, incluso si existe un equilibrio único, lo cual no está garantizado en muchas clases de modelos;\footnote{Como argumenta, por ejemplo, HOWITT (2012), esta suposición también evita abordar los problemas de coordinación en la economía, que son esenciales para comprender fenómenos como la aparición de crisis y también el impacto de las políticas.
+    }
+    \item \textit{Racionalidad}. La hipótesis de que todos los agentes tengan expectativas racionales sobre la dinámica futura de la economía ha sido criticada por ser poco realista y, de hecho, existe escasa evidencia experimental o empírica que sugiera que la evolución de las expectativas de los agentes sea consistente con el supuesto de expectativas racionales;
+    \item \textit{Estacionariedad}. Los estudios en la literatura suelen basarse en aproximaciones locales de la dinámica del modelo en torno a un estado estacionario (log-linealización) y, por tanto, no capturan la dinámica global completa de la realidad subyacente. Esto dificulta la adecuada representación de fenómenos globales como cambios de régimen o grandes fluctuaciones dentro de este marco; y,
+    \item \textit{Exogeneidad de las fluctuaciones}. Los ciclos económicos y las fluctuaciones están impulsados por perturbaciones de los fundamentos o de las expectativas, cuya estructura se calibra para ajustarse a objetivos empíricos. En consecuencia, los mecanismos que realmente generan estas fluctuaciones quedan fuera del alcance del modelo y, por ello, el modelo solo puede utilizarse para estudiar la propagación de perturbaciones, pero permanece silencioso respecto a qué mecanismos generan tales fenómenos y qué medidas podrían reducir el riesgo de la aparición de ciclos y recesiones desde un inicio.
+\end{lnum}
+
+
+
+\clearpage
+\section{Optimización dinámica: Modelos representativos}
+\puntosclave{
+    La aplicación del análisis intertemporal es especialmente relevante en macroeconomía, de la mano de los modelos de agente representativo, el caballo de batalla de la corriente mayoritaria en macroeconomía hoy día.
+    
+    Los modelos de agentes de vida infinita (infinitely-lived agent models) o de horizonte infinito (MHI) consisten en agentes idénticos que viven un número infinito de períodos: sirven de herramienta básica para los modelos de crecimiento à la Ramsey, así como a los modelos DSGE de ciclo económico.
+
+    Los modelos de generaciones solapadas (MGS) incorporan la existencia de dos (o más) tipos de agentes económicos que conviven en el tiempo. Su análisis es más complejo a nivel matemático, pero permiten un estudio más ajustado de fenómenos sociales como el envejecimiento de la población.
+}
+Como hemos comentado, una de las aplicaciones más importantes del análisis intertemporal ha sido su incorporación en el análisis macroeconómico a través de la fundamentación microeconómica de los fenómenos macroeconómicos.
+
+Por eso, no lograríamos tener un entendimiento completo de la relevancia del enfoque dinámico si no prestamos atención a su aplicabilidad macroeconómica. Ésta suele dividirse en dos grandes tipos de modelos: Modelos de Horizonte Infinito y Modelo de Generaciones Solapadas.
+
+Pasamoe s a estudiar el primero de ellos.
+
+\subsection{Modelos de Horizonte Infinito}
+Los MHI son aquellos en que un agente (consumidores o empresas) vive un número infinito de períodos, por lo que el horizonte de optimización no queda acotado.
+
+Ahora bien, este supuesto de vida inifinta sería razonable para las empresas pero es, a priori, muy poco razonable aplicado a consumidores. Por tanto, podríamos racionalizar este supuesto mediante dos alternativas:
+\begin{la}
+    \item \textit{Juventud perpetua}.\footnote{El del modelo de juventud perpetua o modelo de muerte de POISSON (ACEMOGLU, 2008, apartado 5.3) supone que aunque los agentes tienen vidas finitas no saben cuándo morirán, de modo que tienen una probabilidad de muerte positiva en todo período. En principio, lo razonable es que esta probabilidad sería creciente con la edad, pero por simplicidad y conveniencia se asume constante, $v$ (de ahí lo de juventud perpetua). En el plano formal, lo interesante es:
+    \begin{la}
+        \item Que la probabilidad de muerte queda incorporada en el factor de descuento subjetivo ($\hat\beta=\beta(1-v)$), que pasaría a denominarse factor de descuento efectivo; y,
+        \item Que la función de utilidad intertemporal dejaría de ser una función ordinal y se convertiría en una función de utilidad esperada v.N-M.
+    \end{la}
+    } Indicando simplemente que infinito equivale a lo suficientemente alejado en el tiempo (recuérdese que en estos modelos el futuro se descuenta, por lo que cuanto más alejado sea un período, menos importante) e incluso lo suficientemente incierto en su momento final; o,
+    \item \textit{Altruismo intergeneracional}. Se trata de una dinastía de agentes con vidas finitas pero que se suceden en el tiempo pero sin coincidir o solaparse entre ellos en ningún instante. Esto debe implicar que los agentes se preocupan por las generaciones futuras exactamente igual que por sí mismos, por lo que gestionan los recursos para dejar recursos a sus descendientes bajo la forma de herencias o legados (altruismo intergeneracional)
+\end{la}
+
+Los MHI pueden utilizarse tanto para analizar de forma parcial comportamientos de un colectivo tomado aisladamente como para analizar el comportamiento y la interacción simultánea de todos los colectivos en modelos de equilibrio general; por tanto, se han aplicado en multitud de campos:
+\begin{la}
+    \item \textbf{Microeconomía}. Son el marco principal para el análisis del equilibrio general dinámico; y,
+    \item \textbf{Macroeconomía}. Su uso se ha extendido a múltiples ámbitos, tanto a nivel del estudio de variables agregadas (mercados de trabajo o consumo) como el análisis de los ciclos reales o del crecimiento económico.
+\end{la}
+
+\subsubsection{Elementos esenciales}
+Ahora bien, ¿cómo construimos un MHI? ¿Qué componentes necesitamos? Es decir, la economía es un sistema que se caracteriza por la enorme cantidad de interacciones e interdependencias existentes entre miles, millos de individuos. Por tanto, ¿cómo podemos formular un modelo que tenga una aplicación práctica en términos de Política Económica sin vernos sobrepasados por la enorme cantidad de individuos que conforman el sistema?
+
+Para esto es imprescindible recordar uno de los supuestos comentados al principio: el \textbf{individualismo metodológico}.
+
+\paragraph{Agente representativo}
+La construcción de modelos macroeconómicos requiere considerar la interacción simultanea y sucesiva de multitud de inidividuos, cientos de millones de Agentes. Esto resulta del todo imposible sin recurrir a una figura que nos permita simplificar dichas interacciones, y es precisamente aquí donde dicho supuesto juega un papel fundamental.\footnote{
+Recordemos que la hipótesis nos indica que \textit{es posible explicar el comportamiento agregado de un colectivo mediante la agregación del comportamiento de cada uno de estos} (no existen propiedades emergentes en el sistema).
+} 
+
+La agregación del comportamiento optimizador de los agentes se realiza mediante la figuración de los que conocemos como un \textit{agente representativo}.\footnote{Haciendo un poco de historia, la propia idea de agente representativo surgió con la propia revolución marginalista de la mano de JEVONS y los trading bodies de su teoría del intercambio, defendidos por EDGEWORTH mediante el representative particular del filósofo inmaterialista  BERKELEY. MARSHALL crearía explícitamente un agente representativo más sofisticado, la empresa representativa, en sus \textit{Principles of Economics}. Su utilización se mantuvo muy limitada y pese al apoyo de economistas como PIGOU o ROBERTSON, el virulento ataque a dicho concepto de parte de ROBBINS (1928) hizo que quedara absolutamente relegado. No sería hasta la célebre crítica de LUCAS (1976) (no obstante, se suele citar el análisis de la oferta intertemporal de trabajo de LUCAS y RAPPING de 1969 como primer uso moderno del agente representativo), que la búsqueda de relaciones macroeconómicas genuinamente estructurales desencadenase el proceso, que se extiende hasta la actualidad, de fundamentación microeconómica o microfundamentación de los modelos macroeconómicos. En efecto, la estrategia consiste en buscar modelos robustos en el sentido de rastrear los determinantes últimos, los fundamentos estructurales del modelo económico, a saber, preferencias, dotaciones y tecnología. 
+
+Sin embargo, este enfoque desde su inicio se topó con la dura realidad, sobre todo cuando la ambición llevó a modelizar el conjunto de una economía, esto es, a intentar utilizar modelos de equilibrio general walrasiano (donde interactúan una pluralidad (diversa) de consumidores y empresas en múltiples mercados de manera simultánea por lo que, por muy simplificado que esté resulta intratable por su complejidad, razón por la cual ni siquiera se presta a ejercicios de estática comparativa) y es entonces cuando se impone el recurso al agente representativo, gracias al cual se consiguen modelos tratables (que permitan llegar a algún tipo de resultados o conclusiones de validez general: con solución analítica o una aproximación a ésta) a costa de eliminar la complejidad derivada de la heterogeneidad entre agentes de un mismo tipo. 
+}
+
+\textbf{Definición.-} (Agente representativo) Un agente representativo es un agente, posiblemente ficticio, cuyo comportamiento coincide exactamente con el comportamiento de la colectividad.\footnote{La primera definición es teóricamente cierta pero supone casos irreales. La última definición sería la más genérica y válida, pero nos llevaría necesariamente a la pregunta de cuándo es teóricamente legítima dicha representación. Por desgracia, salvo para el caso de consumidores cuyas preferencias originen una función indirecta de utilidad de la forma GORMAN (que se da con preferencias cuasilineales y con preferencias homotéticas, por ejemplo), dicha agregación de conductas a través de agente representativo no puede asegurarse.
+} 
+
+Por tanto, en los modelos macroeconómicos, debería ser un consumidor o un productor tipo, cuyas decisiones coincidan con las decisiones agregadas del conjunto de la colectividad a la que representa. Los modelos de agente representativos pueden clasificarse en dos grandes categorías: los modelos de agentes de vida infinita (\textit{infinitely-lived agent models}) o de horizonte infinito (MHI), y los modelos de generaciones solapadas (MGS).\footnote{Un tipo de modelo que combina ambas características: P. Weil, Overlapping families of infinitely-lived agents, Journal of Public Economics 38 (1989) 183-198.
+}
+
+\paragraph{Rasgos característicos}
+Ahora que conocemos la definición, los tipos y la principal herramienta que nos permite agregar el comportamiento de la heterogeneidad de agentes en un solo Agente, podemos decir que los principales rasgos que caracterizan los MHI son:
+\begin{lnum}
+    \item \textit{Microfundamentación y estructuralidad}. La razón de ser fundamental de estos modelos es la inmunidad a la crítica de Lucas, por lo que su principal característica es la aspiración a ser modelos genuinamente estructurales, dependientes en última instancia únicamente de preferencias, dotaciones y tecnología;
+    \item \textit{Optimización dinámica}. Al ser modelos de agente representativo, buscan establecer relaciones entre las variables macroeconómicas a partir de los procesos individuales de decisión racional de los agentes;\footnote{En ocasiones se imponen \textit{ad hoc} comportamientos que no responden a un proceso optimizador (las llamadas \textit{rules of thumb}) para incorporar alguna conducta observada en la realidad que no se consigue deducir de dicho comportamiento optimizador
+    }
+    \item \textit{Dificultad resolutiva} (no \textit{closed-form solutions}). Su resolución puede ser en muchos casos problemática pues lo que se gana en términos de detalle del comportamiento optimizador en la especificación del modelo, se suele perder en soluciones analíticas (\textit{closed-form solutions}).\footnote{Esto no impide que se puedan alcanzar conclusiones cualitativas y cuantitativas sobre la conducta óptima de los agentes, por diferentes vías:
+    \begin{lnum}
+        \item \textit{Éstatica comparativa}. Se pueden realizar ejercicios de estática comparativa y conocer propiedades del equilibrio sin necesidad de resolver el problema a través de la sola inspección de las CPO's y, si es necesario, su diferenciación para ver cómo afecta a una variable la modificación de algún parámetro.
+        \item \textit{Pareto optimalidad}. En ciertos casos, como los modelos de ciclo real, el supuesto de competencia perfecta y la ausencia de todo tipo de fricciones o fallos de mercado hace que el equilibrio competitivo sea eficiente en el sentido de PARETO;\footnote{
+        En el plano técnico esto presenta la ventaja de que el óptimo de PARETO puede ser más fácil de encontrar que el equilibrio competitivo (de entrada, el óptimo de PARETO carece de precios por lo que el número de incógnitas se reduce significativamente), por lo que se puede optar por determinar la asignación (cantidades ofrecidas/demandadas de productos y servicios) del equilibrio competitivo encontrando la asignación PARETO óptima, y después encontrar el vector de precios que lo sostenga (2TFEB)
+        }
+        \item \textit{Estado estacionario}. En ocasiones se puede resolver el modelo de manera restringida, es decir, imponiendo alguna restricción al equilibrio final que lo simplifique. El caso más habitual es el concepto de equilibrio de estado estacionario (\textit{steady-state equilibrium}), entendido en sentido amplio como aquel en que las variables relevantes crecen a una tasa constante38, generalmente cero;\footnote{Esto suele simplificar enormemente las CPO y permite encontrar el equilibrio, aunque a costa de restringir la validez de dicho equilibrio al largo plazo al que podría tender el modelo. Asimismo, esto permite analizar gráficamente este tipo de modelos a través de los diagramas de fases. Y no conviene olvidar que este tipo de equilibrios no es el único posible del modelo, aunque conhorizonte infinito los modelos típicamente (no siempre) tenderán a este tipo de equilibrios a lo largo de las denominadas dinámicas de transición (\textit{transition dynamics})
+        } y,
+        \item Sin embargo, en ocasiones ni siquiera esto es factible, por lo que se puede optar por resolver el modelo por métodos numéricos. Esto puede requerir elegir adecuadamente los parámetros del modelo a través de un ejercicio de calibración, así como una ligera transformación del modelo original, por norma general altamente no lineal, en otro linealizado en el entorno de la solución de equilibrio, de modo que sea más fácil de resolver. Esto permite realizar ejercicios de estática comparativa en términos puramente numéricos a través de funciones de respuesta al impulso (\textit{impulse response function}), que permiten ver la transición de las asignaciones o precios de equilibrio hacia un nuevo equilibrio ante variaciones de los parámetros. El problema reside en que, aun realizándose todo este proceso de manera óptima, las conclusiones se restringen al caso concreto analizado (cuando el vector de parámetros toma unos determinados valores), careciendo por tanto de validez general y arrojando muy poca luz sobre los mecanismos, procesos de ajuste óptimos y el razonamiento económico que hay detrás de dichas respuestas.
+    \end{lnum}
+    }
+    \item \textit{Bienestar basado en la utilidad}. Una de las grandes ventajas es la posibilidad de realizar análisis de bienestar. La presencia explícita de agentes que maximizan su utilidad o beneficio permite comparar diferentes situaciones y medidas de política económica en términos de bienestar comparando utilidades (o beneficios o excedentes) antes y después de las mismas, aplicando el enfoque de PARETO\footnote{Hay que tener en cuenta que en un modelo intertemporal el concepto de óptimo de PARETO puede resultar un tanto espinoso, sobre todo si se interpreta al agente representativo como una sucesión de diferentes agentes de vida finita, pues se podría incurrir en comparaciones interpersonales de utilidad. Es posible que por ello muchos autores se guarden de utilizar el término óptimo de PARETO y se limiten a hablar de óptimo del planificador (benevolente).
+    } (equilibrio general) o marshalliano de los excedentes (equilibrio parcial): maximizar el bienestar sería equivalente a maximizar la utilidad del hogar representativo.
+\end{lnum}
+
+\subsubsection{Ejemplo: Modelo de RAMSEY-CASS-KOOPMANS}
+Podemos ilustrar fácilmente un ejemplo práctico de un Modelo de Horizonte Infinito con una versión sencilla del Modelo de RAMSEY-CASS-KOOPMANS, encuadrado dentro de la Teoría del Crecimiento Económico.
+
+Desde la óptica de una economía descentralizada, el modelo se plantea en tiempo continuo, asumiendo que existe altruismo intergeneracional (nos preocupamos por nuestra estirpe), que nos encontramos en Estado Estacionario, que la Función de Utilidad instantanea del Hogar representativo es, neoclásica de buen comportamiento y de tipo CES (isoelástica) y se reconoce que las cantidades consumidas son de un bien de tipo no duradero.\footnote{Esto se explica ya sea porque los bienes no duraderos sean los únicos considerados, ya sea porque, aun permitiendo bines duraderos, existen mercados perfectos de alquiler de los mismos, de modo que todo bien duradero, consumido en múltiples períodos de tiempo, puede representarse equivalentemente como una sucesión de bienes no duraderos, adquiridos a su tasa de alquiler. En el apéndice se ofrece el modelo en que estos mercados perfectos de alquiler de bienes duraderos no existen.
+}; podemos formular el modelo de la siguiente forma.
+
+\paragraph{Optimización de los Hogares}
+El hogar es la unidad de decisión del consumo en términos macroeconómicos (reconociendo que se trata de una colectividad de individuos con distintas preferencias),\footnote{La denominada \textit{New Home Economics} de autores como Gary Becker o Jacob Mincer es el enfoque microeconómico encargado de estudiar la toma de decisiones de consumo y producción (doméstica) en el seno de las familias compuestas por diferentes agentes.
+} por tanto, su problema de maximización quedaría como:
+
+\eqblock{
+\begin{aligned}
+    \boxed{\begin{aligned}
+        \max U(0)=\int_0^\infty e^{-(\rho-n)t}u(c_t)\mathrm{d}t\\[0.5em]
+        \text{s.a.}\;\;
+        \begin{cases}
+            \dot a_t=w_t-c_t+(r-n)a_t\\[0.5em]
+            a_0=A\\[0.5em]
+            \lim_{t\to\infty}v_ta_t=0
+        \end{cases}
+    \end{aligned}}
+\end{aligned}
+}{Optimización de los Hogares. Modelo de Horizonte Infinito}
+
+Donde $v_t$ es una variable de coestado, $c_t$ es variable flujo (control) y $a_t$ es la variable de estado (ahorro). El resto de los elementos se desprenden de lo anteriormente analizado. 
+
+Resolviendo mediante el Hamiltoniano obtendríamos las Condiciones de Primer Orden y, tomando logaritmos (por la Función CES), derivando respecto al tiempo ($t$) y sustituyendo en la RPI, obtendríamos:
+
+\eqblock{
+\begin{aligned}
+    \text{Ecuación de EULER:}\qquad \boxed{\gamma_c^*=\frac{1}{\theta}(r-\rho)}
+\end{aligned}
+}{Senda de consumo: Condición de EULER (KEYNES-RAMSEY). Modelo de Horizonte Infinito}
+
+\paragraph{Optimización de las Empresas}
+La existencia de empresa representativa no presenta, a diferencia del hogar, problemas de existencia para el caso no trivial de empresas heterogéneas.\footnote{
+En efecto, el teorema de la empresa representativa (Acemoglu, 2008) establece que, para que exista empresa representativa solo se necesita que:
+\begin{lnum}
+    \item No existan externalidades en la producción; y,
+    \item Todos los factores se intercambien en mercados competitivos,
+\end{lnum}
+
+La razón de esta mayor facilidad de existencia se halla en que en la teoría de los costes y del beneficio (con la que se modeliza el comportamiento de la empresa) no existen efectos renta. Esto a su vez se debe a la tradición neoclásica de representar distintamente los problemas del consumidor y de la empresa: mientras el consumidor está sometido a una restricción presupuestaria, la empresa carece de toda restricción financiera43. En el análisis macroeconómico, la función de producción de la empresa representativa toma el relevo de la función de producción agregada de la macroeconomía anterior, siendo habitual que en los modelos exista un único sector productivo con una única función de producción que englobe o agregue el agregado o composite de los distintos bienes de la economía.
+} La empresa es el agente económico encargado de las decisiones de producción y, con ese fin, demanda factores productivos y ofrecerá bienes y servicios con el objetivo último de maixmizar intertemporalmente sus beneficios. Para facilitar nuestro análisis supondremos también que las empresas, al igual que los agentes, son precio aceptantes y operan en un entorno competitivo.
+
+Resolviendo el problema de maximización intertemporal de beneficios, a través de las CPO's, obtendremos las siguientes condiciones de equilibrio:\footnote{La función de producción intertemporal a la que se enfrenta la empresa es la función de producción neoclásica de buen comportamiento. En consecuencia, no existe un caráctér estrictamente intertemporal en el problema (igual que en los hogares), por lo que el análisis dinámico de la empresa seguiría siendo irrelevante: la estrategia óptima intertemporal se reduciría a optimizar el beneficio de manera miope, periodo a periodo, sin necesidad de preocuparse por el conjunto del horizonte temporal.
+
+Para hacer un verdadero problema intertemporal, habría que añadir un elemento en la función objetivo o en la restricción de la empresa, que suele consistir en la incorporación de una o varias ecuaciones de estado que reflejen la acumulación de los factores (como una ecuación de inversión o la inclusión de costes de ajuste). Esto implica que la empresa es propietaria del stock del factor en cuestión, por lo que debe afrontar el pago de su precio de adquisición (coste explícito), el coste de depreciación y un coste de oportunidad (coste implícito).
+}
+
+\eqblock{
+\boxed{\begin{aligned}
+    f'(k_t)&=r+\delta\\[0.5em]
+    w_t&=f(k_t)-kf'(f_t)
+\end{aligned}}
+}{Condiciones de optimalidad del problema de maximización de la Empresa. Modelo de Horizonte Infinito}
+
+\paragraph{Equilibrio}
+En el equilibrio final, todo lo que se presta (ahorro) es ugual a todo lo recibido por préstamos: $a=k$. Por tanto, podemos traducir el equilibrio en esta formulación como:
+
+\eqblock{
+\begin{aligned}
+    &\boxed{\begin{aligned}
+        \dot k_t&=f(k_t)-c_t-(\delta+n)k_t\\[0.5em]
+        \gamma_c^*&=\frac{1}{\theta}(f'(k_t)-\rho-\delta)
+    \end{aligned}}\\[2em]
+    &\text{Estado Estacionario}\Longrightarrow \boxed{\dot k_t=\gamma_c^*=0}
+\end{aligned}
+}{Equilibrio. Modelo de Horizonte Infinito}
+
+Por tanto, en Estado Estacionario las ecuaciones dinámicas alcanzan el máximo y la economía de haya en la región dinámicamente eficiente. ¿Qué implicaciones tiene esto?
+
+\subsubsection{Sector público: Limitaciones MHI} 
+Dados los resultados del modelo, en el óptimo, no es posible disminuir el ahorro para que aumente el beneficio social de una generación sin que disminuya el beneficio social de otra, entendido esto como el continuo de generaciones que se suceden entre sí \textit{in fine}. 
+
+Por tanto, el policy-maker no tiene posibilidad de intervenir ya que esta sería innecesaria e ineficiente, puesto que el Equilibrio de Mercado en este contexto es Pareto-Óptimo. 
+
+Como vemos, si bien los modelos de agente representativo, siendo los MHI uno de sus máximos exponentes, nacieron para solventar las deficiencias de los modelos macroeconómicos anteriores que no tenían en cuenta la respuesta óptima del sector privado a las medidas de política económica, la incorporación del sector público como un agente más es muy limitada.\footnote{En particular, la incorporación del sector público presenta mayor o menor complejidad en función de si se trata de:
+\begin{la}
+    \item \textit{Autoridad monetaria}. Tiene una función objetivo más definida y comúnmente aceptada (dada por la estrategia monetaria), lo que hace que encaje mejor en un modelo de agentes optimizadores que exige que se explicite su regla de comportamiento; y,
+    \item \textit{Autoridad fiscal}. Como carece de dichas reglas (como la economía pública señala), se suele introducir de una manera más imperfecta, sin un objetivo claramente definido. A lo más que se llega es a especificar funciones de pérdida pero siempre sujeto a una restricción intertemporal de recursos (la restricción presupuestaria intertemporal del gobierno) y con el problema añadido de la introducción manifiestamente mejorable del gasto público, frecuentemente considerado puro desperdicio o \textit{pure waste}, esto es, no generador de utilidad o beneficio alguno.
+\end{la}
+
+Por tanto, la autoridad monetaria es más fácil de introducir que la fiscal.
+} Esta es una de las razones principales por las que se introdujo el Modelo de Generaciones Solapadas.
+
+\subsection{Modelo de generaciones solapadas}
+El enfoque alternativo a los MHI más reconocido son los MGS. Aunque hay grandes similitudes entre estos dos tipos de modelos (agentes, resolución, equilibrios, etc.), poseen diferentes implicaciones positivas y normativas y cada uno permite analizar un tipo de problemas que no permite el otro.
+
+\subsubsection{Elementos esenciales}
+Los modelos de generaciones solapadas (de ahora en adelante, MGS) son aquellos en los que el agente representativo de una colectividad vive un número finito de períodos, por lo que el horizonte de optimización sí está acotado, pero con la peculiaridad de que los agentes que mueren son sustituidos por otros idénticos, que nacen antes de dicha muerte por lo que ambas generaciones se solapan durante un número determinado de períodos.
+
+\paragraph{Heterogeneidad de agentes}
+La principal ventaja de este enfoque es que permite introducir heterogeneidad en los individuos (procede del comportamiento asociado a su edad), manteniendo la perspectiva intertemporal, lo que nos permite obtener implicaciones de política económica.
+
+Esta heterogeneidad será introducida a través de la edad, es decir, existen dos agentes representativos que se solapan.\footnote{Es posible que se quieran conocer las implicaciones económicas de la continua llegada o nacimiento de nuevos hogares, pues esto crea un nuevo conjunto de interacciones económicas en tanto que las decisiones tomadas por las viejas generaciones pueden afectar a los precios que soportarán las jóvenes generaciones. Y, evidentemente, este tipo de interacciones no pueden estudiarse en los MHI.
+} Uno de ellos representa a la \textbf{juventud} y otro de ellos a la \textbf{vejez}. De forma simple, y en linea con lo anterior, podemos plantear un problema maximización intertemporal del consumo, teniendo en cuenta ahora que:
+
+\eqblock{
+\begin{aligned}
+    \underbrace{\underbrace{u(c_t^J)}_{\text{\scriptsize Utilidad jóven}}+\overbrace{u(c_{t+1}^V)}^{\text{\scriptsize Utilidad viejo}}=\underbrace{U(c_t^J,c_{t+1}^V)}_{\text{\scriptsize Utilidad total del consumo}}}_{\text{\scriptsize Dos periodos de vida}}\\[2em]
+    \underbrace{\underbrace{c_t^J}_{\text{\scriptsize Consumo jóvenes}}+\overbrace{c_t^V}^{\text{\scriptsize Consumo viejos}}=\underbrace{c_t}_{\text{\scriptsize Consumo total en cada periodo}}}_{\text{\scriptsize Solapamiento en el consumo}}
+\end{aligned}
+}{Heterogeneidad en los agentes. Modelo de Generaciones Solapadas}
+
+Los individuos pertenecientes a una generación determinada, en particular suspreferencias, son homogeneas, por lo que su conducta se puede sintetizar en la de un individuo representativo. Además, asumiremos que no existe crecimiento poblacional, por razones de simplicidad analítica puesto que no cambiarán los resultados normativos del modelo.\footnote{Este aspecto es muy relevante dado que este ritmo de crecimiento va a ser determinante en los resultados de muchos modelos (ya ha aparecido en la caracterización de la ineficiencia dinámica), como en los de Seguridad Social. Hay que notar que con esta especificación sencilla, los agentes conocen exactamente la fecha de su muerte. En modelos más refinados, la dinámica demográfica incorpora incertidumbre, de modo que el agente no conoce con certeza el fin de su vida, sino solamente en términos probabilísticos, según el modelo de muerte de Poisson o modelo de “juventud perpetua”, con probabilidad de muerte constante $v$ en cada instante. Unido a una tasa de nacimientos en cada instante de $n$, la dinámica de la población sería: 
+    $$L_{t+1}=L_t(1+n-v)$$
+}
+
+\paragraph{Rasgos característicos} 
+Otros rasgos característicos del MGS son:
+\begin{lnum}
+    \item \textbd{Mantenemos los supuestos de MHI descartando altruismo intergeneracional}. Esto es:
+    \begin{lnum}
+        \item \textit{Microfundamentación y estructuralidad};
+        \item \textit{Optimización dinámica};
+        \item \textit{Dificil resolución} (no \textit{closed-form solutions}); y,
+        \item \textit{Bienestar basado en la utilidad}.
+    \end{lnum}
+    \item \textit{Generaciones de hogares solapados}. Los agentes que se solapan son los consumidores u hogares pero no las empresas; y,
+    \item \textit{Ausencia o no-unicidad del Equilibrio}. Partiendo de un enfoque de equilibrio general, en el plano técnico, estos modelos presentan la característica diferencial: puede presentar problemas de existencia o puede estar indeterminado o ser múltiple.
+\end{lnum}
+
+\subsubsection{Ejemplo: Economía de intercambio puro}
+Para ilustrar de manera sencilla las implicaciones de éste y sus beneficios respecto al anterior planteamos el siguiente modelo: imaginemos una economía de intercambio puro (sin dinero) con bienes perecderos, autárquica.
+
+Por ejemplo, imaginemos que un barco se ha hundido y toda su tripulación y pasajeros han quedado extraviados en una isla desierta con suficientes recursos para vivir y para reproducirse. Algo parecido a un modelo de CRUSOE pero con intención de permanencia y sin posibilidad de salir de esta isla. Cada generación de individuos tiene una dotación de bienes en cada periodo, joven y viejo, que son aquellos que son capaces de obtener por sí mismos, puesto que no existe altruismo intergeneracional (nos llevamos bien para convivir pero no compartimos nuestros recursos).
+
+De la misma forma que en los modelos presentados anteriormente, las preferencias de cada cohorte generacional pueden expresarse mediante curvas de indiferencia:
+
+\imagenfit{MGS_CI.png}{Curva de Indiferencia de cada cohorte de población}{Elaboración propia}
+
+Entonces, podemos plantear el problema de maximización (apoyándonos en lo descrito antes) incluyendo la Restricción Presupuestaria Intergeneracional y las condiciones iniciales y terminales. 
+
+\eqblock{
+\begin{aligned}
+    \max_{\{c_t^J,c_t^V\}}U(0)=u(c_t^J)+\beta\; u(c_t^V)\\[1em]
+    \text{s.a.}
+    \begin{cases}
+        c_t^J+\frac{c_t^V}{1+r}=e^J+\frac{e^V}{1+r}\\[1em]
+        a_t^V=0
+    \end{cases}
+\end{aligned}
+}{Problema de optimización de cada cohorte de hogares. Modelo de Generaciones Solapadas}
+
+Gráficamente, podemos ilustrar este prolema de sobre el plano cartesiano de la siguiente manera:
+
+\imagenfit{MGS_EqPO.png}{Equilibrio General Competitivo Pareto-Óptimo}{Elaboración propia}
+
+Ahora bien, dadas las características propias de la economía que hemos expuesto, este problema no constituye realmente un problema de maximización posible puesto que no se podrá transferir renta (son rentas dotacionales de bienes perecederos) de un periodo a otro y, al vivir solo dos periodos, los agentes no tendrán incentivos para intercambiar sus bienes puesto que nadie les devolverá lo prestado (ya estarán muertos los prestatarios). Si suponemos que estos bienes son, por ejemplo, alimentos, la distribución de recursos que da lugar a este equilibrio dotacional sería casi imposible de manera aleatoria y, atendiendo a las cualidades físicas de los humanos a lo largo de su vida, podría constituir un subóptimo para los jóvenes (por estar más capacitados físicamente y poder dedicar más tiempo a la recolección) y algo muy difícil para los ancianos (por haber pérdido capacidades físicas). Esto se traduciría simplemente, en términos matemáticos a que el equilibrio realmente alcanzado en cada periodo de vida sería:
+
+\eqblock{
+\begin{aligned}
+    \underbrace{(\tilde c_t^J, \tilde c_t^V)=(e^J,e^V)}_{\text{dotaciones}}
+\end{aligned}
+}{Equilibrio dotacional para cada generación. Modelo de Generaciones Solpadas}
+
+Lo que en términos gráficos se podría representar como:
+
+\imagenfit{MGS_EqSubPO.png}{Equilibrio General Competitivo subóptimo}{Elaboración propia}
+
+Por tanto, ¿qué implicaciones tiene este resultado?
+
+\subsubsection{Implicaciones}
+Desde un punto de vista positivo, el equilibrio alcanzado sería una asignación ineficiente. Por tanto, el Equilibrio General Competitivo no es Pareto Óptimo y se incumple el Primer Teorema Fundamental de la Economía del Bienestar. 
+
+Ahora bien, está posibilita la acción del policy-maker ya que es posible intervenir y aumentar la eficiencia signativa de los recursos de la economía ya que ésta no se encuentra en la región dinámicamente eficiente: será posible disminuir el ahorro aumentando el consumo de todas las generaciones (cohortes poblacionales). Los habitantes de la isla podrían organizarse y crear un mecanismo de distribución intergeneracional que pueda ser beneficioso para todos mediante mecanismos de provisión social (una especie de versión primitiva de lo que hoy son los Sitemas de Seguridad Social).
+
+De manera más general, existen importantes diferencias con el MHI:
+\begin{lnum}
+    \item \textit{Cumplimiento 2TFEB}. Curiosamente, sí se cumple el segundo teorema del bienestar, es decir, un óptimo de Pareto puede alcanzarse de manera descentralizada a través de redistribuciones.\footnote{
+    Por otra parte, no se debe olvidar que el reconocimiento explícito a la existencia de diferentes agentes obliga a ser cautelosos a la hora de definir el óptimo de Pareto a fin de evitar comparaciones interpersonales de utilidad. Es por ello frecuente que se recurra a un concepto distinto, el óptimo del planificador social, que es el óptimo computado como solución del planificador benevolente que maximiza una función de bienestar social bergsoniana explícita, habitualmente como suma de las utilidades ponderadas de las diferentes generaciones. Por tanto, óptimo de Pareto y óptimo del planificador dejarían de ser equivalentes.
+    }
+    \item \textit{Inconsistencia dinámica}. Como en el modelo de generaciones solapadas el resultado de consumo y de ahorro de mercado no siempre será eficiente (no PO), pueden exhibir situaciones de ineficiencia dinámica que, en este caso, se define como un equilibrio competitivo con sobre-acumulación de capital, que sucederá cuando el tipo de interés neto del equilibrio competitivo sea inferior a la tasa de crecimiento de la población ($r^*<n$). En este caso, todas y cada una de las infinitas generaciones \textbf{podrían aumentar su consumo y bienestar mediante una reducción del ahorro}. En otras palabras, se da una externalidad pecuniaria intergeneracional en el proceso de acumulación de capital, pues la generación joven debe ahorrar/acumular para consumir en su vejez, pero este ahorro tiene una rentabilidad determinada por la productividad marginal del nivel de stock heredado. \footnote{
+    La intuición económica se basa en la combinación de la existencia de externalidades pecuniarias entre generaciones unido a la infinitud de agentes y bienes de la economía: los individuos de una generación se enfrentan a los precios (rentabilidad del capital) determinados por el stock de capital acumulado hasta la fecha y que es resultado de decisiones de generaciones previas.
+    
+    En efecto, el equilibrio competitivo de estado estacionario de los MGS arroja típicamente un nivel de capital diferente al de la denominada regla de oro (Golden rule), que es el que maximiza el nivel de consumo (y bienestar) en estado estacionario. En los modelos más sencillos, la condición matemática que determina dicha ineficiencia dinámica es: 
+    $$r^*<n$$ 
+    Es decir, se da ineficiencia dinámica cuando el tipo de interés neto del equilibrio competitivo es inferior a la tasa de crecimiento de la población. En este caso, todas y cada una de las infinitas generaciones podrían aumentar su consumo y bienestar mediante una reducción del ahorro. La intuición económica detrás de este resultado se basa en la combinación de la existencia de externalidades pecuniarias (definición abajo) entre generaciones unido a la infinitud de agentes y bienes de la economía. En efecto, los individuos de una generación se enfrentan a los precios (rentabilidad del capital) determinados por el stock de capital acumulado hasta la fecha y que es resultado de decisiones de generaciones previas. En otras palabras, se da una externalidad pecuniaria intergeneracional en el proceso de acumulación de capital, pues la generación joven debe ahorrar/acumular para consumir en su vejez, pero este ahorro tiene una rentabilidad determinada por la productividad marginal del nivel de stock heredado, de modo que cuanto mayor sea este, menor será la rentabilidad y más se verán forzados a ahorrar, empeorando así la situación. De ahí la condición matemática anterior, pues la rentabilidad del capital con sobreacumulación es demasiado baja. Estas externalidades pecuniarias en general no afectan a la consecución de un equilibrio eficiente, pero deja de ser el caso en presencia de un número infinito de agentes y de bienes, y se agrava cuanto mayor es esta necesidad de ahorrar, como los modelos en que los agentes viejos no tienen rentas de ningún tipo y sólo pueden consumir a partir del ahorro previo.
+    
+    \textbf{Definición.-} (Externalidades pecuniarias) Jacob Viner dio la distinción tradicional entre externalidades pecuniarias y externalidades tecnológicas o reales. Mientras que las tecnológicas o reales no se reflejan en los precios, las externalidades pecuniarias se traducen en mayores o menores precios, esto es, los mercados las incorporan de modo que permiten equilibrios competitivos Pareto-eficientes y no constituyen, en general, un fallo de mercado.
+    
+    En cualquier caso, hay que recalcar que la ineficiencia dinámica no es una mera curiosidad analítica o una posibilidad exótica, sino que se demuestra que puede darse en circunstancias muy plausibles. Otra cuestión es la incidencia en economías reales que, claro está, queda limitada a economías desarrolladas (es difícil defender que Chad tenga un problema de exceso de acumulación de capital).
+    }
+    \item \textit{No equivalencia ricardiana}. A diferencia del MHI, donde sí aplica la equivalencia ricardiana (por lo que la política fiscal no tiene efectos en las decisiones de consumo de los agentes), en un modelo con generaciones que viven dos periodos, la política fiscal sí puede tener efectos relevantes, por lo que podría estar justificado aplicar distintos tipos a distintos grupos demográficos. Es decir, la senda fiscal sí puede importar.
+\end{lnum}
+
+\clearpage
+\section{Comodín: Metodologías alternativas}
+\puntosclave{
+    La Teoría de Juegos permite realizar un análisis complementario al anterior acerca de cómo se modelizan en Economía las decisiones sobre el tiempo. En concreto, introduce objetos que son útiles como los Equilibrios de Nash Perfectos en Subjuegos, que permiten localizar las promesas y amenazas no creíbles.
+    
+    Como en el caso de los modelos sin interdependencia estratégica, cuestiones cómo las preferencias por el consumo presente o la aversión al riesgo determinarán el resultado alcanzado. 
+    
+    Existe una amplia gama de modelos dinámicos en Teoría de Juegos, lo que permite su aplicación frecuente en modelos macroeconómicos (generalmente, cuando hay un sector público).
+}
+
+Hasta aquí hemos visto la metodología ortodoxa para la modelización dinámica de las decisiones intertemporales y sus dos modelos más representativos. Ahora bien, ésta no constituye la única metodologia posible para introducir el tiempo en este serie de problemas, pues se han desarrollado métodos alternativos para incorporar el tiempo como una variable explícita en la toma de decisiones por parte de los agentes de una economía; de las cuales trataremos en particular dos.
+
+\subsection{Teoría de Juegos}
+Empecemos con los métodos desarrollados en el marco de la Teoría de Juegos. Como sabemos, uno de los supuestos básicos que caracteriza la modelización dinámica es que los agentes son precio-aceptantes, lo cual resulta incompleto: la interacción estratégica es frecuente tanto en modelos microeconómicos como en muchos modelos macroeconómicos.
+
+Ahora bien, en este campo teórico debemos desplazar la pregunta típica del economista de ¿cuál es el equilibrio en tal juego? a, la modelización dinámica: ¿bajo qué condiciones se obtiene tal perfil de estrategias como equilibrio para el juego? 
+
+Existen tres tipos de juegos que son frecuentemente utilizados en el ámbito de la economía: los Juegos repetidos, los Juegos de MARKOV y los Juegos de negociación.
+
+\subsubsection{Juegos repetidos}
+En los juegos repetidos existen varias estrategias típicas y la principal cuestión de interés será saber bajo qué condiciones cada una de ellas será un ENPS.\footnote{Un juego repetido es un juego que consiste en una secuencia de juegos estáticos idénticos jugados entre el mismo conjunto de jugadores y su característica clave es que los jugadores interactúan repetidamente a lo largo del tiempo, tomando decisiones en cada ronda o período basándose en sus observaciones de acciones y resultados anteriores.
+} Este tipo de metodología es frecuente en el ámbito de la Teoría del Oligopolio y el análisis de mercados \footnote{Veáse [\authorfont{Ver Tema 3.A.19}]
+}
+
+La aproximación metodológica a través de Juegos repetidos no se diferencia mucho de las formulación mencionada a través de la optimización pues mantiene los supuestos base de ésta: los agentes actúan de manera racional, se sustenta sobre el indibidualismo metodológico, es \textit{path-dependant} y mantiene ergodicidad. Esto se debe a que, en puridad, el Equilibrio en los casos de optimización dinámica es un primo muy cercano del Equilibrio en el marco de la Teoría de Juegos, la mejor estrategia posible dadas las mejores estrategias posible del resto. De hecho, podríamos decir, sin pérdida de generalidad, que en ambas aproximaciones se plantea un trade-off entre especificidad de las interacciones entre variables y la especificidad de los agentes: (a) en la modelización/optimización dinámica se prefiere una mayor especificidad en las interacciones entre variables (introduciendo multitud de paramterizaciones y relaciones) frente a una mayor especificidad de los agentes que interactúan; y, (b) en los juegos repetidos se preferirá la especificidad en la heterogeneidad de los agentes (pudiendo formular matrices de pagos más extensas en número de jugadores) frente a la especificidad de las interacciones (reduciéndose a pagos esperados y conjuntos de información).
+
+No obstante, una particularidad propia es que permite analizar de manera más sencilla las consecuencias a cambios abrutos de trayectoria fruto de una decisión raccional o cuasi-racional (racional con parámetro estocástico), como por ejemplo la consideración de estrategias de gatillo o \textit{tit-for-tat} con perdón. Esto nos permite valorar como interactúan los agentes a lo largo del tiempo y cómo responderían óptimamente éstos ante cambios de conducta de otros. 
+
+\subsubsection{Juegos de MARKOV y Equilibrio Perfecto de Markov}
+Ahora bien, todas las aproximaciones vistas hasta ahora suponen que la trayectoria histórica o bien de la variable estado o bien de las estrategias de los jugadores condicionan y determinan el futuro del sistema de interacción: ¿es eso cierto?
+
+A menudo, en la vida real, nos encontramos con situaciones en las el desarrollo futuro del sistema no depende de lo que sucedió hace 150 años, sino que son resultado del estado inmediatamente anterior. Por ejemplo, si suponemos que el mercado financiero se puede encontrar eufórico o depresivo, poco (más bien nada) afectaría que el 29 de octubre de 1929 se encontrara depreseivo para determinar o intentar predecir el estado en el que se encontrará mañana. De hecho, probablemente el factor que condicione el estado del mercado financiero mañana es cómo se encuentre hoy. 
+
+Esto es lo que se conoce como \textbf{propiedad de MARKOV}. La propiedad de MARKOV nos indica que un sistema padece \textbf{amnesia histórica}, es decir, las probabilidades de los estados futuros del sistema solo dependen del momento actual (entendiendo esto como el último estado realizado).\footnote{\textbf{Importante.-} Un sistema de MARKOV puede mantener la hipótesis ergódica o no. Para que un sistema de MARKOV sea ergódico, todo estado pasado del sistema debe ser recuperable. 
+
+Los sistemas markovianos que ostentan esta cualidad se conocen como homogéneos.
+} Para ilustrar de manera simple y sencilla un sistema de estas características, sus ventajas e implicaciones imaginémos lo siguiente: nos encontramos en una economía formada por dos empresas ($A$ y $B$), con dos posibles acciones (\textit{invertir} o \textit{no invertir}) y dos posibles estados de la economía (\textit{débil} y \textit{fuerte}). Para empezar, representemos la matriz de pagos de dicho sistema:
+
+\imagenfit{MatrizPagos_MARKOV.png}{Matriz de pagos para cada estado de la economía ($\omega_1, \omega_2$) y cada estrategia de los jugadores}{Elaboración propia}
+
+Como vemos, en este Juego existe un Equilibrio de NASH por cada estado de la economía:
+
+\eqblock{
+\begin{aligned}
+    &\omega_1=(NI,NI)\\[0.5em]
+    &\omega_2=(I,I)
+\end{aligned}
+}{Equilibrio de NASH. Juegos de MARKOV}
+
+Ahora bien, sabemos que lo más probable es que la transición entre estados de la economía dependa de las acciones de los jugadores, por tanto, podemos definir el diagrama de transiciones de la siguiente manera:
+
+\imagenfit{Transiciones_MARKOV.png}{Diagrama de probabilidades de transición con acciones}{Elaboración propia}
+
+Como vemos, el perfil de estrategias óptimas para cada estado conduce a un comportamiento beneficioso en el caso de que nos encontremos en un mercado fuerte, pero uno tremendamente perjudicial en el caso de que nos encontremos en un mercado débil. ¿Por qué? Si las empresas se comportan conforme a su estrategia óptima, no se podrá escapar el bucle débil, que permanecerá con probabilidad 1 hasta que se produzca el salto por un fenómeno exógeno (o estocásticamente incluida, en cuyo caso reformularíamos la probabilidad). 
+
+\paragraph{Implicaciones en términos de Política Económica}
+¿Qué ventajas e implicaciones tiene la formulación de este tipo de juegos? Las ventajas de estos juegos son evidentes puesto que permiten analizar qué estrategia sería óptima en cada estado. Por ejemplo, en este caso el planificador deberá, sea como sea, incentivar la inversión en los supuestos en que nos encontremos con un mercado débil, por ejemplo, sufragando los costes de ésta con el fin de acelerar la recuperación del mercado. También vemos como el planificador podría acudir para evitar una debacle en caso de que las expectativas de crecimiento se reduzcan y los operadores del mercado dejen de invertir (como sucede en la flecha de transición superior), aumentando la probabilidad de transicionar. 
+
+\subsection{Modelos \textit{Agent-Based}: Simulación dinámica}
+Otra método para analizar el comportamiento de los agentes introduciendo la variable temporal es mediante el uso de la simulación.\footnote{Es muy importante entender la diferencia entre \textit{modelización}, los dos métodos presentados hasta ahora, y \textit{simulación}, el presente.
+
+La modelización es crear una representación abstracta de un sistema real, mientras que la simulación es usar una versión simplificada de ese sistema real para ejecutarlo y observar su comportamiento en diferentes escenarios a lo largo del tiempo, permitiendo evaluar diseños, diagnosticar problemas y predecir resultados sin riesgo ni costo del mundo real, como en un simulador de vuelo o predicción meteorológica.
+}\textsuperscript{,}\footnote{En un artículo publicado en American Economic Review en 1959, H. SIMON argumentaba que:
+
+\textit{La misma complejidad que ha hecho esencial una teoría del proceso de toma de decisiones ha hecho que su construcción sea extraordinariamente difícil. La mayoría de los enfoques han sido fragmentarios: a veces centrados en los criterios de elección, otras en los conflictos de intereses, otras en la formación de expectativas. [...] El ordenador digital moderno ha cambiado radicalmente la situación. Nos proporciona una herramienta de investigación, para formular y poner a prueba teorías, cuya potencia es acorde con la complejidad de los fenómenos que tratamos de comprender. [...] A medida que la economía encuentre cada vez más necesario comprender y explicar el desequilibrio, además del equilibrio, encontrará un uso creciente de esta nueva herramienta y de la comunicación con sus ciencias hermanas, la psicología y la sociología.}
+(Simon, 1959, p. 280)
+
+El enfoque basado en agentes para la modelización macroeconómica es afín en espíritu a la cita de Simon anterior y, por tanto, difiere en varios aspectos de los modelos dominantes de equilibrio dinámico. 
+} 
+
+Este enfoque, radicalmente diferente a los anteriores, se contrapone a los expuestos por la ausencia de:
+\begin{lnum}
+    \item Valoraciones/juicios \textit{ex-ante} sobre la coordinación del comportamiento individual;
+    \item Adopción de un enfoque \textit{bottom-up} y, en consecuencia, por la explícita renuencia a la agregación mediante \textit{agentes representativos}; y,
+    \item Renuncia a la hipótesis \textit{ergódica}.
+\end{lnum}
+ 
+En los modelos macroeconómicos basados en agentes (MABM), el instrumento por antonomasía en esta corriente metodológica, distintos tipos de agentes heterogéneos, dotados de reglas de comportamiento y de formación de expectativas, interactúan a través de protocolos de mercado explícitamente representados, y las variables meso- y macroeconómicas se determinan mediante la agregación efectiva de los resultados de esta población de agentes.\footnote{La dinámica macroeconómica se caracteriza por la interacción de un gran número de individuos heterogéneos que toman una multitud de decisiones de distinto tipo para producir e intercambiar una amplia variedad de bienes, así como información. Estas transacciones están regidas por reglas institucionales que pueden variar significativamente entre distintas regiones, industrias, periodos de tiempo y otros contextos. Sobre esta base, los sistemas económicos deben considerarse, sin duda, sistemas adaptativos de gran complejidad (Sistemas Adaptativos Complejos), lo que convierte el la complejidad en un atributo fundamental del sistema. En particular, siguiendo el enfoque pionero del Santa Fe Institute: \textit{los sistemas adaptativos complejos (CAS, por sus siglas en inglés) son sistemas que constan de un gran número de elementos acoplados cuyas propiedades pueden modificarse como resultado de las interacciones con el entorno. [...] En general, los sistemas adaptativos complejos son altamente no lineales y están organizados en múltiples escalas espaciales y temporales.}
+}
+
+\subsubsection{Construcción de un MABM: Macroeconomic Agent-Based Model}
+El desarrollo y uso de un MABM suele requerir una serie de pasos:
+\begin{lnum}
+    \item \textit{Diseño del modelo y configuración teoríca}.
+    \begin{lnum}
+        \item \textit{Tipos de agentes}. Determinar los tipos de agentes que se incluirán en el modelo (hogares, empresas, bancos, etc.);
+        \item \textit{Reglas de decisión e información} (así como ajustes dinámicos y estados).\footnote{
+        En los modelos macroeconómicos basados en agentes no se asume que la economía esté en equilibrio ni que los individuos tengan expectativas racionales. Por ello, los agentes del modelo, al igual que los responsables de la toma de decisiones en el mundo real, están \textit{necesariamente limitados a acciones localmente constructivas, es decir, a acciones restringidas por sus redes de interacción, información, creencias y estados físicos}. El diseño de las reglas de comportamiento que determinan estas acciones localmente constructivas es un aspecto crucial del desarrollo de un modelo macroeconómico basado en agentes. En términos generales, en muchos MABM el diseño de las reglas de comportamiento se apoya en la amplia literatura psicológica y empírica que muestra la prevalencia de heurísticas relativamente simples y reglas prácticas para la toma de decisiones, incluidas las decisiones económicas en entornos complejos. Dichas reglas pueden derivarse de la optimización dentro del marco de un modelo interno simplificado del entorno, o pueden evolucionar a lo largo del tiempo en función de dinámicas de ajuste que tienen en cuenta qué tipos de reglas generan resultados deseables para el decisor. En varios modelos basados en agentes, las reglas de comportamiento elegidas están fuertemente motivadas por observaciones experimentales o empíricas de cómo se comportan los decisores reales en determinados tipos de problemas de decisión.
+        } Para cada agente de cada tipo, definir el conjunto de decisiones que debe tomar, el conjunto de estados internos (por ejemplo, riqueza, habilidades, ahorro, etc.), la estructura de cada regla de decisión (entradas, modo de decisión), los posibles intercambios de información con otros agentes y el posible ajuste dinámico de los estados internos y de las reglas de decisión; y,
+        \item \textit{Mercados y plataformas de interacción}.\footnote{
+        En la mayoría de los modelos macroeconómicos basados en agentes, la interacción entre los distintos agentes en los mercados u otras estructuras de interacción está gobernada por protocolos explícitos que representan el diseño institucional del sistema económico considerado. Esto permite capturar detalles del entorno institucional y también representar de manera natural el posible racionamiento en ambos lados del mercado, así como la aparición de fricciones. El grado de detalle con el que se describen las estructuras de interacción en los distintos mercados varía, por supuesto, de manera sustancial entre los modelos macroeconómicos basados en agentes que se han desarrollado y está fuertemente influido por el foco principal del modelo.
+        } Definir los protocolos de interacción para todas las interacciones potenciales.
+    \end{lnum}
+    \item \textit{Codificación.} Traducir las reglas a código informático y realizar pruebas adecuadas del código (por ejemplo, pruebas unitarias) para asegurar la correcta implementación del modelo;
+    \item \textit{Elección de parámetros y validación}. Estimar y calibrar los parámetros, ejecutar simulaciones, analizar las propiedades emergentes de los datos simulados, tanto a nivel transversal (por ejemplo, distribución del tamaño de las empresas) como a nivel macroeconómico (crecimiento y fluctuaciones del PIB) y comparar estas propiedades con los hechos estilizados del mundo real; y,
+    \item \textit{Análisis del modelo}. Estudiar los efectos de cambios en parámetros clave del modelo mediante un análisis estadístico riguroso de los resultados de ejecuciones múltiples bajo distintas configuraciones de parámetros; utilizar los datos de simulación a nivel micro para poner de relieve los mecanismos responsables de los resultados observados y para fomentar la intuición económica sobre dichos resultados.
+\end{lnum}
+
+\subsubsection{Propiedades y características}
+Varias propiedades son comunes a los MABM y se han encontrado en muchos MAB en economía, entre ellos:
+\begin{lnum}
+    \item \textit{Microfundamentación}. La característica más importante de un ABM es la autonomía de los elementos, es decir, la ausencia de un mecanismo centralizado de coordinación o control (enfoque \textit{bottom-up} microfundamentado);
+    \item \textit{Heterogeneidad persistente}. Estos modelos suelen generar heterogeneidad persistente entre los agentes, dando lugar a distribuciones poblacionales estables del tamaño de las empresas, la productividad, la rentabilidad, la tasa de crecimiento o la renta de los hogares, y, por tanto, pueden reproducir patrones empíricos relativos a las distribuciones de estas variables;\footnote{
+    En particular, las distribuciones con colas gruesas, que se observan en muchas variables del mundo real
+    }
+    \item \textit{Propiedades emergente, no-linealidad y caos}. A menudo dan lugar a propiedades emergentes, esto es, estructuras agregadas estables y ordenadas que resultan de la interacción del comportamiento de los agentes. Un fenómeno es emergente cuando el conjunto adquiere propiedades que sus elementos, considerados de forma aislada, no poseen; y,
+    \item \textit{Fluctuaciones endogeneizadas}. Estos modelos pueden generar endógenamente fluctuaciones que se asemejan a los ciclos económicos reales sin recurrir a perturbaciones externas y destacan mecanismos mediante los cuales el contagio y la retroalimentación entre los sectores real y financiero de la economía pueden inducir inestabilidad y caídas súbitas;\footnote{Muchos MABM se caracterizan por la presencia de externalidades y no linealidades (debidas a la interacción), que generan procesos dinámicos con retroalimentaciones positivas. Debido a la existencia de tales retroalimentaciones, pueden surgir dependencias de la trayectoria (\textit{path dependence}), de modo que las condiciones iniciales o los eventos aleatorios en la fase transitoria pueden tener un impacto decisivo en la dinámica de largo plazo. Estas propiedades de los MABM constituyen también la base para la generación endógena de eventos extremos, como colapsos y crisis económicas, así como de transiciones rápidas entre distintos regímenes cuasiestables. Los MABM capturan los mecanismos dinámicos reales que generan tales transiciones económicas potencialmente rápidas y, por tanto, son herramientas naturales para estudiar cómo prevenir o mitigar las crisis económicas, por ejemplo, mediante diseños institucionales adecuados o medidas de política económica. En términos generales, el hecho de que los modelos basados en agentes permitan un análisis global de la dinámica macroeconómica en marcos que generan endógenamente patrones dinámicos e intersectoriales que se asemejan estrechamente a los datos empíricos es, sin duda, una de las principales razones del atractivo de este enfoque.
+    }
+    \item \textit{Potencial para el policy-maker}. Estas propiedades, junto con la capacidad de incorporar una amplia gama de supuestos conductuales y de representar características institucionales relevantes para el análisis de propuestas de política concretas, han fomentado el interés de los responsables de política económica por la modelización macroeconómica basada en agentes y han dado lugar a un fuerte aumento de la investigación en este ámbito en general, y en el análisis de políticas basado en agentes en particular.
+\end{lnum}
+
+
+\clearpage
+\section{Conclusión} 
+
+
+
+
+\subsection{Recapitulación}
+
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+\MyBibItem{Agent-Based Computational Economics}{Agent-Based Computational Economics}{2003}{https://www.researchgate.net/profile/Leigh-Tesfatsion-2/publication/228732927_Agent-based_computational_economics/links/541bd54d0cf2218008c4c247/Agent-based-computational-economics.pdf}
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% --- Anexos (no aparecen en el índice) ---
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+\clearpage
+\anexo{Los datos: series temporales}\label{anx:series_temp}
+\puntosclave{
+    Las series temporales es una de las tres estructuras de datos típicos en Economía, y su principal característica es la presencia explícita del tiempo.
+    
+    Se trata de una forma concreta de procesos estocásticos; es decir, una colección ordenada de variables aleatorias. La principal propiedad es que el tiempo es típicamente discreto y que la distancia entre observaciones es constante. 
+    
+    Para el análisis económico, se necesita generalmente trabajar con variables estacionarias; es decir, con medias y autocovarianzas que no dependen del momento del tiempo. Para ello, generalmente se aplican transformaciones a los datos, como eliminar la tendencia aplicando primeras diferencias o tomar logaritmos.
+} 
+
+En Microeconomía, la aplicación de los modelos a menudo parte de datos de sección cruzada, que consisten en observaciones de varias unidades económicas tomadas en un momento específico. Estas unidades pueden ser individuos, empresas o cualquier entidad que pueda ser objeto de análisis. Es decir, la estructura de los datos será una matriz con $m$ filas ($m$ observaciones) y $n$ columnas ($n$ variables de interés). Por ejemplo, si quiere contrastar o emplear un modelo de capital humano, podemos contar con una base de datos consistente en 500 filas para 500 trabajadores, y 3 columnas con, para cada uno de ellos, el salario nominal, los años de experiencia, los años deeducación (o potencialmente más columnas/variables que se puedan emplear como controles). Este enfoque permite analizar las variaciones entre las unidades en un momento dado.\footnote{Otro tipo de datos son los datos de panel, que resultan de sobreponer varias “capas” de datos de sección cruzada obtenidos en distintos momentos del tiempo para las mismas unidades (mismos hogares). Permiten introducir dinámica en el análisis, e incluso inferir causalidad bajo ciertos supuestos.
+}
+
+En contraste, los modelos macroeconómicos tienden a utilizar series temporales, que consisten en observaciones de una variable a lo largo del tiempo. 
+
+Se ha de puntualizar no obstante que esta explicación es excesivamente simplista y que, si bien en la segunda mitad del siglo XX el empleo de series temporales en Economía sí consistía mayoritariamente en el uso de herramientas estadísticas para explicar el comportamiento pasado y predecir el futuro de variables macroeconómicas agregadas, tras la Crítica de Lucas (1976) y el triunfo de la microfundamentación econométrica, la frontera es más difusa. De hecho, la aproximación de este tema es precisamente la aplicación de modelos dinámicos microfundamentados a la macroeconomía. Ello no obstante, resulta útil conocer ciertas propiedades básicas de las series temporales. 
+
+Las series temporales son una forma concreta de procesos estocásticos.\footnote{Los procesos estocásticos en estadística y teoría de la probabilidad proporcionan un marco matemático para modelar y analizar fenómenos aleatorios que evolucionan con el tiempo o el espacio. El término estocástico se refiere a la aleatoriedad o incertidumbre, y un proceso estocástico es por tanto esencialmente una colección de variables aleatorias ordenadas en el tiempo o el espacio.
+} Su uso transciende en mucho a la Economía, y son ampliamente utilizados en diversos campos, como la física, biología, o la ingeniería. 
+
+De manera general, un proceso estocástico se caracteriza por su distribución de probabilidad, que evoluciona a medida que avanza el tiempo o el proceso se mueve a través del espacio. La idea clave es capturar la imprevisibilidad inherente en el sistema, permitiendo una representación más realista de fenómenos complejos y dinámicos. Existen numerosas clasificaciones para los procesos estocásticos, siendo una la distinción entre los procesos estocásticos de tiempo discreto y de tiempo continuo. 
+
+Como se ha dicho, las series temporales son una forma específica de un proceso estocástico que tienen como principal característica que las variables aleatorias están indexadas en orden cronológico y la separación entre las observaciones es de la misma duración. En otras palabras, es una secuencia de puntos de datos medidos, observados o registrados en intervalos sucesivos y equidistantes en el tiempo: $\{x_t\}$ para $t = 0,1,2,..,T$. Como se ha dicho, cada punto es la realización concreta de la variable aleatoria en el momento $t$. 
+
+Así, cuando se conforma una base de datos de series de tiempo, se obtiene un resultado posible, o realización/observación, del proceso estocástico en cada $t$. Únicamente se puede ver una sola realización, ya que no es posible retroceder en el tiempo y empezar de nuevo el proceso. (Esto es análogo al análisis de corte transversal en el que únicamente se puede reunir una sola muestra aleatoria). No obstante, si ciertas condiciones históricas fueran distintas, por lo general se obtendría una realización diferente para el proceso estocástico y por ello los datos de series de tiempo se consideran como el resultado de variables aleatorias. El conjunto de todas las realizaciones posibles de un proceso de series de tiempo desempeña el papel de la población en el análisis de corte transversal. El tamaño de muestra para una base de datos de series de tiempo es el número de periodos durante los cuales se observan las variables de interés. 
+
+Es decir, una característica fundamental de los datos de series de tiempo, que las hace más difíciles de analizar que los datos de sección cruzada, es que las observaciones rara vez, si acaso, serán independientes en el tiempo. La mayor parte de las series de tiempo económicas y otras series de tiempo están relacionadas, a menudo fuertemente, con sus historias recientes. Esta correlación introducida por el muestreo de puntos temporales cercanos restringe severamente la aplicabilidad de muchos métodos estadísticos convencionales que tradicionalmente parten del supuesto de que todas las observaciones son independientes e idénticamente distribuidas. 
+
+\textit{¿Qué tipo de dependencia en el tiempo muestran las series temporales?}
+
+La más simple es la presencia de una tendencia, que podría representarse, entre otras opciones, a través de la siguiente expresión y que se ilustra con un ejemplo en el siguiente gráfico:
+
+$$y_t=\alpha_0+\alpha_1\cdot t+e_t\quad \text{donde,}
+\begin{cases}
+    \alpha_0\;\text{y}\;\alpha_1\equiv\text{Parámetros}\\[0.5em]
+    e_t\equiv\text{Secuencia i.i.d., con,}\;E[e_t]=0\;\wedge\;Var(e_t)=\sigma^2\\[0.5em]
+\end{cases}$$
+
+Como se ha dicho, la dependencia del tiempo supone una dificultad para el análisis estadístico de las series de tiempo.\footnote{Las tendencias pueden dificultar la identificación de patrones y relaciones subyacentes. Es más, las tendencias pueden dar lugar a lo que se denominan relaciones espurias: imaginemos el caso en que graficamos la serie del número de mascotas en una ciudad junto con la serie del número de robos. Si la ciudad ha experimentado un crecimiento de la población fuerte y sostenido en el tiempo, ambas variables tenderán a crecer. Así, las dos presentarán una correlación positiva, pero dicha relación es “espuria”, en tanto que se debe a que las dos variables comparten una tendencia, debido a su correlación con una tercera variable sin significado en el análisis.
+} Por ello, eliminar las tendencias de los datos de series temporales es un paso común en el análisis de series temporales. Algunos métodos comunes para eliminar la tendencia de los datos de series temporales en análisis de regresión son, entre otros:
+\begin{lnum}
+    \item \textit{Diferenciar}. Es decir, trabajar con las primeras diferencias de la serie temporal en vez de con la serie en niveles. Así se miden las variaciones inter-períodos, lo que eliminaría tendencias de tipo lineal;
+    \item \textit{Incluir un término tendencia en la regresión.} La inclusión de una variable en un análisis de regresión permite controlar por la misma ya que el parámetro de cada variable explicativa mide la relación entre ésta y la variable explicada eliminando el efecto parcial de las demás variables (permite realizar un análisis ceteris paribus). Así, si se incluye el tiempo explícitamente como una variable en el análisis de regresión, su parámetro “absorberá” el efecto de la tendencia; y,
+    \item \textit{Técnicas de suavización}. Existen muchas maneras de suavizar una serie temporal, para localizar una tendencia estadística y potencialmente descomponer la serie en un componente tendencia y otro no tendencia. Metodologías frecuentes son las medias móviles, el suavizado kernel, o el método lowess.
+\end{lnum} 
+
+\textsc{Estacinoariedad}
+
+Un proceso de series de tiempo estríctamente estacionario es aquel en el que sus distribuciones de probabilidad se mantienen estables con el paso del tiempo en el siguiente sentido: Si se toma cualquier colección de variables aleatorias de la secuencia y se las desplaza $h$ periodos, la distribución de probabilidad conjunta debe permanecer inalterada. 
+
+Formalmente, decimos que un proceso estocástico $\{x_t : t = 1, 2, 3,...\}$ es estríctamente estacionario si para cada conjunto de índices temporales $1 < t_1 < t_2 < ... < t_m$ , la distribución conjunta de $( x_{t_1}, x_{t_2},..., x_{t_m})$ es la misma que la distribución conjunta de $(x_{t_{1+h}}, x_{t_{2+h}},..., x_{t_{m+h}})$ para todos los enteros $h > 0$. 
+
+Esta definición es un poco abstracta, pero tiene una implicación muy clara: $x_t$ tiene la misma distribución que $x_1$ para toda $t = \{2, 3,...\}$. Esto significa que la secuencia $\{x_t : t = 1, 2, 3, ...\}$ está idénticamente distribuida. La estacionariedad requiere aún más. Por ejemplo, la distribución conjunta de $(x_1, x_2)$ debe ser la misma que la distribución conjunta de $(x_t, x_{t+1})$ para cualquier $t>0$. De nuevo, esto no impone restricciones a la manera en que $x_t$ y $x_{t+1}$ se relacionan entre ellas; de hecho, podrían tener una correlación muy estrecha. La estacionariedad exige que la naturaleza de cualquier correlación entre términos adyacentes sea la misma en todos los periodos.
+
+Un proceso estocástico que no es estacionario se llama proceso no estacionario. Puesto que la estacionariedad es un aspecto del proceso estocástico subyacente, no de la única realización disponible, es muy difícil determinar si los datos reunidos fueron generados por un proceso estacionario. Sin embargo, es fácil detectar ciertas secuencias que no son estacionarias. Un proceso con una tendencia en el tiempo como el comentado antes evidentemente no es estacionario: como mínimo, su media cambia con el tiempo. Dada la dificultad para comprobar que se cumple la condición de estricta estacionariedad y lo exigente del supuesto, en la práctica se recurre a una versión más débil. Si $\{x_t : t = 1, 2, 3, ...\}$ tiene un segundo momento finito, es decir, $E[x_t^2]<\infty$ para todas las $t$, entonces se aplica la siguiente definición. Un proceso estocástico $\{x_t : t = 1, 2, 3, ...\}$ con un segundo momento finito es débilmente estacionario si:
+\begin{lnum}
+    \item $E[x_t]$ es constante; y,
+    \item Para cualquier $t$, $h > 0$, la $Cov(x_t, x_{t+h})$ depende sólo de $h$ no de $t$.
+\end{lnum} 
+
+Éste último estadístico recibe el nombre de autocovarianza (de manera trivial, porque computa la covarianza de una variable consigo misma, pero en distintos momentos del tiempo).\footnote{Nótese que, en los casos en que $h=0$, la autocovarianza de $x_t$ es la covarianza consigo misma en el mismo período del tiempo; es decir, simplemente la varianza de $x_t$. Es importante destacar esto porque, como la condición de la autocovarianza debe de cumplirse para todo $h$ (incluido 0), esta segunda condición requiere por tanto también que la varianza de $x_t$ sea constante.
+} 
+
+\imagenfit{ProcesoEstacionario.png}{Ejemplo de proceso estacionario}{SHUMWAY, STOFFER (2017). Apuntes ICEX-CECO. Tema 3.A.29}
+
+Es decir, los procesos débilmente estacionarios se centran sólo en los dos primeros momentos del proceso estocástico: la esperanza y la varianza del proceso son constantes en el tiempo y la autocovarianza entre $x_t$ y $x_{t+h}$ depende sólo de la distancia entre los dos términos, $h$, y no de la ubicación del periodo inicial, $t$. Se deduce de inmediato que la correlación entre $x_t$ y $x_{t+h}$ depende también sólo de $h$ (es decir, ¡existirá la misma relación entre $x_t$ y $x_{t-2}$ que entre $x_{t-2}$ y $x_{t-4}$! se puede comprobar la enorme deseabilidad de que se cumpla esta condición: permite identificar patrones estables en la serie de datos). 
+
+El primer paso en cualquier análisis de datos dinámicos es comprobar que la serie es estacionaria y, de no serlo, aplicarle transformaciones (por ejemplo, eliminar la tendencia)\footnote{Eliminar la tendencia permitirá que la media sea constante, pero generalmente no será suficiente para cumplir con los requisitos sobre los segundos momentos. Otras técnicas, como las transformaciones de Box-Cox (en especial, el uso de las variables en escala logarítmica) pueden resultar útiles para conseguirque la varianza sea constante.
+} para que lo sea. Para localizar si la variable es estacionaria, existen varias aproximaciones complementarias entre sí, como la observación gráfica o el empleo de tests estadísticos. 
+
+\textit{¿Cómo se usa la estacionariedad en la econometría de las series de tiempo?}
+
+En un nivel técnico, la estacionariedad simplifica los enunciados de la ley de los grandes números y el teorema central del límite. En un nivel práctico, si se quiere entender la relación entre dos o más variables que utilizan el análisis de regresión, como se mencionó más arriba, se necesita dar por sentada algún tipo de estabilidad en el tiempo. Si se permite que la relación entre dos variables (por ejemplo, $y_t$ y $x_t$) cambie de forma arbitraria en cada periodo, no se puede aspirar a aprender mucho acerca de cómo un cambio en una variable afecta a la otra al sólo tener acceso a una sola realización de serie de tiempo.
+
+\begin{specialblock}{Función de Autocorrelación (ACF) y Función de Autocorrelación Parcial (PACF)}
+    La Función de Autocorrelación (ACF) y la Función de Autocorrelación Parcial (PACF) son herramientas esenciales en el análisis de series temporales para comprender y modelardependencias temporales. De manera somera:
+    \begin{lnum}
+        \item La ACF mide, para una serie temporal dada, la correlación entre la variable en el momento t=0 y sus valores rezagados, ayudando a identificar patrones y la presencia de autocorrelación. Proporciona información sobre la fuerza y la naturaleza de la relación entre observaciones en diferentes rezagos;
+        \item Por otro lado, la PACF representa la correlación entre la variable en el momento t=0 y sus valores rezagados, excluyendo la influencia de rezagos intermedios. La PACF ayuda a identificar la relación directa entre observaciones en diferentes rezagos, facilitando la determinación del orden de los términos autorregresivos en un modelo de series temporales.
+    \end{lnum}
+    
+    Tanto los gráficos de ACF como de PACF se utilizan comúnmente para diagnosticar las propiedades de los datos de series temporales y guiar la selección de modelos apropiados, como los modelos autorregresivos de media móvil integrada (ARIMA).
+
+    \imagenfit{ACFyPACF.png}{Ejemplo de ACF y PACF}{SHUMWAY y STOFFER (2017). Apuntes ICEX-CECO. Tema 3.A.29}
+    
+\end{specialblock}
+
+
+\clearpage
+\anexo{Historia}{\label{anx:historia}}
+Haciendo un breve repaso de la HPE, puede considerarse a grandes rasgos que el análisis económico de la escuela clásica y anterior se caracterizó por ser un pastiche de relaciones estáticas y dinámicas, mezcladas a conveniencia. Como señala BAUMOL, esto era debido a que por entonces la Economía era política económica, más preocupada por proporcionar argumentos de política que por preservar el rigor analítico.
+
+Tras la revolución marginalista de finales de siglo XIX, la Economía empezó a adoptar el método científico y el rigor que ello supone, diferenciando estrictamente estática y dinámica. Sin embargo, la dinámica quedó ostensiblemente relegada al análisis del ciclo y en favor de los sólidos modelos estáticos, con las audaces excepciones de WALRAS (y su proceso de \textit{tatônnement}) o EDGEWORTH (y su modelo de recontratación). 
+
+Ya entrado el s.XX, el análisis dinámico cobra vigor de la mano del desarrollo del análisis de una variable que sólo puede explicarse en plenitud desde una perspectiva temporal: el capital y su remuneración; de donde se extenderá al análisis en otros problemas económicos, especialmente macroeconómicos: primero la teoría de ciclos y de ahí al crecimiento económico. El autor señero en este período de inicios de siglo sería sin duda FISHER y su análisis intertemporal. 
+
+No obstante, no sería hasta los años 70 cuando, alrededor de la famosa crítica de Lucas, cuando se reavivó el interés por el análisis dinámico en el contexto de la microfundamentación de los modelos macroeconómicos, ayudado de una nueva herramienta matemática, la optimización dinámica. De este modo, el análisis dinámico llegaría a copar la práctica totalidad del análisis macroeconómico.
+
+\anexo{Modelo Agente-Productor}\label{anx:agente_productos}
+Para analizar las decisiones intertemporales de las empresas, utilizaremos el Modelo de Robinson (de Agente-Productor), incorporando al problema de producción intertemporal una ecuación de estado, en particular, la ecuación de acumulación de capital (inversión).
+
+$$\begin{aligned}
+    \text{Supuestos generales,}\;
+    \begin{cases}
+        \text{(1) Agente consumidor-productor}\\[0.5em]
+        \text{(2) Función de producción}
+        \begin{cases}
+            \text{(1) Un único bien (consumido (c) y acumulado ($K$))}\\
+            \text{(2) Un único factor, $K$}\\
+            \text{(3) Función Neoclásica de Buen comportamiento}\\
+            \text{(4) No hay depreciación}\\
+            \text{(5) Se acumula siguiendo:}\;\;K_{t+1}=K_t+I_t\\
+        \end{cases}\\[0.5em]
+        \text{(3) Agente representativo}
+        \begin{cases}
+            \text{(1) Función de Utilidad:}\;\;U(c)=\sum_{t=0}^\infty \beta^tu(c_t)\\
+            \text{(2) Restricción presupuestaria $\exists$ dos activos}\\
+            \text{(3) Ahorro = Capital productivo}
+        \end{cases}
+    \end{cases}\\[2em]
+    \text{CPO's}:
+    \begin{cases}
+        \text{(1)}\quad \text{Ecuación de Euler}: &&\boxed{\frac{u'c_t}{\beta u'(c_{t+1})}=1+PMg_K}\\[1em]
+        \text{(2)}\quad \text{Stock de capital deseado}: &&\boxed{\underbrace{PMg_K}_{\substack{\text{\scriptsize Productividad Marginal}\\\text{\scriptsize de acumular}}}=\overbrace{r}^{\substack{\text{\scriptsize Coste Marginal}\\\text{\scriptsize de acumular}}}}
+    \end{cases}
+\end{aligned}$$
+
+Como vemos, la primera CPO es la ya analizada Ecuación de EULER. La segunda ecuación, no obstante, es crucial para determinar el equilibrio, ya que el stock de capital deseado es independiente de las preferencias sobre el consumo: aunque un individuo tenga mucha impaciencia por consumir, no tendrá por qué invertir menos si tiene acceso a los mercados de capital (aunque pedir prestado tiene un coste de $r$, no dejará pasar oportunidades de inversión con un rendimiento $PMg_K$ superior a $r$), porque sus decisiones de consumo e inversión no están constreñidas por la renta del período. Por tanto, la solución dependerá de si hay o no mercado de capitales:
+\begin{la} 
+    \item \textit{Sin mercado de capitales}. Es aquel en el que $a_t = 0$, de modo que no se tiene acceso a los mercados de capital ($r=0$) y sólo se puede llevar renta hacia adelante a través de la inversión real. En este caso, las decisiones de inversión y consumo están íntimamente relacionadas, y: (i) no se cumplirá el teorema de separación de Fisher; y, (ii) sólo cumple la primera CPO; y,
+    \item \textit{Con mercados de capitales}. Permite separar las decisiones de consumo e inversión: consumo según las preferencias subjetivas del individuo e inversión según las oportunidades de inversión. Además, lo que no le cubra la renta del periodo, lo suplirá con deuda (Teorema de separación de FISHER). Esto se puede ver intuitivamente observando las dos CPO:
+    \begin{lnum}
+        \item La primera establece la senda de consumo óptima; y,
+        \item La segunda establece la senda de inversión óptima.
+    \end{lnum} 
+    Esto muestra claramente que las decisiones de consumo e inversión se separan: aparecen en ecuaciones distintas. 
+\end{la}
+
+{Toma de decisiones en dos etapas}
+
+El agente Robinson puede dividir su proceso de decisión en dos etapas:
+\begin{lnum}
+    \item Primero optimizará su decisión de inversión, decidiendo qué parte de su dotación inicial de recursos dedica a invertir en capital productivo (y, por ende, cuánto produce) dado el tipo de interés de mercado, con lo que maximiza sus recursos disponibles; y,
+    \item En segundo lugar, decide, dados dichos recursos y el acceso al mercado de capital, cuánto consume y cuánto ahorra o se endeuda. Por lo tanto, el individuo, en su vertiente de consumidor, maximizará su utilidad, y en su vertiente de productor, maximizará su beneficio.
+\end{lnum}
+
+Así, la presencia de mercados financieros permite un mayor bienestar del que se lograría en una situación de ausencia de mercados financieros: el mercado de capitales es más potente a la hora de trasladar rentas entre periodos que la sola tecnología productiva, pues, mientras ésta permite únicamente llevar recursos del presente al futuro, el mercado de capital también permite lo contrario: traer recursos futuros el momento presente (vía endeudamiento). 
+
+{Representación gráfica del equilibrio: Con y sin mercados financieros}
+
+Podemos representar en el mismo gráfico ambos óptimos. Primero trazando la Frontera de Posibilidad de Consumo Intertemporal (que queda restringida a la producción del periodo) y, posteriormente, situando la restricción de consumo de manera indepenidiente para la situación con y sin mercados.
+
+\imagenfit{Equilibrio_MF.png}{Equiliibrio dinámico con mercados financieros (C) y sin mercados financieros (A)}{Elaboración propia}
+
+El punto A representa el equilibrio, donde la frontera de posibilidades de consumo intertemporal ($FPCI$) es tangente a la curva de indiferencia más alta que se puede alcanzar y a la restricción intertemporal. La pendiente de la FPC en ese punto es $–(1+r)$, siendo $r$ el rendimiento de la inversión. El individuo consume e invierte lo que produce, de manera que sus decisiones de consumo e inversión están constreñidas por la renta (producción) del período. 
+
+Por el contrario, cuando existan mercados de capitales (perfectos), las decisiones de consumo e inversión serán independientes entre sí, pues no estarían restringidas a la producción del período. Si se puede pedir prestado a un tipo de interés, póngase, más bajo ($r$), el productor invertiría más hasta colocarse en el punto $B$, en el que la $FPCI$ es tangente a la nueva restricción presupuestaria, y consumiría en el punto $C$, en el que la curva de indiferencia más alejada del origen es tangente a la nueva restricción presupuestaria. La producción escogida (punto $B$) maximiza el valor presente del producto (neto de inversión), dados los precios de mercado.\footnote{La distancia horizontal entre A y B es la inversión extra que se genera al tener acceso al mercado de crédito. El consumo escogido (punto C) maximiza la utilidad del consumidor. La distancia horizontal entre A y C es el consumo extra que se genera al tener acceso al mercado de crédito. Por lo tanto, la distancia entre B y C refleja el préstamo otorgado al agente para financiar el consumo y la inversión adicionales.
+} El Teorema de separación de FISHER señala que todos los oferentes elegirán la misma producción ($B$) (pues todos disponen de la misma tecnología), pero cada uno de ellos elegirá la combinación de consumo presente y futuro que sea óptima de acuerdo con sus preferencias. Además, nótese que cuando no se consideraba la inversión, todas las ganancias del acceso al mercado de capitales se debían a la suavización del consumo. Ahora que el consumidor es, además, productor, las ganancias de poder acceder a los mercados financieros se derivan, también, del cambio en la inversión derivado del nuevo stock de capital óptimo (al que se llega vía inversión).
+
+\clearpage
+\anexo{Juegos repetidos}\label{anx:juegos_repetidos}
+Como ejemplo simple, planteamos el siguiente dilema del prisionero en forma sucesiva:
+
+\imagenfit{JuegosRepetidos_Dilema.png}{Ejemplo de dilema del prisionero}{Apuntes ICEX-CECO. Tema 3.A.29}
+
+\textsc{Juegos repetidos de horizonte infinito}
+
+Al no existir un período $T$ desde el que actuar recursivamente, no se puede aplicar el algoritmo de inducción hacia atrás. 
+
+Nos podemos plantear qué factor de descuento daría lugar a que la estrategia \textit{grim strategy} sea ENPS:\footnote{
+Hacemos notar dos puntos en la resolución presentada a continuación. Primero, independientemente del período en el que tenga lugar la desviación, ésta será la identidad de la condición (matemáticamente, se puede factorizar y restar el mismo valor de los dos lugares de la expresión y simplificar hasta llegar a esta expresión). Segundo, la tercera expresión se obtiene por propiedad matemática, porque la segunda línea es un serie infinita.
+}
+
+$$
+\begin{aligned}
+    &\text{Teniendo en cuenta que el EN en dicho escenario estático es:}\quad &&(NC,NC)\\[0.5em]
+    &\text{Y el mejor resultado posible para el jugador es:}\quad &&(NC,C)\\[1em]
+    &\text{Problema:}\quad \boxed{U(\text{no desviarse})<U(\text{desviarse})}\\[0.5em]
+    &\begin{aligned}
+        &b+\beta\;b+\beta^2b+...<a+\beta \;c+\beta^2c+...\\
+        &\hspace{4em}\frac{b}{c-\beta}<a+\frac{c\;\beta}{1-\beta}\\
+        &\hspace{7em}...\\[0.5em]
+        &\hspace{6em}\boxed{\beta=\frac{c}{b}}
+    \end{aligned}
+\end{aligned}
+$$
+
+\textsc{Juego repetido de horizonte finito}
+
+La mera presencia de un período terminal en el juego da lugar a un cambio total en la estrategia de los jugadores.\footnote{De manera tal vez no trivial, el empleo de la inducción hacia atrás nos permite hallar un resultado importante: en un juego finito, si T tiende a infinito, el ENPS no tiende al ENPS en un juego repetido infinitas veces. 
+} En efecto, se puede demostrar que en estos juegos, los jugadores jugarán el NE del juego estático en cada período y no hay cooperación.\footnote{De manera conceptual, consiste en lo siguiente: imaginemos que los jugadores han cooperado en todos los períodos hasta llegar a $T$. En ese momento, ambos tienen incentivos a desviarse, ya que el juego termina y el pago de no cooperar es mayor. Sin embargo, por inducción hacia atrás, en el momento $T-1$, los jugadores, sabedores de que la otra parte se desviará en el siguiente período (y que por tanto se jugará (NC,NC)), tienen incentivos a adelantarse a tomar esa decisión y a desviarse antes. En $T-2$ sucederá lo mismo. Recursivamente, se llega a $t=0$, y los jugadores juegan (NC,NC) desde el inicio.\\
+Nota importante: este resultado tiene lugar porque el juego repetido tiene sólo un NE. En caso contrario, existirán varios SPNE.
+}
+
+\begin{specialblock}{Teorema de la tradición hablada: \textit{folk theorem}}
+    El folk theorem demuestra que, en grupos de cualquier tamaño, la cooperación en juegos repetidos puede mantenerse bajo el supuesto de que los jugadores tienen suficiente orientación hacia el futuro y que la terminación de la interacción es suficientemente improbable. 
+    
+    El fundamento consiste en que los jugadores pueden amenazar de manera creíble a los demás con un castigo en caso de que alguno opte por desviarse (puede comprobarse la relevancia del concepto de ENPS). No se trata estrictamente de un teorema específico, sino más bien una colección de resultados e ideas que describen colectivamente el rango de posibles resultados en juegos repetidos.    
+
+    Existen folk theorems para juegos repetidos infinitas veces, pero también para juegos repetidos un número finito de veces.
+\end{specialblock}
+
+\anexo{Juegos de negociación: RUBENSTEIN}\label{anx:rubenstein}
+El modelo de negociación de referencia es RUBINSTEIN (1982). Esta clase de modelos se utiliza comúnmente para analizar cómo dos jugadores racionales, que buscan maximizar su utilidad descontada, llegan a un acuerdo sobre cómo repartir un nivel determinado de renta $X$ entre los dos a través de un proceso de ofertas alternas. Es decir, en cada momento $t$, uno de los dos jugadores realiza una oferta de reparto de dicha renta mientras que la estrategia del otro jugador será aceptarla o rechazarla. Si se acepta la oferta, el proceso de negociación termina, y los jugadores reciben sus respectivas ganancias. Si la oferta es rechazada, el juego continúa al siguiente período. Así, la aplicación del algoritmo de inducción hacia atrás permite hallar un ENPS para estos juegos.\footnote{De hecho, esta familia de juegos suele presentarse como ejemplo por antonomasia de la insuficiencia de los EN no-ENPS en los juegos dinámicos: como hemos visto, será necesario conseguir filtrar las promesas y amenazas no-creíbles.
+}
+
+En su versión más sencilla, este tipo de juegos cuenta sólo con un ENPS: el oferente ofrecerá quedarse con $\frac{1}{1+\beta}\;X$ y que la contraparte se quede por tanto con $\frac{\beta}{1+\beta}\;X$. La estrategia de la contraparte será aceptar si la oferta que recibe es al menos igual a $\frac{\beta}{1+\beta}\;X$. De este modo, el juego terminará en $t=1$.\footnote{La resolución se fundamenta conceptualmente en que, como los jugadores valoran más las ganancias inmediatas que las ganancias diferidas, los acuerdos alcanzados para $t$ elevados implicarán menores ganancias agregadas. Por tanto, no tiene sentido realizar una oferta que la contraparte no va a aceptar.
+}
+
+
+\end{document}
