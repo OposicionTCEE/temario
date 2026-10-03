@@ -1,0 +1,1270 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Teoría del Comercio Internacional (I)\\
+\large La teoría ricardiana de la ventaja comparativa. Determinación de la relación real de intercambio. El modelo de factores específicos. El modelo Hecksher-Ohlin-Samuelson (H-O-S): Teoremas derivados del modelo y extensiones.}
+\author{Marcelo Ortega}
+\date{Marzo 2026}
+\newcommand{\TemaCode}{3B5}
+
+\oldtitle{
+    B.5. Teoría del comercio internacional (I): La teoría ricardiana de la ventaja comparativa. El modelo Heckscher-Ohlin-Samuelson y sus extensiones.
+}
+\changerationale{
+    Se explicitan dos contenidos importantes para garantizar que todos los opositores los traten en su exposición.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     En el modelo de Ricardo debe enfatizarse la importancia del concepto de la ventaja comparativa en contraposición con las teorías de la ventaja absoluta. Al final de la explicación del modelo, puede hacerse una breve mención al \textbf{modelo de EATON y KORTUM}, que constituye una contribución reciente muy importante a la teoría ricardiana del comercio internacional.
+
+     El material presentado está basado los capítulos 3 a 5 del manual de Paul Krugman, Maurice Obstfeld y Marc Melitz, que contiene muy buenos ejemplos e intuiciones. El manual más avanzado de Robert Feenstra y el de Markusen, Melvin, Kaempfer y Maskus también pueden ser útiles. Se recomienda, asimismo, leer al menos la introducción de algunos artlculos citados en la bibliografía, especialmente en la evidencia empírica y en los modelos más recientes, como el de Eaton y Kortum.
+
+    La exposición puede seguir un patrón sistemático, empezando por los supuestos y siguiendo por la asignación de recursos en autarquía, el efecto del comercio internacional y las fuentes de las ganancias y pérdidas de bienestar que se derivan de ella.
+    }
+\vspace{1cm}
+
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+
+
+
+\clearpage
+\section{Modelo RICARDIANO: Ventaja Comparativa}
+En el modelo de RICARDO debe enfatizarse la importancia del concepto de la ventaja comparativa en contraposición con las teorías de la ventaja absoluta. Al final de la explicación del modelo, puede hacerse una breve mención al modelo de Eaton y Kortum, que constituye una contribución reciente muy importante a la teoría ricardiana del comercio internacional. 
+
+
+\textbf{¿Qué queremos decir?} Después de leer este capítulo será capaz de:
+• Explicar cómo funciona el modelo ricardiano, el más básico sobre el comercio internacional,
+y cómo ilustra el principio de la ventaja comparativa.
+• Demostrar las ganancias del comercio y refutar algunas de las frecuentes falacias sobre el
+comercio internacional.
+■ Describir la evidencia empírica de que los salarios reflejan la productividad y los patrones
+del comercio reflejan la productividad relativa.
+
+
+
+\subsection{Ventaja comparativa: Concepto}
+Como hemos introducido, a lo largo de la presente exposición nos centraremos en desarrollar el marco clásico de la Teoría del Comercio Internacional, exponiendo sus herramientas que nos ayudarán a entender el modo en que las diferencias dan origen al comercio entre países y los motivos por los cuales este comercio es mutuamente beneficioso. 
+
+
+\subsubsection{Coste de oportunidad: Relaciones de transformación}
+Cuando un agente elige entre diferentes alternativas, considera tanto la valoración que le atribuye a cada una de estas (en términos de preferencias, sesgos, etc.) así como también su valoración relativa al conjunto de alternativas a las que renuncia por comprometer sus recursos a una actividad. Este segundo \textit{benchmark} de referencia es lo que conocemos como coste de oportunidad y es el principal criterio valorativo que, en la Teoría Económica estándar, los agentes utilizan para condicionar su elección. A modo de ejemplo, si un productor decide comprometer sus recursos a una actividad de producción concreta esta dejando de obtener los resultados derivados del resto de actividades factibles dada una restricción de recursos:
+
+\begin{center}
+\begin{tabular}{|p{0.45\linewidth}|p{0.45\linewidth}|}
+\hline
+\textbf{Agricultura} & \textbf{Manufacturas} \\
+\hline
+10 & 5 \\
+\hline
+\end{tabular}
+\end{center}
+
+Por tanto, con la misma cantidad de recursos podría obtener 10 unidades de rendimiento dedicándose a la agricultura o 5 unidades de rendimiento destinando dichos recursos a la industria. Si normalizamos los recursos de los que dispone a la unidad (1 u.m), podemos expresar el coste de oportunidad como:
+
+\eqblock{
+\begin{aligned}
+    \left.\begin{aligned}
+        &\underset{\substack{\text{\scriptsize Coste de oportunidad}\\\text{\scriptsize  en términos de la manufactura}}}{\text{Agricultura}}:&& \frac{\overset{\text{\tiny recursos}}{1}}{\underset{\text{\tiny udd. rendimiento}}{10}}\cdot \overset{\text{\tiny udd. rendimiento}}{5}={0.5}\\[2em]
+        &\underset{\substack{\text{\scriptsize Coste de oportunidad}\\\text{\scriptsize  en términos de la agricultura}}}{\text{Manufactura}}:&& \frac{\overset{\text{\tiny recursos}}{1}}{\underset{\text{\tiny udd. rendimiento}}{5}}\cdot \overset{\text{\tiny udd. rendimiento}}{10}={2}  
+    \end{aligned}\right\}\Longrightarrow \boxed{\text{RMT}_M^A=\frac{10}{5}=2}
+\end{aligned}
+}{Coste de oprtunidad: Elección de producción. Modelo RICARDIANO: Ventaja comparativa}
+
+De esta forma, podemos ver como, a priori, renunciamos a dos unidades de rendimiento agrícola por cada unidad de rendimiento de la industria y, de forma equivalente, renunciamos a media unidad de rendimiento de la industria por cada unidad de rendimiento de la agricultura. Alcanzando la relación marginal de transformación entre agricultura e industria: número de unidades de rendimiento de manufacturas a las que tenemos que renunciar por cada unidad de rendimiento de la industria. No obstante, esto solo nos indica la capacidad productiva que tiene esta economía dada una cantida de recursos. Es una forma sencilla de ver la \textbf{tecnología} que enfrenta la economía. Nada nos dice qué es preferible, con qué se gana más dinero o, incluso, que factores necesitamos para una u otra actividad de producción. Si queremos contestar a estas preguntas tenemos que añadir más criterios de decisión.
+
+\subsubsection{Ventaja comparativa}
+Una de las maneras con las que comparar dicha relación es a través de la comparación entre diferentes tecnologías. 
+
+\begin{center}
+\begin{tabular}{|p{0.30\linewidth}|p{0.30\linewidth}|p{0.30\linewidth}|}
+\hline
+ & \textbf{Agricultura} & \textbf{Manufacturas} \\
+\hline
+\textbf{Tecnología A} & 10 & 5 \\
+\hline
+\textbf{Tecnología B} & 12 & 4 \\
+\hline
+\end{tabular}
+\end{center}
+
+Imaginemos esta situación. Dos individuos disponen de conocimientos diferentes y una misma cantidad de recursos. El individuo A es más hábil con las máquinas y el individuo B conoce bien las técnicas de cultivo. ¿Qué debería hacer cada uno? ¿Cómo deberían tomar la decisión de dedicarse a una u otra actividad?
+
+\eqblock{
+\begin{aligned}
+    \left.\begin{aligned}
+        &\text{Tecnología A}:\\
+        &\over\begin{aligned}
+            \\[0.5em]
+            &\text{Agricultura}:&& \frac{1}{10}\cdot 5={0.5}\\[2em]
+            &\text{Manufactura}:&& \frac{1}{5}\cdot 10={2}
+        \end{aligned}\\[2em]
+        &\Longrightarrow\boxed{({\text{RMT}_M^A})_A=\frac{10}{5}=2}
+    \end{aligned}\hspace{1em}\right|
+    \hspace{1em}\begin{aligned}
+        &\text{Tecnología B}:\\
+        &\over\begin{aligned}
+            \\[0.5em]
+            &\text{Agricultura}:&& \frac{1}{12}\cdot 4=0.\hat{3}\\[2em]
+            &\text{Manufactura}:&& \frac{1}{4}\cdot 12={3}
+        \end{aligned}\\[2em]
+        &\Longrightarrow\boxed{(\text{RMT}_M^A)_B=\frac{12}{4}=3}
+    \end{aligned}
+\end{aligned}
+}{Coste de oprtunidad: Elección de producción entre diferentes tecnologías. Modelo RICARDIANO: Ventaja comparativa}
+
+Está claro que algo es diferente, ¿pero qué? ¿qué es mejor? Veamos lo que nos dice cada expresión. El individuo A renuncia a media unidad de manufacturas por cada unidad de rendimiento agrícola. El individuo B, por el contrario, renuncia a un tercio de manufacturas por cada unidad de rendimiento agrícola. Por tanto, parece claro que el individuo B enfrenta menores costes de oportunidad al destinar sus recursos al sector agrario que el individuo A. Por otro lado, el individuo A renuncia a dos unidades agrícolas por cada unidad de producción manufacturera, mientras que el individuo B eleva este coste de oportunidad a tres: el individuo B enfrenta mayores costes de oportunidad dedicándose a la industria. 
+
+Si extrapolamos esto a diferentes países llegamos al concepto crucial para comprender el resto de la exposición: la ventaja comparativa. \textbf{Se dice que un país tiene ventaja comparativa en la producción de un bien si el coste de oportunidad en la producción de este bien en términos de otros bienes es inferior en él que en otros países}. 
+
+Este concepto vertebrará el modelo y extensiones que se van a presentar y es la respuesta fundamental a la pregunta de nuestra exposición: ¿Por qué comercial los países? Porque tienen una ventaja comparativa. Aunque la comparativa es una noción sencilla, la experiencia demuestra que es sorprendentemente difícil de entender para mucha gente.\footnote{En efecto, SAMUELSON (el premio Nobel que contribuyó en gran medida a desarrollar los modelos de comercio internacional que se analizan) ha descrito la ventaja comparativa como el mejor ejemplo que conoce de un principio económico que es indiscutiblemente cierto, pero sigue sin ser obvio para personas inteligentes.
+}
+
+No debemos asociar la ventaja comparativa a una variable concreta. Al contrario, se trata de un concepto abstracto que debe poder asociarse a cualquier variable sobre la cual vayamos a fundamentar nuestro análisis. Por ello, la forma más sencilla de comprenderlo es aceptar que se trata de una proyección del concepto coste de oportunidad en el ambito que nos ocupa. 
+
+\paragraph{Implicaciones de Política Económica: Aumento de la producción}
+Además, podemos alcanzar otra implicación fundamental que se desprende de este mismo concepto. Imaginemos que estos individuos tuviesen que ser autosuficientes. Es fácil ver que la cesta de consumo factible que enfrentaría cada uno de los individuos se vería circunscrita al conjunto acotado por sus posibilidades de producción, esto es:
+
+\eqblock{
+\begin{aligned}
+    A(x_A,x_M): &&&0.1x_A+0.2x_M&&\leq 1\\[0.5em]
+    B(x_A,x_M): &&&0.08x_A+0.25x_M&&\leq 1
+\end{aligned}
+}{Conjuntos factibles de consumo: Autarquía. Ventaja comparativa}
+
+No obstante, si son capaces de producir aquello en lo que ostentan una ventaja relativa podrían aumentar sus posibilidades de consumo conjunto, de manera que:
+
+\begin{center}
+\begin{tabular}{|p{0.30\linewidth}|p{0.30\linewidth}|p{0.30\linewidth}|}
+\hline
+ & \textbf{Agricultura} & \textbf{Manufacturas} \\
+\hline
+\textbf{Tecnología A} & -10 & +5 \\
+\hline
+\textbf{Tecnología B} & +12 & -4 \\
+\hline
+\textbf{TOTAL} & +2 & +1 \\
+\hline
+\end{tabular}
+\end{center}
+
+El mundo produce el más de ambos bienes que antes. ¿Por qué? Porque con la especializción productiva y la posibilidad de intercambiar bienes entre los participantes del comerio, aumenta el tamaño a repartir de la tarta económica mundial. Por tanto, sado que el mundo en conjunto, produce más, tal vez, en principio, sea posible elevar el nivel de vida de todo el planeta. La razón por la que el comercio internacional obtiene este aumento de la producción mundial es que permite que cada país se especialice en la producción del bien en el que dispone de una ventaja comparativa. 
+
+Disponemos así de una reflexión esencial sobre la ventaja comparativa y el comercio internacional: el comercio entre dos países puede beneficiar a ambos si cada uno exporta los bienes en los que tiene una ventaja comparativa. No obstante, en el mundo real no hay una autoridad central que decida qué país tiene que producir qué; tampoco hay nadie que distribuya los productos a los consumidores en diferentes lugares. Todo lo contrario, la producción y el comercio internacional se determinan en el mercado, que se rige por la ley de la oferta y la demanda. Por tanto, aunque hayamos visto por qué comercian los países y cuál es el fundamento económico último que parece explicarlo, debemos ahora contestar a preguntas más explícitas y reales, en particular: ¿cómo lo hacen? ¿existe alguna razón para suponer que se terminará por aprovechar el potencial existente de ganancias mutuas del comercio? ¿conseguirá el comercio bilateral beneficiar a ambos países? 
+
+Para responder a estas preguntas, debemos ser mucho más explícitos en nuestro análisis.
+
+
+\subsection{Autarquía: Desarrollo del modelo}
+Comenzaremos por imaginar que tenemos una economía, nuestro país, que solo tiene un factor de producción. Supondremos que solo se producen dos bienes, agrícolas y manufacturas. 
+
+La tecnología de la economía de nuestro país puede ser resumida por la productividad del trabajo en cada sector, expresando en términos de requerimientos unitarios de trabajo, producto-hora de trabajo:
+
+\eqblock{
+\begin{aligned}
+    \begin{aligned}
+        &\text{Requerimientos}\\[0.5em]
+        &\left\{\begin{aligned}
+            &\text{Agrícola}:&&a_{LA}\\
+            &\text{Manufactura}:&&a_{LM}
+        \end{aligned}\right\}
+    \end{aligned}\quad \Longrightarrow
+    \left\{\begin{aligned}
+        &\text{FPP}:&&a_{LA}x_A+a_{LM}x_M\leq L\\[0.5em]
+        &\underset{\text{\scriptsize en términos del factor productivo}}{\text{Coste de oportunidad}}:&&\frac{a_{LA}}{a_{LM}}
+    \end{aligned}\right.
+\end{aligned}
+}{}
+
+Por ejemplo, se requiere una hora de trabajo para producir una unidad agrícola, y dos horas para producir una unidad manufacturera.\footnote{Debe observarse, a propósito, que definimos los requerimientos de trabajo por unidad como la inversa de la productividad: cuanto más producto agrícola o manufacturero puede producir un trabajador en una hora, menor será el requerimiento unitario de trabajo.
+} La FPP ilustra las distintas combinaciones de bienes que puede producir la economía. Sin embargo, para determinar qué producirá en realidad, necesitamos conocer los precios. 
+
+\subsubsection{Precios relativos: Producción}
+Concretamente, hemos de saber el precio relativo de los dos bienes de la economía, es decir, el precio de un bien en función del otro. 
+
+En una economía competitiva, las decisiones de oferta se determinan a partir de los intentos que realizan los individuos para maximizar sus ingresos. En nuestra economía simplificada, como el trabajo es el único factor de producción, la oferta estará determinada por el movimiento del factor trabajo hacia el sector que pague salarios más altos. De forma general, sean $p_A$ y $p_M$ los precios agrícolas y manufactureros, el salario por hora en el sector será igual al valor de lo que un trabajador puede producir en una hora, $p_Aa_{LA}$ (no hay beneficios). De igual forma, el salario manufacturero será $p_Ma_{LM}$. 
+
+Por tanto, como los salarios se fijan en función de la productividad y el precio de cada factor y sector, la producción resultante puede resumirse a las dinámicas del factor móvil:
+
+\eqblock{
+\begin{aligned}
+    \frac{a_{LA}}{a_{LM}}<\frac{p_A}{p_M}\quad&&&\underset{w_A<w_M}{\Longrightarrow}\quad L\to L_M\\[1em]
+    \frac{a_{LA}}{a_{LM}}>\frac{p_A}{p_M}\quad&&&\underset{w_M<w_A}{\Longrightarrow}\quad L\to L_A\\[1em]
+    \frac{a_{LA}}{a_{LM}}=\frac{p_A}{p_M}\quad&&&\underset{w_M=w_A}{\Longrightarrow}\quad L=L_A+ L_M\\
+\end{aligned}
+}{}
+
+Acabamos, pues, de deducir una proposición crucial acerca de la relación entre precios y producción: \textbf{la economía se especializará en la producción del sector cuyo precio relativo sea mayor que su coste de oportunidad}. El razonamiento económico es intuitivo. Si un sector de producción enfrenta mayores costes de oportunidad que la rentabilidad que ofrece, nadie querrá destinar recursos a dicho sector y la economía concentrará sus recursos en otros sectores. De forma equivalente, si la rentabilidad ofrecida por un sector remunera al factor de producción de forma deficitaria (relativamente al otro), nadie querrá trabajar en dicho sector y, en consecuencia, todos los recursos productivos se concentrarán en el resto de sectores. 
+
+\subsubsection{Equilibrio: Precios relativos y cantidad producida}
+Ahora bien, en ausencia de comercio internacional, nuestro país tendrá que producir los dos bienes. Pero, como hemos visto, lo hará solo si el precio relativo del sector es igual a su coste de oportunidad. Dado que el coste de oportunidad es igual a la relación de los requerimientos unitarios de trabajo en la producción de cada sector, podemos resumir la determinación de los precios con una simple teoría del valor trabajo: si no existe comercio internacional, el precio relativo de los bienes es igual a la relación de sus requerimientos unitarios de trabajo. Gráficamente:
+
+
+
+Por tanto, en autarquí ricardiana, la tecnología de producción determina el precio relativo y las preferencias determinarán la combinación producida. Dicho de otra forma, la restricción presupuestaria que enfrenta el agente viene determinada por las condiciones tecnológicas de la nación que habita.
+
+\subsection{Apertura comercial}
+Ahora bien, ¿qué sucede nos abrimos al comercio? Supongamos que hay dos países: nuestro país y el extranjero. Cada uno de estos países tiene un factor productivo (trabajo) y puede producir en ambos sectores. 
+
+En general, los requerimientos unitarios de trabajo pueden seguir cualquier pauta, de momento, arbitrariamente, suponemos que: 
+
+\eqblock{
+\begin{aligned}
+    &\underset{\text{\scriptsize requerimos menos factor-producto}}{\text{Ventaja absoluta}}: &&a_{Lj}<a_{Lj}^*\\[1em]
+    &\text{Ventaja comparativa}: &&\frac{a_{Lj}^*}{a_{L(-j)}^*}<\frac{a_{Lj}}{a_{L(-j)}}
+\end{aligned}
+}{Apertura comercial: Ventaja comparativa. Modelo RICARDO}
+
+Por ejemplo, supongamos que la productividad agrícola relativa de nuestro país es mayor que la manufacturera. Así este supuesto acerca de las productividades relativas equivale a afirmar que nuestro país tiene una ventaja comparativa en la producción de queso. Es preciso destacar de inmediato una cuestión: cuando un país puede producir una unidad de un bien con menos trabajo que otro, decimos que el primer país tiene ventaja absoluta en la producción de este bien (industria $j$ en nuestro ejempo). Sin embargo no podemos detequinar el patrón de comercio solamente a partir de la ventaja absoluta. 
+
+Sabemos que en ausencia de comercio, los precios relativos se determinan en cada país según los requerimientos unitarios de trabajo relativos (tecnología de producción). Sin embargo, cuando permitimos que exista comercio internacional, los precios no se determinarán simplemente por consideraciones nacionales. Si el precio relativo del sector agrícola es más elevado en el extranjero que en nuestro país, será beneficioso exportar de nuestro país al extranjero e importar manufacturas del extranjero a nuestro país.
+
+\eqblock{
+\begin{aligned}
+    \underset{\substack{\text{\scriptsize el precio relativo de nuestro país es menor al extranjero}\\\text{\scriptsize $\sim$ tenemos una ventaja comparativa agrícola}}}{\frac{a_{LA}}{a_{LM}}=\frac{p_A}{p_M}<\frac{a_{LA}^*}{a_{LM}^*}=\frac{p_A^*}{p_M^*}}\quad \underset{\text{\scriptsize flujo comercial}}{\Longrightarrow}\quad 
+    \left\{\begin{aligned}
+        &\overset{\text{\scriptsize exportamos agricultura}}{x_A\to x^*}\\[0.5em]
+        &\underset{\text{\scriptsize importamos manufactura}}{x^*_M\to x}
+    \end{aligned}\right.
+\end{aligned}
+}{}
+
+Ahora bien, esta situación no puede prolongarse indefinidamente. Llegará un momento en que nuestro país exportará suficiente producto agricola y el extranjero suficientes manufacturas, como para que se iguale el precio relativo. Pero, ¿qué es lo que determina el nivel al que se fija ese precio?
+
+\subsubsection{Oferta y Demanda relativas: Determinación del precio relativo}
+Como todos los precios, los de los bienes intercambiados internacionalmente están determinados por la oferta y la demanda. Sin embargo, al analizar la ventaja comparativa debemos aplicar este análisis de la oferta y la demanda con cuidado. Cuando estudiamos la ventaja comparativa es fundamental tener en cuenta las relaciones entre mercados. Dado que las exportaciones de nuestro país solamente se realizan a cambio de manufacturas, y las exportaciones del extranjero a cambio de productos agricolas, sería incorrecto que estudiáramos estos mercados de productos de forma aislada. 
+
+Una forma útil de tener en cuenta los dos mercados a la vez consiste en centrar el análisis en sus ofertas y demandas relativas, es decir, en el número de productos agrícolas ofrecidos o demandados dividido por el número de manufacturas ofrecidas o demandadas.
+
+\textbf{AÑADIR GRÁFICO}
+
+La curva de demanda relativa DR no requiere un análisis tan detallado: la pendiente negativa de la curva DR refleja el efecto de sustitución. Es decir, a medida que el precio relativo del queso aumenta, los consumidores tenderán a comprar menos queso y más vino, por lo que la demanda relativa de queso disminuye.
+
+\eqblock{
+\begin{aligned}
+    &\text{Curva Demanda relativa }(DR):&&\underset{\text{\scriptsize elasticidad demanda-precio \textbf{relativas}}}{-1\leq\quad \varepsilon_{\bar x_A/\bar x_M,p}\quad \leq 0}
+\end{aligned}
+}{Curva demanda relativa: Efecto sustitución. Modelo RICARDO}
+
+La característica sorprendente es la curiosa forma de la curva de oferta relativa OR: un curva escalonada, con dos secciones planas unidas por una sección vertical. Para entender por qué, recordemos que veíamos que nuestro país se especializará en la producción de un sector siempre que su coste de oportunidad sea menor al precio relativo de dicho sector: $a_{LA}/a_{LM}<p_A/p_M$; y de forma equivalente en el extrenjero. De esta forma:
+
+\eqblock{
+\begin{aligned}
+    &\text{Suponiendo que}: \underset{\text{\scriptsize nuestro país tiene ventaja comparativa en el sector agrícola}}{\frac{a_{LA}}{a_{LM}}<\frac{a_{LA}^*}{a_{LM}^*}}\qquad \text{y,}\qquad \frac{p_A}{p_M}=\frac{p_A^*}{p_M^*} \\[1em]
+    &\text{Entonces},
+    \left\{\begin{aligned}
+        &\left.\begin{aligned}
+            &\frac{p_A}{p_M}<\frac{a_{LA}}{a_LM}\quad &&\Longrightarrow\quad \bar x_A=0\\[0.5em]
+            &\frac{a_{LA}}{a_{LM}}=\frac{p_A}{p_M}\quad &&\Longrightarrow\quad \bar x_A>0\quad \wedge \quad \varepsilon_{OR}=\infty\\[0.5em]
+            &\frac{a_{LA}}{a_{LM}}<\frac{p_A}{p_M}\quad &&\Longrightarrow\quad x=x_A \quad \wedge\quad  \varepsilon_{OR}=0
+        \end{aligned}\right\}\substack{\text{\scriptsize OJO! El extranjero}\\\text{\scriptsize está especializado}\\\text{\scriptsize en manufacturas igualmente}}\\[0.5em]
+        &\begin{aligned}
+            &\frac{p_A}{p_M}=\frac{a_{LA}^*}{a_{LM}^*}\quad &&\Longrightarrow\quad \varepsilon_{OR}=\infty\\[0.5em]
+            &\frac{p_A}{p_M}<\frac{a_{LA}^*}{a_{LM}^*}\quad &&\Longrightarrow\quad \bar x_M=0\\[0.5em]
+        \end{aligned}
+    \end{aligned}\right.\\[3em]
+    &\Longrightarrow\quad \text{Si,}\quad \frac{a_{LA}}{a_{LM}}<\frac{p_A}{p_M}<\frac{a_{LA}^*}{a_{LM}^*}\quad\Longrightarrow\quad\boxed{\text{Oferta relativa}:\frac{L/a_{LA}}{L^*/a_{LA}^*}}
+\end{aligned}
+}{Curva de Oferta relativa: Construcción por tramos. Modelo RICARDO: Ventaja comparativa}
+
+En palabras, para precios relativos del queso inferiores su coste de oportunidad, no habrá producción mundial agrícola porque nuestro país producirá cero unidades. Cuando el precio relativo sea exactamente igual a su coste de oportunidad, los trabajadores de nuestro país ganan exactamente lo mismo en ambos sectores. Por tanto, nuestro país estará dispuesto a ofertar una cantidad relativa cualquiera de los dos bienes, lo que origina una sección plana de la curva de oferta. Mientras el precio relativo se encuentre en el intervalo: $\frac{a_{LA}}{a_{LM}}<\frac{p_A}{p_M}<\frac{a_{LA}^*}{a_{LM}^*}$, nuestro país se especializará en el sector agrícola y el extranjero seguirá especializado en las manufacturas. Finalmente, tenemos que cuando el precio relativo se iguale al coste de oportunidad del extranjero, nuestro país seguirá especializado mientras que el extranjero será indiferente entre la producción de los dos bienes. Y, en caso de que supere el coste de oortunidad extranjero, todos se especializarán en la producción agrícola. 
+
+
+\subsubsection{Implicaciones de Política Económica}
+¿Qué importancia tiene este resultado? En términos de Política Económica, estos resultados arrojan implicaciones muy importantes.
+
+\paragraph{Especialización: Circunstancial}
+En primer lugar, si el precio relativo del sector es igual a su coste de oportunidad en nuestro país, nuestra economía no tiene motivos para especializarse. De hecho, en el tramos elástico inferior de la curva de oferta, nuestro país debe producir algo de vino y algo de queso. Sin embargo, el extranjero se especializa completamente en la producción del sector manufacturero. Por tanto, se confirma que, si un país se especializa, lo hará en el bien en el que tiene ventaja comparativa. 
+
+\paragraph{Ganancias: FPP}
+Por otro lado, dejando aparte la posibilidad de que uno de los dos países no se especialice completamente, vemos que el efecto de esta convergencia de los precios relativos es que cada país se especializa en la producción del bien en el que tiene un requerimiento unitario de trabajo relativamente menor. 
+
+El aumento del precio relativo del sector agrícola determinará la especialización en nuestro país ($F$) y la caída del precio relativo de éste sector en el extranjero determinará su especialización en la producción de manufacturas ($F^*$). Gráficamente
+
+\imagenfit{Especializacion_KRUGMAN.png}{}{}
+
+¿Qué significa? Al especializarse en la producción de distintos bienes se genera una ganancia mutua que puede ser demostrada por dos vías alternativas:
+\begin{la}
+    \item \textbf{Producción indirecta}. La primera forma de mostrar que la especialización y el comercio son beneficiosos es pensar en el comercio como un método indirecto de producción. Nuestro país podría producir manufacturas directamente, pero el comercio con el extranjero le permite producirlas mediante la producción agrícola y su intercambio;
+    \item \textbf{Expansión de la restricción tecnológica}. Otro modo de considerar las ganancias mutuas del comercio consiste en examinar cómo afecta el comercio a las posibilidades de consumo de cada país. Cuando se permite comerciar, cada economía puede consumir una combinación de bienes diferente de la que puede producir: el comercio amplía el rango de elección y, por tanto, ha mejorado el bienestar de los residentes de cada país.
+\end{la}
+
+
+\textcolor{red}{\textbf{OJO!} Mirar: Ideas erróneas sobre la ventaja comparativa / Salarios / Modelo multifactores (ventaja comparativa)} 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Modelo de factores}
+\puntosclave{ 
+    El comercio internacional suele tener efectos acusados sobre la distribución de la renta en los países, por lo que a menudo produce perdedores y ganadores. Los efectos de la distribución de la renta surgen por dos razones: los factores de producción no pueden desplazarse instantáneamente y sin costes de una industria a otra, y los cambios en la composición de la producción de una economía tienen efectos diferentes sobre la demanda de distintos factores de producción. 
+    
+    En el modelo de los factores específicos, los factores específicos de los sectores exportadores en cada país ganan con el comercio, mientras que los factores específicos de los sectores que compiten con las importaciones pierden. Los factores móviles que pueden trabajar en ambos sectores pueden ganar o perder.
+    
+    Sin embargo, el comercio produce en general ganancias, en el sentido concreto de que los que ganan podrían, en principio, compensar a los que pierden, con lo que aún pe rmanecerían mejor que antes. 
+    
+    Los movimientos internacionales de factores pueden, en ocasiones, sustituir al comercio, por lo que no resulta sorprendente que la migración internacional del trabajo sea similar en cuanto a sus causas y efectos al comercio internacional. El trabajo se desplaza de los países en los que es abundante a aquellos en los que es escaso. Este movimiento incrementa la producción mundial total, pero también genera profundos efectos en la distribución de la renta, de forma que algunos grupos resultan perjudicados.
+}
+
+En definitiva, es fácil describir el patrón y los efectos del comercio entre dos países cuando cada uno de ellos tiene un único factor de producción. Aun así, las implicaciones de este análisis pueden ser sorprendentes. Para quienes no han reflexionado sobre el comercio internacional, muchas de estas implicaciones parecen contradecir al sentido común. Incluso este modelo tan sencillo del comercio puede ofrecer alguna luz sobre algunas cuestiones del mundo real, como, por ejemplo, qué hace que la competencia internacional y el comercio entre países sean justos.
+
+El modelo de factores específicos debe motivarse como un modelo muy apropiado para analizar los efectos del comercio internacional sobre la distribución de la renta, supliendo así una de las limitaciones del modelo ricardiano de un factor. Debe entenderse bien por qué este modelo genera ganadores y perdedores debido al comercio internacional. Al final de este modelo, o del modelo de Ricardo de un factor, puede hablarse brevemente del modelo de Harberler, que añade el análisis de la demanda al modelo de Ricardo.
+
+
+El modelo ricardiano del comercio internacional ilustra las ventajas potenciales del comercio:  (i) ganancias en eficiencia, ya que la especialización internacional desplaza el factor de producción de las industrias en las que es relativamente ineficiente a las industrias en las que es relativamente más eficiente; (ii) homogeneidad entre países, ya que, como el trabajo es el único factor de producción en el modelo no existe posibilidad de que los individuos resulten perjudicados por el comercio; y, (iii) comercio no afecta a la distribución de la renta, ya que sugiere que todos los individuos mejoran como consecuencia del comercio internacional. 
+
+Sin embargo, en el mundo real el comercio tiene efectos sustancia les sobre la distribución de la renta en cada nación, por lo que en la práctica los beneficios del comercio a menudo se distribuyen de forma muy desigual, principalmente por dos razones fundamentales:
+\begin{lnum}
+    \item La primera es que los recursos no se pueden reasignar inmediatamente y sin ningún coste de una industria a otra, una consecuencia del comercio a corto plazo; y,
+    \item La segunda es que las industrias difieren en los factores de producción que demandan: un cambio en la composición de los bienes que produce un país reducirá la demanda de algunos factores de producción, al mismo tiempo que aumentará la demanda de otros, una consecuencia del comercio a largo plazo.
+\end{lnum}
+
+
+\subsection{Autarquía: Desarrollo formal}
+El modelo de los factores específicos fue desarrollado por SAMUELSON y JONES. Como el sencillo modelo ricardiano, supone una economía que produce dos bienes y que puede asignar su oferta de trabajo entre los dos sectores. No obstante supondremos la existencia de otros factores de producción además del trabajo: el trabajo es el factor móvil que se puede desplazar entre sectores y los otros factores son específicos para cada sector. Es decir, solo se pueden utilizar en la producción de determinados bienes.
+
+Imaginemos una economía que puede producir dos bienes, manufacturas y alimentos:
+
+\eqblock{
+\begin{aligned}
+    \boxed{\left.\begin{aligned}
+        &x_A=f(\bar T,L_A)\\[0.5em]
+        &x_M=f(\bar K, L_M)
+    \end{aligned}\right\}\Longrightarrow L=L_A+L_M}
+\end{aligned}
+}{}
+
+El trabajo es, pues, un factor móvil que se puede utilizar en ambos sectores, mientras que la tierra y el capital son factores específicos que se usan únicamente en la producción de un bien. 
+
+\subsubsection{Precios relativos: Producción}
+¿Cuánto puede producir la economía de cada bien? La producción de ambos bienes, depende de la combinación de factores utilizados en dicho sector. Por tanto, para analizar las posibilidades de producción de la economía, solo necesitamos preguntarnos cómo cambia la composición de la producción cuando el trabajo se desplaza de un sector a otro: al añadir un trabajador adicional en un sector, cada trabajador dispondrá de menor factor específico para trabajar, cada incremento sucesivo de trabajo añadirá menos producción que el anterior. Gráficamente, todas las relaciones hasta ahora expuestas pueden expresarse como:
+
+\imagenfit{ModeloFactores_EstructuraProductiva.png}{Frontera de Posibilidades de Producción: Modelo factores específicos}{\textit{Economía Internacional. Teoría y política}. KRUGMAN, OBSTFELD y MELITZ (10ª edición)}
+
+Como vemos, a diferencia del modelo ricardiano, la adición de otros factores de producción modifica la forma de la frontera de posibilidades de producción, $PP$, que se hace curva. La curvatura de $PP$ refleja los rendimientos decrecientes del trabajo en cada sector; estos rendimientos decrecientes definen la diferencia fundamental entre el modelo de factores específicos y el modelo ricardiano. Siendo la pendiente de dicha curva el cociente de productividades marginales del factor trabajo (el otro es fijo).
+
+\subsubsection{Equilibrio: Salarios y asignación del trabajo}
+Por tanto, ¿cuánto trabajo se empleará en cada sector? Dicho de otra forma, ¿cuánto producirá la economía en cada sector? Para responder a esta pregunta tenemos que observar la oferta y la demanda en el mercado de trabajo. La demanda de trabajo en cada sector depende del precio del bien fabricado y del salario, que depende de la demanda combinada de alimentos y manufacturas. Dados los precios de las manufacturas y los alimentos conjuntamente con el salario, podemos determinar el empleo y la producción de cada sector. 
+
+Brevemente si, en cada sector, los empleadores demandan trabajo hasta el punto en que el valor producido por una persona-hora adicional iguale el coste de emplear esta hora de trabajo, $PMgL_j$, podemos aseverar que el salario ofrecido por dicho sector será:
+
+\eqblock{
+\begin{aligned}
+    &PMgL_j\cdot p_j=w_j\qquad \Longrightarrow\qquad \text{Si,}\,\,\,PMgL_j\cdot p_j<PMg_{-j}\cdot p_{-j}\,\,\Longrightarrow\,\,L_j\to L_{-j}\\[1em]
+    &\Longrightarrow\qquad w_j=w_{-j}\Longrightarrow PMgL_{j}\cdot p_j=PMg_L{-j}\cdot p_{-j}\qquad \Longrightarrow\qquad \boxed{\text{Eq.}: \frac{PMgL_j}{PMg_{-j}}=\frac{p_j}{p_{-j}}}
+\end{aligned}
+}{}
+
+Como vemos, la tasa salarial ($w$) debe ser igual en ambos sectores, debido al supuesto de que el trabajo se desplaza libremente entre sectores: se desplazará del sector de salarios bajos al de salarios altos hasta que los salarios se igualen.Al representar las dos curvas de demanda del trabajo en un gráfico, podemos ver cómo se determinan el salario y el empleo en cada sector, dados los precios de los alimentos y las manufacturas.
+
+\imagenfit{Eq_TrabajoProduccion_MFFEE.png}{(Izq.) Asignación del trabajo | (Dcha.) Producción en el modelo de factores específicos}{}
+
+Por último, vemos que en el punto de equilibrio en la producción, la frontera de posibilidades de producción debe ser tangente a una linea cuya pendiente es el cociente de precios, o precio de un sector relativo al otro, resultado muy general que describe las reacciones de la producción a las variaciones de los precios relativos a lo largo de la frontera de posibilidades de producción.
+
+\paragraph{Distribución de la renta: Variaciones en los precios relativos} 
+Hasta ahora hemos examinado los siguientes aspectos del modelo de factores específicos: (i) la determinación de las posibilidades de producción, dados los recursos y la tecnología de una economía; y, (ii) la determinación de la asignación de recursos, producción y precios relativos en una economía de mercado. 
+
+Antes de analizar los efectos del comercio internacional, debemos considerar los efectos de los cambios de los precios relativos sobre la distribución de la renta. Sabemos que los empresarios contratarán trabajo hasta el punto en que el salario real en términos del bien, $w/p_j$, iguale al producto marginal, $PMgL_j$. Así, podemos expresar la distribución de la renta en el sector de las manufacturas, por ejemplo, como:
+
+\imagenfit{DistRenta_SectorManufacturero_MFFEE.png}{Distribución de la renta en el sector manufacturero}{}
+
+Es decir, teniendo en cuenta que el producto total del sector es la integral de la función de productividad marginal hasta la asignación de trabajo sectorial de equilibrio, la repartición del producto se lleva a cabo de manera que la renta del trabajo es igual al salario real por el empleo sectorial y el resto del producto corresponde a la renta de los capitalistas.
+
+De esta forma, si recuperamos el gráfico propuesto en la sección interior donde el equilibrio agregado se expresaba en términos de oferta y demanda relativa, tenemos que:
+
+\imagenfit{Det_ORDR_MFFEE.png}{Determinación de los precios relativos}{}
+
+En el modelo de factores específicos, la curva de oferta relativa (OR) tiene pendiente positiva. ¿Por qué? Porque un mayor precio relativo de las manufacturas provocará un aumento de la producción de manufacturas con respecto a la de alimentos, debido al equilibrio en la producción (cocientes precios y productividades):
+
+\imagenfit{AumentoP_M_MFFEE.png}{Respuesta de la producción a un cambio en el precio relativo}{}
+
+En este mismo sentido, la curva de demanda de trabajo de manufacturas se desplazará hacia arriba en la proporción en que aumenta $p_M$ y, salvo que el precio de los alimentos aumente también en la misma proporción (situación en la cual no experimentaríamos un cambio en la producción por lo que no sería de aplicabilidad el gráfico anterior), $w$ aumentará en menor medida. Por tanto, al incrementar el salario, se experimenta una redistribución profunda en las rentas de la economía que pueden observarse perfectamente en los siguientes dos gráficos:
+
+\imagenfit{Redistribuciones_MFFEE.png}{(Izq.) Un incremento de $p_M$ beneficia a los capitalistas | (Dcha.) Un incremento de $p_M$ perjudica a los terratenientes}{}
+
+El salario real en términos de las manufacturas disminuye (porque $\Delta p_M> \Delta w$), lo que provoca un incremento de las rentas de los capitalistas. Y, por otro lado, el salario real en términos de los alimentos aumenta (porque $\Delta w>\bar p_A$), con lo que reduce la renta de la tierra. Además, hay que tener en cuenta que este efecto directo sobre las rentas es reforzado por el cambio en el propio cociente de precios relativos ($p_M/p_A$): la renta real de los capitalistas en términos de alimentos aumenta más que su renta real en términos de las manufacturas, ya que los alimentos son ahora relativamente más baratos que las manufacturas; análogamente, la renta real de los terratenientes en términos de manufacturas cae más que su renta real en términos de alimentos, porque las manufacturas son ahora relativamente más caras 
+
+Veamos en palabras lo que implican estos resultados:
+\begin{la}
+    \item \textbf{Trabjadores}. Los trabajadores se encuentran con que el salario ha aumentado, pero en menor proporción que el precio de manufacturas. Por tanto, su salario real en términos de manufacturas (la cantidad que pueden comprar con su renta salarial), disminuye, mientras que su salario real según los alimentos aumenta. Ante esta información no podemos decir si los trabajadores están mejor o peor que antes, ya que depende de la importancia relativa de las manufacturas y los alimentos en el consumo de dichos trabajadores, una cuestión en la que no profundizaremos;
+    \item \textbf{Capitalistas}. Los capitalistas están notoriamente mejor. El salario real en términos de manufacturas se ha reducido, por lo que los beneficios de los capitalistas, en términos de lo que producen, se incrementan. Es decir, la renta de los capitalistas aumentará en mayor proporción que el aumento de los precios. Además, como $p_M$ ha aumentado con relación a $p_A$, la renta de los capitalistas ha aumentado claramente en términos de ambos bienes; y,
+    \item \textbf{Terratenientes}. Por el contrario, los terratenientes están definitivamente peor. Pierden por dos razones: el salario real en términos de los alimentos (el bien que producen) aumenta, lo que reduce su renta, y el incremento de los precios de las manufacturas rebaja el poder adquisitivo de cualquier renta dada.
+\end{la}
+
+Si el precio relativo se hubiera desplazado en sentido contrario, y el precio relativo de las manufacturas hubiera disminuido, las predicciones serían las contrarias: los propietarios del capital estarían en peor situación y los terratenientes, en mejor situación. El cambio de bienestar de los trabajadores sería, de nuevo, ambiguo, porque su salario real en términos de manufacturas aumentaría pero su salario real en términos de los alimentos disminuiría. El efecto de un cambio del precio relativo sobre la distribución de la renta se puede resumir de la siguiente manera: (i) el factor específico del sector cuyo precio relativo aumenta está definitivamente mejor; (ii) el factor especifico del sector cuyo precio relativo disminuye está definitivamente peor; y, (iii) el cambio de bienestar del factor móvil es ambiguo.
+
+
+\subsection{Apertura comercial: Implicaciones Económicas}
+Como acabamos de ver, los cambios en los precios relativos tienen fuertes repercusiones en la distribución de la renta, por lo que crean tanto ganadores como perdedores. 
+
+A continuación relacionaremos este cambio del precio relativo con el comercio internacional y equipararemos las predicciones sobre quiénes son los ganadores y los perdedores con la orientación comercial de un sector. Para que exista comercio, un país debe encontrarse ante un precio relativo mundial diferente del precio relativo que habría en ausencia de comercio, tal y como observamos en el modelo ricardiano. 
+
+\imagenfit{AperturaComercial_MFFEE.png}{Comercio y precios relativos}{}
+
+\subsubsection{Oferta y Demanda relativas: Determinación del precio relativo}
+¿Por qué podría diferir la oferta relativa mundial de la de nuestra economía con factores específicos? Tal vez los demás países del mundo tengan distintas tecnologías, como sucede en el modelo ricardiario. Sin embargo, ahora que nuestro modelo tiene más de un factor de producción, los demás países pueden diferir en la dotación de sus recursos: la cantidad total de tierra, capital y trabajo disponible. Lo importante es que la economía se encuentra ante un precio relativo distinto cuando se abre al comercio internacional. 
+
+Por tanto, a diferencia del modelo de RICARDO, no existe una única razón por la cual los precios relativos serían suficientes. En consecuencia, sin profundizar más nos vemos impedidos de saber cuáles son las razones que subyacen y, en última instancia, que determinan el cociente de precios relativos, en este caso de las manufacturas. No obstante, esto no impide que podamos ver las implicaciones económicas de la apertura comercial ya que, lo más probable es que estas diferencias sí existan y en consecuencia el precio relativo sea precisamente diferente al precio relativo en autarquía. 
+
+Por tanto, y siguiendo con el ejemplo, cuando la economía se abre al comercio, el precio relativo de las manufacturas viene dado por la oferta y demanda relativa mundial ($DR^{MUNDO}$), lo cual se corresponde con el precio relativo $(p_M/p_A)^2$. Si la economía no comerciara, el precio relativo sería menor, en $(p_M/p_A)$. 
+
+\subsubsection{Implicaciones de Política Económica} 
+¿Qué consecuencias tiene la apertura comercial? En términos de Política Económica, podemos intuir con lo expuesto hasta ahora las consecuencias previsibles del comercio internacional. En particular, existirán dos esencialmente: (i) la especialización; y, (ii) la redistribución.
+
+\paragraph{Especialización: Consecuencial}
+En primer lugar, el incremento del precio relativo de $(p_M/p_A)^1$ a $(p_M/p_A)^2$ induce a la economía a producir relativamente más manufacturas, al mismo tiempo que los consumidores responden al mayor precio relativo de las manufacturas con una demanda de alimentos relativamente mayor. 
+
+Por tanto, el mayor precio relativo $(p_M/p_A)^2$ inducirá a la economía a exportar manufacturas e importa alimentos. Es decir, la especialización productiva será una consecuencia fundamental de la apertura comercial y no una situación circunstancial que depende del precio relativo finalmente observado: todo país se especializará en aquel sector cuyo precio relativo en autarquía sea inferior al observado tras la apertura comercial.
+
+Si la apertura al comercio estuviera relacionada con una reducción del precio relativo de las manufacturas, los cambios en la oferta y la demanda relativas se revertirían, y la economía se convertiría en exportadora de alimentos e importadora de manufacturas. Estos dos casos pueden resumirse con la predicción intuitiva de que, al abrirse al comercio, \textbf{una economía exportará el bien cuyo precio relativo haya aumentado e importará aquel cuyo precio relativo haya disminuido}.
+
+\subsubsection{Ganancias: Redistribuciones y Posibilidades de Consumo}
+Hasta ahora hemos visto: (i) cómo se determinan las posibilidades de producción según los recursos y la tecnología; (ii) el modo en que la elección de lo que se produce depende del precio relativo del sector; (iii) la forma en que los cambios del precio relativo de las manufacturas afectan a la renta real de los distintos factores de producción; y, (iv) cómo influye el comercio tanto en los precios relativos como en la respuesta de la economía a las variaciones de los precio s relativos. 
+
+Ahora nos podemos plantear la pregunta crucial: ¿quién gana y quién pierde con el comercio internacional? Para ser breves, nos preguntaremos directamente cómo se ve afectado el bienestar de determinados grupos y después cómo influye el comercio en el bienestar de un país en su conjunto. 
+
+\paragraph{Redistribuciones: Ganadores vs. Perdedores}
+Para evaluar los efectos del comercio sobre determinados grupos, el elemento clave es que el comercio internacional modifica el precio relativo de los bienes que se intercambian. Por tanto, podemos relacionar esta predicción con nuestros resultados acerca de cómo se traducen las variaciones de precios relativos en cambios en la distribución de la renta. De forma más concreta, hemos visto que el factor específico del sector cuyo precio relativo aumenta resultará beneficiado, y que el factor específico en el otro sector (cuyo precio relativo disminuye) perderá. También hemos analizado que los cambios del bienestar del factor móvil s on ambiguos.
+
+Por tanto, el resultado general es sencillo: el comercio beneficia al factor que es especifico al sector exportador de cada país, pero perjudica al factor específico de los sectores que compiten con las importaciones; el efecto final sobre los factores móviles queda indeterminado. 
+
+\paragraph{Ganancias agregadas: Conjunto de consumo y compensaciones}
+¿Son mayores las ganancias del comercio que las pérdidas? Una forma de evaluar las ganancias generales del comercio consiste en plantear una pregunta distinta: ¿pueden los que ganan con el comercio compensar a aquellos que pierden y permanecer en mejor situación que antes del comercio? En caso afirmativo, el comercio es, potencialmente, una fuente de ganancias para todo el mundo. Existen dos alternativas para mostrar este resultado: una análitica y otra gráfica.
+
+Si la economía no comerciase, consumirá la cantidad producida: sería su restricción presupuestaria impuesta por los fundamentos económicos. En cambio, al abrirse al comercio (y sin considerar mivimientos de capital), la economía puede consumir el valor de su producción, es decir:
+
+\eqblock{
+\begin{aligned}
+    &\underset{\text{\scriptsize restricción tecnológica}}{\text{Autarquía}}:\quad D_M=X_M\quad \text{y},\quad D_A=X_A\\[1em]
+    &\underset{\text{\scriptsize restricción de valor}}{\text{Apertura}}:\quad p_M\cdot D_M+p_A\cdot D_A=p_M\cdot X_M+p_A\cdot X_A\\[1em] 
+    &\underset{\text{\scriptsize en el ejemplo,}}{\Longrightarrow}\quad \boxed{D_A-X_A=(p_M/p_A)\cdot (X_M-D_M)}\\[1em]
+\end{aligned}
+}{Ganancias del comercio: Posibilidades de consumo. Modelo de factores específicos: SAMUELSON}
+
+La ecuación muestra, por tanto, que las importaciones de alimentos igualan a las exportaciones de manufacturas multiplicadas por el precio relativo de las manufacturas. Aunque no nos dice cuánto exportará o importará la economía, la ecuación muestra que la cantidad que la economía puede ofrecer a cambio de importar está limitada, o restringida, por la cantidad de exportaciones. La ecuación se conoce, por tanto, como restricción presupuestaria (en ausencia de movimientos de capital). Esta misma relación puede expresarse gráficamente. 
+
+\imagenfit{GananciasComercio_MFFEE.png}{Restricción presupuestaria para una economía de intercambio y ganancias del comercio}{}
+
+La pendiente de la restricción presupuestaria es el precio relativo de las manufacturas, $-(p_M/p_A)^2$. La razón es que, al consumir una unidad menos de manufacturas, la economía ahorra $p_M$; este valor es suficiente para adquirir $p_M/p_A$ unidades adicionales de alimentos. En segundo lugar, la restricción presupuestaria es tangente a la frontera de posibilidades de producción en el punto que representa la elección de producción de la economía, dado el precio relativo de las manufacturas: es decir, la economía siempre se puede permitir consumir lo que produce. Para ilustrar que el comercio es una fuente de ganancia potencial para todos procederemos en tres pasos: 
+\begin{lnum}
+    \item En primer lugar observamos que, sin comercio, la economía tendría que consumir lo que produce y, por tanto, el consumo de la economía debería ser un punto en la frontera de posibilidades de producción, por ejemplo el punto $2$;
+    \item En una economía de intercambio es posible consumir más de los dos bienes de lo que lo haría en ausencia de comercio: dado el precio relativo mundial de las manufacturas (punto $1$), parte de esta restricción presupuestaria (zona sombreada) representa situaciones en que la economía consume más de los dos bienes de lo que haría en ausencia de comercio;\footnote{Observe que este resultado no depende de los supuestos de que la producción y el consumo anteriores al comercio estuvieran en el punto 2. Excepto cuando la producción anterior al comercio está en el punto 1 , por lo que el comercio no tiene efecto alguno sobre la producción, existe siempre una parte de la restricción presupuestaria que permite consumir más de los dos bienes.
+    } y,
+    \item Si la economía en su conjunto consume más de los dos bieneses posible, en principio, proporcionar a cada individuo más de ambos bienes. Ello supondríauna mejora para todos y demuestra, por tanto, que es posible asegurar que todos mejoran a consecuencia del comercio.
+\end{lnum}
+
+
+\clearpage
+\section{Modelo HECKSHER-OHLIN}
+\puntosclave{
+    El modelo de Heckscher-Ohlin-Samuelson se contrapone al modelo de Ricardo en que enfatiza diferencias en la dotación de recursos entre países para explicar por qué hay comercio internacional, en lugar de diferencias tecnológicas. En la explicación del modelo debe hacerse mención al efecto Stolper-Samuelson, efecto Rybczynski, el teorema de Heckscher-Ohlin y el teorema de igualación de los precios de los factores de producción. Para introducir la evidencia empírica sobre las teorías neoclásicas del comercio internacional, puede utilizarse el modelo de Heckscher-Ohlin-Vanek. En la exposición, debe enfatizarse que ese modelo no es exitoso a la hora de predecir la dirección y cuantía de los flujos comerciales. La discusión de la paradoja de Leontief es importante en este sentido. Puede hacerse una breve mención también a la evidencia sobre el modelo de Ricardo.
+}
+
+Con todo lo expuesto hasta ahora, ¿qué es lo que origina el comercio en el modelo de factores específicos? Hemos visto que si el trabajo fuera el único factor de producción, como supone el modelo ricardiano, la ventaja comparativa surge de las diferencias internacionales en la productividad del trabajo. De manera similar, la razón por la cuál se explica el comercio internacional se encuentra en esa misma linea: sigue siendo la productividad del trabajo la razón por la cual los países ostentan ventajas comparativas en determinados sectores. Aunque a través de este hemos podido incorporar las redistribuciones que se originan a raiz del comercio internacional.
+
+Sin embargo, en el mundo real, aunque el comercio se explica en parte por las diferencias de productividad del trabajo, también refleja diferencias en los recursos de los países. Canadá exporta productos forestales hacia los Estados Unidos no porque sus madereros sean más productivos que sus homólogos estadounidenses, sino porque Canadá, país escasamente poblado, tiene más tierra forestal per cápita que su vecino del sur. Una perspectiva realista del comercio debe considerar la importancia no solamente del trabajo, sino también de otros factores de producción, como la tierra, el capital y los recursos minerales. Para explicar el papel de las diferencias de los recursos en el comercio, este capítulo anal iza un modelo en el que las diferen cias de recu rsos son la única fuente del comercio. Este modelo muestra que la ventaja comparativa se ve afectada por la i nteracción e n tre los recu rsos de las naciones (la relativa abundancia de factores de producción) y la tec n o logía de producción (que influye en la intensidad relativa con la que los diferentes factores de producción son uti lizados en la producción de diferentes bienes) . Algunas de estas ideas fueron p resentadas en el modelo de los factores específicos del capítu lo 4, pero el m odelo que estudiamos en este capítu lo pone mayor acento en la interacción entre abu n d a n cia e i ntensidad, a l a vez que se centra en los resultados a largo plazo, es decir, cuando todos los factores de producción son móvi les entre los distintos sectores. El hecho de que el comercio internacional se debe en gran medida a las diferenc ias de recu rsos de los países es una de las teorías más i nfluyentes en economía i ntern acional. Desarrol lada por dos economistas suecos, E l i Heckscher y Berti l Oh l i n (este ú ltimo recibió el Prem io Nobel de Economía en 1 977), se conoce a menudo como teoría HeckscherOhli n . Como pone de rel ieve la interacción entre las proporciones en las que l os d iferentes factores están dispon ibles en los distintos países y la proporción en que son uti l izados para produ cir diferentes bienes también se conoce como teoría de las proporciones factoriales. Para desarrol lar la teoría de las proporciones facto riales comenzamos por desc rib i r una econom ía que no comercia, y después nos pregu ntamos qué ocu rre cuando dos economías  como esas comercian entre sí. Anal izaremos que, al contrario de l o que i n.d ica el modelo ricard iano con un ú n ico factor de producción, el comercio puede i nfl u i r en la d istribución de la ren ta entre factores, incluso a largo plazo. Expondremos en qué med ida el comercio puede contribu i r a aumentos en la des igualdad salarial en los países desarroI lados. Finalmente, conclu i remos con una revisión de la evidencia empírica a favor (y en contra) de las pred iccio nes de la teoría.
+
+
+
+\textbf{¿Qué queremos decir?} • Explicar cómo se genera un determi nado patrón de comercio a partir de las diferencias de recursos. ■ Anal izar las razones por las que las ganancias del comercio no se reparten de forma equitativa, ni siquiera a largo plazo, e identificar a los posibles ganadores y perdedores. • Comprender las posibles relaciones entre un mayor comercio y una creciente desigualdad salarial en el mundo desarrollado. ■ Ver el modo en que las pautas empíricas del comercio y los precios de los factores respaldan algunas de las predicciones de la teoría de las proporciones factoriales, aunque no todas.
+
+
+\subsection{Autarquía: Desarrollo formal}
+En este capítulo nos centraremos en la versión más sencilla del modelo de proporciones factoriales. Supondremos que los factores inmóviles ($K,T$) que eran específicos para cada sector son ahora factores móviles a largo plazo.\footnote{Así pues, la tierra que se utilizaba para producir alimentos se puede usar para construir una fábrica de textiles y, análogamente, el capital utilizado para pagar una máquina de tejer se puede emplear ahora para comprar un tractor.
+} De esta forma, a largo plazo se equipararán los rendimientos (renta y salario) en ambos sectores. La cantidad que se producirá, dada la cantidad de capital y trabajo empleados en cada sector, viene dada por la función de producción de cada bien: 
+
+\eqblock{
+\begin{aligned}
+    \left.\begin{aligned}
+        &x_A=f(K_A,L_A)\\[1em]
+        &x_M=f(K_M,L_M)
+    \end{aligned}\right\}\Longrightarrow
+    \left\{\begin{aligned}
+        &a_{Kj}\equiv \text{Capital \textbf{utilizado} para un rendimiento de $j$}\\[0.5em]
+        &a_{Lj}\equiv \text{Trabajo \textbf{utilizado} para un rendimiento de $j$}\\[0.5em]
+        &\sum_{j=1}^JK_j=K\quad \wedge \quad \sum_{j=1}^JL_j=L
+    \end{aligned}\right.
+\end{aligned}
+}{}
+
+Estos requisitos de factores por unidad de producto son muy parecidos a los definidos en el  modelo ricardiano (únicamente para el trabajo). Sin embargo, existe una diferencia crucial: en estas definiciones hablamos de la cantidad de capital o trabajo \textbf{utilizada} para producir una determinada cantidad, no de la cantidad \textbf{requerida} para producir dicha cantidad. 
+
+El motivo de este cambio con respecto al modelo ricardiano es que, en una economía de dos factores de producción es más realista pensar que existe una cierta posibilidad de elección en el uso de los factores productivos. Es decir, un cierto grado de sustituibilidad entre factores productivos.\footnote{Si existiese \textbf{una única forma de producir cada bien} la frontera de posibilidades de producción sería una línea escalonada ya que, si la economía se especializa en la producción de un sector que requiere más de un factor y menos de otro, existirá un exceso de oferta del factor menos requerido, y viceversa en caso de otra tecnología productiva para otro sector. Por tanto, la característica importante sería que el coste de oportunidad de producir una unidad de rendimiento más de un sector en términos del otro no sería constante: produciendo fundamental en un(os) sector(es) se obtiene un exceso de capacidad de uno(s) factor(es). Un modelo más realista sería aquel que permitiese un cierto grado de sustituibilidad entre factores productivos, de forma que la Frontera de Posibilidades de Producción fuese continua y el coste de oportunidad una función entre sectores, precisamente el tipo de tecnología que sobre el que se sustenta el modelo H-O.
+} Por lo general, estas elecciones dependerán de los precios de los factores trabajo y capital. 
+
+\subsubsection{Precios relativos: Factores y Bienes}
+Bajo este marco, la frontera PP tiene la forma cóncava en el origen y nos muestra que el coste de oportunidad en términos de alimentos de fabricar una unidad más de manufacturas aumenta a medida que la economía produce más tela y menos alimentos.\footnote{Si se puede sustituir capital por trabajo, y a la inversa, la frontera de posibilidades de producción ya no tiene un salto. No obstante, se cumple todavía que el coste de oportunidad de la tela en términos de alimentos aumenta a medida que la combinación de productos de la economía se desplaza hacia la tela y se aleja de los alimentos.
+}
+
+\imagenfit{ModeloHOI_FPP.png}{Frontera de Posibilidades de Producción}{}
+
+Pero, ¿en qué punto de la frontera de posibilidades de producción se sitúa la economía? Como decimos, depende de los precios. Concretamente, la economía se sitúa en el punto en el que se maximiza el valor de la producción: el punto $Q$, sobre la frontera de posibilidades de producción que alcanza la recta de isovalores más alta posible. En ese punto, el coste de oportunidad en términos de alimentos de producir otra unidad de manufacturas es igual al precio relativo de la manufactura, $CO(x_A/x_M)=p_M/p_A$.
+
+¿Cómo alcanzarán los productores este nivel de producción? Como los productores tienen margen para elegir cuáles son los factores que utilizarán, existen dos elementos \textbf{esenciales} a considerar: (i) las alternativas de combinación posible en la producción (es decir, su sustituibilidad en el proceso productivo); y, (ii) el precio de los factores, en particular, el coste relativo de éstos.\footnote{Suponiendo que las rentas del capital son elevadas y los salarios reducidos, los productores elegirán producir con relativamente poco capital y mucho trabajo; y, al contrario, si las rentas son bajas y los salarios elevados, utilizarán menos trabajo y mucho más capital.
+} Gráficamente:
+
+\imagenfit{Modelo_OHI.png}{(Izq.) Posibilidades de utilización de factores productivos en la producción agrícola | (Dcha.) Precios de los factores y elección de los factores productivos}{}
+
+En primer lugar, los productores no se encontrarán con requerimientos fijos de factores productivos sino con posibilidades de elecciones, como la que ilustra la curva $II$, en la que se muestran distintas combinaciones de factores productivos que se pueden utilizar para producir una unidad de rendimiento agrícola. Para tomar su decisión final óptima sobre la ratio trabajo-capital utilizadas, los productores considerarán los precios relativos de los factores.\footnote{Para ver el desarrollo de cómo podemos construir las curvas de intensidad factorial a partir de las relaciones isocuanta-isocoste [Ver Anexo \ref{anx:isocuantas_isocostes}]
+} Eso es precisamente lo que observamos en el gráfico de la derecha: las ratios factoriales óptimas atendiendo a las ratios de precio de los factores productivos, que se obtienen mediante la iteración sobre una misma linea iscuanta (gráfico de la izquierda) de tangencias con pendientes de isocostes alternativas ($w/r$) y computando la ratio trabajo-capital de estas tangencias.
+
+Lo que nos interesa, no obstante, no es la derivación de las curvas sino su significado: las \textbf{curvas de demanda relativa de los factores} caracterizan el efecto sustitución de la demanda de factores por parte de los productores. Y, sobretodo, su posición nos indica la intensidad en factor que tiene un sector productivo. En el ejemplo, el sector manufacturero tiene una mayor ratio trabajo-capital para cualquier nivel de precios de los factores, por lo que decimos que este sector es \textbf{intensivo en trabajo}. Mientras que el otro sector será intensivo en capital. Cabe observar que \textbf{la definición de intensidad depende de la ratio de trabajo con respecto al capital utilizada en la producción}, no de la ratio de trabajo o capital en relación con el producto. Por tanto, un bien no puede ser a la vez intensivo en trabajo y en capital.
+
+\subsubsection{Equilibrio: Recursos y producción}
+Tenemos ahora todos los componentes fundamentales del modelo, pero fragmentados. Veamos como se asignan definitivamente los recursos en equilibrio.
+
+Supongamos por un momento que la economía produce en todos los sectores. Entonces, la competencia entre productores de cada sector asegura que el precio de cada bien iguala su coste de producción, que a su vez depende de los precios de los factores: si el salario aumenta el precio de cualquier bien cuya producción requiera trabajo también aumentará (ceteris paribus). Pero, si consideramos las intensidades factoriales de cada proceso productivo llegamos a otro elemento crucial: la relevancia de la renta/precio de un determinado factor en la composición del coste de producción de un bien depende de la intensidad de ese factor en su proceso productivo.\footnote{Por ejemplo, si la producción de alimentos es poco intensiva en trabajo, entonces podeos suponer que un aumento del salario no tendrá gran efecto sobre el precio de los alimentos; en cambio, si la producción de manufacturas es intensiva en trabajo, podemos suponer que un incremento del salario tendrá un efecto muy notable sobre su precio.
+}
+
+Es decir, existe una relación unitaria y directa entre los precios factoriales relativos, $w/r$, y los precios de consumo relativos, $p_M/p_A$: cuanto mayor sea el coste relativo del trabajo, mayor será el precio relativo del bien intensivo en trabajo. Gráficamente:\footnote{En este caso concreto, al ser la producción de manufacturas intensiva en trabajo, y la del sector agrícola intensiva en capital, existe una relación uno a uno entre la ratio de los factores $w/r$ y la de los precios de la manufactura ($p_M/p_A$): cuanto mayor sea el coste relativo del trabajo, mayor será el precio relativo del bien intensivo en trabajo. Esta relación se iluestra con la $SS$.
+}
+
+\imagenfit{PPBByFF_MHO.png}{(Izq.) Precios de los factores y precios de los bienes | (Dcha.)Relación unitaria: De los precios de los bienes a las elecciones de factores productivos}{}
+
+Poniendolo en contexto con las curvas de intensidad relativa de factores de producción por sectores, vemos como el precio relativo de la manufactura $(p_M/p_A)^1$, la ratio de la tasa salarial con relación a la tasa de rentas del capital tiene que ser igual a $(w/r)^1$. Esta ratio salario-rentas implica que las ratios de trabajo con relación al capital empleadas en la producción de manufacturas y alimentos tienen que ser $(L_M/K_M)^1$ y $(L_A/K_A)^1$, respectivamente. Si el precio relativo de la manufactura aumenta hasta $(p_M/p_A)^2$, la ratio salario-rentas tiene que aumentar hasta $(w/r)^2$, lo que provocará una disminución de la ratio capital-trabajo utilizada en la producción de ambos bienes. 
+
+\paragraph{Efecto RIBEZYNSKI: Abundancia relativa de factores}
+En puridad, nuestro análisis bajo autarquía ya ha terminado.\footnote{Como vemos, existe un relación económica fundamental entre: (i) coste de oportunidad en la producción de un bien (FPP); (ii) su precio relativo (restricción presupuestaria tangente); (iii) sustituibilidad de factores y precios factoriales relativos (análisis isocuanta-isocoste); (iv) curvas de demanda relativa de factores, y la consecuente comparativa explicita en términos de intensidad factorial entre sectores; y, la consecuente vuelta al punto de partida con (v) la relación unitaria entre precios relativos de los factores y precios relativos de los bienes.
+} Pero necesitamos algo más para evaluar el impacto que tendrá la apertura comercial en nuestra economía: ¿cómo influyen los cambios en los recursos sobre la asignación de factores entre los distintos sectores y los correspondientes cambios de las cantidades producidas?\footnote{Este es uno de los componentes aleatorios al que están sujetos las naciones y, tal y como está especificado el modelo, podemos intuir que será determinante a la hora de analizar el impacto de la apertura comercial.
+}
+
+Supongamos que tomamos como dado el precio relativo de las manufactura, $(p_M/p_A)^1$, relacionado con determinada ratio fija $(w/r)^1$. Además, sabemos que esa proporción determina las ratios de trabajo-capital utilizadas en los sectores de telas y de alimentos: $(L_A/K_A)^1$ y $(L_M/K_M)^1$ respectivamente. En definitiva, supongamos que estamos en equilibrio general. ¿Qué pasaría ante un aumento de la población activa de una economía? Este aumento tiene un impacto directo sobre la ratio agregada de trabajo-capital de dicha economía, $L/K$, pero, a priori no parece tener influencias sobre el cociente de precios relativos dado, que acabamos de ver están en equilibrio. Entonces, ¿no experimenta la economía ningún cambio? No parece coherente pensarlo, por lo que ¿cómo puede la economía acomodarse al incremento de la oferta agregada relativa de trabajo $L/K$ si la demanda relativa de trabajo en cada sector se mantiene constante en $(L_A/K_A)^1$ y $(L_M/K_M)^1$?  En otras palabras, ¿de qué modo emplea la economía las horas adicionales de trabajo? 
+
+La respuesta se encuentra en la asignación de trabajo y capital en los distintos sectores. Sabemos que la ratio trabajo-capital en el sector manufacturero es mayor que en el de los alimentos, $L_M/K_M>L_A/K_A$, $TT$. Parece lógico suponer que un aumento de la oferta de trabajo aumenta la utilización de trabajo con respecto al capital en el total de la economía, $\Delta L/K$. Pero cuidado, aunque aumenta dicha ratio agregada, la ratio trabajo-capital en cada sector, $\bar L_j/\bar K_j$, se mantiene constante. Por tanto, ¿qué sucederá? Para que esto puede suceder, lo que experimentaremos será precisamente una canalización de recursos a los sectores más intensivos en trabajo, por su relativa abundancia, y, por tanto, una mayor asignación de trabajo y de capital a la producción de manufacturas (que es intensiva en trabajo). Gráficamente:
+
+\imagenfit{Efecto_RIDEZCKY.png}{Recursos y posibilidad de producción: Efecto RYBEZYNSKI}{}
+
+Un aumento de la oferta de trabajo desplaza hacia el exterior la frontera de posibilidades de producción de la economía desde $TT^1\to TT^2$, pero lo hace de un modo desproporcionado en la dirección de la producción de manufacturas por la relación que subyace entre la intensidad relativa del trabajo en este sector y la abundancia relativa del trabajo en esta economía. El reultado es que, si no cambia el precio relativo de la tela, la producción de alimentos desde $x_A^1\to x_A^2$ y un aumento de la producción de tela $x_M^1\to x_M^2$. En definitiva, lo que observamos es un incremento del coste de oportunidad de los alimentos con respecto a las manufacturas por la relativa abundancia del factor productivo y, si los precios no se ven alterados, el consecuente desplazamiento del equilibrio en la producción.
+
+\textcolor{red}{\textbf{OJO!} -- Copiar Anexos Manual para un mejor desarrollo y \textbf{OJO!} Creo que este es precisamente el punto de ROSELL de: \textit{Los precios no cambian, ¿o si?}}
+
+El efecto sesgado del incremento de los recursos sobre las posibilidades de producción constituye la clave para entender el modo en que las diferencias en recursos dan lugar al comercio internacional.
+
+\paragraph{Distribución de la renta: Efecto STOLPER-SAMUELSON}  
+Por último, podemos extraer otra lección importante de este modelo. En particular la relación unívoca entre los precios relativos de los factores y los precios relativos de los bienes:
+
+\imagenfit{PPBByFF_MHO.png}{(Izq.) Precios de los factores y precios de los bienes | (Dcha.)Relación unitaria: De los precios de los bienes a las elecciones de factores productivos}{}
+
+¿Qué provoca un aumento relativo de los precios de los productos, por ejemplo, del de manufacturas? Como vemos, provoca una recomposición de las combinaciones de productor en cada sector a causa de un incremento de los precios relativos de los factores de producción. En este caso concreto debido a un aumento de la ratio del salario sobre el capital.
+
+Pero, ¿qué más significa esto? En términos distributivos, una consecuencia crucial: un aumento del precio relativo de las manufacturas incrementará la renta de los trabajadores con respecto a la de los propietarios del capital. Incluso podemos hacer una afirmación más taxativa: dicho cambio en los precios relativos aumentará de modo inequívoco el poder adquisitivo de los trabajadores y disminuirá el de los propietarios del capital, al aumentar los salarios reales y reducir las rentas reales en términos de los dos bienes. ¿Cómo podemos saberlo?
+
+\eqblock{
+\begin{aligned}
+    &(p_M/p_A)^2>(p_M/p_A)^1\Longrightarrow (w/r)^2>(w/r)^1 \\[2em]
+    &\text{En un EGC}:\,\,\,\frac{w}{p_j}=PMgL_j\qquad \text{y,}\qquad \frac{r}{p_j}=PMgK_j\\[1em]
+    &\text{Si,}\quad\underset{\text{\scriptsize efectivamentepasa: mirar gráfico}}{(L_j/K_j)^2<(L_j/K_j)^1}\Longrightarrow
+    \underset{\text{\scriptsize el salario real aumenta en términos de todos los bienes, contrariamente al capital}}{\left\{\begin{aligned}
+        &PMgL_j^1<PMgL_j^2&&\Longrightarrow \left(\frac{w}{p_j}\right)^1<\left(\frac{w}{p_j}\right)^2\\[0.5em]
+        &PMgK_j^2<PMgK_j^1&&\Longrightarrow \left(\frac{r}{p_j}\right)^2<\left(\frac{r}{p_j}\right)^1
+    \end{aligned}\right.}
+\end{aligned}
+}{}
+
+En una economía competitiva, los factores de producción se remuneran de acuerdo con su producto marginal. Por tanto, cuando la ratio del trabajo con respecto al capital disminuye en la producción de cualquiera de los bienes, el producto marginal del trabajo en términos de ese bien se incrementa, de forma que los trabajadores se encuentran con que su salario real es mayor en términos de los dos bienes. Por otra parte, el producto marginal del capital cae en ambas industrias, por lo que los capitalistas se encuentran con que su renta real es menor en términos de los dos bienes. Así pues, en este modelo, al igual que en el de los factores específicos, cambios en los precios relativos tienen efectos acusados en la distribución de la renta. Un cambio de los precios de los bienes no solo altera la distribución de la renta, sino que la modifica siempre hasta tal punto que los propietarios de un factor de producción ganan mientras que los del otro sufren un perjuicio.\footnote{La relación entre precios de los bienes y precios de los factores (y los correspondientes efectos sobre el bienestar) fue expuesta en un artículo clásico de STOLPER y SAMUELSON. \textit{Protection and Real Wages}. Review of Economic Studies 9 (1941), pág. 58-73, y se conoce, por lo tanto, como efecto STOLPER-SAMUELSON.
+}
+
+
+\subsection{Apertura comercial: Implicaciones Económicas}
+Una vez esbozada la estructura de la producción en una economía con dos factores, podemos ver l o que sucede cuando dos economías de este tipo, nuestro país y el extranjero, comercian entre sí. Como de costumbre, nuestro país y el extranjero son similares en muchos aspectos. Tienen los mismos gustos y, por tanto, idénticas demandas relativas de alimento y tel a cua ndo se enfrentan a los mismos precios relativos de los dos bienes. 
+
+También comparten la misma atecnología: una determinada cantidad de trabajo y capital produce la misma cantidad de tela o alimento en los dos países. La única diferencia entre los países reside en sus recursos: nuestro país tiene una mayor ratio de trabajo-capital que el extranjero.
+
+Dado que nuestro país posee una relación entre trabaj o y capital mayor que el extranj ero, es abundante en trabajo, mientras que el extranjero es abundante en capital. Cabe observar que la abundancia se define en términos de ratios y no de cantidades absolutas. Por ej emplo, el número total de trabajadores en los Estados Unidos es aproximadamente tres veces superior al de México, pero se considera a México abundante en trabajo con respecto a los Estados U n idos dado que el stock de capital estadounidense es más de tres veces superior al mexicano. La «abundancia » siempre se define en términos relativos, mediante la comparación de la ratio entre trabajo y capital de los dos países, por lo que ningún país tiene abundancia en todo. Dado que la tela es el bien que utiliza intensivamente el trabajo, la frontera de p osibilidades de producción de nuestro pa1s está más desplazada hacia fuera, con respecto a la del extranjero, en la dirección de la tela que en la dirección de los alimentos. Así, si todo. lo demás se mantiene ínvariante, nuestro país tiende a producir relativamente más tela que alimentos. Dado q ue el comercio lleva a la convergencia de los precios relativos, uno de los factores que será igual es el precio de la tela con respecto a los alimentos. Sin embargo, como l o s países di fieren en la abundancia de sus factores, para una ratio determinada entre el precio de l a tela y el de los alimentos nuestro país producirá una mayor ratio d e tela y alimentos que e l extranjero: nuestro país tendrá una mayor oferta rela tiva de tela. Por tanto, la curva de oferta relativa de nuestro país se sitúa a la derecha de la del extranjero.
+
+En la Figura 5.9 se ilustran las funciones de oferta relativa de nuestro país (OR) y del extranjero (OR*) . La curva de demanda relativa, que suponemos la misma para los dos países, es DR Si no hubiera comercio internacional, el equilibrio para nuestro país �� situaría en el punto 1, y el precio relativo de la ropa sería (PTIPA) 1 . El equilibrio el extranjero se situaría en el punto 3, con un preci o relativo de la ropa dado por (P TIPA)3. Es decir, en ausencia de comercio, el precio relativo de la tel a sería menor en nuestro país que en el extranjero. Cuando nuestro país y el extranjero comercian entre sí, sus precios relativos converge n. El preci o relativo de la tela aumenta en nuestro país, se reduce en el extranjero y se establece un nuevo precio relativo mundi.al de la tela en algún punto entre los precios relativos anteriores al comercio, por ej emplo en (PrlPA)2. En el capítulo 4 analizamos cómo reacciona una economia a esta apertura al comercio según la dirección del cambio del precio relativo de los bienes: la economía exporta el bien cuyo precio relativo aumenta. Así pues, nuestro país exportará tela (el precio relativo de la tela aumenta en nuestro país), mientras que el extranjero exportará alimentos. (El precio relativo de la tela disminuye en el extranjero, lo que significa que el precio relativo de los alimentos aumenta). Nuestro país se convierte en un exportador de tela porque es abundante en trabajo (con respecto al extranjero) y porque la producción de tela es intensiva en trabajo (en relación con la producción de alimentos). Análogamen te, el extranjero se convierte en un exportador de alimentos porque es abundante en capital y porque la producción de alimentos es inten siva en capital. Estas predicciones de los patrones de comercio (en la versión de dos países, dos factores y dos bienes que hemos estudiado) se pueden generalizar en forma de un teorema cuyo nombre proviene de los autores que desarrollaron inicialmente este modelo de comercio: Teorema Heckscher-O hlin: El pals que es abundante en un factor exporta el bien cuya producción es in tensiva en ese fa ctor. En el caso más realista de múltiples países, factores de producción y bienes es posible generalizar este res ultado como una correlación entre la abundancia de un país en un factor y las exportaciones de bienes que utilizan ese factor de forma intensiva: los países tienden a exportar
+los bienes cuya producción es intensiva en los factores de los que tienen una dotación abundante 
+
+
+
+Comercio y distribución de la renta 
+
+Acabamos de analizar cómo induce el comercio una convergencia de los precios relativos. Antes vimos que los cambios de los precios relativos tienen, a su vez, efectos acusados sobre las g anancias relativas del trabajo y del capital. Un aumento del precio de la tela eleva el poder adquis itivo del trabajo en términos de los dos bienes, mientras que disminuye el poder adquisitivo del capital en función de ambos bienes. Un aumento del precio de los alimentos tiene el efecto contrario. Así, el comercio internacional ejerce un poderoso efecto en la distribución de la renta, incluso a largo plazo. En nuestro país, donde aumenta el precio relativo de la tela, la gente que consigue su renta del trabajo gana con el comercio, pero los que la obtienen del capital se encuentran en peor situación. En el extranjero, donde el precio relativo de la tela se reduce, sucede lo contrario: los trabajadores resultan perjudicados y los capitalistas, beneficiados. El recurso del cual un país tiene una oferta relativamente grande (trabajo en nuestro país, capital en el extranjero) es el factor abundante en ese país, y el recurso del que tiene una o ferta relativamente reducida ( capital en nuestro país, trabajo en el extranjero) es el factor escaso. La conclusión general sobre los efectos del comercio internacional en la distribución de la renta es la siguiente: los propietarios delf actor abundante en el país ganan con el comercio, pero los propietarios del factor escaso en el país pierden. En nuestro análisis del caso de los factores específicos concluíamos que los factores de producción que están «atrapados» en una industria que compite con las importaciones resultanperjudicados frente a la apertura al comercio. En la presente situación, observarnos que los factoresde producción utilizados intensamente en la industria que compite con las importaciones ven lesionados sus intereses por la apertura al comercio, con independencia de l a i ndustria enla que están empleados. El argumento teórico sobre las ganancias agregadas del comercio es el mismo que en el caso de los factores específicos: la apertura al comercio amplía las p osibilidades de consumo de la economía (véase la Figura 4. 1 1), de forma que existe una forma de conseguir que todo el mundo mejore. Sin embargo, se aprecia una diferencia crucial con respecto a los efectos sobre la distribución de la renta de los dos modelos. La especificidad de los factores a determinadas industrias es solo un problema temporal: los fabricantes de ropa no se pueden convertir en productores de ordenadores de la noche a la mañana pero, con el tiempo, la economía estadounidense puede trasladar su empleo en las manufacturas de los sectores en declive a los que se encuentran en crecimiento. Así pues, los efectos de la distribución de la renta derivados del hecho de que el trabajo y otros factores son inmóviles representan un problema temporal y transitorio (lo que no significa que esos efectos no sean dolorosos para quienes los padecen) . Por el contrario, los efectos que tiene el comercio sobre la distribución de la renta entre la tierra, el trabajo y el capital, cuando son móviles, tienden a ser permanentes.En comparación con el extranjero, Estados Unidos es un país abundante en trabaj o altamente cualificado, mientras que es escaso en trabajo no cualificado. Ello significa que, en l os Estados Unidos, el comercio internacional tiende a empeorar la situación de los trabajadores no cualificados, no solo temporalmente, sino de forma permanente. El efecto negativo del comercio sobre los trabajadores no cualificados plantea un problema político persistente, que no se puede resolver con políticas que ofrecen ayudas temporales (como un seguro de desempleo). Por consiguiente, el efecto potencial del mayor comercio sobre la desigualdad de la renta en economías avanzadas corno la estadounidense se ha convertido en el centro de una gran cantidad de investigación empírica. En el siguiente recuadro revisaremos parte de esta evidencia, para llegar a la conclusión de que el comercio ha sido, como mucho, un factor más que ha contribuido al incremento de los indicadores de la desigualdad de la renta en los Estados Unidos.
+
+
+Igualación del precio de los factores 
+
+En ausencia de comercio, el trabajo tendría una renta menor en nuestro país que en el extranj ero y el capital tendría una renta mayor. Sin comercio, nuestro país, que es abundante en trabajo, tendría un menor precio relativo de la tela que el extranjero, que es abundante en capital, y la diferencia de los precios relativos de los bienes implicaría una diferencia aún mayor de los precios relativos de los factores. Cuando nuestro país y el extranjero comercian, los precios relativos de los bienes convergen. Esta convergencia, a su vez, favorece la convergencia de los precios relativos del trabajo y e l capital. Así, existe realmente una tendencia hacia la igualación de los precios de los factores. ¿Hasta dónde 11ega esta tendencia? La sorprendente respuesta es que, en el modelo, la tendencia llega hasta el final. El com e rcio internacional conduce a la total igualación del precio de los factores. A pesar de que nuestro país tiene una relación más alta entre trabajo y capital que el extranjero, una vez que ambos países comercian entre sí, el salario de ambos países se iguala y la renta del capital también. Para verlo, volvamos a la Figura 5.6, que muestra que, dados los precios de la tela y los alimentos, podemos determinar el salario y la renta sin referencia a la oferta de capital y trabajo. Si nuestro país y el extranjero se enfrentan a los mismos precios relativos de tela y alimentos, tendrán también losmismos precios de los factores. Para entender cómo se produce la igualación hemos de considerar que, cuando nuestro p a ís y el extranjero comercian entre si, ocurre algo más que un simple intercambio de bienes. De una forma indirecta los dos países intercambian realmente factores de producción. Nuestro país permite al extranjero el uso de una parte de su factor abundante, el trabajo, no mediante la venta del trabajo directamente, sino por el intercambio de bienes producidos con una relación trabajocapital alta por bienes producidos con una relación trabajo-capital baja. Los bienes que nuestro país vende requieren para su producción más trabajo que los que recibe a cambio; es decir, hay más trabajo incorporado en las exportaciones de nuestro país que en sus importaciones. Así, nuestro país exporta su trabajo, incorporado en sus exportaciones intensivas en trabajo. En sentido contrario, las exportaciones del extranjero incorporan más capital que sus importaciones y, en consecuencia, el extranjero exporta indirectamente su capital. Visto de este modo, no es sorprendente que el comercio lleve a la igualación de los precios de los factores en los dos países. Aunque este enfoque del comercio es sencillo y atractivo, contiene un problema importante: en el mundo real los precios de los factores, no se igualan. Por ejemplo, existe un rango extremadamente amplio de salarios entre los países (Tabla 5. 1 ). Aunque algunas de estas diferencias pueden reflejar discrepancias en la cualificación del trabajo, son demasiado pronunciadas para que puedan explicarse solo con esta razón. Para entender los mqtivos por los cuales el modelo no proporciona una predicción exacta, hemos de analizar sus supuestos. Existen tres, supuestos cruciales para la predicción de la igual ación de los precios de los factores que, e9 realidad, no se cumple��. Son los que indican que (1) l as tecnologías son las mismas; (2) la ausencia de costes de comercio iguala los precios de los bienes en ambos países, y (3) los dos países producen ambos bienes.l. La proposición de que el comercio iguala los precios de los factores no se mantiene si los paísestienen diferentes tecnologías de producción. Por ejemplo, un país con una tecnología superior puede tener rentas del trabajo y del capital mayores que un país con una tecnología in. ferior. 2. La igualación completa de los precios de los factores depende de la completa convergencia de los precios de los bienes. En el mundo real, los precios de los bienes no se igualan completamente con el comercio internacional. Esta ausencia de convergencia se debe a las barreras naturales (como los costes de transporte) y las limitaciones al comercio, como los aranceles, las cuotas a la importación y otras restricciones. 3. Aun cuando todos los países utilicen las mismas tecnologías y se enfrenten a los mismos precios de los bienes, la igualación de los precios factoriales depende del supuesto de que los países prod ucen el mismo conjunto de bienes. Así lo hemos supuesto cuando obtuvimos los salarios y las rentas de los precios de la tela y de los alimentos en la Figura 5.6. Sin embargo, los países pueden verse ind ucidos a especializarse en la producción de bienes diferentes. Un país con una ratio muy alta entre trabajo y capital puede producir solo tela, mientras que si tiene una ratio muy alta entre capital y trabajo podría producir únicamente alimentos. Esto implica que la igualación de los precios de los factores tiene lugar solo cuando los países implicados son suficientemente similares en sus dotaciones factoriales relativas. 
+
+(En el apéndice de este capítulo se analiza este aspecto con más detalle.) Por tanto, l o s precios de los factores no se igualan necesariamente entre países con relaciones radicalmente diferentes entre capital y trabajo, o entre trabajo cualificado y no cualificado.
+
+
+
+\subsubsection{Oferta y Demanda relativas: Determinación del precio relativo}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+En las conclusiones, deben resumirse las implicaciones fundamentales de los modelos neoclásicos y puede utilizarse su escasa relevancia empírica para motivar el surgimiento de la "nueva teoría del comercio internacional", que a partir de los años 80 introdujo un nuevo marco teórico para analizar los flujos comerciales, con mucho mayor éxito empírico.
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+\anexo{Modelo HECKSHER-OHLIN: Precio de los factores, precio de los bienes y elección de los factores productivos}\label{anx:isocuantas_isocostes}
+
+La Figura 5A. 1 ilustra una vez más la elección entre el factor productivo trabajo y el factor productivo capital para producir una unidad de alimentos: la iso cuanta unitaria en la producción de alimentos que mostramos con la curva //. Sin embargo, también muestra unas cuantas líneas de isocoste: combinaciones de los factores productivos capital y trabajo que cuestan lo m ismo. Una línea de isocoste se construye del siguiente modo: el coste de adquisición de una determinada cantidad de trabajo es wL; el coste de arrendar una determinada cantidad de capital K es rK. Así, si podemos producir una unidad de alimentos con ªLA unidades de trabaj o y ªKA unidades de capital, el coste total de producción de esta unidad, e, es:....
+
+\textcolor{red}{\textbf{OJO!}} Manual de KRUGMAN -- Apéndice Capítulo 5
+
+
+
+
+\end{document}
