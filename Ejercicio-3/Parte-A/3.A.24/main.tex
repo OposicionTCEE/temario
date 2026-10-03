@@ -1,0 +1,1351 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%% EMPEZAR EL DOCUMENTO %%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% --- Datos del tema ---
+\title{Tema 3.A.24 -- Economía del Bienestar (III)\\
+\large Las funciones de bienestar social. Teoría de la elección colectiva. El teorema de imposibilidad de \authorfont{ARROW} y desarrollos posteriores.}
+\author{Marcelo Ortega}
+\date{Noviembre 2025}
+\newcommand{\TemaCode}{3A24}
+
+\oldtitle{Tema 3.A.24 -- Economía del bienestar (III). Las funciones de bienestar social. Teoría de la elección colectiva. El Teorema de imposibilidad de \authorfont{ARROW} y desarrollos posteriores.}
+\changerationale{Sin cambios}
+
+\begin{document}
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{
+    La herramienta básica empleada por la literatura es la "función de bienestar social"; sin embargo, distintos autores emplean distintos axiomas y conceptos de Teoria del Orden a la hora de construir éste y otros objetos matemáticos utilizados para estudiar esta cuestión. La diferencia entre axiomas en ocasiones .es pequeña (por ej., antisimetría vs. completitud,transitividad vs. aciclicidad), pero da generalmente lugar o bien a que no se puedan comparar directamente entre autores funciones que tienen la misma denominación. o por el contrario a la proliferación de numerosos términos para referirse a esta "función de bienestar social"(entre otros, funcional de bienestar social, función de elección social. regla de elección social). Sirva esto como advertencia al opositor para que sea consciente de (i) es deseable evitar etiquetas taxonómicas que restrinjan el análisis, (ii) existirán divergencias entre fuentes consultadas (incluso entre las de primer nivel), (iii) se trata de una rama de la literatura en el que escasean planteamientos incontestados y en el que las conclusiones alcanzadas son especialmente sensibles a los supuestos.
+
+    \textcolor{red}{\textbf{OJO}} La clave del Tema es entender la pregunta que intenta contestar: \textbf{¿Podemos ponernos de acuerdo?} Parece una pregunta trivial pero todo menos esto. A lo largo de este tema se espera que desarrollemos los siguientes puntos clave de los que se desprenderá la respuesta a esta pregunta: (i) bajo que premisas básicas (campo de la filosofía moral y política); (ii) qué juicios de valor llevamos a cabo (criterios comparativos entre diferentes situaciones en base a las premisas que previamente hemos aceptado, característico del campo de la Economía del Bienestar); y, (iii) cómo podemos representarlo para que esto tenga aplicabilidad en térmios de Política Económica (matemáticas y Economía Pública). Si damos con una respuesta que nos satisfaga: (i) podemos ponernos de acuerdo; y, (ii) seremos los primeros en pensarlo.
+    }
+\vspace{1cm}
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\section{Introducción}
+La Economía del Bienestar es una rama de la Economía cuya propia definición y delimitación no es pacífica dentro de la literatura, pues ha variado desde los inicios de la ciencia económica como disciplina autónoma y está íntimamente relacionada con el debate acerca de la existencia o no de una Economía positiva (del ser) y una Economía normativa (del deber ser). 
+
+La economía del bienestar es la rama del análisis microeconómico que intenta valorar, desde un punto de vista colectivo, las distintas situaciones en que puede encontrarse un sistema económico y, por ello, tiene dos objetivos fundamentales:
+\begin{lnum}
+    \item Buscar los instrumentos que permitan realizar una valoración de la deseabilidad social de estados económicos alternativos; estados caracterizados por una asignación de recursos y una distribución de la renta determinados;  y,
+    \item Maximizar el bienestar social. Es decir, proporcionar normas de política económica que permitan alcanzar el estado o estados realizables socialmente más preferidos.
+\end{lnum}
+
+El criterio fundamental que ha surgido en el campo de la economía del bienestar para valorar los distintos estados alternativos es el de la eficiencia económica. La noción de eficiencia económica se refiere al mejor uso posible de unos recursos limitados, es decir, un sistema económico será eficiente si no desperdicia recursos haciendo máximo el bienestar de los individuos. Los teoremas del bienestar fueron desarrollados por el economista de origen ruso \authorfont{ABBA LERNER}, pionero del keynesianismo, aunque serían posteriormente \authorfont{ARROW y DEBREU} quienes desarrollen formalmente los mismos.  
+
+\subsection{Contextualización}
+
+
+\paragraph{Características básicas}
+Una característica diferencial de los problemas dinámicos es la posibilidad de clasificación de las variables económicas de decisión en dos categorías en función de su referencia temporal:
+\begin{la}
+    \item \textit{Variables flujo}. Una variable flujo siempe tiene, como característica esencial, una dimensión temporal; son las referidad un intervalo de tiempo. Suelen ser aquéllas sobre las que se decide directamente y que se utilizan como variables de control en los problemas de optimización dinámica. Por ejemplo, el consumo; y,
+    \item \textit{Variables stock}. Una variable stock nunca tiene una dimensión temporal; son las referidas a un instante del tiempo, su evolución queda determinada por las variables flujo y se corresponden a las variables de estado en los problemas de optimización dinámica. Por ejemplo, la riqueza.
+\end{la}
+
+\imagenfit{FlowANDstock.png}{Variables flujo y variables stock. Caracterización}{Elaboración propia}
+
+Además, el análisis dinámico, independientemente de la metodología utilizada para formularlo, comparte una serie de características/especificaciones comunes:
+\begin{lnum}
+    \item \textbf{Horizonte temporal}. El horizonte temporal puede ser finito o infinito;
+    \item \textit{Unidades de tiempo}. Las unidades de tiempo se pueden medir de forma continua (cuando no hay intervalos claramente definidos), o de forma discreta, cuando cada periodo corresponde a una unidad claramente definida y no contigua a la anterior, solo sucesiva. 
+\end{lnum}
+
+Centrandonos ahora en los programas de optimización, la vertiente metodológica ortodoxa en análisis dinámico, se sostiene sobre los siguientes supuestos:
+\begin{lnum}
+    \item \textit{Hipótesis ergódica}. El sistema posee una estructura estable en el tiempo, de modo que las regularidades observadas no dependen de una historia particular, sino que reflejan propiedades generales del propio sistema (el valor esperado del sistema es igual a su valor a largo plazo). Por tanto, la ergodicidad no es una descripción empírica del mundo, es una hipótesis metodológica que permite tratar la economía como un sistema gobernado por regularidades generales, no como un proceso históricamente singular o dependiente del camino seguido;\footnote{Su rechazo implica aceptar que la historia importa de manera no resumible, que las trayectorias no son intercambiables y que el futuro no está estadísticamente contenido en el pasado
+    }
+    \item \textit{Individualismo metodológico}. Los fenómenos económicos deben explicarse a partir de las acciones, decisiones e interacciones de los individuos, y no mediante entidades colectivas tratadas como agentes autónomos: el comportamiento agregado del sistema debe (y puede) explicarse a través de la agregación de los agentes que lo conforman;\footnote{Desde este enfoque, una explicación económica es satisfactoria solo si muestra cómo las regularidades observadas a nivel agregado emergen de decisiones individuales, tomadas bajo restricciones y con expectativas determinadas. Las variables macroeconómicas no se niegan, pero se consideran legítimas únicamente en la medida en que pueden vincularse, al menos en principio, a mecanismos microeconómicos.
+    } 
+    \item \textbf{Racionalidad}. Los agentes económicos eligen de manera sistemática y coherente entre las alternativas disponibles, utilizando la información que poseen y actuando conforme a un criterio estable de valoración. Las decisiones no se consideran arbitrarias, sino el resultado de un proceso de elección;
+    \item \textbf{Escasez o economía basada en el intercambio}. Los agentes económicos actúan en un entorno en el que los recursos disponibles son limitados en relación con los fines que pueden perseguirse: no es posible satisfacer simultáneamente todos los objetivos deseables. Desde este punto de vista, la escasez no es un hecho empírico contingente, sino una condición estructural del análisis económico ya que, sin escasez no habría costes de oportunidad ni decisiones propiamente económicas. La escasez convierte la elección en el verdadero problema económico, dando a la Teoría Económica su razón última de existir.
+\end{lnum}
+
+\imagenfit{Hipotesis_Basicas.png}{Las hipótesis básicas de la metodología económica}{De derecha a izquierda: \href{https://www.youtube.com/watch?v=VCb2AMN87cg}{What is ergodicity? (Ergodicity Channel. Youtube)}; \href{https://www.nytimes.com/2023/07/10/opinion/economic-modeling-hank-representative-agent.html}{\textit{The representative agent is always rational. The rest of Us are not.}. (The New York Times)}; \href{http://www.marcopangallo.it/blog/2024/04/}{\textit{Making sense of chaos. A better Economics for a Better World}. J. DOYNE FARMER}; \href{https://easy-peasy.ai/ai-image-generator/images/scarcity-opportunity-cost-interactive-editorial-cartoon}{Generado por IA}}
+
+Por lo que estos se considerarán válidos durante la exposición salvo que expresamente se diga lo contrario.
+
+
+\subsubsection{Relevancia}
+La relevancia de este tema en el temario es indudable. En primer lugar, como economistas, se ha de ser consciente de la importancia de las aportaciones de los autores en este campo: esto se puede comprobar fácilmente. por ejemplo, consultando los premios Nobel de Economía en las últimas tres décadas, con numerosos premiados por sus trabajos tanto sobre la Teoría de la Elección Social en general como sobre el diseño de mecanismos. En segundo lugar, como futuros policy makers, este tema permite entender que guías ha de seguir el regulador o el Estado en sentido amplio a la hora de tomar decisiones que afecten a individuos con distintas sensibilidades y en presencia de problemas de información.
+
+El enfoque supone el desarrollo de ideas en la intersección de Teoría Política (Votación) y Filosofía (Ética y Bienestar Social) desde un punto de vista consecuencialista: las diferentes alternativas sociales deben evaluarse de acuerdo a los resultados para los agentes que forman la sociedad. El enfoque que presentamos en este tema es normativo y axiomático. Trataremos de definir reglasque permitan guiar al decisor público en la toma de decisiones óptimas o deseables para la sociedad (Normativo). Formalizaremos la definición de qué entendemos cómo óptimo mediante axiomas: propiedades que se consideran deseables para el proceso de decisión usado por la sociedad. El enfoque axiomático intenta caracterizar las reglas de decisión colectiva que satisfacen un conjunto de propiedades deseables (axiomas) o demostrar la imposibilidad de satisfacer todas las propiedades simultáneamente. Es posible que existan diferentes propuestas razonables (aparentemente óptimas según algún criterio). Idealmente, el método axiomático nos permitiría reducir el número de soluciones de interés tanto como sea posible, hasta alcanzar una caracterización (identificación y parametrización de un conjunto de reglas que son las únicas que satisfacen un conjunto de axiomas deseables). Cuantas más propiedades deseables se pretenda imponer sobre estas reglas, más pequeño es el conjunto de reglas que las satisfacen. Aunque parezca que el objetivo de la Teoría de la Elección Social es encontrar resultados de imposibilidad, es decir, que un conjunto de axiomas son incompatibles. Por tanto, intentar cumplir un objetivo loable a menudo implica sacrificar otro tan válido como el primero. Un debate instruido y razonable podrá discrepar sobre estos trade-offs y por tanto sobre las mismos objetivos de la decisión pública.
+
+\subsubsection{Problemática}
+¿Es posible medir la felicidad/utilidad en unidades métricas? ¿Es posible comparar grados de felicidad/utilidad entre distintos individuos? Estas cuestiones son fundamentales para poder alcanzar algo parecido a una utilidad agregada de una sociedad, pero no existen respuestas universales no controvertidas a estas preguntas
+
+La Teoría de la Elección Social plantea un enfoque económico normativo que permita analizar qué situaciones son socialmente más deseables que otras y así evaluar los resultados que los individuos obtienen en la interacción en la sociedad. Es decir, ¿cómo podemos formalizar la idea del interés público de manera que cualquiera puede aceptarlo como correcto? ¿Es posible tratar a las sociedades como agentes económicos racionales, en el sentido restrictivo de que existan preferencias coherentes y por lo tanto actúan persiguiendo maximizar dichas preferencias? Las sociedades son grupos de personas (agentes) con diferentes preferencias y prioridades. Cuando este grupo de agentes necesita tomar decisiones que afectan a todo el colectivo, la sociedad debería tener en cuenta los intereses de sus miembros. El campo de la Elección Social intenta determinar cómo estas decisiones que agreguen las diferentes preferencias de los agentes en un método de decisión social. Los problemas de decisión colectiva aparecen en muchos contextos, desde la elección de gobiernos nacionales y referendums sobre decisiones públicas, a acuerdos de paz o climáticos en organismos internacionales, y también los métodos para evaluar los efectos de diferentes políticas para el conjunto de la sociedad.
+
+\subsection{Estructura de la exposición}
+El que vamos a seguir el siguiente esquema:
+\begin{lnum}
+    \item comenzaremos repasando los puntos de vista clásicos (utilitarista y egalitarista), y notaremos la dificultad para enmarcar las elecciones colectivas orno una extensión de la teoría de la decisión individual. La principal diferencia será desligar el enfoque positivo del normativo . Mientras que para un individuo el supuesto de racionalidad nos permite identificar la decisión de un individuo como óptima dadas sus preferencias. desde un punto de vista colectivo. el resultado de las acciones conjunt as de los individuos no tiene porqué corresponderse con la decisión óptima desde el punto de vista social. Más aún, aunque el decisor público pueda actuar intentando maximizar unos criterios que representan las preferencias sociales, la pregunta que quedaría pendiente sería: ¿Cuál de los diferentes criterios normativos es el adecuado para la sociedad?
+    \item 
+    \item Finalmente, nos aproximaremos al problema del decisor público teniendo en cuenta las dificultades para conocer las preferencias de los agentes que forman la sociedad, dada que esta información es privada para los agentes. La existencia de información privada que sólo es observada por agentes racionales, que buscan su propio interés genera problemas severos de compatibilidad de incentivos y la aproximación necesariamente será de óptimo restringido. Ofreceremos por tanto una primera aproximación a qué puede ser implementado cuando estas restricciones de incentivos se toman en consideración. Este aproximación vinculará la decisión pública con las herramientas de Teor ía de Juegos, y pondrá el énfasis en las restricciones de second-best ligadas a los incentivos de los agentes a revelar información privada relevante para la decisión social óptima. En este contexto, los resultados negativos en contextos generales como el Teorema de Gibbard-Satterthwaite, abren la puerta a resultados más positivos en problemas restringidos con interés económico y apli caciones a la vida real que brevemente discutiremos en las conclusiones.
+\end{lnum}
+\clearpage
+
+\section{Filosofía Política: ¿Podemos determinar la satisfacción del colectivo?}
+\puntosclave{
+    El utilitarismo y el egalitarismo [\authorfont{Ver Anexo \ref{anx:egalitarismo}]} son los principales ejemplos de enfoques normativos consccuencialistas. 
+    
+    Ambos están basados en la igualdad inicial de todos los miembros de la sociedad y pueden ser compatibles. El utilitarismo buscaría maximizar la satisfacción global de los miembros de la sociedad. El egalitarismo buscaría obtener la müxima satisfacción teniendo en cuenta la posibilidad de reducir el coste que supone para la sociedad que individuos que son iguales ex-ante puedan obtener resultados desiguales.
+    
+    Ambos enfoques se basan en la comparación de los niveles de utilidad de los individuos y por tanto muchas críticas (referentes al nivel de información necesaria para la toma de decisiones aplican a ambos enfoques).
+    
+    Ambos enfoques ofrecen criterios para llevar a cabo decisiones públicas perfectamente justificables, pero las recomendaciones no tienen porqué ser coincidentes. La cuestión por tanto es si es posible construir un criterio que genere un enfoque normativo a partir de las preferencias de los miembros de la sociedad.
+    
+    Extensiones: Utilitarismo y Egalitarismo son sólo dos posibles (y razonables) enfoques normativos consecuencialistas. En los [\authorfont{Ver Anexo \ref{anx:igualdadoportunidades} y Anexo \ref{anx:enfoquedeontologicoylibertario}}] se presentan otros enfoques normativos consecuencialistas (igualdad de oportunidades) y no consecuencialistas que juzgan decisiones colectivas con criterios morales a priori (\authorfont{BUENO DE MESQUITA}, 2016). SEN (2016), YOUNG (1994), ROEMER (1996) y MOULIN (2003) presentan desarrollos axiomáticos y formalizados de estos enfoques y otros como medición de igualdad de oportunidades, derechos individuales y diferentes conceptos de justicia. 
+}
+
+Como hemos dicho, a lo largo de la siguiente exposición vamos a intentar arrojar algo de luz (o oscuridad) sobre los fundamentos teóricos e intrumentos que deben o pueden guiar la decisión del policy maker en su objetivo de maximizar el bienestar colectivo. 
+
+Ahora bien, si pretendemos ofrecer una teoría normativa que guíe al policy maker en su actuación de manera que maximice el bien común primero debemos entender cómo podemos valorarlo, si debemos o no, y en caso afirmativo, qué criterios utilizar para ello. Sin estos elementos, una Teoría de la Elección colectiva resulta simplemente imposible.
+
+\subsection{Economía: Fundamentos teóricos}
+Ahora bien, como economistas, intentaremos aterrizar el tema a nuestro campo de acción y, en consecuencia, consideraremos únicamente las diferentes vertientes filósoficas que presentan mayor adecuación práctica. Como esta exposición se correspondiente a la parte pertinente a la Economía del Bienestar, presentemos primero su definición:
+
+La economía del bienestar es una rama de estudio que intenta formular proposiciones que nos permitan afirmar que el bienestar social en una situación económica es mayor o menor que en otra. Nótese que, aunque los términos \textbf{mejor} y \textbf{peor} son explícitamente normativos, el \textbf{bienestar social} puede recibir una interpretación normativa o positiva. Es cierto que la mayoría de las personas tiende a considerar el bienestar social como un término normativo, pero no existe ninguna razón lógica por la cual no podamos adoptar una definición positiva. Por ejemplo:
+
+\eqblock{
+\begin{aligned}
+    &\text{Vector de Bienestar Individual}:&&W = (W_1, W_2, \ldots, W_I)\\[1em]
+    &\underset{\text{\scriptsize Puede considerarse más \textit{normativo}, pero es generalmente válido}}{\text{Función de Bienestar Social}}:&&W =f(W_1, W_2, \ldots, W_I)
+\end{aligned}
+}{Definición positiva del bienestar social: Forma vectorial y forma funcional. Economía política}
+
+Por un lado tenemos la definición vectorial del bienestar social. Aunque un vector se dice que es mayor que otro si y solo si algunos de sus elementos son mayores y ninguno es menor que los elementos correspondientes del otro vector, podemos considerar que sigue siendo un criterio positivo sin haber definido que hace mejor o peor la situación de bienestar individual.\footnote{El bienestar individual puede interpretarse como el bienestar personal, o más explícitamente, como la felicidad de una persona, donde la felicidad incluye tanto placer y dolor sensorial como deleite y sufrimiento espiritual.
+} Por otro lado tendríamos la definición funcional del bienestar social, donde existe un único valor de $W$ para cada conjunto de valores $W_i$ que, de nuevo, podemos considerar positiva siempre y cuando no definamos su forma funcional.
+
+Como ya hemos definido positivamente el Bienestar Social, podemos introducir algunas vertientes para llenar de contenido normativo dichas definiciones.
+
+\subsubsection{Utilitarismo: BENTHAM}
+Según criterio utilitarista, corriente filosófica originada en el s. XVII, las decisiones deberían buscar como objetivo generar el máximo bienestar para el conjunto de la sociedad. Por la siguiente definición, podemos expresar la forma funcional de la Función de Bienestar Social como:
+
+\eqblock{
+\begin{aligned}
+    W=f(W_1,\ldots,W_I)=\sum_{i=1}^IW_i
+\end{aligned}
+}{Definición normativa del Bienestar Social: Utilitarismo. Economía política}
+
+
+El utilitarismo requiere medir, agregar y comparar niveles de utilidad y felicidad individuales, aunque la teoría de la elección individual no incorpora ningún contenido epistemológico al concepto de utilidad, más que el de que una función de utilidad representa las preferencias de cada individuo sobre las alternativas.\footnote{En términos de formalización, el utilitarismo implicaría implícitamente que las preferencias de todos los agentes de la economía son cuasilineales y por tanto representables con funciones aditivamente separables en la renta, y los niveles de utilidad individuales directamente comparables.
+}
+
+
+Ya desde BENTHAM y MILL se considera que las preferencias son privadas y esto llevaría a ponderar en exceso una alternativa si ésta genera una gran felicidad a un individuo, o infravalorar el peso de un individuo en la sociedad si las alternativas le generasen escaso nivel de utilidad comparado con los demás agentes.\footnote{Más preocupante y relacionado es la cuestión de la existencia de monstruos que obtienen felicidad inflingiendo dolor a otros miembros de la sociedad.
+} Además, no permite incluir cuestiones morales que impliquen que problemas formalmente similares necesiten diferentes soluciones.\footnote{Considera los siguientes problema. Un ferroviario tiene que dirigir un cambio de vía para un tranvía. Si no cambia las agujas el tranvía chocará y morirán sus 5 ocupantes. Si cambia las agujas, el tranvía atropellará a un operario de mantenimiento que sé encuentra trabajando (pero los viajeros no se darán cuenta del problema). Un grupo de enfermos necesita diferentes órganos para transplante (2 riñones, 2 hígado, 1 corazón). El jefe de la unidad de transplantcs tiene contactos con el crimen organizado, y puede encargar un ataque terrorista aleatorio que genere un donante potencial para el hospital que podría salvar las vidas de los cinco pacientes. Si nos parece razonable desde un punto de vista utilitarista que el ferroviario active el cambio de vías. un enfoque consecuencialista extremo como el utilitarista no debería renunciar a la possibilidad de salvar la vida de 5 pacientes con un ataque terrorista aleatorio.
+}
+
+Por otro lado, las comparaciones intergeneracionales (criterios de equidad intergeneracional) resultan muy complejas: ¿Cómo valorar generaciones futuras con posible población variable?  Parece razonable descontar la utilidad de generaciones futuras como descontamos nuestra utilidad en el futuro, pero esto supondría un trato inequitativo al bienestar de otras personas. Pero si no descontamos la suma de utilidades tenderá a infinito. Es decir, el descuento del futuro sólo tiene una finalidad pragmática y ninguna justificación moral.
+
+
+El utilitarismo extremo puede llevar a propuestas claramente inequitativas y que reduzcan incentivos a cooperar. Por ejemplo en una economía en que algunos trabajadores son más productivos que otros, el utilitarismo implicaría que los más productivos trabajen más que los improductivos y alcancen un nivel de bienestar menor que los menos productivos. Cuando la información de productividad es privada, la implementación de políticas utilitaristas puede verse enfrentada a restricciones de incentivos considerables que analizaremos más adelante.\footnote{Por ejemplo, considera una sociedad con dos agentes 1, 2 que producen un bien $y$ con su trabajo $x_1$, $x_2$. Cada trabajador tiene 10 horas unidades disponibles de trabajo. El agente 1 obtiene una unidad del bien por cada unidad de trabajo que dedica, mientras que el agente 2 obtendría el doble. Si $x_i$ es el trabajo que dedica el trabajador $i$ y puede consumir $y_i$ unidades del bien, su utilidad sería $u_i=y_i(10-x_i)$. Por tanto. el programa utilitarista buscaría maximizar $u_1 + u_2$ eligiendo
+$(x_1 , y_1)$ y $(x_2,x_2)$ sujeto a que $y_1 + y_2 \leq x_1 + 2x_2$. Es inmediato comprobar que en el óptimo $(10 -x_1) = 4(10 - x_2)\; \text{y}\;, y_1= 2y_2$. Es decir, el agente menos productivo trabaja menos y obtiene un mejor reparto del bien obtenido.
+}
+
+
+
+
+
+
+A continuación, presentaremos como esta noción ha ido evolucionando a lo largo del tiempo, presentando en último lugar las bases y limitaciones de la primera aproximación Teórico-Análitica formal del Bienestar en un contexto general (no de equilibrio parcial): el criterio de Pareto.\footnote{Recuérdese que se trata de la primera formalización en términos globales y, además, sobre la base ordinal dela Utilidad. A diferencia de MARSHALL, que plantea un enfoque cardinal con el concepto de Excedente.
+} El utilitarismo es el ejemplo clásico de enfoque normativo consecuencialista y welfarista: (i) la bondad de un acto se juzga únicamente por sus consecuencias y no sobre el proceso por el que éstas se alcanzan; y, (ii) welfarista ya que las consecuencias consideradas son el nivel de bienestar o utilidad de los afectados por el acto.
+
+La motivación básica para el utilitarismo es que los mejores actos para la sociedad son aquellos que tienen a maximizar el nivel agregado de utilidad en la sociedad;\footnote{Nótese la ambigüedad que puede generar esta definición aparentemente transparente. Determinar el bienestar agregado de una sociedad como la suma de los niveles de utilidades o la media de estos niveles podrían generar conclusiones diferentes en entornos con población variable.
+} por tanto, en una situación en que cada agente en la sociedad obtiene un nivel de satisfacción $u_i$, indentificaríamos el bienestar social como $\sum_iu_i$.
+
+Como es evidente, resulta atractivo ya que considera a todos los individuos que forman la sociedad equitativamente, además de que facilita y simplifica la resolución de trade-offs ya que al comparar sólolos niveles de bienestar o utilidad, siempre permite obtener una respuesta. \footnote{HARSANYI nos ofrece una justificación menos pragmática y qué refleja porqué el utilitarismo podría entenderse como un método que los miembros de la sociedad voluntariamente y unánimemente aceptarían para determinar las reglas de formación del Estado.
+
+Imagina que un agente que se encuentra tras el velo de la ignorancia, de manera que no conoce ninguna de sus propias particularidades, si es listo o estúpido, alto o bajo, si ha nacido en una familia rica o tus padres son pobres, etc. no conoce ninguna de sus propias particularidades que caracterizan a cada individuo único en la sociedad. La situación del velo de la ignorancia tiene dos características fundamentales: 
+\begin{lnum}
+    \item Primero, la probabilidad de acabar con cada conjunto de características específicas es la misma. Esto implicaría que tras el velo de la ignorancia todos tendríamos los mismos intereses y estos no serían intereses particulares privados. La cuestión es que cada conjunto de posibles alternativas para la sociedad generarían diferentes niveles de bienestar para cada individuo de acuerdo con el conjunto de características específicas. 
+    \item Tras el velo de la ignorancia, si hay $m$ posibles situaciones que definen a un individuo en la sociedad, el agente consideraría que tendrías una probabilidad  $3/4$; de ser cada uno de los individuos que forman la sociedad, y para evaluar el resultado de cada alternativa considerarías la Utilidad Esperada que obtendría de cada alternativa, cuando cree que tiene una probabilidad de ser cada uno de los individuos que forman la sociedad. En esta situación, cualquier agente pereferiría la alternativa que genera mayor suma de utilidades para cada uno de los miembros de la sociedad.
+\end{lnum}
+El concepto velo de la ignorancia fue introducido por el filósofo John Rawls en su obra \textit{A Theory of Justice} (Rawls, 1971) y asociado estrictamente a éste en Filosofía Política. Sin embargo, en Economía es frecuente su empleo también para las aproximaciones funcionales del utilitarismo y del egalitarismo (doctrinas diferentes a las de Rawls). Ello es así porque la metáfora del velo habilita la introducción de incertidumbre y de la utilidad esperada, lo que, por ejemplo, permite a Harsanyi alcanzar el resultado de que sociedades aversas al riesgo casi extremo deberían ser utilitaristas. Siguiendo a Moulin (1988) y Bueno de Mesquita (2016) entre otros, aquí utilizamos el término rawlsiano con generalidad, lo que es ilustrativo para comprobar que ligeras modificaciones en los supuestos y axiomas iniciales conducen a conclusiones muy diferentes y por tanto la formalización es esencial.
+} Sin embargo, es útil identificar problemas y trade-offs inherentes al utilitarismo.
+
+
+\subsubsection{Egalitarismo: RAWLS}
+Por otro lado, tendríamos la vertiente egalitarista rawlsiana, en la que las decisiones deberían tener como objetivo mejorar el bienestar de aquel que esté en peor posición desde un punto de vista social. Por tanto, podemos expresar la forma funcional de la Función de Bienestar Social como:
+
+\eqblock{
+\begin{aligned}
+    W_0=f_0(W_1,\ldots,W_I)<W_1=f_1(W_1,\ldots,W_I)\iff \min_{W_0}(W_1,\ldots,W_I)<\min_{W_0}(W_1,\ldots,W_I)
+\end{aligned}
+}{Definición normativa del Bienestar Social: Egalitarismo (RAWLS). Economía política}
+
+
+\textbf{LLENAR CON CONCEPTOS DEL ANEXO}
+
+
+\subsubsection{Utiltarismo económico: PARETO}
+Por último y, precisamente, más importante en nuestro campo tendríamos la definición paretiana del bienestar colectivo. Iinicialmente propuesta por PARETO y su criterio de optimalidad y luego reformulada en forma de función por SAMUELSON y BERGSON. 
+
+Sabemos que, atendiendo al criterio de PARETO, una situación es mejor que otra si y solo si lo es para todos sus componentes o, como mínimo, para algun(os) manteniendo la situación inicial para todo el resto. Por tanto:
+
+\eqblock{
+\begin{aligned}
+    &\text{Vector paretiano}:&&W^0 = (W_1^0, W_2^0, \ldots, W_I^0)\le W^1\iff W_i^0\le W_i^1,\quad \forall i\\[1em]
+    &\text{SWF - Paretiana}:&&W^0\le W_1\iff\frac{\partial f}{\partial W_i}>0,\quad \forall i
+\end{aligned}
+}{Definición positiva del bienestar social: Forma vectorial y forma funcional. Economía política}
+
+Cabe notar que el concepto vectorial de bienestar social debe distinguirse cuidadosamente del concepto de una Función de Bienestar Social paretiana (SWF). Por un lado, el concepto vectorial del Bienestar Social está directamente relacionado con el criterio de optimalidad de PARETO que, como sabemos, exige que para considerar un aumento en el Bienestar Social, algunos individuos deben mejoran sin que ningún individuo empeore. Por otro lado, mientras que la SWF paretiana acepta este criterio y, en consecuencia, cualquier cambio que satisfaga el criterio de PARETO debe considerarse un buen cambio según una SWF paretiana; un cambio no necesita necesariamente satisfacer el criterio de PARETO para ser considerado bueno según la SWF. (Por ejemplo, un cambio puede empeorar ligeramente la situación de algunos individuos pero mejorar significativamente la de muchos otros, por lo que puede considerarse un buen cambio según una SWF paretiana.) Esto se debe a que, por definición, existe un único valor de $W$ para cada conjunto de valores $W_i$. Así, si tenemos una SWF paretiana específica y completamente definida, sabemos si el bienestar social en una situación alternativa es mayor o menor, incluso si algunos $W_i$ cambian en direcciones opuestas con respecto a la situación original. En cambio, con el concepto vectorial de bienestar social tal comparación no es posible. 
+
+El concepto vectorial de bienestar social es, por supuesto, de interés limitado, debido a que evita las comparaciones interpersonales de bienestar o utilidad. Por ello, lo que generalmente se acepta es una función de bienestar social paretiana vaga y no especificada, en la forma de la ecuación anterior, pero con la forma exacta de $f$ desconocida. En este sentido, el concepto vectorial de bienestar social captura el contenido mínimo de este acuerdo.\footnote{Por ejemplo, un análisis que trate solo las condiciones necesarias para la optimalidad de Pareto puede basarse únicamente en el concepto vectorial de bienestar social. Entonces podemos decir que el bienestar social vectorial no está maximizado a menos que se cumplan ciertas condiciones, sin necesidad de basar el análisis en la existencia de una función de bienestar social general, especificada o no, paretiana o de otro tipo.
+}
+
+La mayoría de las personas acepta el criterio de Pareto como una condición suficiente, pero no necesaria, para un aumento del bienestar social. Sin embargo, es difícil lograr que las personas se pongan de acuerdo sobre una función de bienestar social paretiana específica o que proporcionen la condición necesaria y suficiente para un aumento del bienestar social. 
+
+
+\subsection{Características: Controversias principales}
+Ahora que conocemos tres proyecciones básicas de la filosofía política sobre la economía, podemos analizar más en profundidad los juicios de valor que subyacen en cada una de estas aproximaciones para comprender mejor tanto a lo que se renuncia en cada formulación, como también algunas de las controversias que aún a día de hoy sacuden la ciencia económica y que trataremos al final.
+
+\subsubsection{Intercomparabilidad: ¿se pueden comparar situaciones interpersonales?}
+La primera controversia que salta a la vista subyace en los principios que rigen las diferentes concepciones del bienestar: la comparación interpersonal del bienestar o de la utilidad.
+
+Dado que estos índices de bienestar o utilidad individuales deben sumarse, debemos poder encontrar una unidad común de medida. En otras palabras, las funciones de utilidad deben ser comparables en unidades. Volveremos a este problema más adelante. Por el momento basta señalar que, aunque el problema de la comparabilidad interpersonal de la utilidad es complicado, no es insoluble en principio.
+
+Es concebible que, quizá dentro de varios cientos (o mil) años, la neurología haya avanzado hasta el punto en que el nivel de felicidad pueda correlacionarse con precisión con alguna reacción cerebral que pueda medirse mediante un eudaimonómetro. En ese caso, la definición de bienestar social en la ecuación sería una definición objetiva, aunque los objetos medidos sean sentimientos subjetivos de los individuos. Decidir si un plato es delicioso es subjetivo, pero el hecho de que una persona concreta disfrute de ese plato es objetivo.
+
+Sin embargo, antes de que encontremos un aparato de medida perfecto, podemos discrepar ampliamente sobre la medición de $W_i$ o incluso de $U_i$. Pero si adoptamos una definición objetiva de bienestar individual, felicidad o utilidad, tales desacuerdos constituyen diferencias en juicios subjetivos sobre hechos, no diferencias en juicios de valor básicos.
+
+
+El concepto vectorial de bienestar social es, por supuesto, de interés limitado, debido a que evita las comparaciones interpersonales de bienestar o utilidad. La mayoría de las personas acepta el criterio de Pareto como una condición suficiente, pero no necesaria, para un aumento del bienestar social. Sin embargo, es difícil lograr que las personas se pongan de acuerdo sobre una función de bienestar social paretiana específica o que proporcionen la condición necesaria y suficiente para un aumento del bienestar social.
+
+\subsubsection{Flexibilidad: ¿qué objetivo persguimos?}
+Por otro lado, la cuestión de si debemos perseguir o maximizar el bienestar social requiere en primer lugar definir qué objetivo estamos persiguiendo. Una forma de evitar esta dificultad es suponer que los individuos son los mejores jueces de su propio bienestar y que lo maximizan. No obstante, esto implica que resulta prácticamente imposible encontrar un objetivo claro y definido que, con seguridad, garantice una mejor en términos de bienestar.
+
+Frente a este caballo de troya en el núcleo teórico de la Economía del Bienestar, lo que los economistas de esta rama se ven forzados a hacer es utilizar un concepto de bienestar social que crean que es el objetivo correcto, el que la mayoría de las personas o el gobierno consideren adecuado, o algún compromiso entre ambos. Por ello, lo que generalmente se acepta es una función de bienestar social paretiana vaga y no especificada, en la forma de la ecuación anterior, pero con la forma exacta de $f$ desconocida. En este sentido, el concepto vectorial de bienestar social captura el “contenido mínimo” de este acuerdo. Por ejemplo, un análisis que trate solo las condiciones necesarias para la optimalidad de Pareto puede basarse únicamente en el concepto vectorial de bienestar social. Entonces podemos decir que el bienestar social vectorial no está maximizado a menos que se cumplan ciertas condiciones, sin necesidad de basar el análisis en la existencia de una función de bienestar social general, especificada o no, paretiana o de otro tipo.
+
+Esto no es muy diferente de lo que ocurre en otras ramas del conocimiento. Por ejemplo, uno podría investigar formas de preservar el “mo-xu-you”. Esta línea de investigación podría resultar muy útil si el mo-xu-you se volviera muy escaso en relación con la demanda. Incluso si el mo-xu-you sigue siendo un bien libre, su estudio puede no ser muy útil, pero aun así forma parte de nuestro conocimiento científico.
+
+\subsubsection{Mesurabilidad: ¿qué unidad de referencia utilizamos?}
+Por último, otra característica fundamental que hemos sorteado a conciencia es ¿cómo puede medirse la felicidad individual (neta)? La forma más habitual de sortear esta dificultad es tomar sus preferencias ($\succsim_i$) como indicador de su bienestar, de modo que siempre que una persona prefiera $x$ a $y$ inferimos que su bienestar es mayor en $x$ que en $y$.  es una cuestión de valores; pero el análisis de conceptos definidos objetivamente puede realizarse con o sin acuerdo sobre esa cuestión de valores.
+
+Sin embargo, varios autores han señalado razones por las cuales esto no siempre es un buen indicador:
+\begin{lnum}
+    \item \textbf{Ignorancia y falta de previsión}. Primero, las preferencias pueden diferir del bienestar debido a la ignorancia y a una previsión imperfecta. Aunque los individuos puedan preferir $x$ a $y$ creyendo que estarán mejor en $x$, puede resultar finalmente que ocurra lo contrario. Esta es la cuestión de la estimación ex ante frente al bienestar ex post: mientras que el concepto ex ante es relevante para explicar el comportamiento, el ex post refleja el bienestar real. Por ello HARSANYI (1997) subraya que, para fines normativos, deberían utilizarse preferencias informadas en lugar de preferencias reales;
+    \item \textbf{Consideración por el bienestar de otros}. En segundo lugar, las preferencias de los individuos pueden depender no solo de su propio bienestar sino también del bienestar de otros. Así, es posible que una persona prefiera $x$ a $y$ y, sin embargo, sea menos feliz en x porque cree que otras personas son más felices en $x$. Es cierto que la creencia de que otros son felices puede hacerlos sentir felices también, pero esto puede no ser suficiente para compensar la pérdida personal que sufren al pasar de $y$ a $x$;\footnote{Por ejemplo, los individuos pueden votar por el partido $x$ aun sabiendo que estarían mejor si gobernara el partido $y$. Lo hacen porque creen que la mayoría de las personas estará mucho mejor con $x$. Esto puede hacerlos sentir mejor (altruismo afectivo) y constituye un tipo de efecto externo. Aunque este beneficio externo puede no ser lo suficientemente grande como para compensar, en términos de felicidad subjetiva, su pérdida personal (por ejemplo, en ingresos) bajo $x$, pueden votar por $x$ debido a su preocupación moral por la mayoría (altruismo no afectivo). 
+    
+    Un ejemplo aún más dramático: imaginemos un grupo de individuos que esperan llevar una vida muy feliz. Si su país es invadido, pueden ofrecerse voluntarios para una misión que con certeza causará su muerte. La perspectiva de vivir como ciudadanos de un país conquistado (especialmente sumada al sentimiento de culpa por no haberse ofrecido voluntarios) puede no ser muy atractiva, pero aun así podrían seguir siendo razonablemente felices viviendo esa vida. Sin embargo, eligen morir por el bien de sus compatriotas. En este caso no están maximizando su propio bienestar.
+    } y,
+    \item \textbf{Preferencias irracionales}. En tercer lugar, los individuos pueden tener preferencias irracionales. Se define que la preferencia de un individuo es irracional si prefiere $x$ a $y$ a pesar de que su bienestar es mayor en $y$ que en $x$, y su preferencia no está afectada por consideraciones sobre el bienestar de otros individuos (cualquier ser sintiente puede contarse como individuo aquí), ni por ignorancia ni por previsión imperfecta. Esta definición de irracionalidad está construida de modo que los tres factores siguiente constituyan causas exhaustivas de divergencia entre preferencia y bienestar: (i) descuento excesivo del futuro;\footnote{Primero, existe la tendencia de muchas personas a descontar el futuro o incluso a ignorarlo por completo. Esta tendencia ha sido ampliamente señalada, incluso por economistas. Por ejemplo, PIGOU (1929) la llamó facultad telescópica defectuosa, RAMSEY (1928) la llamó debilidad de la imaginación respecto al futuro, y HARROD (1948) la consideró la victoria de la pasión sobre la razón.
+    
+    Descontar el consumo futuro, los ingresos futuros u otros valores monetarios puede ser racional, ya que un dólar hoy puede transformarse en más de un dólar en el futuro. Descontar la utilidad futura también puede ser racional si la realización de esa utilidad es incierta (para personas sanas esta incertidumbre suele ser muy pequeña). Descontar el futuro por razones adicionales probablemente es irracional.
+    } (ii) tentaciones y pulsiones biológicas;\footnote{La segunda causa es la fuerte tentación del placer (especialmente placer presente frente a costes futuros) y las poderosas pulsiones biológicas.
+    
+    Tras la evolución de especies flexibles (aquellas cuyo comportamiento no está determinado solo por respuestas automáticas sino también por elecciones) la selección natural aseguró que las decisiones fueran consistentes con la aptitud biológica mediante un sistema de recompensas y castigos. Así, comer cuando se tiene hambre o aparearse con miembros fértiles del sexo opuesto se recompensa con placer, mientras que el daño corporal se castiga con dolor.
+    
+    Se ha demostrado que \textit{querer} (wanting, preferencia) y \textit{gustar} (liking, bienestar) están mediados por sistemas neuronales diferentes en el cerebro. Es decir, los individuos pueden preferir algo sin que realmente les guste, o preferir algo con mayor intensidad de la que justificaría el placer que les produce, y viceversa. Por ejemplo, la sensibilización neuronal del sistema dopaminérgico por drogas adictivas puede generar un deseo intenso que va mucho más allá del placer real que producen las drogas o de la necesidad de evitar síntomas de abstinencia (Berridge, 1999).
+    } y, (iii) los individuos pueden aferrarse rígidamente a hábitos, costumbres o principios, incluso sabiendo que son perjudiciales para su bienestar presente o futuro y para el de otros, considerando todos los efectos y repercusiones.\footnote{Las costumbres, reglas y principios morales tienen una base racional, ya que proporcionan guías simples de comportamiento que generalmente favorecen el bienestar social. Sería demasiado costoso en tiempo y esfuerzo que los individuos evaluaran cada decisión calculando todas las ganancias y pérdidas en términos de bienestar social o personal. Por ello, tienden a seguir rutinas y reglas sin reconsiderarlas constantemente. Si esto ocasionalmente conduce a decisiones inconsistentes con su bienestar o con el de otros, puede verse como un coste de seguir reglas generalmente beneficiosas.
+    
+    Si cambian las circunstancias, la adhesión estricta a ciertas reglas puede producir pérdidas persistentes de bienestar. Si los individuos continúan siguiéndolas sin saber que ya no son beneficiosas, la divergencia entre preferencia y bienestar se debe a ignorancia. Si lo saben y aun así continúan, entonces actúan irracionalmente.}
+\end{lnum}
+
+La cuestión que surge entonces es: para fines normativos, qué preferencias deberíamos tomar como referencia ¿Debemos usar el bienestar o las preferencias/comportamiento observados? Claramente deberíamos usar el bienestar en lugar del comportamiento dictado por la aptitud biológica. Sin embargo, para la especie humana en su conjunto la población ciertamente no está disminuyendo, y cualquier función de bienestar social a largo plazo que tenga en cuenta el bienestar de las generaciones futuras debería reflejarlo.
+
+
+
+
+
+\clearpage
+\section{Función de Bienestar Social: Agregación de preferencias}
+\puntosclave{
+    El objetivo de esta sección es plantear un enfoque normativo endógeno: ¿se pueden construir preferencias sociales -objetivos del decisor público- agregando preferencias de los individuos?
+    
+    Al contrario que para las aproximaciones utilitarista y egalitarista el enfoque es puramente ordinal: no se emplean en ningún momento la informa!,:ión cardinal referentes a los niveles de utilidad de los miembros de la sociedad.
+    
+    Aproximación axiomática: se plantean propiedades (axiomas) que deberían cumplir métodos de agregación para considerar que el resultado constituya unas preferencias sociales razonables y se comprueba que implicaciones tienen estos axiomas. Es decir, qué métodos de agregación cumplen las propiedades deseables.
+    
+    Cuando sólo existen dos alternativas es posible encontrar métodos de agregación satisfactorios. Teorema de May: la regla de mayoría es el único método de agregación que trata simétricamente a individuos, alternativas y para el que aumentar el apoyo de una alternativa implica que "aumenta" la preferencia social por esta alternativa.
+    
+    Cuando existen más de dos alternativas el resultado es negativo. Teorema de Arrow: la única manera de agregar las preferencias de los individuos en unas preferencias sociales con propiedades similares a las preferencias individuales (transitivas, basadas en preferencias sobre pares de alternativas y que respondan paretianamente) es determinar la preferencia social a partir de las preferencias de un único individuo.
+    
+    El Teorema de Arrow no supone una demostración de la imposibilidad de establecer sistemas democráticos ni justifica los sistemas autoritarios. Simplemente implica que la aproximación puramente ordinal para la formación de preferencias sociales es sólo válida en dominios restringidos (problemas específicos). Alternativamente, el Teorema de Arrow la utilización de información cardinal se hace necesaria en proceso de decisión social
+}
+
+\subsection{Función de Bienestar Social}
+
+
+
+\subsubsection{Social Welfare Function: BERGSON y SAMUELSON}
+Empecemos presentando los desarrollos relativos a la FBS, formulada inicialmente por BERGSON (1938) y desarrollada extensamente por SAMUELSON (1947). Como hemos dicho, esta aproximación pretende sortear las limitaciones existentes en la concepción paretiene, principalmente: (i) la imposibilidad de comparar óptimos entre sí; y, (ii) la introducción explícita de criterios de equidad y distribución.\footnote{No trataremos la alternativa neoparetianista. Para conocer acerca del Neoparetianisnmo [\authorfont{Ver Tema 3.A.22}]
+} 
+
+Para comprender el trabajo de estos autores, debemos entender los supuestos subyacentes:
+\begin{lnum}
+    \item \textbf{Utilidad cardinal}. Los autores rompen con la concepción ordinal de la utilidad y optarán por un enfoque cardinalista que permite comparar entre diferentes niveles de utilidad, tanto a nivel agregado como a nivel interpersonal.;
+    \item \textbf{Individualismo metodológico}. La sociedad no es más que la colectividad de un conjunto de individuos. Estos agentes que componen la sociedad tendrán un determinado grado de satisfacción cuando la economía se sitúa o alcanza unas cestas de consumo determinadas;
+    \item \textbf{Racionalidad}. Los agentes económicos eligen de manera sistemática y coherente entre las alternativas disponibles, utilizando la información que poseen y actuando conforme a un criterio estable de valoración. Las decisiones no se consideran arbitrarias, sino el resultado de un proceso de elección;
+    \item \textbf{Escasez o economía basada en el intercambio}. Los agentes económicos actúan en un entorno en el que los recursos disponibles son limitados en relación con los fines que pueden perseguirse: no es posible satisfacer simultáneamente todos los objetivos deseables. Desde este punto de vista, la escasez no es un hecho empírico contingente, sino una condición estructural del análisis económico ya que, sin escasez no habría costes de oportunidad ni decisiones propiamente económicas. La escasez convierte la elección en el verdadero problema económico, dando a la Teoría Económica su razón última de existir.
+\end{lnum}
+
+Como la sociedad simplemente agrupa individuos, es de esperar que el bienestar social dependa del bienestar de cada uno de los agentes que la componen. Por tanto, de igual manera que los agentes disponen de una función de utilidad que refleja la satisfacción al consumir una determinada cesta, la sociedad también dispondrá de tal función, que será la Función de Bienestar Social (de ahora en adelante, FBS). 
+
+Por tanto, si suponemos una economía de dos agentes y un planificador público con preferencias racionales sobre el bienestar social (ponderación distributiva entre los diferentes agentes), entonces el problema del planificador se podría presentar como:
+ 
+\eqblock{
+ \begin{aligned}
+     \boxed{\begin{aligned}
+        &\max_{W}{W=f(U_1,U_2)}\\[0.5em]
+        &\text{s.a.} \quad (U_A,U_B)\in CPU
+     \end{aligned}}
+ \end{aligned}
+}{Problema de optimización del planificador. Función de Bienestar Social}
+
+Gráficamente, podemos representar este problema del planificador como:
+
+\imagenfit{FBS_Optimo.png}{Óptimo Social a través de la Función de Bienestar Social}{Apuntes Victor García Begué. Tema 3.A.24}
+
+Ahora bien, la forma de la FBS lleva implícita la realización de juicios de valor: (i) utilidad cardinal; y, (ii) aversión por la desigualdad. 
+
+\subsubsection{Agregador de Preferencias: ARROW}
+Lo primero colisionaba radicalmente con todo el establishment teórico desde inicios del siglo XX, por lo que ARROW desarrolló un concepto de FBS distinto que sorteara esta reticencia. 
+
+Para ARROW, la manera de conjugar las diferentes opiniones de los miembros de la sociedad con un acuerdo colectivo sobre el interés público se puede alcanzar a través de un proceso de agregación que a partir de las preferencias de los individuos permita definir el interés público como el resultado de ese método de agregación. Es decir, habrá que recurrir al Dominio de la Función Agregadora para determinar las preferencias colectivas, puesto que la Función de Utilidad, por ser ordinal, no nos permite agregar su Recorrido ni comparar éste entre agentes.
+
+Esto dió lugar a lo que se concoe como una FBS arroviana: \textbf{toda regla de decisión colectiva que permita agregar las preferencias individuales de los agentes sobre un conjunto de elección determinado, a fin de obtener una jerarquización de las alternativas desde una perspectiva de preferencias sociales}. La idea es que al igual que asumimos que los agentes de manera individual aplican sus preferencias sobre ciertos conjuntos de elección, la FBS tratará de agregar la aplicación de dichas preferencias individuales para obtener una jerarquización de las alternativas según la preferencia de la colectividad.
+
+La cuestión entonces es simple: ¿cómo debemos ordenar estas preferencias y qué condiciones debe cumplir dicha ordenación? 
+
+Veamos la contribución fundamental de ARROW. 
+
+\paragraph{Estado Social: Condicionales Racionales}
+ARROW define un estado social como: \textbf{una descripción completa de la cantidad de cada tipo de bien en manos de cada individuo, la cantidad de trabajo que cada individuo debe realizar, la cantidad de cada recurso productivo invertido en cada tipo de actividad productiva, y las cantidades de distintos tipos de actividades colectivas como servicios municipales, diplomacia y su continuación por otros medios, y la erección de estatuas a hombres famosos}. Como se puede apreciar, dicha definición incluye todos los aspectos que puedan afectar a la preferencia de cualquier individuo. Cada individuo de la comunidad tiene un ordenamiento definido de todos los estados sociales concebibles en términos de su deseabilidad para él o ella. Además, \textbf{el individuo puede ordenar todos los estados sociales según cualesquiera criterios que considere relevantes} (ARROW, 1950), es decir, cada individuo es juez supremo y único conocedor de su propio bienestar y sus criterios valorativos.
+
+Ahora bien, tanto las preferencias individuales como las sociales deben satisfacer dos condiciones necesarias para constituir un ordenamiento racional (axiomas bastante débiles):
+
+\eqblock{
+\begin{aligned}
+    &\text{Sea una FBS}\qquad \boxed{F:(R_1,\ldots,R_I)\to R}\quad
+    \text{\scriptsize$\text{donde,}
+    \left\{\begin{aligned}
+        &(R_1,\ldots,R_I)&&\equiv\text{Perfil de preferencias indiduales}\\
+        &R&&\equiv\text{Perfil de preferencias resultantes}
+    \end{aligned}\right.$}\\[2em]
+    &\text{Tal que,}\;
+    \underset{\substack{\\[0.5em]\\\text{donde},\;\;\;\succsim_R \equiv\;\;\text{Indistinto para individuales/resultante}}}{
+    \left\{\begin{aligned}
+        &\text{Completitud}.  &&\boxed{\forall x, y\in X: \quad x\succsim_R y\;\;\; \vee\;\;\; y\succsim_R x}\\[1em]
+        &\text{Trasitividad}. &&\boxed{\forall x,y,z\in X,\;\;\text{si}\;\;x\succsim_R y\;\;\wedge\;\;y\succsim_R z\iff x\succsim_R z}
+    \end{aligned}\right.}\\[2em]
+    &\text{Y,}\quad \underset{\text{\scriptsize posibles cambios dado el \textit{estado} social}}{\forall (R_1,\ldots,R_I)\in\mathbb R^S}\;\;\text{tenemos la misma $F$}\Longrightarrow\text{Consistencia entre perfiles}
+\end{aligned}
+}{Agregador Social de Preferencias: Axiomas de Racionalidad. Funciones de Bienestar Social: ARROW}
+
+Debe observarse que, aunque ARROW expone su teorema en términos de estados sociales, su argumento es aplicable de forma general a la elección entre cualquier conjunto de alternativas, ya sea el conjunto de estados sociales al que se enfrenta una sociedad, el número de candidatos que deben ser elegidos o el número de acciones alternativas que un comité debe decidir. Los dos requisitos cruciales son que esté implicado más de un individuo y que el ordenamiento colectivo esté basado en los ordenamientos individuales de las alternativas.
+
+\paragraph{Constitución: Condiciones naturales}
+Por otro lado, ARROW define a continuación una constitución como: \textbf{un proceso o regla que, para cada conjunto de ordenamientos individuales $R_1,\ldots,R_I$ para estados sociales alternativos (un ordenamiento para cada individuo), establece un ordenamiento social correspondiente de estados sociales alternativos $R$} (ARROW, 1951).
+
+Y, sobre esta base, ARROW exige que la constitución/regla satisfaga las siguientes cinco \textbf{condiciones naturales}:
+\begin{lnum}
+    \item \textbf{Dominio Universal}. El dominio del agregador sociál de preferencias es $\mathbb R^I$. En esencia, el agregador debe permitir que todos los ordenamientos lógicamente posibles sean admisibles;
+    \item \textbf{Criterio de PARETO débil} (Unanimidad). Si todos los individuos prefieren una alternativa a otra, entonces la sociedad también prefiere la primera a la segunda;\footnote{Démonos cuenta que es Pareto optimalidad débil porque hace referencia a que todos prefieren $x$, no valdría que todos prefiriesen $x$ menos que uno que esté indiferente entre $x$ e $y$ como alternativas más preferidas. Criterio de PARETO y Dominio Universal implica que cuando todos los agentes están de acuerdo en como ordenar dos posibles alternativas, las preferencias sociales deben compartir esa misma manera de ordenar ese par de alternativas.
+    }
+    \item \textbf{Independencia de alternativas irrelevantes (IIA)}. Este concepto es especialmente relevante y difícil de comprender. SEN (1970a) hace la observación de que hay dos aspectos diferentes en la IIA: (i) el primero es el aspecto de \textbf{irrelevancia} o \textbf{independencia}, que se refiere al hecho de que el ordenamiento social de cualquier par de alternativas debe depender únicamente de las preferencias individuales para esas alternativas y no de preferencias individuales respecto de otras alternativas (lo que en dicha comparación por pares serían \textit{alternativas irrelevantes}); (ii) el segundo es el aspecto de ordenamiento, que exige que el ordenamiento social de cualquier par de alternativas esté basado únicamente en los ordenamientos individuales de esas alternativas y no en nada más, como la intensidad de las preferencias o utilidades cardinales.\footnote{
+    ARROW (1951) expresamente establece: \textit{La elección hecha por la sociedad a partir de un entorno dado depende únicamente de los ordenamientos de los individuos entre las alternativas en ese entorno. Dicho de otra manera, si consideramos dos conjuntos de ordenamientos individuales tales que, para cada individuo, su ordenamiento de esas alternativas particulares en un entorno dado es el mismo en cada caso, entonces exigimos que la elección hecha por la sociedad a partir de ese entorno sea la misma cuando los valores individuales estén dados por el primer conjunto de ordenamientos que cuando estén dados por el segundo}. 
+
+    Aunque a menudo se utiliza un ejemplo individual de cómo se proyecta este supuesto, puede resultar muy confuso dado que no es perfectamente análogo a la exigencia planteada por ARROW en lo que respecta al agregados social de preferencias. De hecho, la IIA se formula frecuentemente con referencia a un cambio en las preferencias individuales. Pero, dado que el ejemplo utilizado por el propio ARROW para ilustrar el espíritu de la IIA se refiere a un cambio en el conjunto de alternativas, con frecuencia se ha entendido que también supone este segundo significado. Si prescindimos del aspecto de ordenamiento, ambos significados de la IIA son simplemente una propiedad de independencia extremadamente razonable.
+    } Ambos aspectos de la IIA son razonables si nuestro conocimiento se limita a ordenamientos o preferencias ordinales de los individuos. Si se conocen intensidades relativas de preferencias o utilidades cardinales comparables interpersonalmente, entonces el aspecto de ordenamiento de la IIA no tiene por qué aceptarse; y,
+    \item \textbf{No dictadura}. La constitución no debe ser dictatorial. Sensu contrario, la constitución es dictatorial si existe un individuo tal que, si él prefiere una alternativa sobre otra, entonces la sociedad también la prefiere. Debemos observar que es en realidad muy débil, no incluye necesariamente a figuras como Stalin o Hitler. Si permitiéramos la dictadura, podría establecerse fácilmente una constitución/regla que exigiera que el ordenamiento social fuera el mismo que el ordenamiento del dictador.
+\end{lnum}
+
+Hasta el momento todas las propiedades que hemos propuesto son razonables.\footnote{Existen agregadores sociales de preferencias razonables que no verifican alguna de las propuestas. Además es fácil encontrar agregadores sociales de preferencias, poco interesantes que verifican todos los axiomas que hemos presentado. Simplemente podríamos pensar en una regla que sólo tiene en cuenta las preferencias de un agente para determinar la preferencia social, es decir un agente que define las preferencias sociales.
+}
+
+\textcolor{red}{\textbf{OJO}} ARROW aquí establece lo que podríamos llamar \textit{condiciones deseables para una constitución/regla capaz de reflejar las preferencias individuales como preferencias colectivas}. Es muy importante esto. No se está tratando de decir \textit{estas son las condiciones aximoáticas que deben cumplir las preferencias}. No, lo que se está definiendo son las condiciones que debe cumplir el mecanismo que agregue las preferencias individuales. Además, con independencia de las condiciones previamente establecidad. Podríamos decir que se trata de dos \textit{bloques separados} que convergen en el Teorema de la Imposibilidad
+
+\subsection{Implicaciones de Política Económica: Teorema de la Imposibilidad de ARROW}
+No obstante, a raíz de esta definición, ARROW formula su gran aportación: el Teorema de Imposibilidad, que establece que cualquier sociedad finita con al menos dos agentes que considera un conjunto de al menos tres alternativas $X$,  bajo una relación de preferencias sociales racional, no es posible construir una FBS arroviana que cumpla: (i) axiomas deseables/racionales; y, (ii) condiciones naturales (liberales).\footnote{Para ver la prueba de esta Teorema [\authorfont{Ver Anexo \ref{anx:teorema_imposibilidad}}]}
+
+Es evidente que el teorema de imposibilidad de ARROW tiene implicaciones de gran alcance ya que demuestra que no podemos tener una regla razonable para derivar una función de bienestar social (SWF) o un ordenamiento social a partir de las preferencias ordinales de los individuos (la existencia de una SWF presupone un ordenamiento social). Por eso, a partir de su formulación una muchos autores han tratado de explorar vías de escape.
+
+\subsubsection{Crítica de SAMUELSON y LITTLE: Inconsistencia entre perfiles}
+Como es normal, los primeros en criticar esta aportación fueron algunos de los padres de la Economía del Bienestar, especialmente LITTLE (1952) y SAMUELSON (1967) (desarrollo de la SWF criticada por ARROW). Su crítica, no obstante, consistió en rechazar el teorema de ARROW como irrelevante para la Economía del Bienestar. 
+
+Los autores se preguntaron ¿por qué tenemos que usar la misma regla de agregación para todos los perfiles de preferencias? Es cierto que las preferencias individuales pueden cambiar, pero para cada nuevo conjunto de ordenamientos individuales habría una nueva SWF. 
+
+Si prestamos atención al Teorema, el resultado de imposibilidad de ARROW solo se aplica si la regla utilizada para derivar diferentes SWF (por ejemplo, en términos dinámicos) a partir del nuevo conjunto de preferencias individuales es siempre la misma. Por tanto, si no exigimos esta consistencia entre perfiles (es decir, usar la misma regla para distintos conjuntos de preferencias) podemos liberarnos de la paradoja de ARROW.
+
+\paragraph{Limitaciones: Endurecimiento del Teorema (NG y KEMP, 1976)}
+Sin embargo, este argumento para evitar el resultado de imposibilidad no resulta convincente, porque implica algo muy extraño: \textbf{la regla social cambia dependiendo de las preferencias observadas} ($t_1\Longrightarrow F_1\equiv$ regla de mayoría; $t_2\Longrightarrow F_2\equiv$ dictadura; etc. $\Longrightarrow$ No hay una constitución fija.)
+
+A medida que cambian las preferencias individuales sobre los estados sociales o alternativas, es razonable suponer que también cambiará el orden social o la SWF. Pero ¿por qué debería cambiar también la regla utilizada para derivar ese orden social? Si las preferencias cambian, es razonable que cambie el resultado social, pero no la regla que lo determina.
+
+No obstante, incluso ignorando el requisito de consistencia entre perfiles, puede demostrarse que no existe una regla razonable para derivar un orden social basándose solo en ordenamientos individuales. Incluso si trabajamos con un conjunto fijo de preferencias individuales, seguimos obteniendo un resultado de imposibilidad.\footnote{Para una demostración, [\authorfont{Ver Anexo \ref{anx:imposibilidad_ng}}]
+} Brevemente, si consideramos: (i) diversidad moderada de preferencias; (ii) principio de PARETO fuerte; y, (iii) anonimato y ordenamiento, solamente. Entonces, dada la diversidad moderada de preferencias, no existe un orden social que satisfafa simultáneamente el principio de PARETO fuerte y el anominato más el uso exclusivo de ordenamientos. Por tanto, no podemos construir un orden social razonable basado únicamente en preferencias ordinales. Por ello, el intento de LITTLE y SAMUELSON de escapar de la paradoja de Arrow conduce a un callejón sin salida. De hecho, como veremos más adelante, esto funciona únicamente si consideramos que las utilidades son cardinales y comparables interpersonalmente, pero no si se insiste en que las utilidades son solo ordinales, donde aparece el núcleo del resultado de imposibilidad.
+
+Por tanto, dado que el Teorea es válido, las soluciones propuestas a la paradoja deben consistir o bien en relajar el requisito de racionalidad (especialmente la racionalidad social), o bien en relajar algunas de las condiciones de ARROW, en particular IIA (Independencia de Alternativas Irrelevantes) y/o los Axiomas Liberales. 
+
+\subsubsection{Axiomas liberales: Universalidad y Regla Dictatorial}
+Centremonos en primer lugar en explorar el relajamiento axiomática de las condiciones más propias del campo político-social, conceptos o axiomas puramente liberales: (i) dominio universal, y (ii) ausencia de dictadores.
+
+\paragraph{Dominio Universal: MAY (1952) y BLACK (1948)}
+¿Qué pasaría si nuestro Agregador Social de Preferencias no está obligado a representar todas las preferencias individuales de la sociedad? Aunque esto será posterioremente rescatado por la Public Choice Theory o Teoría de la Elección Social (que vemos más adelante), algunas aportaciones teóricas en el campo de la agregación de preferencias son especialmente interesantes. En particular, las propuestas por MAY y BLACK:
+\begin{lnum}
+    \item \textbf{Mayoría entre pares}. MAY propone que una posible vía que permite evitar la consecuencia indeseada de intransitividad de las preferencias sociales podría ser simplemente eliminar de la votación aquellas alternativas que ya han sido consideradas. Sin embargo, una consecuencia inmediata de esta situación es que el resultado final depende del orden de votación de las alternativas, dando lugar al problema de \textbf{manipulación de la agenda}.\footnote{Véase [\authorfont{Ver Anexo \ref{anx:reglamayoria}}]
+    
+    Un problema del proceso de toma de decisiones sociales a partir de las preferencias individuales, es que las preferencias de los agentes no son información pública, si no privada de los agentes y debe ser solícitada para su uso público. Pero si los agentes tienen incentivos a revelar preferencias falsas, la sociedad a través de la FBS utilizará información incorrecta y tomará la decisión que sería óptima con unos datos que no son los que reflejan las verdaderas preferencias de la sociedad. Por tanto, si los agentes no presentan sus verdaderas preferencias, el resultado de la decisión social puede estar muy lejos del que sería considerado socialmente óptimo. Por eso, una propiedad deseable sería la de no manipulabilidad, es decir, que el método de selección no propocione incentivos a ningún agente a actuar estratégicamente en el sentido de presentar preferencias erróneas, independientemente de cuáles sean las preferencias de los demás agentes.
+    }; y,
+    \item \textbf{Preferencias unimodales}. Otra opción sería la prupuesta por BLACK (1948), justo antes de la publicación del artículo de Arrow (1950), donde muestra que si las preferencias de todos los individuos son unimodales (single-peaked), entonces las decisiones de grupo basadas en la regla de la mayoría son transitivas, pero a costa de violar la condición de dominio universal.\footnote{
+    Sabemos que existen innumerables versiones sobre el Teorema de Imposibilidad de ARROW, pero en este caso concreto resulta más conveniente pensar en lo que se denomina Triple Libre. Esto es que, entre todas las alternativas consideradas debe haber al menos tres alternativas para las cuales todos los ordenamientos individuales lógicamente posibles de esas tres alternativas sean admisibles.
+    
+    Si los ordenamientos de todos los individuos sobre todas las alternativas tuvieran que ser exactamente iguales y no se permitiera ningún otro patrón, sería completamente trivial introducir una cláusula constitucional que estableciera que el orden social debe coincidir con ese ordenamiento individual común. Sin embargo, si permitimos que los individuos ordenen libremente las alternativas, incluso aunque esta libertad se conceda solo para tres alternativas, entonces nos enfrentamos al problema de la elección social. Por tanto, en realidad Dominio Universal es la generalización total de esta primitiva condición: que al menos tres se puedan ordenar libremente.
+
+    No obstante, las preferencias unimodales son bastante probables para algunas alternativas, por ejemplo el tamaño de una magnitud numérica como el precio de un producto, el nivel de un impuesto, etc. Si los individuos prefieren £10 a £5 (por ejemplo, para un impuesto por unidad de contaminación), es poco probable que prefieran £5 a £8. No obstante, muchos problemas de elección social involucran más de una dimensión, y las preferencias individuales pueden ser tan complejas y diversas que ningún ordenamiento de alternativas produciría una curva unimodal para todos los individuos. 
+    } En síntesis, este autor demostró que si el número de individuos es impar y dos alternativas no son igualmente preferidas para ningún agente, si levantamos el supuesto de dominio universal, la FBS resultante proporcionaría una ordenación de preferencias sociales transitiva y que cumple con las otras tres características (ausencia de dictador, eficiencia en el sentido de PARETO o Unanimidad e IAI). 
+    
+    Además, de esta segunda propuesta se obtiene un resultado fundamental en materia de Economía Política: que la relación de preferencias sociales coincidirá con la relación de preferencias del agente mediano, es decir, aquel ubicado en el medio al ordenar transitivamente las alternativas, lo que se conoce como \textbf{Teorema del votante mediano}.
+\end{lnum}
+
+\paragraph{Ausencia dictatorial: WICKSELL}
+Por otro lado, ¿qué pasaría si nuestro Agregador Social de Preferencias no está obligado a respetar la ausencia de un agente dictatorial (laxo senso)? ¿Podríamos obtener una FBS aceptable que además cumpla las otras tres condiciones (además de la transitividad)?
+
+Una de las aportaciones más relevantes sería la regla de unanimidad de WICKSELL. Esta regla de votación consiste en que una alternativa determinada es elegida si y solo si es aceptada por todos los individuos o, análogamente, no es rechazada por ninguno. 
+
+No obstante, inmediatamente se aprecia que si algunos agentes tienen preferencias diametralmente opuestas a las del resto del grupo tienen un poder desmedido. Por tanto, renunciar a la regla de la mayoría supone aceptar que algunos agentes pueden adquirir un rol dictatorial, pues son capaces de imponer sus preferecias al resto incluso cuando las del resto coinciden.\footnote{La regla de la unanimidad se ha estudiado en gran medida y presenta algunas implicaciones interesantes. Muchos autores defienden que es tendente al inmovilismo, hacia el mantenimiento del statu quo, pues las minorías siempre podrán bloquear una decisión (lo que BAUMOL llamó tiranía de la minoría).
+
+Por ejemplo, sería el caso utilizado en las elecciones en materia fiscal en el seno de la UE, que deben ser tomadas por el Consejo por unanimidad. } Además, sortear éstadificultad puede acabar conduciendo a descartar otros supuestos/axiomas, en especial el Dominio Universal; ya que restringiendo el conjunto de preferencias el planificador promoverá el cambio sorteando el poder de las minorías (dictador), en detrimento del Dominio Universal. 
+
+\subsubsection{Axiomas Deseables: Racionalidad}
+Exploremos ahora el relajamiento axiomático de las condiciones técnicas o deseables de la FBS: (i) independencia de alternativas irrelevantes; (ii) transitividad; y, (iii) Pareto Óptimalidad débil/Eficiencia o Unanimidad\footnote{Se reitera en inumerables ocasiones la equivalencia entre términos que puede ser tan confusa en la literatura. Sin embargo, debe entenderse como una condición directamente relacionada con el Principio de Unanimidad presente en la noción de Eficiencia en el sentido de PARETO. A partir de ahora, se utilizará el término Unanimidad (a diferencias con la FBS presentada anteriormente)}.
+
+\paragraph{Transitividad: Paradoja de CONDORCET}
+¿Podríamos obtener una FBS aceptable pero cuyo orden de preferecias (social) no es racional?
+ 
+La literatura, ha analizado qué ocurriría si en lugar de la transitividad, se le exige a la relación de preferencia social que sea cuasitransitiva\footnote{Sólo respeta las relaciones estrictas, pero no las débiles.
+} 
+
+La sustitución de transitividad por cuasitransitividad evita la existencia de dictadores en el sentido planteado, pero existe la posibilidad de que existan dictadores en el sentido débil, como en la Regla de Unanimidad de WICKSELL, lo que obliga a imponer el supuesto de \textbf{aciclicidad} para evitarlo.\footnote{(MAS-COLELL) Estos dictadores débiles son individuos que tienen capacidad de veto, es decir no imponen sus preferencias pero son capaces de bloquear la aplicación de alternativas que no coincidan con las suyas. 
+
+Esto nos obliga imponer un axioma (ligeramente) menos exigente que es el de aciclicidad: si hay $A$ alternativas: $x_1\succ x_2;\; x_2\succ x_3\;;\quad ... \; x_1\succsim x_a$. Por tanto, $$\text{Transitividad}\; \Longrightarrow\text{Cuasitransitividad}\; \Longrightarrow \text{Aciclicidad}$$, pero no a la inversa. 
+
+No obstante, BROWN demostró que si incorporamos el Axioma de Aciclicidad, aunque evitamos el problema del dictador débil, no evitamos el problema de la \textbf{oligarquía débil}: un subconjunto de individuos $I\subset N$ que si actúan de forma unánime son equivalentes a un dictador débil.
+} 
+
+\paragraph{IAI: Regla de BORDA}
+Para levantar este axioma, la literatura ha señalado dos métodos principales:
+\begin{lnum}
+    \item \textbf{La regla de BORDA}. La regla de elección de Borda (siglo XVIII) es un sistema de votación en el que los individuos proporcionarán puntos a las diferentes alternativas según su preferencia por ellas.\footnote{Véase [\authorfont{Ver Anexo \ref{anx:reglamayoria}}]
+    }
+    \item \textbf{Log-Rolling}. Otros proponen un método de votación con log-rolling (trueque de votos), mediante el cual puede revelarse la intensidad relativa de preferencias. Básicamente, se permite a los votantes entrar en acuerdos de intercambio de votos. Por ejemplo, si $f$ se opone fuertemente a la alternativa $z$, puede acordar con $K$ que votará por $y$ (su segunda preferencia y la primera de $K$) en primer lugar, a condición de que $K$ acuerde votar $z$ (la segunda preferencia de $K$) en último lugar. Esto aumenta la probabilidad de que $K$ obtenga su primera preferencia y también aumenta la probabilidad de que $f$ impida la adopción de su peor alternativa.\footnote{ARROW rechaza el argumento del log-rolling alegando que: \textit{un estado social es un conjunto completo de cuestiones, y yo supuse que todas las combinaciones posibles de decisiones sobre esas cuestiones se consideran como estados sociales alternativos. Que esto incluyera el log-rolling me parecía tan obvio que no merecía ser explicitado}. Sin embargo (NG, 2002), este argumento pierde de vista que, con el log-rolling, la intensidad relativa de las preferencias se revela en cierta medida, por lo que quizá ya no queramos mantenernos vinculados al aspecto de ordenación del axioma de Independencia de Alternativas Irrelevantes (IIA).
+    }
+\end{lnum}
+
+
+\paragraph{Unanimidad: Ineficiencia en el sentido de PARETO}
+¿Qué pasaría si nuestro Agregador Social de Preferencias no está obligado a seguir la noción de eficiencia en el sentido de PARETO? Es decir, ¿debería o puede una FBS no cumplir el Principio de Unanimidad de la comparabilidad en el sentido de Pareto?
+
+Este axioma es sin duda especialmente difícil de levantar, pues es un axioma considerablemente débil. 
+
+SEN (1969) mostró que, si solo nos interesa la mejor alternativa social y no el ordenamiento completo de todas las alternativas, entonces el teorema de imposibilidad no se aplica. Es decir, es posible tener una función de elección social que indique la alternativa elegida mientras satisface todas las condiciones de ARROW. Sin embargo, al añadir una condición adicional razonable, SEN logra revivir el teorema de imposibilidad incluso para funciones de elección social: si $x$ e $y$ son elegidas de un conjunto $S_1$, entonces si $x$ es elegida de un conjunto mayor $S_2$ que contiene a $S_1$, $y$ también debe ser elegida.
+
+Como podemos intuir, este levantamiento se encuentra en la frontera entre la noción ordinal y cardinal de la Utilidad, puesto que la incomparabilidad de las preferencias individuales es la que se está sometiendo a juicio en este levantamiento. Es pues, uno de los Axiomas más rebatidos en el campo teórico. 
+
+\subsubsection{¿Por qué funciona la democracia en la práctica?}
+Nótese que el Teorema de la Imposibilidad demuestra que toda regla de decisión es inconsistente con una serie de principios básicos de nuestro entendimiento y organización socio-política (constitución), al menos desde una perspectiva teórica. 
+
+No obstante, los sistemas democráticos reales parecen funcionar razonablemente bien, o al menos son aceptables. ¿por qué?
+
+Algunos autores han cuestionado la relevancia práctica del teorema. Por ejemplo, TULLOCK (1967) argumenta que el teorema no es muy importante en la práctica: aunque ningún sistema de decisión cumpla perfectamente las condiciones de ARROW, algunos procedimientos comunes las cumplen aproximadamente en un grado muy alto, lo que explicaría el éxito práctico de la democracia.
+
+ARROW reconoce que TULLOCK argumentó convincentemente que si las opiniones sociales están distribuidas de forma relativamente uniforme y el número de dimensiones de los problemas sociales es pequeño en comparación con el número de individuos, entonces la votación por mayoría puede ser transitiva. Sin embargo, otros autores (MACKENZIE, 1967; TAYLOR, 1968) sostienen que el teorema sigue siendo muy relevante para grupos de decisión pequeños, como comités, donde el número de miembros es reducido. Simulaciones informáticas muestran que, aunque la probabilidad de ciclos disminuye cuando aumenta el número de miembros, no se ha demostrado que los ciclos en comités pequeños sean irrelevantes ni que sean importantes.
+
+Aunque la regla de la mayoría puede ser aceptable como regla práctica de decisión, incluso una pequeñísima probabilidad de ciclos resulta inquietante desde el punto de vista lógico. Por ello, aunque la votación por mayoría seguirá utilizándose durante mucho tiempo, los teóricos seguirán buscando una alternativa mejor, si no perfecta.
+
+\clearpage
+\section{Desarrollos posteriores}
+
+Ahora que conocemos la problemática general que acarrea la construcción de la Función de Bienestar Social debemos explorar otras alternativas que sorteen estas limitaciones reformulando desde la base el concepto mismo de la Función de Bienestar Social (o Agregador Social de Preferencias). Hemos examinado varios intentos representativos en esa búsqueda y todos presentan alguna deficiencia. La siguiente sección analiza dos nuevos intentos, ambos basados en mecanismos para revelar la intensidad de las preferencias.
+
+Una primera pregunta que podríamos formularnos es ¿hasta qué punto es necesario contar con una FBS?O Más concretamente, si la Función de Bienestar Social tiene como objetivo establecer cuál es la alternativa preferida por parte de la sociedad, ¿nos interesa una jerarquización completa de las alternativas (y, consecuentemente, enfrentarnos a las limitaciones exploradas en el apartado anterior) o podemos restringir el recorrido de la FBS a un único output: la alternativa más preferida? ¿salvaríamos así las limitaciones vistas?
+
+\subsection{Public Choice Theory: Funciones de Elección Social}
+
+\textcolor{red}{\textbf{OJO!}}: Esto es exactamente igual que la última parte de Externalidades y Bienes Públicos. Extraer esta parte de aquí
+
+De esta manera, pasamos de una jerarquización completa de las preferencias, a la elección directa entre las alternativas: dejamos atrás el concepto de Función de Bienestar Social (o Agregador Social de Preferencias) y pasamos a explorar el concepto de Función de Elección Social\footnote{Esta Función está estrechamente ligada con la Teoría del Diseño de Mecanismos, correspondiente al [\authorfont{Ver Tema 3.A.14}]} 
+
+La Función de decisión tiene dos componentes principales:
+\begin{lnum}
+    \item La Función de Transferencia;
+    \item La Regla de Decisicón.
+\end{lnum}
+El dominio de esta función es el espacio de tipos por lo que para cualquier perfil de tipos $\theta$ nos proporcionará la elección social y el perfil de transferencias óptimo. 
+
+\textbf{Definición.- } (Forma general) Una función de Elección Social,
+\eqblock{
+\begin{aligned}
+    &\hspace{5em}\begin{aligned}
+        f\;:\; &\theta \to (d,t)\\[0.5em]
+        &\theta\longmapsto(d(\theta), t(\theta))
+    \end{aligned}\qquad 
+    \text{Donde,} \quad\begin{cases}
+    \theta=(\theta_1,\theta_2, ..., \theta_n)\in\Theta_1, \Theta_2, ..., \Theta_n=\Theta\\[0.5em]
+    \theta \equiv \text{\scriptsize Perfil de tipos $n$-dimensional}\\[0.5em]
+    \Theta \equiv \text{\scriptsize Producto cartesiano de $\Theta_i$ tipos (espacios-tipo de los $n$-individuos)}\\[0.5em]
+    \underbrace{d:\;\Theta \to A}_{\text{\scriptsize Regla de decisión}}\quad : \quad d(\theta)\in A
+    \end{cases}\\[2em]
+    &\begin{aligned}
+    &\text{Nos permitirá saber cuál será la decisión social y las transferencias dado un perfil de tipo $\theta$. Además,}\\[1em]
+    &\hspace{10em} U_i(\hat \theta,\theta_i, d, t)=v_i(d(\hat\theta), \theta_i)+t_i(\hat\theta) \;
+    \\[1em]
+    &\Longrightarrow\text{La Utilidad del agente $i$ si $\hat\theta$ es el perfil de tipos declarados y dado el verdadero tipo de $i:\quad \theta_i$}
+    \end{aligned}\\[1.5em]
+    &\text{\scriptsize \textbf{NOTA}: Diremos que una Regla de decisión es eficiente si y solo si:}\\
+    &\hspace{5em}\sum_{i=1}^nv_i(d_j(\theta),\theta_i)\ge\sum_{i=1}^nv_i(d_{-j}(\theta),\theta_i\;\quad \forall \theta \in\Theta \quad \& \quad \forall d_{-j}\in A
+\end{aligned}
+}{Función de Elección Social}
+
+\textbf{Hay que adaptar la notación al apartado anterior:: Muchos conflictos de notación que cambian de nombre!! No tener esto en cuenta, quedarse con la idea general hasta que sea arreglado}
+
+Así, para una jerarquización individual de las alternativas, la Función de Elección Social (FES) será $f(\theta)$, y nos dirá cuál será la alternativa escogida por la colectividad entre el conjunto de alternativas $A$.
+
+En este caso concreto, debemos sustituir el axioma de independencia de alternativas irrelevantes por el de monotonía. Es decir, que si la opción x es la preferida socialmente y mantiene su posición en todas las preferencias de los individuos, me dará igual lo que ocurra con el resto de alternativas, que siempre acabaré escogiendo x como socialmente óptima. Si esto no ocurre es porque x ha tenido que “empeorar” para lo menos un agente. 
+Pues bien, en este caso vuelve a demostrarse que si la FES cumple el axioma de Pareto optimalidad débil, de universalidad y de monotonía, la FES debe ser dictatorial, de forma que la opción elegida por la FES será la opción preferida del agente dictador (date cuenta que solo nos importa la preferida del dictador)
+
+\subsubsection{Incertidumbre: Diseño de Mecanismos}
+\textcolor{red}{\textbf{OJO!}}: Esto es exactamente igual que la última parte de Externalidades y Bienes Públicos. Extraer esta parte de aquí
+
+Sin embargo, un problema que se pone de manifiesto con las FES es ¿por qué irían los agentes a revelar sus verdaderas preferencias si saben que modificando las preferencias reveladas la sociedad podría acabar eligiendo una alternativa que para él les resulta más deseable? 
+
+Es decir, debemos tener en cuenta que los individuos pueden manipular la revelación de sus preferencias para acabar alcanzando una asignación que les resulte mejor. 
+
+Supón por ejemplo que denominamos Z a las preferencias de todos los agentes de la sociedad menos el agente i. El agente i podría reportar dos tipos de preferencias A o B. Si reporta A el agente sabe que c(A,Z)=1 y si reporta b el agente sabe que c(B,Z)=2. Imaginemos que el individuo prefiere 1 antes que 2. Evidentemente, tendrá entonces incentivos a decir que sus preferencias son de tipo A, aunque en la realidad podemos asumir que son de tipo B. Por tanto, el agente puede tener incentivos a revelar falsamente sus preferencias.
+
+Por ello, suele ser asumible en la literatura que a las FES se les exija una condición adicional que es deseable, y es la de:
+5º Resistencia estratégica: una FES presenta resistencia estratégica si cualquier individuo no tiene incentivo alguno a mentir en la revelación de sus preferencias y, por tanto, siempre revelarán las preferencias verdaderas.
+
+Desafortunadamente, al incluir este último requisito encontramos en la FES un teorema similar al que obteníamos en la FBS con el Teorema de Arrow. En este caso se denomina Teorema de Gibbard-Satterhwaite. Éste establece que si existen al menos 3 estados sociales alternativos, toda FES que sea resistente estratégica será entonces una FES dictatorial. Démonos cuenta que este Teorema es más explícito: no es que no pueda cumplir las 4 de forma simultánea, sino que tienes que elegir entre resistencia estratégica o ausencia de dictadores. NO puedes tener ambas de forma simultánea con 3 o más estados sociales entre los que elegir. 
+
+Por tanto, lo que nos dice el Teorema de Gibbard-Satterhwaite es que en un contexto con más de 3 alternativas, si queremos obtener la elección social y que los agentes no mientan tendremos que aceptar la presencia de un dictador; mientras que si queremos asegurar la ausencia de dictadores entonces habrá incentivos para los agentes para que mientan. Se puede ver fácilmente con la regla de Borda que la ausencia de dictador lleva a que no haya resistencia estratégica. 
+
+Este Teorema dejó abiertas varias líneas de investigación que ocuparon a muchos teóricos durante buena parte del resto del siglo XX. Una línea de gran importancia fue la de estudiar dominios particulares de preferencias que fueran de interés y dentro de los cuales pudieran definirse mecanismos no manipulables. 
+
+Uno de los más importantes es el dominio de las preferencias cuasilineales, para las cuales Clarke y Groves lograron definir el mecanismo pivotal, bajo el cual cabe esperar la revelación correcta de preferencias en situaciones donde los agentes deben contribuir a la toma de decisiones sobre niveles de bienes públicos, entre otras. Este resultado permitió dar respuesta a una de las dificultades más clásicas de la Economía Pública: el problema del free rider.
+
+
+\subsection{intercomparabilidad: }
+
+\subsubsection{Neoutilitarismo}
+
+\subsubsection{Neocontractualismo}
+
+\subsection{Igualdad}
+
+\subsubsection{Funciones de \authorfont{ATKINSON}}
+
+\subsubsection{Índices de desigualdad basados en el equivalente igualitariamente distribuido}
+
+
+
+
+
+\clearpage
+\section{Conclusión}
+
+\subsection{Recapitulación}
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+
+
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+\MyBibItem{Autor}{Título}{Año}{DOI -- LINK}
+
+
+% --- Anexos ---
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+\clearpage
+\anexo{Historia}\label{anx:historia}
+Las raíces del campo de la Elección Social se encuentran en la confluencia de dos corrientes independientes desarrolladas desde finales del siglo XVIll. Por un lado, el trabajo de matemáticos ilustrados franceses liderados por el Marqués de Condorcet y Borda sobre teoría de votación. Estos matemáticos desarrollaron el aparato formal que permitiesen decisiones racionales y democráticas para sociedades, prestando atención a las preferencias e intereses de los miembros de la sociedad. La metodología propuesta no tardo en encontrar las limitaciones generadas por la toma de decisiones con criterios mayoritarios. Por otro lado, la tradición utilitarista propuesta por Jeremy Bentham (y continuada por los economistas clásicos como J. Stuart Mili) que desarrolló el concepto del cálculo de la utilidad agregada de la comunidad para obtener como base del criterio para la toma de decisiones sociales. Este enfoque que identifica la suma de utilidades independiente de su distribución como fundamento del bienestar colectivo tuvo un entronque inmediato con los economistas involucrados en la revolución marginal como Edgeworth, Marshall, y Pigou. Sin embargo, en la década de los años 30 del siglo XX, a partir de los trabajos de, por ejemplo, Pareto, Robbins, o Myrdal, el enfoque utilitarista dejó de considerarse apropiado, ya no por la abstracción de las cuestiones distributivas, sino porque se basaba en comparaciones interpersonales de utilidad cuando la revolución marginalista no incluía ningún significado al concepto de utilidad cardinal individual (más que el representación de preferencias). La Nueva Teoría de la Economía del Bienestar, con los trabajos de Bergson, Hicks, Kaldor, y Samuelson, trató de plantear el análisis de decisiones colectiva ex¡endiendo el enfoque utilitarista pero basándose en preferencias ordinales. Sin embargo, la necesidad de centrarse en criterios basados en preferencias de los miembros de la sociedad para evaluar y tomar decisiones sociales requiere un nuevo entorno analítico similar al planteado por los ilustrados france ses en el análisis de reglas de votación. Este es el punto de partida en el que Arrow ( 1951, 1963) planteó la utlización del método axiomático para analizar la posibilidad de generar criterios de evaluación de decisiones sociales (preferencias sociales) a partir de las preferencias de los miembros de la sociedad.
+
+La formulación de la construcción preferencias sociales como una función que toma como dato las preferencias de los agentes y obtiene unas preferencias sociales fue inicialmente propuesta por Bergson y Samuelson acuñando el término de Función de BienestarSocial (Bergson. 1938: Samuelson, 1947). En este entorno, Bergson y Samuelson desarrollaron una teoría de la elección social óptima que replicaba la teoría de la decisión óptima individual con las preferencias sociales. El objetivo de este programa sería caracterizar el óptimo social como la alternativa factible que alcanzaba la curva de indiferencia que representase mayor bienestar social. 
+
+Ante la falta de un criterio normativo objetivo único que permita determinar las decisiones óptimas de la sociedad, Arrow ( 1963) se plantea la posibilidad de derivar los criterios objetivos del decisor público como la agregación de las preferencias de los agentes de la economía, y hacerlo de una manera satisfactoria de acuerdo con unos principios mínimos deseables (axiomas). En entornos sencillos en los que sólo hay dos alternativas para la sociedad, la regla de la mayoría es un buen candidato para obtener las preferencias sociales sobre las alternativas disponibles. Sin embargo, en entornos más complejos la agregación de preferencias resulta inviable.\footnote{De esta manera, Arrow prueba que la extensión del enfoque utilitarista propuesta por la Nueva Economía del Bienestar, concretameme por Bergson y Samuelson. no es compatible con un enfoque ordinal.} El Te orema de Imposibilidad de Arrow (Arrow, 1963) muestra la incapacidad de construir agregadores de preferencias en entornos generales con más de dos alternativas disponibles. Desde un punto de vista más optimista, este Teorema no impide que existan entornos específicos relevantes donde esta imposiblidad se suaviza, como el entorno en las que las preferencias de los miembros de la sociedad son unimodales (single-peaked) y anal izaremos el comportamiento de la regla de la mayoría en este contexto.Arrow considera que si realmente se toma un enfoque ordinal y se considera necesario el axioma de Independencia de Alternativas Irrelevantes, la única función de bienestar social posible es dictatorial. Por lo tanto, las funciones de bienestar social de Bergson y Samuelson necesariamente utilizan más información que la incorporada a las preferencias ordinales de los agentes. En este tema hemos preferido utilizar términos que distingan todos los operadores para evitar confusiones terminológicas, y utilizamos el término agregador social de preferencias para funciones que toman en cuenta preferencias individuales para construir una preferencia social, función de utilidad colectiva para funciones que toman información cardinal para definir el nivel de bienestar de la sociedad (e implícitamente las preferencias sociales), y función de elección social como una función que dadas las preferencias de los individuos elige la alternativa que será implementada
+
+\clearpage
+\anexo{Egalitarismo}\label{anx:egalitarismo}
+Al igual que el utilitarismo, el egalitarismo es un enfoque normativo consecuencialista, bajo el cual se juzga la bondad de un acto por el hecho de reducir la desigualdad en la sociedad en lugar de incrementar el bienestar general. En una situación en que cada agente en la sociedad obtiene un nivel de satisfacción $u$, indentificaríamos el bienestar social como $\min U_i$.
+
+El gran problema de la definición de egalitarismo como principio básico de justicia, es el problema de fijar la dimensión sobre la que se mide la desigualdad. ¿Igualdad de bienestar, igualdad de riqueza, igualdad de oportunidades? 
+
+El egalitarismo en mayor medida que el utilitarismo genera problemas de incentivos. La manera más directa de conseguir igualdad de riqueza sería confiscar los recursos generados por todos los miembros de la sociedad y redistribuirlos directamente (lo que eliminaría el problema de priorizar, beca al prometedor y reparte los beneficios obtenidos luego). Sin embargo, este sistema reduciría los incentivos a trabajar duro si sólo se disfruta una parte de los frutos del trabajo individual. 
+
+El egalitarismo extremo puede llevar a preferir situaciones ineficientes, en las que se reduce la desigualdad simplemente reduciendo la riqueza disponible a los individuos más favorecidos (igualación a la baja), aunque es fácilmente refutable si consideramos que la sociedad no seleccionará una alternativa dominada paretianamente, e identificamos el objetivo social ya no como alcanzar la igualdad, si no como maximizar el bienestar del individuo peor tratado en la sociedad. 
+
+Entre las vertientes egalitaristas podemos destacar: 
+\begin{lnum}
+    \item \textbf{Egalitarismo utilitarista}. Utilitarismo y egalitarismo son coherentes cuando los agentes tienen utilidad marginal decreciente de la renta, de manera que un dólar adicional es más valioso para una persona pobre que para una persona rica. En este caso transferencias de recursos de los más ricos a los más pobres suponen un incremento del bienestar agregado. Con este argumento y la posibilidad de transferencias de renta se corrigen los problemas de igualación a la baja y las cuestiones de priorización e incentivos se pueden incorporar al programa utilitarista, buscando un equilibrio entre los beneficios de redistribuir renta con los incentivos a destinar los recursos a los destinos más productivos;
+    \item \textbf{Egalitarismo Rawlsiano}. Con razonamientos similares a los que hemos presentado en la justificación del utilitarismo por HARSANYI, RAWLS invoca razonamientos basados a decisiones bajo el velo de la ignorancia, argumentando que los agentes que forman una sociedad prefieren las situaciones en las que el individuo peor tratado se encuentra mejor. Económicamente, podríamos interpretar la filosofía de RWALS suponiendo que los agentes son maximizadores de su utilidad esperada, pero otorgan toda la carga de probabilidad al evento de ocupar el lugar del individuo peor tratado en cada situación. En esta situación, una sociedad debería tolerar la desigualdad sólo si la desigualdad implica la mejora del bienestar del individuo peor tratado en la sociedad (Principio de Diferencia de RAWLS). 
+    
+    Por tanto, aunque originalmente RAWLS no está interesado en la reducción de la desigualdad en la economía, sino en asegurar la mejor situación del individuo más desfavorecido, el objetivo de un decisor público ya sea egalitarista o interesado en mejorar al miembro de la sociedad peor parado, se correspondería con elegir la alternativa que maximice el nivel de utilidad del individuo peor tratado.  
+\end{lnum}
+
+
+
+\clearpage
+\anexo{Igualdad de Oportunidades}\label{anx:igualdadoportunidad}
+
+
+
+\clearpage
+\anexo{Enfoques Deontológicos y Libertarios}\label{anx:enfoquedeontologicoylibertario}
+
+
+
+
+\clearpage
+\anexo{Teorema de Imposibilidad de ARROW: Demoestración}\label{anx:teorema_imposibilidad}
+Manteniendo los supuestos de racionalidad inmodificados, las condiciones naturales inicialmente propuestas por ARROW son:
+\begin{lnum}
+    \item \textbf{Triple Libre}. Que existan al menos tres alternativas entre todas las consideradas para las cuales todos los ordenamientos individuales lógicamente posibles de las tres alternativas son admisibles;\footnote{En esencia, el objetivo es evitar la trivialidad imponiendo libertad de \textbf{discrepancia} en como mínimo tres alternativas. Si los ordenamientos de todos los individuos sobre todas las alternativas debieran ser exactamente iguales y ningún otro patrón de ordenamiento fuera permisible, sería completamente trivial tener una cláusula constitucional que estableciera que el ordenamiento social puede ser el mismo que el ordenamiento individual común. Sin embargo, si permitimos que nuestros individuos ordenen las alternativas libremente, incluso si tal libertad se permite solo para tres alternativas, nos enfrentamos con la dificultad de la elección social.
+    }
+    \item \textbf{Criterio de PARETO}. El ordenamiento social responde positivamente a alteraciones en los valores individuales, o al menos no negativamente. Por tanto, si un estado social alternativo asciende o permanece sin cambio en el ordenamiento de cada individuo sin ningún otro cambio en estos ordenamientos, esperamos que ascienda, o al menos no descienda, en el ordenamiento social (ARROW, 1951);
+    \item \textbf{Independencia de alternativas irrelevantes (IIA)}. Este concepto es especialmente relevante y difícil de comprender. SEN (1970a) hace la observación de que hay dos aspectos diferentes en la IIA: (i) el primero es el aspecto de \textbf{irrelevancia} o \textbf{independencia}, que se refiere al hecho de que el ordenamiento social de cualquier par de alternativas debe depender únicamente de las preferencias individuales para esas alternativas y no de preferencias individuales respecto de otras alternativas (lo que en dicha comparación por pares serían \textit{alternativas irrelevantes}); (ii) el segundo es el aspecto de ordenamiento, que exige que el ordenamiento social de cualquier par de alternativas esté basado únicamente en los ordenamientos individuales de esas alternativas y no en nada más, como la intensidad de las preferencias o utilidades cardinales.\footnote{
+    ARROW (1951) expresamente establece: \textit{La elección hecha por la sociedad a partir de un entorno dado depende únicamente de los ordenamientos de los individuos entre las alternativas en ese entorno. Dicho de otra manera, si consideramos dos conjuntos de ordenamientos individuales tales que, para cada individuo, su ordenamiento de esas alternativas particulares en un entorno dado es el mismo en cada caso, entonces exigimos que la elección hecha por la sociedad a partir de ese entorno sea la misma cuando los valores individuales estén dados por el primer conjunto de ordenamientos que cuando estén dados por el segundo}. 
+
+    Aunque a menudo se utiliza un ejemplo individual de cómo se proyecta este supuesto, puede resultar muy confuso dado que no es perfectamente análogo a la exigencia planteada por ARROW en lo que respecta al agregados social de preferencias. De hecho, la IIA se formula frecuentemente con referencia a un cambio en las preferencias individuales. Pero, dado que el ejemplo utilizado por el propio ARROW para ilustrar el espíritu de la IIA se refiere a un cambio en el conjunto de alternativas, con frecuencia se ha entendido que también supone este segundo significado. Si prescindimos del aspecto de ordenamiento, ambos significados de la IIA son simplemente una propiedad de independencia extremadamente razonable.
+    } Ambos aspectos de la IIA son razonables si nuestro conocimiento se limita a ordenamientos o preferencias ordinales de los individuos. Si se conocen intensidades relativas de preferencias o utilidades cardinales comparables interpersonalmente, entonces el aspecto de ordenamiento de la IIA no tiene por qué aceptarse;
+    \item \textbf{Soberanía ciudadana}. El ordenamiento social no debe ser impuesto. Sensu contrario, un ordenamiento social está impuesto si existe un par de alternativas $x$ e $y$ tal que la sociedad nunca puede expresar preferencia por $y$ sobre $x$ sin importar cuáles sean las preferencias de todos los individuos de esa sociedad; es decir, en dicho escenario, incluso si todos los individuos prefieren $y$ a $x$, el ordenamiento social seguiría siendo $x\succsim y$; y,
+    \item \textbf{No dictadura}. La constitución no debe ser dictatorial. Sensu contrario, la constitución es dictatorial si existe un individuo tal que, si él prefiere una alternativa sobre otra, entonces la sociedad también la prefiere. Debemos observar que es en realidad muy débil, no incluye necesariamente a figuras como Stalin o Hitler. Si permitiéramos la dictadura, podría establecerse fácilmente una constitución/regla que exigiera que el ordenamiento social fuera el mismo que el ordenamiento del dictador.
+\end{lnum}
+
+Sabemos como se formula el Teorema de la Imposibilidad. Para demostrarlo, ARROW utiliza el concepto de conjunto decisivo. Un conjunto de individuos es decisivo para la alternativa $x$ contra $y$ si su clasificación unánime de $x$ como preferida a $y$ es suficiente para establecer que $x$ es socialmente preferida a $y$, independientemente de los ordenamientos de todos los demás individuos.
+
+Demuestra primero que para un Dominio Universal (Triple Libre), si un individuo es decisivo para una alternativa frente a otra, entonces también es decisivo para todo par de alternativas en ese triple. Por lo tanto, ningún individuo único puede ser decisivo debido al requisito de no dictadura. Por otro lado, dado que la unanimidad debe determinar el orden social según las condiciones dos y cuatro, siempre puede encontrarse al menos un conjunto decisivo.
+
+Seleccionemos el conjunto decisivo que contenga el menor número de individuos, y supongamos, sin pérdida de generalidad, que es decisivo para $x$ frente a $y$. Dividamos este conjunto decisivo, denotado $V_1$, en $V'$, que consiste en un solo individuo de $V_1$, y $V_2$, el conjunto de todos los demás individuos de $V_1$. Esta división es posible porque un conjunto decisivo no puede contener menos de dos individuos. Supongamos que los ordenamientos individuales son los siguientes:
+
+$$\begin{aligned}
+    &(V',V_2)\in V_1:\quad \#(V')=1\quad\text{y}\quad\#(V_2)=(\#N-1)\quad \text{donde},\;\;N=(1,\ldots,N)\subseteq I\;\;(\text{\scriptsize todos los agentes sociales: $I$})\\[1em]
+    &V':\quad x\succsim y\quad \text{y}\quad y\succsim z\\[0.5em]
+    &\forall i\in V_2:\quad z\succsim_i x\quad \text{y}\quad x\succsim_i y\\[0.5em]
+    &\forall j\in V_3:\quad y\succsim_j z\quad \text{y}\quad z\succsim_j w,\qquad \text{donde,}\;\;\underset{\text{\scriptsize conjunto ordenado de la sociedad sin incluir los de $V_1$}}{V_3=\{V_I\backslash V_1\}}\\
+\end{aligned}$$
+
+Este patrón de preferencias es admisible ya que $x$, $y$ y $z$ constituyen el triple libre. Como $V_1$ es decisivo para $x$ contra $y$, el ordenamiento social debe situar $x$ por encima de $y$. Los individuos en $V_2$ prefieren $z$ a $y$, pero todos los demás individuos prefieren $y$ a $z$. Si en el ordenamiento social $z$ fuese preferido a $y$, entonces $V_2$ sería decisivo para $z$ contra $y$. Pero esto contradiría el supuesto de que $V_2$ contiene un individuo menos que el conjunto decisivo más pequeño. Por lo tanto, la sociedad debe preferir $y$ a $z$ o ser indiferente entre $y$ y $z$. Por transitividad, $x$ debe ser socialmente preferido a $z$.
+
+Sin embargo, todos los individuos excepto el único individuo $V'$ prefieren $z$ a $x$. Por tanto, ese individuo es decisivo para $x$ contra $z$. Pero, para satisfacer la condición de no dictadura, ningún individuo por sí solo puede ser decisivo. Esto muestra que las cinco condiciones no pueden satisfacerse simultáneamente.
+
+\textcolor{red}{OJO!} La demostración es incompleta porque se refiere solo al triple libre. Si las otras condiciones se satisfacen, la no dictadura se viola para el triple libre. Por ejemplo, si consideramos el caso general de más de tres alternativas, entonces las cinco condiciones pueden satisfacerse para estas alternativas, aunque no para el triple libre. Si un individuo es decisivo sobre el triple libre, eso no significa que sea dictador sobre todas las alternativas. Por tanto, la condición de no dictadura no se viola necesariamente.
+
+La definición original de conjunto decisivo de ARROW no es, estrictamente hablando, apropiada, ya que \textit{independientemente de las preferencias de todos los demás individuos} y \textit{todos los demás individuos tienen la preferencia opuesta} no son exactamente lo mismo. La insuficiencia de la demostración original de ARROW fue señalada por primera vez por BLAU (1957), quien muestra que la demostración puede salvarse revisando ligeramente la segunda condición y sustituyendo el triple libre por Dominio Universal: \textbf{todos los ordenamientos lógicamente posibles son admisibles}.
+
+El propio ARROW (1963) sustituyó esta segunda condición revisada y la cuarta condición (Optimalidad de PARETO) por una versión débil del principio de PARETO: \textbf{si todos los individuos prefieren una alternativa a otra, entonces la sociedad también prefiere la primera a la segunda}. De hecho, esta condición se deduce de la segunda condición (revisada), tercera (soberanía ciudadana) y cuarta (original), y es casi universalmente aceptada. Es más débil que el principio de PARETO usual porque exige una preferencia estricta por parte de todos los individuos.\footnote{Otra revisión del teorema fue propuesta por Murakami (1961), quien sustituye la condición de no dictadura por: \textbf{No dictadura fuerte}, entre los triples de alternativas que satisfacen la condición de triple libre, existe al menos uno para el cual ningún individuo es dictador.
+
+ARROW acepta esta ampliación del concepto de dictador como muy razonable, ya que su violación implicaría que existe un dictador para toda elección en la que pueda haber desacuerdo real.
+}
+
+A partir de estos cambios, ARROW demuestra el Teorema de Imposibilidad revisado: ordenamientos libres, IIA, PARETO débil y no dictadura son incompatibles. Esta demostración es muy similar a la original:
+\begin{lnum}
+    \item Primero se muestra que ningún individuo por sí solo puede ser decisivo para ningún par de alternativas. Esto se debe a que, si un individuo es decisivo para cualquier alternativa contra otra, entonces también lo es para todos los pares de alternativas, debido a ordenamientos libres, IIA y Pareto débil;
+    \item Después se selecciona un conjunto decisivo con el menor número de individuos; y,
+    \item Tercero, utilizando el mismo argumento que en la demostración anterior, se muestra entonces que debe surgir una contradicción.
+\end{lnum}
+
+En sínteis, bajo cualquiera de los siguientes conjuntos de condiciones (junto con los axiomas A y B) se establece el Teorema de Imposibilidad:
+\begin{la}
+    \item \textbf{Original}. Triple libre, Independencia de ALternativas Irrelevantes, PARETO débil y no dictadura fuerte;
+    \item \textbf{Revisado}. Ordenamientos libres, IIA, PARETO débil y no dictadura.
+\end{la}
+
+
+
+
+\clearpage
+\anexo{Agregador Social de Preferencias -- MAY y BORDA}\label{anx:reglamayoria}
+Otros autores, contemporáneos o muy anteriores, formularon alternativas para la construcción de lo que podemos interpretar como un Agregador Social de Preferencias y desarrollaron la axiomática que debe cumplir dicho elemento/función. Constituyen trabajos indiciarios sobre la agregación ce preferencias colectivas que llevarán posteriormente al desarrollo de ARROW, en particular, a formular su Teorema de la Imposibilidad.
+
+\textsc{MAY, 1952}
+
+Teorema de \authorfont{MAY}
+Consideremos la situación en que sólo tenemos 2 alternativas $A = \{x,y\}$. Este es un caso más sencillo, ya que con sólo 2 alternativas transitividad se satisface inmediatamente, para entender que es la preferencia de un individuo basta con saber qué alternativa prefiere (o si está indiferente entre ambas), y obtener una preferencia social basta con indicar bajo que circunstancias (características de los perfiles de preferencias) una alternativa se prefiere socialmente a la otra.
+
+\textbf{Definición.-} (Regla de la mayoría) Para cada par $x,y\in A\; : \; x\succsim^{maj}y \iff \#\{i\;|\;x\succsim_iy\}\geq \#\{i\;|\;y\succsim_ix\}$. La regla de agregación de preferencias $R^{maj}$ tal que para todo perfil de preferencias $\succsim\in\mathcal{R}^N$, $R^{maj}(\succsim)=\succsim^{maj}$ se denomina Regla de la Mayoría.
+
+En este caso la Regla de Mayoría es un posible agregador social de preferencias, ya que podemos considerar que la alternativa $x$ es socialmente al menos tan preferida a la alternativa $y$ si el número de agentes que prefieren $x$ a $y$ es mayor que el número de agentes que prefieren $y$ a $x$. Existen múltiples métodos alternativas. Por ejemplo podríamos pensar en reglas que favorezca una de las alternativas (statu quo) y por tanto una alternativa requiera más apoyo que la otra para ser la socialmente preferida. También podríamos considerar que el apoyo de determinados agentes cuente más que el de otros a la hora de determinar el resultado final. Incluso podríamos considerar agregadores que elijan siempre a la alternativa que tenga menos apoyo. Sin embargo estos métodos implicarían que a priori algunas opiniones serían más válidas, alguna alternativa partiría como el candidato inicial, o un mínimo requisito es que si una alternativa domina Paretianamente a otra, la sociedad también debería preferirla. Estas nociones de lo que debería reflejar el interés común se puede formalizar con axiomas que debería cumplir un buen candidato a agregador social.
+
+\textbf{Teorema.-} (\textit{Teorema de \authorfont{MAY}}) Si solo hay dos alternativas sociales $\#A=2$, un agregador social de preferencias $R$ satisface anonimidad, neutralidad y responsividad positiva si y solo si $R$ es la Regla de la Mayoría. 
+
+Esta axiomática propuesta se puede definir como sigue:
+\begin{lnum}
+    \item \textit{Anonimidad} (Simetría entre agentes). Los nombres de los agentes son irrelevantes para el agregador social $R$ de manera que el resultado del agregador para dos perfiles de preferencias en los que simplemente se permuten entre las preferencias entre los agentes deberá ser el mismo.
+    \item \textit{Neutralidad} (Simetría entre alternativas). Los nombres de las alternativas son irrelavantes para el agregador social $R$ de manera que si se permutan los nombres de las alternativas en las preferencias de todos los agentes, el resultado de la agregación se permuta de la misma manera. 
+    \item \textit{Responsividad Positiva}. Para dos perfiles de preferencias $\succsim, \succsim' \; : \; x\; R(\succsim) \; y$  y $\forall i$  si $x\succsim_iy$ y entonces $x\succsim_i'y$, entonces $x\;R(\succsim)\;y$ y no $y \; R(\succsim') \;y$. Es decir si $x$ es al menos tan preferido como $y$ socialmente, y, si $x$ aumenta su apoyo, entonces $x$ pasa a ser socialmente estrictamente preferido a $y$.
+\end{lnum}
+
+La regla de la mayoría satisface anonimidad, neutralidad, y responsividad positiva. Conjuntamente, anonimidad y neutralidad implican que sólo el número de agentes que apoya cada alternativa es relevante para determinar las preferencias sociales. Responsividad implica que la indiferencia social se rompe con el apoyo de un agentes más y por lo tanto está sólo puede tener lugar cuando el mismo número de agentes apoya cada alternativa. 
+
+Sin embargo, la Regla de la Mayoría no satisface la Axiomática de Arrow. Ilustremos un ejemplo para tres individuos y tres alternativas. Las preferencias de los individuos nos han permitido obtener una jerarquización de las alternativas de la siguiente forma:
+$$\begin{cases}
+    \text{Individuo 1:} \quad A\succsim_1 B\succsim_1 C\\[0.7em]
+    \text{Individuo 2:} \quad B\succsim_2 C\succsim_2 A\\[0.7em]
+    \text{Individuo 3:} \quad C\succsim_3 A\succsim_3 B
+\end{cases}$$
+
+La regla para agregar estas preferencias individuales en una preferencia social será la siguiente: 
+\begin{lnum}
+    \item Se escogerán, sucesivamente por pares, dos alternativas y los individuos votarán por su favorita;
+    \item Se ordenarán los resultados de acuerdo con los resultados de las sucesivas votaciones. 
+\end{lnum}
+
+¿Qué ocurriría entonces? $\Longrightarrow$ \textbf{Paradoja de Condorcet}. Las preferencias individuales pueden ser transitivas, pero las preferencias sociales derivadas de este Agregador Social de Preferencias no cumple la condición de transitividad. Demostrándose así el Teorema de la Imposibilidad de Arrow.
+
+\textsc{Jean-Charles BORDA, 1770}
+
+Contemporáneo a los trabajos del Marqués de CONDORCET, el matemátco francés formula una forma de recuento alternativa a los métodos de CONDORCET pero que, aún así, no escapa de las limitaciones presentes en éstos, en particular, de la Paradoja de CONDORCET.
+
+\textbf{Definición.-} (Cuenta de Borda) Para toda alternativa $x,y\in A$, define el marcador de $x $ contra $y$ como $s(x, y) = \#\{ i\in N \;|\;x \succ_i y\}$, y el marcador de la alternativa $x\;:\; S(x) = \sum_{y\in A\backslash \{x\}} s(x,y)$. Esto es, cada alternativa recibe un punto por cada individuo que prefiere la alternativa $x$ a la alternativa $y$, y $S(x)$ recoge el total de puntos que $x$ recibe contra todas las demás alternativas. Define la relación binaria en $A$ $\succsim^{Borda}$ de manera que $\forall x,y \in A \; ; \; x\succsim^{Borda}y \iff S(x)\ge S(y)$. El agregador social de preferencias de Borda $R^{Borda} \; :\; \forall \succsim\in \mathcal{R}^N, R^{Borda}(\succsim)=\succsim^{Borda}$  se denomina Regla de Borda (Rank-Order voting).
+
+Por ejemplo, se pide a cada elector que vote de la siguiente manera. Frente a un subconjunto del conjunto $X$ de todas las alternativas concebibles, asigna a la alternativa que clasifica en primer lugar (es decir, aquella de la que espera obtener mayor utilidad) el número uno. A las alternativas restantes se les asignan números según la utilidad esperada relativa a la alternativa más deseada, los números asignados a cada alternativa se suman entre todos los electores y se elige la alternativa con el total más alto. La alternativa con el segundo total más alto se clasifica segunda, y así sucesivamente.
+
+Este procedimiento viola claramente el aspecto de ordenación de IIA. También viola el aspecto de independencia, como se muestra a continuación. Supongamos que mi primera alternativa, $x$, es clasificada muy abajo por todos los demás votantes, que están más o menos divididos entre $y$ y $z$. La utilidad que esperamos de $y$ es el doble que la de $z$, digamos $10$ unidades y $5$ unidades, respectivamente. Si la utilidad que espero de $x$ es $100$ unidades, debo votar $1$ por $x$, $0,1$ por $y$ y $0,05$ por $z$. Ahora supongamos que $z$ es preferida por una fracción ligeramente mayor de votantes que $y$. En ese caso, si la utilidad que espero de $x$ es $20$ unidades, debo votar $1$ por $x$, $0,5$ por $y$ y $0,25$ por $z$. Manteniendo todos los demás votos sin cambios, $y$ puede entonces tener un total mayor que $z$.
+
+Así, incluso si todas las preferencias individuales (tanto ordinales como cardinales) respecto de $y$ y $z$ permanecen exactamente iguales, el orden social entre $y$ y $z$ se verá afectado por mi preferencia respecto de $x$, una alternativa que ciertamente será clasificada por debajo de $y$ y $z$. Este es un resultado indeseable. Incluso si todas las preferencias individuales permanecen fijas, el orden social entre $y$ y $z$ dependerá de si $x$ u otra alternativa está incluida en el conjunto de alternativas. De nuevo, un resultado indeseable. (Lectores atentos habrán notado que IIA se formula con referencia a un cambio en preferencias individuales. Pero como el ejemplo de Arrow para ilustrar el espíritu de IIA se refiere a un cambio en el conjunto de alternativas, con frecuencia se ha entendido que IIA asume también este segundo sentido. Si prescindimos del aspecto de ordenación, ambos sentidos de IIA son propiedades extremadamente razonables de independencia).
+
+\textsc{\textbf{Implicaciones de Polític Económica}}
+
+La regla de la mayoría y la regla de Borda generan la misma preferencia social cuando sólo hay dos alternativas, pero pueden (suelen) generar diferentes preferencias sociales cuando tenemos más de dos alternativas disponibles. Por tanto, resulta interesante plantear nuevos axiomas que tengan aplicación en contextos más amplios de los que hemos propuesto en la sección anterior que recojan cómo debería ser la decisión social en este contexto.
+
+
+
+\clearpage
+\anexo{Función de Bienestar Social de ARROW (ordinal)}\label{anx:FBSarroviana}
+Supondremos que se trata de una sociedad formada por un conjunto finito de $n$ agentes, $N\; (N = \{ 1 . . . . . n\})$, que deben tomar decisiones colectivas sobre un conjunto $A$ de alternativas (políticas. planes de inversión, . . . ),\footnote{En general, $i,j,\ldots$ denotarán miembros del conjunto de agentes y, $x,y, \ldots$ miembros del conjunto de alternativas
+} dotados de preferencias (racionales) sobre el conjunto de alternativas $A$.
+
+Gracias a que sus preferencias son por tanto racionales (completas, reflexivas y transitivas), los agentes de esta sociedad pueden jerarquizar las distintas asignaciones de bienes de consumo desde la más preferida a la menos preferida.
+
+Denotaremos por $R$ el conjunto de todas las posibles preferencias que pueden definirse sobre el conjunto $A$ y por $\mathcal{P}$ el conjunto de preferencias estrictas sobre $A$ en las que no se admiten indiferencias entre diferentes alternativas.\footnote{Por tanto, una preferencia estricta es una preferencia antisimétrica, tal que $\forall x,y \in A, \text{si}\; x\neq y \text{entonces o }\; x\succ_i y\; \vee\; y\succ_i x$} Cada agente puede tener una preferencia en la que ordena de acuerdo a sus gustos e intereses las diferentes alternativas. Llamamos perfil de preferencias a un vector que indica una preferencia para cada agente, $\succsim = (\succsim_1 , . . . , \succsim_n)$. Indicamos como $\mathcal{R}^N$ el conjunto de todos los posibles perfiles de preferencias, y $\mathcal{P}^N$ el conjunto de todos los perfiles de preferencias estrictas sobre $A$.
+
+Tenemos ya por tanto una jerarquización de las alternativas según las preferencias de cada uno de los agentes. La pregunta es ¿cómo logramos agregar esa jerarquización individual para obtener una jerarquización social? Es decir ¿cómo pasamos de preferencias individuales a conocer las preferencias de la sociedad? 
+
+\textbf{Definición.-} Un Agregador Social de Preferencias es una función:\footnote{Para ver otras formulaciones alternativas (o primigenia, depende de como se mire): MAY y BORDA [\authorfont{[Ver Anexo \ref{anx:reglamayoria}]}]}
+
+$$\begin{matrix}
+&\text{Sea un conjunto de individuos $N$ con preferencias que cumplan:}\quad 
+\left\{\begin{matrix}
+    \text{(1)   Completitud}\\[0.3em]
+    \text{(2)   Reflexividad}\\[0.3em]
+    \text{(1)   Transitividad}\\[0.3em]
+\end{matrix}\right.\quad {\scriptsize \text{\scriptsize Tal que:} \; \underbrace{\succsim=(\succsim_1, \ldots,  \succsim_n)}_{\text{Un perfil de preferencias para cada agente, por ejemplo, sobre $x,y$}}}\\[0.5em]
+&\text{Definimos:}
+\left\{\begin{matrix}
+    \mathcal{R}^N \equiv &\text{Conjunto de todos los perfiles de preferencias; y,}\\[0.3em]
+    \mathcal{P}^N \equiv &\text{Conjunto de todos los perfiles de preferencias estrictas sobre $A$}\\
+\end{matrix}\right.\\[1em]
+&\text{Entonces} \quad \Longrightarrow \quad \text{Agregador Social de Preferencias} \quad \equiv \quad R: \mathcal{R}^N\rightarrow \mathcal{R}
+\end{matrix}$$
+
+Por tanto, esta FBS (arroviana) $\equiv$ Agregador de Preferencias sociales, nos va a permitir agrupar las preferencias individuales de los $N$ agentes de nuestra economía en una relación de preferencia social, indicándonos precisamente esa jerarquización de las distintas alternativas desde una perspectiva colectiva. Por tanto, obtenemos un cuasiorden (porque se acepta la indeferencia) completo y transitivo de todas las alternativas del conjunto de elección $A$.\footnote{Como vemos, las diferencias con la FBS de Bergson son evidentes. En primer lugar, la FBS tiene como argumentos relaciones de preferencia individuales, no funciones de utilidad. Por tanto, ya no nos basamos en el concepto de Utilidad de la sociedad, sino que según las preferencias individuales de los agentes tratamos de determinar qué punto de la $GFPU$ es el preferido por la colectividad. En segundo lugar, la FBS de Arrow no devuelve un valor numérico que refleja la preferencia de la sociedad por una alternativa, sino que proporciona una jerarquización completa de las alternativas, ordenándolas de mayor a menor grado de deseabilidad social. De esta forma, de entre todas las alternativas existentes se podrá elegir entre las más preferidas socialmente.} Evidentemente, se pueden construir muchísimos agregadores sociales de preferencias.\footnote{Demasiados. 
+
+Por ejemplo, en el caso más sencillo con sólo 2 agentes y 3 alternativas, suponiendo que las preferencias de los agentes son estrictas, $\mathcal{P}$ contiene seis posibles ordenaciones de las 3 alternativas, $\mathcal{P}^N$ contiene 36 posibles perfiles de preferencias. Por tanto, podremos construir $6^{36} > 10^{28}$ posibles diferentes agregadores sociales de preferencias.
+} Sin embargo, sólo estamos interesados en reglas que cumplan una serie de propiedades (axiomas) que aseguren que el resultado de está regla agregadora para cualquier perfil de preferencias pueda considerarse un buen reflejo de las preferencias colectivas.
+
+
+\clearpage
+\anexo{Proposición de Imposibilidad: KEMP y NG (1976)}\label{anx:imposibilidad_ng}
+A raíz de la publicación de las críticas vertidas por SAMUELSON y LITTLE sobre el Teorema de Imposibilidad de ARROW, algunos autores trabajaron por demostrar que incluso con la incosistencia temporal de las reglas elegidad, no existe una regla razonable para derivar un orden social basándose solo en ordenamientos individuales. Incluso si trabajamos con un conjunto fijo de preferencias individuales, seguimos obteniendo un resultado de imposibilidad. Esto fue demostrado casi simultáneamente e independientemente por KEMP y NG (1976) y PARKS (1976), utilizando conjuntos de supuestos distintos.\footnote{En términos generales, PARKS adoptó un supuesto más fuerte sobre la diversidad de alternativas y preferencias, mientras que KEMP y NG adoptaron un supuesto más fuerte sobre el requisito democrático (anonimato en lugar de mera no-dictadura). Debido a sus supuestos, la demostración de PARKS es muy similar a la de ARROW. Por ello, se presenta aquí la demostración de KEMP y NG.
+}
+
+KEMP y NG muestran que no podemos construir una SWF con valores reales basada únicamente en ordenamientos individuales bajo supuestos bastante moderados. Pero como esa demostración es compleja, presentaremos un versión sencilla que descarta la posibilidad de un orden social razonable basado solo en ordenamientos individuales. Considerando los supuestos:
+\begin{lnum}
+    \item \textbf{Diversidad moderada de preferencias}. Esto significa que, por ejemplo, si existen tres alternativas sociales $x$, $y$ y $z$, y dos individuos $J$ y $K$: (i) ambos ordenan estrictamente $x$, $y$ y $z$ (sin indiferencias); (ii) difieren fuertemente en la clasificación de dos pares de alternativas y coinciden en el tercero;\footnote{Una diferencia fuerte en preferencias entre $x$ e $y$ significa que: $x\succsim_Jy \quad \text{y} \quad y\succsim_K x$ o viceversa. 
+    
+    Si las alternativas sociales incluyen la asignación de bienes entre individuos, como ocurre en economía del bienestar, puede demostrarse que esta condición de diversidad es muy razonable.
+    } y, (iii) los demás individuos son indiferentes entre $x$, $y$ y $z$;
+    \item \textbf{Principio de PARETO fuerte}. Esto es, para dos alternativas $x$ e $y$: (i) si todos los individuos prefieren $x$ al menos tanto como $y$, entonces socialmente $x$ es al menos tan bueno como $y$; y, (ii) si todos prefieren $x$ al menos tanto como $y$ y alguno lo prefiere estrictamente, entonces socialmente x es estrictamente mejor que $y$; y,
+    \item \textbf{Anonimato y ordenamieto, solamente}. Si para todas las personas $x$ es preferido a $y$, entonces socialmente $x$ debe ser preferido a $y$, y lo mismo debe cumplirse para cualquier otro par de alternativas. Además, la identidad de los individuos no importa (anonimato). Este axioma incorpora dos requisitos: (i) anonimato, todos los individuos cuentan por igual; y, (ii) solo ordenamientos, el orden social debe depender únicamente del orden de preferencias individuales, no de su intensidad.
+\end{lnum}
+
+Entonces dada la diversidad moderada de preferencias no existe un orden social que satisfafa simultáneamente el principio de PARETO fuerte y el anominato más el uso exclusivo de ordenamientos.
+
+Para demostrarlo, basta pensar que, bajo las condiciones de diversidad, si existen tres alternativas ($x$,$y$,$z$) y dos individuos $(J,K)$ tales que $x\succsim_Jy\succsim_Jz$ y $z\succsim_Kx\succsim_Ky$. Aplicando el principio de PARETO, se obtiene socialmente: $x\succsim y$. Por tanto, por el axioma de anonimato y ordenamientos, $x$ y $z$ deben ser socialmente indiferentes. Pero entonces, por transitividad, resulta: $z\succsim y$, lo cual viola el axioma anterior, ya que las preferencias individuales entre $y$ y $z$ no justifican ese resultado. Por lo tanto, no existe tal orden social.
+
+\textbf{\textsc{Implicaciones de Política Económica}}
+
+Esta proposición muestra que incluso con un conjunto fijo de preferencias individuales, no podemos construir un orden social razonable basado únicamente en preferencias ordinales. Por ello, el intento de LITTLE y SAMUELSON de escapar de la paradoja de ARROW conduce a un callejón sin salida.
+
+Esto supone un golpe fuerte para quienes rechazan las utilidades cardinales o creen que las utilidades ordinales son suficientes. Sin embargo, no descarta la posibilidad de construir una SWF basada en utilidades cardinales. En ese caso se requiere algún procedimiento de agregación o comparación interpersonal.
+
+Si se prohíben las comparaciones interpersonales, pueden demostrarse resultados de imposibilidad incluso con utilidades cardinales. Pero la comparabilidad interpersonal sin cardinalidad tampoco es suficiente. Por ejemplo, el anonimato ya implica cierta comparación interpersonal, y aun así no produce un resultado razonable si solo se utilizan ordenamientos.
+
+SAMUELSON (1977) criticó el tercer axioma, pero como nadie objeta el anonimato, la verdadera cuestión es el ordinalismo. Para el problema general de elección social, el ordinalismo puede ser una base insuficiente. Si SAMUELSON rechaza ese axioma, entonces no puede seguir defendiendo que el ordinalismo sea suficiente.
+
+Posteriormente, el autor discutió el problema con ARROW, quien señaló que si SAMUELSON insistía en el ordinalismo tendría que abandonar el principio de independencia. Sin embargo, el principio de independencia resulta muy convincente. Además, en la tradición BERGSON–SAMUELSON, el bienestar social en un estado $x$ se escribe como función de las utilidades individuales en ese mismo estado, lo que implica que la comparación social entre $x$ e $y$ no depende de otras alternativas. Esto funciona si las utilidades son cardinales y comparables interpersonalmente. Pero si se insiste en que las utilidades son solo ordinales, aparece el núcleo del resultado de imposibilidad.
+
+\end{document}
