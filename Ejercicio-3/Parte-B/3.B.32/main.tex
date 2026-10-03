@@ -1,0 +1,1287 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Perspectivas económicas mundiales\\
+\large Estructura sectorial y geográfica de los flujos comerciales y financieros internacionales. Las nuevas áreas emergentes}
+\author{Marcelo Ortega}
+\date{Julio 2026}
+\newcommand{\TemaCode}{3B32}
+
+\oldtitle{
+    B.33. Evolución y estructura sectorial y geográfica de los flujos comerciales y financieros internacionales. Los bloques comerciales y las nuevas áreas emergentes en el comercio internacional
+}
+\changerationale{
+    Se busca una visión más actual, reduciendo el sesgo histórico y esperando del opositor una actualización continua.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     
+    }
+\vspace{1cm}
+
+\modificaciones{
+    OJO: Última modificación -- 24/06/2026. 
+    Informe: \href{https://www.imf.org/-/media/files/publications/weo/2026/april/english/text.pdf}{\textit{World Economic Outlook}. FMI, abril 2026}
+
+    OJO (Incluir): \href{https://www.ifri.org/en/media-external-article/rethinking-global-imbalances}{\textit{Rethinking Global Imbalances}, IFRI (2026)}
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+El primer apartado contiene un resumen de las “Perspectivas económicas mundiales” publicado por el Fondo Monetario Internacional (en adelante, FMI) en abril de 2023. 
+
+En el segundo apartado de este tema se describe la estructura sectorial y geográfica de los flujos de bienes y servicios. Esta estructura es el resultado de un proceso de profundización de las relaciones económicas entre los países que se ha caracterizado por (i) el incremento del peso de los servicios en los flujos comerciales internacionales, (ii) la incorporación de la mayoría de países al comercio internacional, entre los que destacan las economías emergentes cuya integración se ha canalizado a través de su participación en las cadenas mundiales de producción y (iii) el creciente peso del comercio de bienes y servicios intermedios frente a los finales. Para finalizar este segundo apartado, mencionamos a las economías emergentes, cuyo proceso de inserción en los flujos comerciales y financieros mundiales presenta características comunes, aunque sin olvidar su enorme heterogeneidad. En el tercer apartado se analiza la otra cara de la moneda, la financiación de los desequilibrios exteriores en los que entran los países cuando consumen más de lo que producen y los activos y pasivos exteriores que son el resultado acumulado de dichos desequilibrios. La eliminación de las restricciones a los movimientos de capitales ha sido mucho más lenta que la de los flujos de bienes y servicios. Vamos a centrarnos en los flujos que se recogen en la cuenta financiera de la balanza de pagos: inversión directa, de cartera y otras inversiones. Dentro de los flujos de capital, merece un análisis separado la inversión extranjera directa (en adelante, IED) por su impacto sobre la actividad económica de los países emisores y receptores.
+
+\clearpage
+\section{Perspectivas económicas mundiales}
+\puntosclave{
+    El FMI publica dos veces al año su informe Perspectivas económicas mundiales en las que analiza la economía internacional y presenta proyecciones sobre la evolución de las principales variables macroeconómicas
+    
+    En el último informe publicado, en abril de 2026, el FMI considera que la economía mundial ha iniciado una senda de recuperación tras los shocks de los tres años anteriores. 
+    
+    \textcolor{red}{\textbf{OJO}} -- Este apartado debe actualizarse anualmente con el primer capítulo del informe del FMI: Global Prospects and Policies. Normalmente, destacan una serie de apartados por lo que será sencillo adaptarlos, resumirlos y presentarlos de manera clara. Todos las actualizaciones se complementarán situando la actualización anterior en [\authorfont{Ver Anexo\ref{anx:weo_pasadas}}].
+}
+
+La economía mundial ha resistido hasta ahora una sucesión de perturbaciones. Sin embargo, un nuevo shock está poniendo a prueba esa resiliencia: la Guerra en Oriente Medio. 
+
+\imagenfit{Fig1.png}{Informe WEO: Geopolitical risks and uncertainty}{WEO. Abril 2026}
+
+El conflicto ya ha provocado elevados costes humanitarios, ha dañado infraestructuras críticas y ha alterado gravemente el transporte marítimo y aéreo en la región afectada. El impacto económico mundial dependerá de manera crucial de la duración, la intensidad y el alcance del conflicto, factores que son intrínsecamente impredecibles.
+
+\subsection{Evolución reciente: Resiliencia continuada y creciente fragilidad}
+Antes del estallido de la guerra, la economía mundial estaba mostrando un \textbf{comportamiento mejor de lo previsto}, sentando las bases para una revisión al alza de las previsiones.
+
+\subsubsection{Economía real: Resiliencia y rendimiento}
+Desde la óptica de la economía productiva, destacan el crecimiento observado y la vigorosidad del comercio internacional a pesar de las guerras arancelarias.
+
+\paragraph{Crecimiento: Por encima del proyectado}
+En términos agregados, el crecimiento mundial aumentó hasta $3,9\%$ en tasa anualizada. 
+
+En China, el crecimiento trimestral se aceleró hasta el $6,1\%$, ya que \textbf{el fuerte dinamismo de las exportaciones compensó la debilidad de la demanda interna}. Un incremento del gasto público impulsó una mayor actividad en Alemania, contribuyendo a que el crecimiento de la zona del euro, excluida Irlanda, se acelerara hasta el $1,5\%$. En Estados Unidos, el crecimiento se desaceleró hasta una cifra inferior a la prevista debido a que el cierre temporal de la Administración provocó una fuerte contracción transitoria del gasto público. En Japón, el crecimiento repuntó gracias al fortalecimiento del consumo y de la inversión.
+
+\paragraph{Comercio internacional: Comportamiento sólido}
+Desde una óptca comercial, el comercio mundial continuó mostrando un \textbf{comportamiento sólido}. 
+
+El vigoroso crecimiento de las exportaciones vinculadas a las \textbf{tecnologías avanzadas} compensó la desaceleración de las exportaciones correspondientes a otras categorías de productos:
+
+\imagenfit{Fig2.png}{Continued Brisk Growth in Tech-Related Trade Flows: percentage, year over year}{WEO. Informe Abril 2026}
+
+Este fenómeno benefició especialmente a las economías asiáticas, ya que los principales exportadores de semiconductores y otros equipos demandados por las empresas incrementaron su producción para satisfacer la creciente inversión en tecnologías digitales y de inteligencia artificial. La reconfiguración de las cadenas globales de suministro y de las relaciones comerciales continuó avanzando:
+
+\imagenfit{Fig3.png}{Reorientation of Global Trade}{WEO. Informe Abril 2026}
+
+Las importaciones estadounidenses procedentes de China disminuyeron de forma pronunciada; las provenientes de Canadá también descendieron. Estas reducciones fueron compensadas por un aumento de las importaciones desde Taiwán, Vietnam y, en menor medida, México. Por otro lado, las exportaciones chinas se redirigieron desde Estados Unidos hacia otras economías asiáticas y, de manera temporal, hacia Europa. 
+
+El \textbf{superávit comercial de mercancías de China alcanzó un máximo histórico de $1,2\text{B}\$$} (equivalente al $6\%$ del PIB) en 2025.
+
+\subsubsection{Economía nominal: Fragilidad e incertidumbre}
+Desde la perspectiva de la economía nominal, no obstante, las condiciones no son tan favorables. EL conflicto en oriente medio ha causado un aumento generalizado de las expectativas de inflación y ha generado gran incertidumbre en los mercados financieros internacionales, observable tanto en el rendimiento de los bonos como en la huida de los inversores hacia activos refugio. 
+
+\paragraph{Inflación: Estable pero divergente}
+La inflación mundial se ha mantenido estable. Sin embargo, esta estabilidad \textbf{oculta divergencias significativas} entre economías. 
+
+En Estados Unidos, la inflación continúa situándose por encima del objetivo, manteniéndose la inflación subyacente del gasto en consumo personal (PCE) en una elevada tasa interanual del $3,1\%$ en enero de 2026.\footnote{Hasta el momento, la evidencia indica que la incidencia directa de los aranceles ha recaído principalmente sobre los importadores y consumidores estadounidenses (AMITI et al., 2026; GIMBEL, 2026; GOPINATH y NEIMAN, 2026).
+} Por el contrario, en Japón la inflación descendió bruscamente en enero de 2026 hasta situarse por debajo del objetivo del $2\%$ por primera vez desde el segundo trimestre de 2022, debido principalmente a la eliminación provisional del impuesto sobre la gasolina. Además, existe el sentimiento generalizado por un resurgimiento de la inflación derivado del conflicto (cost push).
+
+\paragraph{Mercados Financieros: Endurecimiento pero acomodaticias}
+La mayor aversión al riesgo generada tras el estallido del conflicto en Oriente Medio ha provocado un \textbf{endurecimiento moderado de las condiciones financieras mundiales}, \textbf{aunque estas siguen siendo acomodaticias} desde una perspectiva histórica (véase el Global Financial Stability Report, abril de 2026).
+
+Las preocupaciones por un posible resurgimiento de la inflación han impulsado al alza los rendimientos de los bonos y han provocado descensos en las cotizaciones bursátiles. Los mercados emergentes han sido los más afectados, especialmente aquellos importadores de materias primas y los que ya presentaban vulnerabilidades previas.
+
+El dólar estadounidense se ha apreciado moderadamente, reafirmando su condición de activo refugio. Aun así, la volatilidad de los mercados ha permanecido relativamente contenida (Figura 1.6). 
+
+\imagenfit{Fig4.png}{Global Geopolitical Risk: Index, US dollars per ounce}{WEO. Informe Abril 2026}
+
+Al mismo tiempo, las tensiones geopolíticas y otros factores han contribuido a fuertes oscilaciones en el precio del oro.
+
+\subsubsection{Políctica Económica: Excesivamente expansiva}
+La política fiscal sigue siendo excesivamente expansiva en muchas de las principales economías avanzadas y en numerosos mercados emergentes (véase el Fiscal Monitor, abril de 2026).
+
+El conflicto en Oriente Medio está ejerciendo una \textbf{presión adicional sobre las finanzas públicas}, tanto por los efectos directos de la guerra como por los esfuerzos de los gobiernos para proteger a los grupos más vulnerables frente al encarecimiento de las materias primas. 
+
+Los países que ya contaban con subsidios a los combustibles afrontan una dinámica fiscal distinta de la de aquellos que habían liberalizado los precios de la energía. Al mismo tiempo, las \textbf{economías con estrechos vínculos con Oriente Medio a través de las remesas soportan presiones adicionales sobre la renta de los hogares y sobre sus balances externos}. La \textbf{política monetaria se estaba volviendo cada vez más divergente entre países} a medida que los factores globales comunes que impulsaban la inflación perdían importancia. Sin embargo, el estallido del conflicto introdujo un shock negativo de oferta de alcance mundial, alterando nuevamente ese proceso.
+
+
+\subsection{Perspectivas: Correción a la baja}
+Como vemos, antes del estallido del conflicto, las previsiones bottom-up apuntaban a una \textbf{trayectoria de crecimiento estable}. El crecimiento mundial habría alcanzado el $3,4\%$ en 2026 y el $3,2\%$ en 2027, lo que suponía una revisión al alza de $0,1$ p.p para 2026 y ninguna modificación para 2027 (Informe enero).
+
+\imagenfit{Fig5.png}{Previsiones pre-Guerra: Informe Junio 2025}{WEO. Informe Abril 2026}
+
+No obstante, tras el estallido del conflicto ha sido imperativo revaluar las proyecciones, para lo que se han construido tres escenarios diferentes que permiten evaluar el impacto de la guerra atendiendo a su duración: (i) \textbf{referencia}, según el cual la Guerra es breve; (ii) \textbf{adverso}, la Guerra se prolonga hasta el segundo trimestre de 2026 y los precios del petroleo se estabilizan con un aumento del $80\%$; y, (iii) \textbf{grave}, que considera un shock más adverso y persistente, estabilizándose el precio del petroleo en un aumento del $100\%$ durante la mayor parte de 2026.
+
+\begin{specialblock}{\textbf{Supuestos: Escenarios alternativos}}
+    \textbf{Escenario adverso}. En este escenario se supone que los precios del petróleo aumentan un $80\%$ a partir del segundo trimestre de 2026 respecto al escenario base de la actualización del WEO de enero de 2026, para posteriormente moderarse hasta situarse aproximadamente un $20\%$ por encima del escenario base durante 2027 y volver a la normalidad en 2028. Esto equivale a un precio medio del petróleo de aproximadamente 100 dólares por barril en 2026 y 75 dólares en 2027. Los precios del gas natural en Europa y Asia aumentan un $160\%$ durante el segundo trimestre respecto al escenario base y posteriormente retroceden en gran medida durante 2027. Los precios internacionales de los alimentos aumentan un $2,5\%$.
+    
+    También se supone que las expectativas de inflación a un año aumentan hasta 50 puntos básicos en las economías avanzadas y hasta 90 puntos básicos en los mercados emergentes (excluida China) hacia 2027. En China las expectativas permanecen estables, dado que la baja inflación hace menos probable este riesgo.
+    
+    Un episodio de fuerte aversión al riesgo incrementa las primas de riesgo corporativo en 50 puntos básicos en las economías avanzadas y en China. En los mercados emergentes (excluida China), las primas corporativas aumentan 100 puntos básicos, mientras que los diferenciales soberanos se amplían 50 puntos básicos. Este endurecimiento de las condiciones financieras desaparece gradualmente durante 2027.
+    
+    Dado el fuerte aumento de las expectativas de inflación, la respuesta de la política monetaria concede menor prioridad a la estabilización de la actividad económica que en circunstancias normales.
+
+    \textbf{Escenario grave}. En el escenario grave se considera que el shock sobre los precios de las materias primas es más intenso y persistente. El precio del petróleo aumenta un $100\%$ desde el segundo trimestre de 2026 respecto al escenario base de enero de 2026 y permanece en ese nivel durante 2027 antes de normalizarse en 2028. Esto implica un precio medio de aproximadamente 110 dólares por barril en 2026 y 125 dólares en 2027. Los precios del gas natural en Europa y Asia aumentan un $200\%$ durante el mismo período. Los precios de los alimentos aumentan un $5\%$ en 2026 y un $10\%$ en 2027. Las expectativas de inflación a un año aumentan hasta 100 puntos básicos en las economías avanzadas y hasta 130 puntos básicos en los mercados emergentes (excepto China) hacia 2027. Un episodio intenso de aversión al riesgo incrementa las primas de riesgo corporativo en las economías avanzadas y en China en 100 puntos básicos durante 2026, manteniéndose en ese nivel durante 2027. En los mercados emergentes (excepto China), los diferenciales soberanos aumentan 100 puntos básicos, mientras que las primas corporativas se incrementan 200 puntos básicos. Al igual que en el escenario adverso, la política monetaria prioriza el control de las presiones inflacionarias frente a la estabilización del producto.
+\end{specialblock}
+
+
+\subsubsection{Crecimiento: Frágil y con elevada dispersión}
+Bajo el supuesto de referencia se espera que el crecimiento mundial se desacelere de forma moderada. Las previsiones se sitúan en el $3,1\%$ para 2026 y el $3,2\%$ para 2027, frente al crecimiento estimado del $3,4\%$ registrado en 2025. 
+
+La relativamente modesta revisión a la baja del crecimiento mundial respecto a la actualización del WEO de enero de 2026 obedece a que varios factores favorables continúan compensando parcialmente los efectos negativos del conflicto: (i) la reducción de los aranceles; (ii) el apoyo de políticas económicas ya existente; y, (iii) el efecto de arrastre derivado de unos resultados mejores de lo esperado a finales de 2025 y durante el primer trimestre de 2026 en algunas economías.
+
+No obstante, si el conflicto se prolongara más de lo previsto o la reanudación de la producción y del transporte fuera más lenta debido a los daños permanentes ocasionados por el cierre o deterioro de infraestructuras energéticas, el impacto sobre el crecimiento sería considerablemente mayor:
+\begin{la}
+    \item \textbf{Adverso}. Bajo el escenario adverso, se proyecta un crecimiento mundial que se reduciría en $0,8$ puntos porcentuales en 2026, descendiendo hasta el $2,5\%$. En 2027 el impacto sería de $0,2$ puntos porcentuales, situando el crecimiento mundial en el $3,0\%$. El efecto persistente sobre el crecimiento en 2027 deriva principalmente del endurecimiento de las condiciones financieras y del aumento de las expectativas de inflación, lo que exigiría una subida moderada de los tipos de interés oficiales en las economías avanzadas y un incremento algo mayor en las economías emergentes; y,
+    \item \textbf{Grave}. Dándose el escenario grave, se proyecta un escenario cuyos efectos sobre el crecimiento mundial serían considerablemente \textbf{más intensos y persistentes}. El crecimiento mundial disminuiría en $1,3$ p.p en 2026, lo que situaría la economía mundial muy cerca de una recesión global (definida como un crecimiento inferior al $2\%$): fenómeno que solo se ha producido cuatro veces desde 1980 (las más recientes, crisis financiera mundial y la COVID-19). Los efectos también persistirían en 2027, cuando el crecimiento mundial sería $1$ p.p inferior al escenario base, situándose en el $2,2\%$. La amplificación derivada del aumento de las expectativas de inflación y del endurecimiento de las condiciones financieras también sería importante, reduciendo el crecimiento en $0,7$ puntos porcentuales en 2026 y $0,5$ puntos porcentuales en 2027, en parte por una respuesta más agresiva de la política monetaria.
+\end{la}
+
+En ambos escenarios, el impacto sobre los mercados emergentes sería nuevamente superior al observado en las economías avanzadas. Esta mayor vulnerabilidad refleja una combinación de factores: (i) una exposición más elevada al aumento de los precios de las materias primas y a las perturbaciones de la producción energética; (ii) un incremento más acusado de las expectativas de inflación; y, (iii) un endurecimiento más severo de las condiciones financieras.
+
+\begin{specialblock}{\textbf{Perspectivas de crecimiento:} Por economías}
+    \textbf{Economías avanzadad}. Según el escenario de referencia, se prevé que el crecimiento de las economías avanzadas sea del 1,8\% en 2026 y del 1,7\% en 2027. En conjunto, el conflicto tendría un impacto relativamente moderado sobre estas economías, reduciendo el crecimiento en $0,2$ puntos porcentuales en 2026 respecto a las previsiones anteriores al conflicto, que se explica por la mejora de los términos de intercambio en Estados Unidos y por el mayor dinamismo económico y las medidas compensatorias adoptadas en Japón. En cambio, se espera un impacto negativo significativo únicamente en algunas economías importadoras netas de energía, como la zona del euro y el Reino Unido. 
+    
+    La Zona Euro experimentaría una diminución en el crecimiento del $1,4\%$ en 2025 al $1,1\%$ en 2026 y al $1,2\%$ en 2027. Aunque el crecimiento fue mejor de lo previsto a finales de 2025, ese efecto positivo irá desapareciendo conforme se manifiesten las consecuencias del conflicto en Oriente Medio, que se suma a las consecuencias de la invasión rusa de Ucrania. A ello se añade la \textbf{apreciación real del euro} frente a las monedas de otros países exportadores de productos similares, lo \textbf{que reduce la competitividad de la industria europea}. 
+
+    \textbf{Economías de mercados emergentes y en desarrollo}. En las economías emergentes y en desarrollo, se espera que el crecimiento disminuya hasta el $3,9\%$ en 2026 y posteriormente se recupere hasta el $4,2\%$ en 2027. El conflicto en Oriente Medio tiene efectos muy distintos según el grado de exposición de cada economía, ya sea por proximidad geográfica, flujos financieros, remesas o dependencia energética. En conjunto, el impacto negativo sobre el crecimiento es mayor que en las economías avanzadas, reduciendo el crecimiento previsto para 2026 en $0,3$ p.p respecto al escenario previo al conflicto.
+\end{specialblock}
+
+
+\subsubsection{Inflación: Interrumpe su descenso y divergencia persistente}
+Por lo que respecta a la inflación mundial, se prevé que interrumpa su descenso: la inflación general aumentaría del $4,1\%$ en 2025 al $4,4\%$ en 2026, antes de volver a caer hasta el $3,7\%$ en 2027, lo que supone una revisión al alza de 0,7 puntos porcentuales reflejando el aumento esperado de los precios de la energía y los alimentos.
+
+No obstante, persiste la divergencia entre países, que se explica por la persistencia de la inflación de servicios (mayor componente interno) y por el creciente peso de factores específicos de cada país en la explicación de la inflación:
+\begin{la}
+    \item \textbf{Estados Unidos}. El traspaso gradual de los mayores aranceles, el traspaso limitado del encarecimiento de la energía y la moderación progresiva de la inflación de servicios, en un mercado laboral ampliamente equilibrado, implican que la inflación subyacente vuelva al objetivo del $2\%$ durante 2027. El c\textbf{recimiento sostenido de la productividad}, que convergerá lentamente hacia sus normas históricas, \textbf{apoyará una desinflación impulsada por el lado de la oferta};
+    \item \textbf{Reino Unido}. Se espera que la inflación vuelva a repuntar temporalmente hacia el $4\%$, antes de retornar al objetivo a finales de 2027, a medida que se disipen los efectos de los mayores precios de la energía y el debilitamiento del mercado laboral continúe presionando a la baja el crecimiento salarial;
+    \item \textbf{Japón}. Se espera que la inflación se modere en 2026 respecto al resultado de 2025 y converja hacia el objetivo nacional a finales de 2027, conforme se relajen los precios de los alimentos y las materias primas; y,
+    \item \textbf{Zona Euro}. Se proyecta que la inflación general aumente temporalmente por encima del $2\%$ en 2026 y permanezca por encima del objetivo en 2027. La inflación subyacente aumentaría de forma más moderada, pero se mantendría por encima del $2\%$ hasta 2028.
+\end{la}
+
+En China, se prevé que la inflación empiece a subir desde niveles bajos, mientras que en India se espera que vuelva a niveles cercanos al objetivo tras la marcada caída de 2025 impulsada por la moderación de los precios de los alimentos.
+
+\subsubsection{Comercio mundial: Ajustes temporales y resiliencia}
+Se espera que el crecimiento del \textbf{volumen del comercio mundial disminuya} del $5,1\%$ en 2025 al $2,8\%$ en 2026, para aumentar luego al $3,8\%$ en 2027, debido al adelanto de operaciones comerciales al inicio del período y el impacto de los aranceles, mitigado con el tiempo por ajustes en los vínculos comerciales y las cadenas de producción.
+
+Se proyecta que las exportaciones de bienes y servicios disminuyan como porcentaje del PIB mundial durante el horizonte de previsión, aunque la caída del comercio de servicios será mucho menos pronunciada. Esto refleja el mayor crecimiento tendencial subyacente y la mayor resiliencia del comercio de servicios frente al aumento de los riesgos, en comparación con el comercio de bienes.
+
+Por otro lado, el auge de la inversión empresarial impulsada por la tecnología seguirá atrayendo flujos de capital hacia Estados Unidos, aun cuando la inversión tecnológica se modere. Un mayor crecimiento de la productividad en Estados Unidos podría reforzar su competitividad en servicios vinculados a la tecnología y mejorar su balanza comercial. Sin embargo, los efectos riqueza positivos que impulsan la demanda interna, junto con entradas sostenidas de capital asociadas a mayores rendimientos, predominarían y mantendrían el déficit por cuenta corriente estadounidense por encima del observado durante la década previa a la pandemia de COVID-19.
+
+
+\textcolor{red}{\textbf{Perspectivas a medio plazo}. Muchos países enfrentan dificultades para elevar sus perspectivas de crecimiento a medio plazo, agravadas por la fragmentación geoeconómica y el aumento de los riesgos geopolíticos. En ausencia de medidas de política decisivas o avances tecnológicos significativos, las previsiones de crecimiento a cinco años del WEO siguen siendo mediocres. Se proyecta que la economía mundial crezca a una tasa media anual del 3,1\% entre 2028 y 2031, un desempeño persistentemente débil frente al promedio histórico prepandémico de 3,7\% registrado entre 2000 y 2019. Este ritmo refleja principalmente la desaceleración del crecimiento de China, aunque también se espera una moderación del crecimiento medio anual en varias otras grandes economías asiáticas, Oriente Medio y Asia Central, África subsahariana, Norteamérica y Europa. La reversión de la integración económica mundial impulsada por decisiones de política y un entorno internacional más volátil perjudicarán el potencial de la economía mundial a través de múltiples canales interconectados (Aiyar et al., 2023). En primer lugar, se reducirá el papel catalizador que el comercio internacional desempeñó en la convergencia de ingresos entre países, ayudando a sacar de la pobreza a grandes segmentos de la población del mundo en desarrollo. En segundo lugar, es probable que disminuyan muchos de los beneficios tangibles que la migración internacional aportó tanto a los países de origen como a los de destino, debido a flujos migratorios más limitados. Esto tendría consecuencias especialmente adversas para la reducción de la pobreza y la estabilidad macroeconómica en países dependientes de las remesas. En tercer lugar, los flujos de capital, incluida la inversión extranjera directa, pueden disminuir a medida que las empresas evalúen costes y beneficios en un contexto de mayor incertidumbre. En conjunto, el aumento de las barreras al movimiento de bienes y servicios, inversión y personas puede reducir la difusión tecnológica, la circulación de ideas y la innovación. Las estimaciones de pérdidas de PIB mundial a largo plazo derivadas únicamente de la fragmentación comercial oscilan entre el 0,3\% y el 7,0\% tras diez años (BOLHUIS, CHEN y KETT, 2023). Es importante destacar que algunos de estos efectos podrían tardar más en manifestarse que el horizonte de cinco años del WEO.
+}
+
+\subsection{Riesgos: Riesgos a la baja}
+Ahora bien, estas perspecticas económicas mundiales están sujetas a una serie de riesgos, de entre los cuales predominan los riesgos a la baja: \textbf{riesgos adversos especialmente los relacionados con una posible prolongación del conflicto en Oriente Medio}.
+
+
+\subsubsection{Riesgos a la baja: Conflictos y aumento de las tensiones políticas internas}
+La guerra actual y las tensiones geopolíticas podrían intensificarse aún más, y los efectos ya visibles podrían agravarse, como la volatilidad de los precios de las materias primas, las interrupciones de las cadenas de suministro y la depreciación de los tipos de cambio.
+
+La \textbf{seguridad alimentaria} también podría verse amenazada si las perturbaciones en los mercados de fertilizantes, justo antes de la temporada de siembra, provocan un fuerte incremento de los precios de los alimentos. La pérdida de ingresos reales y el aumento de la pobreza en los \textbf{países importadores de materias primas podrían agravar sus desequilibrios externos} y situar a aquellos con reservas limitadas ante riesgos de crisis de balanza de pagos. Asimismo, podrían aumentar la \textbf{inestabilidad política y las tensiones internas preexistentes}, especialmente en las economías del África subsahariana. Paralelamente, un incremento de la aversión al riesgo o mayores fricciones en las transacciones financieras internacionales podrían provocar salidas de capital y fuertes correcciones en los precios de los activos, particularmente en las economías emergentes con marcos de política económica más débiles y menores colchones fiscales y externos (BARRETT et al., 2021; Global Financial Stability Report, abril de 2023 y abril de 2025).
+
+En términos más globales, el escenario severo presentado anteriormente muestra que una intensificación del conflicto podría desencadenar una importante crisis energética con efectos significativos sobre la producción mundial. No obstante, solo alrededor del $10\%$ del impacto estimado sobre el PIB puede atribuirse directamente al aumento del precio del petróleo, lo que indica que otros canales de transmisión desempeñan un papel mucho más importante.\footnote{Otros riesgos significativos que podrían afectar a la baja son:
+\begin{la}
+    \item \textbf{Costes de financiación}. La deuda pública permanece en niveles elevados en varias grandes economías, especialmente en aquellas cuyas monedas y títulos públicos desempeñan un papel central en los mercados financieros internacionales. Las dudas sobre la sostenibilidad fiscal podrían elevar no solo los costes de financiación de esos países, sino también endurecer las condiciones financieras internacionales, aumentar la volatilidad de los mercados y agravar el riesgo de refinanciación de algunas economías en desarrollo altamente endeudadas. En los países de bajos ingresos, la reducción prevista de la ayuda oficial al desarrollo (AOD) representa un desafío adicional, al afectar negativamente a la salud, la educación y la protección social;
+    \item \textbf{Instituciones eocnómicas}. Una mayor presión política sobre los bancos centrales independientes y otras instituciones económicas puede erosionar la confianza pública en su capacidad para cumplir sus mandatos y elevar las expectativas de inflación. Cuando las expectativas inflacionarias se desanclan, volver a estabilizarlas suele requerir largos períodos de política monetaria restrictiva, con mayores rendimientos de largo plazo debido al incremento de las primas por plazo y de las expectativas de inflación. Como consecuencia, el crecimiento económico disminuye y los países pueden afrontar costes de financiación persistentemente elevados y salidas de capital si los inversores internacionales trasladan sus inversiones hacia activos considerados más seguros.
+\end{la}
+}
+
+\paragraph{Productividad: Inteligencia artificial}
+Además, juegan un papel fundamental las expectativas sobre la rentabilidad futura de la IA. A medio plazo, las perspectivas están también dominadas por el riesgo de una posible asignación ineficiente de recursos debido a un exceso de optimismo sobre la IA o la persistencia de políticas que generen vulnerabilidades reales, fiscales y financieras, potencialmente amplificadas por los mercados financieros.
+
+Si las expectativas respecto a la IA resultaran excesivamente optimistas, la inversión real en sectores tecnológicos podría caer de forma abrupta, provocando una fuerte correción de precios en los mercados bursátiles, especialmente aquellos con elevada concentración de empresas tecnológicas (Global Financial Stability Report, abril de 2026).
+
+Una caída bursátil, añadida a las correcciones ya observadas en algunas empresas tecnológicas, podría reducir el consumo privado mediante \textbf{efectos riqueza negativos}, cuyas repercusiones se extenderían internacionalmente tanto a través del comercio como mediante la reversión de flujos de capital y el deterioro de las carteras internacionales de inversión. El endurecimiento de las condiciones financieras globales asociado a este proceso frenaría la actividad económica mundial.
+
+\paragraph{Políticas comerciales: Ruptura del frágil equilibrio}
+Además, no se puede descartar la posibilidad de que más países adopten posiciones proteccionistas, especialmente si la desviación y reorganización de los flujos comerciales genera importantes distorsiones.
+
+La introducción de nuevos aranceles reduciría aún más el crecimiento mundial, mientras que los aranceles sectoriales podrían crear cuellos de botella productivos y tener efectos desproporcionados sobre la actividad económica y la inflación.
+
+Las restricciones no arancelarias dirigidas a insumos críticos, como las tierras raras, también podrían perturbar las cadenas mundiales de suministro. Efectos que serían mayores si desencadenaran medidas de represalia tanto arancelarias como no arancelarias.
+
+\subsubsection{Riesgos al alza: Ganancias de productividad (IA)}
+Por otro lado, también se presentan algunos posibles riesgos que afecten al alza, aunque no sean dominantes. 
+
+El más notable de todos ellos sería el impacto en productividad que pudiera generar la IA: el escenario de referencia no incorpora efectos directos de la IA sobre la productividad, ya que su adopción todavía es limitada en numerosos sectores. Sin embargo, el fuerte aumento reciente de la inversión vinculada a la IA y la aceleración de su adopción podrían incrementar significativamente la productividad y elevar el crecimiento económico antes de lo previsto, tal como podría sugerir el crecimiento de la productividad estadounidense superior a la tendencia desde 2020, lo que aumentaría el crecimiento mundial hasta $0,3$ p.p a corto plazo. Estos beneficios podrían extenderse al conjunto de la economía siempre que existan políticas complementarias para aliviar las restricciones en el suministro eléctrico, ampliar la producción de insumos críticos y facilitar la transición laboral mediante programas específicos.
+
+En los países de bajos ingresos, aprovechar plenamente estas ventajas requerirá reducir las carencias en infraestructuras energéticas y digitales, así como disminuir la elevada concentración del empleo en sectores como la agricultura y la minería, donde el potencial de mejora de la productividad mediante IA es más limitado.
+
+\paragraph{Políticas comerciales: Avances en las negociaciones}
+Además, podría suceder que se diesen progresos concretos en las negociaciones comerciales, que redujeran los aranceles e impulsaran la actividad económica mundial. Asimismo, una mayor previsibilidad de las políticas permitiría a las empresas planificar mejor sus inversiones y desbloquear proyectos actualmente pospuestos.
+
+Los beneficios serían aún mayores si la cooperación internacional se ampliara más allá de los aranceles e incluyera el comercio de servicios, la inversión extranjera directa y la fiscalidad internacional.
+
+En este contexto, la negociación y conclusión de nuevos acuerdos comerciales regionales —como los alcanzados recientemente por la Unión Europea con India y MERCOSUR— podría reducir los costes del comercio y facilitar la adaptación a los recientes cambios en las políticas comerciales. Una reducción generalizada de los aranceles estadounidenses, acompañada de una menor incertidumbre, podría elevar el crecimiento mundial en aproximadamente 0,6 puntos porcentuales (véase el escenario C del Recuadro 1.3).
+
+Además, si los aranceles estadounidenses establecidos al amparo de la Sección 122 no fueran prorrogados y tampoco se impusieran nuevos aranceles mediante otras disposiciones legales, el tipo arancelario efectivo sería inferior al supuesto en el escenario de referencia.
+
+
+\subsection{Implicaciones de Política Económica: Amortiguar y prepararse}
+En definitiva, las hostilidades actuales en Oriente Medio plantean disyuntivas inmediatas de política económica: \textbf{entre combatir la inflación y preservar el crecimiento, y entre apoyar a quienes se ven afectados por el aumento del coste de la vida y reconstruir los colchones fiscales}. 
+
+\subsubsection{Estabilidad de precios y financiera: Materias primas}
+Los bancos centrales deben estar preparados para actuar con decisión de acuerdo con sus mandatos. La política monetaria debe preservar la estabilidad de precios y prestar especial atención a los efectos de contagio desde la inflación observada hacia las expectativas de inflación, especialmente en el horizonte de medio y largo plazo. 
+
+La transmisión a la inflación del shock provocado por la guerra actual diferirá entre países, reflejando distintos grados de exposición a los mercados de materias primas y a la región en la que se ubican, la solidez del anclaje de las expectativas de inflación y la magnitud de la depreciación cambiaria. 
+
+Al mismo tiempo, un endurecimiento prematuro podría ser desestabilizador si las condiciones financieras se endurecen aún más o si disminuye la confianza de consumidores y empresas. Reaccionar con fuerza ante precios flexibles de materias primas, cuando las restricciones de oferta solo están presentes en los sectores relacionados, reduce rápidamente la inflación, pero aumenta el riesgo de una recesión posterior 
+
+Una comunicación clara, oportuna y coherente por parte de los bancos centrales es esencial en un momento de elevada incertidumbre y renovado temor a presiones inflacionarias. Los bancos centrales deben expresar con claridad su compromiso con sus mandatos, incluida la determinación de no permitir que las expectativas de inflación se desanclen y la disposición a endurecer la política si los nuevos datos y la evolución del balance de riesgos lo hacen necesario. También resulta imperativo mantener la independencia de los bancos centrales, tanto legal como operativa, crucial para la credibilidad de la política monetaria. 
+
+Mantener un tipo de cambio flexible pero ordenado. En general, los tipos de cambio deben moverse con flexibilidad en respuesta a las fuerzas del mercado para facilitar el ajuste macroeconómico. Dado que el conflicto en Oriente Medio está provocando volatilidad y amenaza con un endurecimiento abrupto de las condiciones financieras globales, los movimientos cambiarios podrían volverse excesivos o desordenados, amplificando el impacto de los mayores precios de las materias primas sobre la inflación y la estabilidad financiera. 
+
+
+\subsubsection{Sostenibilidad de la deuda}
+Por otro lado, se hace especial énfasis en la necesidad de proteger a los vulnerables del shock manteniendo la disciplina: las respuestas fiscales al conflicto en Oriente Medio deben tener en cuenta las lecciones aprendidas y, idealmente, ajustarse a los principios básicos de limitar la distorsión de las señales de precios y mantener una combinación de política fiscal y monetaria coherente con la estabilidad de precios. 
+
+En principio, y bajo un conjunto excepcional de condiciones, las medidas fiscales temporales en forma de subsidios, recortes de impuestos y límites de precios pueden ayudar a evitar la amplificación de grandes shocks de costes y suavizar la inflación.\footnote{Este conjunto de condiciones es: que el shock de precios de las materias primas sea temporal, que el traspaso de la inflación general a la subyacente sea fuerte, que el sobrecalentamiento económico sea bajo, que los efectos de contagio a los mercados mundiales de materias primas sean reducidos y que exista espacio fiscal disponible.
+
+En la práctica, por tanto, esas condiciones son difíciles de determinar en tiempo real y, aun cuando se cumplen, dichas medidas suelen ser regresivas, fiscalmente costosas y políticamente difíciles de retirar. Conclusión: debe evitarse el apoyo fiscal discrecional.
+} Si la presión sobre el coste de la vida es drástica y algún apoyo resulta inevitable, este debe ser oportuno, explícitamente temporal y canalizado mediante transferencias estrictamente focalizadas hacia los más vulnerables, con cláusulas claras de expiración y compensaciones identificadas mediante reducciones del gasto no prioritario o nuevas medidas de ingreso, especialmente allí donde el espacio fiscal sea limitado.
+
+Además, resulta crucial la reconstrucción de colchones fiscales dados los elevados niveles de deuda pública, el espacio fiscal erosionado tras una secuencia de shocks globales, la incertidumbre sobre el resultado del conflicto más reciente y las apremiantes necesidades de gasto. Una consolidación fiscal creíble de medio plazo debe basarse en evaluaciones realistas de las presiones de gasto de largo plazo, manteniendo al mismo tiempo el foco en un ajuste favorable al crecimiento (Fiscal Monitor, octubre de 2025). La dependencia de la represión financiera, la financiación monetaria o un sentimiento benigno de los mercados entrañaría riesgos macrofinancieros significativos y debe evitarse. Los gobiernos deben fortalecer los ingresos mediante la ampliación de las bases imponibles y la mejora de la administración tributaria, aumentar la eficiencia del gasto y reorientar los desembolsos hacia áreas con altos multiplicadores, como infraestructura, desarrollo de capacidades y protección social bien focalizada, al tiempo que movilizan inversión privada. 
+
+\paragraph{Transición energética}. 
+Destaca entre todas las medidas que deben adoptarse, la necesidad de continuar los objetivos de transición energética. 
+
+En este sentido, la adopción de sistemas renovables y energéticamente eficientes puede generar múltiples beneficios, ayudando a las economías a enfrentar tanto los desafíos actuales como los de largo plazo. Las medidas para acelerar la transición energética pueden contribuir a contener el impacto sobre los precios de la energía y mejorar la resiliencia frente a futuros shocks mediante una mayor seguridad energética. También pueden acercar los objetivos de mitigación del cambio climático y preparar a los países frente a mayores riesgos derivados de fenómenos meteorológicos extremos relacionados con el cambio climático.
+
+
+
+
+\clearpage
+\section{Flujos comerciales: Estructura sectorial y geográfica}
+\puntosclave{
+    Los flujos internacionales de bienes y servicios han experimentado una fuerte expansión desde el fin de la II Guerra Mundial. Todos los países se han ido incorporando al comercio internacional, muchos de ellos a través de su integración en las cadenas globales de valor (en adelante, CGV).
+    
+    Concentración geográfica: el grueso de los flujos comerciales internacionales tiene lugar entre Asia, los Estados Unidos y la Unión Europea (en adelante, UE).
+    
+    La mayor parte del comercio de mercancías corresponde a los productos manufacturados, seguido de los combustibles y productos de las industrias extractivas y de los productosagrícolas.
+    
+    Se ha producido un cambio en la naturaleza y configuración de los flujos comerciales internacionales ya que han ido ganando peso el comercio de servicios y el de bienes intermedios, a costa del de bienes finales. 
+    
+    El comercio en términos de valor añadido permite ver la posición de los países en las CGV, a través de sus participaciones hacia adelante y hacia atrás. 
+    
+    El Banco Mundial a finales de los años 80 decidió denominar mercados emergentes a un grupo de países en desarrollo caracterizados por sus procesos de rápido crecimiento e industrialización. No hay una única clasificación de los mercados emergentes. Están localizados en Europa, Asia, América y África. 
+    
+    Su desarrollo ha estado vinculado a su inserción en las CGV y ha sido muy dependiente de las entradas de capital extranjero.
+}
+
+Tras la Segunda Guerra Mundial se creó un orden comercial internacional basado en unas reglas y normas que facilitaron unas relaciones económicas internacionales estables y predecibles. Más concretamente, en 1947 se firmó el GATT con el objetivo de facilitar los flujos comerciales de mercancías entre los países miembros, que se fundamentaba en el firme convencimiento de los beneficios que reporta el libre comercio y los costes que supone el mantenimiento de medidas proteccionistas. 
+
+Bajo el marco multilateral de la Organización Mundial del Comercio, que cuenta actualmente con $168$ miembros, el comercio internacional ha experimentado un tremendo crecimiento tanto en términos extensivos (número de países) como en términos intensivos (volumen), conduciendo a una gran expansión de los flujos internacionales de bienes y servicios, que ha transformado profundamente la estructura sectorial y geográfica de la producción.
+
+Entre 2005 y 2022 el valor del comercio mundial de mercancías se ha triplicado, pasando de 11 billones de dólares a 31 billones, medido por el promedio del valor de las importaciones y exportaciones. Este crecimiento no ha sido lineal, sino que ha tenido avances y retrocesos. Los dos mayores retrocesos fueron consecuencia de la gran crisis financiera (en adelante, GCF) y de la pandemia; concretamente en 2020 el comercio de bienes tuvo una caída del $-8\%$ interanual y el comercio de servicios comerciales del $-21\%$ interanual.\footnote{La OMC calcula los índices del volumen de mercancías que permiten obtener datos de la variación de las cantidades de mercancías objeto de comercio. Para calcular dichos índices, la OMC divide la variación del valor en dólares de las corrientes comerciales (representado por índices del valor del comercio) por la variación de los precios de las importaciones y exportaciones (representados por los índices de valor unitario). En el caso de mercancías, las variaciones en términos reales se pueden calcular tanto sobre datos de aduanas (con índices de valor unitario) como sobre datos de contabilidad nacional y balanza de pagos, mientras que para los servicios comerciales sólo pueden calcularse sobre estos últimos. Ver: \href{https://www.wto.org/spanish/res_s/statis_s/technotes_s.htm}{\textit{Estadísticas comerciales}. OMC, Notas técnicas}
+} 
+
+Creciente peso del comercio digital.\footnote{\href{https://www.oecd-ilibrary.org/trade/handbook-on-measuring-digitaltrade-second-edition_ac99e6d3-en}{\textit{Handbook on measuring digital trade}. OECD} 
+} El continuo desarrollo y la progresiva penetración de nuevas tecnologías digitales, así como las innovaciones en los sistemas de información y comunicación ligados a la irrupción de internet, han tenido importantes implicaciones sobre el proceso de internacionalización de las empresas y han originado profundas transformaciones en la estructura y configuración de los flujos comerciales.\footnote{\textit{La disminución de las fricciones de comunicación, información y búsqueda ha propiciado que un gran número de empresas, especialmente pequeñas y de reciente creación, logren internacionalizarse con éxito a través del canal online, vendiendo sus productos en numerosos mercados a la vez, sin necesidad de disponer de elevados niveles de productividad}. 
+
+\href{https://doi.org/10.32796/ice.2020.913.6987}{\textit{Plataformas de comercio electrónico e internacionalización empresarial}. Serrano, J. (2020). ICE, Revista De Economía, (913)}.
+} Las tecnologías digitales están transformando la actividad económica y el comercio internacional, están cambiando la forma en que se compran y entregan los productos al aumentar la participación de las pequeñas empresas y los hogares en el comercio internacional y posibilitar un uso cada vez mayor de los pedidos digitales (digital ordering). Muchos servicios que tradicionalmente requerían de proximidad entre productores y consumidores ahora se comercializan a distancia. En las estadísticas de comercio, se entiende por comercio digital todo el comercio internacional que se contrata digitalmente o se entrega digitalmente.\footnote{El comercio contratado digitalmente (digitally ordered) se define como “la compra o venta internacional de un bien o servicio, realizado a través de redes informáticas por métodos específicamente diseñados con el propósito de recibir o hacer pedidos”. Es, por tanto, sinónimo de comercio electrónico internacional y cubre transacciones tanto de bienes como de servicios.
+}\textsuperscript{,}\footnote{El comercio entregado digitalmente (digitally delivered) se define como “todas las transacciones comerciales internacionales que se entregan remotamente a través de redes informáticas”. Sólo los servicios pueden ser entregados digitalizados. A diferencia de los pedidos digitales, que son instantáneos, la entrega digital puede tener lugar durante un período más largo y puede implicar un grado significativo de interacción interpersonal.
+} Se trata, por tanto, de un subconjunto de las transacciones totales internacionales de bienes y servicios. 
+
+
+\subsection{Comercio de mercancías: Estructura mundial}
+El comercio de mercancías comprende cuatro grandes grupos de productos: (i) \textbf{manufacturas}; (ii) \textbf{combustibles y productos de las industrias extractivas}; (iii) \textbf{productos agropecuarios}; y, (iv) \textbf{otros productos}.
+
+Para analizar y comprender la evolución de estos flujos de mercancias, presentaremos de forma separada su evolución en términos de estructura geográfica y su evolución en términos de estructura sectorial.
+
+\subsubsection{Geográfica: Estructura regional} 
+Hasta los años noventa del siglo pasado la mayor parte del comercio tenía lugar entre las economías avanzadas, pero la incorporación de China y de las economías emergentes al comercio internacional modificó la dotación relativa de factores productivos a escala mundial y alteró la división internacional del trabajo. Durante la última década, las economías en desarrollo han representado del $40\%$ del comercio mundial de mercancías. 
+
+Los grandes flujos comerciales forman un triángulo cuyos vértices son los Estados Unidos, Asia y Europa. El grado de concentración es muy elevado: más de la mitad del comercio mundial de mercancías se concentra en diez economías y las cinco más importantes representan más de un $35\%$.\footnote{China, Estados Unidos, Alemania, Japón, Países Bajos, Francia, Hong Kong, Reino Unido, Corea e Italia.
+} 
+
+Hasta los años 90, Japón dominaba el comercio ente Asia y los Estados Unidos. Pero con la emergencia de China, la distribución geográfica del comercio entre los Estados Unidos y sus principales interlocutores asiáticos se modificó. China surgió inicialmente entre las restantes economías asiáticas como rival de Japón; sin embargo, al final del decenio de 2000, sustituyó a Japón como principal interlocutor comercial de los Estados Unidos. 
+
+Inicialmente China fue una fuente importante de importaciones para los Estados Unidos (ya que un número cada vez mayor de cadenas de suministro que producían para el mercado americano se trasladaron a China) y un mercado de exportación poco importante. Sin embargo, la posición de China como importador y exportador tanto con sus socios asiáticos como con la UE y los Estados Unidos se ha modificado radicalmente desde su entrada en la OMC. Durante el primer decenio del siglo XXI, China se ha convertido en un importante mercado de exportación tanto para los Estados Unidos como para la UE. 
+
+Desde comienzos de este siglo, la composición regional de los flujos de comercio ha ido variando dependiendo de las tasas de crecimiento del PIB de cada país, de los precios de las materias primas (especialmente en lo que se refiere a la participación de América del Sur, la Comunidad de Estados Independientes (en adelante, CEI) y Oriente Medio), de las crisis financieras sufridas (GCF, crisis de la deuda soberana europea) y de las variaciones de sus tipos de cambio respecto al dólar.
+
+Tras la crisis financiera, Asia fue la región que más contribuyó a la recuperación del comercio mundial, pero en 2015, China y las economías asiáticas perdieron dinamismo, lo que se vio compensado por la recuperación de Europa, que había lastrado el crecimiento de las importaciones mundiales desde la crisis de deuda soberana hasta los años 2014 y 2015.
+
+\paragraph{Exportaciones: Fábricas regionales}
+China, los Estados Unidos y Alemania son los tres principales exportadores de mercancías, seguidos por Países Bajos, Japón, Corea e Italia, cuyas participaciones son muy inferiores y van desde un 4\% a un 2,5\%. En las exportaciones alemanas tiene un elevado peso relativo la industria del automóvil, cuyas cadenas de aprovisionamiento mundiales han soportado tensiones importantes en la última década. Ello está en el origen de la pérdida de cuota de mercado de Alemania. 
+
+De entre las tres regiones que hemos definico en el \textit{modelo fabril}, las mayores exportadoras son Asia y la UE, con más de un tercio del total cada uno de ellos, seguidos de América del Norte con un porcentaje en el entorno del 13\%. El resto de las regiones, América del Sur y Central y el Caribe, la CEI, África y Oriente Medio tienen porcentajes muy inferiores.\footnote{Además, como veremos, dado que estas regiones son exportadoras de materias primas energéticas y no energéticas, su participación en las exportaciones mundiales se ve muy afectada por las variaciones en sus precios.
+}
+
+La razón de esta distribución tiene su origen en la transformación sectorial de la economía estadounidense. Desde principios de siglo, la participación de América del Norte ha ido reduciéndose desde una media entre 2000 y 2015 del $18\%$ hasta el $13\%$ actual, lo que representa solo la culminación final de un proceso que se inició a principios de los años 60's cuando comenzó a ser deficitaria por cuenta de bienes. En la misma linea, si bien la sustitución inicial derivó en mayor vínculos tanto con Europa como con Asia, tras la transición China al capitalismo de Estado, la sustitución ha sido cada vez más a razón de un aumento de la participación del país asiático.
+
+No obstante, destaca en los últimos ejercicios el creciente peso de la India dentro de las exportaciones de Asia, como consecuencia de la intensificación de su vocación exportadora en los últimos años que la ha convertido en una pieza clave en las cadenas de suministro internacionales. 
+
+\paragraph{Importaciones: Fábricas regionales}
+En la misma linea que las exportaciones, Estados Unidos, China y Alemania son los principales importadores, seguidos de Países Bajos, Japón, Reino Unido, Francia y Corea con participaciones que van desde el $3,5\%$ al $2,8\%$.
+
+Asia y la UE suponen más de un tercio de las importaciones mundiales cada una de ellas, seguidas de América del Norte con un porcentaje de en torno al $18\%$, superior al de sus exportaciones. El resto de las regiones tienen porcentajes muy inferiores.\footnote{En los datos anteriores se ha tenido en cuenta el comercio de mercancías dentro de la UE. Si tratamos al conjunto de la UE como un único país, China seguiría siendo el mayor exportador, seguido de las Exportaciones extra-UE y de los Estados Unidos. Por el lado de las importaciones, los Estados Unidos serían el mayor importador mundial, pero le seguirían las Importaciones extra- UE y China. Gran parte de estos flujos comerciales corresponden a bienes intermedios y a productos energéticos.
+}
+
+
+\subsubsection{Sectorial: Cadenas Regionales de Valor}
+Al igual que en términos geográficos, la fragmentación internacional de la producción no se ha desarrollado de manera homogénea ni en todos los sectores productivos ni en todos los tipos de bienes. 
+
+En prinicpio, las innovaciones tecnológicas en las comunicaciones y el transporte, junto con las grandes inversiones en infraestructuras de transporte y de comunicaciones, la marcada competencia de las economías emergentes y la reducción de restricciones a los intercambios comerciales propiciaron una nueva concepción de la producción en la que se posibilitaría la descomposición de la cadena de valor de un producto cualquiera en múltiples segmentos que podrían ubicarse donde puediera explotarse el principio de la ventaja comparativa, formando la que se llegó a conocer como \textbf{Cadenas Globales de Valor} (GVC).\footnote{GANDOY y DÍAZ-MORA (2020): \textit{El futuro de las Cadenas Globales de Valor}, Nota técnica, Comité de Reflexión sobre Internacionalización, Club de Exportadores e Inversores Españoles.
+} Esto a su vez generaría efectos de segunda ronda respecto a estas localización geográficas, puesto que los países se incoporarían al comercio desde la demanda como consecuencia del desarrollo económico proyectado. 
+
+No obstante, el resultado no ha sido como el proyectado. Veamos por qué.
+
+\paragraph{Sectores productivos: Concentración extensiva e intensiva}
+Por lo que respecta a los sectores, la fragmentación ha sido muy intensa en vehículos, confección y calzado y electrónica, siendo la participación del resto de grupos muy inferior (agropecuarios, combustibles y productos de las industrias extractivas y otros bienes). 
+
+Descomponiendolo en grandes grupos de productos, el comercio sectorial en porcentaje sobre el total comerciado es el siguiente: (i) productos agrícolas, en torno al $10\%$, estabilizado en los últimos años; (ii) combustibles y productos de las industrias extractivas, que a pesar de su gran volatilidad, se ha estabilizado en torno al $20\%$ (ajustando edebidamente por los \textit{shocks} geopolíticos); y, (iii) manufacturas, que constituyen el grueso de las exportaciones mundiales de mercancías, en torno al $63\%$.\footnote{Todos los grupos de productos están definidos con arreglo a la Revisión 3 de la Clasificación Uniforme para el Comercio Internacional (CUCI) y a la Revisión 4 de la Clasificación por Grandes Categorías Económicas (CGCE). Al estar las exportaciones definidas en términos nominales, estos porcentajes reflejan las variaciones en los precios de los bienes y la cotización del dólar.
+
+Destaca por su importancia y volatilidad las variaciones de los precios de las materias primas energéticas. Así, la participación de Oriente Medio, América del Sur y Central y la CEI en el comercio mundial está limitada mayormente al comercio de productos agropecuarios, energía y otros productos básicos, por lo que sus corrientes comerciales son vulnerables a las fluctuaciones de los precios en los mercados internacionales. Por ejemplo, entre 2019 y 2022 los combustibles y productos de las industrias extractivas incrementaron su peso en 4 puntos porcentuales en las exportaciones de mercancías mundiales. Ver gráfico 2.3 de \href{https://www.wto.org/english/res_e/booksp_e/wtsr_2023_ch2_e.pdf}{\textit{World Trade Statistical Review 2023}} de la OMC. 
+}
+
+Si al grupo sectorial manufacturero es al que corresponde una fracción superior del volumen total de comercio, es a este al que debemos prestar atención para analizar la fragmentación geográfico-sectorial de la producción. La categorías estrella dentro de este gran grupo sectorial son:\footnote{\href{https://www.wto.org/spanish/res_s/booksp_s/wtsr_2022_c4_s.pdf}{\textit{Composición, definiciones y metodología}. OMC, Nota técnica}
+} 
+\begin{la}
+    \item \textbf{Maquinaria y equipo de transporte}. Desde 2000 supone aproximadamente el $35\%$ de las exportaciones mundiales de mercancías. Sus componentes principales son máquinas de oficina y equipos para telecomunicaciones, productos de la industria del automóvil y otro equipo de transporte. Los productos de la industria del automóvil suponen dos tercios de las exportaciones mundiales de equipo de transporte y un $12\%$-$13\%$ de las exportaciones mundiales de manufacturas entre 2000 y 2022, excepto en los tres últimos ejercicios cuyo peso ha disminuido hasta algo menos de un $10\%$. Los mayores exportadores de productos de la industria del automóvil son la UE, $45\%$ de las exportaciones mundiales entre 2000 y 2022, los Estados Unidos (11,7\% en 2000 y 9,1% en 2022) y Japón (15,3% en 2000 y 8,9% en 2022). Méjico, China y Corea han visto un incremento de sus exportaciones entre 2000 y 2022, del 5,3% al 8,5%, del 0,3% al 8% y del 2,6% al 5,1%, respectivamente. Canadá ha visto caer su cuota del 10,5% en 2000 al 3,3% en 2022. Los mayores importadores son la UE, los Estados Unidos, China, Canadá y Reino Unido.;
+    \item \textbf{Máquinas de oficina y equipos para telecomunicaciones}. Su relevancia ha ido creciendo desde suponer el $25\%$ de las exportaciones totales de maquinaria y equipo de transporte a principios de la década de los 90 a un tercio en los tres últimos años. Los mayores exportadores son China, la UE, Taiwán, Singapur, los Estados Unidos, Corea, Malasia y Vietnam. La cuota mundial de la UE se ha reducido desde un 24\% en 2000 al 16,9\% de 2022. Los mayores importadores son la UE, China, los Estados Unidos, Singapur y Taiwán. Destaca el aumento de peso de China como importador y la caída de los Estados Unidos desde el 21,4\% al 16\% en dicho período;
+\end{la}
+
+No obstante, si nos adentramos en los datos nos daremos cuenta de que el grado de concentración del comercio manufacturero es muy elevado, tanto a nivel extensivo como intensivo: \textbf{los diez principales exportadores suponen más del $70\%$ del total exportado y son a su vez los mayores importadores}.\footnote{Las únicas observaciones que difieren de esta patrón general son, como es normal, el comercio de productos de industrias extractivas, siendo los Estados Unidos, Arabia Saudita, los Emiratos Árabes Unidos, la Federación Rusa, Australia y Canadá los mayores exportadores; mientras que los mayores importadores son China, la Unión Europea, los Estados Unidos, Japón y la India (en función del tipo de recurso deficitario). Incluso se ha visto agravada esta fragmentación geográfico-sectorial desde el 2000 debido a la progresiva incorporación de las exportaciones provinientes de otras economías (esencialmente África).
+}
+
+\paragraph{Tipo de producto: Bienes finales}
+Resolver esta aparente paradoja exige que nos adentremos en la fragmentación sectorial de la producción por tipología de productos. 
+
+Lo primero que podríamos pensar es que esto se debe al gran volumen de comercio de bienes intermedios. Es decir, aquellos bienes que van a ser incorporados al proceso de producción del producto final y, en consecuencia, jugarían un papel fundamental en la formación de las Cadenas Globales de Valor.\footnote{\href{https://www.wto.org/english/res_e/statis_e/miwi_e/tig_e.htm}{\textit{Information notes on trade in intermediate goods}. OMC, Nota técnica}. Para ello generalmente se utiliza la Clasificación por Grandes Categorías Económicas de las Naciones Unidas (CGCE), que agrupa los productos por su uso final principal La última revisión ha incluido servicios. Los bienes y servicios están definidos en términos del “Standard International Trade Classification, STIC”, en español CUCI. Por tanto, las CGCE establece una relación entre los productos STIC y 19 categorías básicas de bienes, de las cuales 8 son categorías de bienes intermedios. El problema para delimitar ambos tipos de bienes es que muchos pueden ser intermedios o finales dependiendo del contexto. A lo largo de este apartado, dado que la actualización del tema se haría con las publicaciones de la OMC, vamos a seguir la agrupación en cinco categorías de los bienes intermedios que la OMC utiliza. También puede acudirse a las bases de datos de Naciones Unidas (Comtrade) o Eurostat, que siguen la clasificación de la CGCE. La definición y la medición del comercio de servicios intermedios. son mucho más complejas y están sujetas a la limitada disponibilidad de datos y a la dificultad de hacer una distinción precisa entre servicios finales y servicios intermedios.
+}\textsuperscript{,}\footnote{La extensión del comercio intraindustrial se mide habitualmente por índices de comercio intraindustrial (IIT). El más conocido es el índice de Grubel-Lloyd, que mide el grado de solapamiento de los flujos comerciales. La cuestión esencial es la definición de industria. ¿A qué nivel de desagregación arancelaria decimos que los intercambios de bienes pertenecen a la misma industria? Es un índice muy dependiente del nivel de desagregación que se utilice, por lo que con frecuencia los análisis se centran en su evolución temporal y en las diferencias entre los países, más que en los datos brutos.
+} 
+
+Si empezaramos por aquí veríamos como, a priori, no vamos mal encaminados: la participación media de los bienes intermedios en el comercio total durante el último decenio es de un $50\%$.\footnote{La importancia de este tipo de comercio es mayor en las categorías de bienes manufacturados que en las de bienes no manufacturados (industrias extractivas). Además, dentro de los primeros, es superior para las manufacturas más sofisticadas como productos químicos, maquinaria, equipos de transporte y electrónica.
+} Ahora bien, la razón por la que la participación de estos bienes es casi tan alta como la concentración geográfica de los flujos comerciales de carácter sectorial es \textbf{porque las Cadenas Globales de Valor son eminentemente regionales}. Es decir, los flujos comerciales que desbordan la óptica regional, que como hemos dicho se configura en estructura fabril que guarda mucha relación con los modelos Centro-Periferia, son \textbf{esencialmente los productos destinados al consumo final}.
+
+Por tanto, si bien es cierto que el intraindustrial ocupa una buena porción del comercio internacional, este se restringe a los límites regionales que se establecieron en el primer apartado.\footnote{El comercio intraindustrial se define como la exportación e importación simultánea de bienes o servicios que están en la misma categoría estadística. A pesar de que mediante las teorías clásicas del comercio este fenómeno tiene difícil explicación, las nuevas teorías del comercio han aportado una base teórica al mismo. Puede ser vertical u horizontal, según qué tipo de relación capte. La medición del comercio intraindustrial capta diferentes tipos de relaciones: (i) comercio horizontal en productos similares de diferentes variedades (v.gr. coches de una misma clase y de un mismo rango de precios), (ii) comercio de productos diferenciados verticalmente por la calidad y el precio (v.gr. ropa de marca frente a ropa de baja calidad) y (iii) especialización vertical de la producción que lleva a comercio de bienes similares en diferentes fases de producción. De hecho, un nivel considerable del comercio en bienes intermedios es comercio intraindustrial.
+} Razón por la cual hemos visto como el comercio intraindustrial sobre el total de comercio ha aumentado progresivamente desde finales de los años 80s en la mayor parte de los países de la OCDE, mientras iba disminuyendo paralelamente su posición en el comercio total. De la misma forma, es esta la razón por la que destaca el comercio intrarregional en Asia supone más del $40\%$ de comercio mundial de bienes intermedios.\footnote{Asia acusó el descenso más pronunciado, con una caída de sus exportaciones de bienes intermedios del $-1,8\%$ en 2022, seguida de Europa con un $–1,2\%$, lo que puede explicarse por la fuerte reducción de las exportaciones de metales, como las aleaciones de aluminio, cuya producción se vio muy afectada por el aumento de los costos de la energía desencadenado por la guerra en Ucrania. Destaca la reducción de las exportaciones de bienes intermedios de Hong Kong ya que sus exportaciones de componentes de alta tecnología (memorias y circuitos integrados) disminuyeron más de un $40\%$. En 2022, las exportaciones de bienes intermedios de África crecieron un $10\%$ (por el incremento del precio de las materias primas), las de América del Norte un $4,2\%$ y las de América del Sur y Centroamérica un $8,4\%$ debido al incremento de los precios de la soja y derivados que suponen el $28\%$ de las exportaciones de bienes intermedios de Brasil.
+}
+
+No obstante, existen sectores particulares en los que el comercio internacional se está extendiendo a otras areas. En particular, el comercio de productos químicos, que ha ido ganado peso progresivamente. Los mayores exportadores siguen siendo los mismos (UE, Estados Unidos, China y Japón), aunque el peso de Estados Unidos, Japón y Reino Unido ha caído progresivamente mientras aumentaba el peso de otras regiones, como la India y los países del Golfo Pérsico.
+
+
+\subsection{Comercio de servicios: Estructura mundial}
+Veamos ahora como se estructura el comercio de servicios. 
+
+Como es lógico, incialmente el comercio internacional era, esencialmente, comercio de mercancias. No obstante, el comercio de servicios ha experimentado un proceso de rápida expansión durante las últimas tres décadas, hasta el punto que se habla de un proceso de servitización del comercio internacional en linea con la transformación estructural que han experimentado las economías más avanzadas. De hecho, desde la crisis financiera el comercio de servicios ha crecido a mayores tasas que el comercio de mercancías, superando el $5\%$ de crecimiento interanual y ascendiendo hasta un valor total de $15,3\text{B}\$$ en 2022: el $22,1\%$ del total de las exportaciones mundiales.\footnote{Su medición es muy compleja. La medición del comercio de servicios es más difícil que la del comercio de mercancías, dada la complejidad de su delimitación, su gran heterogeneidad y las dificultades de recogida de datos derivadas de sus diversos modos de suministro. Todo ello da lugar a numerosas dificultades para clasificar y cuantificar el comercio internacional de servicios. Es por ello por lo que también las estadísticas comerciales convencionales se vuelven cada vez más difíciles de interpretar a medida que se van difuminando los conceptos tradicionales, como el país de origen o la distinción entre bienes y servicios debido a la servitzación de las manufacturas.
+} Además, no hay que perder de vista el hecho que las manufacturas, en sí mismas, han experimentado también un proceso de servitización que complica aún más la valoración adecuada de la importancia de los servicios en el comercio internacional: \textbf{se estima que el valor añadido de los servicios representa casi la mitad del valor del comercio internacional}.
+
+Varios han sido los factores que han propiciado este desarrollo. Como es normal, la modernización del transporte terrestre, marítimo y aéreo en los años 70's han jugado su papel.\footnote{Los servicios también pueden introducirse en los procesos de producción de manufacturas, ya sea como insumos de valor elevado, como los servicios de ingeniería, o como insumos de menor valor, como las operaciones de montaje; es decir, pueden constituir insumos en una transacción internacional de bienes. Las estadísticas sobre el comercio en términos de valor añadido revelan la importancia de los insumos de servicios en el comercio internacional de bienes y servicios. Se conoce como \textbf{servitización} de las manufacturas.
+} Pero, sin duda, el factor determinante ha sido los avances tecnológicos: \textbf{servicios que antes eran difíciles de comercializar porque sólo podían prestarse físicamente, son cada vez más fáciles de comercializar internacionalmente porque pueden prestarse digitalmente}.
+
+Como sabemos, existen cuatro modos de prestar servicios en el exterior [\authorfont{Ver Tema 3.B.34}], siendo la \textbf{presencia comercial el modo de prestación predominante}, aunque este modo viene perdiendo protagonismo en favor del suministro transfronterizo debido a los avances en las tecnologías digitales, que facilitan esta modalidad.\footnote{Un caso paradigmático es el de los servicios financieros y de distribución. Históricamente, estos sectores se han basado en la presencia comercial para acceder a mercados extranjeros. Sin embargo, la expansión de la digitalización está cambiando los modelos de actividad y abriendo más posibilidades al suministro transfronterizo de servicios, dando lugar a empresas como Revolut o Netflix que pueden suministrar el servicio mediante suministro transfronterizo: la prestación transfronteriza se ha duplicado desde el año 2000.
+
+Paradójicamente, esto resulta más útil a la hora de analizar adecuadamente los intercambios de servicios a nivel internacional. Como sabemos, la balanza de pagos es la principal fuente de datos para el comercio. Sin embargo, la prestación por presencia comercial ha sido siempre un dato de conflicto pues no es posible su observancia directa (ya que estos proveedores son \textit{residente} y, como tal, forman parte de la demanda y producción interna) y debía ser complementada con datos sobre IED y servicios de construcción, causando grandes dolores de cabeza al tener que cruzar datos e inferir resultados. Una reciente propuesta para resolver esta cuestión ha sido la creación de series de flujos comerciales entre filiales de empresas no residentes y la empresa matriz: \href{https://www.ine.es/metodologia/t37/t3730p227.pdf}{\textit{Estadística de Filiales de Empresas Extranjeras en el Sector Servicios}. INE, Nota técnica}
+
+} De hecho, el volumen total de esta modalidad de provisión (digital) se ha triplicado desde 2000, manteniendo una tasa de crecimiento interanual promedio del $7,3\%$. 
+
+\subsubsection{Geográfica: Comerciales vs. Digitales}
+Por lo que respecta la estructura geográfica de estos flujos comerciales, a pesar de que cada año diferentes países ganan en participación en el comercio internacional de servicios, la concentración en los principales exportadores se mantiene relativamente estable: los diez exportadores de servicios suponen el $55\%$ del total. 
+
+Las economías en desarrollo han aumentado su participación en el comercio total de servicios, aunque de forma desigual, ya que se concentran principalmente en cinco economías: China, India, Singapur, Corea y Hong Kong. También resalta el comportamiento de los BRICS (Brasil, Rusia, India, China y Sudáfrica) y la creciente participación de los países menos adelantados, que ha aumentado significativamente desde 2005. Es por esta razón que el comercio de servicios se consideran esencial para el crecimiento: un instrumento fundamental del desarrollo económico y un elemento clave de las políticas comerciales. 
+
+Para entrar en una desagregación más apropiada del comercio de servicios, debemos distinguir, para mayor claridad, entre los servicios comerciales y los servicios digitales, pues es donde existen verdaderas diferencias desde una perspectiva geográfica.
+
+\begin{specialblock}{¿Qué son los servicios comerciales y los servicios digitales?}
+    No se trata de una clasificación estándar ni cerrada, pero es muy útil a la hora de entender las razones de la concentración geográfica del comercio de servicios:
+    \begin{la}
+        \item \textbf{Servicios comerciales}. Entendemos como \textbf{servicios comerciales} aquellas actividades económicas que facilitan la venta y distribución de bienes y servicios (físicos o intangibles). Incluyen logística, distribución, marketing, consultoría, transporte y gestión de ventas. Pueden darse en espacios físicos (tiendas, oficinas) o a través de canales combinados (omnicanal) y su expansión suele estar limitada por la geografía, el inventario y la necesidad de infraestructura física; y,
+        \item \textbf{Servicios digitales}. Entendemos como \textbf{servicios digitales} aquellas actividades estríctamente automatizados, intangibles y entregados a través de internet. Incluyen software en la nube, streaming, plataformas de redes sociales, almacenamiento de datos y comercio electrónico. Requieren obligatoriamente de redes electrónicas y conexión a internet para su provisión y consumo, lo que a su vez las hace altamente escalables: un servicio puede ser utilizado por millones de usuarios a nivel global con una intervención humana mínima.
+    \end{la}
+
+    \begin{center}
+    \begin{tabular}{|p{0.3\linewidth}|p{0.3\linewidth}|p{0.3\linewidth}|}
+    \hline
+     & \textbf{Servicios Comerciales} & \textbf{Servicios Digitales} \\
+    \hline
+    \textbf{Ejemplo} & Transporte, seguros, asesoría legal presencial, publicidad tradicional & Netflix, Google Drive, Spotify, pasarelas de pago (PayPal), aplicaciones móviles \\
+    \hline
+    \textbf{Soporte físico} & Puede requerir o no infraestructura logística & Ninguno, $100\%$ virtuales \\
+    \hline
+    \textbf{Alcance} & Local o internacional (sujeto a barreras comerciales y logísticas) & Global e inmediato\\
+    \hline
+    \end{tabular}
+    \end{center}
+\end{specialblock}
+
+Los principales exportadores de \textbf{servicios comerciales} son la Unión Europea, los Estados Unidos y el Reino Unido, representando conjuntamente más del $60\%$ del total mundial, seguidos por Asia  ($24,2\%$), donde destaca el crecimiento de los flujos en India. Por otro lado, las exportaciones de servicios comerciales de África tienen un escaso peso relativo ($1,9\%$), si bien han mostrado un fuerte crecimiento interanual. Los principales importadores de servicios comerciales son también la Unión Europea ($41,9\%$), los Estados Unidos ($11,0\%$) y el Reino Unido ($5,3\%$), seguido del continente asiático que representa en conjunto el $27\%$ de las importaciones.\footnote{Considerando la Unión Europea como bloque, sería el mayor exportador e importador de servicios comerciales: las exportaciones extra Unión Europea supusieron el $20,4\%$ del total mundial en 2022; mientras que las importaciones supusieron el $23,6\%$ del total mundial. 
+
+Con el Brexit, Alemania pasó a ser el principal protagonista en las exportaciones de la UE de servicios comerciales, seguida de Irlanda, Francia y Países Bajos. Estos cuatro países suman el $52,5\%$ del total exportado.
+}
+
+Por lo que respecta a los \textbf{servicios digitales}, que son los que han experimentado un crecimiento más pronunciado (se ha triplicado desde 2000, con un aumento anual del $7,3\%$), los principales exportadores de servicios digitales son los Estados Unidos, Reino Unido y China; mientras que los mayores importadores son los Estados Unidos, China y Alemania. Tomada en bloque, Europa supone más de la mitad de las exportaciones mundiales.\footnote{No obstante, la depreciación de la libra esterlina y el euro frente al dólar han reducido sustancialmente su tasa de crecimiento.
+} Sin duda el mayor crecimiento lo muestra Asia, que cubre casi una cuarta parte del total mundial, de la que el $43\%$ responde a comercio intrarregional. África supone menos del $1\%$ del total.
+
+A futuro, la OMC considera que el comercio de servicios se verá afectado por cuatro tendencias principales: las tecnologías digitales, los cambios demográficos, el aumento de los ingresos y las repercusiones del cambio climático.
+
+\subsubsection{Sectorial: Objetivos divergentes} 
+Analicemos ahora la estructura sectorial del comercio de servicios. El MBP$-6$ distingue cuatro grandes categorías de servicios: servicios relacionados con los bienes, transporte, viajes y otros servicios comerciales.\footnote{Así mismo, el manual delimita doce componentes normalizados de servicios: (i) servicios de manufactura sobre insumos físicos pertenecientes a otros, (ii) servicios de mantenimiento y reparaciones no incluidos en otra parte, (iii) transporte, (iv) viajes, (v) construcción, (vi) servicios de seguros y pensiones, (vii) servicios financieros, (viii) cargos por el uso de la propiedad intelectual no incluidos en otra parte, (ix) servicios de telecomunicaciones, informática e información, (x) otros servicios empresariales, (xi) servicios personales, culturales y recreativos y (xii) bienes y servicios del Gobierno no incluidos en otra parte. 
+}
+
+Lo primero que destaca es la heterogeneidad en el comportamiento a lo largo del tiempo entre las diferentes categorías de servicios, pues su evolución depende de múltiples factores económicos, sociales y políticos, y más recientemente de factores ambientales o de salud como la reciente pandemia.
+
+Uno de los rasgos más sobresalientes de la evolución de los intercambios internacionales durante las últimas décadas ha sido el creciente protagonismo de los servicios no turísticos. De esta forma, los servicios con mayor participación actualemnte son los servicios relacionados con la distribución y el transporte y otros servicios comerciales, en particular los servicios financieros y servicios de telecomunicaciones, informáticos y audiovisuales. El peso de todos ellos se ha incrementado desde principios de este siglo:
+\begin{la}
+    \item \textbf{Servicios de transporte}. Por un lado, la distribución de mercancías a nivel internacional requiere una industria de transporte y logística eficiente, por lo que es fácil comprender que cerca de la mitad del comercio de servicios de transporte está asociado al comercio de bienes. Sin embargo, el transporte es vital también para el desplazamiento de personas, lo que posibilita el comercio de otros servicios.\footnote{En el último decenio, el aumento de las aerolíneas de bajo costo, sumado a la multiplicación de rutas directas, especialmente de ámbito regional, ha transformado el sector del transporte aéreo y ha fomentado un fuerte crecimiento del turismo internacional.
+    } Los principales exportadores de servicios de transporte son: la Unión Europea y China (cerca del $50\%$), seguidos de Singapur, Estados Unidos, Corea y los Emiratos Árabes Unidos; y,
+    \item \textbf{Servicios de distribución y financieros}. Por otro lado, los servicios de distribución (no transporte) y los servicios financieros representan casi la quinta parte del comercio de servicios, siendo los principales exportadores de servicios financieros la Unión Europea, los Estados Unidos, el Reino Unido, Singapur, Suiza y Hong Kong; y los mayores importadores son la Unión Europea, los Estados Unidos, Reino Unido, Singapur, Canadá, Japón y Hong Kong.\footnote{Su comercialización se lleva a cabo principalmente mediante el establecimiento de una presencia comercial en otros países (modo 3), pero cada vez más los bancos y otras instituciones de servicios financieros ofrecen servicios en línea. A resultas de ello, la proporción de las exportaciones de servicios a través de sucursales y filiales establecidas en otras economías está disminuyendo en las principales economías desarrolladas.
+    }
+\end{la}
+
+Al margen de lo expuesto, debemos destacar que el turismo internacional es sin duda el sector más inclusivo, ya que en su comercio participan economías de todos los niveles de desarrollo.\footnote{Además, de la importancia que tien al contribuir indirectamente al desarrollo de otros sectores e impulsa la construcción de infraestructuras y alojamientos. 
+} Su importancia ha crecido de forma sostenida durante los últimas setenta años, que ha pasado de $25\text{M}$ de turistas (1960) hasta casi $1.500\text{M}$ (2019), representando cerca del $24\%$ del total de las exportaciones de serviciso. Los principales exportadores son la Unión Europea, los Estados Unidos y Reino Unido, que suponen en conjunto más del $50\%$; seguidos de Emiratos Árabes Unidos, Turquía y Méjico. Los principales importadores son la Unión Europea, China, los Estados Unidos, Reino Unido, Emiratos Árabes Unidos y la India. 
+
+Por último, cabe no perder de vista como la digitalización está transformando algunos servicios profesionales, que están dando sus primeros pasos en el comercio internacional. Entre estos destacan los servicios de enseñanza, de salud o medioambientales; así como también los servicios legales. En la actualidad representan una parte insignificante del comercio, pero muestran tasas de crecimiento muy elevadas.\footnote{Por razones de tiempo, no hemos hecho mención alguna a la exportación de servicios relacionados con la propiedad intelectual. En general, el comercio transfronterizo de servicios relacionados con la propiedad intelectual está dominado por las corrientes entre países desarrollados (que representan el $92\%$ de las exportaciones y el $75\%$ de las importaciones). Sin embargo, la innovación y la creatividad prosperan en varias economías en desarrollo, donde las solicitudes de patentes, dibujos y diseños industriales y marcas de fábrica o de comercio registran un crecimiento extraordinario. 
+
+Las comunicaciones digitales, la tecnología de la información y la maquinaria eléctrica fueron las principales esferas tecnológicas de las solicitudes de patentes en China, mientras que en Singapur se centraron en la tecnología de la información, los semiconductores, los productos farmacéuticos y las biotecnologías. Corea está entre los primeros puestos del mundo en número de solicitudes de dibujos y modelos industriales, principalmente en el ámbito de las TIC y los medios audiovisuales. La innovación se ha traducido en un aumento significativo de las exportaciones asiáticas de servicios relacionados con la propiedad intelectual (por término medio, del $17\%$ anual en este siglo). En Oriente Medio, Israel es un centro internacional de investigación e innovación que abarca desde la tecnología de la información hasta las tecnologías médicas y los productos farmacéuticos. Israel ocupa los primeros puestos en gasto en I+D (aproximadamente $4,5\%$ del PIB) y en exportaciones de servicios de I+D, junto a la UE, los Estados Unidos y China.
+}
+
+\paragraph{Geopolítica: ¿exportación de servicios y posicionamiento geoestratégico?}
+Cabe hacer una mención especial a la situación cada vez más comprometida que existe entre el posicionamiento geoestratégico y la exportación de determinados servicios.\footnote{Por motivos obvios no hemos mencionado esto en el apartado relativo a mercancias, pues siempre ha sido en cierta manera así. Sin embargo, podríamos mencionar la importancia de las tierras raras, las vetas de determinados materiales estratégicos y su paralelismo con el posicionamiento mediante exportación de servicios.
+}
+
+En primer lugar, a lo largo de los últimos veinte años el comercio de servicios de construcción ha mostrado un crecimiento medio anual del $7\%$. Aunuque su participación sobre el comercio total sea prácticamente irrelevante, sus implicaciones son muy profundas desde un punto de vista estratégico: \textbf{el último decenio ha sido testigo del surgimiento de China como exportador mundial de servicios de construcción, gracias a su participación en grandes proyectos de infraestructuras}, representando más de la tercera parte de las exportaciones mundiales de servicios de construcción. Esto está completamente alineado con uno de los proyectos más ambiciosas del Gobierno Chino: \href{https://www.cidob.org/publicaciones/nueva-ruta-seda-corredor-euroasiatico-iniciativa-global-politica-exterior-china}{\textbf{la Nueva Ruta de la Seda}}. Este ambicioso proyecto global, iniciado en 2013, de construcción de puentes, puertos, carreteras y/o ferrocarriles en en diversas areas regionales, vertebra una ambiciosa iniciativa de Política Exterior china que pretende posicionarse como un verdadero actor global. De hecho, sus ambiciones llegan hasta el mismísimo \href{https://www.portdebarcelona.cat/es/comunicacion/noticias/el-corredor-verde-entre-los-puertos-de-barcelona-y-shanghai-protagonista-de-la-mision-institucional-del-ayuntamiento-de-barcelona-china}{Puerto de Barcelona}.\footnote{Nótese que los principales exportadores de servicios de construcción son China, la Unión Europea, Japón, Corea, la Federación Rusa, Reino Unido y los Estados Unidos. Todos estos actores buscan influencia global, por lo que no se debe perder de vista los driving factors del comercio internacional de servicios de construcción y todas sus ramificaciones. Por ejemplo: \href{https://www.defensa.gob.es/ceseden/-/la_importancia_de_los_corredores_terrestres_el_corredor_de_lobito_contra_la_linea_de_tazara}{\textit{La importancia de los corredores terrestres (V): el Corredor de Lobito contra la Línea de Tazara}. TORRES (2024). Publicaciones CESEDEN}
+}
+
+Por otro lado, y motivo de gran controversia reciente, encontraríamos la exportación de servicios de servicios de tecnología de la información y las comunicaciones, que ha experimentado una tasa media anual de crecimiento del $11\%$ en el último decenio, por una demanda sostenida de nuevos programas informáticos y una creciente preocupación por la ciberseguridad. Tras la entrada en vigor de la nueva Ley de Ciberseguridad europea (CSA2), determinados proveedores de servicios y equipos de telecomunicaciones chinos han sido vetados y exclusidos del mercado europeo.\footnote{
+Para profundizar en el tema: \href{https://www.mobileworldlive.com/spanish/las-operadoras-y-bruselas-chocan-por-el-coste-de-retirar-tecnologia-china-de-las-redes/}{\textit{Las operadoras y Bruselas chocan por el coste de retirar tecnología china de las redes}. Mobile World Live}; \href{https://efe.com/euro-efe/2026-04-20/ue-china-5/}{\textit{China adoptará contramedidas si la UE no enmienda su ley de ciberseguridad}. EFE}; \href{https://es.china-embassy.gov.cn/esp/wjyw/202605/t20260512_11909281.htm}{\textit{Declaración de la Cámara de Comercio e Inversiones de China en España sobre la propuesta de la Comisión Europea a la revisión de la Ley de Ciberseguridad}. Embaja de la República Popular China en el Reino de España}.
+}
+
+\subsection{Nuevas tendencias: ¿Qué nos depara el futuro?}
+Una vez hemos analizado la estructura geográfica y sectorial de los flujos comerciales, podemos preguntarnos cuáles son algunas de las tendencias que podrían tener una influencia mayor en lo descrito hasta ahora. 
+
+Aunque hemos introducido la cada vez más relevante y controvertida simbiosis que existe entre la orientación exportadora y la Política Exterior, esta no es la única tendencia que tiene potencial para moldear las estructuras existentes.\footnote{Por otro lado, hay que destacar que esta vinculación ha sido siempre históricamente relavente. Lo que genera preocupación y descontento no es, por tanto, la vinculación como tal sino los actores que han entrado en el juego.
+}
+
+
+
+
+
+\subsubsection{Nuevas areas emergentes: ¿Por qué algunas economías presentan mayor dinamismo que otras?}
+Por otro lado, y en parte como resultado de la progresiva incorporación de los países al sistema multilateral de comercio, destacaría el desarrollo de nuevas areas emergentes especialmente relevantes y atractivas desde un punto de vista económico.\footnote{El término \textit{mercado emergente}, o economías emergentes, fue acuñado en los 80 en el Banco Mundial para referirse a aquellos países que estaban inmersos en un proceso de rápido crecimiento e industrialización. Actualmente habría que considerar también que están sometidos a procesos de transformación tecnológica, en condiciones de industrialización parcial. 
+
+Un estudio más reciente sería: \href{https://www.imf.org/external/pubs/ft/fandd/2021/06/the-future-of-emerging-markets-duttagupta-and-pazarbasioglu.htm#:~:text=This\%20approach\%20identifies\%20the\%20following,and\%20the\%20United\%20Arab\%20Emirates}{\textit{Miles to go}. DUTTAGUPTA y PAZARBASIOGLU (2021)}
+} 
+
+Las areas o economías emergentes son países con características de mercado desarrollado, pero que no cumplen los estándares para ser considerados como tal, fundamentalmente por alguna (o todas) de las razones siguientes: (i) baja renta per cápita; (ii) estructura social e inestabilidad política; y/o, (iii) bajo desarrollo y solidez institucional, junto con cierta inseguridad jurídica por falta de capacidades, captura político-judicial o vacío normativo. Normalmente se encuentran en una fase de transición, presentan un alto potencial de crecimiento económico y, aunque cada vez más infrecuente, suelen poseer una población joven en expansión y tasas de actividad muy elevada. Respecto a sus políticas exteriores, suelen buscar su inserción en los flujos comerciales internacionales de bienes y servicios y, en consecuencia, suelen ser economías internacionalizadas. No obstante, son ciertamente dependientes de capital extranjero (importantes receptores de IED) y sufren excesiva volatilidad en el tipo de cambio (ajustes de precios y \textit{policy mix}).\footnote{Algunas veces suele incluirse países que son, fundamentalmente, exportadores de recursos naturales o de industrias extractivas, lo que resulta especialmente ambiguo, incorrecto e innecesario. Sería el caso de los países del Golfo o de la Federación Rusa.
+
+Por otro lado, una característica especialmente interesante es que suelen verse muy afectadas por las variaciones en el dólar, especialmente apreciaciones: \href{https://www.imf.org/es/Blogs/Articles/2023/07/19/emerging-market-economies-bear-the-brunt-of-a-stronger-dollar}{\textit{Las economías de mercados emergentes son las más castigadas por el fortalecimiento del dólar}. IMF (2023)}
+} Por último, respecto a su potencial interno, normalmente suelen presentar tasas de crecimiento superiores a las de las economías más avanzadas y un alto potencial de crecimiento del consumo. 
+
+Como podemos intuir, se trata de un grupo muy heterogéneo de países en lo que a estructura productiva, nivel de desarrollo, internacionalización e innumerables variables de importancia económica. Por esta razón, existen múltiples formas de clasificar estas nuevas areas emergentes. Aquí presentaremos la clasificación más técnica con el objetivo de explicar, sin atarnos las manos, la existencia de éstas: \textbf{las clasificaremos en dos grandes categorías en función de la razón subyacente que explica su dinamismo económico}.\footnote{Otras clasificaciones, o más bien \textit{listas} de mercados emergentes son: FTSE Group (\href{https://www.lseg.com/content/dam/ftse-russell/en_us/documents/country-classification/ftse-equity-country-classification-paper.pdf}{\textit{FTSE Equity Country Classification Process}, Research paper}), ISI Emerging Markets, The Economist y MSCI. Todas estas listas buscan proporcionar información a gestores de fondos, con el fin de ayudar u orientar la toma de decisiones de inversión mediante la provisión de información o la creación de índices de mercado. No obstante, tienen el problema de que preservan, por motivos de continuidad, determinados países que ya no deberían ser considerados como economías emergentes, como Israel, Corea del Sur, Taiwán y Polonia.
+
+En los últimos años, nuevos términos han surgido para describir a los más grandes países en desarrollo tales como BRIC que significa Brasil, Rusia, India y China, junto con BRICS (BRIC + Sudáfrica), BRICA (BRIC + Argentina), BRICK (BRIC + Corea del Sur) y CIVETS (Colombia, Indonesia, Vietnam, Egipto, Turquía y Sudáfrica). Estos países no comparten una agenda común, pero algunos expertos creen que están disfrutando de un papel creciente en la economía mundial y sobre las plataformas políticas.
+}
+
+\paragraph{NEE: Efectos desbordamiento}
+En primer lugar tendríamos las \textbf{nuevas areas emergentes por razón de efectos desbordamiento} (spillovers). La creación de estas Cadenas Regionales de Valor ha provocado un dinamismo atípico en algunos de los países periféricos a las denominadas \textbf{fábricas regionales}. Dentro de este grupo distinguimos entre:
+\begin{la}
+    \item \textbf{Fábrica China}. En el area de influencia de la \textit{fábrica china} encontraríamos países como Indonesia, Tailandia, Filipinas, Malasia, Taiwán o Viet Nam;
+    \item \textbf{Fábrica Norteamerica}. En el area de influencia de la \textit{fábrica norteamerica} encontraríamos, por su particular geografía, únicamente a Cánada y Méjico, por su proximidad geográfica y el progresivo crecimiento que han experimentado los flujos comerciales tripartitos dentro del USMAC (previamente: NAFTA); y,
+    \item \textbf{Fábrica Alemania}. En el area de influencia de la \textit{fábrica alemana} encontraríamos, como materialización del potecial económico que presenta la incorporación al Mercado Común, a las ex repúblicas soviéticas europeas que se han incoporado. En particular, destacan el dinamismo de las economías checa (República Checa), rumana y húngara. Así como también de la Federación Rusa y Turquía, en una combinación de lo que podríamos llamar \textbf{ventaja geográfica y/o material y efectos desbordamiento de segunda ronda}.
+\end{la}
+
+Así, como vemos los avances en las tecnologías de la información y comunicación, el descenso sostenido de los costes de transporte y el progresivo desarrollo e incremento de los niveles de vida en los países de industrialización tardía (China, tigres asiáticos, repúblicas exsoviéticas europeas y Canadá), han provocado la dispersión geográfica de determinados eslabones de la cadena productiva a sus areas colindantes, dando lugar a un aumento sostenido del número de países que participan activamente en las Cadenas Regionales de Valor.
+
+
+\paragraph{NEE: Desarrollo económico}
+Por otro lado tendríamos las nuevas areas emergentes \textbf{por razón del progresivo desarrollo experimentado y la capacidad que han mostrado para aprovechar los potenciales provistos por este}. 
+
+Este grupo de economías es, como se puede intuir, muchísimo más amplio que el presentado antes. Sin embargo, todas coinciden, en mayor o menor medida, en un patrón claro y constante: (i) desarrollo progresivo, con un cierto grado de aislamiento; (ii) estabilidad política y fotalecimiento de las capacidades del Estado; y, (iii) apertura exterior lenta pero constante. Lo interesante de este grupo de países es la dispersión geográfica que presentan:
+\begin{la}
+    \item \textbf{Continente Americano}. En el continente americano destacarían Brasil, Colombia y, quizás en el futuro cercano, Argentina. Siendo todos estos países con una población muy elevada, y de economías principalmente impulsadas por la demanda interna, presentan un potencial particularmente bueno si continuan esta senda;
+    \item \textbf{Continente Asiático}. Por lo que respecta al continente asiático, destacan la India, Pakistán y Bangladesh. Estos países presentan sendas muy diferentes aunque todas ellas han sabido aprovechar el potencial que presentaban dentro de la arquitectura comercial internacional al mismo tiempo que han continuado los procesos de desarrollo interno, fortalecido la demanda y fomentado la movilización internacional de su excedente \textit{humano}. Tanto Pakistán como Bangladesh han sabido incorporarse notablemente al comercio internacional de téxtiles y productos derivados (prendas de vestir), y en tiempos más recientes la India. Además, la se ha ido conviertiendo en los últimos años en un destacado exportador de servicios de tecnologías de la información, cuyos principales importadores son los Estados Unidos y Canadá: alrededor del $13\%$ corresponde a profesionales de la tecnología de la información destinados en el extranjero\footnote{Las empresas de TI de la India y de otras economías amplían cada vez más sus servicios básicos para abarcar el desarrollo de productos. En los próximos años se espera que este segmento, que incluye nuevas tecnologías como la internet de las cosas, el análisis basado en la nube y la inteligencia artificial, impulse no solo la industria de TI y el comercio mundial de servicios informáticos, sino también el comercio de servicios relacionados con la propiedad intelectual. Los servicios relacionados con la propiedad intelectual abarcan, entre otros, los derechos de reproducción y distribución de los derechos de autor de programas informáticos, materiales audiovisuales, libros y la radiodifusión y grabación de interpretaciones o ejecuciones en directo. El comercio de servicios relacionados con la propiedad intelectual crece rápidamente, propiciado también por la tecnología móvil y los medios digitales. Además de introducir innovaciones en el sector audiovisual, la digitalización también ha revolucionado el sector de los servicios de publicidad. Se está desplazando la publicidad de los medios tradicionales, como la televisión, la radio y los periódicos, y se está introduciendo en los canales digitales. Los datos recopilados a través de plataformas de redes sociales, motores de búsqueda y sitios web permiten crear anuncios automatizados y personalizados que pueden llegar a clientes potenciales de todo el mundo. Todo ello hace que hayan crecido las exportaciones de servicios de publicidad transfronterizo y se hayan reducido las prestaciones a través de filiales. En los últimos años, el auge de la reproducción de música y vídeos a la carta, por ejemplo, a través de plataformas en línea, ha convertido al sector audiovisual en el segmento más dinámico de las exportaciones de servicios relacionados con la propiedad intelectual de los Estados Unidos.
+    } Por último, todos estos tres países reciben una cantidad remesas sin parangón, debido a su estrategia constante y implacable de \textbf{exportación de personas}; y,
+    \item \textbf{Continente Africano}. No obstante, lo que resulta probablemente más interesante es la existencia de estas NEE en el Continente Africano. Este continente, asilado del comercio internacional a excepción de su participación en las materias primas, ha sido históricamente el paradigma del subdesarrollo. No obstante, debido a los procesos antes mencionados, existen hoy en día determinados outliers con implicaciones muy alentadoras. En particular, destacan Ruanda, Mozambique y, más históricamente, Mauricio. Todos estos países, y algunos otros, han sabido solucionar sus graves problemas internos y, mediante buena gestión y planificación ciertamente orientada, han logrado experimentar tasas de crecimiento sorprendemente fuertes explotando su potencial exportador (principalmente servicios turísticos) manteniendo en todo momento la estabilidad mediante la promoción de un crecimiento inclusivo.\footnote{Mauricio es un caso particular que no se adecúa exactamente al análisis presentado puesto que su desarrollo económico se experimentó a finales de los años 60's. En este tuvo un lugar primordial la industrialización orientada a la exportación de productos téxtiles y prendas de vestir mediante la planificación, organización y construcción de Zonas Económicas Especiales. El declive de Mauricio dentro del comercio internacional de téxtiles ha generado estragos en la población local y el potencial económico, que se ha tenido que reorientar no sin graves problemas de corrupción y amiguismo. No obstante, es el primer estado insular de África (o segundo, según el indicador) en muchos indicadores de valor económico (renta, IDH, etc.).
+
+    \textbf{ZEE}: Se trata de zonas industriales dotadas de incentivos especiales para atraer a los inversores extranjeros, en las que los materiales de importación se someten a un cierto grado de proceso industrial antes de ser de nuevo exportados. Han evolucionado desde las actividades iniciales de ensamblaje y simple procesado para incluir zonas de alto nivel tecnológico y científico, zonas financieras, centros logísticos e incluso centros turísticos. En la actualidad, una proporción considerable de las exportaciones de muchas economías en desarrollo tienen su origen en ZEE.
+    }
+\end{la}
+
+En definitiva, lo normal sería que las economías emergentes dejasen de ser consideradas como tal cuando se desarrollasen económica, política y socialmente. Sin embargo, como podemos ver las características son tan generalies que la línea entre emergente y desarrollado se difumina.
+
+\subsubsection{World Trade Organization: ¿Crisis del Sistema Multilateral?}
+La primera, y quizás más evidente, sería el creciente desencanto con el sistema multilateral. 
+
+Cada vez más la legislación nacional sobre temas como la política de competencia, las leyes laborales o medioambientales afectan al comercio internacional. Como ejemplo podríamos mencionar el CBAM (Carbon Border Adjustment Mechanism), un mecanismo de ajuste en frontera que busca regular las emisiones de gases de efecto invernadero causadas directa o indirectamente por algunas importaciones de bienes a la UE. 
+
+Crisis del multilateralismo Recientemente asistimos a un proceso de desglobalización o regionalización. Desde la GCF, se ha producido una desaceleración de los flujos internacionales de bienes, servicios y capitales, ligada al frenazo en el ritmo de avance de las CGV, tanto por factores internos a las mismas como externos.
+
+
+\href{https://www.elmundo.es/motor/2026/06/26/6a3e5750e9cf4a68468b45a5.html}{Reestructuración Grupo Volkswagen}
+
+\href{https://www.funcas.es/wp-content/uploads/Migracion/Articulos/FUNCAS_PEE/144art04.pdf}{LA DESINDUSTRIALIZACIÓN DE ESPAÑA EN EL CONTEXTO EUROPEO (*)}
+
+
+
+
+
+
+Restablecer reglas económicas internacionales previsibles
+
+Impulsar esfuerzos para resolver tensiones y promover el comercio. Marcos de política comercial claros, transparentes y coherentes son esenciales para reducir la incertidumbre, limitar la volatilidad y anclar las expectativas. La cooperación pragmática puede ser crucial para contener los costes de ajuste y reducir las barreras distorsionadoras al comercio y a los flujos de inversión. Esto incluye salvaguardar los bienes comunes globales clave y actualizar las reglas internacionales para reflejar cambios estructurales en la economía mundial —incluida la creciente participación de los servicios— y alinearlas con políticas que refuercen el crecimiento del empleo, la transición verde o la resiliencia de las cadenas de suministro. La modernización de las reglas comerciales debe ser focalizada y proporcional, centrada en externalidades transfronterizas claramente identificadas y respetuosa de objetivos prudenciales legítimos. Las negociaciones bilaterales, regionales y plurilaterales deben procurar reducir fricciones, mantenerse abiertas a nuevos participantes y evitar disposiciones discriminatorias que eleven barreras frente a terceros. También deben evitar acuerdos distorsionadores —como compromisos de compra y restricciones cuantitativas— que difícilmente resolverán desequilibrios externos originados en la dinámica interna de ahorro e inversión. Las autoridades también deben evitar controles a la exportación y barreras al comercio transfronterizo que agraven las interrupciones de oferta, incluidas aquellas asociadas con la guerra en Oriente Medio.
+
+Promover una cooperación internacional eficaz. La cooperación internacional será esencial para afrontar tanto las amenazas inmediatas derivadas del conflicto en Oriente Medio como los desafíos de más largo plazo. En los países que reciben flujos de refugiados, el apoyo a la integración debe estar adecuadamente financiado con fuertes contribuciones internacionales, en lugar de quedar exclusivamente a cargo de los países anfitriones, que pueden carecer del espacio fiscal necesario. El acceso a liquidez de emergencia, incluida la proporcionada mediante los mecanismos del FMI, constituye un respaldo crucial frente a los efectos de contagio financieros internacionales. Para algunos países en riesgo de sobreendeudamiento, el apoyo de liquidez no será suficiente, y un proceso oportuno y ordenado de resolución de deuda será la mejor forma de contener las consecuencias económicas. El progreso continuo en la puesta en funcionamiento de mecanismos internacionales de resolución de deuda soberana —incluido el Marco Común del Grupo de los Veinte (G20)— y una mayor convergencia de prácticas a través de la Mesa Redonda Global sobre Deuda Soberana pueden hacer que las reestructuraciones necesarias sean más previsibles y menos costosas.
+
+\subsubsection{Comercio intraempresa}
+Por último tendríamos el papel en el comercio de las \textbf{empresas multinacionales}. Aunque no especialmente novedoso, si viene siendo cada vez más relevante tanto por su importancia sobre el volumen total de comercio como por sus implicaciones en términos de política económica.
+
+El creciente peso del comercio intraempresa, o comercio entre las empresas multinacionales y sus filiales, se deriva del cada vez mayor peso de las empresas multinacionales en la economía mundial. Si bien es cierto que sólo recientemente se ha empezado a recopilar datos de este tipo de comercio, la evidencia sugiere que representa una parte significativa del comercio mundial, pero diverge significativamente mucho entre países e industrias.\footnote{Hay datos disponibles para un número limitado de países, Japón, Estados Unidos y la UE. La base de datos AMNE de la OCDE (i) proporciona información sobre qué parte del output, el valor añadido y las exportaciones de un país es debido a las filiales de empresas extranjeras, (ii) divide las matrices input-output entre empresas propiedad de nacionales y de residentes, (iii) y permite un análisis de la producción de las empresas multinacionales en términos de valor añadido. \href{https://www.oecd.org/sti/ind/analytical-amne-database.htm#papers}{\textit{Multinational enterprises and global value chains}. OCDE Data}
+} En particular, vemos como el comercio intraempresa deriva de productos casi terminados destinados a las filiales encargadas del márketing y de la distribución es muy importante entre países de elevado nivel de renta, por lo que podría estar positivamente correlacionada con el PIB per cápita. 
+
+Otro tipo diferente de comercio intraempresa es aquel en el que la matriz produce bienes destinados a su mercado nacional a través de sus filiales en un tercer país. Por ejemplo, en el año 2000, dos tercios de las importaciones de Estados Unidos provenientes de Méjico de este tipo.
+
+Como decíamos, esta tendencia tiene fuertes implicaciones, principalmente en tres areas distintas: (i) en la transparencia y disponibilidad de los datos comerciales, lo que exigiría una revisión de la metodología utilizada para la cuantificaicón de los flujos; (ii) en linea con lo expuesto en la sección anterior, por las implicaciones que tiene sobre la legitimidad externa del sistema multilateral de comercio; y, (iii) quizás más preocupante y relacionado con lo que explicaremos a continuación, con las dificultades que supone en materia de imposición internacional.
+
+
+\clearpage
+\section{Flujos de factores productivos}
+\puntosclave{
+    Creciente integración financiera internacional por la progresiva liberalización de las cuentas de capital. 
+    
+    Contexto de creciente endeudamiento público y privado.
+    
+    Los datos disponibles sobre los flujos financieros internacionales son incompletos por el desarrollo de los euromercados, la complejidad de las transacciones, especialmente las ligadas a los derivados financieros, y el peso de los centros financieros offshore. 
+    
+    Los países con mayor necesidad de financiación externa son los Estados Unidos, Reino Unido, Brasil y la India. Los países con mayor capacidad de financiación son China, Alemania y Japón. 
+    
+    Japón, Alemania, China, Hong Kong, Noruega, Singapur, Suiza, Países Bajos, Corea y Canadá son los mayores acreedores mundiales. El gran deudor es Estados Unidos, seguido de España, Brasil, Francia, Irlanda, Méjico y Australia. 
+    
+    Peso creciente de los flujos de IED hacia los países en desarrollo.
+}
+
+Debemos entender que los flujos internacionales de comercio y factores de producción, aunque puedan descomponerse para identificar patrones y llevar a cabo análisis parciales, en última instancia deben considerarse como un todo, pues es la única forma de formar unas perspectivas sólidas, adecuadas y coherentes acerca del rumbo que toma la arquitectura económica internacional. 
+
+\textbf{¿Qué queremos decir?} Por ello, si en la sección anterior hemos analizado la estructura sectorial y geográfica de los flujos comerciales, ahora debemos ver la otra cara de la moneda: los flujos internacionales de factores de producción, prestando especial atención a los movimientos internacionales de capital. 
+
+El crecimiento de los flujos financieros ha sido posible por la supresión de las restricciones a los movimientos de capital, que ha provocado un aumento progresivo y, sobretodo, muy significativo del volumen de flujos financieros transfronterizos. Para entender la magnitud de este fenómeno, que se ha venido llamando como \textbf{proceso de financiarización}, solo es necesario pensar que, a principios de la década de 1970's, las transacción financieras y comerciales, en valor en divisas, mantenían una relación de $2:1$ (financieras:comerciales), mientras que para 2013, la relación había aumentado hasta situarse en torno a los $90:1$.
+
+\subsection{Flujos de capital: Proceso de financiarización}
+Comprender de dónde surge esta radical desproporción, exige empezar por descomponer los flujos financieros en sus correspondientes subtipos (o sectores), entender cómo se estructuran geográficamente éstos y explicar algunos de los retos que presentan, donde intentaremos retomar los ya presentados. 
+
+Para abordar estos flujos se utilizan datos provenientes de las cuentas financieras. (También existe la posibilidad de estudiarlos como variable stock, mediante la Posición de Inversión Internacional (en adelante, PII), pero esto será abordado más adelante).\footnote{Las categorías funcionales, que aplican a ambos enfoques, son:
+\begin{la}
+    \item \textbf{Inversión directa (stock) y sus rentas (flujo)}. Categoría de inversión transfronteriza que realiza un residente de una economía con el objetivo de establecer un interés duradero en una empresa residente en una economía diferente de la del inversor directo. Ahora bien, también entran dentro de esta categoría los instrumentos financieros que se utilicen en operaciones de carácter financiero entre empresas de un mismo grupo: acciones y otras formas de participación, beneficios reinvertidos y financiación entre empresas relacionadas (préstamos y operaciones materializadas en otros instrumentos representativos de deuda);
+    \item \textbf{Inversión de cartera (stock) y sus rentas (flujo)}. Se desagregan en acciones y participaciones en fondos de inversión, títulos de deuda con vencimiento inicial a más de un año y títulos de deuda con vencimiento inicial de un año o menos;
+    \item \textbf{Otra inversión (stock) y sus rentas (flujo)}. Recoge, por exclusión, los activos y pasivos financieros frente a no residentes no contabilizados como inversión directa o de cartera, derivados financieros y reservas.
+\end{la} 
+Respecto al \textbf{interés duradero}, el criterio mayoritariamente utilizado es el que establece el MBP6: cuando un residente en una economía tiene la propiedad directa o indirecta de, al menos, el $10\%$ del poder de voto de una empresa residente en otra economía, mediante participaciones en el capital o deuda entre empresas materializada en valores negociables.
+} Existen, fundamentalmente, cinco tipos de inversión: inversión directa, inversión en cartera cartera, otra inversión, instrumentos derivados financieros y reservas. De todos estos, nos centraremos en los dos primeros, tanto por tiempo como por la relevancia en términos económicos (no cuantitativos, como sabemos el mercado de derivados es uno de los más importantes).
+
+Asimismo, los flujos transfronterizos de capital pueden analizarse netos o brutos. Centrarse en unos u otros depende del análisis que se desee llevar a cabo. Desde una perspectiva de balanza de pagos, lo más apropiado sería fijarse en los flujos netos, para evaluar cómo se financian los déficits y cómo se relacionan con el ahorro y la inversión nacional. Si queremos ver cómo evolucionan los tipos de cambio o la resiliencia de los mercados financieros domésticos a las perturbaciones externas, será más apropiado analizar los flujos brutos.\footnote{Ojo, deficiencia de datos tanto respecto a los flujos brutos como a los netos: datos del mercado de eurodólares, del mercado de repos, de financiación proveniente del “shadow banking” o del nocional de los derivados financieros han de ser en muchos casos estimados. Los datos de balanza de pagos no los recogen en su totalidad.
+} Además, hablaremos de capacidad de financiación o necesidad de financiación atendiendo al saldo por cuenta financiera que presente la economía.
+
+Ahora que hemos definido toda la terminología, podemos pasar a analizar los flujos financieros desde una óptica sectorial, centrándonos sobretodo en los flujos netos (por la relación que guarda con el apartado anterior) y su destino.
+
+\subsubsection{Flujos netos: Capacidad vs. Necesidad}
+Como podemos intuir, los flujos de financiación netos van desde los países con capacidad de financiación hacia los países con necesidad de financiación, por lo que están directamente relacionados con el PIB del país y su superávit comercial sobre éste.
+
+En consecuencia, los países con mayor capacidad de financiación son \textbf{China, Alemania y Japón} (elevada tasa de ahorro nacional), así como grandes exportadores de industrias extractivas: Federación Rusa o Noruega. Por otro lado, el país con mayor necesidad de financiación es los \textbf{Estados Unidos}, seguido (a considerable distancia) por \textbf{Reino Unido, Brasil, India, Chile, Rumanía, Egipto, Colombia, Bangladesh y Nueva Zelanda}. Las razones por las que se presenta esta necesidad de financiación suelen ser muy dispares, aunque vienen directamente determinadas por su capacidad de absorcioón: estas economías generan un ahorro interno insuficiente para financiar sus procesos de desarrollo (India), su elevada demanda de inversión (Nueva Zelanda) o el elevado peso de su demanda interna (Estados Unidos).\footnote{Consultar: \href{https://data.imf.org/en?sk=7a51304b-6426-40c0-83dd-ca473ca1fd52}{Acces to Economic and Financial Data. IMF Data}
+}
+
+Por lo que respecta a los financiadores, destaca el papel de China. Tras un mínimo en 2017, ha crecido hasta superar el $2\%$ de su PIB por la debilidad de su demanda interna. Además, destaca la composición de su cartera de activos: la importancia de las reservas exteriores que llegaron a suponer un $71\%$ de sus activos netos exteriores en 2008 para ir decayendo progresivamente hasta el $36\%$; el poco peso de sus inversiones en cartera reflejaría el control de los movimientos de capitales; y el potente peso que muestra la IED.\footnote{Sin embargo cada vez se duda más de la verdadera posición China en materia de inversión extranjera, ya que no proporciona información sobre sus tenencias de títulos de inversión de cartera emitidos por no residentes.
+} Por otro lado, a partir de 2012 la eurozona ha tenido capacidad de financiación en todos los ejercicios, recursos que han sido canalizados hacia inversión en cartera de títulos estadounidenses. 
+
+Por lo que respecta al destino de dichos superávits, destacamos dos en particular.
+
+\paragraph{Inversión Extranjera Directa: ¿Asmiétrica y real?}
+En primer lugar, la inversión extranjera directa. Existen dos características interesantes acerca del movimiento de estos flujos. 
+
+En primer lugar, no han mostrado un perfil suave a lo largo de este siglo, sino que su comportamiento ha estado sujeto a importantes vaivenes. En los últimos ejercicios, el total mundial se ha situado entre $1 \,\,\text{y}\,\,2\text{B}\$$. Los mayores países receptores de flujos de IED son los Estados Unidos, China, Brasil, Reino Unido, Australia, Canadá y la India. China ha mostrado una tendencia creciente de sus flujos de entrada, mientras que Brasil tuvo un fuerte crecimiento en la primera década de este siglo y una estabilización posterior.
+
+Si evaluamos la distribución regional, los flujos de IED han estado históricamente dirigidos hacia América del Norte y Europa. No obstante, se ha observado un peso creciente de los flujos hacia las economías en desarrollo, que en los últimos años han supuesto entre el $60\%$ y $70\%$ del total, mientras que a principios de siglo más del $70\%$ se dirigían a los países desarrollados:\footnote{Los flujos hacia Europa han ido disminuyendo a pasos agigantados. Los mayores receptores son Reino Unido, Alemania, Bélgica, Irlanda, España, Francia y Países Bajos. Destaca la Federación rusa como gran receptora de inversiones concentradas en la industria del gas y el petróleo. 
+}
+\begin{lnum}
+    \item \textbf{Africa}. África ha recibido entre el $2,5\%$ y el $4\%$ del total desde principios de siglo, siendo Sudáfrica, Egipto y Nigeria los grandes receptores. La inversión se dirige, en gran parte, a los sectores de recursos naturales y especialmente al sector energético. La inversión de Marruecos está más diversificada por la presencia de empresas multinacinales del sector industrial, como automovilísticas o textiles. 
+    \item \textbf{Asia}. Por otro lado, Asia ha crecido rápidamente hasta recibir actualmente algo más de la mitad de los flujos mundiales. No obstante, los flujos están mucho más concentrados, siendo China, Hong Kong, Singapur e India los principales receptores.\footnote{Las inversiones relacionadas con el turismo o las intensivas en mano de obra han dado paso a inversiones relacionadas con la economía digital o el tratamiento de datos.
+    }
+    \item \textbf{América Latina}. Por último, los flujos hacia América Latina y el Caribe se han situado en un estable entorno del $10\%$, si bien recientemente este porcentaje ha sido superior como consecuencia de los elevados precios de las materias primas, que han supuesto un aumento de la reinversión de las filiales extranjeras en las industrias extractivas. Las mayores economías receptoras son Brasil, Méjico, Colombia y Argentina;
+    \item \textbf{América del Norte}. Los flujos hacia América del Norte se sitúan en el entorno del $25\%$ del total. 
+\end{lnum}
+
+La segunda característica tiene que ver con la ambigüedad. Desde la óptica de la Teoría Económica tradicional, se considera que la Inversión Extranjera Directa, fruto de la globalización financiera, es un auténtico promotor del crecimiento y desarrollo económico pues, entre otras cosas, conlleva transferencia de tecnología y conocimiento y la integración en las cadenas de valor regionales y globales, teniendo un fuerte impacto sobre el empleo, los salarios, la producción y los flujos de comercio. Ahora bien, tal y como se define este tipo de flujo en el MBP$6$, su conveniencia, deseabilidad e impacto económico está cada vez más en entredicho. Recordemos que estos flujos quedan registrados en base a la \textit{intención sobre la propiedad} en el país receptor, y no sobre la \textit{efectiva materialización de dichos flujos}. En consecuencia, y poniendolo en contexto con lo observado en otras grandes magnitudes, como el pronunciado aumento de las operaciones de Fusión y Adquisición empresarial, el impacto real de estos flujos financieros no queda bien delimitado.
+
+\paragraph{Inversión en cartera: Fondos y deuda}
+Por otro lado, compitiendo en importancia tendríamos los flujos destinados a inversión en cartera.\footnote{Para analizar la estructura de los activos y pasivos de este tipo de inversión, que comprende las tenencias de acciones y títulos de deuda negociables que no son considerados inversiones directas, se utiliza: \textit{Coordinated Portfolio Investment Survey} (CPIS) del FMI.
+}
+
+El grado de concentración en la tenencia de estos títulos es muy elevado: los diez mayores tenedores poseen un $65\%$ del total mundial, Estados Unidos tiene el $20\%$. Pero también lo es el grado de concentración de los flujos. En especial, aunque hemos destacado el papel de la Inversión Extranjera Directa en la financiación de la economía estadounidense, sin duda la financiación del resto del mundo se ha canalizado esencialmente a través de la inversión de cartera y la otra inversión (siendo esta última cada vez más significativa). Las inversiones de cartera son la categoría funcional dominante de sus pasivos exteriores como consecuencia de la demanda mundial de títulos emitidos por residentes americanos. 
+
+Además, estos flujos están adquiriendo un papel internacional cada vez más relevante, situándoseen torno al 70\% del total del stock financiero mundial, a consecuencia de un factor fundamental: englobal los instrumentos de deuda y los instrumentos de renta variable sin capital social (cada vez más importantes en términos de \textit{stock}).
+
+El aumento de la participación de los títulos de inversión en cartera dentro de la Posición de Inversión Internacional de los países responde a varios factores que conviene distinguir de los que explican el crecimiento de la IED. En primer lugar, un factor puramente mecánico: la propia naturaleza de la inversión en cartera —títulos de deuda y de renta variable sin participación de control, líquidos y negociables en mercados secundarios— la hace estructuralmente más escalable que la inversión directa, que requiere relaciones de propiedad duraderas y, por tanto, fricciones de información, coordinación empresarial y tiempo de maduración mucho mayores. A medida que se ha producido la liberalización progresiva de las cuentas de capital que mencionas en el apartado 4.1.2.1, el canal de cartera ha sido el que más rápido ha podido absorber ese nuevo capital móvil, precisamente porque no exige el mismo grado de compromiso operativo que la IED.
+
+En segundo lugar, la composición del propio stock financiero mundial ha cambiado: como bien apuntas en 4.1.1.2, los instrumentos de deuda y los de renta variable sin capital social han ido ganando peso relativo, lo que arrastra mecánicamente la importancia de la inversión en cartera dentro del total de activos y pasivos exteriores. A esto se suma la creciente sofisticación de los mercados de deuda soberana y corporativa en economías emergentes, que ha abierto una clase de activo que antes era residual para los inversores institucionales globales (fondos de pensiones, aseguradoras, fondos soberanos) en busca de diversificación y rendimiento, especialmente durante el período de tipos bajos en las economías avanzadas, cuando la búsqueda de rentabilidad (search for yield) empujó capital hacia deuda de mercados emergentes y deuda corporativa de mayor riesgo.
+
+En tercer lugar —y aquí enlazas directamente con tu propio apartado sobre desigualdad y centros financieros offshore— buena parte de ese crecimiento de la inversión en cartera es, en realidad, un artefacto estadístico derivado del rol desproporcionado de los centros financieros extraterritoriales, donde se concentran tenencias de cartera que no reflejan relaciones económicas reales entre el país de origen y el de destino, sino paradas intermedias en la ruta del capital hacia su destino final. Esto es coherente con lo que tú mismo documentas sobre Luxemburgo, Países Bajos, Hong Kong o las Islas Caimán.
+
+\subsubsection{Retos: ¿Cuáles son las perspectivas?}
+Como vemos, los flujos internacionales de capital son mucho más complejos de analizar que los flujos internacionales de bienes y servicios. De hecho, tal y como decíamos al principio hemos dejado de lado una de las claves para arrojar luz sobre éstos: la \textbf{posición de inversión internacional}. 
+
+Esto se ha hecho deliberadamente con el objetivo de apoyar la presentación de los dos retos fundamentales que se presentan en la arquitectura financiera internacional: la \textbf{desigualdad} y la \textbf{deuda}.
+
+\paragraph{Desigualdad: ¿Cómo afecta la globalización financiera al incremento de la desigualdad?}
+Investigadores del Fondo Monetario Internacional (FMI) han encontrado que una mayor movilidad del capital produce fuertes efectos sobre la desigualdad (JAUMOTTE et al., 2013; FURCERI y LOUNGANI, 2015; FURCERI et al., 2017). 
+
+En particular, encuentran que la liberalización de la cuenta de capital conduce a descensos estadísticamente significativos y duraderos en la \textbf{participación del trabajo en la renta}, así como a aumentos correspondientes en el \textbf{coeficiente de Gini} y en las participaciones en la distribución de ingresos de los percentiles $1\%$, $5\%$ y $10\%$ superioreres. No existe en la macroeconomía internacional un equivalente al teorema de STOLPER-SAMUELSON, pero existen diversas explicaciones.\footnote{Según el informe anual de 2021 del \href{https://www.imf.org/-/media/files/publications/balance-of-payments-statistics/abpea2021001.pdf}{\textit{IMF Committee on Balance of Payments Statistics}}, uno de los problemas más importantes de las cuentas financieras es su baja cobertura de los centros financieros offshore: \textit{Offshore financial centers are jurisdictions in which the majority of the financial transactions are entered into by financial corporations located therein and are on behalf of cliens who reside outside the offshore financial center. The collection of separately identifiable cross-border data from key jurisdictions hosting special purpose entities (SPEs) will partly address this concern about data gaps}. (Paragraph 3.78, \href{https://www.imf.org/-/media/files/data/guides/mfsmcg-final.pdf}{\textit{Monetary and Financial Statistics Manual and Compilation Guide 2016}}.
+}
+
+La primera y más evidente estaría relacionada con la \textbf{negociación}, como se argumenta en RODRIK (1997, capítulo 2). Mientras los salarios se determinen en parte mediante negociación entre trabajadores y empleadores, la movilidad del capital proporciona a los empleadores una amenaza creíble: \textbf{aceptar salarios más bajos o, de lo contrario, nos trasladamos al extranjero}.\footnote{FURCERI et al. (2017) proporcionan cierta evidencia de que la caída de la participación del trabajo está relacionada con la amenaza de trasladar la producción al extranjero. La explicación basada en la negociación también es coherente con el hallazgo de JAUMOTTE et al. (2013), según el cual es la inversión extranjera directa, en particular, la que se asocia con el aumento de la desigualdad. De forma más amplia, el régimen de negociación salarial puede ser endógeno a la globalización, de modo que la mayor facilidad para trasladar la producción al extranjero se asocia con un menor poder del trabajo.
+}
+
+Otro argumento en RODRIK (1997) es que la movilidad del capital aumentaría la volatilidad de los ingresos laborales y, en particular, trasladaría la \textbf{carga de los shocks económicos al trabajo}. Esto también se deriva de la movilidad diferencial del trabajo y el capital a través de las fronteras. El factor que permanece atrapado dentro de las fronteras debe absorber los costes de los shocks idiosincráticos.\footnote{La evidencia posterior ha sido en gran medida coherente con esta conjetura (SCHEVE y SLAUGHTER, 2004; OCDE, 2007; BUCH y PIERDZIOC, 2014). Los trabajadores con menores habilidades y cualificaciones, aquellos menos capaces de desplazarse a través de las fronteras, suelen ser los más afectados por este traslado del riesgo.
+}
+
+Otro cambio distributivo tiene que ver con la \textbf{carga de la tributación}. A medida que el capital se vuelve globalmente móvil, resulta más difícil gravarlo. De hecho, los tipos del impuesto sobre sociedades han disminuido de forma pronunciada en prácticamente todas las economías avanzadas desde finales de la década de 1980, en algunos casos reduciéndose a la mitad o más. 
+
+Esto es especialmente cierto cuando observamos en detalle los flujos de financiación y las Posiciones de Inversión Internacional de los países: \textbf{los centros financieros offshore ofrecen una importante capacidad de financiación mundial que no guarda ninguna relación con su peso en las relaciones comerciales internacionales}. Ello es debido a que muchas entidades financieras fijan su residencia en ellos y colocan los recursos de clientes en activos financieros de todo el mundo. Por ejemplo, Luxemburgo, Países Bajos, Hong Kong y Singapur tienen un importante nivel de flujos de IED de entrada y de salida debido a la actividad de las Empresas Multinacionales, que crean entidades con fines especiale (\textit{Special purpose entities}) en centros financieros extraterritoriales en los que los fondos atraviesan por la economía en lo que no es más que un paso intermedio del trayecto hacia su destino final.\footnote{El FMI publica la \textit{Coordinated Direct Investment Survey}. Estos datos son coherentes con los de las balanzas de pagos que tienen en cuenta el país de procedencia inmediata de los flujos de capitales y los flujos se cuentan cada vez que entran y cada vez que salen de un país. Varios países llevan a cabo análisis de la procedencia última y destino último de sus flujos de inversión directa, tanto de entrada como de salida.
+} Estas entidades suelen crearse para conseguir ventajas tributarias o de regulación y pueden inflar considerablemente las entradas financieras que tienen un efecto tangible relativamente pequeño en la economía anfitriona. 
+
+Paralelamente, el Caribe tiene otros dos grandes centros financieros que reciben grandes flujos de financiación: las Islas Caimán y las Islas Vírgenes Británicas. Paralelamente, las Islas Caimán figura en su posición internacional de inversión en cartera entre los principales tenedores de activos emitidos por residentes de Estados Unidos, Japón, China. Algo que, como no, se ve compensado por la posición que ostenta Estados Unidos en la tenencia de inversión en cartera, cuyo primer deudor son las Islas Caimán.
+
+Sin duda, los centros financieros offshore tienen una relevancia desproporcionada en las estadísticas financiera, algo que debe ser abordardo para mitigar los efectos potencialmente dañinos que pueda estar generando. De hecho, estas tendencias se han venido vinculando explícitamente a la \textbf{competencia fiscal en países con regímenes de libre movilidad de capitales} (DEVEREUX et al., 2008), haciendo que la carga fiscal sobre las remuneraciones al trabajador se hayan mantenido constante, se hayan tenido que aumentar en algunas casos y los tipos del impuesto sobre el valor añadido generalmente hayan aumentado (RODRIK, 2018a). 
+
+En esta misma linea resulta muy llamativo las soluciones propuestas en el último Informe sobre Sostenibilidad del Déficit y reformas presentado por la Oficina Presupuestaria del Congreso de los Estados Unidos, donde se ve necesario aumentar la capacidad recaudatoria mediante: subida de los impuestos sobre la renta o aumento de los impuestos sobre el valor añadido. ¿Dónde queda la tributación corporativa?\footnote{Además, debemos poner en contexto esto con el progresivo descenso de la participación de las rentas salariales sobre el total del producto interior bruto en las economías más avanzadas, violando los tan conocidos \textit{hechos de KALDOR}. Esto significa que, a medida que aumenta la participación del beneficio sobre el producto interior bruto, su carga fiscal disminuye, aumenta desproporcionadamente la carga fiscal sobre las rentas salariales: \textit{La Paradoja del Beneficio: Como las empresas exitosas amenzan la economía}, EECKHOUT (2020).
+}\textsuperscript{,}\footnote{En los últimos años ha habido una cooperación y un intercambio de información mucho mayores entre las economías avanzadas, con el objetivo de limitar la competencia fiscal. Recientemente se ha alcanzado un acuerdo entre las principales economías para establecer un suelo a la tributación de la renta empresarial. Queda por ver si esto producirá un cambio significativo en la tributación del capital globalmente móvil.
+}
+
+
+\paragraph{Deuda: ¿Cómo manejar un entorno de \textit{sobre endeudamiento}?}
+Otro reto reseñable es la cuestión de la deuda, que ha pasado de ser un epígrafe técnico dentro de la sostenibilidad fiscal a convertirse en uno de los ejes centrales del debate macroeconómico contemporáneo. Según el Global Debt Database del FMI, la deuda mundial total se situó en 2024 algo por encima del $235\%$ del PIB mundial ($251\text{B}\$$ billones de dólares), con una deuda pública cercana al $93\%$ del PIB y una deuda privada en torno al $143\%$. La deuda total apenas cambió el año pasado, según la última actualización del Global Debt Database del FMI.\footnote{Una manera muy amena de profundizar en el concepto de liquidez internacional es ver los videos en Youtube de Michael Howell de Cross border capital. 
+} 
+
+No obstante, lo que ha devuelto la deuda al centro del debate académico no es solo su volumen, sino su concentración y su composición: Estados Unidos y China continúan desempeñando un papel dominante en la dinámica de la deuda mundial, con la deuda pública estadounidense subiendo al $121\%$ del PIB y la china al $88\%$, mientras que excluyendo a Estados Unidos la deuda pública del resto de economías avanzadas descendió por debajo del $110\%$ del PIB. El motor principal del aumento de la deuda pública es el déficit fiscal global persistentemente elevado, que promedia en torno al $5\%$ del PIB, reflejando todavía costes heredados del Covid-19 (subsidios, prestaciones sociales) junto con el incremento de la carga neta de intereses. 
+
+La visión ortodoxa dominante hasta hace pocos años partía de un consenso relativamente estable construido sobre el \textbf{análisis de sostenibilidad fiscal}, centrado en la dinámica $r−g$ y en la disciplina de mercado como mecanismo corrector.\footnote{El trabajo más influyente en revisar este consenso desde dentro de la propia ortodoxia es el de BLANCHARD, quien en su discurso presidencial de la American Economic Association de 2019 argumentó que cuando el tipo de interés de la deuda pública es inferior a la tasa de crecimiento, la deuda puede renovarse de forma segura sin que aumente la ratio deuda/PIB, lo que implica que la deuda pública puede no tener coste fiscal, aunque sí costes en términos de bienestar al desplazar acumulación de capitalsi el tipo de interés sobre la deuda pública i es menor que la tasa de crecimiento g, entonces la deuda pública puede renovarse de forma segura sin un aumento en la ratio deuda-PIB incluso sin costes fiscales, la deuda pública reduce la acumulación de capital y puede por tanto tener costes de bienestar. Sin embargo, los costes de bienestar pueden ser menores de lo habitualmente asumido. Es importante matizar, que el propio BLANCHARD advierte que su argumento no es una defensa de más deuda pública, sino una llamada a una discusión más rica sobre sus costes, y que reconoce el riesgo de equilibrios múltiples: si los inversores empiezan a percibir la deuda como arriesgada, exigirán una prima de riesgo que retroalimenta el propio riesgo de insostenibilidad.
+} La visión heterodoxa, de raíz keynesiana y particularmente desarrollada por la escuela poskeynesiana y la Teoría Monetaria Moderna (MMT), parte de un punto de partida distinto: la identidad contable de los balances sectoriales (sectoral balances) desarrollada por GODLEY.\footnote{Esta identidad establece que, por pura contabilidad, el saldo del sector público más el saldo del sector privado más el saldo del sector exterior deben sumar cero, de manera que un déficit del gobierno implica necesariamente un superávit equivalente del sector privado y/o exterior. Desde esta óptica, la deuda pública no es intrínsecamente problemática sino el reflejo contable de un superávit en otro sector de la economíase siguen varias implicaciones. En primer lugar, los déficits gubernamentales no son inherentemente problemáticos, y la pregunta relevante deja de ser \textit{cuánta deuda es sostenible} para convertirse en \textit{qué sector está siendo forzado a endeudarse si el gobierno persigue el superávit}. 
+}
+
+En términos prescriptivos, la gestión del sobreendeudamiento difiere sustancialmente entre deuda denominada en moneda propia y deuda en moneda extranjera, siendo esta segunda la que genera los riesgos de crisis de balanza de pagos. Por otro lado, el consenso actual del FMI, como hemos visto, tiende hacia consolidación fiscal gradual y favorable al crecimiento más que ajustes abruptos, evitando represión financiera o financiación monetaria. Por último, para los países con mayor riesgo de sobreendeudamiento la discusión se desplaza del ajuste doméstico hacia la arquitectura internacional de resolución de deuda (Common Framework del G20, Mesa Redonda Global sobre Deuda Soberana).
+
+
+
+
+
+\subsection{Flujos de trabajadores}
+
+
+
+
+
+\subsubsection{Pacto social: ¿Cómo afecta la inmigración a la sostenibilidad de las políticas compensatorias?}
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+\end{document}
