@@ -1,0 +1,1155 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{El Grupo del Banco Mundial\\
+\large Los Bancos Regionales de Desarrollo y otras instituciones financieras multilaterales de desarrollo}
+\author{Marcelo Ortega}
+\date{Marzo 2026}
+\newcommand{\TemaCode}{3B30}
+
+\oldtitle{
+    B.31. Instituciones multilaterales de financiación y ayuda al desarrollo: el Grupo Banco Mundial y los Bancos Regionales de Desarrollo
+}
+\changerationale{
+    Ajuste de redacción, con finalidad de mayor claridad.El objetivo del tema es doble: por un parte, comprender el lugar de
+los bancos multilaterales de desarrollo en el sistema económico internacional y, por otra parte,
+conocer su funcionamiento; los detalles numéricos sobre el número de estados miembros o el
+volumen de aprobaciones son cuestiones totalmente menores.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     El objetivo del tema es doble: por un parte, comprender el lugar de los bancos multilaterales de desarrollo en el sistema económico internacional y, por otra parte, conocer su funcionamiento; los detalles numéricos sobre el número de estados miembros o el volumen de aprobaciones son cuestiones totalmente menores.
+
+     Con respecto al contenido del tema, el opositor podría considerar: 
+     \begin{lnum}
+         \item La inclusión o no del BEI. Se podría decidir hacer una breve referencia al BEi en su consideración de financiador de proyectos de desarrollo;
+         \item La inclusión de instituciones multilaterales de desarrollo como por ejemplo el PNUD. El ténnino financiero es una de las claves por las que no se desarrollan las agencias de Naciones Unidas. No obstante, se podría optar por hacer un brevísima referencia al PNUD y otros organismos similares.
+     \end{lnum}
+
+     Cuestiones que podrían ser de interés en 2023 serían: 
+     \begin{lnum}
+         \item Respuesta de los bancos de desarrollo a la COVID o a la invasión de Ucrania por Rusia (donde, como punto adicional, está la problemática en la gobemanza de aquellas instituciones donde Rusia es miembro);
+         \item Grupo de trabajo IFA del G20 sobre el marco de adecuación del capital de IFM [Ver Anexo \ref{anx:ifa_g20}];
+         \item ¿Es indispensable un rating triple A para las principales IFM? [Ver Anexo \ref{anx:rating_ifms}];
+         \item Revisión de la política energética en los Bancos de Desarrollo, que se podría enlazar con la proliferación de ventanillas climáticas cuando ya existen los grandes fondos climáticos. 
+     \end{lnum}
+    }
+\vspace{1cm}
+
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+
+
+\clearpage
+\section{Bancos Multilaterales de Desarrollo: Elementos comunes}
+\puntosclave{
+    Los principales Bancos regionales (BID, BAsD, BAID) se han creado a semejanza del BM, por lo que presentan muchos elementos comunes. 
+    
+    Los BMDs captan recursos para proporcionar financiación en los mercados internacionales mediante la emisión de bonos a un coste muy bajo gracias a su rating AAA. 
+    
+    Pueden proporcionar financiación no concesional a estados y sector privado, y concesional a aquellos estados con una renta per cápita inferior a 1.255 USO (dato para 2023). 
+    
+    La estructura de gobernanza de cada una de las principales entidades sigue una misma estructura: Asamblea de Gobernadores, Directorio Ejecutivo y Gerencia o Dirección ( el Management). 
+    
+    Las principales actuaciones de los BMDs son: financiación de proyectos, asesoramiento y diálogo en materia de política económica así como generación de conocimiento.
+}
+
+Los principales bancos multilaterales de desarrollo (BMD) presentan numerosos elementos comunes, en la medida en que los regionales se hicieron siguiendo el modelo establecido en su día por el Banco Internacional de Reconstrucción y Desarrollo. 
+
+\textbf{¿Qué queremos decir?} A lo largo de este apartado se desarrollan los elementos más esenciales de los BMD, por ejemplo, que tipo de entidades son, sus estructuras de gobemanza o sus principales áreas de actuación.
+
+\subsection{Financiación: ¿Cómo se estructuran financiaramente estas instituciones financieras?}
+Por lo general, cada BMD está compuesto por varias entidades con su propia personalidad jurídica pero persiguiendo un objetivo común y actuando de forma coordinada.\footnote{Por ejemplo, el Grupo del Banco Mundial se denomina Grupo ya que aglomera hasta cinco entidades con personalidad jurídica propia. El Grupo del Banco Africano de Desarrollo es un Grupo ya que está formado por dos entidades jurídicas: el Banco Africano de Desarrollo y el Fondo Africano de Desarrollo. 
+} Esta segmentación institucional obedece obedece, fundamentalmente y por lo general, al tipo de servicio que prestan. Por ello, cada grupo institucional o institución individual puede estar compuesto por una, algunas o todas las entidades que vamos a ver a continuación.
+
+\subsubsection{Financiación no concesional: Ventanilla de crédito}
+En primer lugar, y con posición preeminente, tendríamos las instituciones cuyo fin es proveer financiación concesinoal, bien sea al Sector Público o al Sector Privado de la economía. Estas entidades son de naturaleza bancaria: su capital social está suscrito por diferentes países accionistas y su poder de voto es proporcional. En la mayoría de casos dicho capital sólo se desembolsa en una pequeña porción (\textit{paid in capital} o capital pagadero) y se deja el resto que le correspondería como compromiso/obligación en caso de necesidad (\textit{callable capital} o capital exigible). 
+
+Captan la mayoría de sus recursos principalmente en los mercados financieros mediante emisión de títulos de deuda respaldados por su capital (en particular, el \textbf{capital exigible}). Su carácter institucional permite abaratar enormemente sus costes de financiación y les proporciona, en la mayoría de casos, altos estándares de rating (AAA). No obstante, es frecuente topar con límites al apalancamiento de las entidades para garantizar la sostenibilidad financiera de la entidad. 
+
+\textbf{INTRODUCIR GRÁFICOS DE ESTRUCTURA DE BALANCE}
+
+Por lo que respecta a su activo, los prestatarios: (i) deben ser miembros de la institución; (ii) suelen ser países de renta intermedia (a menudo se establecen incluso umbrales); y, (iii) no suelen presentar problemas de sostenibilidad de deuda.\footnote{Dicho de otro modo, para acceder a los recursos de esta ventanilla, el país prestatario debe poseer una renta nacional bruta superior a $1.255\$$ (dato para 2023, es un nivel que se revisa periódicamente) y no presentar problemas solvencia.
+} Si no cumplieren alguna de las últimas dos condiciones, recibirían un tratamiento específico a medio camino entre el préstamo concesional y el no concesional. Además, es frecuente también que se otorguen préstamos a entidades públicas regionales y no entidades políticas (Estados). Por último, los estatutos suelen marcar límites en la concesión de préstamos y cada entidad prestamista tiene, además, establecidos una serie de límites de préstamo por sectores y países en función de su política de riesgo y de adecuación del capital. 
+
+Como es de suponer, los márgenes de intermediación son muy favorables respecto al resto de alternativas posibles: tipos de interés y períodos de carencia y amortización amplios. No obstante, estas entidades deberían poder obtener beneficios debido al margen de intermediación (tipo-coste) que serán destinados a la dotación de reservas, financiación concesional, iniciativas de desarrollo y su propio funcionamiento (sueldos, gastos administrativos, etc.).\footnote{Hay que tener en cuenta que, en caso de crisis de deuda e insolvencia, estas entidades suelen considerarse acreedores preferentes aunque no esté estipulado en ninguna parte (ya sea en sus estatutos, en un convenio o en los acuerdos de préstamo) sino que es ua cuestión consuetudinaria. 
+}
+
+\paragraph{Financiación no-concesional: Sector Privado}
+Un caso particular de esta ventanilla de crédito o actividad de intermediación de las instituciones de financiación mundial/regional es la promoción/financiación de las actividades del Sector Privado de la economía.\footnote{
+Hay que notar que, en muchos casos, la financiación que se concede al sector privado se realiza a través de la misma entidad que otorga financiación no concesional clásica (no hay una entidad específica para el sector privado, p.e. en Grupo BAfD o BAsD). También es notable que, en algunos casos como el BERD, la mayor parte del negocio se dirige precisamente al Sector Privado. 
+}
+
+Al igual que sus homólogas de mayor orden de magnitud, tienen naturaleza bancaria y las mismas características ya mencionadas con respecto al capital y al poder de voto; siendo, posiblemente, la diferencia principal los destinatarios de la financiación. Es decir, la composición institucional de su activo (empresas, Special Purpose Vehicles, fondos de inversión, etc.). También obtienen sus recursos de los mercados financieros (títulos de deuda) y los márgenes de intermediación en sus operaciones. Suelen ofrecer una amplia gama de instrumentos: préstamos, garantías, financiación del comercio, sindicaciones, inversión en capital riesgo, etc. 
+
+Podría entenderse también como financiación no-concesional dirigida a la promoción del sector privado la Agencia Multilateral de Garantía de Inversiones del Grupo Banco Mundial (MIGA). Esta agencia tiene como meta facilitar la corriente de inversión de capitales privados con fines productivos en países en desarrollo, encargándose de otorgar garantía a los inversionistas contra pérdidas ocasionadas por riesgos no comerciales como expropiación, inconvertibilidad de moneda, transferencias cambiarias, guerra civil o disturbios. Asimismo, proporciona asistencia técnica para ayudar a los países a difundir información sobre oportunidades de inversión.
+
+\subsubsection{Financiación concesional: Ventanillas blandad}
+Por otro lado tendríamos las entidades cuyo objetivo principal, razón de ser, es la financiación concesional a los diferentes Estados miembros.\footnote{El CIADI sería la única entidad que quedaría fuera de esta clasificación por ser una entidad muy particular y específica del GBM. Más adelante se explicará su actividad.
+} 
+
+Como es obvio, estas entidades no siguen el esquema habitual de una entidad bancaria ya que sus recursos provienen de las aportaciones periódicas de sus contribuidores y su actividad es canalizarlo a proyectos y países concretos con el fin de alcanzar los objetivos de la entidad. Resulta importate, por esta razón, destacar que el poder de voto no será proporcional (pues no hay capital suscrito) sino que dependerá de los miembros y sus propios pactos de distribución de poderes.
+
+\textbf{INTRODUCIR ESQUEMA DE BALANCE ENTIDAD DE FINANCIACIÓN CONCESIONAL}
+
+Normalmente, los procesos de reposición de los fondos se realizan con una periodicidad de entre tres y cuatro años. No obstante, existen también otras fuentes de recursos: (i) transferencias recibidas de las ventanillas de crédito; (ii) repago de los préstamos concedidos en el pasado; y, (iii) ingresos derivados de la gestión de tesorería. Además, a partir de $2018$ estas entidades empezaron a emitir sus propios títulos de deuda para obtener recursos adicionales, obteniendo paralelamente la calificicación máxima (AAA). (En especial, la ventanilla blanda del Grupo del Banco Mundial).\footnote{Hasta hace poco, las entidades de financiación concesional no emitían bonos para captar recursos. Por ello, puede parecer incluso más contradictorio que una ventanilla concesional pueda obtener un rating triple A. 
+
+No obstante, encontramos, entreotras, las siguientes razones: (i) posee una base de capital excepcionalmente fuerte gracias a sus países donantes y a las calificaciones crediticias de estos; (ii) elevados niveles de liquidez (debe mantener activos líquidos que le permitan cubrir almenos 24 meses de salidas netas); (iii) calidad de cartera de préstamos (IDA tiene estatus de acreedor preferente, diversificación global de préstamos, límites de endeudamiento por país. congelación de desembolsos en casos de atrasos. etc.); y, (iii) mantienen una gestión prudente del riesgo.
+} Además, también recientemente se ha empezado a permitir que los propios Estados Miembros otorguen financiación concesional a estas entidades, que es posible tanto en la ventanilla blanda del Banco Mundial, como en la del Banco Africano de Desarrollo.\footnote{Sería equivalente a que España realizase un préstamo concesional desde el FEDES (Fondo para el Desarrollo Sostenible) a la ventanilla concesional del Banco Mundial. Se recuerda al opositor que el Fonprode/FEDES es objeto de estudio en el [\authorfont{Ver Tema 4.B.22}].
+}
+
+Una vez con que se dispone de los recursos suficientes, se produce el reparto (asignaciones) entre los países que son elegibles: (i) umbrales máximos de renta; y, (ii) problemas de solvencia. De nuevo, recordar que si los países cumplen únicamente con uno de los dos criterios, pueden recibir financiación mixta, a caballo entre la financiación concesional y la no concesional (\textit{blend countries}).\footnote{Cuando un país deja de ser elegible para la financiación concesional y pasa a financiarse a través de la no concesional, se dice que se ha \textbf{graduado}. En caso contrario, hablaríamos de \textbf{reingresar}. Las graduaciones suelen llevar aparejadas períodos transitorios en los que el país va dejando paulatinamente de poder acceder a financiación concesional. 
+
+Desde la fundación de IDA, 46 países se han graduado, y diez de ellos han reingresado en IDA.
+}  La asignación se realiza teniendo en cuenta las necesidades de los países (por ejemplo, utilizando renta per cápita o población) y las buenas prácticas en materia de Gobernanza, lo que ha contribuido al alineamiento de incentivos. No obstante, la asignación puede ser estríctamente en términos concesionales (préstamo) y/o mediante donaciones; principalmente dependiendo de su situación y la deseabilidad de los miembros participantes (utilizando solo donaciones únicamente como elementos penalizador, pues reduce la cuantía percibida). Además, suelen establecerse asignaciones para actividades/objetivos de tipo regional y/o por temáticas (estados frágiles o situaciones de crisis), cuyos beneficiarios suelen ser los países más pobres. 
+
+No hay que olvidar que, aunque la financiación vía ventanilla blanda puede parecer financiación \textbf{gratuita}, lo que normalmente se produce no es financiación estríctamente gratuita, sino que se carga un coste extremadamente reducido (no genera ganancias para la entidad, como mucho reembolsa), es decir a tipo de interés muy ventajosos y períodos de carencia y devolución especialmente amplios. En el caso del Banco Asiático de Desarrollo, el Fondo Asiático de Desarrollo (su ventanilla blanda) no es independiente y está integrado dentro del propio BAsD. El BERD no ofrece financiación concesional, mientras que el BAII ha implementado una ventanilla especial para hacer sus préstamos más asequibles (que no concesionales) para los países miembros menos desarrollados.\footnote{El Fondo Monetario Internacional determina como concesionales \textbf{préstamos con un componente de subvención de, al menos, el $35\%$, evaluados a un tipo de descuento del $5\%$}. La intención del BAII no es proporcionar concesionalidad hasta el nivel de la del FMI, sino hacer que su financiación del BAII sea más asequible para sus países menos desarrollados.
+}
+
+\subsection{Gobernanza: ¿Cómo se organizan políticamente estas instituciones financieras?}
+Una vez conocemos qué tipos de entidades podemos encontrar en el ámbito de la financiación internacional, podemos ver cómo se articula jurídica y políticamente su gobernanza, pues igual que antes, todas siguen una estructura muy similar.
+
+\textbf{INTRODUCIR ESQUEMA DE JERARQUÍA POLÍTICA}
+
+\paragraph{Asamblea de Gobernadores}
+En la cúspide de la jerarquía, como máximo órgano de gobierno, tendríamos la \textbf{Asamblea de Gobernadores}, con cada Gobernador asociado a uno de los Estados Miembro accionistas. 
+
+Normalmente, los Gobernadores suelen ser los Ministros de Economía, Asuntos Exteriores o de Desarrollo, aunque no tienen por qué tener ninguna condición política ni institucional concreta dentro del Estado al que representan: cada país puede determinar qué cargo lo representa. Este cargo se complementa, normalmente, con la figura del Gobernador Alterno, sustituyendo al Gobernador en ausencia.
+
+La Asamblea de Gobernadores suele reunirse \textbf{una vez al año}, con carácter ordinario, y se toman las decisiones determinadas por el Convenio Constitutivo correspondiente: aspectos financieros, directrices estratégicas o gobernanza (por ejemplo, la elección del Presidente). También puede reunirs e con carácter extraordinario. 
+
+\begin{specialblock}{Comité de Desarrollo (sólo GBM)}
+    En 1974 se constituyó el Comité de Desarrollo (CD) como foro de alto nivel de los Gobernadores del Grupo del Banco Mundial y del Fondo Monetario Internacional con el fin de buscar y establecer consensos intergubemamentales en su ámbito (desarrollo). 
+      
+    Su finalidad es asesorar las Asambleas de Gobernadores del GBM y del FMI en ámbitos fundamentales de desarrollo y los recursos financieros necesarios para promover el desarrollo económico. A lo largo de los años ha ido incluyendo materias como el comercio internacional o el medioambiente en sus debates. Se reúne dos veces al año, en el mismo momento que las Asambleas Anuales conjuntas del GBM y del FMI.\footnote{El GBM es el único BMD que cuenta con dos Asambleas de Gobernadores ordinarias al año: una en primavera y otra en otoño.
+    }  
+\end{specialblock}
+
+
+\paragraph{Directorio Ejecutivo} 
+En segunda posición por arriba tendríamos el Directrio Ejecutivo (Consejo de Administración), encagado de la gestión diaria de la institución y dependiente de la Asamblea de Gobernadores y con alrededor de veinte miembros (Directores Ejecutivos, aunque depende de la institución). El órgano es residente, es decir que sus miembros residen en el lugar de la sede de la institución.\footnote{Aunque en algunos casos no lo es: bancos multilaterales subregionales o en el Banco Asiático de Inversión en Infraestructuras.
+} 
+
+En la medida en que no es posible que todos los países accionistas se \textit{sienten} en el Directorio Ejecutivo, cada Director Ejecutivo suele representar a varios países a la vez: los países accionistas se agrupan en circunscripciones o \textit{sillas} que suelen surgir por afinidades culturales o políticas, aunque no existe norma al respecto.\footnote{Por ley, EEUU no comparte silla con ningún país. En el Directorio Ejecutivo del BIRD, hasta siete países tienen silla propia sin compartirla con otros países: Alemania, Arabia Saudí, China, EEUU, Francia, Japón y Reino Unido.
+}
+
+El Director Ejecutivo (independientemente de su nacionalidad) representa a todos los países de la silla y su poder de voto es el resultado de la suma de los poderes de voto de los países a los que representa. Por ello, en teoría, su posición en el Directorio Ejecutivo es el resultado de la negociación entre los países que forman parte de una misma silla; en la práctica, el poder de negociación depende del poder de voto. Es común, por tanto, que los países que comparten \textit{silla} firmen un acuerdo o memorando en el que repartan de forma rotatoria la ocupación de la silla. Además, existen en función de la institución varios puestos en la silla: (i) Director Ejecutivo, que se sienta en el Directorio como tal; (ii) Director Ejecutivo Alterno, 2º en importancia que suple al Director Ejecutivo en ausencia; y, (iii) uno o varios asesores que trabajan para el Director Ejecutivo y que tienen menor rango en la jerarquía interna de la silla. 
+
+El Directorio Ejecutivo toma las decisiones que le competen en función de lo establecido por el Convenio Constitutivo y las delegaciones dispuestas por la Asamblea de Gobernadores. Entre otros: proyectos, asuntos de recursos humanos, presupuestos, estrategias sectoriales y de país o asuntos financieros. Cada entidad tiene establecida la mayoría necesaria para aprobar los asuntos sometidos al Directorio Ejecutivo 
+
+\paragraph{Gerencia o Dirección (el Management)} 
+Po último, en el escalofón inferior estaría el órgano de Gerencia o Dirección, responsable de dirigir el personal de la entidad y que suele articularse en áreas regionales, temáticas y corporativas. 
+
+Este órgano suele componerse de personal propio de la entidad que tiene la condición de trabajador internacional y suele ser contratado en el lugar correspondiente. Cada entidad tiene un Presidente a su cabeza. Es un puesto muy político y que tiene rango de jefe de gobierno. Tradicionalmente, en el Grupo del Banco Mundial, el Presidente siempre ha sido norteamericano. Del mismo modo, el Presidente del Banco Asiático de Desarrollo siempre ha sido japonés.
+
+\subsection{Actuaciones: ¿Qué hacen estas instituciones financieras?}
+Por último, encontramos también un patrón común en las actuaciones que llevan a cabo estas instituciones financieras.  
+
+\subsubsection{Actividad principal: Financiación de proyectos}
+La \textbf{financiación de proyectos} es sin duda el grueso de la actividad de estas instituciones. Dentro de este gran abánico genérico de proyectos, los principales sectores destinatarios son las infraestructuras (\textbf{financiación de inversión}), y en orden de magnitud: (i) energia (generación, transmisión); (ii) transporte (carreteras); y/o, (iii) agua y saneamiento. 
+
+Esto tiene una doble razón de ser. En primer lugar, se trata de proyectos con elevadísimos costes. En segundo lugar, se trata de proyectos con un fuerte y cuantificable impacto en el desarrollo y crecimiento del país, tanto desde una perspectiva estática como dinámica. 
+
+Para llevar a cabo estas actividad, normalmente \textbf{cofinancia} el proyecto con el país beneficiario; financiándo, eso sí, la mayor parte. El objetivo principal de mantener este sistema de cofinanciación es \textbf{involucrar al país receptor} en el proyecto. Complementariamente, también puede haber cofinanciaciones entre instituciones financieras (con proporciones más equitativas) y/o entre una institución y una agencia bilateral de desarrollo (p.e. USAID). Por lo general, la aprobación final de un proyecto la realiza el Directorio Ejecutivo tras analizar y debatir el documento de proyecto, aunque depende de las particularidades de cada entidad. Una vez aprobado, el país beneficiario (institución competente) se encarga de la ejecución, incluyendo las licitaciones necesarias, que suelen estar restringidas a compañías de países miembros (una excepción llamativa es el BAII). 
+
+Alternativamente, estas instituciones suelen también \textbf{apoyar la actividad presupuestaria} (financiación de apoyo): inyección de dinero al presupuesto sin asignarlo a un fin concreto. Este tipo de actividad suele venir acompañada de cierta condicionalidad a la hora de autorizar los desembolsos (modificación de leyes o aplicación de reformas económicas).
+
+\subsubsection{Actividades complementarias: Asesoramiento y generación de conocimiento}
+Como complementos fundamentales a la financiación de inversión o de apoyo presupuestario tendríamos el asesoramiento y generación de conocimiento.
+
+El asesoramiento de estas instituciones tiene como fin la cooperación técnica y/o la transferencia de técnicas, tecnologías, conocimientos, habilidades o experiencias con el fin de apoyar el desarrollo de estos países. Por su parte, la generación de conocimiento se fundamenta en la existencia de departamentos potentes de investigación en materias de dinámica del desarrollo que, por tanto, pueden realizar y realizan investigaciones y publicaciones especializadas. Además, funcionan como importantes foros de intercambio de ideas. 
+
+Todas estas áreas de actuación orientan la actividad de la institución, dotándola de coherencia y predictibilidad. Cada institución cuenta con una estrategia general a largo plazo que marca: (i) los objetivos (pobreza, sostenibilidad, etc.); y, (ii) los ámbitos de actuación para alcanzarlos (infraestructuras, gobernanza, género, etc.). Asimismo, suele contar con: (i) estrategias/políticas concretas para los sectores en los que interviene (gobernanza, agua, agricultura, etc.); y, (ii) estrategias país, para cada país beneficiario de su financiación. Como todo, estas lineas de actuación y sus resultados se someten a consultas entre partes. 
+
+
+
+
+\clearpage
+\section{Grupo Banco Muncial} 
+\puntosclave{
+    El Grupo del Banco Mundial (GBM) -constituido por BIRD, AIF. CFI, MIGA y CIADI- es, sin duda, el BMD más importante de todos tanto por historia como por ámbito de actuación y por volumen de financiación. 
+    
+    El BIRD proporciona, principalmente a países de renta intennedia, financiación y  conocimiento técnico y asesoramiento. 
+    
+    La AIF es la ventanilla concesional, por lo que ofrece financiación a los países más pobres en condiciones ventajosas o donaciones, además de condonaciones de deuda a través de la Iniciativa para Países Pobres Muy Endeudados y la Iniciativa de Alivio de la Deuda Multilateral 
+    
+    La CFI proporciona financiación al sector privado de los países en desarrollo, siempre respetando los estándares medioambientales, sociales y gobemanza de la institución,que se han convertido en un referente. 
+    
+    MIGA proporciona garantías para mitigar riesgos (por ejemplo, de expropiaciones, guerras, impagos de estado, inconvertibilidad de divisas, etc.) en proyectos de inversión o préstamos 
+    
+    El CIADI es la principal institución en conciliación y arbitraje en diferencias relativas a inversiones internacionales
+}
+
+Analizados los principales elementos comunes, pasemos a revisar las principales instituciones, empezando por el Grupo del Banco Mundial (GBM). 
+
+Esta institución es sin duda la más importante de todas, tanto por historia como por ámbito de actuación y volumen de financiación. A lo largo de los años se ha ido adaptando a los cambios producidos en la economía internacional y las distintas problemáticas asociadas a los procesos de desarrollo como las crisis alimentarias o financieras o pandemias. 
+
+\subsection{Grupo: ¿Qué lo caracteriza de forma conjunta?}
+En primer lugar, vamos a centrarnos en su evolución histórica. A continuación, vamos a explicar su estrategia y la problemática relacionada con la representatividad de los países en desarrollo. Más adelante analizaremos las 5 instituciones que componen el GBM.
+
+\subsubsection{Evolución histórica: Banco Internacional de Reconstrucción y Desarrollo (1944)}
+La génesis del Grupo se encuentra en la constitución del Banco Internacional de Reconstrucción y Desarrollo (1944), parte fundamental del pilar financiero (uno de tres) de la aquitectura de Bretton Woods, destinada a reconstruir la Sistema Económica Internacional. La principal misión de este banco debía ser la reconstrucción de las potencias europeas, devastadas por la Guerra, aunque también contemplaba la financiación al desarrollo del resto de países. Poco después, en 1947, aprobaría su primer préstamo a Francia.\footnote{
+También realizo labores de asesoramiento desde el principio. Por ejemplo, asesoró a Japón en el ámbito de los mercados financieros. 
+} A medida que la reconstrucción fue terminando el BIRD empezó a actuar cada vez más en los países en vías de desarrollo (Chile como primer prestatario).
+
+Aunque a finales de la década se consolidaba como agencia de desarrollo, en 1960 se creó para complementarlo la Asociación Internacional de Fomento (AIF), cuyo objetivo explícito era proporcionar ayuda a los países en desarrollo en términos más favorables a los del mercado. A lo largo de la década de los 70's, bajo la presidencia de McNamara, se produjo un notable incremento del volumen de financiación aprobado por la institución: los préstamos del BIRD y del AIF se multiplicaron por diez; lo que le valío muchas críticas (entre otras), por la rapidez en detrimento de su calidad. También en los 70's el Banco Mundial adoptó su firme postura contra la pobreza extrema, a expensas de las infraestructuras. 
+
+A finales de los años 70's quedó patente que la calidad política e institucional en los países beneficiarios era un determinante esencial de impacto, por lo que se adoptó un importante cambio en la forma de actuar al introducir (fuertemente) la condicionalidad (principios de los 80's). Además, en los años 80's se empezó a hablar también de impacto ambiental en el desarrollo y, poco después (años 90's) se empezaron a integrar políticas de salvaguardias en las actividades de la institución (medioambientales y sociales), al observar que los proyectos generaban impactos negativos en poblaciones y medioambiente.\footnote{Se empezó a tomar en consideración la participación civil y las ONGs, como respuesta a las críticas vertidas sobre su actuación unilateral. 
+
+Los Objetivos de Desarrollo del Milenio (ODM), también conocidos como Objetivos del Milenio, son ocho propósitos de desarrollo humano fijados en el año 2000, que los 189 países miembros de las Naciones Unidas acordaron conseguir para el año 2015.
+} A partir de los años 2000's se hizo hincapié en la lucha contra pandemias como el VIH y la malaria y surgieron los ODM como referencia a nivel mundial en las agendas de desarrollo.
+
+\subsubsection{Estrategia: Extreme poverty and Shared Prosperity}
+La estrategia del Grupo del Banco Mundial (\textit{end extreme poverty and promote shared prosperity}) es otra de las características que lo define de forma conjunta, pues estable y orienta las actuaciones a que todas ellas lo hagan como un \textit{solo} banco, de forma conjunta, coordinada y con lo mismo en mente. 
+
+Esta estrategia se elaboró teniendo en cuenta las realidades, y no los objetivos, de la economía mundial. En particular, la creciente importancia de las economías emergentes y los países de renta media, la participación del sector privado y los flujos internacionales de capital y empleo, así como los cambios circunstanciales de las características de la pobreza, el aumento de la conectividad y el cambio climático. De esta forma, establece dos objetivos eseciales:
+\begin{lnum}
+    \item \textbf{Pobreza extrema}. Acabar con la pobreza extrema, reduciendo el porcentaje de personas que viven con menos de $1,25\$$ al día a menos del $3\%$ en 2030. 
+    \item \textbf{Prosperidad compartida}. Promover la prosperidad compartida, fomentando el crecimiento de ingresos para el $40\%$ de la población más pobre en cada país en desarrollo. Esta idea está íntimamente ligada a la del crecimiento inclusivo.
+\end{lnum}
+
+Además, la estrategia busca que la cooperación y coordinación entre socios, limitando las cargas económicas a las generaciones futuras.
+
+\subsubsection{Reforma de Gobernanza: Consenso de Monterrey (2002)}
+Por último, encontraríamos el ánfasis en las formas de Gobernanza: la evolución económica de los países en desarrollo (economías emergentes) no ha tenido el reflejo que correspondería en los ámbitos de gobernanza. En 2002, el Consenso de Monterrey, fruto de la Conferencia Internacional sobre Financiación al Desarrollo, así lo reconoció para la gobernanza del Grupo del Banco Mundial y el Fondo Monetario Internacional. 
+
+A raíz de esto, en 2008, se aprobó un marco para poder hacer efectivo el mandato de la comunidad internacional, estabeciéndose tres dimensiones clave:
+\begin{lnum}
+    \item \textbf{Representatividad}. Por una parte, se añadió una silla adicional para países de África Subsahariana en el Directorio Ejecutivo. Por otra parte, en la política de contratación de personal, se trata de apoyar la contratación de personal de nacionalidades infrarrepresentadas;
+    \item \textbf{Receptividad}. Para canalizar mejor las opiniones de los países en desarrollo, se abrieron más oficinas sobre el terreno y se descentralizó parte del personal para reforzar el contacto; y,
+    \item \textbf{Voto}. Es el pilar de la reforma de voz más complicado. En un primer momento se concedieron más votos básicos a los países en desarrollo, sin ampliaciones de capital. Más tarde, en 2010, se acordó en la ampliación de capital aprobada en ese año que se realizarían dos ampliaciones de capital del BIRD y de la CFI: (i) una general, con la que se mantienen pesos relativos en el capital sin modificaciones en la proporcionalidad del voto; y, (ii) una selectiva, con la que se ofrecen acciones únicamente a los países infrarrepresentados. Tras la concesión de votos básicos y la ampliación selectiva de capital, los países endesarrollo aumentaron en $4,5$ pp su participación en el capital. El otro acuerdo al que se llegó en 2010 al aprobar las mencionadas ampliaciones de capital fueque cada cinco años se revisaría la representatividad de los países en desarrollo con respecto al capital para reflejar los cambios en la economía mundial. En 2018 se realizó la última ampliación de capital para el BIRD y para la CFI, donde se proporcionó un calendario de cinco años para materializar la aportación.
+\end{lnum}
+
+El incremento de capital es el mecanismo más efectivo y directo de ampliación de la capacidad crediticia de estas instituciones y de aumento del poder de voto de sus miembros. No obstante, suponen fuertes debates y negociaciones entre la institución, el Directorio Ejecutivo y los países miembros, que luego deben ser aprobadas en la Asamblea de Gobernadores y tardan en hacerse efectivos.\footnote{Surge la pregunta de cuál es el tamaño adecuado de estas instituciones o si deberían ser sostenibles financieramente.
+}
+
+\subsection{Entidades: ¿Qué entidades forman parte del Grupo?}
+
+
+\subsubsection{Banco Internacional de Reconstrucción y Desarrollo (BIRD, 1946)}
+El BIRD cuenta con $189$ países miembros que están representados por un Directorio Ejecutivo de $25$ miembros. EEUU es el principal accionista, con el $16,7\%$ de los votos, seguido de Japón con el $7,9\%$, China con el $5,6\%$ y a continuación Francia, Alemania y Reino Unido con el $4\%$ en conjunto. 
+
+A lo largo de los años, ha ofrecido más de $500.000\text{M}\$$ en préstamos para cumplir sus objetivos. Obtiene la mayor parte de sus fondos en los mercados financieros internacionales y, debido a su calificación triple A (desde 1959), puede pedir prestado a bajo coste y ofrecer a los países de ingreso medio acceso a capital en condiciones favorables. 
+
+\paragraph{Servicios: Préstamo flexible}
+Sus servicios van principalmente dirigidos a países de renta intermedia, a los que proporciona: (i) préstamos flexibles, algunos en moneda local; (ii) garantías; (iii) herramientas de gestión de riesgos de tipos de interés o tipos de cambio (swaps); (iv) financiación para situaciones de catástrofe; y, (v) conocimientos, servicios técnicos y asesoramiento, asistencia técnica como por ejemplo servicios de asesoría en gestión de activos y deuda pública o para la mejora del clima para las inversiones.
+
+El instrumento típico del BIRD es el \textbf{préstamo flexible}, que permite al prestatario adaptar las condiciones de reembolso (período de gracia, amortización y estructura de amortización) a las necesidades del proyecto o de gestión de su deuda. En cualquier caso, el vencimiento final puede ser de hasta treinta y cinco años, incluyendo el período de gracia. El margen de intermediación se compone de:
+\begin{lnum}
+    \item \textbf{Prima de riesgo: revisión semestral} (tipo de interés). Normalmente, un tipo de referencia variable de mercado y un margen, variable o fijo. Los intereses se pagan sobre los saldos desembolsados y pendientes de repago. La tasa de referencia varía según la moneda, y desde el 1 de enero de 2022 se ha abandonado el LIBOR para la mayoría de monedas y basculado hacia referencias libres de riesgo (SOFR, TONA, SONIA-$16$);\footnote{No obstante, existe un período de transición, por ejemplo, en los préstamos en USO el cambio se hace efectivo a SOFR desde el 1 de julio de 2023. Para los préstamos denominados en euros  la referencia continúa siendo el EURIBOR
+    }
+    \item \textbf{Comisión de apertura}. Comisión inicial sobre el monto total del préstamo al comienzo del contrato;
+    \item \textbf{Comisión de compromiso}. Comisión de compromiso sobre el monto no desembolsado a partir de los $60$ días después de que el préstamo es firmado. 
+\end{lnum}
+
+El BIRD obtiene ingresos de rentabilizar su patrimonio y el margen de intermediación, que usa principalmente para pagar los gastos operacionales y administrativos, dotar reservas para fortalecer el balance y realizar transferencias de recursos a la AIF. 
+
+\paragraph{Limitaciones: ¿Graduados como miembros?}
+Existe un debate acerca de su diseño financiero a largo plazo. La razón es que se espera que el número de miembros vaya aumentando a medida que los países se vayan graduando de la ventanilla concesional. ¿Cómo hacer frente a un incremento de la capacidad de préstamo sin menoscabar la integridad financiera del BIRD? O dicho de otro modo ¿van a dejar los países accionistas más influyentes dejar crecer el BIRD? 
+
+Por una parte, existen necesidades para aumentar el capital del BIRD, pero esto implica seguir abriendo la puerta al reequilibrio de poder entre los países accionistas en favor de las economías emergentes. Otra opción, que no se contempla en la actualidad, sería aumentar la capacidad de apalancar recursos por parte del BIRD. En cualquier caso, dentro de los límites estatutarios existentes, hay opciones para optimizar la utilización de los recursos.
+
+\subsubsection{Asociación Internacional de Fomento (AIF, 1960)}
+La segunda institución en importancia es la Asociación Internacional de Fomento (AIF). Creada en 1960, es la institución que brinda ayuda a los países más pobres, es decir a aquellos que tienen más dificultades para atraer capitales, complementando la labor del BIRD. Cuenta con 174 países miembros. 
+
+Desde su creación ha aprobado financiación por valor de $496.000\text{M}\$$, de los que en su último ciclo (2020-2022) ha proporcionado $34.700\text{M}\$$. La última reposición de la AIF ha sido el \href{https://www.bancomundial.org/es/news/press-release/2024/12/05/donors-and-world-bank-group-boost-IDA-development}{vigésimo primer ciclo} (AIF$20$, $100.000\text{M}\$$), donde se alcanzó superar por segunda vez el montante histórico, el COVID-19 fue la anterior vez con $93.000\text{M}\$$. La AIF cuenta con ese montante para financiar proyectos durante los tres años del ciclo en los $75$ países beneficiarios ($39$ de los cuales están en África). 
+
+\paragraph{Servicios: Préstamo concesional}
+Los instrumentos de actuación son: (i) préstamos concesionales, a tipos de interés muy bajos con plazos de reembolso entre $25$ y $38$ años, incluido un periodo de gracia de entre $5$ y $10$ años; (ii) donaciones, fundamentalmente a los países en situación de riesgo de sostenibilidad de deuda; (iii) garantías para hacer frente al riesgo de crédito; (iv) instrumentos de emergencia para hacer frente a situaciones de crisis (\textit{Crisis Response Window}); (v) asesoramiento en la gestión de deuda pública, en el acceso a los mercados de capitales o en la elaboración de estrategias para reducir la pobreza; y, (vi) condonación de deuda a través de la HIPC y la MICS [\authorfont{Ver Tema 3.B.29}]. 
+
+Desde un punto de vista estratégico, la AIF orienta su ámbito de actuación a los sectores más básicos: educación primaria, salud básica, agua y saneamiento y agricultura. Pero también promueve la mejora del entorno de negocios, las infraestructuras y las reformas institucionales. 
+
+Los países son elegibles a la financiación concesional de AIF cuando su renta per cápita es inferior a $1.255\$$ anuales. Dicho esto, existen varios condicionantes particulares que pueden hacer que un país por encima de este nivel de renta per cápita se beneficie de la financiación de la AIF: (i) pequeño e insular (Micronesia o Maldivas); o, (ii) situación de sostenibilidad de la deuda (Honduras o Bután). Asimismo, existen países (Nigeria o Pakistán) que son elegibles por nivel de renta per cápita, pero también pueden acceder a la ventanilla del BIRD por su situación de solvencia: son los llamados países \textit{blend}.\footnote{
+No hay que confundir \textit{blend countries}, países que acceden a la financiación concesional y no concesional a la vez, y \textit{blend financing}, utilizar la ventanilla concesional y la no concesional para financiar una operación.
+}
+
+\subsubsection{Corporación Financiera Internacional (CFI, 1956)}
+En tercer lugar, tendríamos la Corporación Financiera Internacional, fundada en 1956. Tiene 186 países miembros.
+
+Desde los inicios del Grupo, algunos de sus ejecutivos eran conscientes de la importancia vital del sector privado en la promoción del desarrollo, algo no muy común en esa época. Por ello, empezó a tomar forma la idea de crear una filial del BIRD para financiar empresas en países en desarrollo, lo que finalizaría con la constitución de esta entidad. 
+
+Inicialmente disponía de un pequeño capital y la única posibilidad de realizar préstamos. Sin embargo, hoy en día es la principal institución internacional de desarrollo que centra su labor exclusivamente en el sector privado (de los PED), a través de la movilización de fuentes de financiación, la promoción de mercados abiertos y competitivos, el respaldo a empresas y la generación de empleos. 
+
+En 2022 aprobó financiación por un importe récord de $32.800\text{M}\$$. Obtiene sus recursos mediante títulos de deuda en mercados internacionales y locales, contribuyendo así a su desarrollo. 
+
+\paragraph{Servicios: Préstamos}
+Sus instrumentos son: (i) préstamos a empresas o a intermediarios financieros; (ii) capital, inversión en empresas o participaciones en fondos de capital; (iii) financiación al comercio, trade finance; (iv) sindicaciones, reforzando así su papel catalizador; (v) soluciones de tesorería para hacer frente a riesgos derivados del tipo de cambio, los tipos de interés o los precios de las materias primas; (vi) operaciones de capital riesgo, mediante inversión directa o a través de fondos de capital riesgo; y, (vii) servicios de asesoramiento o asistencia técnica. 
+
+Para que una operación sea financiable, tiene que respetar los estándares medioambientales, sociales y de gobernanza de la CFI que se han convertido en un verdadero referente del mercado.\footnote{IFC's \textit{Enviromental and Social Perfomance Standards}. Por ejemplo, son empleados por la ECA o \textit{Export Credit Agency} española (CESCE) en el análisis de sus operaciones.
+} Los principales ámbitos de actuación sectoriales de la CFI son las infraestructuras, las manufacturas, el sector agroalimentario y los servicios y mercados financieros.
+
+\subsubsection{Agencia Multilateral de Garantía de Inversiones (MIGA, 1988)} 
+En cuarto lugar, tendríamos la Agencia Multilateral de Garantía de Inversiones. Una de las consecuencia prendidas en la crisis de deuda de los años 80, sobretodo en lo relativo al crecimiento sostenible, fue la importancia de la empresa privada y, en particular, la Inversión Extranjera Directa. Se consideraba que las economías, independientemente de que estuvieran más o menos endeudadas, necesitaban contar con la participación del Sector Privado y con flujos de inversión estable (IED). Por ello, observando los flujos de inversión que se habían concentrado durante décadas en Asia Oriental, se propuso la creación de una entidad que ofreciese asesoramiento en el fomento y protección de las inversiones. 
+
+Fundada en 1988, el principal objetivo de MIGA es \textbf{impulsar las corrientes de capital} y la tecnología a los países en desarrollo, \textbf{con fines productivos}, bajo condiciones consistentes con las necesidades de su desarrollo y sobre las bases de un modelo estable y justo en el tratamiento de la IED. Sus recursos proceden de las aportaciones de capital de los países miembros. Para alcanzar estos objetivos, el MIGA cuenta con diferentes instrumentos y potestades aplicables tanto a  proyectos de inversión como préstamos (en países miembros de MIGA). 
+
+\paragraph{Servicios: Garantías}
+El más común, y sin duda la principal función de MIGA, es la concesión u otorgamiento de garantías colaterales que ayuden a minimizar el riesgo e impacto económico de procesos de expropiación, guerras, terrorismo, impago de obligaciones, incumpliientos contractuales unilaterales, etc.
+
+El precio de las garantías depende el riesgo del proyecto y del país, por lo general, alrededor del $1\%$ de la cantidad asegurada (al año). La duración máxima de la garantía es de quince años, aunque podría aumentarse a veinte en casos debidamente justificados. Existe un tope de $250\text{M}\$$ asegurados por operación y para importes mayores, se acudiría a una sindicación. Desde su creación hasta 2023, MIGA ha emitido más de $70.000\text{M}\$$ en garantías en $122$ países en desarrollo para apoyar $1.000$ proyectos.
+
+\subsubsection{Centro Internacional de Arreglo de Diferencias relativas a la Inversión (CIADI, 1966)} 
+La última institución perteneciente al Grupo del Banco Mundial es el Centro Internacional de Arreglo de Diferencias relativas a la Inversión (1966). El CIADI cuenta con más de 150 países miembros.\footnote{España tiene numerosos casos en el CIADI por el recorte realizado en el pasado a las energías renovables. Dado que se trata de una potencial pregunta del Tribunal y también puede ser relevante para el cuarto ejercicio se recomienda estar al tanto de esta cuestión.
+}
+
+Como podemos intuir, su objeto principal es brindar instalaciones y servicios de soporte para conciliación y arbitraje en diferencias relativas a inversiones internacionales, siendo servicios totalmente voluntarios que requieren consentimiento de ambas partes. No obstante, por lo general el consentimiento del Estado receptor no figura en el marco dispositivo del contrato sino en los Tratados Internacionales de inversión celebrados con el Estado donde resida la otra prte del contrato. En teoría, el CIADI es una organización imparcial, que dispone de diferentes juristas y los pone a disposición de aquellos que quieren recurrir a sus servicios. Los árbitros y conciliadores independientes nombrados para cada caso examinan las pruebas y deciden el resultado de las diferencias que se les hayan sometido.
+
+
+
+\clearpage
+\section{Bancos Regionales de Desarrollo}
+\puntosclave{
+    Los BRs surgen principalmente para complementar la actividad del BM y como respuesta al deseo de las potencias regionales de obtener una cuota de representatividad que no alcanzaban en el BM. 
+    
+    El primero en aparecer fue el Grupo BID, formado por: el BID en operaciones soberanas, BID lnvest que proporciona financiación al sector privado y BID Lab, el laborator io de innovación del Grupo.
+    
+    El BAsD está compuesto por una única entidad que concede financiación al sector público y al sector privado, incluso proporciona fondos concesionales ya que el F AsD está integrado dentro del Banco. 
+    
+    En el BAfD los países africanos poseen estatutariamente al menos el 60\% de las acciones del capital. El Grupo está compuesto por el BAfD, el FAtD (donde se ha repuesto recientemente el Fondo para el período 2023-2025) y el Fondo Especial de Nigeria (sin apenas actividad). 
+    
+    El BERD en un inicio se concentró en apoyar la transición hacia economías de mercado de los países de Europa Central y Oriental. El foco principal de esta institución es el sector privado, pero su ámbito geográfico se ha expandido según se ha ido logrando su objetivo fundacional, que a partir de 2025 pasará a incluir seis países de África Subsahariana e lrak.
+}
+
+Una vez conocemos las particularidades del Grupo del Banco Mundial, podemos pasar a ver cómo su influencia y resultados se ha materializado en la constitución de muchas otras iniciativas regionales que persiguen los mismos objetivos, cuya aparición obedece fundamentalmente a dos razones: (i) (económica) deseo de atender más directamente las crecientes necesidades de desarrollo económico y social de las regiones más atrasadas que no podían ser atendidas por el GBM y que por razones de eficiencia tampoco eran atendidas por la banca privada; y, (ii) (política) un acusado nacionalismo surgido tras la II Guerra Mundial en Latinoamérica, Asia y África, en busca de soluciones integradoras como parte de la consolidación de su identidad política y su afán por resolver el atraso y pobreza de sus regiones. 
+
+Presentaremos tres instituciones, las tres más importantes o relevantes tanto en términos económicos como en términos políticos. 
+
+\subsection{Grupo del Banco Interamericano de Desarrollo (BID, 1959)} 
+El primero de ellos, y siendo la iniciativa más antigua, es el Grupo del Banco Interamericano de Desarrollo, creado en 1959 y cuya concepción se remonta a finales del s.XIX, pero se encontraba con la oposición de EEUU: no quería amenazas para su posición hegemónica y la de sus bancos privados que operaban en Latinoamérica. Además, los países latinoamericanos abogaban por la creación de una institución de desarrollo regional pues veían la política del BIRD como demasiado conservadora y desinteresada por las cuestiones regionales.
+
+Finalmente, debido a la importancia geoestratégica del continente americano en plena Guerra Fría y debido al temor fundado de que la situación de subdesarrollo diese lugar a corrientes de cambio ajenas a sus propios intereses, se iniciaron consultas entre el gobierno norteamericano y el brasileño que se hicieron extensibles al resto de países latinoamericanos. En 1959 se firmó el cónvenio constitutivo del BID y empezó sus actividades a finales de 1960, siendo 1964 el año en que aprobó su primer préstamo (Perú).\footnote{Poco después, en 1972, entró Canadá como primer país no perteneciente a la Organización de Estados Americanos (OEA) y, con la Declaración de Madrid de 1974, se acordó la entrada de países miembros no regionales (aunque los países regionales siguieron y siguen manteniendo el control del banco).
+} 
+
+El Grupo del BID se compone hoy en día de tres instituciones diferentes.
+
+\subsubsection{Banco Interamericano de Desarrollo (BID, 1959)} 
+La primera, y más importante, es el Banco Interamericano de Desarrollo, que cuenta con $48$ países miembros. El principal accionista del BID es EEUU con el $30\%$ del poder de voto, seguido de Brasil y Argentina con el $11,3\%$. Los países fundamentalmente beneficiarios de la financiación, poseen en conjunto el $50,015\%$ del poder de voto.\footnote{Hay que tener cuidado con asociar miembros regionales con países beneficiarios, porque EEUU y Canadá son miembros regionales, pero no prestatarios.
+} 
+
+\paragraph{Servicios: Asesoramiento y productos financieros}
+Entre sus servicios más destacados encontramos las tareas de asesoramiento y diferentes productos financieros. Enre estos últimos destacan:
+\begin{la}
+    \item \textbf{Financiación flexibles}. Los prestatarios pueden ajustar a sus necesidades las condiciones financieras al momento de la aprobación o durante la vigencia del préstamo. Por lo general son préstamos a $25$ años y a tipos de interés LIBOR o SOFR con margen de intermediación;
+    \item \textbf{Riesgo cambiario}. Además, ofrecen protección para mitigar el riesgo cambiario mediante operaciones de financiación en moneda local; y,
+    \item \textbf{Riesgo político y garantías}. Por otro lado, ofrecen productos de protección al riesgo político mediante la constitución a bajo coste de garantías de crédito. 
+\end{la}
+
+En 2021, todo el Grupo BID aprobó préstamos y garantías por un valor récord de 23.400 millones de USD, la pandernia por descontado tuvo una enorme influencia en estas cifras.
+
+\paragraph{Fondo para Operaciones Especiales (FOE, 1959-2016)} 
+Paralelamente, y sin personalidad jurídica propia, se constituyó el Fondo para Operaciones Especiales como ventanilla blanda (financiación concesional): los países menos favorecidos recibían financiación de esta ventanilla, cuyos activos están constituidos por las contribuciones de los países miembros. 
+
+Las reposiciones a este fondo no funcionaban como las reposiciones de otras ventanillas blandas, sino que se solían enmarcar en las negociaciones de ampliación de capital del BID, menos frecuentes en el tiempo que las reposiciones de las ventanillas blandas como la AIF.
+
+No obstante, en 2016 la Asamblea de Gobernadores aprobó la fusión del fondo con los recursos de capital ordinario del Banco. Este movimiento se realizó, principalmente, para mantener el nivel de financiación concesional, que hubiera caído con fuerza desde 2016 (TRUMP-I). Con este cambio también se modificaron los criterios de elegibilidad para acceder a esta ventanilla, donde además del nivel de renta per cápita se incorporó un criterio de solvencia: país pequeño y vulnerable, con renta per cápita superior al umbral, pero no superior a dos veces el umbral, puede ser elegible si se determina que el país carece de suficiente solvencia crediticia para obtener financiación no concesional.
+
+\subsubsection{BID Invest (Corporación Interamericana de Inversiones, 1984)}  
+La segunda entidad en importancia es la Corporación Interamericana de Inversiones, creado en 1984.
+
+Se trata de un organismo multilateral, jurídicamente independiente, que busca promover el desarrollo económico de América Latina y el Caribe a través del sector privado. Como parte de su misión, provee financiacrón no concesional, inversiones de capital y garantías. BID Invest también se asocia con clientes para ofrecer servicios de asesoramiento y capacitación.
+
+El paso de la Corporación Interamericana de Inversiones a BID Invest con la modificación de sus estatutos (2014) no buscaba únicamente el cambio de denominación: perseguía mejorar la eficiencia y la coherencia de las actuaciones del BID, mejorando las sinergias mediante la reorganización de las actividades sin garantía soberana. De este modo se integró las dos ventanillas que trabajaban con el sector privado en una sola entidad como único punto de acceso a los productos y servicios.\footnote{Por ejemplo, previamente dependiendo del importe un proyecto del sector privado debía acudir a la CII o al Departamento de Financiamiento Estructurado y Corporativo del BID. A este último se acudía para obtener financiación de proyectos relevantes. normalmente por encima de 60 millones de EUR.
+} Además, se aprovechó para aumentar la capitalización y disponer de un mayor músculo financiero (ante las enormes necesidades existentes).
+
+\subsubsection{BID Lab (FOMIN, Fondo Multilateral de Inversiones; 1993)}
+Por último, tendríamos el Fondo Multilateral de Inversiones, creado en 1993 y posteriormente modificado en 2014, pasándose a denominar BID Lab.
+
+Su objetivo principal es financiar proyectos piloto para probar enfoques pioneros que construyan oportunidades económicas y reduzcan la pobreza. Prueba nuevos modelos para atraer e inspirar al sector privado a resolver problemas de desarrollo económico. Es el proveedor más grande de asistencia técnica en desarrollo para el sector privado de Ámérica Latina y el Caribe. Los principales beneficiarios incluyen PYMES, pequeños productores agrícolas, y hogares. 
+
+Los fondos provienen de contribuciones realizadas por los países miembros. El BID Lab tieneuna relación particulannente estrecha con España. Por un lado, su actual gerente, Irene Arias Hofmann es espai'lola pero, además, nuestro país es uno de los principales donantes históricos tras EEUU y Japón, tras aportar 50 millones de dólares en 1993 en la constitución del Fondo, otros 70 en la primera reposición en 2005 y 17 millones más en la reposición de 2017. En la Asamblea de Gobernadores de 2023 éstos han instruido para que se comiencen las negociaciones para una nueva reposición.
+
+\paragraph{Servicios: Asesoramiento, capacidades y acceso}
+Los proyectos/servicios del BID Lab se centran en el acceso a financiación, el acceso a los mercados, el aumento de las capacidades y el acceso a servicios básicos. Además, el BID Lab es pionero en el impulso de las asociaciones público-privadas (APP o PPP), de los que probablemente el más relevante de todos fue el PIAPPEM en México. 
+
+Asimismo, en sus proyectos de acceso a financiación presta especial atención a la actividad de instituciones microfinancieras, en linea con la evidencia empírica tratada en otros temas [\authorfont{Ver Tema 3.B.28}], en remesas o en capital emprendedor. Por ejemplo, mediante la participación en fondos de inversión para impacto en desarrollo, mediante la concesión de financiación en forma de donaciones ($2/3$ de la financiación total), préstamos, garantías, capital y cuasi capital, o cualquier combinación de estos, así como servicios de asesoramiento.
+
+
+\subsection{Banco Asiático de Desarrollo (BAsD; 1963)}
+Otras de las instituciones de financiación más importantes es el Banco Asiático de Desarrollo, fundado en 1966. En la actualidad, está compuesto por $69$ países miembros, tiene su sede en manila (Filipinas) y, a diferencia de otras instituciones, está compuesto por una única entidad.\footnote{Israel se incorporó en 2024 como miembro a la Silla que compartida con España. El último miembro en incoporarse ha sido Turquía (2025).
+} El principal accionista es Japón ($15,6\%$) del capital, seguido de EEUU ($15,6\%$), China ($6,4\%$) e India ($6,3\%$). Los países miembros regionales tienen asegurado el $60\%$ de las acciones y, por tanto, el control de la entidad. 
+
+La iniciativa de crear un banco regional de desarrollo para Asia (y el Pacífico) surgió en agosto de 1963 en el seno de la Comisión Económica de Naciones Unidas para Asia y el Lejano Oriente. Tres años más tarde, en 1966 se creó el Banco Asiático de Desarrollo (BAsD) con el fin de promover el crecimiento económico en una de las zonas más pobres del mundo en aquel momento. Teniendo en cuenta las características de los países receptores de la financiación, sus primeras actuaciones se centraron en la producción de alimentos y el desarrollo rural.\footnote{La génesis del ADB/BAsD estuvo fuertemente marcada por las crisis del petroleo, dada la ausencia notable de este recurso en muchos de sus países miembros. Con el primer shock del petróleo, la institución empezó a financiar proyectos en el sector energético para fomentar cierta independencia energética de los países miembros. Con la segunda crisis del petróleo, continuó el apoyo a los proyectos de infraestructuras pero, además, el BAsD aumentó su actividad en el ámbito de las infraestructuras sociales (microfinanzas, medioambiente, educación, desarrollo urbano, salud). 
+}
+
+\subsubsection{Servicios: Financieros}
+El BAsD clasifica a los países prestatarios en tres categorías en función de su renta per cápita y de su solvencia, que,pPor coherencia, utiliza los mismos umbrales que la AIF. De este modo, los países pueden acceder a la ventanilla de financiación no concesional (de capital ordinario), a la ventanilla concesional (Fondo Asiático de Desarrollo) o a las dos (\textit{blend countries}). 
+
+La ventanilla de capital ordinario ofrece, entre los servicios más importantes: (i) préstamos al sector público (gobiernos y entidades públicas) aplicando un tipo de interés favorable con margen, con términos flexibles y único límite en vencimiento (inferior a $19$ años);\footnote{Este límite de 19 años de vencimiento no aplica a los préstamos concesionales. donde una vía para obtener precisamente la concesionalidad es el aumentar el plazo de repago. Por ejemplo, estos préstamos para operaciones de emergencia pueden alcanzar los 40 años de plazo de vencimiento.
+} (ii) préstamos ligados a resultados (desde 2013), donde los desembolsos se van realizando en función del cumplimiento de resultados, y que se trata de instrumentos de apoyo presupuestario, no de préstamos de inversión; (iii) préstamos al sector privado, donde la participación del BAsD está limitada en cada operación pero es catalizadora de recursos adicionales, y cuyos sectores prioritarios son la infraestructuras y desarrollo de mercados financieros; (iv) inversiones, tanto en empresas directamente como en fondos para desarrollo; y, (v) garantías, para cubrir riesgos políticos o riesgos políticos y comerciales. 
+
+Al igual que las demás BMD, el BAsD también realiza labores de asesoramiento y asistencia técnica en sus diferentes áreas de actuación.
+
+\subsubsection{Fondo Asiático de Desarrollo (FAsD, 1966-2017)} 
+La ventanilla concesional del ADB merece especial atención puesto que, aunque nunca había contado con personalidad jurídica propia, sus recursos habían sido administrados por un Fondo Fiduciario sin confusión de Balance: el Fondo Asiático de Desarrollo, una ventanilla concesional que otorgaba préstamos concesionales y donaciones a los países elegibles (por renta per cápita y solvencia) y que se reponía cada $4$ años. 
+
+No obstante, el Fondo ha experimentado una transformación contable debido, en gran parte, a la situación de crecientes necesidades financieras en la región, la voluntad de dar un impulso a la ventanilla del sector privado y la próxima graduación de varios países, que hizo necesario encontrar fórmulas para dotar de mayor capacidad de financiación no concesional. Por ello, en 2017 se combinaron los Balances y aglutinaron los recursos ordinarios y concesionales (que subsiste, pero únicamente para realizar las donaciones). 
+
+Con esta operación se ha conseguido aumentar notablemente la capacidad de préstamo sostenible a medio y largo plazo, ya que los recursos concesionales también podrían servir al apalacamiento de la entidad en los mercados de capitales, sin afectar a la operativa diaria. Al aumentar su volumen de operaciones, se espera un incremento de los beneficios y, por ende, mayores posibilidades de transferir fondos concesionales, con menor esfuerzo de los donantes.
+
+\subsection{Grupo Banco Africano de Desarrollo (BAfD; 1963)} 
+El tercer y último gran banco regional del desarrollo es el Grupo Banco Africano de Desarrollo, constituído en Khartoum en 1963. Está compuesto principalmente por dos entidades jurídicamente independientes, cuenta con $82$ países miembros y cuyo accionista principal es Nigeria ($9\%$), seguido de Estados Unidos ($6,6\%$), Japón ($5,3\%$) y Egipto ($5,9\%$).
+
+Su constitución fue uno de los hitos del proceso de descolonización africano: la creación de una institución multilateral de carácter exclusivamente africano que reafirmase la independencia del continente frente al resto del mundo. Inició sus operaciones en 1966 compuesto exclusivamente por miembros africanos, señal de independencia frente a las antiguas metrópolis y reafirmación de la identidad africana. No obstante, esta exclusión limitaba la capacidad financiera del BAfD y acabó provocando la modificación del Acuerdo Constitutivo para dar entrada a los países no regionales, en 1982. (Aunque para sortear las limitaciones que sufría el BAtD en la captación de recursos, los países no africanos ya hacían aportaciones al Fondo Africano de Desarrollo fundado en 1972). 
+
+
+
+\subsubsection{Banco Africano de Desarrollo (BAfD; 1966)}
+La primera y más relevante institución del Grupo es el Banco Africano de Desarrollo (1966). 
+
+\paragraph{Servicios: Financiación no concesional}
+Sus servicios se centran casi exclusivamente en la financiación no concesional, proveyendo financiación en términos similares a los ofrecidos por el mercado a los países que sin acceso a la financiación concesional. También concede financiación al sector privado sin existir una entidad separada para este fin. 
+
+Sus instrumentos financierosprincipales son:\footnote{El Grupo del BAfD denomina sus préstamos en Unidades de Cuenta (UC), $1$UC$=1$DEG (Derecho Especial de Giro).
+} (i) préstamos flexibles al sector público, $\leq25$ años con hasta $\leq8$ años de período de gracia;\footnote{Respecto a los benchmarks financieros empleados también se está produciendo un ejercicio de \textit{Libor Transition} aunque más atrasado que en otras instituciones. Además de préstamos en USO, EUR, YEN y ZAR puede realizar préstamos en bastantes monedas locales en caso de ser aprobado (aunque la realidad es que no suelen producir).
+} (ii) préstamos flexibles al sector privado, vencimiento $\leq15$ años y carnecia de $\leq5$ años, el tipo de interés se establece en función del benchmark financiero y de un margen variable según el nivel de riesgo del proyecto; (iii) inversión en capital y en fondos de capital; (iv) garantías parciales frente a riesgos comerciales y riesgos políticos; (v) instrumentos de gestión de riesgos; (vi) financiación al comercio.
+
+El continente africano se caracteriza por concentrar una mayoría de países elegibles a la financiación concesional. Por lo tanto, sólo en torno a un tercio de los países acceden a la financiación no concesional del BAfD. Además, dentro de ese ese grupo de países, existe una elevada concentración en un reducido número de beneficarios: Marruecos, Túnez y Egipto concentran la mayoría de operaciones. Esta concentración de cartera ha sido un motivo de preocupación del Directorio del Banco que, para reducirlo, además de tratar de potenciar los préstamos en otros países, también ha tratado de impulsar los acuerdos de intercambio de exposición soberana con otros bancos de desarrollo. Por ejemplo, con el BID aunque sin el éxito (en términos de volumen) que probablemente la institución desearía.\footnote{El BID y el BAsD a finales de 2022 firmaron un acuerdo de intercambio de exposición soberana de $1.500\text{M}\$$.
+} Además, bajo determinadas circunstancias se ha permitido que países beneficiarios del FAfD puedan acceder a la ventanilla BAfD puntualmente.
+
+\subsubsection{Fondo Africano de Desarrollo (FAfD; 1966)}
+A diferencia de otros BMD, gran parte de la actuación del Grupo Banco Africano de Desarrollo se canaliza a través de la ventanilla de financiación concesional. No tanto por el volumen de recursos aprobados (muy in ferior a los importes de IDA) sino por el número de países clientes deesta ventanilla. Más de 30 países no tienen acceso a la ventanilla de mercado (Banco Africano deDesarrollo) y acuden al FAfD, aunque una petición recurrente de los países FAfD es poder acceder a un mayor volumen de recursos. Para responder a esta petición, el \textit{management} del BAfD ha tratado de manera muy agresi va de conseguir la aprobación de los países donantes para poder proceder a sacar al mercado a la ventanilla concesional si guiendo el proceso de IDA. Por ahora, parece que la mayoría de los países donantes no quieren profundizar en esta vía, pero habrá que estar atentos a futuros desarrollos. 
+
+En la última reposición para el período 2023-2025, los países han comprometido 8.900 millones de USO. Se trata de la mayor reposición de la hi storia del F AID, que como novedad incorporóuna ventanilla de acción climática (\textit{Climate Action Window}) a la que es posible realizaaportaciones en cualquier momento del ciclo del FAfD. España ha contribuido con una aportación a la última reposición del FAID de 54 millones de euros. El volumen de recursos de los que di spondrá el Fondo será superior al monto arriba anunciado, ya que se nutre de las aportaciones de los países donantes, del repago de créditos concedidos en el pasado, de la gestión de tesorería y de las transferencias del BAfD con parte de los beneficios obtenidos por su actividad.
+
+Financia proyectos principalmente a través de préstamos concesionales (a 40 años y con 5 o 10 años de período de carencia) y donaciones. También concede garantías con el fin de atraer flujos del sector privado hacia los países más pobres.
+
+Una característica interesante del F AtD es el establecimiento de la anteriormente llamada Facilidad para Estados Frágiles, actualmente llamada Facilidad de Apoyo a la Transición (\textit{Transition Support Facility}) para proporcionar un apoyo adicional a países en situación de especial fragilidad, a través de una asignación adicional que se canaliza a través de donaciones de esta Facilidad. Estos recursos adicionales pueden destinarse a: financiar proyectos, hacer frente a atrasos en el pago de deudas y labores de asistencia técnica y refuerzo de capacidades.
+
+Algunos países como Camerún, Senegal, Kenia y Zambia acceden a las 2 ventanillas (blend countries).  
+
+\subsubsection{Fondo Especial de Nigeria (FED, 1976)}
+Es, informalmente, la tercera institución del Grupo del Banco Africano de Desarrollo, creada en 1976 a instancias del Gobierno de Nigeria, por un periodo inicial de $30$ años, que ha sido prorroado. 
+
+Su objetivo fundacional es proveer ayuda a los países miembros con dificultades económicas o afectados por catástrofes, a través de la concesión de préstamos en condiciones intermedias entre las del Banco y las del Fondo. Nigeria, país productor de petróleo, contaba en esa época con recursos para dotar un fondo de estas características y quería incentivar a otros países. No obstante, su actividad financiera es notablemente limitada.
+
+\subsection{Banco Europeo de Reconstrucción y Desarrollo (BERD; 1991)}
+Creado en 1991, tras la caída del bloque soviético, el Banco Europeo de Reconstrucción y Desarrollo (BERD) se estableció para apoyar la transición económica de los países de Europa Central y Oriental hacia economías de mercado. La institución está comprometida con la promoción de la iniciativa privada y el emprendimiento. Aunque el contexto político ha cambiado mucho, el apoyo al sector privado sigue siendo el objeto principal de la actividad del BERD. Una vez que los países de Europa Central y del Este fueron convergiendo hacia economías demercado, el BERD fue ampl iando el ámbito geográfico de su actividad a Asia Central y África del Norte: Mongolia, Turquía, Jordania, Túnez, Marruecos o Egipto son nuevos países deoperaciones. En otros casos, atendiendo a las circunstancias económicas, el BERD ha tenidoactividad temporal por ej emplo, en Chipre (finalizó en 20 20) o en Grecia (donde se aprobó una ampliación hasta 2025 de la actividad del Banco). Adicionalmente, 2023 ha traído una novedad geográf ica, los accionistas han aprobado una expansión geográfica a partir de 2025, al incluir seis países de África Subsahariana e lrak como países de actuación. El análisis preparatorio del BERD parece indicar que los países más adecuados de esta región para la actividad del Banco serían: Benín, Costa de Marfil, Ghana, Kenia, Nigeria y Senegal. No obstante, de manera reciente, elBERD se ha visto obligado a ref orzar nuevamente su actividad en su área geográfica inicial, tras  la invasión de Ucrania por Rusia. El BERD ha sido el mayor inversor institucional en Ucrania, con un compromiso de 3.000 millones de EUR en el período 20 22-2023 . A pesar del reforzado interés derivado del conflicto bélico, se puede observar como la ampliación de actividad del banco ha generado una institución con una geografía y retos di ferentes que cambian en la práctica la misión por la vía de los hechos.
+
+El BERD presenta dos características que lo diferencia de los demás BMD: 
+El mandato político: asiste a aquellos países comprometidos en la transición a lademocracia multipartidista. Este \textit{requisito} se aplica sobre todo a los países de operaciones. 
+La UE y BEi son accionistas 
+
+El BERD cuenta con 71 países miembros además de la UE y el BEi. Los principales accionistas son: EEUU ($10\%$ del porcentaje de voto) y luego Japón, Alemania, Francia, Reino Unido e Italiatodos con el mismo porcentaje de voto ($8,6\%$). China es miembro desde 2016 con una participación simbólica del $0,1\%$ del capital. No es país de operaciones y además no podría serlo por el mandato político.El BERD no está compuesto por varias entidades. La financiación que otorga tanto a sector público y sector privado se hace desde la misma entidad. El banco opera sobre todo con empresas privadas ($80\%$ del volumen de operaciones; el resto son operaciones con el sector público). Noofrece préstamos concesionales. Ofrece una variedad de productos financieros que buscan adaptarse a las necesidades de los clientes. Por lo general la financiación suele oscilar entre 5 y 250 millones de dólares en préstamos o inversión en capital. Además de la función financiera, el BMD realiza también una importante función asesora. La asistencia técnica la lleva a cabo mediante fondos propios y fondos fiduciarios. 
+
+Las operaciones en Rusia ya habían sido suspendidas desde 2014 por su papel en la crisis ucraniana. Hasta entonces Rusia era el principal país de operaciones y por lo tanto el que más ingresos generaba para el BERD (a través del pago de intereses). Teniendo en cuenta que es una institución que se caracteriza por su autosostenibilidad, para compensar esta pérdida y para seguir manteniendo los ingresos, el BERD tuvo que aumentar sus operaciones: Polonia y Turquía fueron los grandes beneficiarios de este movimiento. Ucrania, por el actual contexto político, también es un gran receptor de fondos.
+
+
+
+\clearpage
+\section{Otras Instituciones Financieras Multilaterales}
+\puntosclave{
+    Desde Bretton Woods la economía mundial ha cambiado enormemente y los BMDs no siempre reflejan la actualidad económica, lo que ha llevado a las principales economías emergentes a lanzar sus propias iniciativas. Destacan el BAII y el NDB. 
+    
+    Desde su creación el BAII ha avanzado muy rápidamente hasta adquirir un papel cada vez más relevante como institución financiadora. Hay que destacar que puede financiarfuera de Asia hasta un 15\% de su financiación, siempre que de alguna manera apoye el desarrollo de Asia y Oceanía. 
+    
+    Los Bancos de Desarrollo realizan y destinan importantes cantidades a proyectos climáticos. No obstante, las enormes necesidades en este campo y la preocupación de los países han llevado a la aparición de una serie de grandes fondos climáticos como el Fondo Verde del Clima (Green Climate Fund), los Climate Investment Funds (CIF) o la Global Enviromental Facility (GEF).
+}
+
+Hasta ahora se han analizado tanto los aspectos comunes como los principales Bancos de Desarrollo existentes. Sin embargo, no son las únicas instituciones que buscan cumplir esta función. 
+
+Para ofrecer una visión más completa, desarrollaremos brevemente algunas instituciones de creación reciente, así como otros bancos de desarrollo regional de menor tamaño.
+
+\subsection{Nuevas Instituciones: En busca de proporcionalidad}
+Los bancos descritos son, en mayor o menor medida, el producto del Sistema Internacional Económico acordado en Bretton Woods. Por esta razón, y debido al cambio radical que ha experimentado la economía durante los últimos $80$ años que no se ha visto acompañado de un cambio político proporcional en las instituciones observadas, las principales economías emergentes han lanzado sus propias iniciativas ante la pasividad y desinterés de las instituciones existentes. 
+
+El número de bancos multilaterales de desarrollo es muy elevado y es muy poco operativo intentar nombrarlos todos a lo largo del tema.\footnote{Para extender el conocmiento sobre estos bancos, cabe destacar: (i) el Banco de Desarrollo del Consejo de Europa, instrumento financiero del Consejo de Europa y tiene una vocación exclusivamente social, donde España es un país prestatario (por poderse beneficiar de sus fondos países desarrollados); (ii) el Banco de Desarrollo de América Latina; (iii) el Banco Centroamericano de Integración Económica. Los dos últimos son especialmente relevantes para España, ya que somos accionistas importantes en ambas y apenas existen otros socios no regionales.
+
+También existen otros subregionales de desarrollo cuyo ámbito de actuación se limita a una parte de un continente, como por ejemplo: (i) el Banco Centroamericano de Integración Económica; (ii) Banco de Desarrollo de América Latina, antiguamente conocido como Corporación Andina de Fomento; (iii) el Banco Islámico de Desarrollo; (iv) el Banco de Desarrollo de África Occidental; y, (v) el Banco de Desarrollo del Mar Negro.
+} Por ello, nos centraremos en dos de los más importantes, en términos históricos, ámbito geográfico de actuación y volumen de financiación.
+
+\subsubsection{Banco Asiático de Inversión en Infraestructura (BAII, 2015)} 
+En primer lugar, el Banco Asiático de Inversión en Infraestructuras, cosntituido en diciembre de 2015. Actualmente cuenta con $110$ países miembros (de los que 14 son futuros miembros \textit{prospective}), con una porción de capital reservado a miembros regionales del $75\%$ y con sede oficial en Pekín.\footnote{Pueden ser miembros del BAII todos los países miembros del BIRD o del BAsD, salvo desacuerdo de la Asamblea de Gobernadores.
+
+Cabe destacar que, los intereses geoestratégicos jugaron un papel esencial en la fundación del BAII, que nace como una afirmación regional de China ante el peso relativamente reducido que tiene en otras instituciones multilaterales, sobretodo en el Grupo Banco Mundial, habida cuenta la posición que ahora ocupa en la arquitectura económica mundial. Por esta razón, la propuesta de creación fue mal recibida por parte de los donantes tradicionales. No obstante, gran parte de ellos acabaron sumándose al proyecto, con la notable excepción tanto de Estados Unidos como de Japón. 
+}
+
+Su objetivo fundacional es hacer frente a las enormes carencias financieras y de inversión en infraestructuras en el continente asiático, indispensables para mantener tasas de crecimiento que permitan la convergencia de sus países. En este sentido, se consideró que la problemática no era la falta de recursos, sino más bien las dificultades para canalizar los que existen.\footnote{En un principio no estaba prevista la financiación concesional, no obstante, una de las medidas contra la COVID-$19$ fue la creación de una ventana especial para para países menos desarrollados (SFW por sus siglas en inglés). Ésta permite financiar el coste de los préstamos (tipo de interés) a los países menos desarrollados para que estos sean, según el BAII, asequibles (\textbf{affordable}).
+
+Por tanto, el BAII distingue entre \textit{concesional} y \textit{asequible}. El Fondo Monetario Internacional (FMI) define como financiación concesional los \textit{préstamos} con un componente de subvención de, al menos, el $35\%$ evaluados a un tipo de descuento del $5\%$. El BAII no pretende proporcionar la concesionalidad en estos términos, sino hacer que la financiación del BAII sea más asequible para sus miembros menos desarrollados.
+} Por ello, el BAII nace como alternativa y tiene como objetivos:
+\begin{lnum}
+    \item \textbf{Desarrollo sostenible}. Fomentar el desarrollo económico sostenible, generar riqueza y mejorar la conectividad de las infraestructuras en y con Asia (y Oceanía) por medio de la inversión en infraestructuras y otros sectores productivos. Las inversiones se realizarán en Asia o en otras áreas geográficas si tienen efectos positivos en Asia y Oceanía.\footnote{El BAII ha establecido un límite que permi te destinar hasta un 15\% del total de la financiación bancaria aprobada a inversiones no regionales, siempre que siga apoyando el comercio mundial y la conectividad y la integración económica con Asia. Esto supone que el BAII puede (y realiza) operaciones fuera de Asia y Oceanía.
+    }
+    \item \textbf{Cooperación regional}. Promover y fortaler la cooperación y asociación regional para abordar los retos que plantea el desarro llo, trabajando en estrecha colaboración con otras instituciones multilaterales o bilaterales de desarrollo. 
+\end{lnum}
+
+Uno de las características más llamativas del BAII es su diseño, que se distancia notablemente de la arquitectura financiera tradicional de los bancos de desarrollo, aunque con tendencia a converger progresivamente hacia ciertas características tradicionales. 
+
+En primer lugar, el BAII no se cierra ante la posibilidad de miembros no soberanos, siempre que sean de nacionalidad de un país miembro del BAII. Es decir, las personas jurídicas de cualquier país (sea o no miembro del BAII) pueden beneficiarse de la financiación del BAII. También, renuncia a la creación de departamentos de investigación, existentes en otras instituciones y cuyos trabajos son de acceso público (pudiendo ser usados por el BAII). Además, el Directorio Ejecutivo es no residente (con el ahorro en costes que supone) y se han aprobado estructuras de gobernanza ágiles, aunque no ha podido evitar reproducir el vicio del Banco Mundial con respecto a la elección del Presidente, disponiendo China de poder de veto. 
+
+Como podemos ver, estas diferencias son un arma de doble filo, puesto que aún siendo ventajosas conllevan algunas deficiencias operativas. Por un lado, carencias seria en la capacidad de organización y estructuración de operaciones, que provoca que el BAII centre sus actividades en la confinanciación (junto a otros instituciones multilaterales). Por otro lado, aunque pueda suponer un ahorro en costes, también dificulta las tareas de seguimiento diario de la actividad del Banco o la coordinación entre países, lo que al final posibilita un desalineamiento del los gerente del BAII que pueden acabar impulsando sus iniciativas. 
+
+En definitiva, el BAII es, sin duda, un banco fuertemente controlado por China (especialmente). Sin embargo, es destacable el gran margen de maniobra del que dispone, pudiendo actuar a través de distintos instrumentos, proporcionando flexibilidad y apertura a diferentes posibilidades público-privadas. Además, es una institución triple A y con una capitalización de $100.000\text{M}\$$. No cabe duda que su crecimiento y evolución han sido muy destacables y ha supuesto una sacudida poco habitual, incentivada todavía más por su capacidad de actuación global, siembre que vaya en beneficio de Asia y Oceanía. (Que, siendo sinceros, siempre será relativamente sencillo de justificar). 
+
+\subsubsection{Nuevo Banco de Desarrollo (NBD, 2015)} 
+Fundado también en 2015 tenemos el Nuevo banco de Desarrollo, promvido fundamentalmente por los BRICS ante la insuficiencia de recursos. Esta institución, con sede en Shanghái, se caracteriza por ser una iniciativa que no cuenta, de momento, con países desarrollados: las economías emergentes \textit{entienden} mejor los retos asociados al desarrollo. Actualmente cuenta con $11$ miembros.
+
+Su objetivo principal es financiar proyectos de infraestructuras y promover el desarrollo sostenible en los países miembros, así como promover plataformas de intercambio de conocimientos entre los países en desarrollo. Como otras instituciones de reciente creación, su gama de productos financieros es variada e interactúa con entidades del sector público y privado, siguiendo, en cierta medida, las lineas de acción del BAII.
+
+\subsection{Fondos finalistas: Iniciativas climáticas}
+Por otro lado, al margen de estas iniciativas más \textit{genéricas}, podemos encontrar una fuerte emulsión de fondos finalistas. Destacam en este particular los Fondos Climáticos o promotores de iniciativas climáticas, cuyo objetivo prinicpal es responder al reto financiero que supone la lucha contra el Cambio Climático en los países en desarrollo.
+
+Cabe destacar que dentro de la estrucura financiera de estos fondos, los Bancos Multilaterales de Desarrollo juegan, normalmente, un rol esencial, puesto que son quienes canalizan el dinero a los programas propuestos.\footnote{Otra institución financiera multilateral finalista interesante sería el Fondo Internacional para el Desarrollo Agrícola (IFAD por sus siglas en inglés), que se trata de un organismo especializado perteneciente al sistema de Naciones Unidas.
+}
+
+\subsubsection{Fondo Verde del Clima (GCF, 2010)}
+El más importante, en términos cuantitativos y de membresía, sería el Fondo Verde del Clima (Green Climate Fund), constituido en 2010, tras el trascruso de la COP-16 y con sede en Corea del Sur.\footnote{El Fondo Verde el Clima, sucede funcionalmente a dos fondos creados con anterioridad: (i) los Fondos de Inversión del Clima, creados en 2008, que fueron constituidos con cláusula de extinción una vez se definiera la estructura financiera apropiada para luchar contra el cambio climático; y, (ii) el Fondo para el Medioambiente Mundial, del cual el Banco Mundial actúa como fideicomisario y se encarga de la administración del fondo siguiendo las indicaciones de los órganos de gobierno, compuestos por los países donantes, países heneficiarios y observadores (sector privado, NNUU, poblaciones indígenas, sociedad civil, etc.)
+}\textsuperscript{,}\footnote{Al igual que el BAII, al ser una entidad de nueva creación, pretende evitar ciertos vicios de los bancos tradicionales como el exceso de burocracia o los procedimientos complej os que acaban por ahuyentar entidades locales o PYMES a la hora de solicitar financiación al no poder asumir los costes de solicitud de la financiación (que deben medirse también en términos de tiempo).
+}
+
+Su misión principal es limitar o reducir la emisión de gases de efecto invernadero en países en desarrollo y ayudar a adaptar los países más vulnerables a los inevitables efectos del cambio climático mediante financiación a proyectos que tengan por objetivo el desarrollo sostenible y la mitigación del impacto ambiental: \textbf{llamado a ser la herramienta que financiará los proyectos más importantes para combatir el cambio climático}. Los recursos disponibles proceden tanto de países donantes como de otras entidades (regiones, ciudades, fundaciones o fuentes alternativas) y toman la forma de donación o aportaciones de capital; siendo EEUU, Japón y Reino-Unido los principales donantes.
+
+El Fondo funciona a través de un sistema de entidades acreditadas que se identifican y presentan proyectos para ser financiados por el Fondo. Para alcanzar esta acreditación deben someterse a un proceso diseñado para evaluar su capacidad de ejecución, gestión financiera, capacidad de resiliencia frente a cualquier daño imprevisto (ambiental o social). Empezó sus operaciones en 2015 y cuenta con un amplio abanico de instrumentos: financiación concesional y no concesional, participaciones en capital y/o garantías; pudiendo ser los beneficiarios tanto públicos como privados (que juega un papel fundamental). No obstante, al ser finalista, se han designado ocho áreas preferentes de actuación:
+\begin{lnum}
+    \item \textbf{Mitigación}. Cuatro areas de objetivos de mitigación: energía, transporte, edificación, ciudades, industrias, electrodomésticos y bosques y usos agrícolas; y,
+    \item \textbf{Adaptación}. Cuatro areas de objetivos de adaptación: (i) salud, seguridad alimentaria, acceso y suministro de agua; (ii) fortalecimiento de la resiliencia en personas y comunidades; (iii) infraestructuras y ecosistemas; y, (iv) servicios ecológicos. 
+\end{lnum}
+
+Los Fondos de Inversión del Clima se dividen en dos fondos principales: (i) el Fondo para una Tecnología Limpia; y, (ii) el Fondo Estratégico sobre el Clima que a su vez agrupa tres sub-fondos (Programa Piloto sobre la Capacidad de Adaptación al Cambio Climático,  Programa de Inversión Forestal, y Programa de Aumento del Aprovechamiento de Fuentes Renovables de Energía en los Países de Ingreso Bajo.
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex}
+
+\anexo{Informe IFA: Working Group del G20}\label{anx:ifa_g20}
+En abril de 2021 el G20 solicitó una revisión del marco de adecuación del capital (Capital Adequacy Framework, CAF) de las instituciones financieras multilaterales3 1 (IFMs), dado que la recuperación de la crisis de la COVID exigía utilizar de la forma más eficiente y coordinada posible su capital. Para ello se creó un panel, con la inclusión de la española Paulina Beato(Técnico Comercial y Economista del Estado), que elaboraría un informe independiente con recomendaciones. Para entender mejor la necesidad de este infonne, es preciso ver antes brevemente las peculiaridades de las multilaterales y las características básicas de su CAF, quelas hacen diferentes de la banca comercial: No están sujetas ni a supervisión ni a regulación: los Boards son los únicos supervisores. Cuentan con estatus de acreedor preferente por lo que registran un histórico extremadamente bajo de morosidad en sus préstamos soberanos. La mayoría mantiene capital exigible que únicamente se activaría en caso de insolvencia y no existen precedentes de ello. Hay generalmente una concentración de cartera elevada en un grupo limitado de grandes prestatarios. Dado su modelo de negocio y objetivo de desarrollo suelen mantener en cartera los préstamos hasta madurez final, lo cual consume mucho capital.
+
+El modelo financiero de los IFM está determinado por su CAF, tradicionalmente muy conservador. CAF compara el capital riesgo de una institución con sus activos, con el objeto de contar con suficiente capital si éstos se deteriorasen. Sus componentes básicos son capitalrequerido y utilizable:
+
+Capital requerido: los bancos provisionan contra pérdidas esperadas, mantienen capital contra las inesperadas y aceptan un riesgo residual. CAF consiste en mantener capital para cubrirse contra el riesgo de pérdidas inesperadas en base al pasado y a supuestos en cuanto a su distribución. Éstos vienen detenninados tanto por el apetito al riesgo de la institución como al peso que se d a a cada tipo de riesgo, siendo el más importante el de cartera. La mayoría de IFM evalúan su apetito al riesgo en base a los requisitos de las agencias de rating para obtener una calificación AAA. Aquí surge el problema, puesto que la actividad contracíclica que se espera de las multilaterales genera tensiones con la metodología utilizada por las agencias de rating para medir CAF. 
+
+Capital utilizable: comprende el capital depositado (paid-in capital), beneficios retenidos y reservas acumuladas, pero excluye el capital exigible (ca/lable capital). 
+
+El capital requerido y el utilizable son comparados para monitorear CAF y establecer objetivos, pero diversas diferencias de concepto llevan a métricas dispares en cada banco, lo cual hace difi cil además las comparaciones entre instituciones para los países miembros a través de sus Boards.
+
+Dentro del trabajo del Working Group se analizaron diferentes recomendaciones como:
+\begin{lnum}
+    \item \textbf{Recomendación: }. redefinir la aproximación de apetito al riesgo en CAF, no guiarse mecánicamente por las agencias de rating. Al no contar con agencia supervisora las IFM se guían por el rating. Dado que cada agencia de rating usa una metodología diferente, en la práctica los componentes m ás restrictivos de cada metodología son los que definen los limites financieros de los bancos, lo cual lleva a crear excesivos colchones de seguridad y a un apetito al riesgo muy bajo. A juicio de los autores del informe es preciso un claro comunicado del G20 solicitando más coordinación entre IFM y dialogo con las agencias de rating para que las IFM tenga mayor libertad para definir su apetito de riesgo y prioridades. Recomendación 2: mejorar CAF al incorporar el capital exigible. El 9 1 % del capital suscrito de l as I FM es capital exigible que nunca ha sido requerido y no se incluye en CAF. Por el contrario, las agencias de rating incorporan una porción de ese capital exigible en sus evaluaciones. Se propone incorporar una porción prudente de capital exi gible en el cálculo de CAF siguiendo una metodología validada por las tres grandesagencias de rating. 
+    \item \textbf{Recomendación: } innovaciones para reforzar CAF y l a capacidad de préstamo. Las innovaciones que se proponen son m últiples: 1 ) cofinanci ación, sindicación; 2) apoyar la consideración de capital sin derecho a voto (capital depositado o híbrido) para contribuir al capital utilizable; 3) transferir riesgos al sector privado mediante la aceleración de desarrollo de seguros y titulización; 4) compromisos colectivos de capital exigible por accionistas (accionistas con triple A se comprometen anticipadamente a ofrecer capital exigible en caso de deterioro de cuentas); 5) llamamiento a MIGA -parte del Banco Mundial especializada en garantías- para reducir riegos fundamentalmente de concentración mediante seguro y su capacidad de reaseguro;
+    Recomendación 4: mejorar la consideración de la fortaleza financiera de las IFM por parte de las agencias de rating: 1) que las agencias de rating ajusten mejor sus metodologías de evaluación de las IFM ya que se penalizan en exceso algunos aspectos (como la concentnición de cartera) y no se consideran otros (como el trato de acreedor preferente) y 2) que agencias de rating e IFM trabajen co��juntamente para ajustar riegos teniendo en cuenta las mencionadas características distintivas de las multilaterales. Recomendación 5: establecer las condiciones que pennitan una mejor gobemanza de la adecuación del capital. La falta de comparabilidad de indicadores y metodologías entre multilaterales dificulta la percepción de las restricciones de capital existentes.
+\end{lnum}
+
+El conjunto de recomendaciones contemplado podría suponer un aumento en la cartera de los BMDs de unos US$ 500 mil millones a corto plazo y hasta US$ 1 billón a medio plazo.
+
+Valoración: 
+El documento parte de una premisa: la necesidad de incrementar el volumen de financiación como solución a las necesidades de los países en desarrollo. No obstante, no hay que perder jamás devista la necesidad e importancia de mejorar la eficacia, la eficiencia y la sostenibilidad de las intervenciones. El elemento más importante de las recomendaciones es que cualquier acción que se acometa debe ser iniciada y respaldada con claridad por el G20 ya que de lo contrario solo algunas IFM la seguirán, perdiendo su eficacia no solo por su parcialidad, sino también porque las que las inicienserán penalizados por las agencias de rating.En cuanto a la propuesta de definir un apetito al riesgo independiente de la de las agencias, desdeel momento que la institución debe mantener una calificación es prácticamente imposible no estarcondicionado por las agencias. El debate en realidad está en si se puede asumir una calificación por debajo de la triple A y para detenninar eso se requerirían más estudios para evaluar las consecuencias (como en particular la subida de precios a los que se podrá prestar, al encarecerse el coste de los fondos). Las diferentes metodologías de las agencias de rating esconden en parte un desconocimiento delmodelo de negocio de las IFM. La consideración separada de cada multilateral hace que tengaun poder de negociación escaso ante las agencias. El respaldo del G20 en este diálogo podríallegar a una mejor consideración de su misión y del respaldo que reciben de sus accionistas. y por ello a un cambio metodológico y relajamiento de algunos de las ratios exigidas. Destacar por último que está en desarrolfo una hoja de ruta para implementar las recomendaciones entre el IFA del G20 y las IFM que debería estar lista a lo largo de 2023. 
+
+Bibliografia destacada sobre este tema: 
+
+Presentación sobre el trabajo del WG del IFA G20: https://www.!.!2-1-.orníwp-content/uploads/2022/09/Chri:,-I Jumphrcv-Presentation-.pdf Informe del IFA del G20 sobre el CAF de las IFM:
+
+
+\anexo{Debate: ¿Es indispensable el rating para las IFM?}\label{anx:rating_ifms} 
+A lo largo del terna se ha observado corno la calificación triple A de los principales bancos de desarrollo les pennite obtener recursos financieros vía emisi ones con costes de fondeo muy reducidos que posterionnente ofrecen a sus países beneficiarios en la forma de préstamos. No obstante, cabe analizar si disponer de la máxima calificación crediticia es indispensable para estas instituciones. Por descontado, pem,i te realizar emisiones con un menor coste, por lo que el precio último de los préstamos ofrecidos a los países beneficiarios puede ser más competitivo. No obstante, existe también un trade-ojf con el volumen de recursos que se puede poner a disposición de los países beneficiarios. Es decir, ¿sería aconsejable renunciar a la máxima calificación crediticia para poder ofrecer una mayor cantidad de financiación a pesar del incremento del coste de ésta? Leslie Maasdorp, vicepresidente y Chief Financia/ Officer del New Development Bank (NDB) considera que sí y pone como ejemplo en un artículo del Financia/ Times al propio NDB del que indica que el coste de fondeo de una entidad con un rating AA+ se incrementa entre I O y 15 bps frente a una institución triple A. En su defensa, Leslie Maasdorp alude a un estudio realizado por Riccardo Settimo del Banco de Italia (Higher Multilateral Development Bank Lending, Unchanged Capital Resources and Triple-A Rating. A Possible Trinity afler Ali?) donde el autor concluye que los cuatro principales Bancos de Desarrollo (BM, BID, BAsD y BAtD) podrían hasta triplicar su capacidad de préstamo si incrementasen su capacidad de apalancamiento y optasen por un rating AA+ en vez de defender a toda costa la triple A. N o obstante, el opositor que decida revisar el estudio de Riccardo Settirno podrá observar que podría decirse que Leslie Massdorp parece realizar una presentación demasiado optimista de los resultados del primero, porque en el trabajo de Riccardo Settimo el enonne potencial aumento de la capacidad de préstamo de los principales Bancos de Desarrollo se obtiene efectivamente reduciendo un escalón el rating de las instituciones pero, también, en combinación con una modificación de las metodologías de rating que se adaptarían mejor a las especificades de las instituci ones financieras multilaterales. Además del interesante debate que supone esta opción es recomendable tener presente su relación con el ejercicio realizado por el IF A del G20 previamente introducido. Bibliografia destacada sobre este tema: Artículo del Financia! Times: https:,/v,v. w.11.com/contcnt 64ccc956- 1 d4c-43cd-a487- c8d l b5 l 50048 Settimo Riccardo (2019), Higher Multilateral Development Bank Lending, Unchanged Capital Resources and Triple-A Rating. A Possible Trinity after Ali?, Banco de Italia, https:1:papcrs.ssrn.comí��olJ napcrs.cftn".'abstract id��J-1-32994
+
+
+\end{document}
