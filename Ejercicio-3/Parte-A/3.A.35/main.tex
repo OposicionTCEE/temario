@@ -1,0 +1,1389 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Tema 3.A.35 -- Teorías de la demanda de dinero\\
+\large Implicaciones de Política Económica}
+\author{Marcelo Ortega}
+\date{Enero 2026}
+\newcommand{\TemaCode}{3A35}
+
+\oldtitle{Tema 3.A.34. Teorías de la demanda de dinero. Implicaciones de política económica}
+\changerationale{Sin cambios. En cualquier caso, se recomienda al opositor evitar una mera sucesión cronológica de modelos, y exponerlos con profundidad suficiente y de manera conexa.}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     
+    }
+\vspace{1cm}
+
+\modificaciones{
+    Cantado el día 15/01/2026.
+
+    Centrarse en los siguientes modelos:
+    \begin{lnum}
+        \item Modelización tradicional: neoclásicos, KEYNES y monetaristas;
+        \item Modelización moderna: SIDRAUSKY, Shopping-Time, CIA y MGS - Economía pura de intercambio (Muchísimo OJO con entender la restricción presupuestaria: te has bloqueado en la exposición)
+    \end{lnum}
+
+    Hacer una buena conclusión que ligue este último modelo con el primer apartado, en particular, el papel de la confianzaen la demanda del dinero \textit{fiat}!
+
+    Seguir con una recapitulación de las ideas principales
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+La Teoría Monetaria se enmarca dentro de la Teoría Macroeconómica. La rama de la Teoría Económica cuyo objeto es el estudio de las variables agregadas de la economía ($L$, $\pi$, etc.) y las relaciones que existen entre ellas.
+
+Ahora bien, cabe recordar en todo momento que, atendiendo a la literalidad del Título de este Tema, la Teoría de la Demanda del dinero es, por su propia naturaleza, un ámbito microeconómico, puesto que pretende ilustrar los determinantes de su demanda por parte de los agentes.
+
+\subsection{Contextualización}
+¿Qué es el dinero? ¿Por qué existe el dinero? ¿Cómo afecta el dinero a la economía? ¿Por qué se desea (demanda)? ¿Es el dinero una realidad objetiva o subjetiva? ¿Tiene el dinero algún valor real?
+
+Todas estas preguntas han perseguido a filósofos, antropólogos, sociólogos, polítologos y más recientemente a los economistas a lo largo de casi 1000 años de historia.\footnote{De hecho, podría decirse que uno de los primeros en realizar un análisis en detalle sobre la naturaleza del dinero fue Santo Tomás de Aquino (escolásticos).
+} Desde sus inicios, el dinero ha jugado un papel fundamental no solo en el comercio y el intercambio entre los agentes, sino también, por ejemplo, en la materialización de estructuras más grandes de poder y la interacción de los gobernados con ss gobernantes. Ahora bien, como es bien sabido no se puede decir que se haya alcanzado, todavía, una clara comprensión acerca de las preguntas precedentes. De hecho, el análisis histórico tampoco arroja luz sobre la incognita pues la naturaleza del dinero ha experimentado infinitud de cambios, lo que conocemos como innovaciones financieras.\footnote{
+Las primeras evidencias sólidas sobre el acunñamiento de moneda se remotan a los siglos VI-VII a.C, por parte de los gobernantes del Reino de Lidia (Asia menor). Se cree que estas monedas fueron acuñadas con el objetivo de llevar un control más exacto sobre el estado de las finanzas públicas y las remuneraciones que, en ese momento paticular, se estaban realizando a gran escala para la remuneración de soldados por la instigación tan potente que este reino sufría por parte del Imperio Asirio. 
+
+Finalmente para los Lidios, acabarán derrotados. Sus ideas, sin embargo, perdurarón y fomentaron el uso de la moneda como unidad de cuenta estable y medio facilitador del intercambio. \href{https://www.arte.tv/es/videos/RC-027320/la-fabulosa-historia-del-dinero/}{\textit{La fabulosa historia del dinero}. ARTE.tv
+}
+} 
+
+Por lo que aquí nos interesa, cabe decir que para desarrollar una Teoría de la demanda de dinero exige entender la naturaleza de éste dinero, las diversas formas que puede tomar, pero, sobretodo, por qué tiene valor para quién lo usa. 
+
+A esto se dedica este Tema, enmarcado dentro del bloque de Teoría Monetaria del temario.\footnote{ El estudio de los determinantes de la demanda de dinero es un tema clásico de la Teoría monetaria. Dado que hay varias formas de dinero y que el dinero cumple varias funciones no existe una teoría canónica de la demanda de dinero. De hecho, como veremos, los fundamentos microeconómicos de la demanda de dinero están dispersos y la inclusión de una función de demanda de dinero en modelos macroeconómicos es siempre una cuestión controvertida que se resuelve habitualmente de manera \textit{ad hoc}, esto es, en función de la mayor o menor conveniencia de opciones alternativas y de las necesidades de las cuestiones que estén siendo analizadas.
+}
+
+\subsubsection{Relevancia}
+Podríamos preguntarnos ¿por qué es importante estudiar los determinantes de la demanda de dinero? ¿no es suficiente con \textit{controlar} su comportamiento de forma que las expectativas de los agentes no se volatilicen por un comportamiento errado de la Política Monetaria?
+
+Para ilustrar este punto podemos recurrir a un ejemplo sencillo: a lo largo de las últimas dos décadas, las innovaciones financieras han conducido a que la demanda de efectivo se ha reducido de manera colosal en las economías europeos. La evidencia empírica demuestra que, por ejemplo, los suecos utilizan medios digitales de pago para alrededor del 90\% de sus transacciones y solo la mitad de sus habitantes utilizan efectivo alguna vez al mes. Por el contrario, algunos estudios estiman que los japoneses disponen de dinero en efectivo (monedas y billetes), almacenada de formas no convencionales, por un valor equivalente al 22\% de su PIB, mientras que esta cifra se sitúa por debajo del 1\% en el caso sueco.\footnote{Véase: \href{https://www.economist.com/europe/2026/01/08/why-europe-is-rediscovering-the-virtues-of-cash}{\textit{Why Europe is rediscovering the virtues of cash.} The Economist (January 8th, 2026)}}
+
+Estas diferencias (estrechamente relacionados con los determinantes de la demanda) tienen un impacto enorme en el comportamiento y salud de la economía ya que el dinero juega un papel fundamental en el sistema económico que se proyecta en diferentes dimensiones: (i) como medio de cambio y, por tanto, condición previa a la realización de las transacciones de bienes y servicios; (ii) como depósito de valor; (iii) como unidad de cuenta y pago legal, esencial para la interacción entre los ciudadanos y la administración; y, (iv) como unidad de pagos diferidos que permite transferir renta en el tiempo. 
+
+Por todo esto, la relevancia del estudio de los determinantes de la demanda de dinero es total, más aún desde la perspectiva del \textit{policy-maker}, ya que inciden directamente en la definición y eficacia de las políticas económicas:
+\begin{la}
+    \item Desde un punto de vista \textbf{microeconómico}, entender las razones por las que los agentes desean el dinero, es decir, los determinantes de su demanda, nos permite entender cómo, por qué y en qué medida afecta el dinero (nominal) a la economía real y el papel que éste tiene en su conjunto;
+    \item Desde un punto de vista \textbf{macroeeconómico}, la demanda de dinero es un ingrediente fundamental en la transmisión de la política económica (tanto fiscal como monetaria) y, por tanto, muy relevante en el diseño e implementación de éstas. Desde el punto de vista de la política económica, cuál es \textit{la política monetaria óptima} o qué interacciones cabe esperar entre ésta y la política fiscal son cuestiones que dependen de manera fundamental del comportamiento y de las expectativas de los agentes que les llevan a decidirse por mantener una determinada cantidad de saldos reales (demanda de dinero en términos reales).
+\end{la}
+
+\subsection{Estructura de la exposición}
+Para poder dar una imagen detellada de los puntos a tratar, dividiremos nuestro exposición en tres bloques:
+\begin{lnum}
+    \item En primer lugar, presentaremos el marco formal en el que nos movemos. En particular, presentaremos los dos grandes enfoques por los que se puede entender el dinero como elemento: el dinero como activo (agentes) y el dinero como pasivo (emisor); así como también una breve recapitulación de algunos trabajos empíricos y hechos estilizados sobre la demanda de dinero y su influencia en la economía real;
+    \item En segundo lugar presentaremos la caracterización tradicional de la función de demanda de dinero. En particular, haremos un breve repaso histórico a las diferentes aproximaciones, desde el marco neoclásico hasta el enfoque monetarista, enfatizando las diferencias formales (y, en consecuencia, las diferencias teóricas) y las recomendaciones en términos de Política Económica; y,
+    \item En último lugar, presentaremos como estos enfoques han sido incorporados a la modelización macroeconómica moderna a través de los modelos DSGE, desde el enfoque característico de los autores de la NMC hasta las nuevas aportaciones dentro del marco de la NEK-2.
+\end{lnum}
+
+\clearpage
+\section{El dinero: el concepto central de la Teoría Monetaria}
+\puntosclave{
+    En las economías modernas, el dinero es dinero fiduciario (fiat money) 
+    
+    El dinero es un activo generalmente aceptado como medio de pago.
+    
+    El dinero es una deuda del emisor de ese activo y, por tanto, su valor para el que lo demanda depende de la confianza que se tenga sobre el grado de cumplimiento de esa deuda. 
+    
+    Los beneficios de mantener dinero son poder realizar transacciones (esperadas o no) y depositar riqueza en un activo con rentabilidad, riesgo y liquidez alternativos a los de otros activos (financieros o no).
+
+    Las estimaciones empíricas de funciones de demanda de dinero se han centrado especialmente en obtener valores para las elasticidades con respecto a la renta y con respecto al tipo nominal de interés. 
+    
+    Tradicionalmente se utilizaron series temporales de datos agregados. Con estos datos el problema de identificación de una función de demanda de dinero es casi imposible de resolver por varias razones: medición de las variables relevantes y separación de oferta y demanda de dinero.
+    
+    Adicionalmente, el problema de identificación es todavía más complejo por la endogeneidad de la cantidad de dinero en circulación, especialmente con la creación de dinero en una economía moderna, con un peso tan elevado del dinero \textit{insider} (el creado por los bancos).
+    
+    Por otra parte, innovaciones financieras, cambios en los usos y costumbres en la intennediación de los intercambios comerciales y otras perturbaciones hacen poco probable que exista una función estable de la demanda de dinero que pueda inferirse de los datos disponibles.
+    
+    Big data y la disponibilidad de nuevos datos sobre el comportamiento financiero de agentes económicos pueden abrir nuevas vías para la estimación de funciones de demanda de dinero (en particular, de la demanda de efectivo) pero parece poco probable que los problemas de medición, identificación y endogeneidad asociados a la estimación de funciones de demanda de dinero puedan resolverse.
+}
+
+La naturaleza del dinero nos permite comprender no solo su introducción formal en los modelos económicos sino también la función de éste dentro de la economía y la razón por la cual los agentes lo consideran un elemento necesario en su interacción con el resto. 
+
+A modo de síntesis podemos decir que:
+\begin{la}
+    \item \textbf{Los agentes}. Desde el punto de vista de los agentes que lo demandan, el dinero es un activo líquido cuyo valor se deriva de la capacidad de usarlo para obtener bienes y servicios que le reportan utilidad; y,
+    \item \textbf{Emisor}. Desde el punto de vista del que lo emite, el dinero es una deuda (IOU utilizando la terminología inglesa  que viene del acrónimo de \textit{I Owe You}). Cuando un banco central emite efectivo genera una deuda con el tenedor de ese efectivo (familias, empresas o instituciones financieras). Cuando un banco comercial pone a disposición de otros agentes económicos depósitos u otros instrumentos bancarios con los que también se pueden realizar compras está igualmente generando una deuda frente a dichos agentes. La demanda de dinero dependerá pues del valor que los demandantes le asignen en función de la rentabilidad y riesgo asociados a su uso.
+\end{la} 
+
+Como todo bien de mercado, el valor del dinero depende de su demanda y de su oferta: la perspectiva del activo y la perspectivo del pasivo, respectivamente. Una vez comprendamos la diferente percepción, estaremos en condiciones de presentar la evolución teórica en relación a la formalización de la demanda de dinero.
+
+\subsection{La utilidad del dinero: El dinero como activo}
+¿Cuál es la utilidad del dinero?\footnote{Según la Real Academia Española, dinero, como concepto económico, es \textit{un medio de cambio o de pago aceptado generalmente}. Y, aunque el instrumento que se utilice como dinero puede  cumplir otras funciones, la capacidad de sustituir al trueque de bienes en las transacciones económicas es, en realidad, la principal característica que define al dinero. 
+} ¿Por qué lo deseamos? 
+
+En palabras de R. W. CLOWER (1967), uno de los pioneros de la teoría monetaria: \textit{El dinero compra bienes y los bienes compran dinero, pero los bienes no compran bienes}. 
+
+Por tanto, podemos decir que, \textit{a priori}, \textbf{el dinero nos proporciona utilidad de manera indirecta, pues nos permite comprar los bienes que nos proporcionan utilidad directa.} Es consenso generalizado que el trueque de bienes como forma de intercambio es una manera muy ineficiente de organizar las transacciones económicas. Para que dichas transacciones se produzcan sin la existencia del dinero es necesario que se cumpla lo que se llama la \textbf{doble coincidencia de intereses}, esto es que tanto el vendedor de un bien esté interesado en otro bien con el que el comprador pueda pagar al primero. Dada esta ineficiencia, no es sorprendente que a lo largo de la Historia las sociedades humanas hayan intentado encontrar una manera alternativa de realizar transacciones económicas. En algunos casos, metales preciosos u otras mercancías han sido utilizadas como medio de pago. Más adelante monedas, billetes convertibles en activos con valor, letras de cambio endosables, etc. han servido como medios de pago. 
+
+\subsection{La creación del dinero: El dinero como deuda}
+Si el dinero es un activo para quién lo demanda debe ser un pasivo para algún otro agente económico: lo es para los emisores o creadores de dinero, es decir, para los que de una manera u otra emiten las diversas formas en las que se presenta el dinero fiduciario.\footnote{Entender este proceso de creación de dinero es, por tanto, crucial para determinar el valor del dinero y, por tanto, la demanda de dinero de los agentes económicos. 
+}
+
+En las economías modernas hay dos fuentes de creación de dinero: (i) los bancos centrales que emiten efectivo ($E$) y lo ponen a disposición de hogares y empresas; y, (ii) los intermediarios del sistema monetario (p.e. Bancos Comerciales) que, principalmente, facilitan varias formas de depósitos ($D$) que se expanden la oferta monetaria.\footnote{Una parte pequeña de los depósitos de los bancos comerciales se mantienen en forma de reservas ($R$), bien en caja pero, mayoritariamente en depósitos en el banco central. La suma de efectivo y reservas es la base monetaria ($H=E+R$) o \textit{outside money}. La suma de efectivos y depósitos (\textit{inside money}), es la oferta monetaria ($M=E+D$). A la ratio entre oferta monetaria y base monetaria se le denomina multiplicador monetario ($mm=M/H$) y, obviamente, depende de la ratio efectivo-depósitos ($e$) y de la ratio reservas-depósitos ($r$): $mm= (1+e)/(e+r)$.
+
+Tradicionalmente se ha considerado que la cantidad de efectivo en circulación es el resultado de una decisión del banco central que utiliza la base monetaria como instrumento de política monetaria, mientras que el multiplicador monetario resultaba de la intermediación de los bancos centrales en la concesión de préstamos a hogares y empresas y del uso de efectivo por parte de estos, además de la demanda de reservas de los bancos comerciales. Sin embargo, la mayoría de los bancos centrales en condiciones normales tratan de controlar la inflación mediante el manejo de los tipos de interés. Y los bancos comerciales no necesitan captar depósitos con antelación a la concesión de préstamos sino que, más bien, crean nuevos depósitos (oferta monetaria) mediante la concesión de préstamos. Por otra parte, el uso de efectivo lleva en retroceso en muchos países e, incluso en alguno de ellos, se está considerando la posibilidad de su retirada completa.
+}\textsuperscript{,}\footnote{Sin embargo, esta aparentemente sencilla explicación del comportamiento de los agregados monetarios ha variado enormemente en los países desarrollados durante los últimos 40 años. Hoy en día:
+\begin{lnum}
+    \item \textbf{Tipos de interés}. Los bancos centrales concentran su marco operativo en los tipos de interés como principal instrumento de la política monetaria, por tanto, la cantidad de base monetaria es una variable endógena que dependerá de la demanda de efectivo de los hogares y empresas y de la demanda de reservas de los bancos comerciales; y, por otro lado,
+    \item \textbf{Creación de depósitos \textit{ex post}}. Los bancos comerciales conceden préstamos sin restricciones de depósitos y éstos se crean a continuación. Por tanto, la cantidad de depósitos (y, por tanto, la oferta monetaria) depende de factores que determinan la concesión de créditos tales como la regulación bancaria, las expectativas de beneficios de los bancos y los riesgos asociados a la actividad crediticia. Así, el segundo componente de la oferta monetaria (los depósitos) también resultan ser una variable endógena y, no tanto, una decisión de la actividad intermediadora de los bancos comerciales. 
+\end{lnum}
+
+En consecuencia, la demanda de crédito, que se traduce en demanda de depósitos, y la política monetaria, que trata de influir sobre el crédito a través de cambios en los tipos de activo y de pasivo de los bancos comerciales, son, hoy en día, los determinantes últimos de la cantidad de dinero en circulación. 
+
+}
+
+\subsubsection{El dinero en la actualidad: \textit{fiat money}}
+En la actualidad, el medio de pago el dinero tiene una naturaleza exclusivamente legal: se trata de \textit{dinero fiat} (o dinero por decreto, del latín \textit{hágase}). Este tipo de dinero representa la conjunción de dos elementos: (i) dinero fiduciario (es decir, dinero que no tiene valor intrínseco); y, (ii) dinero no convertible (que no está respaldado por ninguna mercancia e intrumentalizado a través del Banco Central). Por tanto, \textbf{su valor se deriva exclusivamente de la confianza que los agentes económicos depositen en su capacidad para ser utilizado en futuras transacciones}. 
+
+\paragraph{La rentabilidad del emisor: Hiperinflación}
+Además, no podemos obviar otra dimensión importante del dinero entendido como deuda: la rentabilidad que ofrece al que lo emite. Al ser un activo con valor nominal constante por definición, la carga de esa deuda disminuye con la inflación. 
+
+Esta rentabilidad hace que las expectativas de los usuarios del dinero acerca de los incentivos del emisor de explotar esa fuente de ingresos, bien mediante la emisión de más dinero y/o la permisividad de tasas de inflación más elevadas, influya decisivamente en su demanda, más aún cuando su valor está exclusivamente fundamentado construido sobre la confianza de los agentes.\footnote{Este mecanismo explica por qué gobiernos con insuficiencia fiscal (déficits primarios elevados y deuda pública creciente) que recurren a la emisión de dinero como fuente de financiación acaban provocando hiperinflaciones.
+}
+
+\subsection{Evidencia empírica de la demanda de dinero}
+Vistos los enfoques desde los que podemos entender la naturaleza del dinero (activo y pasivo), resulta ilustrativo repasar rápidamente algunas aportaciones del análisis empírico acerca del papel del dinero en la economía. 
+
+\begin{specialblock}{Trabajos más influyentes sobre el papel del dinero y la Política Monetaria}
+    A continuación se citan los principales estudios empíricos en relación a la demanda de dinero, el rol que este tiene en la economía y la efectividad (o no) de la Política Monetaria. 
+
+    Se agrupa en un bloque por ser un elemento compartido por los Temas: [\authorfont{Ver Tema 3.A.35, 3.A.36 y 3.A.37}]
+
+    \textbf{\textit{A Monetary History of the United States}. FRIEDMAN y SCHARWZ (1963)}
+    Analizan la relación sistemática entre la tasa de crecimiento del dinero y las fluctuaciones del PIB en un período de casi 100 años. La evidencia aportada muestra que las variaciones en el ciclo vienen sistemáticamente precedidas por variaciones en la oferta monetaria. Al respecto, ambos autores apuntan que la fuerte contracción monetaria que se produjo entre 1929 y 1932, donde M2 cayó un 36\%, fue uno de los determinantes de la severidad de la Gran Depresión.
+    El trabajo clásico de FRIEDMAN y SCHWARTZ (1963) constituye uno de los pilares del monetarismo y del debate moderno sobre el rol del dinero. A partir de una reconstrucción histórica minuciosa de la evolución monetaria de Estados Unidos entre 1867 y 1960, los autores documentan una relación estrecha entre grandes fluctuaciones en la oferta monetaria y episodios de expansión y contracción económica. Su análisis enfatiza que las variaciones monetarias no solo preceden sistemáticamente a los movimientos del producto y del empleo, sino que además tienen efectos reales significativos, especialmente en el corto y medio plazo.\footnote{El caso paradigmático es la Gran Depresión, que Friedman y Schwartz interpretan como el resultado de una política monetaria severamente contractiva y de la inacción de la Reserva Federal ante sucesivas crisis bancarias. 
+} 
+
+    La conclusión central es que el dinero no es neutral en el corto plazo y que la política monetaria puede ser una herramienta extremadamente poderosa, aunque potencialmente desestabilizadora si se gestiona de manera inadecuada.
+
+    \textbf{\textit{Ecuación de St. Louis}. ANDERSEN y JORDAN (1968)}
+    Estos autores estiman un modelo econométrico ARDL para calcular los multiplicadores totales de la política monetaria y la política fiscal. Los autores encuentran una relación mucho más estable y significativa entre dinero y producción que entre el gasto autónomo y producción, lo que indicaría una mayor eficacia de la política monetaria para afectar al ciclo. Se regresa la variación del PIB real respecto a los cambios en el stock de dinero (considerado con varios retardos) y a una tendencia lineal. Los resultados (sumando los coeficientes referidos a los distintos retardos) reflejan un impacto significativo de las variaciones del stock monetario (M2) en la tasa de crecimiento del PIB de 0,25 (i.e. un aumento del 0,25\% en el producto por cada aumento del 1\% en la cantidad de dinero).
+    Este análisis adolece de dos problemas principales:
+    \begin{lnum}
+        \item En primer lugar, la correlación puede no significar causalidad. Las medidas agregadas de la cantidad de dinero pueden verse afectadas por el comportamiento de los agentes productores y consumidores a través de cambios en la demanda de dinero, que a su vez se originan en un mayor crecimiento; y,
+        \item La segunda crítica es más conceptual y está relacionada con el uso de la política monetaria como elemento estabilizador del ciclo. Si la política monetaria tiene efectos reales y su función estabilizadora es eficaz, puede que los cambios en la oferta monetaria no estén asociados a variaciones significativas en el crecimiento de la producción.
+    \end{lnum}
+
+    \textbf{\textit{Causalidad de GRANGER}. SIMS (1972)}
+    Si bien las técnicas estadísticas de los ejemplos c111teriores adolecen de críticas referidas a problemas de endogeneidad en las correlaciones y especificaciones econométricas, Sims, utilizando como instrumental los VAR (Vector AutoRregression) ofrece una prueba mucho más sólida acerca de la relación entre dinero y output. En concreto. Sims demuestra que el dinero causa al output en el sentido de Granger. Esto es, lags de la oferta monetaria son significativos a la hora de predecir valores futuros del PIB, incluso cuando en la regresión incluimos lags del propio PIB.
+
+    \textbf{\textit{Unanticipated Money Growth and Unemployment}. BARRO (1977) \& \textit{Money and the Price Level Under the Gold Standard}. BARRO (1979)}
+    En contraste, los trabajos de BARRO publicados entre 1977 y 1979 representan un giro teórico y empírico importante, al incorporar el supuesto de expectativas racionales en el análisis macroeconómico. 
+    
+    BARRO argumenta que para evaluar correctamente los efectos reales del dinero es necesario distinguir entre componentes anticipados y no anticipados de la política monetaria. Utilizando regresiones que relacionan el output y el desempleo con medidas de sorpresas monetarias, encuentra que solo los cambios no anticipados en la cantidad de dinero tienen efectos transitorios sobre variables reales. La política monetaria sistemática y predecible, en cambio, es completamente neutral, incluso en el corto plazo, ya que los agentes ajustan sus decisiones de manera óptima ante la información disponible. De este modo, Barro concluye que la política monetaria carece de capacidad estabilizadora cuando es conocida de antemano, reforzando la idea de neutralidad del dinero y cuestionando la efectividad de intervenciones discrecionales del banco central.
+
+    \textbf{\textit{Does Monetary Policy matter?} ROMER y ROMER (1989)}
+    Encuentran evidencia sobre la existencia de causalidad entre las innovaciones monetarias y variaciones en la producción. Para ello identifican en el período de posguerra (1945-1985) seis episodios de movimientos en los tipos de interés que no fueron motivados por desarrollos de la economía real sino por deseos de reducir la inflación (p.ej. tras la llegada de P. VOLCKER a la Reserva Federal en 1979). 
+
+    \textbf{\textit{Some Monetary Facts}. MCCANDLESS JR. y WEBER (1995)}
+    Los autores analizaron datos de un largo período de tiempo para un elevado número de países (lo que hace que sus resultados no dependan de los eventos que han podido tener lugar en una región). Hallaron una correlación cercana a 1 entre la inflación y la tasa de crecimiento de la oferta monetaria (entre 0,92 y 0,96 dependiendo de la definición de oferta monetaria utilizada). Esta fuerte correlación es consistente con muchos otros estudios basados en muestras más reducidas o de períodos diferentes. Estos resultados son uno de los principales pilares sobre los que se sustenta la teoría cuantitativa del dinero: un cambio en la tasa de crecimiento del dinero induce un cambio equiproporcional en la tasa de inflación de precios. En cualquier caso, esta elevada correlación no implica causalidad. Si los países siguieron políticas bajo las cuales la tasa de crecimiento de la oferta monetaria está exógenamente determinada, entonces esta correlación podría ser tomada como una prueba de que la tasa de crecimiento de la oferta monetaria causa inflación, con una relación de casi uno-a-uno entre las 2 variables. Pero una posibilidad alternativa, también consistente con el elevado grado de correlación, es que otros factores generan inflación y los bancos centrales permiten que la tasa de crecimiento de la oferta monetaria se ajuste.
+
+    \textbf{\textit{Nominal Rigidities and the Dynamic Effects of a Shock to Mentary Policy}. EVANS y ECHBAUM (2005)}
+    Habida cuenta de lo expuesto, podemos entender la razón por la cual la controversia acerca de la neutralidad o no del dinero persiste. No obstante, existe un grado de consenso más elevado acerca de la no-neutralidad del dinero en el corto plazo como consecuencia de la existencia de rigideces reales y nominales que transforman su papel en la economía real. 
+    
+    El trabajo más influyente al respecto es el de EVANS y EICHENBAUM (2005), que se inscribe en la literatura moderna utilizando modelos VAR estructurales para identificar shocks de política monetaria de manera más creíble. A diferencia de los enfoques anteriores, estos autores incorporan explícitamente la función de reacción del banco central y emplean estrategias de identificación que permiten aislar innovaciones exógenas en la política monetaria. Sus resultados muestran que los shocks monetarios generan respuestas significativas y persistentes del output, el empleo y otras variables reales, en un patrón consistente con la presencia de rigideces nominales. En particular, rechazan la visión según la cual solo las sorpresas monetarias tienen efectos reales, y encuentran que incluso cambios de política bien comunicados pueden influir en la actividad económica. La conclusión es clara: el dinero no es neutral en el corto plazo y la política monetaria es una herramienta efectiva de estabilización macroeconómica.
+
+    Para acabar, cabe destacar algunos datos estilizados (generalizaciones estadísticas sobre la relación del dinero con otras variables):
+    \begin{lnum}
+        \item \textbf{Las rigideces constituyen el canal a través del cual se transmiten los shocks nominales a la economía real en el corto plazo}. Amplía literatura empírica y teórica coincide en que los efectos de la Política Monetaria (y, en consecuencia, de los shocks nominales) se transmiten, o tienen algun efecto sobre la economía real, debido a la existencia de rigideces nominales que impiden la reasignación eficiente de todos los recursos en la economía. Sin estas, es dificil entender las razones por las cuales una variable aparentemente nominal (el dinero) tendría algún tipo de efecto sobre la economía real;
+        \item \textbf{Correlación entre inflación y tasa de crecimiento de la oferta monetaria}. su valor es muy cercano a $1$, entre$ 0,92$ y $0,96$ en función de la definición de dinero que utilicemos. Esta evidencia es consistente con la teoría cuantitativa del dinero reflejando que cambios en la oferta monetaria acaban teniendo un reflejo exclusivo sobre el nivel de precios. LUCAS (1980b), utilizando datos de EEUU entre 1955 y 1975, encuentra una fuerte correlación entre inflación y crecimiento de la oferta monetaria una vez se filtran los datos para eliminar la volatilidad del corto plazo;
+        \item \textbf{Correlación nula en el largo plazo entre PIB y tasa de crecimiento del dinero}. Adicionalmente, algunos trabajos coinciden en que existe una correlación negativa entre inflación y crecimiento real en una base de datos de sección cruzada con distintos países, lo que podría reflejar que altas tasas de inflación generan distorsiones en los precios relativos, lo que acaba erosionando la capacidad productiva de la economía;
+        \item \textbf{Correlación nula en el largo plazo entre desempleo e inflación}. En palabras de John B. Taylor ( 1996) "existe escaso desacuerdo en el hecho de que no exista ningún trade-off en el largo plazo entre inflación y la tasa de desempleo". Adicionalmente, BERENSTEN, MENZIO y WRIGHT (2008) encuentran una relación positiva entre inflación y desempleo en el largo plazo, contradiciendo la intuición básica de la curva de Phillips.
+        \item Tanto la renta como la riqueza se han mostrado generalmente significativas en la función de demanda de dinero, si bien la demanda de dinero es más elástica con respecto a la riqueza que respecto a la renta. 
+        \item La demanda de dinero está inversamente relacionada con los tipos de interés, pero no es muy elástica a éste.
+        \item La trampa de la liquidez keynesiana no se pudo confirmar empíricamente hasta la recesión sufrida por Japón en los años noventa (los nipones mantienen alrededor del 20\% del valor del PIB en dinero en efectivo en depósitos no convencionales, literalmente en carteras o en casa).
+        \item Los parámetros que relacionan las variables independientes con la demanda de dinero se mostraron bastante estables hasta la década de los ochenta, momento en que la innovación financiera (generalización del uso de las tarjetas de crédito, transferencias, giros, etc.) aumentó la velocidad de circulación del dinero e hizo que su demanda fuese más inestable.
+    \end{lnum}
+\end{specialblock}
+
+\begin{specialblock}{\textbf{Problemas de especificación en los estudios monetarios}: Algunas características esenciales}
+    Para entender las discrepancias presentadas es importante comprender los problemas con los que los economistas se enfrentan para analizar los efectos de la política monetaria. Pudiera pensarse que basta con estudiar los efectos tras una intervención monetaria para estimarlos. Es decir, observar qué sucede cuando el banco central reduce (o aumenta) el tipo de interés o reduce (o aumenta) los agregados monetarios. El problema de este enfoque es que normalmente las decisiones del banco central se toman como consecuencia de la situación económica. 
+    
+    Por ejemplo, una bajada en el tipo de interés puede responder al deseo del banco central de intentar estimular la economía ante una recesión económica. En este caso, el analista podría concluir que los efectos asociados con la causa original (la recesión) son consecuenciaprecisamente del remedio a la misma (la estimulación monetaria).\footnote{Por poner un símil, el problema es semejante a analizar el efecto sobre la mortalidad en carretera consecuencia de la circulación de ambulancias. Es cierto que hay mucha correlación entre los muertos en carretera y llegadas de ambulancias, pero esto se debe a que las ambulancias acuden a los accidentes de tráfico, que es precisamente donde se encuentran los heridos, y no a que las ambulancias aumenten la mortalidad en carretera (sino al contrario).
+    } 
+    
+    Por tanto, un análisis de la correlación entre el tipo de interés del banco central y la actividad, la inflación o el desempleo muestra como los tipos de interés descienden en situaciones de recesión y caída en el nivel de precios y aumentan en periodos de expansión e inflación; siendo un grave error inferir de ello que las subidas de tipos de interés son inflacionistas y expansivas. Este resultado es consecuencia del hecho de que los bancos centrales modifican su política monetaria a lo largo del ciclo para intentar evitar los aumentos de la inflación en periodos de bonanza y la deflación durante las crisis. 
+
+    Por todo esto los economistas han tenido que ingeniar métodos alternativos para estudiar los efectos de la política monetaria:
+    \begin{la}
+        \item \textbf{Técnicas VAR estructurales}. La primera de las técnicas de análisis de los efectos de la política monetaria se basa en la identificación de shocks mediante modelos de vectores autoregresivos (VAR). En un VAR, todas las variables se tratan como endógenas y se explican en función de sus propios rezagos y de los rezagos del resto de variables del sistema. Esta flexibilidad permite capturar interacciones dinámicas complejas y estudiar la respuesta de la economía a distintos shocks mediante funciones de impulso–respuesta y descomposiciones de varianza. No obstante, el principal desafío de los VAR es la identificación de shocks estructurales, especialmente en el contexto de política monetaria, donde resulta crucial distinguir innovaciones exógenas del banco central de respuestas endógenas a la evolución de la economía. Para ello se han desarrollado diversas estrategias, como restricciones contemporáneas, de signo o narrativas, aunque los resultados pueden ser sensibles a estas elecciones;
+        \item \textbf{Técnicas narrativas}. Una de las principales limitaciones del enfoque basado en modelos VAR es la identificación de los shocks; pues cambios en el orden de las series, es decir, en el supuesto de cuales reaccionan de forma contemporánea al shock, pueden modificar las conclusiones. Si bien existen diversas estrategias para intentar resolver este problema, una solución es utilizar información adicional para determinar los shocks de política monetaria. Las técnicas narrativas se basan en la identificación de episodios de política económica a partir de información cualitativa proveniente de documentos históricos, actas de bancos centrales, discursos o reconstrucciones cronológicas detalladas. En el contexto monetario, este enfoque busca aislar cambios de política que no respondan directamente a condiciones macroeconómicas contemporáneas, interpretándolos como shocks exógenos. La ventaja principal de estas técnicas es que permiten una identificación más cercana al proceso real de toma de decisiones de la autoridad monetaria y evitan algunos problemas de endogeneidad presentes en métodos puramente estadísticos. Sin embargo, su aplicación depende fuertemente del juicio del investigador y de la disponibilidad y calidad de la información histórica, lo que puede limitar la replicabilidad y generalización de los resultados; y,
+        \item Las técnicas anteriores se basan en métodos estadísticos aplicados a series temporales. Una tercera línea de investigación se basa en la búsqueda de experimentos naturales en la historia que arrojen luz sobre este tema.\footnote{Uno de los principales problemas de la macroeconomía como disciplina científica es la dificultad en realizar experimentos controlados. No es posible escoger una economía, partirla en dos mitades idénticas, y expandir la política monetaria en una mitad mientras se mantiene constante en la otra. No obstante, la historia económica ofrece algunas situaciones que se asemejan a un experimento, y que pueden ser analizadas en detalle para entender los efectos de la política monetaria.
+        } Las técnicas basadas en (cuasi-)experimentos naturales explotan variaciones exógenas generadas por cambios institucionales, reglas de política, eventos inesperados o discontinuidades que afectan a algunos agentes, regiones o periodos y no a otros. Estos enfoques se apoyan en métodos como diferencias en diferencias, regresión discontinua o variables instrumentales, con el objetivo de aproximarse a un entorno experimental en el que la política monetaria o fiscal pueda considerarse exógena. Su principal fortaleza es la credibilidad causal de los resultados, ya que la identificación descansa en fuentes claras de variación exógena. No obstante, suelen analizar efectos locales o contextuales, lo que puede dificultar la extrapolación de los resultados a otros entornos macroeconómicos o periodos históricos.
+    \end{la}
+\end{specialblock}
+
+
+\clearpage
+\section{Modelización tradicional de la demanda de dinero}
+Dado que el dinero es el medio de pago generalmente utilizado en las transacciones económicas, no es de extrañar que sea también la unidad de cuenta en la que se expresan los valores de todos los bienes; y el hecho que puede utilizarse tanto en transacciones corrientes como en las futuras lo convierte en un depósito de valor. El otro determinante que influirá en la demanda de dinero será el coste de usar dinero. Este puede ser de dos tipos: 
+\begin{la}
+    \item \textbf{Coste de oportunidad}. Es decir, lo que cuesta mantener dinero en relación a lo que se obtendría depositando la riqueza en otros activos: (i) en términos nominales, ese coste de oportunidad incluye la rentabilidad (nominal) de los activos alternativos; y, (ii) en términos reales, incluye también la inflación (variación del nivel general de precios o inflación y, en consecuencia la pérdida de poder adquisitivo). 
+    \item \textbf{Coste de transacción}. Lo que cuesta convertir esos otros activos menos líquidos en dinero mediante su venta.
+\end{la}
+
+En definitiva, es la rentabilidad (nominal y real), el riesgo y la liquidez relativas de los activos disponibles en la economía lo que acaba determinando la demanda de dinero. Con estas premisas, estamos en condiciones de presentar los primeros desarrollos formales relativos a la demanda de dinero.\footnote{
+
+$$
+\begin{aligned}
+    \text{Función estándar de la demanda de dinero:}\quad \boxed{m_t^d-p_t=k\;y_t-h\;i_t}
+\end{aligned}
+$$
+
+Donde $k,h$ son parámetros positivos que representan, respectivamente, la elasticidad de la demanda de dinero respecto al volumen de transacciones y la semi-elasticidad de dicha demanda con respecto al tipo nominal de interés.
+}
+
+\subsection{Enfoque Neoclásico: la Teoría Cuantitativa del Dinero}
+Los primeros desarrollos formales acerca del dinero vienen de la mano de los autores neoclásicos. Éstos analizan la demanda de dinero considerando que el condicionante de esta es, principalmente, la necesidad de su disponibilidad para efectuar transacciones económicas. Su punto de partida es, por tanto, la \textbf{identidad contable de gasto} propuesta por HUME, punto de partida de la Teoría Cuantitativa del dinero: \textbf{los precios son proporcionales a la cantidad existente de dinero}. Su desarrollo formal viene dado por dos corrientes alternativas:
+
+\eqblock{
+\begin{aligned}
+    \text{FISCHER:}\qquad &\boxed{\underbrace{M\cdot V}_{\text{\scriptsize Gasto de los agentes}}=\overbrace{P\cdot T}^{\text{\scriptsize Valor mercancias}}}\quad \text{donde,}
+    \begin{cases}
+        T:\quad \text{\scriptsize Determinado por nivel $Q$ de pleno $L$, tiende a ser cte.}\\[0.5em]
+        V:\quad \text{\scriptsize Velocidad circulación del dinero constante ($V_0$)}
+    \end{cases}\\[1em]
+    \text{Escuela CAMRBDIGE:}\qquad &\boxed{\underbrace{M^d}_{\substack{\text{\scriptsize Proporcional ($k$) a}\\\text{\scriptsize renta nominal}}}=k\cdot \overbrace{PY}^{\text{\scriptsize $Y$ nominal}}}
+\end{aligned}
+}{Descripción analítica de la demanda de dinero: Escuela neoclásica. Modelización tradicional de la demanda de dinero}
+
+Como vemos, la diferencia radica no solo en el enfoque del que se parte: macro/micro; sino también en algunas de sus conclusiones, realmente importantes. 
+
+En la ecuación de FISCHER (macroeconómica) se da respuesta a: ¿cuál es la cantidad agregada de dinero necesaria para cubrir las transacciones que se realizan? En ella subyace la idea de que el dinero no juega más que un papel neutral en la economía, puesto que la velocidad de circulación y el volumen real de las transacciones cambian muy lentamente y por tanto pueden considerarse constantes: el dinero es una variable exógena y solo afecta al volumen de precios. Además, no guarda ningún tipo de relación con el tipo de interés puesto que este se materializa a través de la economía real (no se determina en el sistema monetario de la economía).
+
+Por otro lado, en la propuesta por la Escuela de CAMBRIDGE se parte desde una perspectiva microeconómica: los agentes demandan dinero en función de los servicios que se prestan. Además, el dinero no se considera exclusivamente un medio de cambio, sino también un depósito de valor; por lo que los agentes tendrán en cuenta otras variables como el tipo de interés, la riqueza o las expectativas a la hora de demandar una cantitad u otra de dinero.\footnote{Hasta el punto de que se puede considerar un antecedente de la teoría keynesiana por depender del tipo de interés
+}
+
+\subsubsection{Implicaciones de Política Económica}
+Sin embargo, desde la perspectiva del \textit{policy-maker} las conclusiones son similares: \textbf{el dinero es neutral pues no afecta al sector real de la economía}. De hecho, esto es en esencia la formalización analítica de lo que se conoce como la \textbf{dicotomía clásica}. 
+
+Dado que la demanda de dinero se mantiene muy estable a lo largo del tiempo y viene definida, principalmente, en términos de los saldos reales de una economía,\footnote{En particular, los determinantes de la demanda son: (i, ecuación de FISCHER) la renta nacional o transacciones contabilizadas; y, (ii, ecuación de CAMBRIDGE) los condicionantes del valor de $k$, sobretodo el tipo de interés (coste de oportunidad del dinero), factores psicológicos y factores institucionales
+} un aumento de la oferta de dinero se traduce (directamente) en un aumento del nivel agregado de precios. Por lo tanto, la política económica canalizada por instrumentos monetarios resulta ineficaz para afectar a las variables reales de la economía, como la producción o el empleo; dejando únicamente efectos inflacionistas a su paso. 
+
+\subsection{Enfoque Keynesiano}
+A pesar de la escasa influencia que este marco teórico tuvo respecto a las autoridades monetarias, puesto que no fueron pocos los instrumentos de Política Monetaria que muchas autoridades políticas utilizaron a lo largo del primer tercio del siglo XX, el ocaso de esta convención académica llego con la publicación de la Teoría General del Empleo, el interés y el dinero en 1936. 
+
+Para KEYNES, los agentes demandan dinero por tres razones:\footnote{
+Pese a que sus antecesores en la universidad de Cambridge abrieron la puerta a que variables como los tipos de interés y las expectativas de inflación podrían ser importantes para explicar la demanda de dinero, no las incluyeron en su función de demanda. 
+}
+\begin{lnum}
+    \item \textbf{Motivo transacción}. Dado que el uso fundamental del dinero es comprar bienes, la demanda de dinero dependerá de la cantidad de transacciones que los agentes económicos quieran realizar. KEYNES acepta en este punto la teoría neoclásica y considera que la demanda de dinero por este motivo será proporcional a la renta;
+    \item \textbf{Motivo precaución}. En la medida en que las transacciones a realizar tienen una magnitud incierta y que el acceso inmediato al dinero puede tener costes, los agentes económicos pueden decidir mantener reservas de dinero por encima de la cantidad media esperada de compras a realizar. La cantidad demandada por este motivo dependerá del coste de oportunidad del dinero ($r$), en particular, por la rentabilidad ofrecida por otros activos alternativos (como, por ejemplo, los bonos); y,
+    \item \textbf{Motivo especulación}. Los individuos demandan dinero en función del rendimiento que su riqueza les puede generar. Mientras que los dos motivos anteriores estaban relacionados con la función del dinero como medio de cambio, este motivo está relacionado con la función del dinero como depósito de valor: siendo un activo con valor, los agentes económicos pueden decidir mantenerlo frente a otros activos en función de sus preferencias sobre rentabilidad-riesgo y sus expectativas sobre las rentabilidades futuras de activos alternativos.
+\end{lnum}
+
+Formalmente, este planteamiento no es sino la suma de la demanda por los tres motivos anteriores:
+
+\eqblock{
+\begin{aligned}
+    &\begin{aligned}
+    \text{KEYNES:}\qquad \boxed{M^d_t=\underbrace{k\cdot Y_t}_{\text{\scriptsize Motivo transacción/precaución}}-\overbrace{h\cdot i_t}^{\text{\scriptsize Motivo especulación}}}
+    \end{aligned}\\[1em]
+    &\text{donde,}\quad
+    \begin{cases}
+        k: \quad \text{Sensibilidad de la demanda ante variacinoes de renta }\;(\Delta Y)\\[0.5em]
+        Y: \quad \text{Valor real de las transacciones en la economía}\\[0.5em]
+        Y: \quad \text{Sensibilidad de la demanda de dinero ante variaciones del tipo de interés }\;(\Delta i_t)\\[0.5em]
+        i_t: \quad \text{Coste de oportunidad de tener dinero}\\[0.5em]
+    \end{cases}
+\end{aligned}
+}{Demanda de dinero: KEYNES. Modelización tradicional de la demanda de dinero}
+
+\paragraph{Motivo especulación: Canal del Tipo de interés}
+Para KEYNES, existen dos tipos de activos que pueden servir como depósito de valor: el dinero y los bonos. El autor se pregunta por qué los individuos pueden preferir colocar su riqueza en forma de dinero (el cual, según KEYNES, tiene un rendimiento nulo) en vez de hacerlo en bonos (que reportan cierta rentabilidad). Para KEYNES esto está relacionados con dos cosas:
+\begin{lnum}
+    \item En primer lugar, KEYNES es consciente de que existe una relación inversa entre el tipo de interés y el precio de un bono: si el tipo de interés sube, el precio del bono disminuye (pues los bonos existentes generan menores intereses que los nuevos), y se producen pérdidas de capital; y,
+    \item Los individuos consideran que los tipos de interés tienden a gravitar alrededor de un valor crítico, diferente para cada individuo:\footnote{
+    Este valor crítico es el que los individuos creen que genera pleno empleo, por lo que creen que es al que tenderá la autoridad monetaria.
+    }\textsuperscript{,}\footnote{De entre estas motivaciones, que son los beneficios/utilidad de usar dinero, el útimo es sin duda el más importante en la Teoría General de KEYNES. Relacionado estrechamente con la Teoría de la preferencia por la liquidez, es para KEYNES el determinante que más influye en la demanda de dinero: si aumenta el tipo de interés ($r_t$), estando éste por encima del tipo de interés natural (propuesto por WICKSELL, $r_N$), aumentará la demanda de bonos y disminuirá la demanda de dinero (existe una relación negativa entre tipo de interés y demanda de dinero). 
+}
+\end{lnum}
+
+En base a las dos consideraciones anteriores, la idea de KEYNES es que, si los tipos de interés son bajos (i.e. por debajo de su valor crítico) el individuo esperará que los tipos suban en el futuro, por lo que anticipa que, si mantiene bonos, sufrirá pérdidas de capital. De ahí que, si los tipos son bajos, el individuo prefiera mantener toda su renta en forma de dinero, en consecuencia: la \textbf{demanda de dinero depende negativamente de los tipos de interés} y, además, \textbf{será muy inestable}, ya que las expectativas sobre los tipos de interés futuros están dominadas por los \textit{animal spirits}.
+
+Por tanto, para KEYNES el tipo de interés es un fenómeno monetario que viene determinado por la preferencia por la liquidez (de manera que el tipo se determina por la demanda de dinero, pues la oferta es vertical), lo que le situa contrario a las consideraciones de los neoclásicos, que creían que el tipo de interés se determina en el sector real (pues, para ellos, los individuos tienen preferencia por el consumo).\footnote{Para los neoclásicos, el tipo de interés se debe interpretar como la compensación que obtiene un individuo por renunciar a consumo presente (porque el agente neoclásico tiene preferencia por el consumo presente), mientras que para los keynesianos, el tipo de interés se debe interpretar como la compensación que obtiene un individuo por renunciar a liquidez (porque el agente keynesiano tiene preferencia por la liquidez).
+}\textsuperscript{,}\footnote{
+Esto es tremendamente importante de entre las aportaciones de KEYNES, pues profundizando en el análisis de la demanda de dinero a través del enfoque de la Escuela de CAMBRIDGE (visión microeconómica), el autor considera que la demanda de dinero estaría fuertemente influenciada por el tipo de interés, que a su vez actúa sobre el sector real como condicionante de la inversión, por tanto: \textbf{rompe con la dicotomía clásica} y establece un canal de transmisión entre la demanda de dinero (nominal) y la economía real (inversión): el canal de los Tipos de Interés.
+}
+
+\paragraph{Teoría de la Preferencia por la liquidez}
+Esta concepción keynesiana de la demanda de dinero con sus tres componentes permitirá formular la Teoría de la Preferencia por la Liquidez, según la cual el tipo de interés nominal queda determinado por la acción conjunta de la oferta y la demanda de dinero.
+
+KEYNES no estaba de acuerdo con el enfoque neoclásico de corrección automática de desequilibrios (los menores tipos de interés reales inducidos por el desfondamiento previo de la demanda agregada generarán un mayor gasto de consumo e inversión, una mayor producción y un mayor nivel de empleo). Para KEYNES, la demanda de dinero por razones especulativas tendría un tramo horizontal, existiendo la denominada \textbf{trampa de liquidez} (situación en la que el público está dispuesto, dado el tipo de interés, a mantener cualquier cantidad de dinero que se ofrezca). Creía que, si bien la demanda de dinero es decreciente con el tipo de interés, eventualmente, al alcanzar un determinado tipo de interés bajo, la demanda de dinero se volvería perfectamente elástica. 
+
+Esto se conoce como la trampa de liquidez, y supone que cualquier aumento de las cantidades de dinero en la economía llevada a cabo por las autoridades monetarias se mantiene en efectivo, no se invierte (tan bajo está el tipo de interés que los agentes consideran que va a aumentar en el futuro, por lo que no demandan bonos y mantienen líquida toda su renta); suponiendo que aumentos de liquidez suministrados por el banco central no tienen efectos sobre el tipo de interés (ni, por tanto, sobre la economía real, haciendo inefectiva la política monetaria).
+
+\subsubsection{Implicaciones de Política Económica}
+Desde esta óptica, el dinero deja de ser neutral en la economía. Elimina la dicotomía clásica entre sector real y sector monetario. Para KEYNES el tipo de interés es un precio que se determina en el mercado monetario y que también afecta (aunque como determinante de segundo orden) a la inversión. Por tanto, el tipo de interés liga al sector monetario con el sector real, lo que implica que no se puede dividir la economía en dos campos separados: economía monetaria y economía real. El sector financiero (nominal, en este caso bonos y \textit{animal spirits}) será determinante en la fijación del tipo de interés que afectará doblemente: (i) por un lado a la demanda de dinero (coste de oportunidad); y, (ii) por otro lado al sector real a través de la inversión. De esta forma, es el motivo especulación el que rompe con la dicotomía clásica pues la demanda de dinero se expresa (\textit{grosso modo}) en función de: $M^d=f(r)$. Al no determinarse el tipo de interés en el mercado de fondos prestables, un vector cantidad de ahorro, inversión, tipo de interés no lleva a un vaciado de ese mercado. Por tanto, para KEYNES, $S=I$ era la excepción y no la regla, y eso será crucial en el rechazo de KEYNES a la ley de Say y en su conclusión de que las economías de mercado pueden necesitar estímulos fiscales continuos.
+
+Por tanto, en el contexto keynesiano, dada la alta volatilidad de la demanda de dinero por su dependencia crucial al tipo de interés, ni la política fiscal ni la política monetaria son efectivas para afectar a la demanda de dinero, ya que no son capaces de tener un efecto consistente sobre éste (que, como veíamos, es el determinante profundo de la demanda de dinero keynesiana), que está sujeto a expectativas volátiles.\footnote{
+\textbf{Política fiscal:} Aunque es efectiva para afectar a la renta, no lo es para afectar a la demanda de dinero. KEYNES señala que la política fiscal será muy efectiva con la renta a causa de los llamados dos eslabones débiles:
+\begin{lnum}
+    \item La inversión es poco sensible al tipo de interés, v (ya que está dominada por los animal spirits); y,
+    \item La demanda de dinero es muy sensible al tipo de interés, h (ya que sólo los bonos son sustitutivos del dinero, por lo que los cambios de la demanda de bonos ante una variación del tipo de interés afectarán mucho a la demanda de dinero), y poco a la renta, k. Cuando la sensibilidad de la demanda de dinero al tipo de interés es notablemente elevada hablaríamos de la existencia de una trampa de liquidez.
+\end{lnum}
+Por lo tanto, \textit{v} va a ser baja (y la IS será inelástica), $k$ va a ser baja y $h$ va a ser alta (y la LM será elástica). Así, una política fiscal expansiva aumentará inicialmente el nivel de renta (i.e. efecto renta), pero no aumentará mucho el tipo de interés porque la demanda de dinero no es sensible a la renta ($\uparrow(G-T)\;\Rightarrow\;\uparrow Y\;\Rightarrow\;\text{pero}\;\sim(M/P)^d\;\Rightarrow\;\sim r$). Además, el (escaso) aumento del tipo de interés disminuirá poco la inversión por la baja sensibilidad de esta a los tipos (i.e. efecto expulsión o \textit{crowding-out} reducido). Por lo tanto, la política fiscal será muy eficaz con la renta, y poco con la demanda de dinero y con la inversión.
+
+\textbf{Política monetaria:} No es efectiva ni para afectar a la renta ni para afectar a la demanda de dinero. En principio, la política monetaria podría ser efectiva con la renta (es decir, tener efectos sobre la economía real), ya que cambios en la cantidad de dinero de equilibrio dan lugar ahora (por el motivo especulación) a cambios en el tipo de interés, y éstos afectan a la economía real a través de la inversión. Así pues, la introducción del motivo especulación rompe con la dicotomía clásica. Sin embargo, una política monetaria expansiva disminuirá poco el tipo de interés ya que éste es poco sensible a la cantidad de dinero en circulación (i.e. efecto liquidez o KEYNES reducido), y, además, la (escasa) disminución del tipo de interés aumentará poco la inversión por la baja sensibilidad de esta a los tipos (i.e. efecto renta reducido). A su vez, el (escaso) aumento de la renta aumentará poco el tipo de interés porque, como veíamos, la demanda de dinero no es sensible a la renta; además, el (escaso) rebote del tipo de interés disminuirá poco la inversión por la baja sensibilidad de esta a los tipos (i.e. efecto expulsión o crowding-out reducido). Por lo tanto, la política monetaria será poco eficaz con la renta, con la demanda de dinero y con la inversión.
+El tipo de interés es poco sensible a la cantidad de dinero en circulación por el segundo eslabón débil: que la demanda de dinero sea muy sensible al tipo de interés se traduce en que el tipo de interés será poco sensible a la cantidad de dinero en circulación. En efecto, cuando la demanda de dinero es muy plana, una política monetaria expansiva que desplace a la derecha la oferta de dinero disminuirá poco el tipo de interés.
+}
+
+\subsection{Enfoque de la SNC}
+Durante los años 40's y 50's, fruto del trabajo de KEYNES, muchos autores trataron de reconciliar sus postulados con la visión neoclásica, principalmente: el corto plazo de KEYNES con el largo plazo Neoclásico; dando lugar a lo que se conoce como Síntesis Neoclásica. Respecto a la Teoría Monetaria, estos autores profundizan en los motivos/determinantes de la demanda de dinero, aceptando las conclusiones de KEYNES por lo que respecta a los motivos y la fijación monetaria del tipo de interés, pero con matices. 
+
+Ver sus desarrollos de forma exhaustiva requeriría mucho tiempo, por lo que introduciremos esencialmente uno: ¿cómo veían los neoclásicos la demanda de dinero por motivos transaccionales?
+
+\subsubsection{Modelo de Inventario: Motivo transacción}
+Este motivo se trata en el Modelo de Inventario propuesto por BAUMOL (1952) y TOBIN (1956).
+
+Bajo los supuestos de que: (i) existen dos activos nominales diferentes (dinero y depósitos); (ii) el dinero actúa como medio de pago; (iii) los depósitos proporcionan un rendimiento nominal de $i_t$ (tipo de interés nominal); y, (iv) los agentes necesitan convertir sus activos liquidables en dinero para realizar transacciones. 
+
+Podemos presentar analíticamente los siguientes componentes y conclusiones del modelo:
+
+\eqblock{
+\begin{aligned}
+    &\text{Costes de \textbf{transacción}:}\quad \boxed{\underbrace{b}_{\text{\scriptsize CF}}\;\cdot\;\frac{Y}{k}=f(\overbrace{k}^{-})}\quad \text{\scriptsize donde,}
+    \begin{cases}
+        k&\equiv\text{\scriptsize Valor real depósitos convertidos en dinero cada vez}\\[0.5em]
+        Y/k&\equiv\text{\scriptsize $\#$veces agente va al banco a convertir: $Y=k\;n$}
+    \end{cases}\\[2em]
+    &\text{Costes de \textbf{oportunidad}:}\quad \boxed{i\;\cdot\;\frac{k}{2}=f(\overbrace{k}^{+})}\quad 
+    \text{\scriptsize donde,}\;\overbrace{k/2\equiv\text{\scriptsize Tenencia media de dinero}}^{\text{\scriptsize Dos periodos para que $Y$ se gaste uniformemente}}\\[2em]
+    &\Longrightarrow \hspace{2em}
+    \underbrace{\boxed{\min_{k}CT=b\frac{Y}{k}+i\frac{k}{2}}}_{\text{\scriptsize Frecuencia óptima de conversión}}\quad\Longrightarrow\quad \boxed{k^*=\sqrt{\frac{2bY}{i}}}\quad\Longrightarrow\quad\boxed{\frac{M^d}{P}=\omega(\underbrace{Y}_{+},\overbrace{b}^{+},\underbrace{i}_{-})}
+\end{aligned}
+}{Modelo de inventario (motivo de transacción). Modelización tradicional de la demanda de dinero}
+
+Como vemos, la demanda de dinero (en términos reales), será una función de: (i) \textbf{principalmente la renta}; (ii) el coste de transacción; y, (iii) el tipo de interés (coste de oportunidad).
+
+\paragraph{Implicaciones de Política Económica}
+En términos de Política Económica, este modelo proporciona información valiosa para el planificador porque:
+\begin{lnum}
+    \item \textbf{Costes de transacción}. Los costes de transacción son uno de los condicionantes principales de la demanda de dinero: si estos fueran nulos, entonces el dinero depositado (que proporciona rentabilidad a un tipo de interés nominal $i$) sería igual de líquido que el dinero en efectivo (demandado) y, en consecuencia, no se habría demanda precautoria;
+    \item \textbf{Elasticidad renta}. La elasticidad renta de la demanda de dinero es $1/2$ (por la especificación del modelo). Esto se traduce en que la demanda de dinero aumenta a medida que aumenta la renta, pero no de forma proporcional, sino que a un escala inferior, por lo que podemos hablar de economías de escala en la tenencia de dinero: la proporción/peso del dinero disminuye en la economía a medida que su tamaño aumenta; y,
+    \item \textbf{Elasticidad-tipos de interés}. Respecto a la elasticidad demanda-tipo de interés, el modelo plantea que esta es de $1/2$ (debido a su especificación), lo que haría la demanda de dinero muy inestable a las variaciones del tipo de interés pero, en este caso se encuentra \textit{racionalizado} y no depende, como antes, de las expectativas de los agentes como causantes de dicha inestabilidad.\footnote{Aunque sabemos que esta es coherente, no concuerda con las estimaciones derivadas de la evidencia empírica, que le otorgan un valor aproximado de $0,16$ y, por tanto, un comportamiento más estable.
+    }
+\end{lnum}
+
+Sin embargo, como vemos, mientras KEYNES sostenía que la política monetaria era intrínsecamente poco fiable como instrumento de estabilización macroeconómica, no solo por la posibilidad extrema de la trampa de la liquidez, sino porque la demanda de dinero es inestable: depende de expectativas cambiantes, y está dominada por motivos especulativos bajo incertidumbre radical,\footnote{En ese contexto, variaciones en la oferta monetaria no se traducen de manera predecible en cambios en el tipo de interés, y aunque lo hicieran, la inversión puede no reaccionar de forma suficiente. Por eso, la política fiscal tenía una superioridad estructural frente a la monetaria.
+} los autores de la SNC no aceptan esta conclusión en su forma fuerte. Al depender principalmente de la renta, los autores de la SNC veían como la demanda de dinero mantenía un comportamiento más estable y, por tanto, se podía incidir eficazmente sobre el tipo de interés a través de los intrumentos de la Política Monetaria.\footnote{
+Lo reinterpretar dentro de un marco más controlado, admitiendo que la política monetaria puede ser poco efectiva en ciertos casos límite (por ejemplo, cuando la demanda de dinero es muy elástica), pero no aceptan que esa inefectividad sea una característica general del capitalismo monetario.
+}
+
+Por eso, la síntesis neoclásica sí defiende la efectividad de la política monetaria a corto plazo, pero condicionada: efectiva siempre que la demanda de dinero sea suficientemente estable y que el sistema financiero transmita los cambios en el tipo de interés a la inversión.\footnote{En el modelo IS–LM, la inestabilidad de la demanda de dinero se traduce simplemente en una LM más o menos plana o empinada. Si la LM es muy plana, la política monetaria es poco efectiva y la fiscal es más potente; si la LM es empinada, ocurre lo contrario. Esto implica una conclusión que Keynes nunca habría aceptado: la efectividad relativa de la política monetaria y fiscal es una cuestión empírica y técnica, no una consecuencia profunda de la naturaleza monetaria de la economía.
+
+Además, la política fiscal no es superior por principio, sino solo en determinadas configuraciones del modelo. Esta es una diferencia fundamental con KEYNES, para quien la política fiscal no era simplemente más potente en algunos casos, sino el instrumento central de estabilización en una economía dominada por la incertidumbre.
+} 
+
+\subsection{Enfoque Monetarista: Neocuantitativismo}
+El último enfoque tradicional y, junto con KEYNES, probablemente el más importante que presentaremos, es el enfoque monetarista.
+
+Este enfoque surge practicamente en paralelo a los autores de la SNC pero no será hasta la última parte de la década de los 60's y la década de los 70's cuando se proyecte más allá del mundo académico y sus exponentes pasen a guiar, de manera más o menos victoriosa, las decisiones del planificador público (por la crisis de confianza respecto a la SNC a raíz de los periodos de desaceleración experimentados a finales de los 60's y, precisamente, por la ineficacia de las Políticas Monetarias ejecutadas en respuesta las sucesivas crisis del petroleo).
+
+Los monetaristas aceptan las tres motivaciones formalizadas por KEYNES (los agentes demandan dinero por motivo transacción, depósito o precaución y especulación), pero se distancian en lo siguiente:
+\begin{lnum}
+    \item \textbf{Consideran que la demanda de dinero es estable y no sensible al tipo de interés}. La demanda de dinero depende principalmente de la renta permanente, pues al ser todos los activos (financieros y reales) y no solo los bonos, sustitutivos del dinero, los cambios de la demanda de bonos ante una variación del tipo de interés afectarán poco a la demanda de dinero;\footnote{Mientras que KEYNES defendía que el dinero tenía pocos (uno) pero buenos sustitutivos, FRIEDMAN entiende que tiene muchos, pero imperfectos.
+    }
+    \item \textbf{No existe la trampa de liquidez}. Como consecuencia directa de lo anterior, al depender poco del tipo de interés, la elasticidad de la demanda de dinero con respecto al tipo de interés no es infinita (no existe trampa de liquidez).
+\end{lnum}
+
+Sobre la ecuación de la Teoría Cuantitativa del Dinero, FRIEDMAN incluye algunos elementos de corte KEYNESIANO: (i) concepción del dinero como un activo; y, (ii) demanda de dinero proporcional a la renta. Pero, sobretodo, concibe el dinero como un bien más y, por tanto, su tenencia reporta (como cualquier otro bien) utilidad marginal decreciente, supuesto no previsto en ninguno de los anteriormente presentados. Es decir, los agentes tienden a disminuir sus tenencias de efectivo y a sustituirlos por otros activos a medida que aumenta la cantidad de la que pueden disponer. 
+
+Así, la demanda de dinero dependerá, como la de cualquier otro activo,\footnote{\textbf{regla de inflación óptima de FRIEDMAN (1969)}. La Teoría del Bienestar defiende que, para alcanzar un óptimo de Pareto, se debe proveer un bien hasta que el beneficio marginal de su consumo sea igual al coste marginal de su consumo. El coste marginal de consumir (ostentar) dinero es su coste de oportunidad, esto es, la rentabilidad que obtendría el individuo si en lugar de tener el dinero en efectivo lo invirtiera y obtuviera el tipo de interés nominal, $i$. Pero la autoridad monetaria puede reducir este coste a cero, reduciendo, pues, a cero el beneficio marginal, es decir, aumentando al máximo el beneficio (bienestar) total. Así, la regla de inflación de FRIEDMAN señala que esta debe ser igual al tipo de interés real cambiado de signo: $\pi=i-r\;\Rightarrow\;\pi=-r$
+} de tres factores principales: 
+\begin{lnum}
+    \item La riqueza del individuo, medida por la renta permanente, y que, según los monetaristas, será el factor determinante de la demanda de dinero. De ahí que la demanda de dinero monetarista sea muy estable (a diferencia de la keynesiana), ya que la renta permanente lo es;
+    \item La rentabilidad del dinero en relación a otros activos financieros y reales; y,
+    \item Las preferencias de los individuos.
+\end{lnum}
+
+Matemáticamente, la formulación propuesta puede resumirse como:
+
+\eqblock{
+\begin{aligned}
+    \boxed{{\frac{M^d}{P}}=f(\underbrace{Y_P}_{+},\overbrace{r_{\text{\tiny Financieros}}^{\text{\tiny Activos}},r^{\text{\tiny Activos}}_\text{\tiny Reales},\pi^e}^{-},\underbrace{\frac{W_H}{W}}_{+})}
+\end{aligned}
+}{Función de demanda real de dinero: Monetaristas/Neocuantitativismo. Modelización tradicional de la demanda de dinero}
+
+La demanda de dinero dependerá positivamente de la renta permanente, del nivel general de precios y de la proporción de las rentas del trabajo (las rentas del trabajo son, generalmente, más inciertas que las provenientes de activos financieros, por lo que los agentes desearán mantener más dinero por motivo precaución), y negativamente de la rentabilidad de otros activos y de las expectativas de inflación. Además, el dinero se demanda en términos reales ya que, de forma coherente con el resto de sus tesis, los agentes no experimentan ilusión monetaria. 
+
+El equilibrio en este modelo se alcanzaría cuando:
+
+\eqblock{
+\begin{aligned}
+    \boxed{\frac{M}{P}=\frac{1}{V}Y}
+\end{aligned}
+}{Equilibrio mercado de dinero: Neocuantitativismo. Modelización tradicional de la demanda de dinero}
+
+La renta es medida por los agentes en términos reales por lo que el dinero se torna neutral ya que estos \textbf{no experimentan ilusión monetaria} (el incremento de la masa monetaria solo se traducirá en un aumento proporcional en el nivel agregado de precios). No obstante, en el corto plazo, la velocidad de circulación del dinero se mantiene estable a la vez que la masa monetaria puede experimentar variaciones (inducidas). Esto conduce a que la oferta monetaria pueda ser mayor en el corto plazo que la demanda monetaria (exceso de saldos reales), aumentando los depósitos en activos financieros (nominales) y reales (inversión) de los agentes y, en consecuencia, el aumento de la demanda agregada en términos nominales ($\uparrow PY$). 
+
+Por tanto, recapitulando lo expuesto hasta el momento.
+\begin{lnum}
+    \item \textbf{Neoclásicos}. En la teoría neoclásica, el dinero es neutral por construcción y, en consecuencia, la demanda de dinero solo actúa como velo de la economía real. No hay espacio analítico para que una variación monetaria tenga consecuencias reales persistentes. En ese sentido, la neutralidad del dinero no es una hipótesis empírica, sino una propiedad lógica del modelo;
+    \item \textbf{KEYNES}. El mercado financiero es clave en la fijación del tipo de interés. Esto hace que la demanda de dinero sea muy volátil por el comportamiento inherente de éstos mercados, guiados por encima de cualquier otra cosa por los \textit{animal spirits}. Además, la existencia de rigideces nominales incide directamente en el efecto que tienen los shocks de variables nominales en la economía real (en el corto plazo es lo importante, en el largo \textit{estamos todos muertos});
+    \item \textbf{SNC}. La síntesis neoclásica acepta que en el corto plazo existen rigideces nominales, fallos de coordinación y fenómenos monetarios como la preferencia por la liquidez que hacen que cambios en la oferta monetaria o en el tipo de interés tengan efectos reales. La demanda de dinero viene determinada en gran medida por el tipo de interés, por lo que su volatilidad se mantiene (respecto al marco keynesiano) y la Política Montaria resulta muy dificil de ejecutar; y, por último,
+    \item \textbf{Monetaristas}. En el contexto monetarista, como la demanda de dinero depende fundamentalmente de la renta la política monetaria sí va a ser efectiva porque en el corto plazo sí puede afectar a la renta.\footnote{
+\textbf{Política fiscal}: No es efectiva para afectar a la renta, por lo que no afecta a la demanda de dinero monetarista:
+Los monetaristas señalan que la política fiscal no es efectiva, pues se producirá un \textbf{efecto crowding-out total} por la ausencia de los dos eslabones débiles de KEYNES (que los monetaristas rechazan):
+\begin{lnum}
+    \item La inversión es muy sensible al tipo de interés, $v$ (ya que los individuos se guían por la rentabilidad y no por los \textit{animal spirits}, pues son racionales); y,
+    \item La demanda de dinero no es sensible al tipo de interés, $h$ (ya que depende principalmente de la renta permanente, pues al ser todos los activos financieros y reales (y no sólo los bonos) sustitutivos del dinero, los cambios de la demanda de bonos ante una variación del tipo de interés afectarán poco a la demanda de dinero).
+\end{lnum}
+Por lo tanto, $v$ va a ser alta (y la IS será elástica), $k$ va a ser alta y $h$ va a ser baja (y la LM será inelástica). Así, una política fiscal expansiva aumentará inicialmente el nivel de renta (i.e. efecto renta), y aumentará mucho el tipo de interés porque la demanda de dinero sí es sensible a la renta ($\uparrow(G-T)\;\Rightarrow\;\uparrow Y\;\Rightarrow\;\uparrow(M/P)^d\;\Rightarrow\;\uparrow r$). El (elevado) aumento del tipo de interés disminuirá mucho la inversión por la alta sensibilidad de esta a los tipos (i.e. efecto expulsión o \textit{crowding-out} elevado) por lo que la política fiscal será muy poco eficaz con la renta. 
+
+\textbf{Política monetaria:} Sí es efectiva para afectar a la renta en el corto plazo, por lo que sí puede afectar a la demanda de dinero monetarista en el corto plazo. En efecto, una política monetaria expansiva disminuirá mucho el tipo de interés ya que éste es muy sensible a la cantidad de dinero en circulación (i.e. efecto liquidez o KEYNES elevado), y, además, la (elevada) disminución del tipo de interés aumentará mucho la inversión por la alta sensibilidad de esta a los tipos (i.e. efecto renta elevado). A su vez, el (elevado) aumento de la renta aumentará mucho el tipo de interés porque, como veíamos, la demanda de dinero sí es sensible a la renta; además, el (elevado) rebote del tipo de interés disminuirá mucho la inversión por la alta sensibilidad de esta a los tipos (i.e. efecto expulsión o crowding-out elevado). Por lo tanto, la política monetaria será muy eficaz con la renta, con la demanda de dinero y con la inversión. 
+
+El tipo de interés es muy sensible a la cantidad de dinero en circulación porque no se da el segundo eslabón débil: que la demanda de dinero sea muy poco sensible al tipo de interés se traduce en que el tipo de interés será muy sensible a la cantidad de dinero en circulación. En efecto, cuando la demanda de dinero es muy vertical, una política monetaria expansiva que desplace a la derecha la oferta de dinero disminuirá mucho el tipo de interés.
+} Así, argumentan que cambios en la cantidad de dinero harán fluctuar la demanda a corto plazo, lo que servirá para explicar los ciclos económicos.
+\end{lnum} se caracteriza porque. 
+
+\subsubsection{Implicaciones de Política Económica}
+Las recomendaciones de Política Monetaria de los Monetaristas no se resumen de manera clara en una ecuación, de hecho, esto es lo que se conoce como la \textbf{ecuación perdida del monetarismo}: FRIEDMAN no dice en qué medida se trasladarán a precios o a variaciones de la actividad real en el corto plazo las variaciones en la oferta monetaria. No obstante, por sus conclusiones tanto empíricas como teóricas, si podemos sintetizar su visión en los siguientes puntos:
+\begin{lnum}
+    \item \textbf{La Política Monetaria experimenta retardos}. Estos autores creen que el efecto de éstas se experimenta sobre la renta con un retardo de 6 a 18 meses, por tanto impide que se pueda realizar \textit{fine-tuning}. Además, pueden hacer que la política monetaria tenga efectos procíclico. FRIEDMAN empíricamente observa que los primeros efectos de la política monetaria ocurren entre 6 y 9 meses y afectan al producto, pero este efecto desaparece en 5-10 años, por lo que solo afectarán a los precios, por tanto, otra aportación relevante de FRIEDMAN es poner peso sobre los retardos a los cuales están sujetas las políticas económicas de demanda. Estos serán: (i) internos, desde que se detecta la necesidad de actuar hasta que se actúa; y, (ii) externos, desde que se actúa hasta que la política monetaria surte efecto;
+    \item \textbf{El incremento sostenido de los agregados monetarios no tiene incidencia en la economía, pero la tasa de variación sí}. Para los monetaristas, el crecimiento constante de los agregados monetarios no tienen efecto real en la economía (se trasalada a los precios) ya que los agentes no experimentan ilusión monetaria y forman sus expectativas en función de la las expriencias vividas (HEA): por tanto, el dinero es neutral a largo plazo. Sin embargo, la variación en la tasa de crecimiento de estos agregados sí puede tener incidencia en la economía real ($\uparrow Y$) pues disminuye el coste de oportunidad de demandar dinero ($\downarrow i_t$), esto puede traducirse en un aumento de la inversión que consecuentemente tendrá efectos en la renta real agregada de la economía (y de la renta permanente, que a su vez influirá en la demanda de dinero): el dinero no es neutral a corto plazo;\footnote{La regla de política monetaria de FRIEDMAN es que la tasa de crecimiento de la masa monetaria sea constante. Nótese que esta regla es coherente con su otra regla, la de una inflación igual al tipo de interés real cambiado de signo, ya que el tipo de interés real suele ser constante.
+    }
+    \item \textbf{El objetivo de la Autoridad Monetaria debe ser reducir al máximo el coste de oportunidad de mantener dinero}. Para los monetaristas, el dinero debería otorgar una rentabilidad nula, es decir, no debería generar rentabilidad para sus tenedores de forma que se estimule la parte real de la economía incrementando el gasto de dinero. Por ello, en base a la ecuación de FISHER, esto deriva en lo que se conoce como la \textbf{regla de inflación óptima de FRIEDMANN}, donde: $i_t=r_t+\pi_t=0\Longrightarrow\pi_t=-r_t$; es decir, la Autoridad Monetaria debería velar por un cierto grado deflatorio que garntice que el coste de oportunidad del dinero sea mínimo (esto es puramente teórico, nadie lo aplicó ni querría aplicarlo en la práctica).
+\end{lnum}
+
+\clearpage
+\section{Modelización moderna de la demanda de dinero}
+\puntosclave{
+    La modelización de la demanda de dinero requiere de una hipótesis previa sobre cuál es la motivación para usarlo: unidad de cuenta, medio de cambio, depósito de valor. La demanda de dinero puede adoptar diversas formas dependiendo de esa motivación. 
+    
+    Las dos maneras más habituales de derivar la demanda de dinero como medio de cambio es: (i) suponiendo que la tenencia de dinero aumenta la utilidad facilitando las transacciones o reduciendo los costes de transacción (dinero en la función de utilidad); e, (ii) imponiendo una restricción presupuestaria que limita el gasto en consumo a la tenencia de dinero (restricción de efectivo). 
+
+    La forma del rendimiento que reciben los agentes económicos por mantener dinero difiere según se modelice su uso:
+    \begin{lnum}
+        \item Cuando se introduce en la función de utilidad, modelo SIDRAUSKY, el rendimiento del dinero es la utilidad marginal del dinero;
+        \item Cuando los intercambios requieren recursos (tiempo o bienes), modelos Shopping-Time, el valor se deriva de los recursos que puedan ahorrarse por el uso del dinero 
+        \item En modelos CIA, el valor del dinero es el multiplicador de Lagrange asociado a esa restricción; y, 
+        \item En modelos de búsqueda, el rendimiento del dinero depende de la probabilidad de su aceptación por otros agentes.
+    \end{lnum}
+    
+    La demanda de dinero como depósito de valor depende del contexto en el que se analice, es decir, cuáles son los activos alternativos que compiten con el dinero en esa función y los shocks que alteran la relación rentabilidad-riesgo de todos los activos. 
+    
+    Existe una amplia variedad de modelos de demanda de dinero en función de los supuestos que se utilicen para generar el valor del dinero (función del dinero) y el contexto en el que dicho valor se analice (preferencias de los demandantes, certidumbre o incertidumbre, tipos de transacciones, timing respecto a las decisiones de demanda de dinero y consumo, etc.).
+    
+    Muchos de esos modelos son extensiones a contextos dinámicos y con equilibrio general de las intuiciones de los modelos básicos de demanda de dinero de los libros de texto básicos de macroeconomía (el motivo transacción de BAUMOL, 1952, y TOBIN, 1956, el motivo precaución de WHALEN, 1966, o el motivo especulación de TOBIN, 1958 y SAMUELSON, 1958).
+}
+Como vemos, la modelización tradicional ha proporcionado bases sólidas para entender la demanda de dinero, tanto desde una perspectiva microeconómica (comportamiento de los agentes) como desde una perspectiva macroeconómica (cómo afectan los agregados económicos e intervenciones de Política Económica en las variables agregadas). 
+
+Ahora bien, la revolución metodológica que supuso la Nueva Macroeconomía Clásica y sus importantes aportaciones en la comprensión de las variables agregadas también se proyectaron sobre la Teoría Monetaria. En particular, la microfundamentación de los modelos macroeconómicos permitió conciliar mejor las causas y determinantes de la demanda de dinero de los agentes con las alternativas de Política Económica que ostenta el planificar en su labor de estabilidad y promotor del crecimiento económico.
+
+Por tanto, la literatura teórica moderna se ha centrado en incorporar de manera microfundamentada los determinantes de la demanda de dinero explicados (desarrollos de los tres primeros cuartos del siglo XX) a modelos macroeconómicos que permitan el estudio de las variables agregadas, por ejemplo los modelos DSGE. A continuación, se presentan algunos ejemplos (no exhaustivos) de demanda de dinero mediante esta metodología.
+
+Los desarrollos más recientes sobre la demanda de dinero se centran básicamente en tres enfoques: 
+\begin{la}
+    \item Introducir directamente el dinero en la función de utilidad del agente económico, asumiendo que éste deriva una utilidad directa del mismo (modelos Money-In-Utility);
+    \item Asumir que existen costes de transacción no despreciables que justifican la tenencia de dinero y, por tanto, la demanda de dinero (p.ej. modelos Cash-In-Advance); y,
+    \item Tratar el dinero como un activo utilizado para transferir recursos intertemporalmente (Modelos de Generaciones Solapadas).
+\end{la}
+
+\subsection{Demanda de dinero: Motivo transacción}
+Veamos primero los modelos centrados en el motivo transaccional de la demanda (y existencia)\footnote{
+En la actualidad, el papel del dinero en la economía continúa siendo bastante misterioso y, por ello, la modelización moderna de la demanda de dinero pretende a la vez explicar su existencia. Resulta poco atractivo referirse a las razones que llevan a los individuos a mantener dinero, sin tratar de entender qué función desempeña este.
+} del dinero.
+
+\subsubsection{Utilidad Directa: Dinero en la Función de Utilidad (SIDRAUTSKY, 1967)}
+Dado que no resulta viable modelizar todas las transacciones económicas en las que interviene el dinero, una simplificación habitual para derivar su demanda como medio de cambio consiste en suponer que su uso facilita las compras, bien proporcionando servicios o bien reduciendo costes de transacción.\footnote{Otro enfoque similar es introducir el dinero como un argumento de la función de producción de las empresas. La justificación es la misma: la tenencia de dinero facilita la adquisición de inputs por las empresas y hace más eficiente el uso de otros factores de producción.
+} 
+
+SIDRAUSKI\footnote{El economista sionista argentino MIGUEL SIDRAUSKI, discípulo de MILTON FRIEDMAN y HIROFUMI UZAWA en la Universidad de Chicago, murió a los 28 años de cáncer en 1968, dejando a una hija de dos meses.
+} observa que los modelos de equilibrio general empleados hasta la fecha no incluyen el dinero: (i) los agentes son racionales, maximizan una función objetivo (utilidad y beneficio respectivamente) y se interrelacionan en una economía descentralizada, en la cual se puede obtener un equilibrio competitivo y una dinámica hacia él; (ii) dentro de esta economía se realizan transacciones y existen precios (consumo, salario, precio del capital); sin embargo, (iii) aunque se intercambian bienes y factores, no se modeliza explícitamente el dinero para realizar transacciones (medio de pago) y tampoco se modeliza el dinero como depósito de valor, es decir, no existe un activo que tenga un retorno nominal igual a cero, solo existe un activo real que reporta un cierto interés. 
+
+Por tanto, la incorporación de dinero en estos modelos es deseable para obtener implicaciones sobre evolución de la inflación y la demanda de dinero, y la manera de alcanzar este objetivo es mediante la introducción del dinero en la función de utilidad de los agentes, de tal manera que en equilibrio un agente desea tener cantidades positivas de dinero. 
+
+\begin{specialblock}{\textbf{Advertencia.-} ¿Dinero en la FUI?}
+    La fundamentación microeconómica de introducir el dinero en la función de utilidad es endeble y no existe justificación axiomática para ello: El dinero fiduciario no es un bien de consumo sino un determinante de la capacidad de pago, bien como parte de la riqueza, bien como activo líquido aceptado en las transacciones de bienes de consumo que proporcionan utilidad.
+
+    La crítica que se ha vertido sobre este modelo es que el dinero no debería estar en la función de utilidad en la medida en que el dinero es intrínsecamente inútil: mientras que los bienes se pueden consumir, el dinero no se puede consumir, pues sólo tiene sentido en la medida en que se utilice para intercambiarlo por bienes de consumo. De esta manera, este modelo puede llegar al absurdo de postular que las tenencias de dinero aumentan la utilidad de los individuos, aunque dicho dinero no se emplee para nada. A pesar de ello, el modelo deriva conclusiones importantes para la teoría monetaria y permite realizar comparaciones de bienestar entre distintos niveles de equilibrio.
+\end{specialblock}
+
+Hay que precisar que el objetivo principal de los modelos MIU no es modelizar la demanda de dinero, sino el estudio de la dinámica de la inflación en modelos de equilibrio general. Se postula que el agente representativo de los hogares decida su demanda de dinero a partir del siguiente problema de optimización:\footnote{La versión en tiempo continuo de este problema de optimización constituye el modelo de Sidrauski (1967): si bien en origen se trató de una extensión al modelo de Ramsey-Cass-Koopmans con la que este economista argentino mializó la relación entre inflación y crecimiento económico (en concreto. si la política monetaria es neutral y superneutral). dio también lugar al nacimiento de los modelos MIU (Money-In-the-Utility Function), empleados extensivamente por la macroeconomía moderna en el estudio del ciclo económico.
+}
+
+\eqblock{
+\begin{aligned}
+    \boxed{
+    \begin{aligned}
+        &\max_{c_t,m_t,b_t}U(0)=\sum_{t=0}^\infty \beta^tu(c_t,m_t)\quad \text{\scriptsize (términos per cápita)}\\[0.5em]
+        &\text{s.a.}\quad 
+        \begin{cases}
+            \underbrace{b_{t-1}(1+r_t)+m_{t-1}+w_tl_t=c_t+m_t+b_t}_{\text{\scriptsize Equilibrio en Mcdo Final hace que único Activo sea K (inversión): $b=k$}}\\[0.5em]
+            \lim_{t\to\infty}b_{t+1}=0
+        \end{cases}
+    \end{aligned}
+    }
+\end{aligned}
+}{Demanda de dinero en la Función de Utilidad (SIDRAUSKY, 1967). Modelización moderna de la demanda de dinero}
+
+La función de utilidad es aditiva y separable por lo que representar la restricción presupestaria en un horizonte temporal biperiodo no supone un problema. Esta FUI está compuesta por el consumo, $c_t$, y por los saldos reales, $(M/P)_t=m_t$, y cumple los supuestos habituales del consumo (insaciabilidad, utilidad marginal positiva pero decreciente, etc.). A partir de la ecuación expuesta, obtenemos a través de las CPO's las siguientes condiciones de optimalidad: las sendas óptimas de las variables de flujo y estado.
+
+\eqblock{
+\begin{aligned}
+    &\left.\begin{aligned}
+        f_k(k^{ee})=(1+\delta)+\frac{1}{\beta}\\[0.5em]
+        c^{ee}=f_k(k^{ee})-\delta k^{ee}
+    \end{aligned}\right\}\quad \underbrace{\text{Variables reales ($k,c$) independientes del dinero:}}_{\text{\scriptsize Superneutralidad del dinero}}\;\; k,c\neq f(M^s,\gamma_{M^s},P,\pi) \\[0.5em]
+    &\frac{u_m(c_t,m_t)}{u_c(c_t,m_t)}=\frac{r_t}{1+r_t}\quad\to \text{Razón de $UMgs=Cte$ oportunidad de mantener dinero}\\[2em]
+\end{aligned}
+}{Condiciones de Primer Orden (SIDRAUSKY, 1967). Modelización moderna de la demanda de dinero}
+
+La separabilidad de las preferencias permite que en el estado estacionario las condiciones de capital físico per cápita y el consumo per cápita sean independientes de la condición de demanda de dinero.\footnote{Este resultado implica que en este modelo el dinero es superneutral, es decir, que el capital físico per cápita, el consumo y el output son independientes del nivel y la tasa de crecimiento de la oferta monetaria, del nivel de precios y de la tasa de inflación.
+} Nótese que $r_t$ es el precio del dinero (i.e. el coste de oportunidad de mantener dinero en el bolsillo en lugar de en una cuenta corriente donde me reporte $r_t$) y que $1+r_t$ es el precio de consumir hoy (de nuevo, el coste de oportunidad de consumir hoy y no hacerlo mañana, cuando podría consumir $1+r_t$ si no lo gastase hoy).
+
+\paragraph{Implicaciones: Función de Demanda de Dinero}
+Por tanto, como vemos, el modelo de SIDRAUSKY permite caracterizar la demanda de dinero ($M^d$) como función del tipo de interés y el consumo:
+
+\eqblock{
+\begin{aligned}
+    \boxed{\frac{M^d}{P}=f(\underbrace{c}_{+}, \overbrace{r}^{-})}
+\end{aligned}
+}{Caracterización de la función de demanda de dinero (SIDRAUSKY, 1967). Modelización moderna de la demanda de dinero}
+
+Como resultado directo, obtenemos, como hemos avanzado, la \textbf{superneutralidad} del dinero,\footnote{
+La neutralidad defiende que cambios en el stock de dinero no tienen efectos reales. Los agregados monetarios/Base Monetaria no tienen efectos reales.
+} es decir, cambios en la tasa de variación del stock de dinero no tienen efectos reales. Además, subyace la idea de la regla de inflación óptima de FRIEDMAN (1969):\footnote{
+\textit{In the existing literature, two major sources of monetary nonneutrality govern the determination of the optimal long-run rate of inflation. One source is a nominal friction stemming from a demand for fiat money. The second source is given by the assumption of price stickiness.
+In monetary models in which the only nominal friction takes the form of a demand for fiat money for transaction purposes, optimal monetary policy calls for minimizing the opportunity cost of holding money by setting the nominal interest rate to zero. This policy, also known as the Friedman rule, implies an optimal rate of inflation that is negative and equal in absolute value to the real rate of interest.
+A second important result that emerges in this class of models is that the Friedman rule is optimal regardless of whether the government is assumed to finance its budget vis lump-sum taxes or via distortionary income taxes. This result has been given considerable attention in the literature because it runs against the conventional wisdom that in a second-best world all goods, including money holdings, should be subject to taxation.}
+\href{https://doi.org/10.3386/w16054}{Schmitt-Grohe, S. \& Uribe, M. (2010). The Optimal Rate of Inflation (Working Paper 16054). National Bureau of Economic Research.}
+} el coste marginal de consumir (ostentar) dinero es su coste de oportunidad, esto es, la rentabilidad que obtendría el individuo si en lugar de tener el dinero en efectivo lo invirtiera y obtuviera el tipo de interés nominal, $i$; por ello, la autoridad monetaria puede reducir este coste a cero, reduciendo a cero el beneficio marginal, es decir, aumentando al máximo el beneficio (bienestar) total. Así, la regla de inflación de FRIEDMAN señala que esta debe ser igual al tipo de interés real cambiado de signo: $\pi=i-r\;\Longrightarrow\pi=-r$
+
+\paragraph{Limitaciones}
+Sin embargo, el modelo no permite justificar la existencia del dinero y además sugiere que el dinero reporta utilidad \textit{per se}. Es decir, los hogares derivan utilidad de las tenencias de dinero independientemente del nivel de consumo.
+
+\subsubsection{Costes de transacción: Shopping-Time y CIA}
+Por tanto, si el principal problema de poner el dinero en la función de utilidad es que no existe una justificación satisfactoria para considerar que el dinero reporta utilidad \textit{per se}, el desarrollo de nuevos modelos se centraron en incluir el dinero en el proceso de optimización, fundamentan su introducción sobre la base que éste es un insumo necesario y conveniente para realizar transacciones. Estos modelos suponen, esencialmente, que la adquisición de bienes de consumo requiere recursos ($s$), bien en forma de tiempo o de otro tipo, y que el dinero reduce la necesidad de recursos requeridos para esas transacciones.
+
+De esta lógica surgen la linea introducida por BAUMOL (1952) y TOBIN (1956), en defensa de que el dinero genera utilidad de forma indirecta, es decir: (i) el dinero permite comprar bienes y servicios; (ii) disponer de él permite reducir los costes de transacción de otro tipo (como el tiempo de búsuqeda); y, por tanto, (iii) los agentes se proveen de él con el fin de reducir los costes de transacción que reducen su utilidad directamente.
+
+\paragraph{Shopping-Time Models}
+Presentemos una versión muy simple en la que el dinero permite reducir el tiempo dedicado en comprar bienes\footnote{
+Por ejemplo, podemos entender que existiendo diversidad heterogeneidad de precios en el mercado (rebajas, por ejemplo) el consumidor puede/debe decidir entre dos alternativas: (i) dedicar más tiempo a la búsqueda de la mejor oferta (reduciendo su tiempo de ocio y demanda de dinero); o, (ii) aumentar su demanda de dinero con motivo transacción (aumentando su tiempo de ocio).
+} por servir de sustituto a éste, aumentando por tanto el tiempo que los agentes dedican al ocio que les proporcinoa utilidad directa.
+
+Sobre la FUI de un agente representativo podemos plantear el siguiente problema de optimización (modelo de consumo intertemporal de RAMSEY, Ocio-Consumo):
+
+\eqblock{
+\begin{aligned}
+    \boxed{
+    \begin{aligned}
+        &\max_{c_t}U(0)=\sum_{t=0}^\infty \beta^tu(c_t,\underbrace{z_t}_{\text{\scriptsize Ocio}})\\[0.5em]
+        &\text{s.a.}\quad
+        \begin{cases}
+            \text{\scriptsize (RP anterior)}\;\; b_{t-1}(1+r_t)+m_{t-1}+w_tl_t=c_t+m_t+b_t\\[0.5em]
+            \lim_{t\to\infty}b_t=0\\[0.5em]
+            b_0=B\\[0.5em]
+            z_t=1-l_t-s_t
+        \end{cases}\\[1em]
+        &\text{(Función de recursos): $s_t=s(c_t,m_t):\quad s_c>0;\;\;s_M<0$}
+    \end{aligned}
+    }
+\end{aligned}
+}{Optimización modelo RAMSEY (ocio-consumo). Modelización moderna de la demanda de dinero}
+
+Por tanto, la demanda de dinero queda implícitamente incorporada dentro de la Función de Utilidad pues se relaciona con ambas variables que proporcionan utilidad directa: el consumo y el ocio; instrumentalizada a través de la Función de Recursos ($s$), y de la restricción de tiempo. Como vemos existe un \textit{trade-off} adicional entre consumo y ocio. El consumo requiere invertir tiempo ($s$) en realizarlo y, aumentar éste tiempo aumenta el consumo de los agentes pero reduce su tiempo de ocio (lo que le proporciona desutilidad directamente). El dinero entra así como una alternativa viable para el consumidor de aumentar su tiempo de ocio sin perjudicar el consumo pues actúa de facilitador de las transacciones: mayor disponibilidad de dinero disminuye el tiempo requerido para mantener un mismo nivel de consumo y, consecuentemente, aumentando la cantidad de ocio del agente.
+
+A partir del problema anterior, podemos y, de las CPO's, obtener las sendas de consumo óptimas para las variables flujo:
+
+\eqblock{
+\begin{aligned}
+    &m_t^d=\frac{M^d}{P}=m(c,r)
+\end{aligned}
+}{Sendas de consumo óptimo de las variables flujo. Modelización moderna de la demanda de dinero}
+
+El dinero ($m$) es sustituto del tiempo dedicado en comprar ($s$) y también proporciona la capacidad de producir rentas, pues tiene un coste de oportunidad (o rentabilidad económica) que se instrumenta a través del tipo de interés. Por tanto, los modelos Shopping-Time permiten justificar la demanda de dinero al introducir la teconología de transición del consumo: el consumidor desea equilibrar sus decisiones entre tiempo o dinero de manera que maximice su utilidad. 
+
+En términos de Política Económica, las implicaciones no son diferentes a las obtenidas en el Modelo de SIDRAUSKY. De hecho, si bien este análisis ha sido muy influyente en la literatura y ha jugado un papel importante en macroeconomía (particularmente en el estudio de los efectos de las políticas fiscales y monetarias), en nuestro análisis podría servir como ejemplo de la tesis de la irrelevancia de supuestos defendida por FRIEDMAN: la teoría de la demanda de dinero de SIDRAUSKI parte de un supuesto irrealista, pero más simple y permite obtener las mismas predicciones que modelos con supuestos más realistas como el de Shopping-Time. Además, cabe destacar que si bien explicitan el motivo por el que el dinero es útil y es demandado, podríamos considerar que el dinero no debería estar incluido en la FUI en la medida en que el dinero es intrínsecamente inútil: mientras que los bienes se pueden consumir, el dinero no se puede consumir, pues sólo tiene sentido en la medida en que se utilice para intercambiarlo por bienes de consumo.
+
+Además, desde otra perspectiva nos conduce a pensar que la sustituibilidad Ocio-Dinero es infinita: todo bien puede comprarse con tiempo, con dinero o con una combinación de ambos. Pero, ¿podemos realmente sustituir tiempo por dinero, o viceversa? O, por el contrario, ¿el dinero es una condición previa al consumo y sin él no podemos consumir?
+
+\paragraph{Cash-In-Advance Models}
+Esta es la idea que subyace en los modelos CIA. En estos, la función del dinero como medio de cambio se impone de forma explícita mediante una restricción presupuestaria que establece que el gasto en consumo no puede superar a la tenencia de dinero (o una función de ella que represente su utilidad como medio de cambio). Es decir, reconocer que el dinero es una condición previa necesaria para el consumo y, por tanto, el consumidor no puede sustituir (aunque sea de manera imperfecta) tiempo por dinero o viceversa. Sobre la base de la linea anterior, imponemos la restricción de Pago en Efectivo, es decir:
+
+\eqblock{
+\begin{aligned}
+    \begin{aligned}
+        &m_t>c_t\longrightarrow s_t=0\\[0.5em]
+        &m_t<c_t\longrightarrow s_t=\infty
+    \end{aligned} \quad \Longrightarrow\quad \boxed{m_t>c_t}
+\end{aligned}
+}{Tecnología de transición: Dinero-Tiempo $\to$ Consumo. Modelización moderna de la demanda de dinero}
+
+Vemos como se materializa la idea de que la demanda/disponibilidad de dinero es siempre condición previa al consumo y, por tanto, necesariamente superior a éste, ya que el tiempo dedicado al consumo no puedo ser infinito por estar acotado. La restricción CIA ($m_t>c_t$) fuerza a que las transacciones se realicen única y exclusivamente con dinero, reduciendo éste los costes reales de transacción: la demanda de dinero surge endógenamente y proporciona utilidad directa e indirectamente.
+
+\eqblock{
+\begin{aligned}
+    \text{Novedad modelos CIA:}\quad \boxed{
+    u'(c_t)=u'(m_t)+\frac{u'(c_{t+1})}{1+r_t}
+    }
+\end{aligned}
+}{Modelos CIA: utilidad directa e indirecta. Modelización moderna de la demanda de dinero}
+
+Por tanto, la implicación principal de estos modelos es que, al poderse únicamente realizar transacciones con dinero anticipado, la demanda de dinero queda mejor microfundamentada: al ser una condición previa al consumo, el agente demanda dinero para alcanzar los niveles de consumo que le proporcionan mayor utilidad (motivo transacción). Además, al tratarse de una restricción de esquina, el agente deberá forzarse a aumentar su disponibilidad de dinero sino quiere ver perjudicado su nivel de utilidad, lo que nos permite explicar el fenómeno de la liquidez: por qué la gente lleva dinero sin gastar y sin sacarle rentabilidad (esto se traduce en la posible existencia implícita del \textbf{motivo precautorio}).
+
+\subsubsection{Fricciones: Modelos de Búsqueda}
+A pesar de las grandes aportaciones de los modelos anteriores, existen diversas limitaciones que hacen de éstos poco útiles para explicar diferentes aspectos esenciales. En particular, no responden a preguntas clave como ¿por qué existe el dinero? ¿por qué se acepta el dinero como medio de intercambio? Y, ¿qué fricciones resuelve el dinero? 
+
+Una forma de afrontar éstas deficiencias en el marco de la ortodoxia económica es modelizar la demanda de dinero en contextos de búsqueda (DIAMOND, 1984, KIYOTAKI y WRIGHT, 1989; 1993, LAGOS y WRIGHT, 2005). 
+
+En ellos los agentes económicos producen algunos bienes pero deben intercambiarlos por otros bienes antes de consumir. De manera aleatoria, se encuentran con otros agentes y las posibilidades de consumo quedan determinadas por las realizaciones de intercambios. Así:\footnote{
+En modelos con búsqueda hay tres tipos de equilibrio: (i) trueque, cuando la probabilidad de hacer un intercambio con bienes es mayor a la de hacerla con dinero (lo que suele ocurrir en hiperinflaciones, por ejemplo); (ii) dinero universalmente aceptado, cuando todos los agentes están dispuestos a aceptar dinero en sus intercambios por bienes; y, (iii) un equilibrio monetario mixto cuando se acepta el dinero con una cierta probabilidad (estrictamente menor que uno) en la medida en la que se espera que otros agentes también lo acepten con la misma probabilidad.
+}
+\begin{la}
+    \item En una economía con trueque (sin dinero), el consumo solo se realiza cuando se encuentra a otros agentes con bienes que sean intercambiables; y,
+    \item Con dinero (fiduciario o de otro tipo, pero el fiduciario es más eficiente), todos los encuentros abren posibilidades de consumo independientemente del tipo de bienes producidos por la contraparte.
+\end{la}
+
+Así, a partir de esta modelización vemos como responde a todas estas deficiencias de manera excepcional:
+\begin{lnum}
+    \item \textbf{El dinero existe porque resuelve las fricciones del intercambio}. Es decir, el dinero existe porque es útil y no porque el modelo lo imponga. Podríamos decir que la necesidad/justificación de su existencia emerge endógenamente de ésta rama de modelos por servir como solución a las fricciones inherentes del emparejamiento;
+    \item \textbf{El dinero se acepta, principalmente, por las expectativas futuras}. Si además los intercambios son anónimos y no existe posibilidad de crédito por la incapacidad de identificar a la contraparte, el dinero adquiere un valor que depende básicamente, de la probabilidad de que otros agentes lo acepten en intercambios futuros o, dicho de otra manera, en la confianza de su uso como medio de cambio. Es decir, los agentes económicos aceptan el intercambio con dinero en la medida en que esperan (con mayor o menor creencia) poder utilizarlo para futuros intercambios. Además (y por ello), el dinero fiduciario que sufre menores mermas físicas que el dinero mercancía, domina otros tipos de dinero por ser emitido por un banco central (es más fácilmente admitido en dichos intercambios y goza de mayor confianza), su valor es superior al de otros tipos de dinero; y,
+    \item \textbf{Fricciones de intercambio y fricciones informativas}. Por eso, poniendo lo anterior en conjunto, el dinero sirve al agente para reducir las fricciones inherentes al intercambio de mercancias (falta de doble coincidencia) y, el dinero fiduciario en particular, las fricciones informativas de los agentes respecto al futuro, puesto que si el dinero está monopolizado por una institución, las expectativas de los agentes son más acertadas, tanto de forma positiva como de forma negativa, afectando muy positivamente a la confianza que estos depositan en el dinero fiduciario.\footnote{La cuestión de la confianza que refleja este modelo es muy relevante a la hora de obtener implicaciones de política económica. En especial, la credibilidad de los bancos centrales es fundamental para el correcto funcionamiento de una economía monetaria y, de perderse, los agentes podrían dejar de demandar dinero: la relevancia de las expectativas (y de su correcta gestión por parte de la autoridad monetaria) queda de manifiesto por tanto, al tratarse de un modelo de equilibrios múltiples. Extensiones concretas que se fundamentan en esta idea son modelos como los de hiperinflación, o los de crisis de balanza de pagos.
+    }
+\end{lnum}
+
+Por tanto, el dinero emana del mercado no por los costes de transacción sino por ser un instrumento que, de ser generalmente aceptado, resulta útil para reducir las fricciones transaccionales: el dinero existe si es aceptado por los agentes.
+
+\subsubsection{Conclusiones}
+En todos los modelos de demanda de dinero por motivo transacción —ya sean de tipo Cash-in-Advance, shopping-time o de búsqueda— el dinero obtiene su valor porque permite finalizar intercambios que, en ausencia de fricciones, no podrían realizarse o serían más costosos. En este contexto, mantener dinero tiene un coste privado: renunciar a un activo que devenga un tipo nominal positivo. Cuando el tipo de interés nominal es estrictamente positivo, ese coste actúa como un impuesto implícito sobre el consumo, ya que para consumir es necesario mantener un activo que pierde valor relativo frente a otros activos.\footnote{En los modelos de búsqueda este impuesto puede interpretarse de manera particularmente clara: cuanto más frecuentes son las oportunidades de intercambio, menor es el tiempo durante el cual el dinero debe mantenerse sin usarse, y menor es, por tanto, el coste de oportunidad asociado a su tenencia. De manera análoga, cuando existen otros activos nominales que pagan interés, el dinero solo conserva valor si dichos activos no son perfectamente sustitutivos en la función de intercambio, o si el acceso a ellos requiere previamente dinero.
+}
+
+A pesar de sus diferencias formales, todos estos modelos comparten dos implicaciones fundamentales:
+\begin{lnum}
+    \item Primero, con precios flexibles, el valor real del dinero está completamente determinado por el nivel de precios agregado, puesto que el dinero no es más que un derecho a adquirir bienes de consumo; y,
+    \item Segundo, todos conducen a la misma conclusión normativa: dado que el coste social de producir dinero es prácticamente nulo, el coste privado de mantener dinero debería también ser nulo, lo que equivale a un tipo de interés nominal igual a cero. Por tanto, la tasa óptima de inflación (el crecimiento del nivel general de precios) es la que hace que el tipo de interés nominal (el coste de oportunidad de mantener dinero) sea también cero.
+\end{lnum}
+
+En condiciones normales, el dinero está dominado por otros activos nominales que pagan un rendimiento positivo, por lo que no es eficiente mantener riqueza en forma de dinero. Es decir, existen activos alternativos que dominan al dinero como vehículo de almacenamiento de valor. 
+
+\subsection{Demanda de dinero: Depósito de valor}
+Sin embargo, sin riesgo y cuando la tasa de inflación es tal que el poder adquisitivo del dinero crece exactamente a la misma tasa que el rendimiento real de los activos alternativos: $\frac{1+i_t}{1+\pi_t}=1$;\footnote{Es decir, si la tasa de crecimiento de los activos nominales alternativos (o del propio dinero): el tipo de interés nominal; es igual a la tasa de crecimiento del precio del dinero (la inflación), entonces el dinero pasa a ser un vehículo de almacenamiento de valor puesto que no está dominado por otros activos que ingresen más de lo que lo hace éste (el tipo de interés real es cero). Por tanto, en este contexto, el dinero pasa a ser un vehículo de almacenamiento de valor y es, en consecuencia, demandado por éste motivo: el dinero no se valora por su capacidad de facilitar intercambios inmediatos, sino por la expectativa de que su poder adquisitivo se mantendrá en el tiempo.
+}\textsuperscript{,}\footnote{El dinero no gana, pero tampoco pierde más de lo que lo hacen los demás $\Longrightarrow$ dinero es depósito de valor.
+} entonces, el dinero ya no es valioso porque reduce fricciones en el comercio, sino porque permite transferir recursos entre períodos de vida en ausencia de otros instrumentos (mejores): el dinero adquiere valor porque los agentes creen que las generaciones futuras lo aceptarán, lo que lo convierte en un activo puramente nominal cuyo precio depende de expectativas. 
+
+En este sentido, el dinero funciona como una burbuja racional: su valor no está anclado a rendimientos fundamentales, sino que es una burbuja cuyo precio disminuye con la inflación.
+
+En este contexto, surge la posibilidad de introducir la demanda de dinero por motivo depósito de valor; que fue estudiada, entre otros, por SAMUELSON (1958) utilizando modelos de generaciones solapadas.\footnote{Así, la transición entre los modelos anteriores y los que siguen no es técnica sino conceptual: se pasa de modelos donde el dinero es demandado por su papel en el intercambio a modelos donde el dinero es demandado por su papel como activo, y el nexo entre ambos es la condición bajo la cual el dinero deja de estar dominado y puede sostenerse como depósito de valor.
+}
+
+Esta nueva perspectiva puede ilustrarse de una manera muy sencilla a través del siguiente modelo.
+
+\subsubsection{Modelo MGS: Economía pura de intercambio}
+Imaginemos una economía de intercambio puro (sin dinero), autárquica y con únicamente bienes perecederos.\footnote{Por ejemplo, imaginemos que un barco se ha hundido y toda su tripulación y pasajeros han quedado extraviados en una isla desierta con suficientes recursos para vivir y para reproducirse. Algo parecido a un modelo de CRUSOE pero con intención de permanencia y sin posibilidad de salir de esta isla. 
+}
+
+Cada generación de individuos tiene una dotación de bienes en cada periodo, joven y viejo, que son aquellos que son capaces de obtener por sí mismos, puesto que no existe altruismo intergeneracional (no por hipótesis sino por falta de incentivos para hacerlo: nos llevamos bien para convivir pero no compartimos nuestros recursos).
+
+Podemos considerar que cada agente vive dos periodos, que existe previsión perfecta (información completa) y que las preferencias de cada generación son las mismas. Podemos representar las preferencias de cada cohorte generacional mediante curvas de indiferencia:
+
+\imagenfit{MGS_CI.png}{Curva de Indiferencia de cada cohorte de población}{Elaboración propia}
+
+Entonces, podemos plantear el problema de maximización (apoyándonos en lo descrito antes) incluyendo la Restricción Presupuestaria Intergeneracional y las condiciones iniciales y terminales. 
+
+\eqblock{
+\begin{aligned}
+    \max_{\{c_t^J,c_t^V\}}U(0)=u(c_t^J)+\beta\; u(c_t^V)\\[1em]
+    \text{s.a.}
+    \begin{cases}
+        c_t^J+\frac{c_t^V}{1+r}=e^J+\frac{e^V}{1+r}\\[1em]
+        a_t^V=0
+    \end{cases}
+\end{aligned}
+}{Problema de optimización de cada cohorte de hogares. Modelo de Generaciones Solapadas}
+
+Gráficamente, podemos ilustrar este problema sobre el plano cartesiano de la siguiente manera:
+
+\imagenfit{MGS_EqPO.png}{Equilibrio General Competitivo Pareto-Óptimo}{Elaboración propia}
+
+Dadas las características propias de la economía que hemos expuesto, este problema no constituye realmente un problema de maximización posible puesto que no se podrá transferir renta (son rentas dotacionales de bienes perecederos) de un periodo a otro y, al vivir solo dos periodos, los agentes no tendrán incentivos para intercambiar sus bienes puesto que nadie les devolverá lo prestado (ya estarán muertos los prestatarios). Si suponemos que estos bienes son, por ejemplo, alimentos, la distribución de recursos que da lugar a este equilibrio dotacional sería casi imposible de manera aleatoria y, atendiendo a las cualidades físicas de los humanos a lo largo de su vida, podría constituir un subóptimo para los jóvenes (por estar más capacitados físicamente y poder dedicar más tiempo a la recolección) y muy difícil para los ancianos (por haber pérdido capacidades físicas). Esto se traduciría simplemente, en términos matemáticos, a que el equilibrio realmente alcanzado en cada periodo de vida sería:
+
+\eqblock{
+\begin{aligned}
+    \underbrace{(\tilde c_t^J, \tilde c_t^V)=(e^J,e^V)}_{\text{dotaciones}}
+\end{aligned}
+}{Equilibrio dotacional para cada generación. Modelo de Generaciones Solpadas}
+
+Lo que en términos gráficos se podría representar como:
+
+\imagenfit{MGS_EqSubPO.png}{Equilibrio General Competitivo subóptimo}{Elaboración propia}
+
+Por tanto, ¿qué implicaciones tiene este resultado?
+
+\subsubsection{Implicaciones}
+De manera clara y directa podemos apreciar que el valor del dinero surge del hecho de que la economía se encuentra (muy probablemente) en una situación de ineficiencia dinámica, en la que existe una sobreacumulación de capital por exceso de ahorro. Por tanto, la demanda de dinero surge de la necesidad de corregir esa ineficiencia y poder transferir parte de las rentas dotacionales entre periodos: vendemos nuestro exceso cuando somos jóvenes y utilizamos el dinero obtenido para aumentar nuestro consumo durante la vejez.
+
+Desde la óptica del \textit{policy-maker}, los resultados son reveladores, pues existe margen para que éste intervenga y contribuya a favorecer la eficiencia signativa de los recursos. Como la economía se encuentra en región dinámicamentee ineficiente será posible disminuir el ahorro aumentando el consumo de todas las generaciones (cohortes poblacionales). Los habitantes de la isla podrían organizarse y crear un mecanismo de redistribución intergeneracional, beneficioso para todos, por ejemplo mediante mecanismos de provisión social (una especie de versión primitiva de lo que hoy son los Sitemas de Seguridad Social). 
+
+Con esta redistribución de recursos alcanzaríamos una asignación eficiente. Es decir, pasaríamos del Equilibrio General Competitivo alcanzado a una asignación Óptima en el sentido de PARETO. Esto bien podría alcanzarse mediante:
+\begin{la}
+    \item \textbf{Dinero como depósito de valor}; o,
+    \item \textbf{Sistema Pay-As-You-Go}, que nos permita transferir recursos entre las distintas generaciones (empeorando en este caso el Bienestar Social de la primera cohorte poblacional).
+\end{la}
+
+Por tanto, y como conlusión principal, el valor del dinero como depósito de valor está directamente condicionado por la confianza que los agentes depositan en él, por lo que resulta imperativo para el \textit{policy-maker} la preservación de esta confianza, garantizando que la tasa de inflación sea tal que el poder adquisitivo del dinero crezca de manera proporcional (o aproximada) a la tasa de rendimiento real de los activos alternativos.
+
+\clearpage
+\section{Conclusión} 
+En conclusión, a lo largo de la exposición hemos expuesto, no sólo las principales teorías acerca de la demanda de dinero sino también las razones por las que es importante el estudio de ésta desde un punto de vista filosófico-formal.
+
+Hemos repasado, brevemente, la conceptualización del dinero desde un punto de vista histórico y, más recientemente los diferentes enfoques que pretenden dar explicación no solo a su surgimiento sino a su influencia/interacción con otras variables económicas (principalmente aquellas variables que consideramos reales).
+
+\subsection{Recapitulación}
+A modo de recapitulación, hemos visto:
+\begin{lnum}
+    \item \textbf{Teorías cuantitativistas}. Como los autores neoclásicos defendian la neutralidad del dinero en base a la dicotomía existente entre el sector real y el sector nominal (monetario) de la economía;
+    \item \textbf{Teorías keynesianas}. Como las teorías keynesianas rechazan esta dicotomía al postular y justificar diferentes razones por las que los agentes demandan dinero, otorgando un cierto grado de efectividad a las políticas monetarias (aunque menor que las políticas fiscales de demanda por la existencia de la \textit{trampa de la liquidez});
+    \item \textbf{Síntesis Neoclásica}. Hemos visto como los autores de la síntesis defendían la efectividad de las Política Monetaria frente a la priorización de las políticas fiscales, por las relaciones causales que estos autores defendían sobre la inflación y el desempleo;
+    \item \textbf{Teoría Monetarista}. Hemos repasado la defensa por la efectividad a corto plazo que sostenían los monetaristas, sobre la base de una política reglada que ancle las expectativas de los agentes;
+    \item \textbf{Nueva Macroeconomía Clásica}. Hemos visto como los Modelos MIU, de costes de transacción y Cash-In-Advance defienden la superneutralidad del dinero y, en consecuencia la inefectividad de la Política Monetaria; y,
+    \item \textbf{Nueva Economía Keynesiana}. En último lugar, como los autores de la NEK recuperan las tésis Neoclásicas acerca de la efectividad de la Política Monetaria siempre y cuando se reduzca la incertidumbre de los agentes, es decir, una defensa ferrea de una Política Monetaria eficaz pero reglada con el fin de anclar las expectativas de los Agentes. 
+\end{lnum}
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% --- Anexos ---
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+
+\clearpage
+\anexo{Bloque Teoría Monetaria: Introducción}\label{anx:historia}
+Con éste tema comienza el apartado del temario dedicado a Teoría monetaria. 
+
+La introducción del dinero en macroeconomía puede entenderse como una extensión (imprescindible), ya que los modelos básicos asumen neutralidad nominal al partir del supuesto de precios perfectamente flexibles; como resultado, obvian la presencia del dinero en los sistemas económicos. Esto es así tanto en los modelos de crecimiento económico, como en los del ciclo real. En relación a los últimos, la evidencia empírica comprueba la existencia de rigideces nominales y reales, y motiva así tanto la introducción del dinero en los modelos, como la actuación de los bancos centrales para afectar a su cantidad en circulación y precio. 
+
+El temario aborda la teoría monetaria de la siguiente manera: 
+\begin{lnum}
+    \item \authorfont{Tema 3.A.35}. El dinero puede entenderse no como un bien de consumo sino como un activo financiero que además genera una rentabilidad negativa (dado el coste de oportunidad de su tenencia). Por tanto, podemos preguntarnos ¿por qué demandarían dinero los agentes económicos? Y, de existir tal función de demanda, ¿cuáles son sus determinantes y con qué magnitud y condicionantes?
+    \item \authorfont{Tema 3.A.37}. ¿Alteran los niveles (precio y cantidad, tipos y agregados, respectivamente) de dinero en una economía el equilibrio agregado? Es decir, ¿tiene el dinero efectos reales? ¿Cómo se transmiten los cambios en estos niveles al resto del sistema? ¿Qué dicen la teoría y la evidencia empírica?
+    \item \authorfont{Tema 3.A.36}. Teniendo en cuenta los resultados de los dos anteriores temas, ¿cómo debe el banco central diseñar su política monetaria? Siendo conscientes de que el banco central no decide directamente la oferta de dinero, ¿cómo implementar esta política?
+    \item \authorfont{Tema 3.A.39} y \authorfont{Tema 3.A.40}. El dinero y la deuda pública están estrechamente relacionados desde múltiples ópticas, ¿qué nos dice la teoría económica al respecto? ¿Y qué métodos empíricos existen para estudiar esta relación?
+    \item \authorfont{Tema 3.A.41}. La política monetaria tiene efectos colaterales... en especial, la inflación;
+    \item \authorfont{Tema 3.B.15} y \authorfont{Tema 3.B.16}. Hasta ahora, se ha estudiado la economía monetaria en un marco de economía cerrada, ¿qué ocurre cuando relajamos ese supuesto e introducimos el resto del mundo? 
+    \item \authorfont{Tema 3.B.43}. ¿Cómo aterriza este cuerpo de conocimiento el BCE en el ejercicio de su mandato para el caso de la Eurozona?
+\end{lnum}
+
+\anexo{Una economía sin dinero en efectivo}\label{anx:sin_efectivo}
+
+\begin{specialblock}{Mirar estos artículos}
+    \href{https://nadaesgratis.es/fernandez-villaverde/51817}{\textit{La maldición del metálico}. nadaesgratis.es (blog)}
+
+    \href{https://nadaesgratis.es/fernandez-villaverde/eliminemos-el-dinero-en-metalico}{\textit{Eliminemos el dinero (en metálico)}. nadaesgratis.es (blog)}
+\end{specialblock}
+
+En nuestra introducción reseñábamos la importancia del dinero para superar la doble coincidencia de deseos que impone una economía de trueque. Y a lo largo de esta exposición, hemos identificado dinero con metálico (i.e. billetes y monedas). Pero, en puridad, esto no tiene por qué ser así: técnicamente, y como contraposición al trueque, “dinero” es todo aquello lo suficientemente líquido y creíble como para servir de medio de cambio. Esto supone que el “dinero electrónico” también es dinero. 
+
+Por dinero electrónico nos referimos a meros apuntes contables a los que la sociedad otorga el valor por el que están nominados, de forma que los individuos pueden comprar bienes y servicios con tarjetas de débito o apps que produzcan una transferencia de fondos electrónicos del comprador al vendedor, sin necesidad de que tenga lugar un intercambio físico de monedas y billetes. 
+
+El interés del dinero electrónico es que una economía con dinero en metálico puede sufrir mucho cuando, por cualquier razón, su mercado de fondos prestables se vacía a un tipo de interés real negativo.\footnote{
+El tipo de interés real negativo no es creado por las autoridades monetarias, sino por las fuerzas del mercado (exceso de ahorro en China, Alemania, Japón, etc. y escasez de inversión en Estados Unidos y Europa).
+} ¿Por qué? Porque el tipo de interés nominal no puede bajar por debajo del 0\%: los individuos van a preferir guardar el dinero debajo del colchón a prestarlo y pagar por ello. Salvo que la inflación sea alta, en cuyo caso el individuo podría estar dispuesto a pagar por prestar su dinero si ese coste es menor que la pérdida de poder adquisitivo que le genera la inflación.
+
+Pero para que la inflación sea alta, los precios tienen que aumentar. Y para ello será necesario que los precios sean totalmente flexibles, algo que no ocurre en la realidad: contratos multiperíodo, costes de menú, cuasirracionalidad de los agentes, etc.
+
+Por lo tanto, como los precios no son lo suficientemente flexibles, no suben a la velocidad necesaria para conseguir que el tipo de interés nominal nulo se transforme en un tipo real lo suficientemente negativo. Así, el tipo de interés real estará por encima del de vaciado, por lo que más gente querrá ahorrar de la que querrá invertir, y la demanda agregada no despegará.\footnote{Es más, al ser muy débil la demanda agregada, podríamos entrar en deflación, lo cual agravaría el problema del tipo de interés real excesivamente alto.
+} Esto es lo que ocurre en la actualidad. Posibles soluciones:
+\begin{lnum}
+    \item Medidas de política monetaria no convencional, como está ocurriendo en la actualidad;
+    \item Eliminar las rigideces de precios (esto es, las llamadas “reformas estructurales” que no terminan de llegar);
+    \item Llevar a cabo una política fiscal expansiva que genere un déficit con el que absorber el exceso de ahorro, lo que aumentaría el tipo de interés real (esto es precisamente lo que lleva un tiempo exigiendo el FMI a aquellos países con margen fiscal, y que de momento tampoco se ha producido); o,
+    \item Eliminar el dinero en metálico para eliminar la cota cero del tipo de interés nominal.
+\end{lnum} 
+
+Descartemos la primera opción por las dificultades que tiene su implementación (y los posibles efectos secundarios que puede causar, como una burbuja derivada de la compra masiva de activos). Imaginemos que descartamos también la segunda opción, debido a que eliminar las rigideces: (i) no es factible en el corto/medio plazo debido a que responden a problemas estructurales; y (ii) puede no ser deseable en la medida en que muchas de ellas son el resultado de la conducta racional de los individuos (¿quién estaría dispuesto a negociar su contrato de trabajo todos los días o a indiciarlo de manera tan sofisticada que ni lo entienda?). Descartamos también la opción de una política fiscal expansiva, porque es una opción que no está al alcance de todas las economías.
+
+\textsc{La eliminación del dinero en efectivo}
+
+Eliminación del dinero metálico. Nos queda, pues, la opción de eliminar el dinero en metálico y convertirlo en electrónico, lo que permitiría a la autoridad monetaria imponer tipos nominales negativos (por debajo de cero). Además, aflorará parte de la economía sumergida, que puede tener un peso muy importante en muchos países (en España, de hecho, esa cifra podría oscilar en torno al 10-15\% del PIB).
+
+En su libro \textit{La maldición del metálico} publicado en octubre de 2016, KENNETH ROGOFF propone un sistema para transitar de una economía metálica a una economía electrónica. Propone empezar eliminando los billetes de más de 20 euros (o dólares). Más adelante, se eliminarían también estos billetes de bajas denominaciones, dejando únicamente las monedas de 1 o 2 euros, lo que aumentaría el coste de mantener dinero en efectivo, incentivando a los individuos más rezagados a pasarse al sistema electrónico. Por último, se eliminarían también las monedas.
+
+No obstante, una economía sin metálico puede enfrentarse a problemas serios:
+\begin{lnum}
+    \item La pérdida de anonimato en las transacciones;
+    \item La dificultad de integrar en el sistema a las personas de mayor edad y con menores recursos; y,
+    \item La fiabilidad de la red de pagos (solidez, seguridad, etc.).
+\end{lnum}
+
+En cualquier caso, no se trataría de una revolución, al menos no en términos cuantitativos: en algunos países de la UE, las transacciones realizadas con efectivo representan ya menos de la mitad del total (Dinamarca: 25\%; Suecia: 2\%). No obstante, en España el 60\% de las transacciones se realizan todavía en efectivo (aunque representan un porcentaje menor en términos de valor).\footnote{
+\href{https://www.bde.es/wbe/es/areas-actuacion/billetes-monedas/estudios-publicaciones-relacionadas-efectivo/estudio-sobre-habitos-uso-efectivo/}{\textit{Estudio sobre hábitos en el uso del efectivo}. Banco de España (2025)}
+}
+
+\imagenfit{UsoEfectico_BdE.png}{Medios de pago entre la población española (2022)}{Banco de España (2022)}
+
+\end{document}
