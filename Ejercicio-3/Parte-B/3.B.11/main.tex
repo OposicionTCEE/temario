@@ -1,0 +1,1199 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Tema 3.B.11 -- Balanza de Pagos\\
+\large Concepto, medición e interpretación}
+\author{Marcelo Ortega}
+\date{Enero 2026}
+\newcommand{\TemaCode}{3B11}
+
+\oldtitle{Tema 3.B.12 Balanza de Pagos. Concepto, medición e interpretación}
+\changerationale{Sin cambios.}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     Concepro y Medición conforman el primer bloque de la exposición. Se recomienda ser muy preciso con las definiciones.
+
+     Estructura e interpretación de las cuentas desagregadas constituyen el núcleo del tema. Como en el primer bloque, la estructura es algo perfectamente reglado que debe exponerse con precisión. La presentación simultánea de cada rúbrica y de su análisis económico aporta ritmo a la exposición y permite al opositor demostrar que conoce las implicaciones económicas de las distintas anotaciones contables. El criterio para incorporar una determinada idea en este apartado, y no en el siguiente, es que afecte principalmente a una de las rúbricas aisladamente considerada.
+
+     En Interpretación del saldo agregado, tradicionalmente, el análisis se limitaba a la relación de la balanza de pagos con las macromagnitudes, que continúa siendo un aspecto imprescindible. No obstante, es recomendable ir más allá e identificar las interrelaciones entre las distintas rúbricas y entre la cuenta financiera y la PII. Asimismo, el contenido aquí sugerido permite demostrar al tribunal que se conoce perfectamente el resto del temario, con especial énfasis en el ajuste de balanza de pagos y en la sostenibilidad externa. Si hubiese tiempo, el tema se puede completar con referencias a otros modelos de interés que se apoyen en la balanza de pagos o a una panorámica empírica de los desequilibrios globales.
+
+     El reparto de tiempos es decisión del opositor, en función de sus conocimientos y de dónde quiera poner el énfasis en la exposición. En todo caso, a título orientativo, se propone el siguiente reparto para los no iniciados: (i) Introducción 2 minutos; (ii) Concepto: 4 minutos; (iii) Medición: 2 minutos; (iv) Estructura e interpretación de las cuentas desagregadas: 12 minutos; (v) Interpretación del saldo agregado: 8 minutos; (vi) Conclusión: 2 minutos. 
+     
+     Nótese que, aunque el titulo del tema se refiere solo a la balanza de pagos, el presente documento se ocupa también ampliamente de la posición de inversión internacional. Es importante destacar en la introducción este hecho y justificar su estrecha interrelación, reflejada en el propio título del vigente manual del FMI.
+    }
+\vspace{1cm}
+
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+El objetivo de este tema es doble. Por un lado, persigue explicar la estructura y funcionamiento teórico de la balanza de pagos y, por otro, busca exponer los principales usos y aplicaciones prácticas de este documento estadístico.
+
+\subsubsection{Relevancia}
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+
+\clearpage
+\section{Cuentas Internacionales: Marco teórico}
+Las cuentas internacionales de una economía resumen las relaciones económicas entre residentes en la misma y no residentes. 
+
+Comprenden tres estados contables:
+\begin{lnum}
+    \item \textbf{Balanza de Pagos}. La Balanza de Pagos (BP) es un documento contable que registra sistemáticamente las transacciones, reales y financieras, realizadas entre residentes de un país y los residentes del resto del mundo en un determinado periodo de tiempo;
+    \item \textbf{Posición de Inversión Internacional}. La Posición de Inversión Internacional (PII) muestra el valor y la composición, en un momento dado, de las tenencias de activos y pasivos financieros frente al exterior. La diferencia entre activos y pasivos es el saldo neto de la PII y representa el balance financiero de la economía frente al exterior. Puede interpretarse también como el saldo acumulado de las cuentas financieras históricas y como la riqueza externa de un país;
+    \item \textbf{Cuenta de otrasvariaciones de los activos y pasivos financieros}. La cuenta de otras variaciones de los activos y pasivos financieros es un estado contable que recoge las variaciones de las PII no suscitadas por las transacciones entre residentes y no residentes, como las variaciones por valoración. Permite conciliar la BP y la PII.
+\end{lnum}
+
+
+\subsection{Medición}
+Los registros en las Cuentas Internacionales, al igual que en las Cuentas Nacionales se pueden realizar mediante dos tipos de mediciones distintas:
+\begin{la}
+    \item \textbf{Flujos}. Los flujos reflejan la creación, transformación, intercambio, transferencia o extinción de valor económico; implican cambios en el volumen, la composición o el valor de los activos y pasivos de una unidad institucional. Pueden clasificarse en:
+    \begin{lnum}
+        \item \textbf{Transacciones}. Son interacciones entre dos unidades institucionales que ocurren por mutuo acuerdo o en virtud de la ley y que implican un intercambio de valor o una transferencia;
+        \item \textbf{Intercambio}. Entrega de algo de valor económico a cambio de algo de valor económico. • Transferencias: Entrega de algo que tiene valor económico a cambio de nada (sin contraprestación); y,
+        \item \textbf{Otros flujos}. Son las variaciones en el volumen, el valor o la clasificación de un activo o un pasivo que no se derivan de la transacción entre un residente y un no residente. Constituyen fenómenos económicos legítimos y reflejan variaciones de los activos y pasivos entre las posiciones de apertura y de cierre que no se derivan de transacciones.
+    \end{lnum} 
+    \item \textbf{Stocks o posiciones}. Las posiciones se refieren al nivel de activos o pasivos financieros en un momento determinado. Se registran, en este caso, en la Posición de Inversión Internacional, que es un balance de los activos y pasivos financieros frente al exterior. Por lo general, las posiciones se muestran al comienzo y al final de un período contable. Las posiciones entre dos períodos se conectan con flujos ocurridos en ese lapso, dado que las variaciones de las posiciones son producto de transacciones y otros flujos.
+\end{la}
+
+
+\subsection{Clasificación}
+Existen dos clasificaciones principales en el registro y elaboración de Cuentas Internacionales establecido por el el 6MBP.\footnote{Otras clasificaciones alternativas son: (i) presentación independiente de las reservas, enfoque que permite analizar cómo utiliza el banco central las reservas para financiar el resto de transacciones internacionales; (ii) presentación por socio, que es útil para ayudar a tomar decisiones en negociaciones de comercio internacional, para identificar vulnerabilidades asociadas a una excesiva exposición a otra economía o para estudiar efectos de contagió; y/o (iii) la Cuenta Financiera y la PII se pueden clasificar por vencimiento, moneda de denominación y estructura de tipo de interés (fijo o variable).
+}
+
+\subsubsection{Sectores Institucionales}
+El más popular y principal sistema de clasificación es por Sectores Institucionales. El 6MBP distingue cuatro sectores:
+\begin{lnum}
+    \item \textbf{Autoridad monetaria}. Normalmente el banco central. En la zona euro, el banco central nacional;\footnote{Para España y para el resto de países de la zona euro, el Banco Central Europeo pertenece al resto del mundo.
+    } 
+    \item \textbf{Otras instituciones financieras monetarias (IFM)}. Fundamentalmente entidades de crédito. Las instituciones financieras monetarias son aquellas que (a diferencia de las no monetarias) emiten pasivos que son sustitutivos del dinero (como los depósitos o sustitutos próximos);
+    \item \textbf{Administraciones Públicas (AAPP)}; y,
+    \item \textbf{Otros sectores residentes (OSR)}. Puediendo estos ser: (i) Instituciones Financieras No Monetarias, principalmente aseguradoras y fondos de pensiones; (ii) Sociedades no financieras (públicas y privadas); y, (iii) Hogares e instituciones sin fines de lucro al servicio de los hogares.
+\end{lnum}
+
+Esta clasificación difiere de la de las Cuentas Nacionales [\authorfont{Ver Tema 3.A.30}], en las que en el primer nivel están las instituciones financieras, categoría que agrupa a la autoridad monetaria, a las IMF y a los OSR financieros. De este modo, a diferencia de la clasificación funcional de sectores que aparece en el SEC 2010 (que privilegia una clasificación que resalta cuáles son los sectores institucionales que interactúan dentro de la economía nacional), el 6MBP privilegia una clasificación en función de los sectores que interactúan más con el resto del mundo.
+
+\imagenfit{SectoresInstitucionales_6MBP_SEC2010.png}{Diferencias en la clasificación por Sectores Institucionales}{Apuntes Víctor Gutiérrez. Tema 3.B.11}
+
+\subsubsection{Rúbricas: Clasificación funcional}
+La cuenta corriente ($CC$) y de capital ($CK$) recogen la parte no financiera del sector exterior y la cuenta financiera ($CF$) recoge la parte financiera. En $CC$ y $CK$ se anotan ingresos y pagos y en la $CF$, se registra la variación neta de activos ($VNA$) y la variación neta de pasivos ($VNP$). 
+
+Cada activo financiero es un pasivo para alguna contraparte, que debe abonar una corriente de ingresos. En las cuentas internacionales se adopta la perspectiva del residente: un activo financiero es un título emitido por un no residente en manos de un residente; un pasivo es un instrumento emitido por un residente en manos de no residentes. El FMI en su 6MBP propone anotar el signo de la $CF$ siguiendo la convención usada en la PII, es decir, $VNA$ menos $VNP$. De esta manera, un aumento (descenso) de la $CF$ es una salida (entrada) neta de capital ($SNC$), es decir, $CF=SNC$. En todo momento debe cumplirse la identidad básica de la BP que, ignorando errores y omisiones, se expresa como: 
+
+\eqblock{
+\begin{aligned}
+  \text{Cuenta Corriente}+\text{Cuenta de Capital}=\text{Cuenta Financiera}  
+\end{aligned}
+}{Clasificación por rúbrica. Cuentas Internacionales: Marco teórico}
+
+
+\subsection{Principios aplicables a la Contabilidad Internacional}
+
+
+\subsubsection{Residencia}
+Una unidad es residente en un país cuando su centro de interés económico predominante está localizado en el territorio económico de ese país, es decir, cuando existe una vivienda o un lugar de producción desde el cual dicha unidad realiza actividades económicas y transacciones.
+
+\paragraph{Persona física}
+Para las personas físicas, su lugar de residencia es el territorio donde tengan su domicilio habitual. En caso de duda, se atiende a la duración de la estancia en un territorio.\footnote{En la práctica se sugiere utilizar como referencia la permanencia en el país durante un año o más, aunque no se trata de una regla inflexible.
+} Sin embargo, hay numerosas excepciones referidas a turistas, estudiantes, pacientes, funcionarios, trabajadores de instituciones internacionales, tripulaciones o trabajadores de empresas no residentes. 
+
+\paragraph{Persona jurídica}
+En general, una persona jurídica es residente donde realiza una cantidad significativa de su producción de bienes y servicios, normalmente por un período superior a un año. También existen otros criterios complementarios como el de la jurisdicción de la legislación usada para la creación y existencia de la empresa o la base de operaciones (cuando los servicios prestados en una determinada ubicación no tienen entidad suficiente). En este marco, las filiales son unidades institucionales independientes residentes en el lugar donde prestan sus servicios.\footnote{El FMI establece la participación en el 10\% o más del capital como la cantidad indicativa de participación en el control de una empresa. La cantidad es convencional, puesto que el control puede efectuarse con una participación menor, mientras que, otras veces, con participaciones superiores puede no tenerse influencia en la gestión.
+} Las sucursales solo pueden ser consideradas unidades independientes excepcionalmente, si desarrollan una parte sustancial de la producción y llevan una contabilidad independiente. 
+
+\paragraph{Organismos (supra)estatales}
+En cuanto a las Administraciones Públicas (AAPP), se consideran residentes todos sus organismos, incluidas embajadas, consulados y bases militares. Sin embargo, no se incluyen los organismos internacionales ubicados en ese país, que son un territorio económico en sí mismos.
+
+\subsubsection{Partida Doble}
+El sistema contable se basa en el registro de débitos y créditos para cada transacción. En la Balanza de Pagos, cada transacción se registra como si consistiera de dos asientos equivalentes y opuestos, que reflejan el principio de entrada y salida contenido en cada intercambio. Para cada transacción, las partes registran su correspondiente asiento de contrapartida de crédito y de débito:
+\begin{la}
+    \item \textbf{Crédito (CR)}. Exportaciones de bienes y servicios, ingresos por cobrar, reducción de los activos o aumento de los pasivos; y,
+    \item \textbf{Débito (DB)}. Importaciones de bienes y servicios, ingresos por pagar, aumento de los activos o reducción de los pasivos. 
+\end{la}
+
+\paragraph{Forma Vertical: Coherencia Interna}
+La balanza de pagos utiliza un sistema de registro de partida doble, lo que permite la autocomprobación de los saldos e implica que siempre habrá equilibrio contable. A nivel interno, se lleva a cabo lo quese conoce como Método de Partida Doble en su forma vertical, se trata del registro dentro del mismo sistema contable de una economía (perspectiva de sus residentes) en dos columnas: crédito y débito. Cada transacción exige dos apuntes de igual valor (uno crédito y uno débito) para que $\sum\text{créditos}=\sum\text{débitos}$ en el conjunto de transacciones.
+
+En los agregados de la balanza de pagos, los asientos de la cuenta corriente y de capital corresponden a totales, en tanto que los asientos de la cuenta financiera son valores netos que corresponden a cada categoría o instrumento de los activos o los pasivos.\footnote{Las partidas de la cuenta financiera se registran en cifras netas y por separado para cada activo financiero y pasivo. El uso de los términos adquisición neta de activos financieros y emisión neta de pasivos destaca la forma en que la cuenta financiera repercute en la posición de inversión internacional, y simplifica asimismo la interpretación de los datos. 
+
+Una variación positiva denota un aumento en los activos o los pasivos y una variación negativa denota una disminución de los activos o los pasivos. Sin embargo, la interpretación de un aumento o una disminución según la noción de crédito o débito depende de si el aumento o la disminución se refiere a activos o pasivos:
+
+\imagenfit{Ej_PartidaDoble.png}{Interpretación de las anotaciones contables en el método de partida doble}{Apuntes Víctor Gutiérrez. Tema 3.B.11}
+
+Si bien en las transacciones de la cuenta financiera no se hace hincapié en la presentación de débitos y créditos, es importante reconocer y mantener las identidades contables; por ejemplo, un crédito siempre se equipara conceptualmente con el correspondiente débito, y este último se refiere a un aumento de un activo o a una disminución de un pasivo.
+\begin{la}
+    \item \textit{Ejemplo 1}. Un concesionario español importa un coche estadounidense por valor de 20.000 € a cambio de una transferencia a la cuenta que Ford mantiene en España en el Banco Santander. Se anota un pago (débito) en la cuenta corriente y un aumento de la variación neta de pasivos (crédito) en la cuenta financiera. Concretamente, aumentan los pasivos en forma de Otra Inversión (depósitos) de las instituciones financieras: un no residente (Ford) ahora tiene un derecho sobre un pasivo de un residente en España (Banco Santander). El pago del concesionario al Banco Santander es una operación interna sin reflejo en las cuentas internacionales. Como consecuencia de estas transacciones en la BP, se reduce la PII;
+    \item \textit{Ejemplo 2}. Un residente realiza el desembolso de dólares para adquirir acciones extranjeras. Las acciones se anotan como un aumento de la variación neta de activos (débito) en la cuenta financiera (inversión directa) y los dólares como una disminución de la variación neta de activos (otra inversión, crédito). Los saldos de la cuenta financiera y de la PII se mantienen inalterados;
+    \item \textit{Ejemplo 3}. El residente del ejemplo anterior recibe dividendos en dólares. El dividendo es un ingreso de la cuenta corriente (balanza de rentas primarias de inversión, crédito) y los dólares un aumento de la variación neta de activos (débito) de la cuenta financiera (otra inversión). Como resultado aumentan los saldos de la cuenta financiera y de la PII.
+\end{la}
+} Como cada transacción contiene dos asientos, la diferencia entre la suma de los asientos de crédito y la suma de los asientos de débito teóricamente asciende a cero en la balanza de pagos nacional; es decir, en teoría, las cuentas, en su conjunto están equilibradas (el valor total de los activos es igual al valor total de los pasivos más el patrimonio neto). En la práctica, los problemas de medición causan discrepancias (dando lugar a errores y omisiones).
+
+\paragraph{Forma Horizontal: Coherencia Transversal}
+El concepto de la contabilidad por partida doble en forma horizontal sirve para compilar cuentas que reflejen las relaciones económicas mutuas entre diferentes unidades institucionales de una manera coherente. Se trata, por tanto, del registro por contrapartida entre unidades institucionales (quién entrega/recibe qué), asegurando la coherencia entre el apunte de una unidad y el apunte de la(s) otra(s) unidad(es) contraparte. Esto significa que, si la unidad A proporciona algo a la unidad B, las cuentas de A y B muestran la transacción por el mismo monto: como pago de la cuenta de A y como ingreso en la cuenta de B.
+
+La contabilidad por partida doble en forma horizontal garantiza la coherencia de los registros correspondientes a la categoría de cada transacción que efectúan las partes. Por ejemplo, a nivel mundial, los dividendos por pagar de todas las economías deben ser iguales a los dividendos por cobrar de todas las economías.
+
+\paragraph{\textbf{Extra.-} Método de contabilidad por Partida Cuádruple}
+En cuentas nacionales/internacionales, al combinar vertical + horizontal se obtiene contabilidad por partida cuádruple (dos apuntes en cada una de las dos partes). Es decir, una sola transacción entre dos partes da origen a cuatro asientos.
+
+\subsubsection{Principio de devengo}
+Una vez identificada una transacción/flujo, es necesario determinar el momento en que ocurrió para poder compilar el valor de todos los flujos dentro de un período contable dado. 
+
+Las cuentas internacionales no muestran las transacciones ni otros flujos individuales, pero hay varias razones que obligan a establecer reglas precisas sobre su asignación temporal individual: 
+\begin{lnum}
+    \item En primer lugar, tienen que formularse reglas para determinar en qué período contable han de registrarse los flujos discretos; 
+    \item En segundo lugar, una asignación temporal precisa de los flujos individuales dentro del período contable es crucial para establecer la distinción entre las variaciones del valor neto debidas a las transacciones y otras variaciones (por ejemplo, otras variaciones en el volumen y revalorizaciones); 
+    \item En tercer lugar, el carácter integrado del sistema implica que las posiciones registradas en el balance también son influenciadas por el momento de registro de los flujos; y,
+    \item Por último, el sistema de contabilidad por partida cuádruple exige que las partes efectúen al mismo tiempo los asientos correspondientes a una transacción. Esto garantiza la coherencia de las cuentas de cada parte (por ejemplo, coherencia entre la partida de mercancías y los correspondientes asientos en la cuenta financiera) y la simetría de registro entre las economías que comercian entre sí. 
+\end{lnum}
+
+Por todo esto, el consenso es que los flujos deben registrarse en base devengado.\footnote{La base devengado se utiliza en las cuentas internacionales y en otros importantes sistemas estadísticos macroeconómicos (por ejemplo, cuentas nacionales, finanzas públicas y estadísticas monetarias y financieras).
+} Es decir, deben ser registrados en el momento en que se crea, transforma, intercambia, transfiere o extingue un valor económico. Esto significa que los flujos que implican un cambio de propiedad económica se contabilizan cuando se traspasa la propiedad y que los servicios se registran cuando se prestan (i.e. cuando se genera el derecho de cobro o la obligación de pago). En otras palabras, los efectos de los eventos deben registrarse cuando ocurren, con independencia de si existen cobros y pagos y de cuando tengan lugar.\footnote{Cuando un evento económico está acompañado de un pago posterior, como la importación de bienes con crédito comercial, el desfase se corrige registrando cada evento por separado, con un crédito comercial por pagar como asiento de contrapartida en el momento de la importación. 
+} La aplicación del principio de devengo se lleva a cabo de la siguiente manera: 
+\begin{la}
+    \item \textbf{Transferencias}. En el caso de las transacciones, las reglas de devengo son las siguientes:
+    \begin{la}
+        \item Para los bienes, activos no financieros no producidos y activos financieros, el devengo viene determinado por el momento en el que se transfiere la propiedad económica; 
+        \item Para los servicios, por el momento de la prestación; y,
+        \item Las rentas primarias y secundarias se registran cuando surge el derecho a cobrar o la obligación a pagar.
+    \end{la} 
+    \item En el caso de los otros cambios en volumen y de las revalorizaciones de activos, se registran en el periodo comprendido entre los momentos en los que se valoran las posiciones.
+\end{la}
+
+En la práctica, cuando aplicar este principio es especialmente costoso o complejo, se sigue el criterio de caja, según el cual los flujos se registran cuando se recibe o se desembolsa efectivo.\footnote{Por ejemplo se aplica el principio de caja para impuestos.
+}
+
+\subsubsection{Principio de Valoración}
+La valoración de las operaciones se realiza a precios de mercado y en moneda nacional: (i) las transacciones deben valorarse según el precio vigente en la fecha de la operación; y, (ii) las posiciones en activos y pasivos financieros deben valorarse a la fecha a la que se refieren los datos, a cierre de periodo. Sin embargo, para activos no negociados en mercados se admiten criterios alternativos como el valor contable (por ejemplo acciones no cotizadas) o el valor nominal (por ejemplo para préstamos y otras partidas de otra inversión). Por tanto, tanto la BP como la PII se elaboran en moneda local y las operaciones en moneda extranjera se convierten a euros usando el tipo de cambio vigente en el momento en el que se producen los flujos y las posiciones se convierten al tipo vigente en la fecha del balance. No obstante, para algunas fuentes de información se hace inevitable utilizar tipos de cambio medios mensuales para las transacciones, como por ejemplo para aquellas que se deducen de las posiciones. Además, los países sometidos a grandes presiones cambiarias pueden utilizar otra moneda de referencia u otras medidas de valor (euro, dólar, DEG's). 
+
+Por lo que respecta a la cuantificación del valor de los bienes, se recomienda que las operaciones de exportación e importación se hagan de acuerdo al método FOB (Free On Board).\footnote{A diferencia del método CIF (Cost, Insurance \& Freight), no incluye ni el valor de las primas de seguros ni el de los fletes. 
+
+Nótese que mientras el FMI recomienda el uso del método FOB tanto para exportaciones como para importaciones, la OMC recomienda el uso del FOB para las exportaciones y del CIF para las importaciones.
+}
+
+\subsection{Fuentes de información}
+Una fuente común a las transacciones financieras y no financieras es la información de transacciones exteriores comunicada por los Proveedores de Servicios de Pago (PSP).\footnote{
+\href{https://es.wikipedia.org/wiki/Proveedor_de_servicios_de_pago}{\textit{https://es.wikipedia.org/wiki/Proveedor_de_servicios_de_pago}. WIKIPEDIA.org}
+} Los PSP informan de los cobros (pagos) recibidos (ordenados) por sus clientes cuando procedan (se dirijan a) de cuentas abiertas en PSP no residentes y superen un determinado umbral monetario de declaración.
+
+\subsubsection{Comercio Exterior: Cuenta Corriente}
+Las fuentes de información relatica a cada uno de los componentes de la cuenta corriente son múltiples y de muy diversa índole. Desde fuentes oficiales nacionales como el Ministerio de Hacienda, Ministerio de Economía y Comercio, hasta internacionales como la Organización Mundial del Comercio o el Eurostat.
+
+\paragraph{Bienes}
+A nivel europeo se distingue entre las transacciones extracomunitarias e intracomunitarias:
+\begin{la}
+    \item \textbf{Comercio intracomunitario}. Se basa en la declaración estadística Intrastat; y,
+    \item \textbf{Comercio extracomunitario}. Se basa en la declaración de despacho de aduana (DUA o Documento Único Administrativo).
+\end{la}
+
+Es importante notar que se incluyen transacciones con bienes que no cruzan la frontera pero en las que sí cambia la propiedad económica (merchanting) y, de la misma forma, se excluyen las mercancías que cruzan la frontera sin que exista un cambio de propiedad económica (asociado a servicios de transformación y reparación). 
+
+\imagenfit{Merchant_Trading.png}{Bienes comerciados a través de un intermediario}{\href{https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Differences_between_balance_of_payments_and_foreign_trade_statistics}{\textit{Differences between balance of payments and foreign trade statistics}. EUROSTAT}}
+
+\begin{specialblock}{\textbf{NOTA.-} Diferencias entre los registros de Aduanas y los registros de la Balanza de Pagos}
+    Básicamente, las diferencias entre aduanas y balanza de pagos (BP) son: (i) en aduanas las importaciones se valoran CIF (se incluyen los importes de los servicios de fletes y seguros asociados a las importaciones) y en la BP se valoran FOB, (ii) la BP incluye operaciones no cubiertas por las estadísticas de aduanas (bienes que no cruzan la frontera, pero sí cambian su propiedad económica) y excluye otras (mercancías que cruzan la frontera sin cambio de propiedad), y (iii) la BP incluye estimaciones realizadas por el INE de actividades ilegales relacionadas con el comercio internacional de bienes.    
+
+    \href{https://www.caixabankresearch.com/es/economia-y-mercados/actividad-y-crecimiento/excelentes-registros-del-sector-exterior-2024}{\textit{Excelentes registros del sector exterior en 2024}. Caixabank Research (2024)}
+\end{specialblock}
+
+\paragraph{Servicios}
+La principal fuente de información relativa al comercio de servicios son encuestas a personas físicas (como en España la encuesta de gasto turístico) o a empresas (como en España la encuesta de comercio internacional de servicios o las encuestas sobre pasajeros en vuelos internacionales, precios y pernoctaciones). Complementariamente, se usa información fiscal, de comercio electrónico y de pagos con tarjetas bancarias.
+
+Cabe destacar que, a diferecia de las fuentes de información relativas al comercio de bienes donde existe relativa discrecionalidad en la clasificación utilizada para éstos, las definiciones del 6MBP son coherentes con las del Manual de Estadísticas del Comercio Internacional de Servicios de Naciones Unidas (MECIS2010), elaborado para atender las necesidades del GATS.
+
+\paragraph{Rentas (primarias y secundarias)}
+Las fuentes de información para las rentas primarias de la balanza de pagos incluyen principalmente los estados financieros de Instituciones Financieras Monetarias (IFM), el sistema de declaración de transacciones exteriores para Otros Sectores Residentes (OSR), y registros administrativos como FEGA, Tesoro e IGAE. Estas fuentes recogen intereses, dividendos, beneficios reinvertidos y remuneración laboral. 
+
+Se pueden consultar las obligaciones y marco normativo, entre otros, aquí: \href{https://sedeelectronica.bde.es/sede/es/tramites/presentacion-residentes-transacciones-exterior-p158.html}{Presentación por los residentes en España de las declaraciones sobre las transacciones económicas y los saldos de activos y pasivos financieros con el exterior (formulario ETE). Banco de España}
+
+Las fuentes de información para las rentas secundarias y remesas en la balanza de pagos provienen de las declaraciones obligatorias de las entidades financieras y remesadoras al banco central nacional (\href{https://www.bde.es/wbe/es/entidades-profesionales/supervisadas/informacion-financiera-a-remitir-entidades-supervisadas/establecimientos-cambio-moneda/}{\textit{Establecimientos de cambio de moneda}; Banco de España}). Estas entidades reportan transferencias de emigrantes, ayudas y donaciones entre residentes y no residentes.
+
+\subsubsection{Flujos Financieros}
+Por lo querespecta a los flujos financieros en los que se ve involucrado el banco Central, éste proporciona los detalles correspondientes a su balance y cuenta de resultados. Los requerimientos de información del resto de instituciones financieras monetarias suelen estar integrados con los correspondientes a la labor de supervisión del banco central. 
+
+Todas las personas físicas y jurídicas que realizan transacciones con el exterior están obligadas a declararlas y a detallar la forma de compensación (si la hubiese), el instrumento y la categoría funcional. Deben declararse todas las operaciones por cuenta propia y los saldos en activos o pasivos financieros frente al exterior. Para la inversión directa y la inversión de cartera suelen existir registros de inversiones en los Ministerios o agencias independientes implicadas.
+
+\clearpage
+\section{Interpretación: Cuentas desagregadas}
+Con la reciente revisión, el FMI ha demostrado capacidad de adaptación a las crecientes necesidades informativas y a una realidad económica en continua transformación: 
+\begin{lnum}
+    \item En primer lugar, el 6MBP incorpora avances relacionados con el desarrollo tecnológico y la globalización. Así, presta especial atención a nuevos productos, a la titulación financiera, a las Uniones Aduaneras, a las complejas estructuras de los grupos multinacionales, o a asuntos relacionados con la movilidad laboral, como las remesas;
+    \item En segundo lugar, da más relevancia a los saldos financieros, como refleja la inclusión por primera vez de la Posición de Inversión Internacional en el título del manual y el mayor detalle de sus componentes, esencial para analizar las vulnerabilidades externas del balance de una economía; y,
+    \item Finalmente, adapta la metodología al Sistema de Cuentas Nacionales de 2008, reforzando la coherencia entre ambas fuentes.
+\end{lnum}
+
+Cada periodo, sobre la Posición de Inversión Internacional inicial, que mostrará el stock inicial de activos netos de pasivos frente al exterior, acontecerán las variaciones reflejadas en la Cuenta Financiera de la Balanza de Pagos y en la cuenta de otras variaciones en los activos y los pasivos. 
+
+\imagenfit{Ev_CuentasDesagregadas.png}{Panorama general de las Cuentas Internacionales}{Apuntes Víctor Gutiérrez. Tema 3.B.11; \href{https://www.bde.es/webbde/es/estadis/infoest/htmls/notamet/notametBpPii.pdf}{\textit{Balanza de Pagos y Posición de Inversión Internacional de España: Nota metodológica.} Banco de España (2022).}}
+
+Es importante notar que todas las cuentas están \textit{interrelacionadas entre sí}, de manera que la Posición de Inversión Internacional al final del periodo será el resultado de las diferentes operaciones que realice nuestra Economía con el exterior, de manera que no se puede entender la PII sin considerar el conjunto de los flujos hacia y desde el exterior, independientemente del lugar al que competa su registro (la cuenta de la que forme parte). En todo momento debe cumplirse la identidad básica de la BP que se expresa como:
+
+\eqblock{
+\begin{aligned}
+    \underbrace{CF}_{\substack{\text{\scriptsize Cuenta}\\ \text{\scriptsize financiera}}}=
+    \underbrace{CC}_{\substack{\text{\scriptsize Cuenta}\\ \text{\scriptsize corriente}}}+
+    \underbrace{CK}_{\substack{\text{\scriptsize Cuenta}\\ \text{\scriptsize de capital}}}+
+    \underbrace{EO}_{\substack{\text{\scriptsize Cuenta}\\ \text{\scriptsize de errores}\\\text{\scriptsize  y omisiones}}}
+\end{aligned}
+}{Desagregación de los componentes de la Balanza de Pagos. Interpretación de las cuentas}
+
+El saldo de la $CC$ más la $CK$, denominado capacidad o necesidad de financiación, debe ser igual al saldo de la $CF$. Así, si una economía tiene capacidad (necesidad) de financiación se estarán produciendo salidas (entradas) netas de capital y el país estará aumentando (reduciendo) sus activos netos en el exterior. La cuenta corriente ($CC$) y la cuenta de capital ($CK$) recogen la parte no financiera del sector exterior y la cuenta financiera ($CF$) recoge la parte financiera. En la cuenta corriente y la cuenta de capital se anotan ingresos (créditos) y pagos (débitos). En la cuenta financiera, se registra la variación neta de activos ($VNA$) y la variación neta de pasivos ($VNP$). Al final del periodo, el saldo de la cuenta financiera (variación neta de activos y variación neta de pasivos), unido al saldo de la cuenta de otras variaciones en los activos y los pasivos, se verá reflejado en la Posición de Inversión Internacional.
+
+\subsection{Cuenta Corriente}
+La cuenta corriente agrupa las operaciones relacionadas con la creación de renta en el período de referencia. Así, se incluye el valor de las exportaciones e importaciones de bienes y servicios y la remuneración a los factores productivos residentes (trabajo y capital) empleados en el extranjero, así como la de los factores productivos extranjeros que se han empleado en el país. 
+
+La balanza corriente registra las operaciones en una columna de ingresos (créditos) y otra de pagos (débitos), cuya diferencia permite obtener los saldos parciales, que se registran en una u otra columna según la óptica del residente.\footnote{Como criterio nemotécnico de contabilización puede señalarse que:
+\begin{la}
+    \item \textbf{Entrada de divisas}. Las operaciones que suministran divisas (medios de pago de aceptación internacional) al país que elabora la balanza y las operaciones similares a ellas, se anotan en ingresos (crédito). Por ejemplo, las exportaciones de bienes y servicios o los ingresos por turismo o por rentas de inversión en el extranjero se anotan en ingresos; y,
+    \item \textbf{Salida de divisas}. Por otra parte, las operaciones que implican o podrían implicar salidas de divisas o similares se registran en pagos (débito). Por ejemplo, las importaciones o las remuneraciones a los capitales extranjeros empleados en el país. 
+\end{la}
+} Además, está integrada por tres sub-balanzas: bienes y servicios, renta primaria y renta secundaria.
+
+\subsubsection{Bienes y Servicios}
+La Cuenta de Bienes y Servicios se subdivide además, tal y como su nombre indica, en la sub-cuenta de bienes y la sub-cuenta de servicios.
+
+\paragraph{Bienes}
+Los bienes son productos físicos que satisfacen necesidades de los hogares (consumo final) o que se usan para producir otros bienes o servicios (inputs intermedios). La balanza de bienes registra el valor de las mercancías cuya propiedad económica se traspasa entre un residente y un no residente, independientemente de que crucen o no la frontera. Por tanto, se incluyen operaciones (normales) con mercancías generales que ingresan al país, oro no monetario y exportaciones netas de bienes en compraventa.\footnote{
+Las operaciones de exportaciones netas de bienes en compraventa consisten en la compra de bienes que residentes adquieren a no residente en el extranjero para su posterior venta a otros no residentes, conllevando las dos operaciones un traspaso de propiedad; la diferencia entre el importe de la venta y de la compra de dichos bienes (margen puramente comercial) se registra como una exportación de bienes. Es un fenómeno parecido a la \textit{reexportación} pero diferente en esencia:
+\begin{lnum}
+    \item El bien (nunca) no entra físicamente en la economía del residente comerciante. Por lo tanto no hay importación ni exportación bruta física;
+    \item Hay dos traspasos de propiedad: (i) no residente a resiente; y, (ii) residente a no residente; y,
+    \item Se registra solo el margen (venta − compra) como exportación neta de bienes.
+\end{lnum}
+}
+
+Se registra en ingresos (crédito) las exportaciones de bienes y en pagos las importaciones (débito).
+
+\paragraph{Servicios}
+La balanza de servicios registra las exportaciones e importaciones de diversos servicios. Los servicios son el resultado de una actividad productiva que cambia las condiciones de los consumidores, y normalmente su consumo no puede separarse de su producción. La balanza de servicios registra la prestación de servicios entre residentes y no residentes atendiendo a las siguientes categorías u naturaleza económica:
+\begin{la}
+    \item \textbf{Turismo y viajes}. Incluye los bienes y servicios adquiridos en una economía por viajeros residentes en otra, a la que se desplazan para fines o negocios personales (incluidos los de salud y educación), con estancias inferiores a un año. La rúbrica de servicios turismo y viajes (tan importante en España) incluye los gastos realizados por los turistas en España (ingresos) y por los españoles en el extranjero (pagos) cuando se desplazan para fines personales o de negocios. Algunos servicios personales (como una operación médica) pueden realizarse en el país del vendedor del servicio, en el del comprador o en un tercer país. Lo relevante es la transacción entre residentes y no residentes. Tanto en ingresos como en pagos, se registra una estimación del gasto por alquileres imputados a los propietarios de inmuebles ubicados en un país distinto al de su residencia cuando realicen estancias temporales en ellos. Esta imputación no tiene efectos en la cuenta corriente ya que el aumento de ingresos (pagos) por turismo se va compensado por un aumento equivalente de pagos (ingresos) de las rentas de inversión;
+    \item \textbf{Servicios de transformación y reparación}. Los servicios de transformación incluyen la transformación (por ejemplo, la licuefacción de gas natural o la confección textil), el ensamblaje y el empaquetado. Los servicios de reparación son aquellos realizados por empresas que no son dueñas de los bienes, como en el caso de barcos y aeronaves. El valor registrado es el valor del servicio efectuado, independientemente del valor de los bienes. Las importaciones (exportaciones) incluidas en los datos de Aduanas relacionadas con esta operativa se excluyen del comercio de bienes, de forma que la Balanza de Pagos y la Contabilidad Nacional respetan el criterio de traspaso de la propiedad (\textit{traditio});
+    \item \textbf{Transporte}. Son todos los servicios de llevar personas u objetos de una localidad a otra, así como los servicios de apoyo y auxiliares. Con el nuevo Manual los servicios de comunicación se dividen de forma que los servicios postales y de mensajería se incluyen dentro de los servicios de transporte, mientras que los servicios de telecomunicaciones se agrupan con los de informática y gestión. Recoge fletes, pasajes, servicios auxiliares (como carga y descarga) y servicios postales y de correos. Para los fletes usa un ajuste CIF/FOB coherente con la Contabilidad Nacional;
+    \item \textbf{Construcción}. Los que presten o reciban servicios de construcción, sin mediar una filial o sucursal en el país de emplazamiento de la obra. Por tanto, en general no se registran proyectos de construcción con un plazo prolongado. También se incluyen en esta rúbrica el valor de los bienes y servicios que la empresa constructora no residente haya adquirido en el país de ubicación de la obra;\footnote{
+    Piénsese que, si no se registrará, habría una salida de capitales en la Cuenta Financiera (por los pagos efectuados por la matriz, residente, a los proveedores de dichos bienes en otro país) que no se vería \textit{compensada} por un ingreso de capital por exportaciones o aumentación de activos en ninguna otra cuenta, por tanto, el principal del presupuesto es el VAB del proyecto más los insumos consumidos, de forma que la Balanza de Pagos queda equilibrada.
+    }
+    \item \textbf{Servicios de seguros y pensiones}.
+    \item \textbf{Servicios financieros}. No se incluyen los cobros y pagos relacionados con el principal o con los rendimientos del capital ya que van en la cuenta financiera y en la de rentas primarias, respectivamente. Se contabilizan aquí, pues, las comisiones;
+    \item \textbf{Cargos por el uso de la propiedad intelectual} (no incluidos en otras rúbricas). Se trata de las transacciones correspondientes al pago de derechos de uso de propiedad intelectual (no de adquisición). Las transacciones relativas a compraventas de activos intangibles de Propiedad Intelectual no figuran aquí, sino en la cuenta de capital al ser activos no financieros no producidos (salvo que sean fruto de la I+D, en cuyo caso su compraventa figura como un servicio al tratarse de activos no financieros producidos).\footnote{Distinguimos:
+    \begin{la}
+        \item \textbf{Activos no financieros producidos}. Patentes, marcas, derechos de autor, diseños industriales, etc. fruto de la I+D;
+        \item \textbf{Activos no financieros no producidos}. Recursos naturales (minas, bosques, espacio radioeléctrico, etc.) y derechos de propiedad intelectual no fruto de la I+D.
+    \end{la}
+    };
+    \item \textbf{Servicios de telecomunicaciones, informáticos y de información};
+    \item \textbf{Otros servicios empresariales};
+    \item \textbf{Servicios audiovisuales}. Los servicios audiovisuales incluyen, por ejemplo, los asociados a la producción de películas. Los servicios personales son servicios relacionados con la salud o la educación; y,
+    \item \textbf{Bienes y servicios del Gobierno} (no incluidos en otras partidas). Agrupa los cobros y pagos relacionados con gastos de embajadas, consulados, unidades militarse, salud, educación, etc.
+\end{la}
+
+Se incluyen también los ingresos y pagos por royalties y licencias de uso de activos inmateriales (como utilización de patentes y marcas, y reproducción o distribución de productos informáticos o audiovisuales). 
+
+\paragraph{Interpretación: Saldo de Bienes y Servicios}
+Por la magnitud de sus ingresos y pagos, la balanza de bienes ha sido tradicionalmente el componente más importante de la cuenta corriente y sobre el que se ha centrado el estudio de los desequilibrios exteriores. Téngase en cuenta que los bienes representan el 80\% del comercio mundial y los servicios el 20\% restante. No obstante, existe un importante flujo de servicios no recogido en las estadísticas ya que, hoy en día, los productos incorporan una gran parte de servicios en su proceso de fabricación. Este proceso de servicificación de las mercancías es cada vez más importante, y particularmente relevante para los productos tecnológicos (con una gran carga de servicios de diseño, I+D, arquitectura o ingeniería, de alto valor añadido). Gran parte de estos problemas son consecuencia de que el comercio se mide en términos de producto final, y no de valor añadido (como es el caso de la contabilidad nacional [\authorfont{Ver Tema 3.A.30}]),\footnote{
+Esto permite comprobar que el déficit de valor añadido de Estados Unidos con China es bastante inferior al déficit comercial calculado tradicionalmente.
+} que, en ese caso, la participación de éstos rondaría el 50\% del comercio total.\footnote{La medición del comercio en términos de valor añadido (Trade in Value Added (TiVA), base de datos elaborada por la OCDE y la OMC) muestran que el comercio internacional de servicios representa aproximadamente el 50\% del total (y en el caso de España cerca del 60\%, por encima de la media de la OCDE, cercana al 55\%).
+}\textsuperscript{,}\footnote{
+Otro concepto para enfatizar la importancia de los servicios en el comercio internacional es la curva de la sonrisa [ver tema 3.B.34]. En la producción de un bien (p.ej. un teléfono móvil), distinguimos distintas etapas: i) Innovación, diseño, logística pre-venta. ii) Fabricación. iii) Distribución, venta, servicio post-venta y garantía. Nos damos cuenta de que, al final, las principales fases que generan valor añadido son las fases que están tanto al principio como al final, mientras que la fabricación y los componentes físicos (fases intermedias) generan menos valor añadido.
+
+\imagenfit{Curva_Sonrisa.png}{La curva de la sonrisa}{Apuntes Víctor Gutiérrez. Tema 3.B.11; \href{https://doi.org/10.18601/16571959.n24.02}{\textit{Incorporando los riesgos del siglo XXI en la valuación de marcas.} La Propiedad Inmaterial, 27. SAMPER, L. (2017).}}
+
+
+}
+
+Los países desarrollados muestran un mayor grado de comercio intraindustrial, mayor peso del sector servicios, productos de mayor contenido tecnológico y sectores de mayor valor añadido. Este tipo de sectores suele además mostrar una reducida elasticidad-precio al ser más relevante la calidad y la adaptación a las preferencias de los consumidores. El saldo de las exportaciones netas depende, en gran medida, de:
+\begin{lnum}
+    \item El crecimiento de la renta del país (negativamente, al generar un aumento en las importaciones);
+    \item El crecimiento de la renta de los socios comerciales (positivamente, al generar un aumento en las exportaciones); y,
+    \item La mejora de la competitividad (positivamente, al generar un aumento en las exportaciones). A su vez, la competitividad se puede medir a través de diferentes indicadores, entre otros:
+    \begin{lnum}
+        \item \textbf{Indicadores precio}. El principal es el Tipo de Cambio Efectivo Real, índice que sintetiza la evolución del tipo de cambio y de la inflación de un país respecto de sus socios comerciales. Los índices de precios habitualmente utilizados para calcularlo son el IPC, los CLU's y los precios de exportación, según se quiera estudiar las tensiones inflacionistas generales, las generadas en el mercado de trabajo o las concentradas en el sector exportador. Asimismo, se pueden construir tipos de cambios reales sectoriales;
+        \item \textbf{Indicadores no precio}. La capacidad competitiva de un país también depende de factores estructurales, ínidices que tratan de medir aspectos como la dotación de capital físico, tecnológico (productividad total de los factores, gasto en I+D, patentes), humano (alfabetización, informe PISA, ranking de universidades) e institucional (indicadores de regulación tipo PMR de la OCDE o de clima de negocio como el B-READY del Banco Mundial).\footnote{El índice de facilidad para hacer negocios (\textit{Doing Business}) fue creado en 2004 por el Banco Mundial. Este índice dejó de ser publicado a partir de 2021, luego del escándalo que sacó a la luz la manipulación de datos para mejorar o empeorar las posiciones de determinados países. No obstante, en 2023, el Grupo Banco Mundial sacó adelante un nuevo índice para evaluar el entorno empresarial y de inversión a nivel mundial, el \href{https://www.worldbank.org/en/businessready}{Business-Ready (B-READY)}, que mejora y reemplaza a Doing Business.
+        } En este grupo, también se incluyen indicadores de calidad de las exportaciones, que se puede aproximar por el margen obtenido en el precio de venta sobre los costes variables;
+        \item \textbf{Competitividad ex-post}. La evolución de la cuota de mercado de las exportaciones del país sobre el total de importaciones mundiales sintetiza en un único valor el efecto de todos los determinantes precio y no-precio que inciden en la capacidad competitiva de un país. La descomposición del cambio de la cuota por sectores y países permite conocer si se está ganando (perdiendo) cuota en un determinado país o sector o si es la mera especialización en países o sectores pujantes (maduros) la que explica la mejora (el deterioro) en la cuota. Cabe destacar que siempre es más grave perder cuota de mercado por una contracción de las exportaciones nacionales (efecto numerador) que por el diferencial de crecimiento de las importaciones mundiales (efecto denominador); y,
+        \item Otros indicadores complementarios son el de saldo de la balanza comercial y/o de servicios, la tasa de cobertura (exportaciones sobre importaciones) o la propensión exportadora (exportaciones sobre PIB).
+    \end{lnum} 
+\end{lnum}
+
+También es interesante analizar el contenido importado en las exportaciones de un país, que refleja su participación en las cadenas globales de valor. Así, la participación en sectores integrados en complejas cadenas globales suele estar asociado a mayor valor añadido o calidad que los productos producidos en un solo país, ya que aquellos explotarán mejor la ventaja comparativa de cada país. Pero, al mismo tiempo un elevado peso del valor añadido extranjero en las exportaciones de un país es indicativo de que el país juega un papel menor en el proceso de producción (por ejemplo, el mero ensamblaje: Caso México en el sector automotriz).
+
+\subsubsection{Rentas primarias}
+La renta primaria es el rendimiento recibido por una unidad institucional en contraprestación por su contribución al proceso productivo.\footnote{En la Contabilidad Nacional hay dos cuentas de renta primaria: 
+\begin{la}
+    \item \textbf{Cuenta de generación}. La cuenta de explotación, que registra la producción de renta primaria en el proceso productivo; y,
+    \item \textbf{Cuenta de asignación}. La cuenta de asignación de la renta primaria, que registra la distribución de la renta primaria a los proveedores de factores productivos.
+\end{la}
+En las cuentas internacionales, los flujos de renta primaria están vinculados a la cuenta de asignación de la renta primaria.
+} Consta de tres componentes: 
+\begin{la}
+    \item \textbf{Rentas del capital}. Se elabora de conformidad con la metodología empleada para la elaboración de la cuenta financiera y la Posición de Inversión Internacional. En las rentas del capital no se recogen las entradas o salidas de la inversión (el principal del capital, que se anotará en la cuenta financiera) sino sólo su remuneración, en forma de intereses, dividendos y otros. Generalmente, los flujos brutos de esta partida son los más importantes de la balanza de rentas primarias;
+    \item \textbf{Rentas del trabajo}. Comprende la remuneración en términos brutos de los trabajadores fronterizos, estacionales y temporeros. En todo caso, son trabajadores que se desplazan a un país en el que no son residentes por un periodo inferior al año. Las cuantías se estiman teniendo en cuenta información sobre el país de establecimiento y rama de actividad; y,
+    \item \textbf{Otra renta primaria}. Se registran los impuestos netos de subvenciones ligados a productos (IVA, aranceles) y producción (IAE), que se incorporan directamente al precio de mercado de los bienes. Están asociados a relaciones con organismos internacionales que recaudan impuestos o pagan subvenciones. En España, se incluyen en ingresos las transferencias al sector privado procedentes del Fondo Europeo Agrícola de Garantía (FEAGA), y como pagos las aportaciones a la UE por los llamados recursos propios tradicionales (derechos aduaneros, exacciones agrícolas y cotizaciones sobre el azúcar).
+\end{la}
+
+\subsubsection{Rentas secundarias}
+En la cuenta de rentas secundarias se registran las transferencias corrientes\footnote{Una transferencia es un asiento correspondiente al suministro de un bien, servicio, activo financiero u otro activo no producido por parte de una unidad institucional a otra unidad institucional sin contraprestación económica. Las transferencias pueden ser corrientes o de capital. El objetivo de las transferencias de capital es aumentar el capital productivo de la economía por lo que son transferencias vinculadas a la adquisición de activos fijos (inversión productiva). Las transferencias corrientes persiguen aumentar el nivel de renta disponible del receptor, que puede usarlas libremente para aumentar su consumo o, menos habitualmente, su inversión. La distinción práctica no es siempre sencilla, por lo que el FMI ha optado por definir las de capital y clasificar todas las demás como corrientes. Así, las transferencias de capital son transferencias en las que se traspasa la propiedad de un activo fijo; o que obligan a una de las partes a adquirir o enajenar un activo; o en las que el acreedor condona un pasivo. Es importante distinguir una condonación (transferencia voluntaria para el acreedor) de una cancelación de deuda incobrable, que se anota como otros cambios en volumen de la Posición de Inversión Internacional.
+} entre residentes y no residentes, es decir, transacciones sin contrapartida que afectan a la renta corriente. El país receptor de una transferencia en efectivo lo anota como una transferencia a cobrar (crédito) en la balanza de rentas secundarias y como un aumento de los activos (generalmente depósitos) en la cuenta financiera. Para una transferencia en especie, el receptor anota una transferencia a cobrar (crédito) y una importación de bienes o servicios (débito). En el caso de una condonación de deuda, se anota una transferencia a cobrar y se reduce el pasivo correspondiente. Se distinguen dos componentes principales.
+
+\paragraph{Transferencias personales}
+Las transferencias o remesas personales son transferencias, en efectivo o en especie, entre agentes privados, principalmente hogares. Su componente fundamental son las remesas de trabajadores.
+
+\paragraph{Otras transferencias corrientes}
+El otro componente engloba el resto de transferencias que no formen parte de la anterior (\textit{sensu contrario}). Este componente esta a su vez conformado por las siguientes sub-partidad:
+\begin{lnum}
+    \item \textbf{Cooperación Internacional corrient}. Corresponden a transferencias realizadas en virtud de la cooperación internacional. Estas transferencias (de Cooperación Internacional corriente) comprenden transferencias entre gobiernos de diferentes países o entre gobiernos y organismos internacionales; siendo la principal sub-partida en la mayoría de países. Para los Estados miembros de la UE, las transferencias corrientes más importantes son las relacionadas con el Fondo Social Europeo (ingresos, crédito) y el Fondo Europeo de Desarrollo (pagos, débito). Otra particularidad es que los fondos asociados al programa NGEU destinados a la financiación de gastos corrientes se incluyen en esta subcuenta si el beneficiario son las AAPP (para las ayudas MRR se considera siempre que el sector AAPP es el beneficiario).\footnote{ \href{https://www.bde.es/webbe/es/estadisticas/compartido/docs/notaNGEU.pdf}{Los fondos Next Generation EU (NGEU): cómo se contabilizan en la Balanza de Pagos/Posición de Inversión Internacional}
+    };
+    \item \textbf{Otras transferencias corrientes}. Entre otras: (i) las destinadas a instituciones sin fines de lucro al servicio de los hogares; (ii) las multas, sanciones y compensaciones impuestas por tribunales; y, (iii) los pagos obligatorios a autoridades supranacionales. A esta categoría corresponden las aportaciones a la UE, denominadas recursos IVA y recursos RNB, y también los fondos asociados al programa NGEU destinados a la financiación de gastos corrientes si el beneficiario no es el sector de administraciones públicas;
+    \item \textbf{Otras obligaciones o derechos}. Entre otros: (i) impuestos corrientes (IRPF, Impuesto sobre el Patrimonio, cotizaciones sociales); (ii) prestaciones sociales en el marco de la seguridad social; y, (iii) primas netas e indemnizaciones de seguros de vida y garantías estandarizadas.
+\end{lnum}
+
+\subsection{Cuenta Capital}
+Es un elemento cuantitativamente menos significativo. Este componente puede generar algún desconcierto ya que su propia denominación puede confundir con la cuenta financiera, siendo por completo diferente.\footnote{El término cuenta de capital es por el deseo de mantener coherencia con el SCN que hace una distinción entre las transacciones de capital y las transacciones financieras. En la antigua balanza de pagos había un componente llamado balanza de capital, muy similar a la actual cuenta financiera. Por ello, no debe sorprender ver tal denominación en las antiguas balanzas de pagos y, en algunos manuales de Macroeconomía que comentan que el déficit o superávit corriente se equilibra en la balanza de capital. 
+
+Cuando se encuentre tal situación, piénsese en la cuenta financiera y todo quedará aclarado, ya que la sexta edición del Manual del FMI, con arreglo al cual países como España elaboran la balanza de pagos, se recoge una llamada cuenta de capital que no tiene nada que ver con la de anteriores ediciones, ni con la que se describe en algunos manuales de Macroeconomía. 
+} La cuenta de capital registra los asientos de crédito y débito correspondientes a las transferencias de capital entre residentes y no residentes y la adquisición de activos no financieros no producidos entre residentes y no residentes.
+
+El resultado de la suma de la cuenta corriente y la de capital ha de equilibrarse con la cuenta financiera. En el caso de suma deficitaria, contrayendo pasivos financieros o perdiendo reservas u otros activos, y si se tiene superávit en la balanza corriente más la de capital, adquiriendo reservas u otros activos financieros en el resto del mundo o bien reduciendo los pasivos financieros frente al resto del mundo. Se compone de dos sub-balanzas.
+
+\paragraph{Transferencias de capital}
+La partida de transferencias de capital consiste en la anotación de las tranaferencias vinculadas a la adquisición de activos fijos. Esto es, ayudas para financiar la formación de activos fijos, como las ayudas a la inversión (carreteras, puertos, etc.). En los países de la UE, las más importantes son los ingresos recibidos por las Administraciones Públicas de la UE, en particular, el FEDER, los fondos de cohesión y el FEADER, destinados a inversiones industriales y medioambientales que aumentan la capacidad productiva a medio y largo plazo. Distinguimos entre:
+\begin{la}
+    \item \textbf{Traspaso de efectivo condicionado a la compra de un activo fijo}. En la Unión Europea, los fondos asociados al programa NGEU destinados a la financiación de la inversión se incluyen en la cuenta de capital (en la subcuenta de ayudas a la inversión si el beneficiario es el sector AAPP y en otras transferencias de capital en caso contrario);\footnote{Para las ayudas MRR se considera siempre que el sector AAPP es el beneficiario, dado que las áreas que se prevé financien caen dentro del ámbito de decisión de los gobiernos.
+    
+    \href{https://www.bde.es/webbe/es/estadisticas/compartido/docs/notaNGEU.pdf}{Los fondos Next Generation EU (NGEU): cómo se contabilizan en la Balanza de Pagos/Posición de Inversión Internacional}
+    } y,
+    \item \textbf{Condonación de una obligación}. Debe ser de forma voluntaria ya que la cancelación de una deuda incobrable se registra en la cuenta de otras variaciones de activos y pasivos. 
+\end{la}
+
+En este caso, se anotan como ingresos (crédito) las entradas de recursos, y como pagos (débito) las salidas.
+
+\paragraph{Compraventa de activos no financieros no producidos}
+Por otro lado, la partida de compraventa de activos no financieros no producidos registra las transacciones relacionadas con activos que puedan utilizarse para la producción de bienes y servicios, pero en sí no han sido producidos. Se distingue entre: (i) la compraventa de activos no producidos; y, (ii) transacciones sobre activos intangibles no producidos.\footnote{Téngase en cuenta que su préstamo o alquiler se incluye en la sub-balanza de servicios. 
+} \textsuperscript{,}\footnote{La cuenta de capital del Sistema de Contabilidad Nacional anota la formación de capital de todos los activos físicos, producidos y no producidos. En las cuentas internacionales la cuenta de capital solo incluye transacciones de activos no producidos, no financieros. Pero la tenencia de estos activos no se anota en la Posición de Inversión Internacional porque no hay un pasivo de contrapartida Las transacciones en activos producidos se anotan en las balanzas de bienes y servicios que no distinguen si estos productos están destinados a uso corriente o de capital.
+} Como los activos financieros, los activos no financieros generan un flujo de ingresos futuros para su propietario, pero en este caso no tienen un deudor obligado a realizar tales pagos:
+\begin{lnum}
+    \item Propiedad intelectual no producida (fondo de comercio, marcas, etc.);
+    \item Recursos naturales como tierras, derechos minerales, forestales, de pesca, agua, espacio aéreo y espacio electromagnético; o,
+    \item Contratos, arrendamientos y licencias, como por ejemplo, los arrendamientos operativos, las licencias gubernamentales o los derechos de compra.
+\end{lnum}
+
+Se anotan como ingresos (créditos) las enajenaciones de activos, y como pagos (débito) las adquisiciones.
+
+\subsection{Cuenta Financiera}
+Habiendo obtenido la capacidad o necesidad de financiación de la economía, podemos introducir los últimos tres elementos para cerrar el círculo.
+
+
+\begin{la}
+    \item  ‒ La Posición de Inversión Internacional refleja el valor de los activos y pasivos financieros de una economía al final de un periodo. ‒ Las rentas primarias de inversión computan la remuneración percibida durante un periodo por los tenedores de los activos y pasivos financieros.
+\end{la} 
+
+Estos 3 elementos están estrechamente relacionados: un aumento de las entradas netas de capital registradas en la cuenta financiera se traduciría, ceteris paribus, en un deterioro de la Posición de Inversión Internacional neta, lo cual a su vez producirá un aumento de los pagos por rentas primarias de inversión en la cuenta corriente. 
+
+La cuenta financiera y la Posición de Inversión Internacional de una economía se desglosan en “cuenta financiera y Posición de Inversión Internacional, excepto el Banco Central” y en la “cuenta financiera y Posición de Inversión Internacional del Banco Central”, que veremos a continuación. ‒ La cuenta financiera y la Posición de Inversión Internacional se elaboran de manera coherente con el sector Resto del Mundo de las cuentas financieras, si bien en la Balanza de Pagos y la Posición de Inversión Internacional la clasificación funcional es la primordial y la clasificación por instrumentos es secundaria. ‒ Las categorías funcionales son: la Inversión Directa, la Inversión de Cartera, la Otra inversión, los Derivados financieros y las Reservas.
+
+\subsubsection{Cuenta Financiera: Flujos privados}
+La Cuenta Financiera de la balanza de pagos, que registra las transacciones sobre activos y pasivos financieros que tienen lugar entre residentes y no residentes durante un periodo de tiempo.\footnote{En la cuenta financiera se muestran las transacciones netas, de manera que todos los asientos de débito se amortizan con los de crédito para un activo o pasivo particular, debido a que en muchas ocasiones es difícil conocer los flujos brutos. Sin embargo, esto no significa que los activos se amorticen con los pasivos. 
+}
+
+Las transacciones, saldos y rentas se anotan siguiendo el principio de activos y pasivos. Además, la Cuenta Financiera se forma a partir de diferentes sub-cuentas.
+
+\paragraph{Inversión Directa}
+En primer lugar, la Cuenta de Inversiones Directas, donde se registran las entradas o salidas de capital efectuadas con la pretensión de mantener un interés duradero en empresas de otro país. Por tanto, la Inversión Directa (ID) es la inversión transfronteriza en la que el residente en una economía tiene el control o un nivel significativo de influencia en la gestión de una empresa residente en otra economía. La Inversión Directa incluye:
+\begin{la}
+    \item \textbf{Acciones y otras formas de participación}. Las acciones incluyen también los derechos de suscripción sobre las mismas. Entre las otras formas de participación, se consideran las dotaciones a sucursales, las aportaciones a sociedades en proceso de constitución o a cuenta de ampliaciones de capital y la adquisición de inmuebles. Las rentas correspondientes a este componente son los dividendos;
+    \item \textbf{Beneficios reinvertidos}. La reinversión de beneficios en las empresas participadas se anota, siguiendo el principio de partida doble, como rentas y como transacciones de capital de inversión directa. También dan lugar a un aumento de los activos de la Posición de Inversión Internacional, integrándose en la rúbrica de acciones y otras participaciones directas;
+    \item \textbf{Financiación de empresas relacionadas}. Préstamos entre matrices y filiales o entre filiales de un mismo grupo, siempre que no se trate de instituciones financieras monetarias captadoras de depósitos (en cuyo caso la deuda intragrupo se anota en Otra Inversión o en Inversión de Cartera). Las rentas de este componente son principalmente intereses.\footnote{La Inversión Directa incluye todas las transacciones (y saldos y rentas) de inversión que se deriven de operaciones financieras entre empresas de un mismo grupo (con la excepción de los derivados financieros). El 6MBP da instrucciones precisas para delimitar qué empresas deben considerarse dentro de un mismo grupo.
+    }
+\end{la}
+
+Normalmente, la Inversión Directa se asocia a flujos de inversión con mayor vocación de estabilidad y conducentes a aumentar el capital productivo del país receptor. El \textit{inversor directo} es quien tiene un interés a largo plazo y una influencia significativa en la gestión de la empresa en la que participa, llamada empresa de inversión. Por tanto, lo distintivo es está vocación largo placista, tomando parte en la gestión de la compañía en la que se invierte. El 6MBP sugiere considerar inversor directo al propietario de un 10\% o más del capital de una empresa (igual que la determinación de la condición de filial). 
+
+\paragraph{Inversión en cartera}
+La Inversión de Cartera consiste en la adquisición de títulos negociables (como acciones, bonos, deuda pública o en instrumentos del mercado monetario) en las que el inversor persigue obtener un rendimiento financiero, en forma de dividendo, de intereses o de ganancias de capital, pero no busca ejercer en ningún caso la dirección de la empresa financiada (respecto a las Inversiones Directas, interpretar \textit{sensu contrario}). Como consecuencia, la inversión de cartera es más volátil que la Inversión Directa. Este componente se desagrega en:
+\begin{la}
+    \item Acciones y participaciones en fondos de inversión (las rentas son dividendos y beneficios reinvertidos); 
+    \item Títulos de deuda con vencimiento inicial a más de un año (las rentas son intereses); y,
+    \item Títulos de deuda con vencimiento inicial a un año o menos (las rentas son intereses).
+\end{la} 
+
+La asignación de estas operaciones por sectores se realiza en función del residente emisor en el caso de los pasivos y del residente que suscribe o compra los valores en el caso de los activos.
+
+\paragraph{Derivados Financieros}
+Los derivados financieros incluyen opciones, futuros, warrants y swaps, emitidos en mercados organizados u \textit{over-the-counter} (OTC) que cumplen funciones de cobertura de riesgos, arbitraje y especulación [\authorfont{Ver Tema 3.B.25}], y, \textit{a priori}, debe valorarse según el activo subyacente. La clasificación en activos y pasivos es compleja en la medida en que pueden pasar de una a otra categoría según la cotización del activo subyacente. Por ello, se contabilizan como un neto de variación de activos menos variación de pasivos.
+
+\paragraph{Otra inversión (excluido el Banco Central)}
+Por último la categoría de Otra inversión. Esta es meramente residual y viene constituida principalmente por préstamos y depósitos, créditos comerciales, operaciones de leasing financiero y las cesiones y adquisiciones temporales de valores. Por tanto, registra operaciones comerciales (créditos comerciales), financieras (créditos financieros), a corto y a largo plazo, así como los depósitos de residente en el extranjero (o de no residentes en el país), sin consideración de la moneda en la que se hayan realizado. 
+
+En cualquier caso, la distinción con la inversión de cartera no siempre es clara ya que la motivación primordial del inversor es nuevamente obtener una rentabilidad. Se incluyen como préstamos los créditos de ayuda al desarrollo otorgados por la Administraciones Públicas a otros países para financiar la adquisición de residentes de bienes y servicios. También se incluyen las cuotas de participación de los países en organismos internacionales y una estimación de la entrada neta de billetes denominados en moneda nacional como consecuencia de los movimientos turísticos.
+
+\subsubsection{Cuenta Financiera del Banco Central: Activos y Reservas}
+La cuenta financiera del Banco Central registra las variaciones en activos y pasivos exteriores, incluyendo reservas internacionales y posiciones frente al Eurosistema (en el caso del Banco de España). En esta Cuenta se incluye, por tanto, la variación de reservas internacionales o las transacciones en activos de reserva, que son activos de reconocimiento universal, como el oro monetario,\footnote{Oro cuyo titular son las autoridades monetarias, u otras autoridades sujetas al control efectivo de aquellas, y que se posee como activo de reserva. Incluye el oro en lingotes y las cuentas de oro no asignadas con no residentes que otorgan derecho a reclamar la entrega de oro.
+} los derechos especiales de giro (que pueden utilizarse en sustitución de la moneda extranjera), la posición de reserva en el FMI y activos en moneda extranjera (moneda y depósitos). Se trata, por tanto, de las operaciones relacionadas con activos considerados por las autoridades monetarias como disponibles para compensar los desequilibrios en la balanza de pagos o para regular su magnitud por medio de intervenciones en los mercados de cambio. 
+
+Las operaciones relativas a los activos de reserva \textbf{siempre se anotarán en la columna de variación neta de activos} (con signo positivo cuando incrementen y negativo cuando se produzca una reducción de estos). 
+
+\begin{specialblock}{\textbf{Eurozona y Activos de Reserva} -- Relación de los Bancos Centrales con el BCE y el resto de BCN del Eurosistema}
+    Para los países de la Eurozona, los activos y pasivos exteriores del Banco Central Nacional se desglosan en:
+
+    \textbf{Reservas}.\footnote{Hasta la adopción del euro, la variación de reservas era una partida acomodante, por incluir ciertos activos exteriores, reconocidos internacionalmente, como el oro y algunas divisas, a disposición de las Autoridades Monetarias para financiar o absorber desequilibrios de la balanza, facilitando así el ajuste de los ingresos y pagos con el resto del mundo. La pertenencia de España a la Unión Económica y Monetaria (UEM), con una moneda común (el euro), ocasiona que ya no se produzcan estas entradas y salidas de otras monedas de reserva, sino que ciertos pagos internacionales se efectúen en la propia moneda. Por ello, la partida reservas ahora registra los movimientos en activos líquidos extranjeros, distintos de los de la zona UEM, por ejemplo, las letras del tesoro de Estados Unidos
+    } Siguen desempeñando su papel tradicional de variable de ajuste ante desequilibrios externos pero para el conjunto del área. Además, afectan a la orientación de la política monetaria por lo que cualquier variación de reservas debe ser autorizada por el Banco Central Europeo (BCE). Las reservas no incluyen ningún tipo de activo en euros ni los activos en moneda extranjera que se mantengan frente a residentes de países euro.
+    
+    \textbf{Activos netos del Banco Central Nacional frente al Eurosistema}. Son la principal variable de ajuste a nivel nacional, recogiendo el saldo de los activos mantenidos por esta institución frente al conjunto formado por el BCE y el resto de Bancos Centrales. Por tanto, desaparece la vinculación para los países de la Eurozona entre el saldo del conjunto de operaciones exteriores de la balanza de pagos y las variaciones de sus reservas. Las decisiones del Banco Central Europeo sobre las reservas internacionales están ligadas a los resultados del conjunto del área y no a la Balanza de Pagos de alguno de sus miembros aisladamente considerado. Así, aunque Francia presente un déficit por cuenta corriente, el Banco de Francia no reduce sus reservas sino que aumenta sus pasivos netos frente al Eurosistema, los cuales se ven compensados por el aumento de los activos netos de Alemania y otros países superavitarios del Eurosistema. Sus principales variaciones son las producidas por la liquidación de las operaciones transfronterizas entre residentes y no residentes a través del programa TARGET,\footnote{TARGET: \textit{Trans-European Automated Real-time Gross settlement Express Transfer}.
+    } en cuyas operaciones los Bancos Centrales aparecen interpuestos entre residentes y no residentes. 
+    
+    En resumen, en activos del Banco de España frente al Eurosistema se incluyen los activos mantenidos por el Banco de España frente a los bancos centrales de los otros países de la UEM y frente al Banco Central Europeo. Por ejemplo, cuando un español efectúa una importación de Francia, paga en euros por la importación y se anota una reducción en el saldo de la cuenta del Banco de España en el Banco de Francia, es decir, en el Eurosistema.
+    
+    \textbf{Otros activos y pasivos exteriores}. Incluyen las variaciones de activos y pasivos del Banco de España no considerados en las dos rúbricas anteriores. Los activos incluyen las inversiones del Banco que no pueden considerarse reservas (y que no se realizan frente al Eurosistema), mientras que los pasivos incluyen operaciones como, por ejemplo, la financiación recibida por operaciones de cesión temporal de activos.
+\end{specialblock}
+
+\begin{specialblock}{Cuenta Financiera}
+    \imagenfit{CuentaFinanciera_Ejemplo.png}{La Cuenta Financiera}{Apuntes Víctor Gutiérrez. Tema 3.B.11; \href{https://proview.thomsonreuters.com/launchapp/title/aranz/monografias/116004025/v6/page/RB-11.10}{\textit{Introducción a la Economía Aplicada [Magnitudes y Cuentas Económicas}. Civitas. MUÑOZ, IRÁIZOZ, \& RAPÚN (2020).}}
+    
+    Supongamos un país con déficit corriente por valor de 1.700 ($X<M\to (-1.700)$). En la Cuenta Financiera se observa un incremento de los activos financieros por inversiones directas en $2.000$ (inversiones nacionales en el extranjero: salida de capitales), mientras que por inversiones de cartera aumentan los pasivos financieros en $1.000$ (inversiones extranjeras en la nación: entrada de capitales). Se han recibido créditos comerciales por $6.200$ y se otorgan por $4.200$, por tanto, los pasivos por este concepto aumentan en términos netos en $2.000$. Por estos tres conceptos los pasivos se han incrementado en $1.000$. Finalmente, las reservas se han reducido en $700$. 
+    
+    Por lo que el saldo negativo de la balanza corriente ha dado origen a un incremento de los pasivos con el resto del mundo por valor $1.000$ y a un descenso de reservas por $700$.
+\end{specialblock}
+
+
+\paragraph{Relevancia y Funciones}
+Las reservas internacionales en manos del Banco Central son muy relevantes, pues cumplen, entre otras, las siguientes funciones: 
+\begin{lnum}
+    \item \textbf{Necesidades de Financiación}. Son activos externos controlados por la autoridad monetaria directamente disponibles para satisfacer necesidades de financiación de la Balanza de Pagos, para intervenir en los mercados cambiarios a fin de influir sobre el tipo de cambio y para otros fines conexos (como el mantenimiento de la confianza en la moneda y en la economía y servir como base para el endeudamiento externo). Deben ser denominadas en moneda extranjera emitidos por no residentes y, por norma general, consisten en divisas convertibles ampliamente aceptadas, para asegurar la liquidez (disponibilidad directa o inmediata);
+    \item \textbf{Política Monetaria}. Además, el volumen de reservas internacionales tiene efectos sobre la orientación de la política monetaria: al ser un componente del activo del balance del banco central, un aumento de las reservas (compra de divisas) supone un aumento de la oferta de dinero en circulación (venta de moneda nacional). Si el banco central quiere mantener la oferta monetaria inalterada debe esterilizar la compra de reservas mediante la inyección en el mercado de títulos denominados en moneda nacional.
+\end{lnum}
+
+La acumulación de reservas es principalmente un fenómeno guiado por la demanda, pero también hay que tener presente como se genera la oferta:
+\begin{la}
+    \item \textbf{Demanda}. El motivo precaución es la razón principal por la que los países acumulan reservas: cuantas más reservas acumule el banco central de un país más confianza generará, \textit{ceteris paribus}, en su estabilidad económica, monetaria y financiera, ya que dispondrá de mayor capacidad de intervención para sostener un valor de tipo de cambio o un desequilibrio de balanza de pagos. 
+        
+    En algunos casos, los bancos centrales adquieren divisas por encima del umbral de auto aseguramiento para manipular el tipo de cambio. Así, ante la entrada de flujos de divisas, los países pueden adquirir esa liquidez emitiendo moneda nacional en los mercados internacionales, de forma que la moneda nacional se hace más abundante y se abarata. Según se deprecia la moneda local, los productos nacionales se hacen más competitivos, impulsando las exportaciones en detrimento de las importaciones (muchas economías asiáticas han seguido esta estrategia en tiempos recientes).
+        
+    Finalmente, cabe destacar que los exportadores de materias primas también acumulan las reservas con el fin de crear un colchón para hacer frente a las necesidades de liquidez durante el ciclo bajista en los mercados de materias primas. Dichas reservas, a veces gestionadas por fondos soberanos, sirven también de instrumento de ahorro para generaciones futuras o para desarrollar proyectos de inversión en infraestructuras;
+    \item \textbf{Oferta}. Actualmente, los stocks son elevados como resultado de las elevadas emisiones de Deuda Pública y de las inyecciones monetarias de los países desarrollados (por ejemplo, programas de \textit{Quantitative Easing}  o YCC).
+\end{la}
+
+Según datos del FMI, las reservas internacionales ascienden a 17 billones de dólares en 2022. Los principales tenedores son China (18\% del total), Japón (7\%), la zona euro (6\%), Suiza (4,5\%) y Rusia (3,5\%).\footnote{
+La Posición de Inversión Internacional del Banco Central registra principalmente el stock de reservas internacionales bajo su control y la cuenta financiera del banco central registra las variaciones del saldo. 
+        
+\href{https://es.wikipedia.org/wiki/Anexo:Países_por_reservas_internacionales_en_dólares_estadounidenses}{\textit{Anexo:Países por reservas internacionales en dólares estadounidenses}. WIKIPEDIA.org}
+} El Dólar ocupa el lugar preponderante de las divisas en posesión de Bancos Cetrales (59\% en 2022), seguido del Euro (21\%), el Yen (6\%) y la Libra (5\%).
+
+\subsection{Erroresy Omisiones}
+\textbf{NOTA.-} Los errores y omisiones no son una cuenta
+
+Si bien en principio las cuentas de la balanza de pagos están equilibradas, en la práctica surgen desequilibrios por imperfecciones en los datos fuente y la complicación. Este desequilibrio, que es una característica común en los datos de la balanza de pagos, recibe el nombre de errores y omisiones netos y debe señalarse por separado en los datos publicados. No debe ser incluido en otras partidas sin distinción alguna. ‒ Se derivan de manera residual como el saldo de la cuenta financiera menos la capacidad de financiación de la cuenta corriente y de capital.
+
+EO⏞Erroresy omisiones=CF⏞Cuentafinanciera−CC⏞Cuentacorriente−CK⏞Cuenta decapital
+
+Normalmente, los errores y omisiones se concentran principalmente en la cuenta financiera, por lo que un saldo positivo de errores y omisiones suele ser indicativo de una sobrevaloración de la Variación Neta de Activos (VNA) o de una infravaloración de la Variación Neta de Pasivos (VNP).‒ Una cifra elevada o volátil para los errores y omisiones netos incide en la interpretación de los resultados. Si bien no es posible ofrecer directrices con respecto a una cifra aceptable para los errores y omisiones netos, estos pueden ser evaluados por los compiladores (de ser posible) en relación con otras partidas, como el PIB, los datos de posición y flujos brutos. ▪ En el estado de la PII también pueden surgir discrepancias estadísticas. ‒ Los valores de cierre son por definición igual a los valores de apertura más las transacciones netas más otras variaciones netas en el período. No obstante, si estos componentes se miden de manera independiente podrían surgir discrepancias por imperfecciones en los datos.
+
+
+\subsubsection{Posición de Inversión Internacional}
+El 6MBP aporta un enfoque integrado a la Posición de Inversión Internacional y a la cuenta financiera. El 6MBP recomienda elaborar un estado contable independiente que recoja las variaciones netas no explicadas por las transacciones financieras. Idealmente, esa cuenta debería presentarse en coherencia con las categorías funcionales de la cuenta financiera.
+La variación de la Posición de Inversión Internacional entre dos periodos se expresa como:
+PIIt−PIIt−1=CFt+EVt+OCVt donde: 
+
+‒ t hace referencia a un periodo de tiempo. ‒ EV es el efecto valoración o ganancia de capital: Son modificaciones en el valor monetario de los activos y pasivos, como consecuencia de cambios en su precio o en los tipos de cambio. Por coherencia, las revalorizaciones de los activos se anotan con signo positivo y las de los pasivos con signo negativo. Las devaluaciones se anotan con el signo contrario. ‒ OCV son otros cambios de volumen: Están compuestos por las cancelaciones por reconocimiento de la imposibilidad de recuperación de fondos, por reclasificaciones por las que un activo o un pasivo cambia de condición sin que se produzca una transacción y por cambios de residencia de tenedores o emisores de activos o pasivos. Suele ser poco importante en relación con el efecto valoración. ▪ Las revalorizaciones se deben a cambios en los tipos de cambio y a otros cambios en los precios. ‒ Dado que la PII se elabora en moneda local, las fluctuaciones del tipo de cambio provocan revalorizaciones en aquellos activos y pasivos emitidos en moneda extranjera. Una depreciación del tipo de cambio provocará un efecto valoración positivo en el activo y un efecto valoración negativo en el pasivo. El efecto neto dependerá del peso relativo de los activos y de los pasivos denominados en moneda extranjera.o En los países emisores de moneda de reserva internacional el grueso de los pasivos está denominado en moneda local, por lo que el tipo de cambio afecta principalmente al lado del activo. o En las economías emergentes y menos avanzadas el peso de los pasivos en moneda extranjera suele ser muy significativo y la posición de inversión internacional neta suele tener saldo deudor, por lo que el tipo de cambio normalmente tiene un impacto mayor en el lado del pasivo. En tal caso, una devaluación provocaría un efecto valoración neto negativo que deterioraría el saldo de la PII. ‒ Las causas que provocan con más frecuencia otros cambios en los precios de las participaciones de capital son una mejora de las expectativas de ingresos empresariales o la disminución de la tasa de descuento de éstos o del coste del capital. o En el caso de los títulos de deuda, se observan ganancias de capital ante una caída del tipo de interés libre de riesgo o de la pima de riesgo del deudor. A corto y medio plazo, se observan ganancias y pérdidas de capital en todos los títulos con precio de mercado. Sin embargo, a largo plazo el efecto valoración se concentra en las participaciones de capital, sin fecha predefinida de amortización, pues el valor de mercado de los títulos de deuda tiende a converger con el valor nominal según se aproxima el momento del vencimiento. ▪ La descomposición de la variación de la PII es muy útil para el análisis. ‒ Así, las implicaciones de un aumento de la PII deudora son muy diferentes si éste obedece a flujos financieros o a un efecto valoración. o Por ejemplo, si la captación de recursos externa se ha canalizado mediante la emisión de instrumentos de deuda, se generará un aumento de las obligaciones futuras de pago de los sectores residentes. o En cambio, el deterioro de la PII asociada a una revalorización de los pasivos externos no tiene efecto alguno sobre las obligaciones futuras de pago e incluso podría ser indicativo de unas mejores perspectivas relativas del país respecto de otros. Dicho de otra manera, las revalorizaciones de los pasivos externos no perjudican la sostenibilidad externa de una economía.
+
+
+\clearpage
+\section{Interpretación del Saldo Agregado}
+En este apartado se estudia la estrecha relación de los distintos saldos agregados de la Balanza de Pagos y la Posición de Inversión Internacional entre sí y con las decisiones de gasto, con los flujos financieros y con la evolución de la riqueza de un país. Asimismo, se analizan la naturaleza, riesgos e implicaciones de las posibles desviaciones respecto del equilibrio de Balanza de Pagos a nivel de país y a nivel global.
+
+
+El lado derecho de esta ecuación CC+CK muestra la capacidad o necesidad de financiación de la economía con el resto del mundo, es decir, lo que presta (superávit) o lo que pide prestado (déficit) al resto del mundo. Por otra parte, la cuenta financiera refleja cómo se financia ese superávit o déficit.\footnote{
+Una capacidad de financiación conlleva un aumento en el stock de activos menos pasivos financieros.
+Por el contrario, una necesidad de financiación conlleva una disminución en el stock de activos menos pasivos financieros.
+}
+
+Para los economistas, lo que es relevante es la composición de la balanza de pagos en dos aspectos:
+i.
+El signo de la capacidad o necesidad de financiación y sus implicaciones financieras (i.e. con una cuenta de capital insignificante, un déficit por cuenta corriente persistente significativo implica una disminución continua de los activos menos pasivos netos, es decir, un aumento en la deuda neta sobre el resto del mundo).
+ii.
+La composición de la balanza de pagos para entender las relaciones entre el tipo de cambio y el rol de los “activos de reserva” en la cuenta financiera.
+
+\subsection{Capacidad de ahorro: Brecha ahorro e inversión} 
+Se parte de la Renta Nacional Disponible Bruta (RNDB), definida como el PIB más las rentas primarias y secundarias netas (RN): RNDB=C+I+G+(X−M)⏞ XN⏟ PIB+RN donde el PIB por el lado del gasto (compuesto por el consumo privado (C), la inversión (I), el gasto público (G) y las exportaciones netas (XN, i.e. exportaciones, X, menos importaciones, M)) sumado a las rentas primarias y secundarias netas (RN), da lugar a la RNDB. ‒ Los dos últimos términos de la expresión anterior, constituyen la cuenta corriente, por lo que podemos despejar la cuenta corriente para obtener: CC=(X−M)⏞ XN+RN CC=RNDB−C−G⏟ S−I o Esta expresión indica que un aumento del saldo corriente requiere en principio una reducción del gasto en relación a la renta. Alternativamente, el saldo mejoraría con reformas estructurales que mejorasen la eficiencia de la economía y aumentasen la renta nacional sin alterar el nivel de gasto. o Es importante destacar que todas estas expresiones son identidades que definen relaciones entre variables y no una descripción del comportamiento de los agentes económicos. Así, el gasto va a estar influenciado por el nivel de renta y por tanto, al analizar el impacto de una mayor renta sobre la cuenta corriente hay que atender al efecto que la renta tiene en el consumo y la inversión. o Si definimos el ahorro (S) como la RNDB menos el consumo de las familias y del Estado, el saldo de la cuenta corriente es la brecha entre el ahorro y la inversión. Si hay exceso de ahorro, éste se destinará a financiar inversiones en otro países. Si los fondos ahorrados son insuficientes para financiar toda la inversión interna, entonces la economía deberá pedir dinero al extranjero para financiar el exceso de absorción. Cualquier medida dirigida a alterar la cuenta corriente directamente (p.ej. tipo de cambio, aranceles) necesariamente afectará al comportamiento del ahorro y de la inversión. ▪ Esta concepción de la cuenta corriente nos permite realizar un diagnóstico sobre los efectos de la situación de la cuenta corriente: a. En primer lugar, debemos tener en cuenta que existen diferencias entre el efecto a corto plazo y a largo plazo de variaciones en el ahorro o la inversión: o A corto plazo, un aumento del ahorro tiene el mismo efecto sobre la cuenta corriente que una disminución de la inversión. o Sin embargo, a largo plazo, el efecto puede no ser el mismo. • Así, si la menor inversión conduce a un menor crecimiento potencial, la capacidad de ahorro a largo plazo se vería mermada y el saldo corriente no mejoraría.  Además, la identidad ahorro-inversión nos puede ayudar a identificar si el déficit de una economía obedece a que el país se encuentra en una fase de sobrecalentamiento o de convergencia con países más avanzados (catching-up). o Así, un déficit producido por una ratio de ahorro-PIB inferior a la de otros países comparables, puede ser sintomático de un exceso de gasto corriente (sobrecalentamiento) que debe corregirse mediante políticas fiscales y monetarias contractivas y reformas institucionales que fomenten el ahorro y atraigan capitales del exterior. o En cambio, un déficit producido por una elevada inversión sobre el PIB es más probable que indique que la economía está convergiendo, ya que si la inversión es productiva (normalmente asociada a la inversión en equipo) estaría mejorando la eficiencia y productividad de la economía, con lo que el país lograría hacer frente a sus pasivos al tiempo que mejora su capacidad productiva de forma duradera. En cambio, es más probable que la economía esté sobrecalentada si la inversión está concentrada en un sector no comercializable (como la construcción) y está mayoritariamente financiada a crédito. c. Finalmente, la brecha ahorro-inversión, permite analizar el grado de cumplimiento de la paradoja de FELDSTEIN y HORIOKA (1980), quienes observaron una elevada correlación entre el ahorro y la inversión nacionales, que conducía a saldos por cuenta corriente reducidos. o Esta observación contradice la teoría económica tradicional, según la cual el ahorro de un país debería dirigirse a aquellos proyectos con las mayores oportunidades de inversión a nivel internacional y los prestatarios de cada país deberían pedir prestado a aquellos ahorradores que les financien en condiciones más favorables. o Las causas detrás de la paradoja incluyen la existencia de información asimétrica, el riesgo de tipo de cambio, el riesgo regulatorio, incentivos fiscales, costes de transacción o el patriotismo (en general, existe un home-market bias que hace que los inversores prefieran invertir en su propio país).   o Con la globalización y la liberalización financiera, los saldos por cuenta corriente se han ido ampliando por lo que la paradoja de FELDSETEIN y HORIOKA pierde relevancia (especialmente en regiones muy integradas como la zona euro, la inversión y el ahorro están cada vez menos correlacionados (BLANCHARD, 2002)). d. La expresión se puede desglosar distinguiendo entre el sector público y el sector privado: CC=(SPDO−IPDA)+(SPCO−IPCA) o Esta expresión señala que si el desahorro del sector público no se ve compensado por un ahorro privado de al menos la misma cuantía, la economía tendrá déficit por cuenta corriente. o Cuando el déficit por cuenta corriente está generado por déficit público, se dice que la economía presenta déficits gemelos. • Nótese que las variables a la derecha de la ecuación están interrelacionadas. Por ejemplo, si se consideran subidas tributarias alternativas para corregir el déficit público, hay que tener en cuenta que los efectos serán distintos si el nuevo gravamen recae sobre el consumo (aumentará el ahorro) que si recae sobre la inversión (caerá la inversión).• Aquí es importante destacar el enfoque fiscal de la balanza de pagos, según el cual la causalidad entre ambos déficits es que el déficit público estimula el déficit por cuenta corriente (y no al revés) a través de 2 vías: i) ↓(SPCO−IPCA)⇒↑i, entran capitales, se aprecia la moneda, se pierde competitividad, ↓X. ii) ↓(SPCO−IPCA)⇒↑Y a corto plazo vía multiplicador, ↑M. e. Si un país presenta necesidad de financiación normalmente se deberá a que hay un exceso de absorción interna. No obstante, esta situación no es necesariamente negativa en la medida que la necesidad de financiación venga definida por la senda intertemporal óptima de consumo e inversión y sea sostenible. o Tradicionalmente, se consideraba que la balanza de pagos debía estar en equilibrio en todo momento. Sin embargo, desde los años 80, autores como OBSTFELD y ROGOFF desarrollan el enfoque intertemporal de la balanza de pagos, según el cual, la capacidad o necesidad de financiación de un país es el resultado de la decisión optimizadora de un país dadas las preferencias de consumo intertemporal y el diferencial de productividades del capital en el país y en el extranjero. Si el consumo y la inversión se adaptan a la senda óptima, una necesidad de financiación sostenida en el tiempo es también óptima y proporciona ganancias de bienestar derivadas de la suavización del consumo y de la inversión de la financiación exterior en el capital productivo de la economía. En todo caso, el endeudamiento externo debe presentar una senda no explosiva que garantice su sostenibilidad, tal y como analiza el enfoque hoja de balance.
+
+\subsection{Ajuste Exterior: Rol de las Reservas del Banco Central}
+El equilibrio de las operaciones corrientes y financieras se encuentra resumido en la identidad básica de la Balanza de Pagos: 
+
+CC⏞Cuenta corriente⏟ CB&S+CR1as+CR2as+CK⏞Cuentade capital⏟ Capacidad (+) o Necesidad (−) de Financiación+EO⏞Errores yomisiones=CF⏞Cuentafinanciera⏟ ID+IC+Otra inversión+Derivados⏟ SNC*+ΔR⏟ SNC siendo SNC* la salida neta de capitales excluyendo los movimientos de reservas y ΔR la adquisición neta de reservas. 
+
+Por simplificar la expresión, podríamos dejarlo en: CC+CK⏟ Capacidad (+) o Necesidad (−) de Financiación=CF⏟SNC*+ΔR⏟ SNC o Es decir, los recursos destinados al resto del mundo deben ser equivalentes a la salida neta de capitales. ▪ Está ecuación nos permite estudiar el papel de las reservas como variable de ajuste de la balanza de pagos: ‒ Así, una capacidad de financiación debe reflejarse en un aumento de los derechos netos, que pueden materializarse en la adquisición de activos de reserva por las autoridades monetarias o de otro tipo de activo oficial o privado frente a no residentes. Análogamente, una necesidad de financiación implica que la adquisición de recursos del resto del mundo debe pagarse liquidando las reservas internacionales u otro tipo de activos netos frente a no residentes. Si las reservas son la variable de ajuste ante las transacciones corrientes y financieras de una economía, entonces la variación de reservas se expresa como:ΔR=Capacidad o Necesidad de Financiación−SNC* o Es decir, las reservas se reducen ante una necesidad de financiación y ante salidas netas de capital. Debe tenerse en cuenta que podría producirse una disminución de reservas incluso en países con capacidad de financiación si esta fuese inferior a la salida neta de capitales privados hacia el exterior. ‒ Para los países de la zona euro, la posición del Banco Central Nacional frente al Eurosistema desempeña el papel de las reservas de manera que: ΔTARGET=Capacidad o Necesidad de Financiación−SNC*o El saldo TARGET se deteriora ante una necesidad de financiación y ante salidas netas de capital. En aquellos casos en los que existen problemas de sostenibilidad del déficit exterior, la economía deja de recibir flujos de capital externos para financiar su déficit. ‒ En el caso de que los problemas de balanza de pagos sean temporales, las autoridades monetarias pueden reducir sus activos de reserva, suavizando así el ajuste en la senda de consumo e inversión de los residentes. ‒ Sin embargo, si los problemas de sostenibilidad son permanentes, las reservas tenderán a agotarse. Cuando no hay reservas, la salida neta de capital fuerza un aumento del saldo de la cuenta corriente de la misma magnitud, típicamente a través del impacto negativo que el mayor tipo de interés tiene sobre el gasto de la economía. Los inversores pueden anticipar cuando el gobierno se va a quedar sin reservas y precipitar una crisis de balanza de pagos mediante un ataque especulativo a la moneda local [ver tema 3.B.17]. Huidas de capital muy intensas provocan profundas recesiones con un alto coste social. Las autoridades pueden tratar de diseñar políticas que mitiguen la senda de ajuste: o Una depreciación del tipo de cambio de la moneda nacional puede ser necesaria para corregir un desequilibrio en el saldo comercial. Al encarecer los precios de los bienes importados, la depreciación favorece la sustitución de importaciones por producción nacional y estimula las exportaciones. Sin embargo, el impacto de la depreciación no será duradero si conduce a un aumento del nivel de precios.\footnote{
+\href{https://doi.org/10.53479/29820 / https://repositorio.bde.es/bitstream/123456789/29820/1/be2302-art02.pdf}{\textit{El canal de renta real y las depreciaciones contractivas en un modelo de agentes heterogéneos para América Latina.} Campos, R. G. \& Paz Luque, P. F. (2023). Banco de España.}
+} Por ello, para tener éxito, las políticas de desviación del gasto, como la depreciación, generalmente deben acompañarse de políticas de reducción del gasto, que afecten a la brecha entre ahorro e inversión. o Ajuste fiscal: Un aumento del ahorro público neto, bien a través de subidas de impuestos o rebajas de gasto, puede permitir cerrar la brecha de ahorro e inversión. Sin embargo, un diseño inadecuado del programa de ajuste puede exacerbar el déficit a medio plazo, por ejemplo si se recorta en gasto productivo (como educación o infraestructuras), o si se grava excesivamente la inversión (lo que a la larga dañaría las rentas de la inversión y el ahorro). o Política monetaria: El banco central debe lograr tipos reales suficientemente positivos como para fomentar el ahorro. Es importante destacar el vínculo entre los activos de reserva y las condiciones monetarias internas. Una contracción de las reservas produce, ceteris paribus, una contracción de la base monetaria. A su vez, una política monetaria más restrictiva tiende a corregir los desequilibrios de balanza de pagos mediante aumentos de tipos de interés que reducen la inversión y hacen más atractivos los activos domésticos. Sin embargo, si las autoridades esterilizan la reducción de reservas mediante operaciones de mercado abierto compensadoras de este mecanismo de ajuste automático se podría evitar la contracción monetaria pero a costa de retrasar la corrección del desequilibrio y de aumentar el riesgo de una crisis de balanza de pagos. o Políticas estructurales: Dirigidas a mejorar el potencial productivo y exportador de un país y a atraer financiación del exterior, preferiblemente la Inversión Directa. ‒Una combinación de políticas macroeconómicas conducentes a una senda de crecimiento equilibrado es siempre la mejor manera de evitar problemas de balanza de pagos a medio plazo. No obstante, la literatura sobre la acumulación de reservas por motivo precaución (FMI, 2011) proporciona algunos indicadores simples que pueden servir de guía para valorar si un país tiene un nivel de reservas insuficiente o excesivo para hacer frente a futuros shocks: o Cobertura de importaciones: Tradicionalmente se ha considerado que los países deben disponer de un volumen de reservas que les permita al menos cubrir 3 meses de importaciones. Es una prueba de resistencia sobre la capacidad de las reservas para financiar las importaciones en caso de que el país pierda acceso a sus ingresos por exportación y a las entradas de capital. Es útil para medir los riesgos de países menos
+avanzados con limitado acceso a los mercados de capitales. o Cobertura de deuda a corto plazo (regla “Greenspan-Guidotti”): El saldo de reservas debe cubrir el 100\% de la deuda externa a corto plazo. Es una regla más relevante para economía emergentes con acceso a los mercados de capitales. Como limitaciones de esta regla, es precios mencionar que está orientada a medir riesgos de liquidez pero no de solvencia y que no tienen en cuenta los pasivos externos en forma de acciones o derivados. o Cobertura de la base monetaria: Los países deben tener un volumen de reservas de al menos el 20\% del agregado monetario M2 (efectivo más depósitos a la vista y de ahorro). Pretende reflejar el riesgo de una huida de capitales derivada de una pérdida de confianza de depositantes. Es particularmente relevante para países con tipos de cambio fijos, como currency boards, en los que una merma de confianza en la moneda nacional puede conducir a compras masivas y repentinas de moneda extranjera.
+
+\subsection{Hojas de Balance}
+Frente al análisis tradicional centrado en flujos, el enfoque de la hoja de balance amplía el análisis a las variables de saldos o stocks.
+‒
+Según se ha intensificado la integración de los mercados financieros con los mercados globales, el endeudamiento frente al exterior ha permitido financiar mayores niveles de inversión y ha contribuido a períodos de crecimiento.
+‒
+Sin embargo, la apertura financiera también ha puesto a descubierto la volatilidad de los flujos privados que, en algunos casos, ha conducido a crisis financieras. La estructura financiera de las economías ha sido una importante fuente de vulnerabilidad ante las crisis.
+▪
+Este enfoque proporciona un marco analítico sistemático para analizar cómo las debilidades del balance contribuyen a las debilidades macrofinancieras. Además de
+La hoja de balance de una economía consiste en su stock de activos internos no financieros más su PIIN. Es equivalente a la riqueza total de un país. Se excluyen los activos financieros internos porque son deudas entre unidades residentes que en el agregado se cancelan. La riqueza de un país puede expresarse como: Riqueza=K+PII donde K representa los activos internos no financieros o capital productivo del país. A partir de esta ecuación se obtiene la siguiente expresión de los cambios de valor de la riqueza total: ΔRiqueza=I+CF+EVK+EVF donde I es la inversión bruta o el saldo neto de adquisiciones menos enajenaciones de capital productivo, CF es el saldo de la cuenta financiera, EVK es el efecto valoración del capital productivo del país y EVF es el efecto valoración de la riqueza financiera externa.
+Usando la identidad de la balanza de pagos se obtiene: 
+
+
+Y sustituyendo por la brecha entre ahorro e inversión (CC=Ahorro−Inversión): ΔRiqueza=Ahorro+CK+EVK+EVF
+Esta fórmula indica que un país puede aumentar su riqueza neta solo por 3 vías, de las que sólo controla indirectamente la primera: o aumenta su ahorro, o recibe más transferencias de capital o tiene la fortuna de obtener beneficios extraordinarios en forma de ganancias de capital.
+
+\subsubsection{Sostenibilidad}
+El marco para analizar el riesgo de balance externo se centra en diferentes desequilibrios que pueden comprometer la capacidad de una economía para hacer frente a sus deudas, siendo el riesgo de insolvencia el que ha acaparado la mayor atención. 
+
+Los problemas de solvencia o sostenibilidad surgen cuando los activos (más el valor presente de la corriente de ingresos futuros) son insuficientes para cubrir los pasivos (más los pasivos contingentes). Un saldo deudor de la Posición de Inversión Internacional, puede ser perfectamente sostenible si el país genera superávit exteriores suficientes en el futuro. Para ello, es crucial que las entradas de capital extranjero se dediquen a actividades que aumenten la capacidad productiva del país a un ritmo superior al rendimiento exigido por los acreedores internacionales. 
+
+Formalmente, se puede analizar partiendo de la restricción presupuestaria para un período y entender que el saldo deudor de la Posición de Inversión Internacional en términos del PIB es sostenible si no sigue una trayectoria explosiva. Partiendo de la expresión de variación de la PII y de la identidad básica de la balanza de pagos es inmediato que: $PIIt−PIIt−1=CNFt CFt+EVt+OCVt$ donde: 
+
+t hace referencia a un periodo de tiempo. CF es el saldo de la cuenta financiera, que se igualará a la capacidad o necesidad de financiación (CNF). ‒ EV es el efecto valoración o ganancia de capital. OCV son otros cambios de volumen. 
+
+Se denomina CNF* a la capacidad/necesidad de financiación del país descontando el saldo de rentas primarias de la inversión (RPI), que refleja los ingresos recibidos por los activos exteriores menos los pagos realizados al exterior por los pasivos exteriores: $PIIt−PIIt−1=CNF*t+RPIt+EVt+OCVt$ ‒ A su vez, los ingresos se pueden expresar como el producto de la rentabilidad implícita de los activos (itA) y el stock de activos en el período anterior ($At-1$). Los pagos se definen como el producto de la rentabilidad implícita de los pasivos (itP) y los pasivos del período anterior ($Pt−1$):\footnote{
+
+} 
+
+En economías no sometidas a estrés es razonable pensar que la rentabilidad implícita de los activos es similar a la de los pasivos (itA=itP=it), por lo que la ecuación anterior puede reescribirse como:\footnote{Para economías con una PII y una CNF equilibrada, un tipo de interés implícito de los activos superior al de los pasivos generará un superávit en la balanza de rentas primarias de inversión, y viceversa. Si hay dudas sobre la solvencia del país, la rentabilidad de los pasivos superará a la de los activos y la balanza de rentas primarias anotará un déficit, ejerciendo mayor presión sobre la sostenibilidad del país. En Estados Unidos, se da la paradoja de que mantiene una PII deudora, pero, como los títulos de deuda americana en manos de no residentes pagan unos tipos relativamente bajos, la economía obtiene sistemáticamente un superávit en la balanza de rentas primarias de inversión.
+} 
+
+Si dividimos por el PIB y se presentan en minúsculas las ratios sobre el PIB de las variables anteriores: piit=cnf*t+1+it1+γtY∙piit−1+evt+ocvt donde γtY representa la tasa de crecimiento del PIB. ‒ Para garantizar la sostenibilidad, la ratio PII-PIB debe ser estable en el tiempo (piit=piit−1=pii), de donde obtenemos: cnf*t=γtY−it1+γtY∙pii−evt−ocvt ‒ La variable cnf* representa la capacidad de financiación necesaria para asegurar que el saldo deudor de la PII (nótese que pii<0) es sostenible. La sostenibilidad de los déficit externos depende crucialmente de la ratio de la PII deudora sobre el PIB, de la tasa de crecimiento del PIB y del tipo de interés que conjuntamente determinan el umbral de saldo externo sostenible. 
+
+En concreto, si la tasa de crecimiento del PIB es superior al tipo de interés implícito, el país puede mantener una necesidad de financiación de forma continuada en el tiempo (cnf*t<0),ya que esto sería indicativo de que la financiación recibida se está invirtiendo en capital productivo que genera un rendimiento (en forma de crecimiento del PIB) superior al coste de financiarse. Si el crecimiento es inferior al tipo de interés, la economía necesariamente deberá lograr una capacidad de financiación para que la PII deudora sea sostenible. ‒Por otro lado, si el saldo exterior es inferior a la que delimita el umbral de sostenibilidad de forma temporal, la ratio PII-PIB se estabilizará en un nivel más elevado, lo que aumenta la vulnerabilidad exterior, pero no tiene porqué generar problemas de sostenibilidad. Si el desvío es permanente, entonces en la PII se producirá un “efecto bola de nieve”: el nivel de pasivos tenderá a aumentar, generando incrementos de las rentabilidades exigidas, que conducen a una acumulación mecánica y creciente de pasivos. En los modelos de crisis financieras, la decisión de atacar depende de variables superfluas como la actitud histórica hacia el impago, del nivel de reservas respecto de una referencia arbitraria o del precio de las materias primas para países exportadores. Como los gobiernos no pueden controlar estas variables, deben reducir el riesgo de ataque mediante una combinación coherente de políticas económicas orientadas al crecimiento a largo plazo. 
+
+Los efectos valoración negativos aumentan el umbral de sostenibilidad. No obstante, si se concentran en títulos de deuda, normalmente el efecto será transitorio, ya que cuando se aproxime el vencimiento, el valor del título de deuda tendrá a converger con el valor nominal, anulando el efecto valoración pasado. Si el efecto valoración negativo se produce en las acciones tampoco se pone en peligro la sostenibilidad ya que los dividendos no son rendimientos exigibles que puedan conducir a la insolvencia. 
+En todo caso, es recomendable mantener un saldo exterior suficientemente superior al umbral de sostenibilidad, ya que existe incertidumbre sobre la evolución de las variables macroeconómicas y, en contextos de equilibrios múltiples, un déficit excesivo aumenta el riesgo de caer en el equilibrio desfavorable. 
+
+El enfoque hoja de balance también aborda otros riesgos conexos: 
+
+1)Problemas de la estructura financiera: La mayor dependencia de la financiación en forma de deuda, en vez de acciones, es una fuente muy importante de vulnerabilidad ante las crisis. Así, el pago de los rendimientos de los pasivos de inversión directa o de inversión de cartera en forma de acciones depende de la situación económica del emisor y, por tanto, es sensible al ciclo. En cambio, el pago de los rendimientos de los pasivos instrumentados en deuda (distinta a la vinculada a la inversión directa) es acíclico, lo que genera un mayor riesgo para el emisor, pues el pago del principal e intereses va a ser exigido aunque el deudor atraviese dificultades económicas. Por ello, es conveniente realizar un análisis de sostenibilidad no solo sobre la PII neta, sino también sobre la deuda externa bruta (que considera solo los pasivos de la PII en forma de deuda). 
+
+2) Desajustes de vencimiento (maturity): Surgen cuando los pasivos con vencimientos a corto plazo son superiores a los activos líquidos. Si los acreedores deciden no refinanciar los pasivos de un sector, éste puede verse abocado a la suspensión de pagos. El desajuste de vencimientos también genera riesgo de tipo de interés. 
+
+3) Desajustes de divisa: El endeudamiento en moneda extranjera, si no está cubierta, puede producir pérdidas ante fluctuaciones en el tipo de cambio. Si los activos están denominados mayormente en moneda extranjera y los pasivos en moneda nacional, una depreciación (apreciación) de la moneda nacional tendrá efectos riqueza positivos (negativos) incentivando así un mayor (menor) consumo. Este efecto puede compensar parcial o totalmente el efecto de la depreciación (apreciación) sobre las exportaciones netas y el consumo. En cambio, si los activos están denominados en moneda nacional y los pasivos en moneda extranjera, el efecto riqueza asociado a fluctuaciones del tipo de cambio refuerza el impacto de una depreciación (apreciación) de la moneda nacional. Para economías muy endeudadas en moneda extranjera el riesgo de crisis de balanza de pagos es muy elevado, pues la depreciación necesaria para impulsar las exportaciones netas podría conducir a la insolvencia de los sectores endeudados. 
+
+4) Problemas de solvencia sectoriales: Incluso en países poco endeudados, las deudas entre distintos sectores residentes que generan desajustes de balances son una fuente de vulnerabilidad ante crisis de balanza de pagos. El mecanismo de transmisión opera generalmente a través del sistema bancario interno. Por ejemplo, las dudas sobre la capacidad de un gobierno de hacer frente a sus deudas minará rápidamente la confianza en los bancos tenedores de deuda pública y podría causar un pánico bancario. Lo mismo podría suceder con los bancos que hayan concedido préstamos a sociedades no financieras si éstas se han endeudado en exceso y dejan de ser percibidas como solventes. El pánico cambiario puede manifestarse a través de la retirada de préstamos transfronterizos por parte de acreedores no residentes o de la retirada de depósitos por parte de residentes. De hecho, si esta última eventualidad desemboca en un aumento de la demanda de divisas o de otros activos externos por parte de residentes es posible que se registren salidas financieras y/o pérdidas de reservas. 
+
+5) Problemas de dependencia geográfica: La PII clasificada por países permite identificar el exceso de dependencia en otra economía, así como vulnerabilidades y riesgos de contagio.
+
+\subsection{Desequilibrios Globales}
+Precisamente una amenaza para la estabilidad de la economía mundial viene dada por los elevados desequilibrios externos de las principales economías: 
+
+‒ Algunos países tienen elevados y persistentes déficits por cuenta corriente (como Estados Unidos o Reino Unido, que, en 2015, alcanzaron un déficit de 2,6 y 4,7\%, respectivamente) que se dedican a financiar el consumo más que la inversión. Además, el elevado déficit de Estados Unidos tiene difícil solución: o Por parte de EEUU, la solución pasa por un mayor ahorro, para lo cual es necesario un mayor tipo de interés que no parece que se vaya a dar en el corto/medio plazo. o Por parte de sus acreedores, la solución pasa por dejar de comprar pasivos americanos, pero si lo hacen, el dólar caería, y si el dólar cae, con la cantidad de activos en dólares que tienen dichos acreedores (especialmente China), caería de forma significativa el valor real de sus tenencias de activos en dólares.
+
+Otros países presentan elevados superávits (como Alemania, China y Japón, con superávits de 8,5\%, 3,1\% y 3\% en 2015, respectivamente). ‒ España, por su parte, pasó del entorno de un 1\% de déficit durante gran parte de los años 90, a dispararse a partir de 1998, alcanzando un déficit por cuenta corriente de 9,6\% en el 2007. En el año 2015, el déficit por cuenta corriente fue de en torno al 0,8\% del PIB. 
+
+No obstante, economistas como RICARDO HAUSMANN señalan que los datos de la balanza de pagos no reflejan de manera adecuada los desequilibrios exteriores. En el caso de Estados Unidos, los datos sugieren una progresiva disminución de los activos exteriores netos, por lo que en principio el país se está volviendo más deudor. Sin embargo, HAUSMANN propone tener en cuenta lo que él llama “dark matter”, que se refiere al hecho de que países desarrollados como Estados Unidos obtienen una mayor rentabilidad por sus activos de la que pagan por sus pasivos. Explicación: ‒ La mayor rentabilidad de sus activos se debe a las ventajas tecnológicas y al know-how que incorporan dichos activos. ‒ El menor coste de sus pasivos se explica por la seguridad y liquidez que ofrece la deuda estadounidense.
+
+\imagenfit{Macro_Imbalances_UE.png}{Macroeconomic Imbalance Procedure (MIP) Scoreboard 2024}{\href{https://economy-finance.ec.europa.eu/economic-governance-framework/macroeconomic-imbalance-procedure/scoreboard_en}{European Comission}}
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+\end{document}
