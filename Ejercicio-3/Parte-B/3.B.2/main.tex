@@ -1,0 +1,1276 @@
+\documentclass[10pt,a4paper]{article}
+
+% ----------------- Paquetes -------------------%
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{mathptmx}             
+\usepackage{changepage} 
+\usepackage{setspace}
+\usepackage[spanish]{babel}
+\usepackage[labelfont=bf,labelsep=space]{caption}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ebgaramond}
+\usepackage{placeins}
+\usepackage{etoolbox}
+\usepackage{setspace}
+\usepackage{parskip} 
+\usepackage{tcolorbox}
+\usepackage{needspace}
+\usepackage{xparse}
+\usepackage{ocgx2}
+\usepackage{hyperref}
+\usepackage{hypcap}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% --- Fija primero tus valores globales "buenos" ---
+\setstretch{1.2}                 % Interlineado global
+\setlength{\parskip}{0.7\baselineskip}
+\setlength{\parindent}{0pt}
+\newlength{\GlobalParskip}
+\setlength{\GlobalParskip}{\parskip}
+
+\newcounter{eqnum}[subsection]
+\renewcommand{\theeqnum}{\arabic{eqnum}}
+\newcounter{alphaitem}
+\newcounter{numitem}
+
+%% ------------------- Recuadros----------------------%%
+\newcommand{\puntosclave}[1]{%
+  \begin{tcolorbox}[
+    colframe=black,
+    title={Puntos clave},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+\newcommand{\modificaciones}[1]{
+  \begin{tcolorbox}[
+    colback=white,
+    colframe=red,
+    title={Modificaciones a realizar},
+    before upper={\setlength{\parindent}{0.5cm}\setlength{\parskip}{0.5\baselineskip}}
+  ]
+  #1
+  \end{tcolorbox}
+}
+
+%% ------------------- Preguntas TEST----------------------%%
+% Opciones: radio (single-choice)
+\NewDocumentCommand{\OptRadio}{m m m}{%
+  \noindent\CheckBox[radio,name=#1,value=#2,width=1.2ex,height=1.2ex]{}%
+  \;\textbf{#2.}~#3\par
+}
+
+% Opciones: checkbox (multi-choice)
+\NewDocumentCommand{\OptCheck}{m m}{%
+  \noindent\CheckBox[name=#1,width=1.2ex,height=1.2ex,bordercolor={0 0 0}]{}%
+  \;#2\par
+}
+
+% Pregunta single-choice (radio)
+% Args: 1=id, 2=enunciado, 3=opciones, 4=solución+justificación, 5=imagen (o {}), 6=origen
+\NewDocumentCommand{\PreguntaTestSingle}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+% Pregunta multi-choice (checkboxes)
+\NewDocumentCommand{\PreguntaTestMulti}{m m m m m m}{%
+  \par\medskip
+  \noindent\textbf{#1.}~#2\par\smallskip
+
+    % Imagen (si no es {})
+    \IfBlankTF{#5}{}{%
+      \begin{center}
+        \includegraphics[width=0.75\linewidth]{#5}
+      \end{center}
+    }
+    \begin{Form}
+      #3
+    \end{Form}
+
+    \par\smallskip
+    \switchocg{sol-#1}{\fbox{Mostrar / ocultar solución}}%
+    \hfill{\footnotesize #6}\par\smallskip
+
+    \begin{ocg}{Solución}{sol-#1}{0}
+      \noindent #4
+    \end{ocg}
+  \par\medskip
+}
+
+%% ------------------- Listas----------------------%%
+    % --- Lista alfabética ---
+    \newenvironment{la}
+      {\begin{list}{\alph{alphaitem})}{%
+          \usecounter{alphaitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+    % --- Lista numérica ---
+    \newenvironment{lnum}
+      {\begin{list}{\arabic{numitem}.}{%
+          \usecounter{numitem}%
+          \setlength{\leftmargin}{1cm}%
+          \setlength{\parskip}{3pt}% 
+          \setlength{\itemsep}{0pt}% ← espacio entre ítems
+          \setlength{\parsep}{0pt}%  ← párrafos dentro de un ítem
+      }}
+      {\end{list}}
+      
+% ------------------- Imágenes----------------------%
+    \graphicspath{{Img/}}% Rutas por defecto 
+    % --- Imagen adaptativa ---
+    % Registros de dimensión definidos una sola vez
+    \newdimen\imgcap
+    \newdimen\imgmin
+    \newdimen\imgmax
+    \newdimen\imgremain
+    \newdimen\imgh
+    \newdimen\imgneed
+    
+    \newcommand{\imagenfit}[3]{%
+      \addvspace{10pt}% separación antes
+      \par\begingroup
+        % Parámetros de composición (asignaciones, no \newdimen)
+        \imgcap=1\baselineskip            % alto estimado de título+fuente
+        \imgmin=0.15\textheight
+        \imgmax=0.15\textheight
+        \imgremain=\pagegoal
+        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
+        \advance\imgremain by -\pagetotal
+        \advance\imgremain by -\imgcap
+        % Decisión de altura destino
+        \ifdim\imgremain<\imgmin
+          \newpage
+          \imgh=0.20\textheight
+        \else
+          \imgh=\imgremain
+          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+        \fi
+        % Reservar espacio para evitar cortes del bloque completo
+        \imgneed=\imgh \advance\imgneed by \imgcap
+        \Needspace{\imgneed}
+        % Cuerpo
+        \noindent\begin{minipage}{\textwidth}
+          \centering
+          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
+          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
+          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+        \end{minipage}%
+      \endgroup
+      \par\addvspace{10pt}%
+    }
+
+%------------ Bloque de RECUADRO ESPECIAL -------------%
+    \newenvironment{specialblock}[1]{%
+      \begin{quote} % crea sangría a izquierda y derecha
+      \small % texto más pequeño
+      \noindent\textbf{#1}\\[-0.3em] % título en negrita
+      \rule{\linewidth}{0.4pt}\\[0.6em]}{
+      \end{quote}}
+      
+%-------------------------- Portada -----------------------%
+\newcommand{\oldtitle}[1]{\def\OldTitle{#1}}
+\newcommand{\changerationale}[1]{\def\ChangeWhy{#1}}
+
+\newcommand{\changebox}{%
+\begin{tcolorbox}[title={Historial de cambios del tema}]
+\textbf{Título anterior:} \OldTitle\par
+\textbf{Motivo del cambio:} \ChangeWhy
+\end{tcolorbox}
+}
+
+%-------------------------- Author Font -----------------------%
+    \newcommand{\authorfont}[1]{{\fontfamily{EBGaramond-TLF}\selectfont #1}}
+
+%-------------------------- Anexos -----------------------%
+    \makeatletter
+    \newcounter{anexo}
+    \renewcommand{\theanexo}{\Roman{anexo}}
+    \newcommand{\anexo}[1]{%
+      \clearpage
+      \phantomsection
+      \refstepcounter{anexo}%
+      \noindent\textbf{Anexo \theanexo.- }#1\par\medskip
+      \addcontentsline{stc}{section}{Anexo \theanexo.- #1}%
+    }
+    \makeatother
+
+    %-------------------------- Lista de figuras (personal) -----------------------%
+\makeatletter
+\newcommand{\MyListOfFigures}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Índice de figuras\par}%
+  \medskip
+  % Entrada en nuestro índice de contenido (stc)
+  \addcontentsline{stc}{section}{Índice de figuras}%
+  % Recuperación del listado (sin cabecera propia)
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{lof}%
+  \endgroup
+}
+\makeatother
+
+%-------------------------- Bibliografía -----------------------%
+\makeatletter
+% Contador para las referencias
+\newcounter{myref}
+% Cabecera de la bibliografía, entra en el índice 'stc'
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    \apptocmd{\imagenfit}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{La empresa y las decisiones de inversión\\
+\large Diferentes criterios de valoración de proyectos. Rentabilidad, riesgo y coste del capital}
+\author{Marcelo Ortega}
+\date{Abril 2026}
+\newcommand{\TemaCode}{3B2}
+
+\oldtitle{
+    B.2. La empresa y las decisiones de inversión. Diferentes criterios de valoración de proyectos. Rentabilidad, riesgo y coste del capital
+}
+\changerationale{
+    Sin cambios. Se advierte de que, siguiendo estrictamente el título de este tema, no se deberían de incluir modelos de decisión de inversión en activos financieros, al no constituir formación bruta de capital.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     
+    }
+\vspace{1cm}
+
+\modificaciones{
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+
+\clearpage
+\section{Valoración de proyectos: Rentabilidad y Riesgo}
+\puntosclave{
+    El valor actual neto (VAN) es una herramienta ampliamente empleada para determinar la viabilidad de una inversión, si bien asume perfecta certidumbre acerca del futuro, por lo que se complementa típicamente con otras herramientas como las simulaciones de Montecarlo. 
+    
+    La tasa interna de retorno (TIR) mide la rentabilidad implícita de un proyecto de inversión y, de manera similar al VAN, permite la toma de decisiones en forma de reglas. Sin embargo, su correcta aplicación depende fuertemente de las condiciones del proyecto, por ejemplo, los fondos que genere el mismo se deben reinvertir siempre a la tasa TIR. 
+    
+    Al momento de determinar la viabilidad de un proyecto, dada la existencia deincertidumbre acerca del valor que tomarán ciertas variables que afectan a la viabilidad del proyecto, se ha de complementar el análisis estudiando el riego de dicha inversión mediante un análisis de sensibilidad o stress test. 
+    
+    Todas las metodologías para la evaluación de proyectos han de emplearse de manera complementaria, ya que cada indicador recogerá cuestiones diferentes y no siempre llevarán al mismo resultado. Como en Teoría Microeconómica, las preferencias de los agentes (en este caso, ante cuestiones como el riesgo) serán determinantes para la elección del proyecto de inversión.
+}
+
+
+La inversión en proyectos empresariales cuenta con dos componentes principales: la intertemporalidad y el riesgo. 
+
+La primera, si bien puede resultar trivial, para un economista no lo es, y está relacionada con el concepto de valor temporal del dinero, que puede ser afectado tanto por la inflación como la existencia de inversiones alternativas.\footnote{Oportunidades de inversión con alto retorno y/o una tasa de inflación elevada lleva a que los flujos de caja futuros sean descontados a una tasa mayor que aquellos que un inversor recibe cercanos en el tiempo.
+}
+
+Otro concepto básico que es común a todos los métodos de evaluación de proyectos de inversión es la determinación de los flujos de caja. Sin embargo, su obtención en la práctica puede no ser evidente. En todo caso, se deben considerar tres tipos de flujos de efectivo al evaluar una inversión: (i) flujos de efectivo operativos;\footnote{La contribución de la inversión a las ganancias antes de intereses, impuestos, depreciación y amortización (EBITDA) representa la diferencia entre los ingresos adicionales y los gastos derivados de la inversión, excluyendo la depreciación y la amortización. A partir del EBITDA, se debe deducir el impuesto teórico sobre la ganancia operativa adicional. Luego, se calcula el impuesto real multiplicando la tasa impositiva que soporta el proyecto por la diferencia en la ganancia operativa, teniendo en cuenta los créditos fiscales por pérdidas fiscales.
+} (ii) flujos de efectivo de inversión;\footnote{La definición de inversión es bastante amplia e incluye desde inversiones en working capital hasta inversiones en activos fijos. El working capital se refiere a la diferencia entre los activos corrientes de una empresa (como efectivo, inventario y cuentas por cobrar) y sus pasivos corrientes (como cuentas por pagar y deudas a corto plazo). Representa los fondos disponibles para las operaciones diarias de una empresa y es una medida importante de su liquidez y salud financiera. Un working capital positivo indica que una empresa tiene recursos suficientes a corto plazo para cumplir con sus obligaciones, mientras que un working capital negativo puede indicar posibles desanos de liquidez.
+
+Es esencial deducir los cambios en el working capital del EBITDA. La inversión en activos fijos comprende la inversión en capacidad de producción y crecimiento, ya sea en forma de activos tangibles (maquinaria, terrenos, edificios, etc.) o activos intangibles (investigación y desarrollo, patentes y licencias, capital empresarial, etc.) o activos financieros (acciones en subsidiarias) para el crecimiento externo.
+}  y, (iii) flujos de efectivo extraordinarios. 
+
+
+\subsection{Modelos baseline: Decisiones sin riesgo}
+Empecemos presentando tres metodologías básicas para la evaluación de proyectos de inversión: el VAN (Valor Actual Neto), la TIR (tasa interna de retomo) y el payback. 
+
+Si bien estas herramientas utilizan diferentes enfoques y, no necesariamente, alcanzan los mismos resultados, todas se aplican en las primeras etapas de evaluación y tienen como objetivo estudiar la viabilidad de una inversión. Todas las metodologías para la evaluación de proyectos han de emplearse de manera complementaria, ya que cada indicador recogerá cuestiones diferentes y no siempre llevarán al mismo resultado. 
+
+\subsubsection{Valor Actual Neto: VAN}
+El primero de ellos es el Valor Actual Neto. Constituye una herramienta fundamentada en la valoración intertemporal del dinero y empleamos para determinar la factibilidad de un proyecto de inversión.
+
+Como el VAN implica calcular la diferencia entre el valor presente de los flujos de caja netos generados por la inversión y su valor inicial, se tiene que:\footnote{El VAN también puede representarse en tiempo continúo, de manera que:
+
+$$VAN_{t,s}=CF_{t,s}e^{-(\gamma_{t,s}+\lambda)(s-t)}=CF_{t,s}B(t,s)e^{-\lambda(s-t)}\approx \frac{CF_{t,s}}{(1+\gamma_{t,s}+\lambda)^{s-t}}$$
+
+Siendo $\gamma_{t,s}$la tasa libre de riesgo durante el periodo ($s-t$) y $B(t,s)$ el valor de un bono en $t$ que paga 1 en el momento $s$.
+}
+
+\eqblock{
+\begin{aligned}
+    &\boxed{VAN=-I_0+\sum_{t=1}^T\frac{CF_t}{\prod_{s=1}^{t}(1+r_t)}}\quad \text{donde},
+    \left\{\begin{aligned}
+        &I_0\equiv\text{Coste inicial de la inversión}\\[0.5em]
+        &r_t=(\gamma_t+\lambda):
+        \left\{\begin{aligned}
+            &\gamma_t\equiv\text{\scriptsize Tasa libre de riesgo (en $t$)}\\[0.5em]
+            &\lambda\equiv\text{\scriptsize Prima de riesgo del activo en cuestión}\\[0.5em]
+            &r_t\equiv\text{\scriptsize Tasa descuento o coste capital}
+        \end{aligned}\right.\\[0.5em]
+        &T\equiv\text{Número de periodos}\\[0.5em]
+        &CF_t\equiv\text{Flujo caja previsto : $CF_t=\mathbb E_0[CF_t]$}\\[0.5em]
+    \end{aligned}\right.\\[2em]
+    &\text{si}\quad r_i=r_j,\,\,\forall i,j\in T:i\neq j\Longrightarrow\boxed{VAN=-I_0+\sum_{t=1}^T\frac{CF_t}{(1+r)^t}}
+\end{aligned}
+}{VAN: Fórmula general. Valoración de proyectos de inversión: Rentabilidad}
+
+Por lo tanto, el VAN puede ser considerado una \textbf{media de rentabilidad absoluta}, pues mide el incremento (o disminución) del valor de una firma si la inversión es materializada: se trata de una suma de flujos descontados.\footnote{Aunque en la práctica puede resultar desafiante cuando entramos a calibrar los diversos componentes. 
+
+Por ejemplo, un método básico para definir cuál es la tasa de descuento ($r$) a aplicar en el cálculo del VAN es emplear la curva de tipos de interés del activo libre de riesgo y sumarle una prima en función de las características del proyecto. Por tanto, asumir que el tipo de interés es constante es equivalente a asumir que la curva de tipos de interés es totalmente plana, algo poco realista que aquí presentamos por simplicidad.
+
+Si añadimos el supuesto de que los flujos de caja son constantes intertemporalmente, la expresión del VAN se reduce a: $VAN=-I_0+CF\left[\frac{1-(1+r)^T}{r}\right]$. A partir de este caso pueden estudiarse otros de interés como las perpetuidades o los casos en que los flujos de caja crecen a una tasa constante. Consúltese el capítulo 16 de Vemimmen para estas extensiones.
+} De esta forma, la regla de decisión será la siguiente:
+
+\eqblock{
+\begin{aligned}
+    &VAN>0\Longrightarrow(\checkmark)\,\text{Genera Bº}\Longrightarrow\,\, \uparrow V_T\\[0.5em]
+    &VAN<0\Longrightarrow(\mathrm X)\,\text{Genera Pª}\Longrightarrow\,\, \downarrow V_T\\[0.5em]
+    &VAN=0\Longrightarrow(\cdot)\,\text{No tiene impacto}\Longrightarrow\,\, \sim V_T\\[0.5em]
+\end{aligned}
+}{VAN: Regla de decisión. Valoración de proyects de inversion: Rentabilidad}
+
+En definitiva, la principal virtud del VAN es que reduce/simplifica un proyecto de inversión a una suma de flujos de caja descontados, lo que facilita el análisis objetivo de las alternativas de inversión e introduce inequívocamente el criterio más relevante: la creación de valor para la empresa. Por lógica del arbitraje, sería deseable la ejecución de todo proyecto de inversión cuyo VAN fuese positivo. 
+
+Sin embargo, también presenta graves limitaciones. Por ejemplo, la existencia de fricciones limita la validez de este resultado teórico, ya que la empresa puede no contar con acceso ilimitado al mercado de capitales, pueden existir incompatibilidades entre proyectos, o existir costes de gestión de los proyectos o restricciones de capacidad que harían imposible la ejecución de todo proyecto con VAN positivo. Además, tenemos que tener presente que:
+\begin{lnum}
+    \item \textbf{Tasa de descuento}. La tasa con la cual descontamos los flujos futuros determina el resultado del análisis y sin embargo, generalmente no es observable directamente sino que debe de ser estimada por el analista:\footnote{A esta cuestión dedicamos el último gran apartado de este tema.
+    } debe reflejar el coste de oportunidad de la inversión ajustado por riesgo ya que los proyectos con un elevado nivel de incertidumbre incrementarán el riesgo global de la empresa;
+    \item \textbf{Información completa}. El VAN obvia esto y asume, en su versión básica, que los agentes cuentan con previsión perfecta (tanto en lo que refiere a los flujos de caja como al coste de capital futuros); 
+    \item \textbf{Condiciones inalterados}. El VAN parte del supuesto de que los flujos de efectivo generados por la inversión ocurren a intervalos temporales regulares y se reinvierten a la tasa de descuento. Si bien esto permite una comparación significativa de flujos de efectivo que ocurren en diferentes momentos, tácitamente implica asumir que los flujos de efectivo generados por la inversión pueden ser reinvertidos con una rentabilidad igual a la tasa de descuento;
+    \item \textbf{Flujos de efectivo independientes}. El método del VAN asume que los flujos de efectivo generados por la inversión son independientes entre sí. Sin embargo, es posible la existencia de endogeneidad por lo que la estructura de flujos no sería complemente lineal;
+    \item \textbf{Objetivo único}. El método del VAN asume que el objetivo de la decisión de inversión es estrictamente maximizar el valor actual neto. No considera otros factores no fácilmente monetizables, como consideraciones estratégicas o de responsabilidad social corporativa o potenciales problemas de información y/o de gestión que vengan aparejados a un proyecto determinado, a menos que se incorporen explícitamente en las estimaciones de flujos de efectivo o en la tasa de descuento.
+\end{lnum}
+
+\paragraph{Índice de rentabilidad}
+El índice de rentabilidad de una inversión es una extensión del VAN y se define como el cociente entre dicho indicador para un proyecto $p$ y su inversión inicial $I_0^p$. Formalmente, el índice de rentabilidad de un proyecto, denotado como $R_p$, se escribe como: 
+
+\eqblock{
+\begin{aligned}
+    \boxed{R_p=\frac{VAN_{p}}{I_0^p}}\quad:\quad \underset{\text{\scriptsize riqueza por euro invertido}}{R_p\geq 0\iff VAN_p\geq 0}
+\end{aligned}
+}
+
+Fácilmente se puede observar que el índice de rentabilidad mide una suerte de apalancamiento generado por el desembolso inicial sobre el VAN.\footnote{Así, por ejemplo, si un proyecto genera un VAN de 10€ y su inversión inicial es de 50€, el índice de rentabilidad del proyecto es igual 0.2. En otras palabras, por cada curo invertido se espera obtener un retorno adicional de 0.20 céntimos.
+} Por tanto, hay que tener en cuenta que es complementario al VAN y no sustitutivo a éste: mientras que el VAN mide una rentabilidad en términos absolutos, el $R_p$ lo hace en términos relativos.\footnote{Obvia decir que un índice de rentabilidad más alto no necesariamente implica una mejor inversión. Considere los siguientes proyectos: (i) A, con una inversión inicial y un VAN igual a 2 euros, lo que implica que $R_A =1$; y, (ii) B, que requiere una inversión inicial de 100 y tiene un VAN igual a 160 euros, $R_B = 0.6$. Si ambas inversiones son mutuamente excluyentes, entonces se prefiere la segunda, a pesar de que está tiene un índice de rentabilidad menor.
+}
+
+\begin{specialblock}{Ejemplo -- VAN e Índice de Rentabilidad}
+    Supongamos que existen dos proyectos de inversión A y B que son mutuamente excluyentes, es decir, el inversor solo puede escoger uno de ellos, pues tiene un presupuesto de 80.000 euros. Ambas inversiones tienen un horizonte temporal de 4 periodos (por ejemplo, 4 años) y una tasa de descuento igual al 8\%, donde la tasa libre de riesgo es del 2\%. Según estudios realizados, las inversiones tienen los siguientes flujos de caja netos:
+
+    \begin{center}
+    \begin{tabular}{|p{0.30\linewidth}|p{0.30\linewidth}|p{0.30\linewidth}|}
+    \hline
+    \textbf{Años} & \textbf{Proyecto A} & \textbf{Proyecto B} \\
+    \hline
+    0 & $-50.000$ & $-80.000$ \\
+    \hline
+    1 & $20.000$ & $30.000$ \\
+    \hline
+    2 & $22.000$ & $32.000$ \\
+    \hline
+    3 & $25.000$ & $36.000$ \\
+    \hline
+    3 & $30.000$ & $40.000$ \\
+    \hline
+    \end{tabular}
+    \end{center}
+
+    Dado que ambos proyectos son mutuamente excluyentes, la pregunta que debe responder un analista es cuál de estos proyectos se debería escoger. Para dar respuesta a esta pregunta, el primer paso es computar el VAN de cada inversión:
+    \begin{la}
+        \item Para el proyecto A se tiene que: $VAN_A=-50.000+\frac{20.000}{1.08}+\frac{22.000}{(1.08)^2}+\frac{25.000}{(1.08)^3}+\frac{30.000}{(1.08)^4}=29.785$; y,
+        \item Para el proyecto B es igual a: $VAN_B=-80.000+\frac{30.000}{1.08}+\frac{32.000}{(1.08)^2}+\frac{36.000}{(1.08)^3}+\frac{40.000}{(1.08)^4}=38.033$
+    \end{la}
+    
+    En este ejemplo, para una tasa de descuento del 8\%, ambos proyectos tienen un VAN positivo, por lo tanto, cualquiera de ellos incrementará el valor de la compañía. Pero si la empresa se enfrenta a restricciones financieras y solo puede ejecutar uno de ellos, el análisis del VAN no es suficiente para determinar cuál es la inversión adecuada. En este caso, un analista puede computar el índice de rentabilidad de cada proyecto para mejorar el nivel de información y tomar la decisión más adecuada:
+
+    $$\begin{aligned}
+        R_A=\frac{28.033}{30.000}=0,934\\[1em]
+        R_B=\frac{38.033}{50.000}=0,761
+    \end{aligned}$$
+    
+    Esto significa que por cada euro invertido en el proyecto A se espera obtener $0,934$ euros debeneficio, mientras que, por cada euro invertido en el proyecto B, se espera obtener $0,76$ céntimos. En este caso, el proyecto A tiene un mejor índice de rentabilidad, lo que significa que tiene un mayor rendimiento por cada euro invertido en comparación con el proyecto B.
+\end{specialblock}
+
+
+\subsubsection{Tasa Interna de Retorno: TIR}
+El segundo indicador más popular es la TIR: tasa interna de retorno. Se trata de un indicador financiero utilizado para evaluar la \textbf{rentabilidad implícita de una inversión}. 
+
+Conceptualmente, se trata de la tasa de descuento que hace que el valor presente neto de los flujos de caja de un proyecto sea igual a su inversión inicial. De este modo, la TIR es una tasa de descuento que mide el rendimiento al vencimiento de una inversión: 
+
+\eqblock{
+\begin{aligned}
+    &\boxed{VAN=-I_0+\sum_{t=1}^T\frac{CF_t}{(1+TIR)^t}=0}\\[1em]
+    &\left\{\begin{aligned}
+        &(\checkmark)\quad TIR>r\\[0.5em]
+        &(\mathrm X)\quad TIR\leq r
+    \end{aligned}\right.\qquad \substack{(\text{\scriptsize arbitraje de activos})}
+\end{aligned}
+}{Tasa Interna de Retorno: Componentes. Valoración de proyectos de inversión: Rentabilidad}
+
+Es fácil comprobar la presencia de la lógica de arbitraje: la TIR mide la rentabilidad mínima que se le ha de exigir a un proyecto para generar un valor positivo. Por tanto, auxiliará en la toma de decisiones de inversión por parte de la empresa, dando un criterio objetivo de comparación con la tasa de descuento, que se puede fijar como benchmark del coste de oportunidad.\footnote{Veamos un ejemplo, Suponga que un proyecto requiere uha inversión inicial de $1000\texteuro$ y generará un flujo de caja de $600\texteuro$ y $700\texteuro$ al final del primer y segundo año, respectivamente. Resolviendo la siguiente ecuación:
+$$0=-1.000+\frac{600}{1+TIR}+\frac{700}{(1+TIR)^2}$$
+}
+
+Por tanto, como la TIR compara rentabilidades con costes de capital de manera directa, es un formidable complemento del VAN, en tanto que: (i) permite una medición de la creación de valor en términos de unidades de tipo de interés en vez de en unidades monetarias (sorteando la dificultad de medir la tasa de descuento); y, (ii) permite comparar proyectos con diferentes escalas, en los que el VAN puede sesgar la decisión hacia proyectos más grandes pero menos rentables por euro invertido (de forma parecida al índice derentabilidad). 
+
+No obstante, los supuestos detrás del empleo de la TIR son los mismos que los del VAN y, en consecuencia, sus limitaciones: cuestiones como la ausencia de incertidumbre o de la reinversión a la misma tasa son conflictivos y limitan la validez de una hipotética aplicación mecánica de esta herramienta.
+
+\paragraph{Inconsistencia de la TIR: VAN y TIR}
+Existen dos resultados muy interesantes que podemos obtener al relacionar el VAN y la TIR.
+
+\imagenfit{VAN_TIR.png}{Relaciones VAN-TIR}{Apuntes ICEX-CECO. Tema 3.B.2}
+
+El gráfico de la derecha muestra el VAN como función de la tasa de descuento ($VAN(r)$) para un proyecto cualquiera. Nótese que la TIR es, precisamente, la tasa $r$ que satisface $VAN(r) =0$. En este caso, dado que el VAN es una función monótonamente decreciente de la tasa de descuento, se observa que:
+
+\eqblock{
+\begin{aligned}
+    &\text{Si,}\,\,\forall s\in[t,T]:CF_s>0&&\Longrightarrow\,\,
+    \left\{\begin{aligned}
+        &\forall r<TIR_p\Longrightarrow VAN_p(r)>0\\[0.5em]
+        &\forall r>TIR_p\Longrightarrow VAN_p(r)<0
+    \end{aligned}\right\}\Longrightarrow\,\,\text{Alternativos}\\[1em]
+    &\text{Si,}\,\,\exists s\in[t,T]:CF_s<0&&\Longrightarrow\,\,TIR_p=\{r\in\mathbb R^+:VAN_p(r)=0\}:\#TIR_p>1
+\end{aligned}
+}{Inconsistencia de la TIR: Flujos de Caja no monótonos sobre $t$. Valoración de proyectos de inversión: Rentabilidad}
+
+En palabras: cuando los flujos de caja no son convencionales (cuando los negativos no se acumulan en los primeros $k$ periodos del proyecto y los positivos en los $T-k$ periodos finales), el VAN no es una función decreciente de la tasa de descuento. En consecuencia, existirán múltiples tasas de descuento que hacen que el VAN sea igual a cero.
+
+En este contexto cabría preguntarnos: ¿cuál es la verdadera TIR del proyecto? La respuesta es todas o ninguna, por lo que deberíamos aceptar el proyecto solo si la tasa de referencia está en el intervalo $[TIR_p^1,TIR_p^2]$. 
+
+Estas situaciones dificultan (imposibilitan) la toma de decisiones basado únicamente en este criterio.\footnote{En estas notas nos limitamos al estudio del problema de no-unicidad en la TIR. Sin embargo, otro problema para la aplicación de este método puede ser el de no-existencia. Es decir, no hay una tasa de descuento tal que el VAN se anule. Esta cuestión, y otras, se tratan en el capítulo 17 de VERNIMMEN.
+} 
+
+\paragraph{Punto FISHER: VAN y TIR}
+Por último, es interesante mencionar un importante concepto conocido como punto de FISHER. Asumiendo dos proyectos mutuamente excluyentes con un VAN monótonamente decreciente con respecto al costo del capital e igual periodo de maduración y nivel de riesgo, se define como punto de FISHER a la intersección entre el VAN de ambos proyectos.
+
+\imagenfit{VAN_TIR_2.png}{Punto de FISHER}{Apuntes ICEX-CECO. Tema 3.B.2}
+
+Por tanto, el punto de FISHER es de gran utilidad cuando un analista necesita comparar proyectos que no pueden ser implementados simultáneamente, ya que representa la tasa de descuento para la cual ambas opciones de inversión tendrán el mismo VAN. \footnote{Se puede observar que el punto de FISHER se alcanza para una tasa de descuento igual a $r_A$, la cual se puede obtener matemáticamente como la TIR del proyecto diferencial $VAN_1(r_{TIR})-VAN_2 (r_{TIR})$.
+
+No obstante, también cabe destacar que la tasa de FISHER podría no existir (muy habitual), por ejemplo, si la función $VAN_i(r)$ de cada proyecto son paralelas.
+} De esta forma, el criterio de selección reduccionista sería: (i) si la tasa de descuento es inferior a la tasa de FISHER ($r_A$), se debe optar por el proyecto $1$, ya que $VAN_1(r)>VAN2(r)$; pero, (ii) si la tasa de descuento es superior a dicha tasa ($r_A$), se debe optar por el proyecto $2$. 
+
+Pero con mucha cautela, ya que la validez de esta regla de decisión sufre de las mismas limitaciones que los indicadores que la componen, como los supuestos, ausencia de incertidumbre, y el reduccionismo relativo a las características de los proyectos de inversión. En especial, si se compara proyectos con niveles de riesgo o plazos diferentes, esta herramienta arrojaría resultados potencialmente inexactos. 
+
+En cualquier caso, esto permite ilustrar la relevancia de la sensibilidad del $VAN$ al tipo de descuento empleado así como la importancia de emplear $VAN$ y $TIR$ como indicadores complementarios.
+
+\subsubsection{Regla del periodo de recuperación: Payback}
+La última técnicaque presentaremos para evaluar la rentabilidad de los proyectos de inversión (en certidumbre) es el payback. Este indicador determina el \textbf{tiempo necesario para recuperar la inversión} inicial ($I_0$) y, como tal, se expresa en unidades de tiempo (años o meses) dependiendo de periodicidad de los flujos de caja. En otras palabras: estima el tiempo requerido para que los flujos de caja del proyecto generen, al menos, la inversión inicial. La obtención del payback resulta de despejar $t$ de la siguiente fórmula:\footnote{En caso de que los flujos de caja sean constantes a: $Payback=\frac{I_0}{CF}$
+}
+
+\eqblock{
+\begin{aligned}
+    VAN=0=-I_0+\sum_{t=1}^T\frac{CF_t}{(1+r)^t}\quad\underset{\text{\scriptsize si $CF_i=CF_j,$ $\forall i,j\in T$}}{\Longrightarrow}\quad \boxed{Payback=\frac{I_0}{CF}}
+\end{aligned}
+}{Payback: Priodo de recuperación. Valoración de los proyectos de inversión: Rentabilidad}
+
+Se trata por tanto de un método de evaluación de proyectos adecuado para aquellos casos en que la empresa cuenta con restricciones en su acceso al mercado de capitales (restricciones de liquidez, alto coste del endeudamiento, etc.).\footnote{La manera más sencilla de de aplicar esta herramientas es el establecimiento de un número de años (o meses), que actúe como punto de corte para aceptar o rechazar un proyecto. Luego, si el payback es menor o igual que este valor preestablecido, el proyecto se acepta. Caso contrario, la inversión es descartada.
+}
+
+No obstante, el payback no tiene en cuenta los flujos de caja que se generan después de que la inversión inicial haya sido recuperada y, por tanto, se convierte en una medida limitada para el estudio de la rentabilidad y el riesgo a largo plazo de una inversión; debiendo ser utilizado con los demás instrumentos de valoración de proyectos. Es decir, el payback no tiene por fin determinar la elección del proyecto más rentable (como harían VAN o TIR) sino complementar ese estudio para empresas con dificil acceso a la liquidez, o por grandes empresas que enfrentan proyectos menores.
+
+Además, idealmente debería ser aplicada descontando al presente los flujos de caja futuros. No hacerlo, aunque sea más sencillo y comúnmente aceptado por los analistas, implica un reduccionismo excesivo y únicamente valdría como aproximación en contextos con baja inflación y coste de oportunidad reducido, ya que se está omitiendo el problema intertemporal del valor del dinero.
+
+\begin{specialblock}{Ejemplo -- Payback rule}
+    Supongamos que una empresa está contemplando la instalación de una nueva maquinaria que requiere una inversión inicial de $100.000$ unidades monetarias (UM) y, durante los próximos 5 años, se espera que genere flujos de caja anuales de $30.000$ UM. Para calcular el payback de esta inversión:
+
+    \begin{center}
+    \begin{tabular}{|p{0.30\linewidth}|p{0.30\linewidth}|p{0.30\linewidth}|}
+    \hline
+    \textbf{Año} & \textbf{Flujo de caja} & \textbf{Flujo de caja acumulado} \\
+    \hline
+    0 & $-100.000$ &  \\
+    \hline
+    1 & $30.000$ & $30.000$ \\
+    \hline
+    2 & $30.000$ & $60.000$ \\
+    \hline
+    3 & $30.000$ & $90.000$ \\
+    \hline
+    4 & $30.000$ & $120.000$ \\
+    \hline
+    5 & $30.000$ & $150.000$ \\
+    \hline
+    \end{tabular}
+    \end{center}
+
+    Como vemos, el flujo de caja acumulado alcanza el valor de $100.000$ UM a partir del cuarto periodo. Por lo tanto, el payback de este proyecto es 4. Como se ha mencionado, el payback por sí solo no parece ser suficiente para tomar una decisión acerca de la idoneidad de una inversión sobre otra. Así, por ejemplo, si el valor de referencia para el analista es 5 años, la empresa debería materializar el proyecto (pues la inversión inicial se recupera antes del plazo límite tolerado), ello siempre condicionado a que los valores del VAN y la TIR sean satisfactorios.
+    
+\end{specialblock}
+
+
+\subsection{Extensión: Decisiones con riesgo e incertidumbre}
+Hemos comentado reiteradamente algunas de las limitaciones que enfrentan estos métodos de valoración basados en la rentabilidad del proyecto de inversión. 
+
+Sin embargo, una de sus limitaciones fundamentales es su \textbf{carácter estático}. Estos métodos asumen implícitamente que la decisión de inversión es irreversible y que la información relevante está disponible ex-ante. Sin embargo, en muchos proyectos reales, la información se revela de forma progresiva y las decisiones óptimas pueden variar a lo largo del tiempo. Esta es una derivada lógica de uno de los fenómenos que perturban el mundo real: la información incompleta. 
+
+Presentamos ahora alternativas de valoración en un contexto de información incompleta, que pueden modelizarse esencialmente de dos formas.
+
+\subsubsection{Contingencias futuras: inconsistencias dinámica}
+En primer lugar, mediante problemas de inconsistencia dinámica, en los que una inversión que resulta óptima en el momento inicial puede dejar de serlo una vez se materializa un determinado estado de la naturaleza. 
+
+En este contexto, resulta necesario introducir herramientas que permitan modelizar explícitamente la secuencia de decisiones y la llegada de información, como los árboles de decisión o las opciones reales, que capturan el valor de la flexibilidad y la adaptación.
+
+\paragraph{Riesgo: Árboles de deicisión} 
+El árbol de decisión es un instrumento de gran importancia en el ámbito financiero al posibilitar la evaluación de múltiples alternativas de inversión bajo diversos escenarios, permitiendo ahorrar tiempo y recursos en la selección de proyectos.\footnote{En estas notas limitamos la referencia a los árboles a un instrumento gráfico, Sin embargo, puede emplearse para construir modelos mucho más sofisticados. Como árbol es por definición un objeto matemático/computacional recursivo, y por tanto serviría también como herramienta para otras cuestiones como hacer simulaciones, resolver problemas de optimización dinámica o predecir resultados utilizando machine learning.
+} Un árbol de decisiones se compone de diferentes tipos de nodos, los cuales pueden representar decisiones, riesgo y resultados en una serie de etapas del problema analizado. De esta forma, podemos representar de forma compacta, atendiendo a las normas de la probabilidad, el valor esperado de un proyecto expresado mediante una estructura de árbol como:\footnote{Formalmente, tenemos tres tipos de nodos:
+\begin{la}
+    \item \textbf{Nodos de decisión}. Que simbolizan las opciones de acción disponibles para el inversor;
+    \item \textbf{Nodos de resultado}. Que denotan los resultados finales del proceso de toma de decisiones; y,
+    \item \textbf{Conjuntos de información: nodos de riesgo}. Que ilustran situaciones en las que el resultado no está completamente determinado.
+\end{la}
+}
+
+\eqblock{
+\begin{aligned}
+    \mathbb E[VAN_p]\equiv\max u(n_0):
+    \left\{\begin{aligned}
+        &u(n_i)\equiv\text{Nodo terminal}\\[0.5em]
+        &\sum_ip_iu(n_i)\equiv\text{Conjunto de información}\\[0.5em]
+        &\max_iu(n_0)\equiv\text{Nodos de decisión}
+    \end{aligned}\right.
+\end{aligned}
+}{Árbol de decisión: Valos actual neto del proyecto. Valoración de proyectos de inversión: Riesgo}
+
+Este tipo de análisis brindan una evaluación sistemática y completa de múltiples factores, lo que facilita la selección de la mejor alternativa de inversión considerando tanto la rentabilidad como el riesgo asociado a cada una de ellas, descartando las opciones que no son atractivas y simplificando considerablemente el proceso de decisión; ya que, una vez desestimadas las opciones irrelevantes, el inversor solo tendrá que escoger entre las alternativas del nodo inicial.
+
+No obstante, también presenta cierta limitaciones. En particular, está basado en dos aspectos claves: (i) la elección anticipada del sendero que seguirá el proyecto; y, (ii) la idea de que las decisiones son irreversibles. Sin embargo, en la realidad esto no suele suceder así. En general, a medida que el proyecto avanza, aparece nueva información y, junto con ello, nuevas opciones de inversión.\footnote{Por ejemplo, se podría incorporar nuevas tecnologías, cancelar el proyecto o, simplemente, aplazarlo.
+} Es decir, el proceso de inversión conlleva un grado de flexibilidad.
+
+\begin{specialblock}{Ejemplo -- Árboles de decisión}
+    Consideremos un inversor que debe decidir entre ampliar su planta actual o crear una nueva planta en una locación diferente. Para ambas opciones, el inversor puede escoger entre un emprendimiento \textit{Grande} o \textit{Pequeño}. Los posibles escenarios para cada alternativa se representan en el siguiente árbol de decisión. 
+    
+    \imagenfit{ArbolDecision.png}{Árbol de decisión}{Apuntes ICEX-CECO}
+    
+    Para detenninar qué opción es la más conveniente se debe estudiar una a una cada rama del diagrama. Para ello, primero el inversor debe situarse en la rama izquierda del árbol y analizar los pagos que conlleva realizar una ampliación. Si escoge una ampliación grande, la cual está situada en un nodo de incertidumbre, la inversión tendrá un VAN de $150$ UM con probabilidad $0.5$ y un VAN de $-50$ UM con igual probabilidad. 
+    
+    Por lo tanto, puesto a elegir entre una ampliación grande o pequeña, el inversor debería llevar a cabo una inversión pequeña, pues es la opción con un mayor VAN esperado. Procediendo de igual manera sobre la rama derecha, el inversor encuentra optimo crear una nueva planta pequeña en lugar de una grande, ya que la primera opción tiene un VAN esperado de $271.8$ UM, mientras que la segunda tiene un VAN esperado igual a cero.
+\end{specialblock}
+
+\paragraph{Incertidumbre: Opciones reales}
+Como incrementar u obtener cierta versatilidad en el transcurso de una inversión tiene un valor y éste no se ve reflejado en el análisis convencional, surge la necesidad de incorporar dicho valor en los instrumentos de apoyo a las deicisones de inversión. Las opciones reales son, probablemente, la opción más popular para incorporar estas características temporales de los proectos de inversión. Representan el derecho, pero no la obligación, de modificar un proyecto de inversión ante la disponibilidad de nueva información.
+
+Lamentablemente, si bien muchos proyectos presentan la posibilidad de incluir opciones reales, son especificas al tipo de inversión, lo que hace que presentar una teoría general sobre opciones reales este fuera del alcance. Sin embargo, en la práctica aparecen básicamente tres tipos de opciones reales:
+\begin{la}
+    \item \textbf{Opción de posponer}. En muchas industrias las empresas pueden considerar óptimo retrasar el comienzo de un proyecto hasta que las condiciones de mercado sean propicias (muy característico de nuestro ejemplo del petroleo). En este tipo de negocios los proyectos suelen requerir enormes inversiones y, por consiguiente, son muy sensibles a ciertas variables económicas como los precios o tasa de interés;
+    \item \textbf{Opción de crecer}. A menudo los gestores deben decidir entre diferentes proyectos destinados a ajustar su producción ante posibles incrementos de demanda. Optar por un proyecto previsto para un crecimiento potencial muy alto nos expone al riesgo de que la inversión sea excesiva. Mientras que optar por un ajuste pequeño habida cuenta de un posible incremento alto de la demanda puede exponernos a altos costes si queremos ampliar la capacidad productiva. Así, las opciones reales aparecen como una forma de brindar flexibilidad al proyecto, permitiendo al inversor comenzar con una planta pequeña, pero con la opción de ampliar las instalaciones si el mercado así lo demanda. 
+    \item \textbf{Opción de renunciar a una inversión}. Por último, es importante tener en cuenta la opción de abandonar la inversión en cualquier etapa del proyecto.
+\end{la}
+
+Además, independientemente del tipo de opción y proyecto de inversión que enfrentemos, sí que existen algunos métodos orientativos que podemos utilizar para establecer el \textit{valor} de una opción, uno de los cuales es el modelo de BLACK-SCHOLES. 
+
+\eqblock{
+\begin{aligned}
+    &[\text{Opción de posponer}\,|\,\text{Opción de crecer}\,|\,\text{Opción de renunciar}]\\[1em]
+    &\left.\begin{aligned}
+        &(1)&&S^*=S-V(CF_t)\\[0.5em]
+        &(2)&&V(I_0)=\frac{I_t}{(1+r)^t}\\[0.5em]
+        &(3)&&d_1=\frac{\ln[S^*/V(I_0)]}{\sigma\sqrt{t}}\\[0.5em]
+        &(4)&&d_2=d_1-\sigma\sqrt{t}
+    \end{aligned}\right.\quad \text{donde,}
+    \left\{\begin{aligned}
+        &S^*&&\equiv\text{Valor actual del activo}\\[0.5em]
+        &V(I_0)&&\equiv\text{Valor actual de la inversión pospuesta}\\[0.5em]
+        &d_1&&\equiv\text{\textit{Cúan probable es ganar dinero}}\\[0.5em]
+        &d_2&&\equiv\text{\textit{Cuánto influye la opción en el subyacente}}\\[0.5em]
+        &N(d_j),\,j=1,2&&\equiv\text{Distribución acumulada para $d_j$}\\[0.5em]
+        &\sigma&&\equiv\text{Volatilidad sector}\\[0.5em]
+        &t&&\equiv\text{Decisión final}
+    \end{aligned}\right.\\[2em]
+    &\text{Valor de la opción}:\boxed{C=\overset{\scriptsize{\text{(Valor de posponer)}}}{\underbrace{S^*\cdot N(d_1)}_{\scriptsize{\text{$\mathbb E_t[VAN_{t+1}]$ ponderado por exposición}}}}-\overset{\scriptsize{\text{(Coste de posponer)}}}{\underbrace{V(I_0)\cdot N(d_2)}_{\scriptsize{\text{ $\mathbb E_t[I_t]$, ponderado por la probabilidad de ejercer la opción}}}}}\\[0.5em]
+    &\hspace{8em}\Longrightarrow\text{si,}
+    \left\{\begin{aligned}
+        &C<\mathbb E_0[VAN]\Rightarrow\text{No posponer}\\[0.5em]
+        &C\geq\mathbb E_0[VAN]\Rightarrow\text{Posponer}
+    \end{aligned}\right.
+\end{aligned}
+}{Valoración opciones reales: Modelo BLACK-SCHOLES. Valoración de proyectos de inversión: Incertidumbre}
+
+En resumen, las opciones reales otorgan flexibilidad a los proyectos al permitir posponer, abandonar o ampliar una inversión y están implícitamente consideradas en cualquier proyecto de inversión. 
+
+\begin{specialblock}{Ejemplo - Opciones reales}
+    Considere un proyecto que consiste en sembrar 500 hectáreas de trigo. Antes de comenzar, el inversor tiene la opción de no invertir, lo que le dará un valor de O UM. Sin embargo, si el proyecto se materializa, se deben desembolsar 1000 UM. Si esto sucede, el inversor puede obtener 2500 UM si el clima es bueno o -200 si el clima es desfavorable. Ambas alternativas pueden ocurrir con una probabilidad de 0.8 y 0.2, respectivamente. Mediante un esquema de árbol, el proceso de inversión puede representarse de la siguiente manera:
+
+    \imagenfit{OpcionesReales_1.png}{Arbol horizontal: Opciones reales}{Apuntes ICEX-CECO. Tema 3.B.2}
+
+    Asumiendo que la tasa de interés es igual a cero, o lo que es lo mismo, que el valor intertemporal del dinero no cambia, el VAN esperado de esta inversión esta dado por E(VAN) = -1000 + 0.8 (2500) - 0.2(200) = 96 0 UM y, por lo tanto, de no existir restricciones a la financiación o de otro tipo, el proy ecto debería llevarse a cabo. Ahora, suponga que el inversor tiene la posibilidad de no ir al campo a controlar su cultivo una vez que conoce cómo será el clima. Así, por ejemplo, después de haber invertido 1000 UM y observar que el clima es desfavorable, el inversor puede quedarse en su casa y sortear la pérdida extra de 200 UM. Observe que el inversor también tiene la opción de quedarse en casa si el clima es bueno, pero claramente esta opción no es atractiva para él. Bajo esta nueva modalidad, el proceso de inversión se puede representar mediante un diagrama de árbol con la inclusión de dos nodos de decisión adicionales:
+
+    \imagenfit{OpcionesReales_2.png}{Árbol horizontal: Opciones reales (extendido)}{Apuntes ICEX-CECO. Tema 3.B.2}
+
+    Tener la opción de sortear la pérdida de 200 UM cuando el clima es desfavorable, tiene un valor monetario para el inversor. Si este es neutral al riesgo, el máximo valor que el inversor estaría dispuesto a pagar por esta opción real se computa comparando el valor monetario de la inversión sin flexibilidad (960 UM) y con flexibilidad, donde el valor esperado de la inversión con flexibilidad asciende a E(VA N) = -1000 + 0.8 ( 2500) = 1000 UM. Por lo tanto, el inversor estaría dispuesto a pagar hasta 40 UM por tener la opción de no controlar el cultivo cuando el clima es desfavorable
+    
+\end{specialblock}
+
+
+\subsubsection{Contingencias futuras: errores de estimación y sucesos adversos}
+Otra de las formas de incorporar información incompleta en la valoración de los proyectos es mediante la imposibilidad de anticipar correctamente todas las contingencias relevantes. En la práctica, los flujos de caja, las tasas de descuento o incluso la propia estructura del proyecto están sujetos a errores de estimación y a la ocurrencia de sucesos adversos no previstos. 
+
+En este sentido, el problema no radica tanto en la secuencia de decisiones como en la robustez del análisis ante desviaciones respecto al escenario central. Para abordar esta cuestión, se recurre a herramientas como el análisis de sensibilidad o las simulaciones de Montecarlo, que permiten evaluar cómo varían los resultados del proyecto ante perturbaciones en los supuestos iniciales, proporcionando así una medida más realista del riesgo asociado a la inversión.
+
+\paragraph{Riesgo: análisis de sensibilidad}
+El análisis de sensibilidad permite al inversor identificar aquellas variables críticas que influyen en el desempeño financiero de un proyecto, mejorando la gestión de riesgo y la toma de decisiones durante el proceso de inversión. En otras palabras, el propósito del análisis de sensibilidad es reconocer los elementos que contribuyen al éxito o fracaso de una inversión y medir cuánto lo hacen de manera marginal. 
+
+De esta forma, el tipo de pregunta que buscamos responder con esta metodología son: ¿cuál es el escenario de costes que hace que el VAN de una inversión sea cero? ¿Cómo varía la TIR ante una caída de la demanda de un 10\%? ¿Los flujos de caja son sensibles a variaciones en los precios? 
+
+Por tanto, el análisis de sensibilidad se realiza modificando una (algunas) variable(s) a la vez, lo que nos permite valorar con claridad el impacto de los cambios sobre la viabilidad del proyecto.\footnote{Es posible realizar un análisis de sensibilidad de dos o más variables simultáneamente a fin de examinar cómo la interacción de estas variables afecta la viabilidad del proyecto. Sin embargo, es importante tener en cuenta que el análisis de sensibilidad de dos variables es considerablemente más complejo que estudiar una variable a la vez y se requiere un cuidadoso análisis para obtener resultados precisos y confiables.
+} No obstante, también dificulta su formulación general puesto que estas \textit{modificaciones} pueden influir sobre el resultado de muy diversa manera y forma, no solo por incidir sobre diferentes variables sino también en función del instrumento sobre el que llevemos a cabo el análisis.
+
+Con el fin de simplificar la exposición, podemos decir que el análisis de sensibilidad se podría llevar a cabo sobre el VAN, teniendo en cuenta las diferentes variables de las que pueden depender cada uno de los componentes de la fórmula:
+
+\eqblock{
+\begin{aligned}
+    VAN_p=-I_0+\sum_{t=1}^T\frac{CF_t}{(1+r)^t}\quad\text{donde,}
+    \left\{\begin{aligned}
+        &CF(\succsim,\,CT(q),\,\text{Mkting},\,\text{Regulación},\,\cdot)\\[0.5em]
+        &r=(\gamma+\lambda)\\[0.5em]
+        &I_0=\mathbb E_t[I_0]+\underset{\text{\scriptsize componente no esperado}}{\Delta \mathbb E_t[I_0]}
+    \end{aligned}\right.
+\end{aligned}
+}{Análisis de sensibilidad: Alteraciones sobre el cálculo del VAN. Valoración de proyectos de inversión: Riesgo}
+
+Por ejemplo, si una pequeña caída en la demanda de los productos ($\succsim$) vuelve el VAN negativo, se dice que el proyecto es muy sensible o riesgoso a variaciones en la demanda. En síntesis, el análisis de sensibilidad es de vital importancia para una gestión adecuada del riesgo al identificar aquellos factores que podrían influir en el éxito del proyecto. De hecho, una vez tomada la decisión, el conocimiento de estos factores de riesgo resulta de gran utilidad en la elaboración de estrategias de cobertura ante cualquier eventualidad.\footnote{Aunque en muchas ocasiones el peor escenario contemplado puede no ser el más adverso en la práctica. 
+
+Un caso emblemático es el caso del Eurotúnel que conecta el Reino Unido y Francia a través del Canal de la Mancha. Este túnel fue inaugurado en 1994 y es considerado corno una de las obras de ingeniería más impresionantes del mundo. Sin embargo, el análisis de sensibilidad fue ejecutado de manera incorrecta. No solo la estimación de los costes fue casi dos veces menor a los costes soportados en la finalización del proyecto. sino que el pronóstico sobre la demanda del servicio durante el primer afio fue de 17 millones de pasajeros. aunque solo fue utilizado por 4 millones de personas generando enormes pérdidas que no fueron contempladas.
+}
+
+Sin embargo, también enfrenta sus limitaciones. En concreto, cabe destacar que: (i) omite correlaciones, ya que al realizar un análisis individual del impacto que tienen las variables relevantes sobre la rentabilidad de la inversión omite las correlaciones que puedan existir entre diferentes variables (que suelen ser comunes en la práctica);\footnote{Por ejemplo, cambios en los costes de los insumos, podrían estar asociados a cambios en el coste de financiamiento o a variaciones en la demanda.
+} y, (ii) no proporciona probabilidades de manera directa, ya que las alteraciones son ajustadas por el analista (discrecionales)
+
+\begin{specialblock}{Ejemplo -- Análisis de sensibilidad}
+    Consideremos que un analista está evaluando una inversión que requiere un desembolso inicial de 1000€ y, además, se espera que genere los siguientes flujos de efectivo netos:
+
+    \begin{center}
+    \begin{tabular}{|p{0.45\linewidth}|p{0.45\linewidth}|}
+    \hline
+    \textbf{Año} & \textbf{Flujo de caja}\\
+    \hline
+    0 & $-10.000$ \\
+    \hline
+    1 & $300$ \\
+    \hline
+    2 & $500$ \\
+    \hline
+    3 & $600$ \\
+    \hline
+    \end{tabular}
+    \end{center}
+
+    Asumiendo una tasa de descuento del 10\%, el proyecto tendrá un VAN igual a:
+
+    $$VAN=-1.000+\frac{300}{(1+0,1)}+\frac{500}{(1+0,1)^2}+\frac{600}{(1+0,1)^3}$$
+
+    Lo que sugiere que el proyecto es rentable al ser el valor presente de los flujos de caja mayor a la inversión inicial. Ahora, suponga que el analista recurre al análisis de sensibilidad para determinar cuán sensible es este proyecto ante cambios en la tasa descuento. Para ello, se asume la tasa de descuento puede asumir el siguiente rango de valores,
+
+    \begin{center}
+    \begin{tabular}{|p{0.45\linewidth}|p{0.45\linewidth}|}
+    \hline
+    \textbf{Tasa de descuento} & \textbf{VAN}\\
+    \hline
+    10\% & $136,74$ \\
+    \hline
+    13\% & $72,89$ \\
+    \hline
+    14\% & $52,87$ \\
+    \hline
+    15\% & $33,45$ \\
+    \hline
+    16\% & $14,59$ \\
+    \hline
+    17\% & $-3,71$ \\
+    \hline
+    18\% & $-21,49$ \\
+    \hline
+    19\% & $-38,77$ \\
+    \hline
+    \end{tabular}
+    \end{center}
+
+    En la tabla se puede apreciar que el VAN decrece con la tasa de descuento. En particular, si la tasa de descuento es menor al 16\% el proyecto tiene un VAN positivo, mientras que si es mayor el proyecto deja de ser rentable.\footnote{Para ser exactos, la TIR de este proyecto es igual a $16,85$
+    } Por consiguiente, dado que hoy el coste de oportunidad es del 10\%, se podría decir que, bajo condiciones económicas normales, el riesgo ante cambios en la tasa de interés es bajo, pues los intereses deberían incrementarse al menos un 60\% para que el proyecto deje de ser rentable. 
+    
+    Además, el analista podría evaluar, por ejemplo, qué tan sensible es el proyecto ante cambios en el flujo de caja recibido en el periodo 3. Aplicando la definición del VAN, el mínimo valor que puede asumir $CF_3$ para que el proyecto sea viable es, $CF_3\geq\left[1000-\frac{300}{1,1}-\frac{500}{(1,1)^2}\right](1,1)^3=418$.
+    
+    Entonces, el proyecto tendrá un VAN positivo solo si $CF_3 \geq 418$ y, por lo tanto, este valor puede tomarse como un valor de corte o referencia para $CF_3$ .
+    
+\end{specialblock}
+
+
+\paragraph{Incertidumbre: Método de MONTECARLO}
+Para abordar estos problemas de manera más efectiva, sorteando las limitaciones del análisis de sensibilidades podemos recurrir al método de MONTECARLO. 
+
+El método de MONTECARLO es, probablemente, el instrumento más utilizado en la modelización y estimación en el ámbito de las ciencias sociales (y, a menudo, también en ciencias puras). Se trata de un método no determinista usado para aproximar problemas complejos y costosos de evaluar con exactitud.\footnote{Para ver toda la información al respecto: [\authorfont{Ver Tema 3.A.9}], donde se recopila toda la información al respecto para la oposición. 
+
+También: \href{https://ocw.mit.edu/courses/6-0002-introduction-to-computational-thinking-and-data-science-fall-2016/resources/lecture-6-monte-carlo-simulation/}{Lecture 6: Monte Carlo Simulation. MIT (opencouse)} y, \href{https://www.youtube.com/watch?v=L5uAPOE8lMM}{Monte Carlo Simulation to Assess Net Present Value (Youtube.com)}
+}
+
+En nuestro contexto, el método Montecarlo nos permitiría obtener una distribución de probabilidad para el VAN que facilite la evaluación del riesgo asociado a la inversión, a partir de diferentes sendas de comportamiento para las variables relevantes, como los ingresos, costes y tasa de descuento. El procedimiento para aplicar el método de Montecarlo se puede resumir de la siguiente manera: 
+\begin{lnum}
+    \item Identificar las funciones de probabilidad que mejor se ajusten al comportamiento de las variables bajo estudio;\footnote{Por ejemplo, precio de venta, costes, tasa de descuento, etc. Para este proceso, es muy importante reunir toda la información disponible y utilizar el análisis estadístico
+    }
+    \item Una vez que se ha identificado la distribución de probabilidad de las variables relevantes, se deben producir las sendas esperadas para dichos parámetros;
+    \item Proceder al cómputo del VAN para cada uno de los escenarios obtenidos mediante simulación; y,
+    \item Analizar los resultados y evaluar en función de los objetivos. 
+\end{lnum}
+
+Por tanto, el método de Montecarlo brinda la posibilidad de analizar el impacto que un conjunto de variables tiene sobre la viabilidad del proyecto. En consecuencia, un analista es capaz de identificar las correlaciones existentes entre las variables de interés y a enfocar su atención en aquellos aspectos claves que impulsan el valor del proyecto. 
+
+No obstante, la aplicación del método de Montecarlo al cálculo del VAN puede llegar a ser un proceso complejo y presentar algunas limitaciones.\footnote{Por ejemplo, la precisión del análisis depende de manera crucial del proceso de identificación de las distribuciones de probabilidad de las variables relevantes. Si estas distribuciones no se ajustan adecuadamente a la realidad, los resultados pueden ser inexactos y/o sesgados. Otro factor importante es la magnitud de la muestra utilizada en el proceso de simulación. Si el tamaño de la muestra utilizado es demasiado pequeño, el comportamiento de la población podría no verse reflejado en el proceso de simulación, lo que podría inducir al analista a tomar decisiones equivocadas. Finalmente, aunque es posible recurrir a la implementación de software especializado que facilite la generación de los datos de entrada, la realización de grandes simulaciones (o complejas) puede limitar la velocidad y eficiencia del análisis.
+} En resumen, el método de Montecarlo es una herramienta útil para modelar diferentes escenarios y resultados financieros que un proyecto puede soportar con el fin de precisar los riesgos asociados a la inversión. Asimismo, como ocurre con el análisis de sensibilidad, la aplicación del método de Montecarlo posibilita el reconocimiento de factores claves que impulsan el valor del proyecto. 
+
+
+
+
+\clearpage
+\section{Coste de capital}
+\puntosclave{
+    Computar correctamente el coste del capital es clave para la correcta actualización de flujos de caja. Por lo tanto, la precisión con la cual se estima el coste del capital determina la fiabilidad del VAN ,como criterio de selección de proyectos. 
+    
+    El coste del capital se puede estimar, básicamente, a través de dos metodologías: el método directo y el método indirecto. Estas metodologías no necesariamente arriban al mismo valor del coste del capital. 
+    
+    El WACC de la empresa debe emplearse como tasa de descuento si y solo si el proyecto conlleva un nivel de riesgo similar al de la compañía.
+}
+
+
+Ahora que conocemos las diversas herramientas que tiene al alcance un inversor para evaluar la factibilidad de un proyecto, debemos abordar un tema crucial: ¿qué tasa de descuento es la apropiada para el proyecto? Recordemos que la tasa de descuento o coste del capital representa el coste de oportunidad que conlleva comprometer una cantidad de dinero a un proyecto así como también el riesgo que supone el empréstito, puesto que si no lo tuviera en cuenta, cualquier alternativa de inversión libre de riesgo sería una opción mejor que se vería encubierta por su omisión. De esta forma, recuperamos la formulación inicial de la tasa de descuento, de manera que:
+
+\eqblock{
+\begin{aligned}
+    \boxed{r_t=(\gamma_t+\lambda)}\quad \text{donde,}
+    \left\{\begin{aligned}
+        &\gamma_t&&\equiv \underset{\text{\scriptsize o, alternativamente, se puede entender como el coste de oportunidad de la inversión}}{\text{Rentabilidad del activo libre de riesgo}}\\[0.5em]
+        &\lambda&&\equiv\underset{\text{\scriptsize incorpora implícitamente el riesgo}}{\text{Prima de riesgo}}
+    \end{aligned}\right.
+\end{aligned}
+}{Tipo de descuento: Coste de oportunidad y prima de riesgo. Coste del capital: WACC}
+
+Por tanto, la valoración entre diferentes alternativas dependerá, esencialmente, del \textbf{riesgo}. 
+
+Para ilustrar esto, pensemos en dos alternativas que puede tener una empresa: (i) mejorar su precario sistema de almacenamiento en la Planta A, que evitaría el deterioro de sus existencias; o, (ii) construir una nueva planta, en vistas a un aumento de la demanda de su producto, la Planta B. Es normal pensar, que la mejora del almacenamiento no acarrea ningún riesgo, mientras que la abertura de una nueva planta anticipándose a un posible aumento de la demanda de su producto sí es un proyecto que acarrea riesgo implícitamente. Por tanto, mientras que el primero requiere que el $VAN(\gamma_t)$ se superior al $VAN(\gamma_t)$ esperado de un activo libre de riesgo; el segundo necesita que el $VAN(\gamma_t+\lambda)$ esperado sea superior al obtenido por un activo alternativo libre de riesgo $VAN(\gamma_t)$.
+
+\textbf{¿Qué queremos decir?} El objetivo de esta parte es abordar las metodologías a través de las cuáles medir el coste del capital ($r$), discutiendo diferentes problemas teóricos y prácticos que pueden surgir en este proceso. Anticipamos que, como puede haberse deducido, los principales problemas surgen de la falta de datos precisos, la elección de las tasa libre de riesgo, la selección de la estructura de capital adecuada y la estimación de la prima de riesgo. Por ello, se utilizará una variable estrechamente relacionados con el coste del capital o tasa de descuento, pero que no presenten tantos problemas de estimación: el \textbf{coste promedio del capital} (WACC, por sus siglas en inglés). Este concepto, crucial en el ámbito de las finanzas, se refiere al retorno mínimo que una empresa debe lograr para compensar a sus inversores, incluyendo a los tenedores de acciones (coste del equity) y bonos (coste de la deuda) y puede estimarse mediante un método directo y uno indirecto.\footnote{Es decir, estamos entendiendo capital de manera similar al factor $K$ en términos microeconómicos: fuentes de financiación de la actividad de la empresa. Distinguimos únicamente entre \textit{equity} (o capital accionarial) y \textit{deuda}, aunque existen otras fuentes de financiación como la deuda bancaria, beneficios no distribuidos o los accionistas preferentes; pero por simplicidad y sin pérdida de generalidad empleamos las dos anteriores sensu lato.
+}\textsuperscript{,}\footnote{Como apunta VEMIMMEN, ha de entenderse la diferencia entre el coste del capital (medido por el WACC) y la rentabilidad del capital (medido por otros indicadores como el ROE o el PIE).
+\begin{la}
+    \item \textbf{Coste promedio del capital}. Recoge la rentabilidad exigida y/o esperada de los inversores;
+    \item \textbf{Rentabilidad del capital}. Hace lo propio con rentabilidad realizada. 
+\end{la}
+En caso de mercados sin ninguna fricción, ambos conceptos se igualarán gracias al arbitraje, pero conceptualmente son diferentes: mientras que el primero es exante, el segundo es expost. La importancia de esta advertencia radica en la frecuencia con la que analistas emplean los segundos indicadores como medidas del coste de capital, lo que sólo puede tomarse como una aproximación, con riesgo de introducir ruido y sesgo en la estimación.
+}
+
+\subsection{Estimación directa (marco general): WACC} 
+El método directo consiste en estimar el coste del capital mediante modelos de valoración de activos como el APT (\textit{Arbitrage Pricing Theory}) o el modelo CAPM (\textit{Capital Asset Pricing Model}). 
+
+Empleando el segundo, que pretende explicar la relación entre riesgo y rentabilidad existente en el mercado (MARKOWITZ), obtenemos la siguiente ecuación:
+
+\eqblock{
+\begin{aligned}
+    &\left\{\begin{aligned}
+        &(1)\,\mathbb E_t[r_{WACC}]\\[0.5em]
+        &(2)\,\forall i:\sum_{t=1}^T\frac{1}{(1+r_{WACC})^t}\quad \wedge\quad \mathrm P_i[r_{WACC}\leq r]=p\\[0.5em]
+        &(3)\,\text{Mcdos. sin fricciones}
+    \end{aligned}\right\}\quad\underset{\text{CAPM}}{\Longrightarrow}\quad \boxed{\mathbb E_t[r_{WACC}]=\gamma+\underbrace{\beta_A(\underbrace{\mathbb E_t[r_M]-\gamma}_{=\lambda_M})}_{=\lambda}}\\[2em]
+    &\text{Donde}:
+    \left\{\begin{aligned}
+        &\beta_A&&\equiv \underset{\text{\scriptsize porque sino sería posible reducirlo por arbitraje diversificando la cartera}}{\text{Riesgo sistemático o no diversificable de la empresa}}\\
+        &\mathbb E_t[r_{WACC}]&&\equiv\text{Tasa de retorno esperada}\\
+        &\mathbb E_t[r_{M}]&&\equiv\underset{\text{\scriptsize (parámetro no observable: estilo portfolio del mercado)}}{\text{Rentabilidad \textit{media} del mercado}}
+    \end{aligned}\right.
+\end{aligned}
+}{Modelo CAPM (MARKOWITZ): Supuestos y ecuación del coste de capital. Coste de capital: Método directo}
+
+Es decir, si todos los inversores toman sus decisiones en base a la rentabilidad esperada, comparten el mismo horizonte de inversión y las mismas distribuciones de probabilidad y no hay fricciones en los mercados de capitales (posibilidad de arbitraje), el modelo CAPM (que podemos aplicar por analogía) establece que: existe una relación lineal entre el riesgo sistemático de un activo y su retorno esperado.\footnote{Se remite al opositor al Tema 3.B.23 para la demostración de cómo se obtiene esta fórmula.
+
+\textbf{OJO.-} Bajo el CAPM, el riesgo relevante es el riesgo sistemático o no diversificable medido. Por tanto, el riesgo sistemático (no diversificable) es el único retribuido por el mercado, ya que el riesgo no sistemático puede ser eliminado mediante una correcta diversificación del portafolio. 
+} 
+
+De esta forma, en equilibrio el retorno esperado de cualquier activo es igual a la tasa libre de riesgo más una prima, la cual es igual a la beta del activo en cuestión multiplicada por prima de riesgo observada en el mercado ($\lambda=(\mathbb E_t[r_{M}]-\gamma_t)$).\footnote{Para aplicar el método directo, suele emplearse la tasa de las letras del Tesoro de EEUU como representativa de la tasa de libre de riesgo de la economía.
+
+Además, en base a datos históricos, es posible estimar los retornos de la acción en cuestión, la prima de mercado y, en consecuencia, la beta del capital accionario. Actualmente, este proceso se simplifica considerablemente para las betas de empresas que cotizan en bolsa, pues las betas de estas compañías se pueden recoger de manera directa a través de diferentes fuentes de información de libre acceso. 
+} 
+
+\subsubsection{Riesgo no diversificable: Obtención}
+Ahora bien, si conocemos cómo calcular el coste promedio del capital, quedaría una pregunta evidente por responder: ¿cómo se obtiene el riesgo no diversificable de la empresa ($\beta_A$)? Denotemos $E$ y $D$ el valor del equity y de la deuda de la empresa, respectivamente. 
+
+El valor del capital ($E$) se puede obtener multiplicando el precio de la acción en el mercado por el número en circulación, mientras que el valor de la deuda ($D$) se refiere al monto original de préstamos o emisión de bonos. Por tanto, el valor del capital accionario más el valor de la deuda estará dado por la suma de ambos componentes ($V=E+D$) y podemos definir la estructura del cpaital como $\frac{E}{V}+\frac{D}{V}$. Aplicando la fórmula que conocemos para el riesgo no diversificable en un portfolio de activos, tenemos que:
+
+\eqblock{
+\begin{aligned}
+    &\text{Estructura capital}:\frac{E}{V}+\frac{D}{V}\quad \underset{\text{\scriptsize$\beta_p=\sum_ix_i\beta_i$}}{\sim}\quad \beta_A=\beta_E\frac{E}{V}+\beta_D\frac{D}{V}\\[1em]
+    &\beta_A=\frac{\beta_E+\beta_D\frac{D}{E}}{1+\frac{D}{E}}\quad \underset{\text{\scriptsize si $D/E<1,$ $\beta_D\to 0$}}{\Longrightarrow}\quad\boxed{\beta_A=\frac{\beta_E}{1+\frac{D}{E}}}\sim\text{\scriptsize$\beta_A=\frac{\beta_E}{1+(1-T)\frac{D}{E}}$}
+\end{aligned}
+}{Modelo CAPM (MARKOWITZ): Derivación de la $\beta_A$ del modelo. Coste del capital: Método directo}
+
+Por tanto, sabiendo cómo calcular la beta de un portafolio en base a la ponderación de activos que la componen, y aplicando este método al cálculo del riesgo sistemático de la empresa obtenemos la ecuación de la $\beta_A$. Además, siempre y cuando las empresas tengan un bajo nivel de endeudamiento, podemos asumir $\beta_D$ (puesto que no hay riesgo en ese contexto), se simplifica la ecuación. Por último, también cabría la posibilidad de estimar el coste promedio del capital en un contexto impositivo, donde los intereses pagados por una empresa pueden ser deducibles. 
+
+En definitiva, la principal fortaleza que tiene la estimación del coste del capital mediante este método es que se puede aplicar independientemente del patrón de dividendos de la firma y, además, determina de manera explícita el nivel de riesgo. Como punto negativo, es evidente el papel que ostentan la calidad y cantidad de datos obtenidos, además de que el empleo de datos históricos para situaciones futuros supone una cierta continuidad o ergodicidad (hipotética).
+
+\subsection{Estimación indirecta: Composición del capital}
+Como dijimos, también existe un método alternativo que exige únicamente disponibilidad de datos y no asume, en tanta medida, hipótesis adicionales que puedan generar \textit{ceguere inducida por la teoría}.
+
+Este método se conoce como indirecto y se basa en determinar los costes de las principales fuentes de financiación utilizadas por la compañía, que una vez estimados nos proporcionarán el coste promedio del capital ($r_{WACC}$):
+
+\eqblock{
+\begin{aligned}
+    \boxed{r_{WACC}=r_E\frac{E}{V}+r_D\frac{D}{V}}\quad \text{o,}\quad \underset{\text{\scriptsize teniendo en cuenta los impuestos}}{r_{WACC}=r_E\frac{E}{V}+r_D(1-T)\frac{D}{V}}
+\end{aligned}
+}{WACC: Coste \textit{equity} y coste \textit{leverage}. Coste de capital: Estimación indirecta}
+
+Por tanto, el WACC se obtiene como promedio de costes, cuyo peso viene determinado por la composición del capital. Ahora bien, ¿cómo calculamos el coste de cada fuene de financiación?
+
+\subsubsection{Coste de capital accionario: \textit{Equity}}
+Por lo que respecta al coste del capital accionario, esta es la parte más compleja. Normalmente se recurre a dos métodos: el CAPM y/o el modelo fundamental de valoración de acciones. Como el primero lo hemos visto en el apartado anterior, veamos brevemente el modelo de GORDON-SHAPIRO.  
+
+Este establece que el valor teórico de una acción está determinado por los flujos de caja que generará la acción en el futuro. Por lo tanto, es necesario especificar las variables que permiten definir tales flujos y descontar esa corriente, en principio ilimitada, hasta el presente:\footnote{Observe que se asume que no hay inflación, por lo tanto, es el valor de una acción en términos reales. En el apéndice se analiza el valor de compañía cuando existe inflación.
+} 
+
+\eqblock{
+\begin{aligned}
+    &\boxed{p_A=\sum_{t=1}^\infty\frac{d_t}{(1+r_E)^t}}\qquad \text{donde,}
+    \left\{\begin{aligned}
+        &d_t\equiv\text{Dividendo de la compañía}\\
+        &p_A\equiv\text{Precio actual de la acción}
+    \end{aligned}\right.\\[1em]
+    &\underset{\substack{\text{\scriptsize asumimos tasa}\\\text{\scriptsize crecimiento: $g$}}}{\Longrightarrow}\quad \boxed{p_A=\frac{d_1}{r_E-g}}\quad \Longrightarrow\quad \underset{\text{\scriptsize coste del capital accionario}}{\boxed{r_E=\frac{d_1}{p_A}+g}}
+\end{aligned}
+}{Modelo GORDON-SHAPIRO: Estimación coste del capital accionario. Coste del capital: Estimación indirecta}
+
+Por tanto, el origen del valor de la acción es el conjunto de pagos futuros.\footnote{
+\begin{cita}[Annual report to shareholders of Berkshire Hathaway][1994][W. BUFFET]
+    We define intrinsic value as the disco unted value of the cash that can be taken out of a business during its remaining life. Anyone calculating intrinsic value necessarily comes up with a highly subjective figure that will change both as estimates of future cashflows are revised and as interest rates move. Despite its fuzziness, however, intrinsic value is all-important and is the only logical way to evaluate the relative attractiveness of investments and business.
+\end{cita} 
+} Para facilitar el análisis, la expresión se simplifica si asumimos que los dividendos crecen a una tasa constante $g$, lo que es de gran utilidad a la hora de aislar el coste del capital.
+
+Sobra decir que esta metodología es aplicable a empresas que cotizan en bolsa donde tanto los dividendos como el precio de mercado se pueden observar de manera directa, aunque el parámetro $g$ no. Su estimación se puede hacer mediante la utilización de datos históricos de la compañía o a través de la información publicada por los analistas.
+
+\subsubsection{Coste de la deuda: \textit{Leverage}}
+Por otro lado, el coste de la deuda es más sencillo, puesto que es el coste en que una empresa debe incurrir para financiarse.
+
+Este puede obtenerse por dos vías: el modelo CAPM o con la observación directa la tasa de interés que la empresa debe pagar por el acceso a nuevos préstamos en el mercado (o de manera indirecta si una compañía ha emitido bonos en el pasado, en cuyo caso el coste será el rendimiento al vencimiento si estos siguen en circulación). 
+
+Una vez conocemos como calcular el coste promedio de la deuda por el método indirecto, cabe hacer una pregunta fundamental: ¿dependen el coste del equity y el coste de la deuda de la estructura financiera de una empresa (o un proyecto de inversión)? Esto será tratado con más pronfundidad en el Tema 3.B.3, pero podemos decir anticipadamente que es uno de los puntos de mayor divirgencia entre el análisis empírico y la teoría económica. 
+
+Brevemente, si sí, el cálculo del WACC por el método indirecto incorpora dos variables endógenas (los dos costes en cuestión). Por el contrario, si estos costes no dependen de la composición deuda-equity, el WACC no será sensible a cambios en la estructura financiera.
+
+\textbf{INTRODUCIR GRAFICO -- ICEX}
+
+La primera visión considera que un mayor apalancamiento para financiar un proyecto de inversión implica un mayor riesgo, por lo que pese a que incrementos en la ratio de apalancamiento generan primero caídas en el WACC (dado que el coste de la deuda es menor que el coste del equity), a partir de cierto punto, un mayor apalancamiento llevará consigo un mayor WACC, reflejando una mayor prima de riesgo. Por el contrario, en línea con la literatura de MODIGLIANI y MILLER (1958), el coste de capital vendrá determinado exclusivamente por la capacidad de generar valor del proyecto de inversión y por los riesgos asociados al mismo, independientemente de cuál sea la estructura de financiación elegida para llevarlo a cabo. En otras palabras, el WACC permanecería constante sin importar la composición de la estructura de capital escogida o, lo que es lo mismo, el nivel de apalancamiento.\footnote{Bajo supuestos restrictivos. En concreto, se requiere de un mercado de capitales perfecto y de perfecta fungibilidad del dinero. 
+
+Así, como se verá con detalle en el [\authorfont{Ver Tema 3.B.3}], se tiene que el valor total de una empresa es igual al valor de mercado del total de flujos de efectivos generados por sus activos, y, por lo tanto, no lo afecta la selección de la estructura del capital.
+} 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
+
+
+
+\MyBibItem{DAWID y GATTI}{Chapter 2 - Agent-Based Macroeconomics}{2018}{https://doi.org/10.1016/bs.hescom.2018.02.006}
+
+
+% ANEXOS
+\clearpage
+\anexo{\textbf{Preguntas Test}}
+%\input{\TemaCode/questions.tex} 
+
+
+
+\end{document}
