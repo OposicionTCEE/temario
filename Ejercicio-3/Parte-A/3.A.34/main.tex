@@ -18,6 +18,7 @@
 \usepackage{parskip} 
 \usepackage{tcolorbox}
 \usepackage{needspace}
+\usepackage{pdflscape}% páginas apaisadas (\imagenfithorizontal)
 \usepackage{xparse}
 \usepackage{ocgx2}
 \usepackage{hyperref}
@@ -204,46 +205,60 @@
 % ------------------- Imágenes----------------------%
     \graphicspath{{Img/}}% Rutas por defecto 
     % --- Imagen adaptativa ---
-    % Registros de dimensión definidos una sola vez
+    % \imagenfit[alto]{fichero}{título}{fuente}: la imagen queda fija entre los párrafos donde se escribe (no flota), con su
+    % título en el índice de figuras y la fuente debajo. Sin [alto]: las figuras PDF (TikZ) salen al tamaño con que se
+    % dibujaron y solo se reducen si no caben en el ancho o en el alto de la página; las PNG/JPG ocupan el ancho del texto
+    % hasta \imgaltoras del alto de la página. Con [alto] (fracción del alto de la página; [1] = página entera) se fija el
+    % tamaño de esa imagen. Si no cabe en lo que queda de página, pasa entera a la siguiente.
+    % \imagenfithorizontal{fichero}{título}{fuente}: la imagen en una página girada (apaisada), en ese mismo punto del texto.
+    % Reglas: main/GUIA_TEMAS.md, §4 (Figuras).
     \newdimen\imgcap
-    \newdimen\imgmin
-    \newdimen\imgmax
-    \newdimen\imgremain
     \newdimen\imgh
+    \newdimen\imgw
     \newdimen\imgneed
-    
-    \newcommand{\imagenfit}[3]{%
-      \addvspace{10pt}% separación antes
+    \newsavebox\imgcaja
+    \newcommand{\imgaltoras}{0.30}% alto por defecto de las PNG/JPG (fracción del alto de la página)
+    \makeatletter
+    \newcommand{\imagenfit}[4][]{%
+      \addvspace{10pt}%
       \par\begingroup
-        % Parámetros de composición (asignaciones, no \newdimen)
-        \imgcap=1\baselineskip            % alto estimado de título+fuente
-        \imgmin=0.15\textheight
-        \imgmax=0.15\textheight
-        \imgremain=\pagegoal
-        \ifdim\pagegoal=\maxdimen \imgremain=0pt\fi
-        \advance\imgremain by -\pagetotal
-        \advance\imgremain by -\imgcap
-        % Decisión de altura destino
-        \ifdim\imgremain<\imgmin
-          \newpage
-          \imgh=0.20\textheight
+        \imgcap=3.5\baselineskip% alto aproximado de título + fuente
+        \imgw=\linewidth
+        \filename@parse{#2}\def\img@pdf{pdf}%
+        \if\relax\detokenize{#1}\relax
+          \ifx\filename@ext\img@pdf
+            \sbox\imgcaja{\includegraphics{\detokenize{#2}}}% tamaño natural
+            \ifdim\wd\imgcaja<\imgw \imgw=\wd\imgcaja \fi
+            \imgh=\ht\imgcaja
+          \else
+            \imgh=\imgaltoras\textheight
+          \fi
         \else
-          \imgh=\imgremain
-          \ifdim\imgh>\imgmax \imgh=\imgmax \fi
+          \imgh=#1\textheight
         \fi
-        % Reservar espacio para evitar cortes del bloque completo
-        \imgneed=\imgh \advance\imgneed by \imgcap
-        \Needspace{\imgneed}
-        % Cuerpo
+        \dimen@=\textheight \advance\dimen@ by -\imgcap
+        \ifdim\imgh>\dimen@ \imgh=\dimen@ \fi
+        \sbox\imgcaja{\includegraphics[width=\imgw,height=\imgh,keepaspectratio]{\detokenize{#2}}}%
+        \imgneed=\ht\imgcaja \advance\imgneed by \imgcap
+        \Needspace{\imgneed}%
         \noindent\begin{minipage}{\textwidth}
           \centering
-          \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}% título arriba
-          \includegraphics[width=\linewidth,height=\imgh,keepaspectratio]{\detokenize{#1}}\par
-          \vspace{0.3em}\small\textit{Fuente: }#3% fuente abajo
+          \captionof{figure}{\textemdash\ #3}\par\vspace{0.3em}% título arriba
+          \usebox\imgcaja\par
+          \vspace{0.3em}\small\textit{Fuente: }#4% fuente abajo
         \end{minipage}%
       \endgroup
-      \par\addvspace{10pt}%
+      \par\addvspace{10pt}\RequestRestore
     }
+    \newcommand{\imagenfithorizontal}[3]{%
+      \begin{landscape}
+        \centering
+        \captionof{figure}{\textemdash\ #2}\par\vspace{0.3em}%
+        \includegraphics[width=\linewidth,height=\dimexpr\textheight-4\baselineskip\relax,keepaspectratio]{\detokenize{#1}}\par
+        \vspace{0.3em}{\small\textit{Fuente: }#3}%
+      \end{landscape}%
+    }
+    \makeatother
 
 %------------ Bloque de RECUADRO ESPECIAL -------------%
     \newenvironment{specialblock}[1]{%
@@ -508,7 +523,6 @@
     \AfterEndEnvironment{lnum}{\RequestRestore}
     % Al final de macros:
     \apptocmd{\eqblock}{\RequestRestore}{}{}
-    \apptocmd{\imagenfit}{\RequestRestore}{}{}
     
 \makeatother
 
