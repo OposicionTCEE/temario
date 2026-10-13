@@ -11,8 +11,10 @@ cat > "$TMP/wrap.tex" <<'TEX'
 \usepackage[utf8]{inputenc}
 \usepackage{mathptmx}
 \usepackage{ebgaramond}
-\usepackage{amsmath}
-\usepackage{xcolor}
+\usepackage{amsmath,amssymb}
+\usepackage[table]{xcolor}
+\usepackage{array}
+\usepackage{xfp}
 \usepackage{tikz}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
