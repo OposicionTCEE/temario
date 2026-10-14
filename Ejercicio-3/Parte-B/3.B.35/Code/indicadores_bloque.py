@@ -107,9 +107,12 @@ def estructuras():
     tot = defaultdict(float)
     for (p, a, f, k), x in v.items():
         tot[(p, a, f)] += x
+    n = defaultdict(int)
+    for (p, a, f, k) in v:
+        n[(p, a, f)] += 1
     out = defaultdict(dict)
     for (p, a, f, k), x in v.items():
-        if tot[(p, a, f)]:
+        if tot[(p, a, f)] and n[(p, a, f)] >= 100:   # menos de 100 grupos: declaración incompleta (China, 1985)
             out[(p, a, f)][k] = x / tot[(p, a, f)]
     return out
 
