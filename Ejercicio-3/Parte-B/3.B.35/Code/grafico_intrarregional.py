@@ -23,9 +23,11 @@ HITOS = {  # año: texto (se dibujan como líneas verticales en el panel a)
     'MERCOSUR': [(1991, 'Asunción (1991)'), (1995, 'AEC (1995)'), (1999, 'Devaluación del real (1999)'),
                  (2002, 'Crisis argentina (2002)'), (2012, 'Entra Venezuela (2012)')],
     'NAFTA': [(1989, 'CUSFTA (1989)'), (1994, 'NAFTA (1994)'), (2001, 'China, OMC (2001)'), (2020, 'USMCA (2020)')],
+    'ASEAN': [(1976, 'Bali (1976)'), (1992, 'AFTA (1992)'), (1997, 'Crisis asiática (1997)'),
+              (2010, 'China-ASEAN (2010)'), (2015, 'Comunidad Económica (2015)')],
 }
-COLOR = {'MCCA': (200, 76, 58), 'CAN': (233, 160, 40), 'NAFTA': (30, 75, 135), 'MERCOSUR': (30, 75, 135)}
-YMAX = {'MCCA': 45, 'CAN': 30, 'NAFTA': 90, 'MERCOSUR': 45}  # techo del panel (a): deja sitio a las etiquetas de los hitos
+COLOR = {'ASEAN': (200, 76, 58), 'MCCA': (200, 76, 58), 'CAN': (233, 160, 40), 'NAFTA': (30, 75, 135), 'MERCOSUR': (30, 75, 135)}
+YMAX = {'ASEAN': 40, 'MCCA': 45, 'CAN': 30, 'NAFTA': 90, 'MERCOSUR': 45}  # techo del panel (a): deja sitio a las etiquetas de los hitos
 
 
 def main(grupo):
