@@ -65,6 +65,7 @@ BLOQUES = {
         ],
     },
     'afinidad': {
+        't0': 1983,
         'grupos': [  # orden: los posteriores prevalecen (PAFTA sobre AfCFTA en el norte de África)
             ('afcfta', 'AfCFTA', (60, 140, 90), ['@AFRICA']),
             ('afsin', 'AfCFTA, sin ratificar', (160, 205, 170), ['BEN', 'SSD']),
@@ -90,13 +91,13 @@ BLOQUES = {
         ],
         'filas': [
             ('MERCOSUR', 'mercosur', 1991, [(1985, 'Foz de Iguazú', 'aw'), (1991, 'Asunción', 'b'), (1994, 'Ouro Preto', 'a'),
-                                           (1998, 'Ushuaia', 'b'), (2012, 'entra Venezuela', 'a'),
+                                           (1998, 'Ushuaia', 'b'), (2012, 'entra Venezuela', 'ae'),
                                            (2016, 'suspende a Venezuela', 'b'), (2026, 'acuerdo con la UE', 'ae')], []),
-            ('CEFTA', 'cefta', 1992, [(1992, 'Cracovia', 'a'), (2004, 'primeras salidas a la UE', 'b'),
-                                      (2006, 'CEFTA 2006', 'a'), (2013, 'sale Croacia', 'b')], []),
-            ('AfCFTA', 'afcfta', 2018, [(2012, 'decisión de la UA', 'ae'), (2018, 'Kigali', 'b'), (2019, 'en vigor', 'aw'),
+            ('CEFTA', 'cefta', 1992, [(1992, 'Cracovia', 'aw'), (2004, 'salidas a la UE', 'be'),
+                                      (2006, 'CEFTA 2006', 'aw'), (2013, 'sale Croacia', 'bw')], []),
+            ('AfCFTA', 'afcfta', 2018, [(2012, 'decisión de la UA', 'ae'), (2018, 'Kigali', 'be'), (2019, 'en vigor', 'aw'),
                                         (2021, 'empieza el comercio', 'bw')], []),
-            ('Zona Pan-Árabe', 'pafta', 1998, [(1997, 'programa ejecutivo', 'ae'), (1998, 'en vigor', 'b'),
+            ('Zona Pan-Árabe', 'pafta', 1998, [(1997, 'programa ejecutivo', 'ae'), (1998, 'en vigor', 'bw'),
                                                  (2005, 'liberalización completa', 'aw')], []),
         ],
         'tipos': [
@@ -145,6 +146,9 @@ def tx(anio):
 
 def main(ruta_geojson, clave):
     B = BLOQUES[clave]
+    global T0, TICKS
+    T0 = B.get('t0', 1945)
+    TICKS = list(range((T0 // 10 + 1) * 10 if T0 < 1975 else (T0 // 5 + 1) * 5, 2030, 10 if T0 < 1975 else 5))
     paises = [f for f in json.load(open(ruta_geojson))['features'] if f['properties']['ADM0_A3'] != 'ATA']
     estilo = {}
     africa = [p['properties']['ADM0_A3'] for p in paises if p['properties'].get('CONTINENT') == 'Africa']
@@ -228,10 +232,10 @@ def main(ruta_geojson, clave):
     y0 = -0.75
     ys = [y0 - i * PASO_FILA for i in range(len(filas))]
     yeje = ys[-1] - 0.62
-    for d in range(1950, 2030, 10):
+    for d in TICKS:
         out.append(f'  \\draw[black!12, line width=0.3pt] ({tx(d):.2f},{y0 + 0.4:.2f}) -- ({tx(d):.2f},{yeje:.2f});')
     out.append(f'  \\draw[black!70, line width=0.5pt, -{{Stealth[length=4pt]}}] ({TX0:.2f},{yeje:.2f}) -- ({TX1 + 0.12:.2f},{yeje:.2f});')
-    for d in range(1950, 2030, 10):
+    for d in TICKS:
         out.append(f'  \\draw[black!70, line width=0.5pt] ({tx(d):.2f},{yeje:.2f}) -- ++(0,-0.07) node[below, font=\\sffamily\\scriptsize, inner sep=1.5pt] {{{d}}};')
     for (etq, g, inicio, hitos, _), y in zip(filas, ys):
         col = f'c{g}' if g else 'black!45'
