@@ -211,7 +211,8 @@ def fig_complementariedad(grupo, cp, sd, rm, x0=1962, x1=2024):
     sd = movil(sd)
     vals = [v for _, r in sd for v in r.values()]
     lo, hi = math.floor(min(vals) / 2) * 2, math.ceil(max(vals) / 2) * 2
-    marcas = list(range(int(math.ceil(lo / 5) * 5), int(hi) + 1, 5))
+    paso = 5 if hi - lo > 12 else (2 if hi - lo > 5 else 1)
+    marcas = list(range(int(math.ceil(lo / paso) * paso), int(hi) + 1, paso))
     etiquetas = ','.join(f'\\textminus {-m}' if m < 0 else str(m) for m in marcas)
     o += [f'  \\begin{{axis}}[{ESTILO}{ABAJO}, at={{(1.1cm,0cm)}}, width=5.9cm, height=4.0cm, xmin={x0}, xmax={x1}, ymin={lo}, ymax={hi},'
           ' xtick={1960,1970,1980,1990,2000,2010,2020}, title={(c) Saldo con el resto del bloque}, ylabel={\\% del PIB},'
