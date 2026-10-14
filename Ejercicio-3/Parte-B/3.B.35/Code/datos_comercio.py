@@ -136,7 +136,7 @@ def wits(exportador, anio, socios=None):
     valores = dims[ip]['values']
     out = {}
     for clave, serie in d['dataSets'][0]['series'].items():
-        socio = valores[int(clave.split(':')[ip])]['id']
+        socio = iso(valores[int(clave.split(':')[ip])]['id'])
         if socios is None or socio in socios:
             out[socio] = serie['observations']['0'][0] * 1000.0  # miles de dólares -> dólares
     return out
