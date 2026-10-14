@@ -176,6 +176,7 @@ def main(grupo):
     cm = cuota_manufacturas(comp)
     cp = complementariedad(grupo)
     sd = saldos(grupo)
+    rm = reparto_manufacturas(grupo)
     try:
         hoja(f'{grupo}_intensidad', f'Intensidad del comercio intrarregional. {desc}',
              'Cuota: exportaciones a los socios / exportaciones totales (Code/datos_comercio.py). Peso: importaciones de '
@@ -200,13 +201,17 @@ def main(grupo):
              'Exportaciones a los socios menos importaciones desde ellos (exportaciones declaradas por los socios), '
              'con Code/datos_comercio.py; PIB en dólares corrientes del Banco Mundial (WDI). Cálculo propio.',
              ['Año'] + dc.GRUPOS[grupo][0], [(a, *[round(r.get(e), 2) if e in r else None for e in dc.GRUPOS[grupo][0]]) for a, r in sd])
+        hoja(f'{grupo}_reparto_manuf', f'Reparto entre los miembros de las exportaciones de manufacturas dentro del bloque (%). {desc}',
+             'UN Comtrade, API pública (CUCI, secciones 5 a 8; revisiones como en la hoja de composición). Cálculo propio.',
+             ['Año'] + dc.GRUPOS[grupo][0], [(a, *[round(r[e], 1) if e in r else None for e in dc.GRUPOS[grupo][0]]) for a, r in sorted(rm.items())])
     except ImportError:
         print('Falta openpyxl: no se escribe el Excel')
-    return it, comp, cm, cp, sd
+    return it, comp, cm, cp, sd, rm
 
 
 if __name__ == '__main__':
-    it, comp, cm, cp, sd = main(sys.argv[1])
+    it, comp, cm, cp, sd, rm = main(sys.argv[1])
+    print('Reparto manufacturas:', [(a, {k: round(v) for k, v in r.items()}) for a, r in sorted(rm.items())][::5])
     print('Intensidad:', [(a, round(c, 1), round(i)) for a, c, p, i in it][::5])
     print('Manufacturas (dentro, fuera):', [(a, round(d), round(f)) for a, d, f in cm][::4])
     for a, c in cp.items():
