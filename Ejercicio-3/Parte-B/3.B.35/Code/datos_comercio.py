@@ -243,22 +243,24 @@ def destinos(grupo, anio):
     """Destino de las exportaciones de cada miembro actual en un año: bloque, EE. UU., China, UE-27, Reino Unido y resto.
     Guarda los datos brutos por socio en Code/datos/destinos.csv y el resumen en la hoja <GRUPO>_destinos_<año>."""
     ruta = TEMA / 'Code' / 'datos' / 'destinos.csv'
-    brutos = {}
+    brutos, fuentes = {}, {}
     if ruta.exists():
         with open(ruta, newline='', encoding='utf-8') as f:
             for r in csv.DictReader(f):
                 brutos[(r['exportador'], int(r['anio']), r['socio'])] = float(r['valor_usd'])
+                fuentes[(r['exportador'], int(r['anio']))] = r['fuente']
     mm = miembros(grupo, anio)
     for e in mm:
         if (e, anio, 'WLD') not in brutos:
-            for socio, v in wits(e, anio).items():
+            valores, fuentes[(e, anio)] = por_socio(e, anio)
+            for socio, v in valores.items():
                 brutos[(e, anio, socio)] = v
             time.sleep(0.5)
     with open(ruta, 'w', newline='', encoding='utf-8') as f:
         w = csv.writer(f)
         w.writerow(['exportador', 'anio', 'socio', 'valor_usd', 'fuente'])
         for (e, a, so), v in sorted(brutos.items()):
-            w.writerow([e, a, so, f'{v:.0f}', FUENTE_WITS])
+            w.writerow([e, a, so, f'{v:.0f}', fuentes.get((e, a), FUENTE_WITS)])
     resumen = []
     for e in mm:
         tot = brutos.get((e, anio, 'WLD'), 0.0)
