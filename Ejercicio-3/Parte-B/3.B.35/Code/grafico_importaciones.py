@@ -9,7 +9,7 @@ Uso, desde la carpeta del tema (con openpyxl):
 from pathlib import Path
 
 SERIES = [('MEX', 'México', (60, 140, 90)), ('CAN', 'Canadá', (200, 60, 60)), ('CHN', 'China', (233, 160, 40))]
-HITOS = [(1994, 'NAFTA'), (2001, 'China en la OMC'), (2018, 'Aranceles a China'), (2020, 'USMCA')]
+HITOS = [(1994, 'NAFTA'), (2001, 'China, OMC'), (2018, 'Aranceles a China'), (2020, 'USMCA')]
 
 
 def main():
@@ -28,7 +28,7 @@ def main():
             ('(a) Miles de millones de USD', 'miles de millones de USD', lambda r, c: r[c] / 1000),
             ('(b) \\% de las importaciones de EE.\\,UU.', '\\% del total', lambda r, c: 100 * r[c] / r[itot])]):
         pos = 'name=a' if p == 0 else 'at={(a.east)}, anchor=west, xshift=1.2cm'
-        ymax = 520 if p == 0 else 25
+        ymax = 620 if p == 0 else 25
         o += [f'  \\begin{{axis}}[{pos}, width=7.9cm, height=6cm, xmin=1993, xmax=2024, ymin=0, ymax={ymax},',
               '      xtick={1995,2000,2005,2010,2015,2020}, x tick label style={/pgf/number format/1000 sep={}},',
               f'      ylabel={{{ylab}}}, ylabel style={{font=\\sffamily\\scriptsize}}, tick label style={{font=\\sffamily\\scriptsize}},',
@@ -42,8 +42,8 @@ def main():
         if p == 1:
             for anio, txt in HITOS:
                 o.append(f'    \\draw[black!40, densely dashed, line width=0.4pt] (axis cs:{anio},0) -- (axis cs:{anio},{ymax});')
-                o.append(f'    \\node[rotate=90, anchor=north east, font=\\sffamily\\tiny, text=black!70, inner sep=1.2pt] '
-                         f'at (axis cs:{anio},{ymax - 0.3}) {{{txt} ({anio})}};')
+                o.append(f'    \\node[rotate=90, anchor=south west, font=\\sffamily\\tiny, text=black!70, inner sep=1.2pt] '
+                         f'at (axis cs:{anio},0.4) {{{txt}}};')
         o.append('  \\end{axis}')
     o.append('\\end{tikzpicture}')
     (tema / 'Img' / 'USA_importaciones.tikz').write_text('\n'.join(o) + '\n', encoding='utf-8')
