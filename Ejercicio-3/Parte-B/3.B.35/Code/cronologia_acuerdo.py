@@ -79,10 +79,9 @@ class Cronologia:
             ancho = (len(texto) + 5) * CM_POR_CARACTER + 0.1
             mejor = None   # (cruces del tallo con etiquetas más bajas, nivel, preferencia, lado, ancla, intervalo)
             for lado in ([h[2]] if len(h) > 2 else ['a', 'b']):
-                for pref, ancla in enumerate(['west', 'east']):
+                # la etiqueta empieza en su hito (se lee mejor); solo si no cabe a la derecha, termina en él
+                for pref, ancla in enumerate(['west'] if px + ancho <= X1 + 0.3 else ['east']):
                     i0, i1 = (px - 0.06, px - 0.06 + ancho) if ancla == 'west' else (px + 0.06 - ancho, px + 0.06)
-                    if i1 > X1 + 0.3 or i0 < X0 - 0.5:
-                        continue
                     k = 0
                     while True:
                         while len(ocupado[lado]) <= k:
