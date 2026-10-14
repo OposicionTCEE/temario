@@ -56,7 +56,7 @@ GOBERNANZA = {
         'organos': {
             'pres': (4.45, 4.95, 3.6, 'intergub', 'Consejo Presidencial', 'órgano supremo', False),
             'min': (1.6, 3.55, 3.2, 'intergub', 'Consejo de Ministros', 'de Exteriores', False),
-            'com': (4.75, 3.55, 2.3, 'intergub', 'Comisión', 'delegados', False),
+            'com': (4.75, 3.55, 2.5, 'intergub', 'Comisión', 'de los gobiernos', False),
             'sg': (7.55, 3.55, 2.7, 'supra', 'Secretaría General', 'Lima', False),
             'est': (4.45, 2.15, 8.8, 'estados', 'Estados miembros', '', False),
             'tri': (1.6, 0.7, 3.2, 'judicial', 'Tribunal de Justicia', 'Quito', False),
