@@ -245,6 +245,43 @@ def destinos(grupo, anio):
     return resumen
 
 
+def importaciones(importador, a0, a1, socios):
+    """Importaciones de mercancías declaradas por un país desde varios socios (WITS, MPRT-TRD-VL), con hoja propia."""
+    filas = []
+    for anio in range(a0, a1 + 1):
+        url = ('https://wits.worldbank.org/API/V1/SDMX/V21/datasource/tradestats-trade/reporter/%s/year/%d/partner/all'
+               '/product/Total/indicator/MPRT-TRD-VL?format=JSON' % (importador.lower(), anio))
+        try:
+            d = json.loads(get(url))
+        except ValueError:
+            print(anio, 'sin datos', flush=True)
+            continue
+        dims = d['structure']['dimensions']['series']
+        ip = [i for i, x in enumerate(dims) if x['id'] == 'PARTNER'][0]
+        valores = dims[ip]['values']
+        v = {}
+        for clave, serie in d['dataSets'][0]['series'].items():
+            v[valores[int(clave.split(':')[ip])]['id']] = serie['observations']['0'][0] * 1000.0
+        filas.append([anio] + [round(v.get(s, 0.0) / 1e6, 1) for s in socios + ['WLD']])
+        print(anio, 'ok', flush=True)
+        time.sleep(0.5)
+    from openpyxl import Workbook, load_workbook
+    wb = load_workbook(XLSX) if XLSX.exists() else Workbook()
+    nombre = f'{importador}_importaciones'
+    if nombre in wb.sheetnames:
+        del wb[nombre]
+    ws = wb.create_sheet(nombre)
+    ws.append([f'Importaciones de mercancías de {importador} por origen (millones de dólares corrientes)'])
+    ws.append([f'Fuente: {FUENTE_WITS}, indicador MPRT-TRD-VL (importaciones declaradas por el importador). '
+               'Cálculo propio (Code/datos_comercio.py).'])
+    ws.append([])
+    ws.append(['Año'] + socios + ['Total (WLD)'])
+    for f in filas:
+        ws.append(f)
+    wb.save(XLSX)
+    return filas
+
+
 def escribe_brutos():
     """Copia los datos brutos del CSV en la hoja Exportaciones_bilaterales del Excel, con su fuente."""
     from openpyxl import Workbook, load_workbook
