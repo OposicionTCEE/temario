@@ -134,6 +134,17 @@ def fig_composicion(grupo, comp, cm, x0=1962, x1=2024):
     return o
 
 
+def movil(sd, k=3):
+    """Media móvil centrada de k años (solo con años consecutivos completos), para quitar ruido a los saldos."""
+    d = dict(sd)
+    out = []
+    for a in sorted(d):
+        ventana = [d.get(a + j) for j in range(-(k // 2), k // 2 + 1)]
+        if all(ventana):
+            out.append((a, {e: sum(w[e] for w in ventana) / k for e in d[a] if all(e in w for w in ventana)}))
+    return out
+
+
 def fig_complementariedad(grupo, cp, sd, rm, x0=1962, x1=2024):
     miembros_hoy = dc.miembros(grupo, 2023)
     refs = REFERENCIAS[grupo]
@@ -144,7 +155,7 @@ def fig_complementariedad(grupo, cp, sd, rm, x0=1962, x1=2024):
     c = cp[ult]
     cols = miembros_hoy + refs
     cw, ch = 0.78, 0.46
-    xm, ytop = 2.0, 9.2
+    xm, ytop = 2.0, 7.75
     vmax = max(c.values())
     o.append(f'  \\node[anchor=south west, font=\\sffamily\\small, inner sep=0pt] at (0,{ytop + 1.55:.2f}) {{(a) Complementariedad, {ult}}};')
     for jx, j in enumerate(cols):
@@ -178,23 +189,28 @@ def fig_complementariedad(grupo, cp, sd, rm, x0=1962, x1=2024):
         medias.append(fila)
     ymax_b = techo(max(v for f in medias for v in f[1:] if v is not None), 10)
     o += [f'  \\begin{{axis}}[{ESTILO}, at={{(9.3cm,{ytop - 2.95:.2f}cm)}}, width=6.1cm, height=3.0cm, xmin={x0}, xmax={x1}, ymin=0,'
-          f' ymax={ymax_b}, xtick={{1960,1970,1980,1990,2000,2010,2020}}, title={{(b) Complementariedad media}}]',
+          f' ymax={ymax_b}, xtick={{1960,1970,1980,1990,2000,2010,2020}}, title={{(b) Complementariedad media}}, xmax=2025]',
           *etapas(grupo, 0, ymax_b),
           '    \\addplot[s1, line width=1.3pt, mark=*, mark size=1.6pt] coordinates {' + coords((f[0], f[1]) for f in medias if f[1] is not None) + '};']
     estilos_ref = ['black!60', 's7']
     for k, r in enumerate(refs):
         o.append(f'    \\addplot[{estilos_ref[k]}, line width=1.1pt, densely dashed, mark=*, mark size=1.4pt, mark options={{solid}}] coordinates {{'
                  + coords((f[0], f[2 + k]) for f in medias if f[2 + k] is not None) + '};')
-    ultimo = medias[-1]
-    o.append(f'    \\node[anchor=west, inner sep=1.5pt, text=black!80] at (axis cs:{ultimo[0]},{ultimo[1]:.1f}) {{entre socios}};')
+    ref_ult = [f for f in medias if f[1] is not None][-2]   # penúltimo año: el rótulo no toca el borde
+    o.append(f'    \\node[anchor=south, inner sep=2pt, text=black!80] at (axis cs:{ref_ult[0]},{ref_ult[1] + 1:.1f}) {{entre socios}};')
     for k, r in enumerate(refs):
-        o.append(f'    \\node[anchor=west, inner sep=1.5pt, text=black!80] at (axis cs:{ultimo[0]},{ultimo[2 + k]:.1f}) {{con {NOMBRES[r]}}};')
+        if ref_ult[2 + k] is not None:
+            o.append(f'    \\node[anchor=north, inner sep=2pt, text=black!80] at (axis cs:{ref_ult[0]},{ref_ult[2 + k] - 1:.1f}) {{con {NOMBRES[r]}}};')
     o.append('  \\end{axis}')
     # (c) saldos en % del PIB
+    sd = movil(sd)
     vals = [v for _, r in sd for v in r.values()]
     lo, hi = math.floor(min(vals) / 2) * 2, math.ceil(max(vals) / 2) * 2
+    marcas = list(range(int(math.ceil(lo / 5) * 5), int(hi) + 1, 5))
+    etiquetas = ','.join(f'\\textminus {-m}' if m < 0 else str(m) for m in marcas)
     o += [f'  \\begin{{axis}}[{ESTILO}, at={{(1.1cm,0cm)}}, width=5.9cm, height=4.0cm, xmin={x0}, xmax={x1}, ymin={lo}, ymax={hi},'
-          ' xtick={1960,1970,1980,1990,2000,2010,2020}, title={(c) Saldo con el resto del bloque}, ylabel={\\% del PIB}]',
+          ' xtick={1960,1970,1980,1990,2000,2010,2020}, title={(c) Saldo con el resto del bloque}, ylabel={\\% del PIB},'
+          f' ytick={{{",".join(map(str, marcas))}}}, yticklabels={{{etiquetas}}}]',
           *etapas(grupo, lo, hi), f'    \\draw[black!60, line width=0.5pt] (axis cs:{x0},0) -- (axis cs:{x1},0);']
     for e in dc.GRUPOS[grupo][0]:
         pts = [(a, r[e]) for a, r in sd if e in r]
