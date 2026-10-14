@@ -5,8 +5,8 @@ Cada hito: (año, texto, posición) con posición 'a' (encima, centrado), 'b' (d
 'ae'/'be' (encima/debajo, alineado a la derecha del punto) o 'aw'/'bw' (alineado a la izquierda).
 Fechas comprobadas en octubre de 2026 (fuentes en el pie de la figura y en la bibliografía del tema).
 Uso, desde la carpeta del tema:
-  python3 Code/cronologia_bloque.py CAN
-  bash Code/generar_figura.sh CAN_cronologia
+  python3 Code/cronologia_bloque.py AfCFTA
+  bash Code/generar_figura.sh AfCFTA_cronologia
 """
 import sys
 from pathlib import Path
@@ -15,25 +15,7 @@ A0, A1 = 1966, 2027
 X0, X1 = 2.75, 15.9   # cm del eje temporal (a la izquierda, las etiquetas de los carriles)
 
 CRONOLOGIAS = {
-    'CAN': {
-        'fases': [(1969, 1987, (252, 236, 214), 'Regionalismo cerrado'),
-                  (1987, 2027, (222, 234, 246), 'Regionalismo abierto')],
-        'carriles': [
-            ('Miembros', (120, 120, 120), [
-                (1969, 'fundación', 'bw'), (1973, 'entra Venezuela', 'aw'),
-                (1976, 'sale Chile', 'bw'), (2006, 'sale Venezuela', 'a'), (2023, 'Bolivia, también en MERCOSUR', 'be')]),
-            ('Comercio', (233, 160, 40), [
-                (1969, 'zona de libre comercio en etapas', 'bw'), (1993, 'zona de libre comercio plena', 'ae'),
-                (1995, 'arancel exterior común', 'b'), (2007, 'se permite no aplicarlo', 'a'),
-                (2015, 'queda sin efecto', 'b'), (2026, 'guerra arancelaria', 'ae')]),
-            ('Inversión extranjera', (200, 76, 58), [
-                (1970, 'Decisión 24: control del capital extranjero', 'aw'), (1987, 'Decisión 220: flexibiliza', 'b'),
-                (1991, 'Decisión 291: trato nacional', 'aw')]),
-            ('Instituciones y personas', (30, 75, 135), [
-                (1979, 'Tribunal de Justicia', 'a'), (1987, 'Protocolo de Quito', 'b'),
-                (1996, 'Protocolo de Trujillo: nace la CAN', 'a'), (2021, 'Estatuto Migratorio Andino', 'be')]),
-        ],
-    },
+    # CAN: pasó al formato común (Code/cronologia_acuerdo.py), 14/10/2026
     'AfCFTA': {
         'eje': (2011, 2027, range(2012, 2028, 2)),
         'fases': [(2011, 2019.41, (252, 236, 214), 'Negociación'),
