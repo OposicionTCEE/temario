@@ -105,16 +105,15 @@ def main(clave):
     o.append(f'  \\node[anchor=west, inner sep=1pt] at ({xb + 0.35:.2f},{yl:.2f}) {{previsto en los tratados}};')
     o.append(f'  \\fill[bintergub] ({xb + 3.75:.2f},{yl:.2f}) circle (2.4pt);')
     o.append(f'  \\node[anchor=west, inner sep=1pt] at ({xb + 3.95:.2f},{yl:.2f}) {{alcanzado (2026)}};')
-    # leyenda de colores del organigrama, debajo de todo
-    ylc = min(m[1] for m in g['marcos']) - 0.5
-    x = 0.0
-    for t in [t for t in TIPOS if t in usados]:
-        o.append(f'  \\node[draw=b{t}, fill=f{t}, line width=0.6pt, minimum width=0.42cm, minimum height=0.26cm, inner sep=0pt, '
-                 f'anchor=west] at ({x:.2f},{ylc:.2f}) {{}};')
-        o.append(f'  \\node[anchor=west, inner sep=1pt] at ({x + 0.5:.2f},{ylc:.2f}) {{{TIPOS[t][2]}}};')
-        x += 0.75 + len(TIPOS[t][2]) * 0.142
-    o.append(f'  \\draw[black!60, line width=0.6pt, densely dashed] ({x:.2f},{ylc - 0.13:.2f}) rectangle ({x + 0.42:.2f},{ylc + 0.13:.2f});')
-    o.append(f'  \\node[anchor=west, inner sep=1pt] at ({x + 0.5:.2f},{ylc:.2f}) {{competencias limitadas}};')
+    # leyenda de colores del organigrama, debajo de todo, en filas de tres para no pasar de 16 cm
+    entradas = [(f'draw=b{t}, fill=f{t}', TIPOS[t][2]) for t in TIPOS if t in usados]
+    entradas.append(('draw=black!60, densely dashed', 'competencias limitadas'))
+    y0 = min(m[1] for m in g['marcos']) - 0.45
+    for n, (estilo, texto) in enumerate(entradas):
+        x, y = (n % 3) * 5.45, y0 - (n // 3) * 0.45
+        o.append(f'  \\node[{estilo}, line width=0.6pt, minimum width=0.42cm, minimum height=0.26cm, inner sep=0pt, '
+                 f'anchor=west] at ({x:.2f},{y:.2f}) {{}};')
+        o.append(f'  \\node[anchor=west, inner sep=1pt] at ({x + 0.5:.2f},{y:.2f}) {{{texto}}};')
     o.append('\\end{tikzpicture}')
     destino = Path(__file__).resolve().parent.parent / 'Img' / f'{clave}_gobernanza.tikz'
     destino.write_text('\n'.join(o) + '\n', encoding='utf-8')
