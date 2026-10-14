@@ -129,6 +129,8 @@ if __name__ == '__main__':
     if que == 'composicion':
         composicion(g, int(resto[0]), int(resto[1]))
     elif que == 'productos':
-        productos(g, [int(a) for a in resto])
+        productos(dc.GRUPOS[g][0], [int(a) for a in resto])
+    elif que == 'importaciones':   # mercados de referencia, solo importaciones: USA,CHN importaciones 1965 ... 2023
+        productos(g.split(','), [int(a) for a in resto], ('M',))
     else:
         wdi(g)
