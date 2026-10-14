@@ -20,7 +20,7 @@ SERIES = [  # columna de la hoja, leyenda, color RGB
     (5, 'Resto del mundo', (190, 190, 190)),
 ]
 # Bloques en los que Reino Unido se suma al resto del mundo (no es un destino relevante)
-SIN_RU = {'CAN', 'MCCA'}
+SIN_RU = {'CAN', 'MCCA', 'MERCOSUR'}
 
 
 def main(grupo, anio):
