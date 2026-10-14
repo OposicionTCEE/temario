@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+"""Genera Img/<CLAVE>_gobernanza.tikz: (a) organigrama de gobernanza y (b) vertientes de la integración y su grado.
+
+Formato común del tema (nota de \\modificaciones, 14/10/2026):
+(a) organigrama mínimo: órganos (nombre y, debajo, quiénes lo forman o qué tipo de órgano es), marcos que los agrupan y
+    flechas con la relación (quién orienta, decide, apoya o controla). El color indica la naturaleza del órgano; el borde
+    discontinuo, que sus competencias son limitadas o no las reconocen todos los miembros. Sin resumir lo que hace cada
+    órgano: eso está en el texto.
+(b) siete vertientes, cada una en cuatro grados (nada, limitado, parcial, pleno): el círculo hueco es lo previsto en los
+    tratados vigentes y el relleno lo alcanzado en octubre de 2026. Es una valoración propia a partir del texto del tema.
+Letra de 8 puntos (\\footnotesize), ancho total de 16 cm.
+Uso, desde la carpeta del tema:
+  python3 Code/gobernanza.py MCCA
+  bash Code/generar_figura.sh MCCA_gobernanza
+"""
+import sys
+from pathlib import Path
+
+TIPOS = {   # naturaleza del órgano: (borde, relleno, texto de la leyenda)
+    'intergub': ((30, 75, 135), (218, 232, 246), 'intergubernamental'),
+    'supra': ((175, 55, 45), (247, 220, 212), 'supranacional'),
+    'tecnico': ((105, 105, 105), (236, 236, 236), 'técnico o administrativo'),
+    'judicial': ((105, 65, 140), (233, 223, 242), 'judicial o arbitral'),
+    'parlamento': ((55, 125, 65), (223, 238, 214), 'parlamentario o consultivo'),
+    'financiero': ((185, 125, 20), (252, 236, 206), 'financiero o monetario'),
+}
+VERTIENTES = ['Libre comercio interno', 'Arancel exterior común', 'Servicios e inversión', 'Movilidad de personas',
+              'Macro y moneda', 'Supranacionalidad', 'Política y seguridad']
+GRADOS = ['Nada', 'Limitado', 'Parcial', 'Pleno']
+
+GOBERNANZA = {
+    'MCCA': {
+        # órgano: (x, y, ancho, tipo, nombre, segunda línea, discontinuo)
+        'organos': {
+            'pres': (4.3, 5.0, 3.6, 'intergub', 'Reunión de Presidentes', 'órgano supremo del SICA', False),
+            'parl': (0.95, 5.0, 1.9, 'parlamento', 'Parlamento', 'Centroamericano', True),
+            'corte': (7.65, 5.0, 1.9, 'judicial', 'Corte', 'Centroamericana', True),
+            'comieco': (2.15, 2.95, 2.5, 'intergub', 'COMIECO', 'ministros de Economía', False),
+            'sieca': (6.35, 2.95, 2.5, 'tecnico', 'SIECA', 'secretaría técnica', False),
+            'contro': (4.25, 1.55, 3.9, 'judicial', 'Solución de controversias', 'consultas y arbitraje', False),
+            'sg': (1.45, 0.0, 2.6, 'tecnico', 'Secretaría General', 'del SICA (vacante)', True),
+            'bcie': (4.3, 0.0, 2.3, 'financiero', 'BCIE', 'banco regional', False),
+            'cmca': (7.05, 0.0, 2.6, 'financiero', 'Consejo Monetario', 'bancos centrales', False),
+        },
+        # marcos: (izquierda, abajo, derecha, arriba, rótulo)
+        'marcos': [(-0.15, -0.6, 8.75, 5.95, 'SICA'), (0.55, 0.95, 8.0, 3.7, 'Subsistema de integración económica')],
+        # flechas: (desde, hasta, rótulo, estilo); estilo 'o' = orienta o decide, 'a' = apoyo, 'c' = control o consulta
+        'flechas': [('pres', 'comieco', 'directrices', 'o'), ('sieca', 'comieco', 'apoyo', 'a'),
+                    ('parl', 'pres', 'recomienda', 'c'), ('corte', 'pres', 'controla', 'c')],
+        # vertientes: (previsto, alcanzado), de 0 (nada) a 3 (pleno)
+        'grados': [(3, 3), (3, 2), (3, 2), (3, 1), (3, 1), (2, 1), (2, 1)],
+    },
+}
+
+
+def rgb(nombre, c):
+    return '\\definecolor{%s}{RGB}{%d,%d,%d}' % (nombre, *c)
+
+
+def main(clave):
+    g = GOBERNANZA[clave]
+    o = [f'% Generado por Code/gobernanza.py ({clave}).']
+    for t, (borde, relleno, _) in TIPOS.items():
+        o += [rgb(f'b{t}', borde), rgb(f'f{t}', relleno)]
+    o.append('\\begin{tikzpicture}[font=\\sffamily\\footnotesize]')
+    # (a) organigrama
+    alto_a = max(m[3] for m in g['marcos'])
+    o.append(f'  \\node[anchor=south west, font=\\sffamily\\small, inner sep=0pt] at (-0.15,{alto_a + 0.25:.2f}) {{(a) Gobernanza}};')
+    for i, (x0, y0, x1, y1, rotulo) in enumerate(g['marcos']):
+        o.append(f'  \\draw[black!45, line width=0.5pt, {"densely dashed" if i else ""}, rounded corners=3pt] ({x0},{y0}) rectangle ({x1},{y1});')
+        o.append(f'  \\node[anchor=north west, inner sep=2pt, font=\\sffamily\\footnotesize\\bfseries, text=black!60] at ({x0},{y1}) {{{rotulo}}};')
+    usados = []
+    for k, (x, y, ancho, tipo, nombre, linea2, disc) in g['organos'].items():
+        usados.append(tipo)
+        estilo = ', densely dashed' if disc else ''
+        o.append(f'  \\node[draw=b{tipo}, fill=f{tipo}, line width=0.7pt{estilo}, rounded corners=2pt, align=center, '
+                 f'minimum width={ancho}cm, text width={ancho - 0.2:.2f}cm, inner sep=2.5pt] ({k}) at ({x},{y}) '
+                 f'{{\\textbf{{{nombre}}}\\\\[-1pt]{{\\color{{black!70}}{linea2}}}}};')
+    estilos = {'o': 'black!75, line width=0.7pt', 'a': 'black!55, line width=0.6pt', 'c': 'black!55, line width=0.6pt, densely dashed'}
+    for a, b, rot, e in g['flechas']:
+        o.append(f'  \\draw[-{{Stealth[length=4pt]}}, {estilos[e]}] ({a}) -- ({b}) '
+                 f'node[midway, fill=white, inner sep=1pt, font=\\sffamily\\footnotesize\\itshape, text=black!75] {{{rot}}};')
+    # (b) vertientes y grado
+    xb, xl = 9.35, 12.85       # inicio del panel y del primer grado
+    paso_x, paso_y = 0.92, 0.62
+    ytop = alto_a - 0.55
+    o.append(f'  \\node[anchor=south west, font=\\sffamily\\small, inner sep=0pt] at ({xb},{alto_a + 0.25:.2f}) {{(b) Vertientes y grado}};')
+    for j, gr in enumerate(GRADOS):
+        o.append(f'  \\node[anchor=south, inner sep=1pt, text=black!70] at ({xl + j * paso_x:.2f},{ytop + 0.25:.2f}) {{{gr}}};')
+        o.append(f'  \\draw[black!12, line width=0.3pt] ({xl + j * paso_x:.2f},{ytop + 0.22:.2f}) -- '
+                 f'({xl + j * paso_x:.2f},{ytop - (len(VERTIENTES) - 1) * paso_y - 0.25:.2f});')
+    for i, (nombre, (prev, alc)) in enumerate(zip(VERTIENTES, g['grados'])):
+        y = ytop - i * paso_y
+        o.append(f'  \\node[anchor=east, inner sep=1pt] at ({xl - 0.3:.2f},{y:.2f}) {{{nombre}}};')
+        o.append(f'  \\draw[black!20, line width=0.4pt] ({xl:.2f},{y:.2f}) -- ({xl + 3 * paso_x:.2f},{y:.2f});')
+        if prev != alc:
+            o.append(f'  \\draw[bintergub!60, line width=2.2pt] ({xl + alc * paso_x:.2f},{y:.2f}) -- ({xl + prev * paso_x:.2f},{y:.2f});')
+        o.append(f'  \\draw[bintergub, fill=white, line width=0.9pt] ({xl + prev * paso_x:.2f},{y:.2f}) circle (3.6pt);')
+        o.append(f'  \\fill[bintergub] ({xl + alc * paso_x:.2f},{y:.2f}) circle (2.4pt);')
+    yl = ytop - (len(VERTIENTES) - 1) * paso_y - 0.65
+    o.append(f'  \\draw[bintergub, fill=white, line width=0.9pt] ({xb + 0.15:.2f},{yl:.2f}) circle (3.6pt);')
+    o.append(f'  \\node[anchor=west, inner sep=1pt] at ({xb + 0.35:.2f},{yl:.2f}) {{previsto en los tratados}};')
+    o.append(f'  \\fill[bintergub] ({xb + 3.75:.2f},{yl:.2f}) circle (2.4pt);')
+    o.append(f'  \\node[anchor=west, inner sep=1pt] at ({xb + 3.95:.2f},{yl:.2f}) {{alcanzado (2026)}};')
+    # leyenda de colores del organigrama, debajo de todo
+    ylc = min(m[1] for m in g['marcos']) - 0.5
+    x = -0.15
+    for t in [t for t in TIPOS if t in usados]:
+        o.append(f'  \\node[draw=b{t}, fill=f{t}, line width=0.6pt, minimum width=0.42cm, minimum height=0.26cm, inner sep=0pt, '
+                 f'anchor=west] at ({x:.2f},{ylc:.2f}) {{}};')
+        o.append(f'  \\node[anchor=west, inner sep=1pt] at ({x + 0.5:.2f},{ylc:.2f}) {{{TIPOS[t][2]}}};')
+        x += 0.75 + len(TIPOS[t][2]) * 0.142
+    o.append(f'  \\draw[black!60, line width=0.6pt, densely dashed] ({x:.2f},{ylc - 0.13:.2f}) rectangle ({x + 0.42:.2f},{ylc + 0.13:.2f});')
+    o.append(f'  \\node[anchor=west, inner sep=1pt] at ({x + 0.5:.2f},{ylc:.2f}) {{competencias limitadas}};')
+    o.append('\\end{tikzpicture}')
+    destino = Path(__file__).resolve().parent.parent / 'Img' / f'{clave}_gobernanza.tikz'
+    destino.write_text('\n'.join(o) + '\n', encoding='utf-8')
+    print('Escrito', destino)
+
+
+if __name__ == '__main__':
+    main(sys.argv[1])
