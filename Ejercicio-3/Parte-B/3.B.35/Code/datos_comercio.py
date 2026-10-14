@@ -48,6 +48,11 @@ GRUPOS = {
     'ASEAN': (['IDN', 'MYS', 'PHL', 'SGP', 'THA', 'BRN', 'VNM', 'LAO', 'MMR', 'KHM', 'TLS'],
               'ASEAN: Indonesia, Malasia, Filipinas, Singapur y Tailandia (1967); Brunéi (1984), Vietnam (1995), Laos y '
               'Myanmar (1997), Camboya (1999) y Timor Oriental (2025)'),
+    'PAFTA': (['ARE', 'BHR', 'KWT', 'OMN', 'QAT', 'SAU', 'EGY', 'IRQ', 'JOR', 'LBN', 'PSE', 'SYR', 'SDN', 'YEM',
+               'DZA', 'LBY', 'MAR', 'TUN'],
+              'Zona de Libre Comercio Pan-Árabe (GAFTA): los 18 miembros actuales; Argelia desde 2009 y el resto desde 1998 '
+              '(simplificación: Sudán, Yemen y Palestina se incorporaron más tarde). Muchos no declaran todos los años: '
+              'la cuota se calcula con los que declaran'),
     'UE27': (['AUT', 'BEL', 'BGR', 'HRV', 'CYP', 'CZE', 'DNK', 'EST', 'FIN', 'FRA', 'DEU', 'GRC', 'HUN', 'IRL', 'ITA', 'LVA',
               'LTU', 'LUX', 'MLT', 'NLD', 'POL', 'PRT', 'ROU', 'SVK', 'SVN', 'ESP', 'SWE'],
              'UE-27 (composición actual, solo como referencia de comparación)'),
