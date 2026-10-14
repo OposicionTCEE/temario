@@ -16,7 +16,7 @@ from pathlib import Path
 
 X0, X1 = 2.75, 15.95        # cm del eje temporal (a la izquierda, los nombres de los carriles)
 CM_POR_CARACTER = 0.142     # ancho medio de un carácter de 8 puntos en sans serif
-NIVEL = 0.35                # alto de cada nivel de etiquetas
+NIVEL = 0.34                # alto de cada nivel de etiquetas
 SEP = 0.16                  # distancia del carril al primer nivel
 
 # Tipos de etapa: el mismo color significa lo mismo en todas las cronologías
