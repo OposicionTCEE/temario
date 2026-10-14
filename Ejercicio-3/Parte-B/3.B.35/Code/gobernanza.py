@@ -84,8 +84,8 @@ def main(clave):
         o.append(f'  \\draw[-{{Stealth[length=4pt]}}, {estilos[e]}] ({a}) -- ({b}) '
                  f'node[midway, {pos}, inner sep=1.5pt, font=\\sffamily\\footnotesize\\itshape, text=black!75] {{{rot}}};')
     # (b) vertientes y grado
-    xb, xl = 9.45, 12.85       # inicio del panel y del primer grado
-    paso_x, paso_y = 0.95, 0.62
+    xb, xl = 9.45, 12.75       # inicio del panel y del primer grado
+    paso_x, paso_y = 0.92, 0.62
     ytop = alto_a - 0.55
     o.append(f'  \\node[anchor=south west, font=\\sffamily\\small, inner sep=0pt] at ({xb},{alto_a + 0.25:.2f}) {{(b) Vertientes y grado}};')
     for j, gr in enumerate(GRADOS):
