@@ -26,6 +26,8 @@ GRUPOS = {
     # nombre: (miembros ISO3 de cualquier época, descripción)
     'MCCA': (['GTM', 'SLV', 'HND', 'NIC', 'CRI'],
              'Mercado Común Centroamericano: Guatemala, El Salvador, Honduras, Nicaragua y Costa Rica'),
+    'EFTA': (['ISL', 'NOR', 'CHE'],
+             'EFTA: Islandia, Noruega y Suiza (Liechtenstein comparte territorio aduanero con Suiza y no declara por separado)'),
     'CAN': (['BOL', 'COL', 'ECU', 'PER', 'CHL', 'VEN'],
             'Comunidad Andina (Pacto Andino hasta 1996): Bolivia, Colombia, Ecuador y Perú; Chile hasta 1976; Venezuela de 1973 a 2006'),
 }
