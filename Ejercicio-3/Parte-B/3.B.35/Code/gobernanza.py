@@ -88,81 +88,19 @@ GOBERNANZA = {
                     ('lab', 'lab|-est.south', '', 'c'), ('isds', 'isds|-est.south', '', 'c')],
         'grados': [(3, 3), (0, 0), (3, 3), (1, 1), (1, 1), (1, 1), (1, 1)],
     },
+    'EFTA': {
+        'organos': {
+            'con': (2.25, 5.05, 3.7, 'intergub', 'Consejo de la EFTA', 'embajadores y ministros', False),
+            'sec': (6.75, 5.05, 3.4, 'tecnico', 'Secretaría', 'Ginebra y Bruselas', False),
+            'cm': (1.7, 3.05, 3.2, 'intergub', 'Comité Mixto del EEE', 'UE y EEE-EFTA', False),
+            'esa': (4.85, 3.05, 2.8, 'supra', 'Órgano de Vigilancia', 'de la AELC', False),
+            'tri': (7.65, 3.05, 2.4, 'judicial', 'Tribunal', 'de la AELC', False),
+            'est': (4.45, 1.4, 8.6, 'estados', 'Islandia, Liechtenstein y Noruega', '', False),
+            'sui': (4.45, -0.2, 8.8, 'intergub', 'Suiza y la UE: unos veinte comités mixtos', 'acuerdos bilaterales', False),
+        },
+        'marcos': [(0.0, 4.45, 8.95, 5.9, 'EFTA'), (0.0, 0.95, 8.95, 4.05, 'EEE (sin Suiza)')],
+        'flechas': [('sec', 'con', 'apoyo', 'a'), ('cm', 'cm|-est.north', 'incorpora normas', 'o', 'right'),
+                    ('esa', 'esa|-est.north', 'vigila', 'c', 'right'), ('tri', 'tri|-est.north', 'resuelve', 'c', 'right')],
+        'grados': [(2, 2), (0, 0), (3, 2), (3, 3), (0, 0), (2, 2), (0, 0)],
+    },
 }
-
-
-def rgb(nombre, c):
-    return '\\definecolor{%s}{RGB}{%d,%d,%d}' % (nombre, *c)
-
-
-def main(clave):
-    g = GOBERNANZA[clave]
-    # los colores, dentro del tikzpicture: fuera, cada salto de línea añade un espacio a la izquierda de la figura
-    o = [f'% Generado por Code/gobernanza.py ({clave}).', '\\begin{tikzpicture}[font=\\sffamily\\footnotesize]']
-    for t, (borde, relleno, _) in TIPOS.items():
-        o += ['  ' + rgb(f'b{t}', borde), '  ' + rgb(f'f{t}', relleno)]
-    # (a) organigrama
-    alto_a = max([m[3] for m in g['marcos']] + [v[1] + 0.45 for v in g['organos'].values()])
-    o.append(f'  \\node[anchor=south west, font=\\sffamily\\small, inner sep=0pt] at (0,{alto_a + 0.25:.2f}) {{(a) Gobernanza}};')
-    for i, (x0, y0, x1, y1, rotulo) in enumerate(g['marcos']):
-        o.append(f'  \\draw[black!45, line width=0.5pt, {"densely dashed" if i else ""}, rounded corners=3pt] ({x0},{y0}) rectangle ({x1},{y1});')
-        o.append(f'  \\node[anchor=north east, inner sep=2.5pt, font=\\sffamily\\footnotesize\\bfseries, text=black!60] at ({x1},{y1}) {{{rotulo}}};')
-    usados = []
-    for k, (x, y, ancho, tipo, nombre, linea2, disc) in g['organos'].items():
-        usados.append(tipo)
-        estilo = ', densely dashed' if disc else ''
-        o.append(f'  \\node[draw=b{tipo}, fill=f{tipo}, line width=0.7pt{estilo}, rounded corners=2pt, align=center, '
-                 f'minimum width={ancho}cm, text width={ancho - 0.1:.2f}cm, inner sep=2pt] ({k}) at ({x},{y}) '
-                 f'{{\\textbf{{{nombre}}}' + (f'\\\\[-1pt]{{\\color{{black!70}}{linea2}}}' if linea2 else '') + '};')
-    estilos = {'o': 'black!75, line width=0.7pt', 'a': 'black!55, line width=0.6pt', 'c': 'black!55, line width=0.6pt, densely dashed'}
-    for a, b, rot, e, *lado in g['flechas']:
-        # rótulo a la derecha de las flechas verticales, encima de las horizontales y a lo largo de las oblicuas
-        def punto(n):
-            if '|-' in n:   # 'a|-b.ancla': la x de a con la y de b
-                return punto(n.split('|-')[0])[0], punto(n.split('|-')[1])[1]
-            return tuple(map(float, n.split(','))) if ',' in n else g['organos'][n.split('.')[0]][:2]
-        (xa, ya), (xb_, yb) = punto(a), punto(b)
-        pos = lado[0] if lado else ('right' if abs(xa - xb_) < 0.3 else ('above' if abs(ya - yb) < 0.3 else 'sloped, above'))
-        a = f'{a}' if '|-' not in a else a
-        b = f'{b.split("|-")[0]}.south |- {b.split("|-")[1]}' if '|-' in b else b
-        o.append(f'  \\draw[-{{Stealth[length=4pt]}}, {estilos[e]}] ({a}) -- ({b}) '
-                 f'node[midway, {pos}, inner sep=1.5pt, font=\\sffamily\\footnotesize\\itshape, text=black!75] {{{rot}}};')
-    # (b) vertientes y grado
-    xb, xl = 9.45, 12.75       # inicio del panel y del primer grado
-    paso_x, paso_y = 0.92, 0.62
-    ytop = alto_a - 0.55
-    o.append(f'  \\node[anchor=south west, font=\\sffamily\\small, inner sep=0pt] at ({xb},{alto_a + 0.25:.2f}) {{(b) Vertientes y grado}};')
-    for j, gr in enumerate(GRADOS):
-        o.append(f'  \\node[anchor=base, inner sep=1pt, text=black!70] at ({xl + j * paso_x:.2f},{ytop + 0.32:.2f}) {{{gr}}};')
-        o.append(f'  \\draw[black!12, line width=0.3pt] ({xl + j * paso_x:.2f},{ytop + 0.22:.2f}) -- '
-                 f'({xl + j * paso_x:.2f},{ytop - (len(VERTIENTES) - 1) * paso_y - 0.25:.2f});')
-    for i, (nombre, (prev, alc)) in enumerate(zip(VERTIENTES, g['grados'])):
-        y = ytop - i * paso_y
-        o.append(f'  \\node[anchor=east, inner sep=1pt] at ({xl - 0.3:.2f},{y:.2f}) {{{nombre}}};')
-        o.append(f'  \\draw[black!20, line width=0.4pt] ({xl:.2f},{y:.2f}) -- ({xl + 3 * paso_x:.2f},{y:.2f});')
-        if prev != alc:
-            o.append(f'  \\draw[bintergub!60, line width=2.2pt] ({xl + alc * paso_x:.2f},{y:.2f}) -- ({xl + prev * paso_x:.2f},{y:.2f});')
-        o.append(f'  \\draw[bintergub, fill=white, line width=0.9pt] ({xl + prev * paso_x:.2f},{y:.2f}) circle (3.6pt);')
-        o.append(f'  \\fill[bintergub] ({xl + alc * paso_x:.2f},{y:.2f}) circle (2.4pt);')
-    yl = ytop - (len(VERTIENTES) - 1) * paso_y - 0.65
-    o.append(f'  \\draw[bintergub, fill=white, line width=0.9pt] ({xb + 0.15:.2f},{yl:.2f}) circle (3.6pt);')
-    o.append(f'  \\node[anchor=west, inner sep=1pt] at ({xb + 0.35:.2f},{yl:.2f}) {{previsto en los tratados}};')
-    o.append(f'  \\fill[bintergub] ({xb + 3.75:.2f},{yl:.2f}) circle (2.4pt);')
-    o.append(f'  \\node[anchor=west, inner sep=1pt] at ({xb + 3.95:.2f},{yl:.2f}) {{alcanzado (2026)}};')
-    # leyenda de colores del organigrama, debajo de todo, en filas de tres para no pasar de 16 cm
-    entradas = [(f'draw=b{t}, fill=f{t}', TIPOS[t][2]) for t in TIPOS if t in usados and TIPOS[t][2]]
-    entradas.append(('draw=black!60, densely dashed', 'competencias limitadas'))
-    y0 = min([m[1] for m in g['marcos']] + [v[1] - 0.45 for v in g['organos'].values()]) - 0.45
-    for n, (estilo, texto) in enumerate(entradas):
-        x, y = (n % 3) * 5.45, y0 - (n // 3) * 0.45
-        o.append(f'  \\node[{estilo}, line width=0.6pt, minimum width=0.42cm, minimum height=0.26cm, inner sep=0pt, '
-                 f'anchor=west] at ({x:.2f},{y:.2f}) {{}};')
-        o.append(f'  \\node[anchor=west, inner sep=1pt] at ({x + 0.5:.2f},{y:.2f}) {{{texto}}};')
-    o.append('\\end{tikzpicture}')
-    destino = Path(__file__).resolve().parent.parent / 'Img' / f'{clave}_gobernanza.tikz'
-    destino.write_text('\n'.join(o) + '\n', encoding='utf-8')
-    print('Escrito', destino)
-
-
-if __name__ == '__main__':
-    main(sys.argv[1])

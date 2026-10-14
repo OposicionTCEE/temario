@@ -89,126 +89,21 @@ CRONOLOGIAS = {
                 (2026, 'revisión: EE.\\,UU. no lo renueva')]),
         ],
     },
+    'EFTA': {   # sin carril de miembros: las entradas y salidas están en EFTA_arquitectura (valoración)
+        'eje': (1955, 2027, range(1960, 2030, 10)),
+        'etapas': [(1956, 1960, 'origen', 'Origen'), (1960, 1973, 'impulso', 'Alternativa a la CEE'),
+                   (1973, 1994, 'crisis', 'Vaciamiento'), (1994, 2027, 'relanzamiento', 'EEE y vía bilateral suiza')],
+        'contexto': [
+            (1957, 'Tratados de Roma'), (1973, 'primera ampliación de la CEE'), (1986, 'Acta Única Europea'),
+            (1993, 'mercado único'), (2004, 'ampliación al Este'), (2020, 'Brexit')],
+        'carriles': [
+            ('Convenio\\\\y terceros', (233, 160, 40), [
+                (1960, 'Convenio de Estocolmo'), (1966, 'libre comercio industrial'), (2001, 'Convenio de Vaduz'),
+                (2025, 'acuerdo con la India en vigor')]),
+            ('Relación\\\\con la UE', (30, 75, 135), [
+                (1972, 'acuerdos de libre comercio con la CEE'), (1984, 'Declaración de Luxemburgo'),
+                (1992, 'Suiza rechaza el EEE'), (1994, 'EEE en vigor'), (1999, 'Bilaterales I'),
+                (2021, 'Suiza abandona el acuerdo marco'), (2026, 'Bilaterales III; Islandia no reanuda')]),
+        ],
+    },
 }
-
-
-class Cronologia:
-    def __init__(self, c):
-        self.a0, self.a1, self.marcas = c['eje']
-        self.c = c
-
-    def x(self, anio):
-        return X0 + (anio - self.a0) / (self.a1 - self.a0) * (X1 - X0)
-
-    def colocar(self, hitos):
-        """Asigna a cada hito un lado y un nivel sin solapes; devuelve [(año, texto, lado, nivel, ancla, x)]."""
-        ocupado = {'a': [], 'b': []}   # por lado: lista de niveles; cada nivel, lista de intervalos de etiquetas
-        tallos = {'a': [], 'b': []}    # por lado: lista de niveles; cada nivel, posiciones de tallos que lo cruzan
-        res = []
-        # La etiqueta empieza en su hito (se lee mejor); solo si no cabe a la derecha, termina en él. Orden de colocación:
-        # primero las que terminan en su hito, de izquierda a derecha, y luego las demás, de derecha a izquierda; así el
-        # tallo de un hito no cruza las etiquetas ya colocadas en los niveles más bajos.
-        def ancho(h):
-            return (len(h[1]) + 5) * CM_POR_CARACTER + 0.1
-        al_este = [h for h in hitos if self.x(h[0]) + ancho(h) > X1 + 0.3]
-        al_oeste = [h for h in hitos if h not in al_este]
-        for h in sorted(al_este, key=lambda h: h[0]) + sorted(al_oeste, key=lambda h: -h[0]):
-            anio, texto = h[0], h[1]
-            px = self.x(anio)
-            mejor = None   # (cruces del tallo con etiquetas más bajas, nivel, preferencia, lado, ancla, intervalo)
-            # las que terminan en su hito van todas debajo, en escalera, para dejar arriba sitio a los tallos de las demás
-            for lado in ([h[2]] if len(h) > 2 else (['b'] if h in al_este else ['a', 'b'])):
-                for pref, ancla in enumerate(['east'] if h in al_este else ['west']):
-                    i0, i1 = (px - 0.06, px - 0.06 + ancho(h)) if ancla == 'west' else (px + 0.06 - ancho(h), px + 0.06)
-                    k = 0
-                    while True:
-                        while len(ocupado[lado]) <= k:
-                            ocupado[lado].append([]); tallos[lado].append([])
-                        libre = all(i1 + 0.12 < a or i0 - 0.12 > b for a, b in ocupado[lado][k])
-                        libre = libre and all(not (i0 - 0.05 < t < i1 + 0.05) for t in tallos[lado][k])
-                        if libre:
-                            break
-                        k += 1
-                    cruces = sum(a - 0.05 < px < b + 0.05 for j in range(k) for a, b in ocupado[lado][j])
-                    if mejor is None or (cruces, k, pref) < mejor[:3]:
-                        mejor = (cruces, k, pref, lado, ancla, (i0, i1))
-            cruces, k, _, lado, ancla, (i0, i1) = mejor
-            if cruces:
-                print(f'  aviso: el tallo de {anio} {texto} cruza una etiqueta')
-            ocupado[lado][k].append((i0, i1))
-            for j in range(k):
-                tallos[lado][j].append(px)
-            res.append((anio, texto, lado, k, ancla, px))
-        return res
-
-    def tikz(self, clave):
-        c = self.c
-        carriles = [('Contexto', CONTEXTO, c['contexto'], True)] + [(n, rgb, h, False) for n, rgb, h in c['carriles']]
-        colocados = [self.colocar(h) for _, _, h, _ in carriles]
-        # posición vertical de cada carril, de arriba abajo
-        ys, y = [], 0.0
-        for col in colocados:
-            arriba = 1 + max([k for _, _, lado, k, _, _ in col if lado == 'a'], default=-1)
-            abajo = 1 + max([k for _, _, lado, k, _, _ in col if lado == 'b'], default=-1)
-            y -= SEP + arriba * NIVEL + 0.05
-            ys.append(y)
-            y -= SEP + abajo * NIVEL + 0.1
-        base = y - 0.1
-        alto_etapas = 0.42
-        techo = alto_etapas + (0.45 if c.get('estrategias') else 0)
-        o = [f'% Generado por Code/cronologia_acuerdo.py ({clave}).', '\\begin{tikzpicture}[font=\\sffamily\\footnotesize]']
-        # etapas sombreadas, con su nombre
-        for a, b, tipo, nombre in c['etapas']:
-            rgb = ETAPAS[tipo]
-            o.append('  \\fill[fill={rgb,255:red,%d;green,%d;blue,%d}] (%.2f,%.2f) rectangle (%.2f,%.2f);'
-                     % (*rgb, self.x(a), base, self.x(b), alto_etapas))
-            o.append(f'  \\node[anchor=north, align=center, font=\\sffamily\\footnotesize\\itshape, text=black!75, inner sep=1pt] '
-                     f'at ({(self.x(a) + self.x(b)) / 2:.2f},{alto_etapas - 0.04:.2f}) {{{nombre}}};')
-        # estrategias que agrupan etapas
-        for a, b, nombre in c.get('estrategias', []):
-            ya = techo - 0.12
-            o.append(f'  \\draw[black!55, line width=0.5pt] ({self.x(a) + 0.04:.2f},{ya - 0.12:.2f}) -- ({self.x(a) + 0.04:.2f},{ya:.2f}) '
-                     f'-- ({self.x(b) - 0.04:.2f},{ya:.2f}) -- ({self.x(b) - 0.04:.2f},{ya - 0.12:.2f});')
-            o.append(f'  \\node[fill=white, inner sep=1.5pt, font=\\sffamily\\footnotesize\\bfseries, text=black!70] '
-                     f'at ({(self.x(a) + self.x(b)) / 2:.2f},{ya:.2f}) {{{nombre}}};')
-        # rejilla y eje
-        for d in self.marcas:
-            o.append(f'  \\draw[black!12, line width=0.3pt] ({self.x(d):.2f},{base:.2f}) -- ({self.x(d):.2f},{alto_etapas - 0.4:.2f});')
-            o.append(f'  \\draw[black!70] ({self.x(d):.2f},{base:.2f}) -- ++(0,-0.07) node[below, inner sep=1.5pt] {{{d}}};')
-        o.append(f'  \\draw[black!70, line width=0.5pt, -{{Stealth[length=4pt]}}] ({X0:.2f},{base:.2f}) -- ({X1 + 0.15:.2f},{base:.2f});')
-        # carriles
-        for i, ((nombre, rgb, hitos, es_contexto), col, yc) in enumerate(zip(carriles, colocados, ys)):
-            o.append('  \\definecolor{carril%d}{RGB}{%d,%d,%d}' % (i, *rgb))
-            estilo = '\\itshape' if es_contexto else '\\bfseries'
-            o.append(f'  \\node[anchor=east, align=right, font=\\sffamily\\footnotesize{estilo}, text=carril{i}] '
-                     f'at ({X0 - 0.12:.2f},{yc:.2f}) {{{nombre}}};')
-            if es_contexto:
-                o.append(f'  \\draw[carril{i}!60, line width=0.6pt, densely dotted] ({X0:.2f},{yc:.2f}) -- ({X1:.2f},{yc:.2f});')
-            else:
-                o.append(f'  \\draw[carril{i}, line width=1.4pt] ({self.x(min(h[0] for h in hitos)):.2f},{yc:.2f}) -- ({X1:.2f},{yc:.2f});')
-            for anio, texto, lado, k, ancla, px in col:
-                dy = (SEP + k * NIVEL) * (1 if lado == 'a' else -1)
-                vert = 'south' if lado == 'a' else 'north'
-                dx = -0.06 if ancla == 'west' else 0.06
-                o.append(f'  \\draw[carril{i}!70, line width=0.4pt] ({px:.2f},{yc:.2f}) -- ({px:.2f},{yc + dy:.2f});')
-                if es_contexto:
-                    o.append(f'  \\fill[carril{i}] ({px:.2f},{yc + 0.07:.2f}) -- ({px + 0.07:.2f},{yc:.2f}) -- ({px:.2f},{yc - 0.07:.2f}) -- ({px - 0.07:.2f},{yc:.2f}) -- cycle;')
-                    txt = f'\\textit{{{int(anio)} {texto}}}'
-                    color = f', text=carril{i}!85!black'
-                else:
-                    o.append(f'  \\fill[white] ({px:.2f},{yc:.2f}) circle (1.7pt); \\draw[carril{i}!80!black, line width=0.6pt] ({px:.2f},{yc:.2f}) circle (1.7pt);')
-                    txt = f'\\textbf{{{int(anio)}}} {texto}'
-                    color = ''
-                o.append(f'  \\node[anchor={vert} {ancla}, inner sep=0.8pt{color}] at ({px + dx:.2f},{yc + dy:.2f}) {{{txt}}};')
-        o.append('\\end{tikzpicture}')
-        return '\n'.join(o) + '\n'
-
-
-def main(clave):
-    destino = Path(__file__).resolve().parent.parent / 'Img' / f'{clave}_cronologia.tikz'
-    destino.write_text(Cronologia(CRONOLOGIAS[clave]).tikz(clave), encoding='utf-8')
-    print('Escrito', destino)
-
-
-if __name__ == '__main__':
-    main(sys.argv[1])
