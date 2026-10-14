@@ -40,15 +40,15 @@ CRONOLOGIAS = {
                   (2019.41, 2027, (222, 234, 246), 'Aplicación')],
         'carriles': [
             ('Negociación y protocolos', (120, 120, 120), [
-                (2012.05, 'decisión de la cumbre de Addis Abeba', 'be'), (2015.45, 'inicio de las negociaciones', 'a'),
-                (2023.12, 'inversión, competencia, propiedad intelectual', 'aw'),
-                (2024.13, 'comercio digital; mujeres y jóvenes', 'bw')]),
+                (2012.05, 'decisión de la cumbre de Addis Abeba', 'bw'), (2015.45, 'inicio de las negociaciones', 'a'),
+                (2023.12, 'inversión, competencia, propiedad intelectual', 'ae'),
+                (2024.13, 'comercio digital; mujeres y jóvenes', 'b')]),
             ('Firma y ratificación', (30, 75, 135), [
-                (2018.22, 'firma en Kigali (44 países)', 'aw'), (2019.41, 'entra en vigor (24)', 'b'),
-                (2019.52, 'firma Nigeria', 'ae'), (2026.75, '50 de 54 ratificaciones', 'bw')]),
+                (2018.22, 'firma en Kigali (44 países)', 'ae'), (2019.41, 'entra en vigor (24)', 'b'),
+                (2019.52, 'firma Nigeria', 'aw'), (2026.75, '50 de 54 ratificaciones', 'be')]),
             ('Comercio', (233, 160, 40), [
                 (2021.0, 'comienza el comercio', 'aw'), (2022.78, 'comercio guiado (8 países)', 'b'),
-                (2025.29, 'fin de la fase guiada (39 países)', 'aw')]),
+                (2025.29, 'fin de la fase guiada (39 países)', 'ae')]),
             ('Instituciones y pagos', (200, 76, 58), [
                 (2020.6, 'Secretaría en Acra', 'aw'), (2022.03, 'sistema de pagos PAPSS', 'be')]),
         ],
