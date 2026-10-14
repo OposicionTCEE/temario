@@ -60,6 +60,7 @@ def main():
             vals.append((nombre, EFTA_2023, g))
         else:
             vals.append((nombre, serie(wb[f'{g}_intrarregional'])[2023][0], g))
+    vals.sort(key=lambda t: -t[1])
     o.append(f'  \\node[anchor=west, font=\\sffamily\\small] at ({X0 - 1.9:.2f},{H + 0.75:.2f}) {{(b) Comercio intrarregional, 2023}};')
     ytop = H - 0.1
     for t in range(0, 61, 20):
