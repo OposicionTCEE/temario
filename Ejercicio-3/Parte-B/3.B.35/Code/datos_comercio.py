@@ -131,7 +131,7 @@ def comtrade(exportadores, anio, socios):
 
 
 # WITS usa códigos propios para algunos países (Rumanía es ROM, Serbia SER...): se traducen a ISO3
-WITS_ISO = {'ROM': 'ROU', 'SER': 'SRB', 'MNT': 'MNE', 'ZAR': 'COD', 'TMP': 'TLS'}
+WITS_ISO = {'ROM': 'ROU', 'SER': 'SRB', 'MNT': 'MNE', 'ZAR': 'COD', 'TMP': 'TLS', 'SUD': 'SDN'}
 ISO_WITS = {v: k for k, v in WITS_ISO.items()}
 
 
@@ -155,7 +155,7 @@ def wits(exportador, anio, socios=None):
     for clave, serie in d['dataSets'][0]['series'].items():
         socio = iso(valores[int(clave.split(':')[ip])]['id'])
         if socios is None or socio in socios:
-            out[socio] = serie['observations']['0'][0] * 1000.0  # miles de dólares -> dólares
+            out[socio] = out.get(socio, 0.0) + serie['observations']['0'][0] * 1000.0  # miles de dólares -> dólares
     return out
 
 
