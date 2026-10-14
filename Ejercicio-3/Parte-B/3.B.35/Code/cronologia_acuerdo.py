@@ -77,26 +77,26 @@ class Cronologia:
             anio, texto = h[0], h[1]
             px = self.x(anio)
             ancho = (len(texto) + 5) * CM_POR_CARACTER + 0.1
-            if px + ancho <= X1 + 0.3:
-                ancla, i0, i1 = 'west', px - 0.06, px - 0.06 + ancho
-            else:
-                ancla, i0, i1 = 'east', px + 0.06 - ancho, px + 0.06
-            mejor = None   # (cruces del tallo con etiquetas más bajas, nivel, lado)
+            mejor = None   # (cruces del tallo con etiquetas más bajas, nivel, preferencia, lado, ancla, intervalo)
             for lado in ([h[2]] if len(h) > 2 else ['a', 'b']):
-                k = 0
-                while True:
-                    while len(ocupado[lado]) <= k:
-                        ocupado[lado].append([]); tallos[lado].append([])
-                    libre = all(i1 + 0.12 < a or i0 - 0.12 > b for a, b in ocupado[lado][k])
-                    libre = libre and all(not (i0 - 0.05 < t < i1 + 0.05) for t in tallos[lado][k])
-                    if libre:
-                        break
-                    k += 1
-                cruces = sum(a - 0.05 < px < b + 0.05 for j in range(k) for a, b in ocupado[lado][j])
-                if mejor is None or (cruces, k) < mejor[:2]:
-                    mejor = (cruces, k, lado)
-            _, k, lado = mejor
-            if mejor[0]:
+                for pref, ancla in enumerate(['west', 'east']):
+                    i0, i1 = (px - 0.06, px - 0.06 + ancho) if ancla == 'west' else (px + 0.06 - ancho, px + 0.06)
+                    if i1 > X1 + 0.3 or i0 < X0 - 0.5:
+                        continue
+                    k = 0
+                    while True:
+                        while len(ocupado[lado]) <= k:
+                            ocupado[lado].append([]); tallos[lado].append([])
+                        libre = all(i1 + 0.12 < a or i0 - 0.12 > b for a, b in ocupado[lado][k])
+                        libre = libre and all(not (i0 - 0.05 < t < i1 + 0.05) for t in tallos[lado][k])
+                        if libre:
+                            break
+                        k += 1
+                    cruces = sum(a - 0.05 < px < b + 0.05 for j in range(k) for a, b in ocupado[lado][j])
+                    if mejor is None or (cruces, k, pref) < mejor[:3]:
+                        mejor = (cruces, k, pref, lado, ancla, (i0, i1))
+            cruces, k, _, lado, ancla, (i0, i1) = mejor
+            if cruces:
                 print(f'  aviso: el tallo de {anio} {texto} cruza una etiqueta')
             ocupado[lado][k].append((i0, i1))
             for j in range(k):
