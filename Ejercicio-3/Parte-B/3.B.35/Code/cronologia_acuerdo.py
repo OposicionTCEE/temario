@@ -72,7 +72,8 @@ class Cronologia:
         ocupado = {'a': [], 'b': []}   # por lado: lista de niveles; cada nivel, lista de intervalos de etiquetas
         tallos = {'a': [], 'b': []}    # por lado: lista de niveles; cada nivel, posiciones de tallos que lo cruzan
         res = []
-        for h in sorted(hitos, key=lambda h: h[0]):
+        # de derecha a izquierda: así el tallo de un hito nunca cruza las etiquetas de los posteriores, que empiezan a su derecha
+        for h in sorted(hitos, key=lambda h: -h[0]):
             anio, texto = h[0], h[1]
             px = self.x(anio)
             ancho = (len(texto) + 5) * CM_POR_CARACTER + 0.1
