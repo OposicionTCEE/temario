@@ -91,7 +91,7 @@ CRONOLOGIAS = {
     },
     'EFTA': {   # sin carril de miembros: las entradas y salidas están en EFTA_arquitectura (valoración)
         'eje': (1955, 2027, range(1960, 2030, 10)),
-        'etapas': [(1956, 1960, 'origen', 'Origen'), (1960, 1973, 'impulso', 'Alternativa a la CEE'),
+        'etapas': [(1960, 1973, 'impulso', 'Rival de la CEE'),
                    (1973, 1994, 'crisis', 'Vaciamiento'), (1994, 2027, 'relanzamiento', 'EEE y vía bilateral suiza')],
         'contexto': [
             (1957, 'Tratados de Roma'), (1973, 'primera ampliación de la CEE'), (1986, 'Acta Única Europea'),
