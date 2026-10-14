@@ -88,13 +88,13 @@ def composicion(grupo, a0, a1):
         escribe(CSV_COMP, ['exportador', 'anio', 'socio', 'seccion', 'valor_usd', 'clasificacion'], filas)
 
 
-def productos(grupo, anios):
+def productos(paises, anios, flujos=('X', 'M')):
     previas = lee(CSV_PROD)
     hechas = {(r['pais'], int(r['anio']), r['flujo']) for r in previas}
     filas = [[r[k] for k in ('pais', 'anio', 'flujo', 'producto', 'valor_usd', 'clasificacion')] for r in previas]
     for anio in anios:
-        for pais in dc.GRUPOS[grupo][0]:
-            for flujo in ('X', 'M'):
+        for pais in paises:
+            for flujo in flujos:
                 if (pais, anio, flujo) in hechas:
                     continue
                 datos, inv = comtrade(anio, [pais], ['WLD'], flujo, 'AG3')
