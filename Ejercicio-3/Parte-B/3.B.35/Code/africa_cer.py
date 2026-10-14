@@ -45,6 +45,8 @@ MONETARIAS = [
 ]
 # Antiguos miembros recientes, en hueco
 SALIDAS = {('CEDEAO', 'BFA'), ('CEDEAO', 'MLI'), ('CEDEAO', 'NER'), ('IGAD', 'ERI')}
+NOMBRE_REG = {'Norte': 'Norte de África', 'Oeste': 'África occidental', 'Centro': 'África central',
+              'Este': 'África oriental', 'Sur': 'África austral'}
 COL_REG = {'Norte': (200, 120, 60), 'Oeste': (60, 130, 90), 'Centro': (150, 90, 160), 'Este': (40, 110, 170),
            'Sur': (190, 70, 70)}
 
@@ -70,7 +72,7 @@ def main():
     for reg, lista in REGIONES:
         xa, xb = x0 + k * dx - dx / 2, x0 + (k + len(lista) - 1) * dx + dx / 2
         o.append(f'  \\fill[r{reg}] ({xa:.3f},{ybot - 0.05:.3f}) rectangle ({xb:.3f},{ybot - 0.22:.3f});')
-        o.append(f'  \\node[font=\\sffamily\\scriptsize, text=r{reg}, anchor=north] at ({(xa + xb) / 2:.3f},{ybot - 0.25:.3f}) {{África {reg.lower() if reg != "Centro" else "central"}}};')
+        o.append(f'  \\node[font=\\sffamily\\scriptsize, text=r{reg}, anchor=north] at ({(xa + xb) / 2:.3f},{ybot - 0.25:.3f}) {{{NOMBRE_REG[reg]}}};')
         if k:
             o.append(f'  \\draw[black!35, line width=0.4pt] ({xa:.3f},{ytop:.2f}) -- ({xa:.3f},{ybot:.3f});')
         k += len(lista)
