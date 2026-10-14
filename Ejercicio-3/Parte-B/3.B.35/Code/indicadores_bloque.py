@@ -25,9 +25,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import datos_comercio as dc  # noqa: E402
 import datos_producto as dp  # noqa: E402
 
-MANUF = {'5', '6', '7', '8'}
-SECCIONES = [  # (secciones de la CUCI, nombre)
+MANUF = {'5', '6', '7', '8'}   # la sección 6 va sin la división 68 (metales no ferrosos), como en la UNCTAD
+SECS = list('0123456789') + ['68']
+SECCIONES = [  # (secciones de la CUCI, nombre); '68' = metales no ferrosos, restados de la sección 6
     (('0', '1'), 'Alimentos y bebidas'), (('2', '4'), 'Materias primas y aceites'), (('3',), 'Combustibles'),
+    (('68',), 'Metales no ferrosos'),
     (('5',), 'Productos químicos'), (('6',), 'Manufacturas por material'), (('7',), 'Maquinaria y transporte'),
     (('8',), 'Manufacturas diversas'), (('9',), 'Oro y otros')]
 
@@ -58,18 +60,37 @@ def intensidad(grupo):
     return out
 
 
-def composicion(grupo):
-    """{año: (dentro {sección: valor}, fuera {sección: valor})} con los años en que declaran todos los miembros."""
+def valores():
+    """({(exportador, año, socio, sección): valor}, {(exportador, año)} con la división 68 descargada).
+    La división 68 (metales no ferrosos) se resta de la sección 6 y va aparte, con la clave '68'."""
     v = defaultdict(float)
     for r in dp.lee(dp.CSV_COMP):
         v[(r['exportador'], int(r['anio']), r['socio'], r['seccion'])] += float(r['valor_usd'])
+    con68 = set()
+    for r in dp.lee(dp.CSV_68):
+        k = (r['exportador'], int(r['anio']), r['socio'])
+        x = float(r['valor_usd'])
+        con68.add(k[:2])
+        v[k + ('68',)] += x
+        v[k + ('6',)] = max(v[k + ('6',)] - x, 0.0)
+    return v, con68
+
+
+def completo(v, con68, mm, a):
+    """Declaran todos los miembros y se tiene su división 68."""
+    return all(any(v.get((e, a, 'WLD', s)) for s in '0123456789') and (e, a) in con68 for e in mm)
+
+
+def composicion(grupo):
+    """{año: (dentro {sección: valor}, fuera {sección: valor})} con los años en que declaran todos los miembros."""
+    v, con68 = valores()
     out = {}
     for a in sorted({k[1] for k in v}):
         mm = dc.miembros(grupo, a)
-        if not all(any(v.get((e, a, 'WLD', s)) for s in '0123456789') for e in mm):
+        if not completo(v, con68, mm, a):
             continue
         dentro, fuera = {}, {}
-        for s in '0123456789':
+        for s in SECS:
             d = sum(v.get((e, a, p, s), 0.0) for e in mm for p in mm if p != e)
             t = sum(v.get((e, a, 'WLD', s), 0.0) for e in mm)
             dentro[s], fuera[s] = d, max(t - d, 0.0)
@@ -79,16 +100,13 @@ def composicion(grupo):
 
 def reparto_manufacturas(grupo):
     """{año: {miembro: % de las exportaciones de manufacturas dentro del bloque}} (años en que declaran todos)."""
-    v = defaultdict(float)
-    for r in dp.lee(dp.CSV_COMP):
-        if r['seccion'] in MANUF:
-            v[(r['exportador'], int(r['anio']), r['socio'])] += float(r['valor_usd'])
+    v, con68 = valores()
     out = {}
     for a in sorted({k[1] for k in v}):
         mm = dc.miembros(grupo, a)
-        if not all(v.get((e, a, 'WLD')) for e in mm):
+        if not completo(v, con68, mm, a):
             continue
-        x = {e: sum(v.get((e, a, p), 0.0) for p in mm if p != e) for e in mm}
+        x = {e: sum(v.get((e, a, p, s), 0.0) for p in mm if p != e for s in MANUF) for e in mm}
         if sum(x.values()):
             out[a] = {e: 100 * x[e] / sum(x.values()) for e in mm}
     return out
@@ -189,10 +207,12 @@ def main(grupo):
              [(a, round(c, 2), round(p, 4), round(i, 1)) for a, c, p, i in it])
         hoja(f'{grupo}_composicion', f'Exportaciones dentro y fuera del bloque por secciones de la CUCI. {desc}',
              'UN Comtrade, API pública: CUCI Rev. 1 (hasta 1995), Rev. 3 (1996-2006) y Rev. 4 (desde 2007); exportaciones '
-             'declaradas por cada miembro al mundo y a cada socio, dólares corrientes. Fuera = mundo menos socios. '
+             'declaradas por cada miembro al mundo y a cada socio, dólares corrientes, en millones. Fuera = mundo menos socios. '
+             'La división 68 (metales no ferrosos) se resta de la sección 6, como en la definición de manufacturas de la UNCTAD. '
              'Cálculo propio (Code/indicadores_bloque.py).',
-             ['Año', 'Destino'] + [f'Sección {s}' for s in '0123456789'] + ['Manufacturas (5-8, %)'],
-             [(a, dest, *[round(x[s] / 1e6, 2) for s in '0123456789'], round(100 * sum(x[s] for s in MANUF) / sum(x.values()), 1))
+             ['Año', 'Destino'] + [f'Sección {s}' + (' (sin la división 68)' if s == '6' else '') for s in '0123456789']
+             + ['División 68 (metales no ferrosos)', 'Manufacturas (5-8 sin 68, %)'],
+             [(a, dest, *[round(x[s] / 1e6, 2) for s in SECS], round(100 * sum(x[s] for s in MANUF) / sum(x.values()), 1))
               for a, (d, f) in sorted(comp.items()) for dest, x in (('Dentro', d), ('Fuera', f)) if sum(x.values())])
         hoja(f'{grupo}_complementariedad', f'Complementariedad comercial (MICHAELY, 1996). {desc}',
              'UN Comtrade, API pública, grupos de 3 dígitos de la CUCI (Rev. 1 hasta 1995, Rev. 3 de 1996 a 2006 y Rev. 4 '
