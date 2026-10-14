@@ -68,20 +68,24 @@ class Cronologia:
         return X0 + (anio - self.a0) / (self.a1 - self.a0) * (X1 - X0)
 
     def colocar(self, hitos):
-        """Asigna a cada hito un lado y un nivel sin solapes; devuelve [(año, texto, lado, nivel, ancla, x0, x1)]."""
+        """Asigna a cada hito un lado y un nivel sin solapes; devuelve [(año, texto, lado, nivel, ancla, x)]."""
         ocupado = {'a': [], 'b': []}   # por lado: lista de niveles; cada nivel, lista de intervalos de etiquetas
         tallos = {'a': [], 'b': []}    # por lado: lista de niveles; cada nivel, posiciones de tallos que lo cruzan
         res = []
-        # de derecha a izquierda: así el tallo de un hito nunca cruza las etiquetas de los posteriores, que empiezan a su derecha
-        for h in sorted(hitos, key=lambda h: -h[0]):
+        # La etiqueta empieza en su hito (se lee mejor); solo si no cabe a la derecha, termina en él. Orden de colocación:
+        # primero las que terminan en su hito, de izquierda a derecha, y luego las demás, de derecha a izquierda; así el
+        # tallo de un hito no cruza las etiquetas ya colocadas en los niveles más bajos.
+        def ancho(h):
+            return (len(h[1]) + 5) * CM_POR_CARACTER + 0.1
+        al_este = [h for h in hitos if self.x(h[0]) + ancho(h) > X1 + 0.3]
+        al_oeste = [h for h in hitos if h not in al_este]
+        for h in sorted(al_este, key=lambda h: h[0]) + sorted(al_oeste, key=lambda h: -h[0]):
             anio, texto = h[0], h[1]
             px = self.x(anio)
-            ancho = (len(texto) + 5) * CM_POR_CARACTER + 0.1
             mejor = None   # (cruces del tallo con etiquetas más bajas, nivel, preferencia, lado, ancla, intervalo)
             for lado in ([h[2]] if len(h) > 2 else ['a', 'b']):
-                # la etiqueta empieza en su hito (se lee mejor); solo si no cabe a la derecha, termina en él
-                for pref, ancla in enumerate(['west'] if px + ancho <= X1 + 0.3 else ['east']):
-                    i0, i1 = (px - 0.06, px - 0.06 + ancho) if ancla == 'west' else (px + 0.06 - ancho, px + 0.06)
+                for pref, ancla in enumerate(['east'] if h in al_este else ['west']):
+                    i0, i1 = (px - 0.06, px - 0.06 + ancho(h)) if ancla == 'west' else (px + 0.06 - ancho(h), px + 0.06)
                     k = 0
                     while True:
                         while len(ocupado[lado]) <= k:
