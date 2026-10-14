@@ -47,7 +47,7 @@ CRONOLOGIAS = {
                 (2018.22, 'firma en Kigali (44 países)', 'ae'), (2019.41, 'entra en vigor (24)', 'b'),
                 (2019.52, 'firma Nigeria', 'aw'), (2026.75, '50 de 54 ratificaciones', 'be')]),
             ('Comercio', (233, 160, 40), [
-                (2021.0, 'comienza el comercio', 'aw'), (2022.78, 'comercio guiado (8 países)', 'b'),
+                (2021.0, 'comienza el comercio', 'be'), (2022.78, 'comercio guiado (8 países)', 'a'),
                 (2025.29, 'fin de la fase guiada (39 países)', 'ae')]),
             ('Instituciones y pagos', (200, 76, 58), [
                 (2020.6, 'Secretaría en Acra', 'aw'), (2022.03, 'sistema de pagos PAPSS', 'be')]),
