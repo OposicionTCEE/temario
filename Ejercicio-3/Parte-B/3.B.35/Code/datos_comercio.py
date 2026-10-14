@@ -239,7 +239,8 @@ def cuadro(grupo, a0, a1, filas):
             con.append(e)
             total += w
             intra += sum(filas.get((e, anio, s), (0.0, ''))[0] for s in mm if s != e)
-        cuota = 100 * intra / total if total and len(con) == len(mm) else None
+        completo = len(con) == len(mm) or (grupo in PARCIALES and len(con) >= len(mm) / 2)
+        cuota = 100 * intra / total if total and completo else None
         out.append((anio, intra / 1e6, total / 1e6, cuota, len(con), ', '.join(sorted(set(mm) - set(con)))))
     return out
 
