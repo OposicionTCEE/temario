@@ -101,7 +101,7 @@ def fig_composicion(grupo, comp, cm, x0=1962, x1=2024):
     o = cabecera(grupo, 'composicion')
     ymax = 100
     top = max(cm, key=lambda x: x[1])
-    o += [f'  \\begin{{axis}}[{ESTILO}, width=6.0cm, height=4.4cm, xmin={x0}, xmax={x1}, ymin=0, ymax={ymax},'
+    o += [f'  \\begin{{axis}}[{ESTILO}, width=5.6cm, height=4.4cm, xmin={x0}, xmax={x1}, ymin=0, ymax={ymax},'
           ' xtick={1960,1970,1980,1990,2000,2010,2020}, title={(a) Manufacturas en las exportaciones},'
           ' ylabel={\\% de cada destino}, at={(0cm,0cm)}]', *etapas(grupo, 0, ymax),
           f'    \\addplot[s1, line width=1.3pt, mark=none] coordinates {{{coords((a, d) for a, d, f in cm)}}};',
@@ -119,9 +119,9 @@ def fig_composicion(grupo, comp, cm, x0=1962, x1=2024):
         cats.append((nombre, vd, vf))
     ylab = ','.join(n for n, _, _ in cats)
     xmax = techo(max(max(vd, vf) for _, vd, vf in cats), 10)
-    o += [f'  \\begin{{axis}}[{ESTILO.replace("ymajorgrids", "xmajorgrids")}, at={{(10.9cm,0cm)}}, anchor=south west, width=4.4cm, height=4.4cm,'
+    o += [f'  \\begin{{axis}}[{ESTILO.replace("ymajorgrids", "xmajorgrids")}, at={{(9.9cm,0cm)}}, anchor=south west, width=4.6cm, height=4.4cm,'
           f' xbar, bar width=4.2pt, y dir=reverse, symbolic y coords={{{ylab}}}, ytick=data, xmin=0, xmax={xmax},'
-          f' enlarge y limits=0.07, title={{(b) Composición, {ult} (\\% de cada destino)}},'
+          f' enlarge y limits=0.07, title={{(b) Composición, {ult} (\\%)}},'
           ' nodes near coords, nodes near coords style={font=\\sffamily\\footnotesize, text=black!75, /pgf/number format/fixed,'
           ' /pgf/number format/precision=0, /pgf/number format/assume math mode=true}, point meta=x,'
           ' legend style={font=\\sffamily\\footnotesize, draw=none, fill=none, at={(0.5,-0.13)}, anchor=north, legend columns=2,'
