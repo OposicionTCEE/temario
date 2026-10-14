@@ -73,6 +73,22 @@ CRONOLOGIAS = {
                 (1991, 'Decisión 291: trato nacional')]),
         ],
     },
+    'NAFTA': {
+        'eje': (1980, 2027, range(1980, 2030, 10)),
+        'etapas': [(1982, 1994, 'origen', 'Apertura y negociación'), (1994, 2001, 'impulso', 'Auge'),
+                   (2001, 2017, 'crisis', 'Competencia de China'), (2017, 2027, 'relanzamiento', 'Renegociación')],
+        'contexto': [
+            (1982, 'crisis de la deuda'), (1986, 'México entra en el GATT'), (1994, 'crisis del peso'),
+            (2001, 'China entra en la OMC'), (2008, 'crisis financiera'), (2017, 'Trump abre la renegociación'),
+            (2025, 'aranceles de EE.\\,UU.')],
+        'carriles': [
+            ('Miembros', (120, 120, 120), [(1989, 'Canadá y EE.\\,UU. (CUSFTA)'), (1994, 'se suma México')]),
+            ('Comercio', (233, 160, 40), [
+                (1992, 'firma del NAFTA'), (1994, 'entra en vigor'), (2008, 'fin de la desgravación'),
+                (2018, 'firma del USMCA'), (2020, 'entra en vigor el USMCA'), (2023, 'reglas de origen del automóvil plenas'),
+                (2026, 'revisión: EE.\\,UU. no lo renueva')]),
+        ],
+    },
 }
 
 

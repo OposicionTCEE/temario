@@ -70,6 +70,24 @@ GOBERNANZA = {
                     ('caf', 'caf|-est.south', 'financia', 'a', 'right')],
         'grados': [(3, 3), (3, 0), (3, 2), (3, 3), (2, 1), (3, 2), (2, 1)],
     },
+    'NAFTA': {   # USMCA
+        'organos': {
+            'com': (4.45, 4.95, 4.2, 'intergub', 'Comisión de Libre Comercio', 'ministros de los tres países', False),
+            'sec': (1.6, 3.55, 3.0, 'tecnico', 'Secretariado', 'secciones nacionales', False),
+            'cmt': (7.3, 3.55, 3.1, 'tecnico', 'Comités y grupos', 'de trabajo', False),
+            'est': (4.45, 2.15, 8.8, 'estados', 'Estados miembros', '', False),
+            'pan': (1.15, 0.7, 2.2, 'judicial', 'Paneles', 'entre Estados', False),
+            'bin': (3.45, 0.7, 2.2, 'judicial', 'Paneles', 'binacionales', False),
+            'lab': (5.75, 0.7, 2.2, 'judicial', 'Mecanismo', 'laboral', False),
+            'isds': (7.95, 0.7, 2.0, 'judicial', 'Arbitraje', 'inversor-Estado', True),
+        },
+        'marcos': [],
+        'flechas': [('sec', 'com', 'apoyo', 'a', 'sloped, above'), ('com', 'cmt', 'supervisa', 'o', 'sloped, above'),
+                    ('com', 'com|-est.north', 'interpreta', 'o', 'right'),
+                    ('pan', 'pan|-est.south', 'resuelven', 'c', 'left'), ('bin', 'bin|-est.south', '', 'c'),
+                    ('lab', 'lab|-est.south', '', 'c'), ('isds', 'isds|-est.south', '', 'c')],
+        'grados': [(3, 3), (0, 0), (3, 3), (1, 1), (1, 1), (1, 1), (1, 1)],
+    },
 }
 
 
