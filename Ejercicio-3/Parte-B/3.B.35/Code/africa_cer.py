@@ -91,7 +91,7 @@ def main():
         for k, (reg, iso, _) in enumerate(paises):
             x = x0 + k * dx
             if iso in mm:
-                if (nombre, 'x') and fila in CER:
+                if fila in CER:
                     cuenta[iso] += 1
                 o.append(f'  \\fill[r{reg}] ({x:.3f},{y:.3f}) circle (0.095);')
             elif (nombre, iso) in SALIDAS:
