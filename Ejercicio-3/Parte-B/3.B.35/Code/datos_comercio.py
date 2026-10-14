@@ -213,9 +213,10 @@ def descarga(grupo, a0, a1):
             fuente = FUENTE_CT
         else:
             res, fuentes = {}, {}
-            for e in pendientes:
-                res[e], fuentes[e] = por_socio(e, anio, socios)
-                time.sleep(0.5)
+            from concurrent.futures import ThreadPoolExecutor   # varias consultas a la vez: WITS tarda unos 5 s en cada una
+            with ThreadPoolExecutor(max_workers=6) as ex:
+                for e, (r, fu) in zip(pendientes, ex.map(lambda p: por_socio(p, anio, socios), pendientes)):
+                    res[e], fuentes[e] = r, fu
         for e in pendientes:
             if anio >= CORTE:
                 fuente = fuentes[e]
