@@ -105,6 +105,42 @@ BLOQUES = {
             ('Identidad\\\\panregional', 2, 3),
         ],
     },
+    'geoestrategico': {
+        't0': 1965,
+        'grupos': [  # orden: los posteriores prevalecen
+            ('rcep', 'RCEP (fuera de la ASEAN)', (233, 160, 40), ['CHN', 'JPN', 'KOR', 'AUS', 'NZL']),
+            ('asean', 'ASEAN (también en el RCEP)', (200, 76, 58), ['IDN', 'MYS', 'PHL', 'SGP', 'THA', 'BRN', 'VNM',
+                                                                   'LAO', 'MMR', 'KHM']),
+            ('tls', 'Timor Oriental', (238, 165, 145), ['TLS']),
+            ('cptpp', 'CPTPP (fuera del RCEP)', (30, 75, 135), ['CAN', 'MEX', 'PER', 'CHL', 'GBR']),
+            ('ccg', 'CCG', (60, 140, 90), ['SAU', 'ARE', 'KWT', 'QAT', 'BHR', 'OMN']),
+            ('uee', 'UEE', (150, 90, 160), ['RUS', 'BLR', 'KAZ', 'ARM', 'KGZ']),
+        ],
+        'rayado': ('también en el CPTPP', ['JPN', 'AUS', 'NZL', 'VNM', 'MYS', 'SGP', 'BRN']),
+        'recuadros': [],
+        'circulos': [
+            (103.8, 1.35, 0.13, 'asean', 'Singapur', (96.0, -12.0)),
+            (50.9, 25.8, 0.13, 'ccg', 'Bahréin y Catar', (36.0, 13.5)),
+        ],
+        'notas_mapa': [
+            ((-34.0, -38.0), 'tls', 'Timor Oriental: ASEAN desde 2025, fuera del RCEP'),
+            ((-34.0, -45.5), 'rayado', 'Rayado: también en el CPTPP'),
+        ],
+        'filas': [
+            ('ASEAN', 'asean', 1967, [(1967, 'Bangkok', 'aw'), (1976, 'Bali', 'b'), (1992, 'AFTA', 'a'),
+                                      (2007, 'Carta', 'b'), (2015, 'Comunidad Económica', 'a'), (2025, 'Timor Oriental', 'be')], []),
+            ('CCG', 'ccg', 1981, [(1981, 'Riad', 'aw'), (2003, 'unión aduanera', 'b'), (2008, 'mercado común', 'a'),
+                                  (2017, 'bloqueo de Catar', 'b'), (2021, 'Al-Ula', 'ae')], []),
+            ('RCEP', 'rcep', 2022, [(2012, 'negociación', 'ae'), (2020, 'firma', 'b'), (2022, 'en vigor', 'aw')], []),
+            ('CPTPP', 'cptpp', 2018, [(2016, 'TPP', 'ae'), (2017, 'sale EE.\\,UU.', 'b'), (2018, 'en vigor', 'a'),
+                                      (2024, 'Reino Unido', 'be')], []),
+            ('UEE', 'uee', 2015, [(2010, 'unión aduanera', 'ae'), (2014, 'Astana', 'b'), (2015, 'en vigor', 'aw')], []),
+        ],
+        'tipos': [
+            ('Seguridad frente\\\\a una amenaza', 0, 1),
+            ('Esferas de\\\\influencia', 2, 4),
+        ],
+    },
 }
 
 
