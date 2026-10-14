@@ -47,9 +47,9 @@ CRONOLOGIAS = {
                 (1971, 'Honduras se retira de hecho'), (2013, 'Panamá'),
                 (2024, 'Nicaragua deja el SICA')]),
             ('Comercio', (233, 160, 40), [
-                (1958, 'Tratado Multilateral'), (1960, 'Tratado General: libre comercio y arancel común'),
-                (2002, 'servicios e inversión'), (2006, 'DR-CAFTA'), (2013, 'Acuerdo con la UE'),
-                (2017, 'unión aduanera Guatemala-Honduras'), (2018, 'se suma El Salvador')]),
+                (1958, 'Tratado Multilateral', 'b'), (1960, 'Tratado General de Managua', 'a'),
+                (2002, 'servicios e inversión', 'a'), (2006, 'DR-CAFTA', 'a'), (2013, 'Acuerdo con la UE', 'a'),
+                (2017, 'unión aduanera Guatemala-Honduras', 'b'), (2018, 'se suma El Salvador', 'b')]),
             ('Instituciones\\\\y personas', (30, 75, 135), [
                 (1960, 'SIECA y BCIE'), (1964, 'Consejo Monetario'), (1987, 'Parlamento'),
                 (1991, 'Protocolo de Tegucigalpa: SICA'), (1993, 'Protocolo de Guatemala'),
