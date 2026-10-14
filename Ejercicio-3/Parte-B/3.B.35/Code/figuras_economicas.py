@@ -155,16 +155,16 @@ def fig_complementariedad(grupo, cp, sd, rm, x0=1962, x1=2024):
     ult = max(cp)
     c = cp[ult]
     cols = miembros_hoy + refs
-    cw, ch = 0.78, 0.46
-    xm, ytop = 2.0, 8.6
+    cw, ch = 0.95, 0.5   # códigos ISO de país en filas y columnas (más compacto; usuario, 14/10/2026)
+    xm, ytop = 1.0, 8.6
     vmax = max(c.values())
     # título debajo, a la altura del de (b)
-    o.append(f'  \\node[anchor=north, font=\\sffamily\\small, inner sep=0pt] at ({xm + len(cols) * cw / 2 - 0.5:.2f},{ytop - 3.57:.2f}) {{(a) Complementariedad, {ult}}};')
+    o.append(f'  \\node[anchor=north, font=\\sffamily\\small, inner sep=0pt] at ({xm + len(cols) * cw / 2:.2f},{ytop - 3.57:.2f}) {{(a) Complementariedad, {ult}}};')
     for jx, j in enumerate(cols):
-        o.append(f'  \\node[anchor=south west, rotate=40, inner sep=1pt] at ({xm + (jx + 0.3) * cw:.2f},{ytop + 0.05:.2f}) {{{NOMBRES[j]}}};')
+        o.append(f'  \\node[anchor=south, inner sep=1.5pt] at ({xm + (jx + 0.5) * cw:.2f},{ytop + 0.03:.2f}) {{{j}}};')
     for iy, i in enumerate(miembros_hoy):
         y = ytop - (iy + 1) * ch
-        o.append(f'  \\node[anchor=east, inner sep=1pt] at ({xm - 0.08:.2f},{y + ch / 2:.2f}) {{{NOMBRES[i]}}};')
+        o.append(f'  \\node[anchor=east, inner sep=1pt] at ({xm - 0.08:.2f},{y + ch / 2:.2f}) {{{i}}};')
         for jx, j in enumerate(cols):
             x = xm + jx * cw
             if (i, j) in c:
@@ -177,7 +177,7 @@ def fig_complementariedad(grupo, cp, sd, rm, x0=1962, x1=2024):
                 o.append(f'  \\fill[black!6] ({x + 0.02:.2f},{y + 0.02:.2f}) rectangle ({x + cw - 0.02:.2f},{y + ch - 0.02:.2f});')
     xs = xm + len(miembros_hoy) * cw
     o.append(f'  \\draw[black!45, line width=0.5pt] ({xs:.2f},{ytop - len(miembros_hoy) * ch - 0.05:.2f}) -- ({xs:.2f},{ytop + 0.05:.2f});')
-    o.append(f'  \\node[anchor=north west, inner sep=1pt, text=black!70] at ({xm - 1.95:.2f},{ytop - len(miembros_hoy) * ch - 0.12:.2f}) '
+    o.append(f'  \\node[anchor=north west, inner sep=1pt, text=black!70] at ({xm - 0.75:.2f},{ytop - len(miembros_hoy) * ch - 0.12:.2f}) '
              '{exportador (filas), importador (columnas); 0-100};')
     # (b) evolución de la media
     medias = []
