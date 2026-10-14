@@ -116,6 +116,12 @@ CIFRAS = [
     ('PAFTA', 'Comercio entre los miembros sin los exportadores del CCG (datos espejo)', 9.7, '%', 2023, 'Cálculo propio con WITS (hoja PAFTA_con_y_sin_CCG)', 'https://wits.worldbank.org'),
     ('PAFTA', 'Exportaciones de Arabia Saudí declaradas sin destino', 77.3, '%', 2023, 'WITS (Code/datos/destinos.csv, socio UNS)', 'https://wits.worldbank.org'),
     ('PAFTA', 'Destinos por subregión (Golfo: China 19 %, Japón y Corea 19 %, India 11 %, PAFTA 10 %; Magreb: UE 66 %, PAFTA 4 %; Oriente Próximo, Sudán y Yemen: PAFTA 15 %)', None, '%', 2023, 'Cálculo propio con WITS, datos espejo (hoja PAFTA_subregiones_2023)', 'https://wits.worldbank.org'),
+    ('ASEAN', 'Exportaciones intrarregionales / totales', 21.5, '%', 1967, 'Cálculo propio con UN Comtrade (hoja ASEAN_intrarregional)', 'https://comtradeapi.un.org'),
+    ('ASEAN', 'Exportaciones intrarregionales / totales (mínimo)', 14.4, '%', 1976, 'Cálculo propio con UN Comtrade (hoja ASEAN_intrarregional)', 'https://comtradeapi.un.org'),
+    ('ASEAN', 'Exportaciones intrarregionales / totales (máximo)', 26.5, '%', 2013, 'Cálculo propio con WITS (hoja ASEAN_intrarregional)', 'https://wits.worldbank.org'),
+    ('ASEAN', 'Destinos por miembro (China: IDN 25 %, LAO 38 %; EE. UU.: VNM 27 %, KHM 42 %, PHL 16 %; bloque primer destino de MYS, SGP, THA, BRN, MMR, 24-36 %)', None, '%', 2023, 'Cálculo propio con WITS (hoja ASEAN_destinos_2023)', 'https://wits.worldbank.org'),
+    ('CCG', 'Destino de las exportaciones: resto del CCG / EE. UU. / China (datos espejo)', '3,1 / 11,8 / 2,2', '%', 1998, 'Cálculo propio con WITS (hoja CCG_destinos)', 'https://wits.worldbank.org'),
+    ('CCG', 'Destino de las exportaciones: resto del CCG / EE. UU. / China / India / Japón y Corea (datos espejo)', '7,6 / 3,3 / 19,0 / 10,9 / 18,9', '%', 2023, 'Cálculo propio con WITS (hoja CCG_destinos)', 'https://wits.worldbank.org'),
 ]
 
 
