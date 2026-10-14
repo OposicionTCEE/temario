@@ -53,6 +53,9 @@ GRUPOS = {
               'Zona de Libre Comercio Pan-Árabe (GAFTA): los 18 miembros actuales; Argelia desde 2009 y el resto desde 1998 '
               '(simplificación: Sudán, Yemen y Palestina se incorporaron más tarde). Muchos no declaran todos los años: '
               'la cuota se calcula con los que declaran'),
+    'UEE': (['RUS', 'BLR', 'KAZ', 'ARM', 'KGZ'],
+            'Unión Económica Euroasiática (composición actual): Rusia, Bielorrusia, Kazajistán, Armenia y Kirguistán. '
+            'Rusia y Bielorrusia no publican su comercio desde 2022'),
     'UE27': (['AUT', 'BEL', 'BGR', 'HRV', 'CYP', 'CZE', 'DNK', 'EST', 'FIN', 'FRA', 'DEU', 'GRC', 'HUN', 'IRL', 'ITA', 'LVA',
               'LTU', 'LUX', 'MLT', 'NLD', 'POL', 'PRT', 'ROU', 'SVK', 'SVN', 'ESP', 'SWE'],
              'UE-27 (composición actual, solo como referencia de comparación)'),
