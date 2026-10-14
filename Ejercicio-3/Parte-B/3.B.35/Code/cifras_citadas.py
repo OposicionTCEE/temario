@@ -102,6 +102,14 @@ CIFRAS = [
     ('CEFTA', 'Subvención de la UE a la Secretaría (de 9,25 millones en total)', 7, 'millones EUR', '2025-2028', 'Conclusiones ministeriales del Comité Mixto, 2 de diciembre de 2025', 'https://cefta.int/wp-content/uploads/2025/12/Ministerial-conclusions_2-December-2025.pdf'),
     ('CEFTA', 'Mecanismo de Reforma y Crecimiento para los Balcanes occidentales (2 mil millones en subvenciones y 4 mil millones en préstamos)', 6, 'miles de millones EUR', '2024-2027', 'Comisión Europea, Plan de Crecimiento para los Balcanes occidentales', 'https://enlargement.ec.europa.eu/enlargement-policy/growth-plan-western-balkans_en'),
     ('CEFTA', 'Capítulos de adhesión cerrados provisionalmente por Montenegro', 21, 'capítulos', 2026, 'New Union Post (12/10/2026)', 'https://newunionpost.eu/2026/10/12/montenegro-eu-accession-negotiations-2/'),
+    ('AfCFTA', 'Exportaciones intraafricanas / totales (países que declaran)', 11.8, '%', 1996, 'Cálculo propio con WITS (hoja AFCFTA_intrarregional)', 'https://wits.worldbank.org'),
+    ('AfCFTA', 'Exportaciones intraafricanas / totales (países que declaran; 40 de 53)', 20.0, '%', 2023, 'Cálculo propio con WITS (hoja AFCFTA_intrarregional)', 'https://wits.worldbank.org'),
+    ('ASEAN', 'Exportaciones intrarregionales / totales', 22.1, '%', 2023, 'Cálculo propio con WITS (hoja ASEAN_intrarregional)', 'https://wits.worldbank.org'),
+    ('UE-27', 'Exportaciones intrarregionales / totales', 59.7, '%', 2023, 'Cálculo propio con WITS (hoja UE27_intrarregional)', 'https://wits.worldbank.org'),
+    ('AfCFTA', 'Ratificaciones (de 54 signatarios)', 50, 'países', 2026, 'tralac (2026)', 'https://www.tralac.org/resources/afcfta-negotiations-timeline.html'),
+    ('AfCFTA', 'Participantes al cierre de la fase de comercio guiado', 39, 'países', 2025, 'tralac (2026)', 'https://www.tralac.org/resources/afcfta-negotiations-timeline.html'),
+    ('AfCFTA', 'Ratificaciones del Protocolo de libre circulación de personas (de 15 necesarias)', 4, 'países', 2025, 'Ghana News Agency (2025)', 'https://gna.org.gh/2025/03/stakeholders-dialogues-progress-on-ratifying-aus-free-movement-of-persons-protocol/'),
+    ('AfCFTA', 'Aumento de las exportaciones de África en 2035 con más IED (intraafricanas: 109 %)', 32, '%', 2022, 'Banco Mundial (2022)', 'https://www.worldbank.org/en/topic/trade/publication/making-the-most-of-the-african-continental-free-trade-area'),
 ]
 
 
