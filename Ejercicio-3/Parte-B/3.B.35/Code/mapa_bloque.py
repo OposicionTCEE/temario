@@ -79,7 +79,7 @@ BLOQUES = {
         'excluir': ['ERI'],   # único miembro de la Unión Africana que no ha firmado el AfCFTA
         'rayado': ('también en el AfCFTA', ['DZA', 'EGY', 'LBY', 'MAR', 'SDN', 'TUN']),
         'recuadros': [
-            {'titulo': 'Balcanes occidentales y Moldavia', 'lon': (13.0, 30.5), 'lat': (39.3, 48.6),
+            {'titulo': 'Balcanes occidentales y Moldavia', 'lon': (13.0, 30.5), 'lat': (39.3, 49.4),
              'pos': (6.35, 0.25), 'ancho': 2.15, 'esquina_mapa': 'south west'},
         ],
         'circulos': [],
@@ -96,7 +96,7 @@ BLOQUES = {
             ('CEFTA', 'cefta', 1992, [(1992, 'Cracovia', 'aw'), (2004, 'salidas a la UE', 'be'),
                                       (2006, 'CEFTA 2006', 'aw'), (2013, 'sale Croacia', 'bw')], []),
             ('AfCFTA', 'afcfta', 2018, [(2012, 'decisión de la UA', 'ae'), (2018, 'Kigali', 'be'), (2019, 'en vigor', 'aw'),
-                                        (2021, 'empieza el comercio', 'bw')], []),
+                                        (2021, 'comercio', 'bw')], []),
             ('Zona Pan-Árabe', 'pafta', 1998, [(1997, 'programa ejecutivo', 'ae'), (1998, 'en vigor', 'bw'),
                                                  (2005, 'liberalización completa', 'aw')], []),
         ],
