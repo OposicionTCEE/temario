@@ -72,7 +72,8 @@ def main():
         color = 'cafr' if g == 'AFCFTA' else 'cotro'
         o.append(f'  \\node[anchor=east, font=\\sffamily\\scriptsize] at ({X0 - 0.08:.2f},{y:.2f}) {{{nombre}}};')
         o.append(f'  \\fill[{color}] ({X0:.2f},{y - 0.15:.2f}) rectangle ({X0 + v / 60 * Wb:.3f},{y + 0.15:.2f});')
-        o.append(f'  \\node[anchor=west, font=\\sffamily\\tiny] at ({X0 + v / 60 * Wb + 0.05:.3f},{y:.2f}) {{{v:.1f}}};'.replace('.', '{,}', 0))
+        cifra = f'{v:.1f}'.replace('.', '{,}')   # coma decimal
+        o.append(f'  \\node[anchor=west, font=\\sffamily\\tiny] at ({X0 + v / 60 * Wb + 0.05:.3f},{y:.2f}) {{{cifra}}};')
     o.append('\\end{tikzpicture}')
     texto = '\n'.join(o) + '\n'
     destino = TEMA / 'Img' / 'AfCFTA_comercio_intrarregional.tikz'
