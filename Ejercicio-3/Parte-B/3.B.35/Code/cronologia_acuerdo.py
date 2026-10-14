@@ -36,11 +36,10 @@ CRONOLOGIAS = {
         'etapas': [(1951, 1960, 'origen', 'Gestación'), (1960, 1969, 'impulso', 'Auge'),
                    (1969, 1990, 'crisis', 'Crisis y guerras'), (1990, 2004, 'relanzamiento', 'Relanzamiento'),
                    (2004, 2027, 'terceros', 'Acuerdos con terceros')],
+        # sin carril de instituciones (las enseña la figura de gobernanza; el usuario lo pidió el 14/10/2026)
         'contexto': [
-            (1952, 'comité de la CEPAL'), (1969, 'guerra El Salvador-Honduras'),
-            (1979, 'revolución sandinista'), (1982, 'crisis de la deuda'),
-            (1984, 'Iniciativa de la Cuenca del Caribe'), (1987, 'paz de Esquipulas'),
-            (2001, 'El Salvador adopta el dólar'), (2025, 'aranceles de EE.\\,UU.')],
+            (1969, 'guerra El Salvador-Honduras'), (1979, 'revolución sandinista'), (1982, 'crisis de la deuda'),
+            (1984, 'Iniciativa de la Cuenca del Caribe'), (1987, 'paz de Esquipulas'), (2025, 'aranceles de EE.\\,UU.')],
         'carriles': [
             ('Miembros', (120, 120, 120), [
                 (1960, 'Guatemala, El Salvador, Honduras, Nicaragua'), (1963, 'Costa Rica'),
@@ -50,10 +49,6 @@ CRONOLOGIAS = {
                 (1958, 'Tratado Multilateral'), (1960, 'Tratado General de Managua'),
                 (2002, 'servicios e inversión'), (2006, 'DR-CAFTA'), (2013, 'Acuerdo con la UE'),
                 (2017, 'unión aduanera Guatemala-Honduras'), (2018, 'se suma El Salvador')]),
-            ('Instituciones\\\\y personas', (30, 75, 135), [
-                (1960, 'SIECA y BCIE'), (1964, 'Consejo Monetario'), (1987, 'Parlamento'),
-                (1991, 'Protocolo de Tegucigalpa: SICA'), (1993, 'Protocolo de Guatemala'),
-                (2006, 'convenio CA-4'), (2023, 'Secretaría del SICA vacante')]),
         ],
     },
 }
