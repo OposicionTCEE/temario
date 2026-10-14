@@ -84,7 +84,7 @@ GOBERNANZA = {
         'marcos': [],
         'flechas': [('sec', 'com', 'apoyo', 'a', 'sloped, above'), ('com', 'cmt', 'supervisa', 'o', 'sloped, above'),
                     ('com', 'com|-est.north', 'interpreta', 'o', 'right'),
-                    ('pan', 'pan|-est.south', 'resuelven', 'c', 'left'), ('bin', 'bin|-est.south', '', 'c'),
+                    ('pan', 'pan|-est.south', 'resuelven', 'c', 'right'), ('bin', 'bin|-est.south', '', 'c'),
                     ('lab', 'lab|-est.south', '', 'c'), ('isds', 'isds|-est.south', '', 'c')],
         'grados': [(3, 3), (0, 0), (3, 3), (1, 1), (1, 1), (1, 1), (1, 1)],
     },
