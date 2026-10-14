@@ -132,8 +132,8 @@ BLOQUES = {
             ('CCG', 'ccg', 1981, [(1981, 'Riad', 'aw'), (2003, 'unión aduanera', 'b'), (2008, 'mercado común', 'a'),
                                   (2017, 'bloqueo de Catar', 'b'), (2021, 'Al-Ula', 'ae')], []),
             ('RCEP', 'rcep', 2022, [(2012, 'negociación', 'ae'), (2020, 'firma', 'b'), (2022, 'en vigor', 'aw')], []),
-            ('CPTPP', 'cptpp', 2018, [(2016, 'TPP', 'ae'), (2017, 'sale EE.\\,UU.', 'b'), (2018, 'en vigor', 'a'),
-                                      (2024, 'Reino Unido', 'be')], []),
+            ('CPTPP', 'cptpp', 2018, [(2016, 'TPP', 'ae'), (2017, 'sale EE.\\,UU.', 'be'), (2018, 'en vigor', 'aw'),
+                                      (2024, 'Reino Unido', 'b')], []),
             ('UEE', 'uee', 2015, [(2010, 'unión aduanera', 'ae'), (2014, 'Astana', 'b'), (2015, 'en vigor', 'aw')], []),
         ],
         'tipos': [
