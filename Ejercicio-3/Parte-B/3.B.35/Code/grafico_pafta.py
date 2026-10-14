@@ -109,25 +109,27 @@ def main():
         o.append('\\definecolor{cd%d}{RGB}{%d,%d,%d}' % (i, *rgb))
     o.append('\\begin{tikzpicture}[font=\\sffamily]')
     # (a)
-    W, H, a0, a1, ymax = 6.8, 4.0, 1997, 2024, 30
+    W, H, a0, a1, ymax = 6.8, 4.0, 1997, 2024, 20
 
     def px(a):
         return (a - a0) / (a1 - a0) * W
 
     def py(q):
         return q / ymax * H
-    o.append(f'  \\node[anchor=west, font=\\sffamily\\small] at (-0.6,{H + 0.6:.2f}) {{(a) Comercio entre los miembros}};')
-    for q in range(0, ymax + 1, 10):
+    o.append(f'  \\node[anchor=west, font=\\sffamily\\small] at (-0.6,{H + 0.9:.2f}) {{(a) Comercio entre los miembros}};')
+    for q in range(0, ymax + 1, 5):
         o.append(f'  \\draw[black!12, line width=0.3pt] (0,{py(q):.2f}) -- ({W:.2f},{py(q):.2f}); '
                  f'\\node[anchor=east, font=\\sffamily\\scriptsize] at (-0.05,{py(q):.2f}) {{{q}}};')
     for a in range(2000, 2025, 5):
         o.append(f'  \\node[anchor=north, font=\\sffamily\\scriptsize] at ({px(a):.2f},-0.05) {{{a}}};')
     o.append(f'  \\draw[black!70, line width=0.5pt] (0,0) -- ({W:.2f},0);')
     o.append(f'  \\node[rotate=90, font=\\sffamily\\scriptsize] at (-0.65,{H / 2:.2f}) {{\\% de las exportaciones}};')
-    for a, t in [(2005, 'libre comercio pleno (2005)'), (2011, 'Primavera Árabe (2011)')]:
-        o.append(f'  \\draw[black!45, densely dashed, line width=0.4pt] ({px(a):.2f},0) -- ({px(a):.2f},{H:.2f}); '
-                 f'\\node[anchor=south, font=\\sffamily\\tiny, text=black!70] at ({px(a):.2f},{H:.2f}) {{{t}}};')
-    for datos, color, ley, yl in [(todos, 'ctodos', 'todos los miembros', 0.55), (sin_ccg, 'csin', 'sin el Golfo (CCG)', 0.2)]:
+    for i, (a, t) in enumerate([(2005, 'libre comercio pleno (2005)'), (2011, 'Primavera Árabe (2011)'),
+                                (2017, 'bloqueo de Catar (2017)')]):
+        alto = H + 0.28 * (i % 2)   # alterna la altura de los rótulos
+        o.append(f'  \\draw[black!45, densely dashed, line width=0.4pt] ({px(a):.2f},0) -- ({px(a):.2f},{alto:.2f}); '
+                 f'\\node[anchor=south, font=\\sffamily\\tiny, text=black!70] at ({px(a):.2f},{alto:.2f}) {{{t}}};')
+    for datos, color, ley, yl in [(todos, 'ctodos', 'todos los exportadores', 0.25), (sin_ccg, 'csin', 'sin los del Golfo (CCG)', 0.6)]:
         pts = [(a, q) for a, q, _ in datos if q is not None]
         tramos, actual = [], []
         for a, q in pts:   # corta la línea si falta algún año
@@ -146,7 +148,7 @@ def main():
                  f'\\node[anchor=west, font=\\sffamily\\tiny] at ({W - 1.9:.2f},{H - yl:.2f}) {{{ley}}};')
     # (b)
     X0, Wb, paso, alto = W + 3.6, 6.0, 0.95, 0.5
-    o.append(f'  \\node[anchor=west, font=\\sffamily\\small] at ({X0 - 2.6:.2f},{H + 0.6:.2f}) {{(b) Destino de las exportaciones, 2023}};')
+    o.append(f'  \\node[anchor=west, font=\\sffamily\\small] at ({X0 - 2.6:.2f},{H + 0.9:.2f}) {{(b) Destino de las exportaciones, 2023}};')
     lx, ly = X0 - 2.5, H - 0.05
     for i, (ley, _, _) in enumerate(DESTINOS):
         col, fila_l = i % 4, i // 4
