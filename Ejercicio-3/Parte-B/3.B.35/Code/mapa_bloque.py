@@ -243,9 +243,12 @@ def main(ruta_geojson, clave):
         for anio, texto, lado in hitos:
             x = tx(anio)
             out.append(f'  \\fill[white] ({x:.2f},{y:.2f}) circle (1.15pt); \\draw[{col}!70!black, line width=0.45pt] ({x:.2f},{y:.2f}) circle (1.15pt);')
-            ancla, dy = {'a': ('south', 0.07), 'b': ('north', -0.07), 'ae': ('south east', 0.07), 'be': ('north east', -0.07)}[lado]
+            ancla, dy = {'a': ('south', 0.07), 'b': ('north', -0.07), 'ae': ('south east', 0.07), 'be': ('north east', -0.07),
+                         'aw': ('south west', 0.07), 'bw': ('north west', -0.07)}[lado]
             if lado.endswith('e'):
                 x += 0.08
+            elif lado.endswith('w'):
+                x -= 0.08
             out.append(f'  \\node[anchor={ancla}, font=\\sffamily\\tiny, inner sep=0.8pt] at ({x:.2f},{y + dy:.2f}) {{{anio} {texto}}};')
     for texto, a, b in B.get('tipos', []):
         ya, yb = ys[a] + 0.22, ys[b] - 0.22
