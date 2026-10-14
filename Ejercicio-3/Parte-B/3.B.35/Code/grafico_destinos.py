@@ -16,25 +16,33 @@ SERIES = [  # columna de la hoja, leyenda, color RGB
     (2, 'EE.\\,UU.', (30, 75, 135)),
     (3, 'China', (200, 60, 60)),
     (4, 'UE-27', (90, 150, 90)),
+    (6, 'Reino Unido', (130, 90, 160)),
     (5, 'Resto del mundo', (190, 190, 190)),
 ]
+# Bloques en los que Reino Unido se suma al resto del mundo (no es un destino relevante)
+SIN_RU = {'CAN', 'MCCA'}
 
 
 def main(grupo, anio):
     from openpyxl import load_workbook
     tema = Path(__file__).resolve().parent.parent
     ws = load_workbook(tema / 'Code' / 'datos_3B35.xlsx')[f'{grupo}_destinos_{anio}']
-    filas = [r for r in ws.iter_rows(min_row=5, values_only=True) if r[0]]
+    filas = [list(r) for r in ws.iter_rows(min_row=5, values_only=True) if r[0]]
+    series = SERIES
+    if grupo in SIN_RU:
+        series = [x for x in SERIES if x[0] != 6]
+        for r in filas:
+            r[5] = (r[5] or 0) + (r[6] or 0 if len(r) > 6 else 0)
     paises = [NOMBRES.get(r[0], r[0]) for r in filas]
     out = [f'% Generado por Code/grafico_destinos.py ({grupo}, {anio}) con la hoja {grupo}_destinos_{anio}.']
-    for i, (_, _, rgb) in enumerate(SERIES):
+    for i, (_, _, rgb) in enumerate(series):
         out.append('\\definecolor{cd%d}{RGB}{%d,%d,%d}' % (i, *rgb))
     ancho, alto_barra, paso, x0 = 13.5, 0.46, 0.72, 2.0   # cm; x0 deja sitio a los nombres
     n = len(filas)
     out.append('\\begin{tikzpicture}[font=\\sffamily]')
     # Leyenda
     lx = x0
-    for i, (_, ley, _) in enumerate(SERIES):
+    for i, (_, ley, _) in enumerate(series):
         out.append(f'  \\fill[cd{i}] ({lx:.2f},{0.55:.2f}) rectangle ++(0.3,0.2); '
                    f'\\node[anchor=west, font=\\sffamily\\scriptsize, inner sep=1pt] at ({lx + 0.32:.2f},0.65) {{{ley}}};')
         lx += 0.85 + 0.13 * len(ley.replace('\\,', ''))
@@ -52,12 +60,12 @@ def main(grupo, anio):
         y = -k * paso
         out.append(f'  \\node[anchor=east, font=\\sffamily\\scriptsize] at ({x0 - 0.1:.2f},{y:.2f}) {{{NOMBRES.get(r[0], r[0])}}};')
         acum = 0.0
-        for i, (col, _, _) in enumerate(SERIES):
+        for i, (col, _, _) in enumerate(series):
             v = r[col] or 0.0
             xa, xb = x0 + ancho * acum / 100, x0 + ancho * (acum + v) / 100
             out.append(f'  \\fill[cd{i}, draw=white, line width=0.3pt] ({xa:.3f},{y - alto_barra / 2:.3f}) rectangle ({xb:.3f},{y + alto_barra / 2:.3f});')
             if v >= 5:
-                color = 'black!80' if i == len(SERIES) - 1 else 'white'
+                color = 'black!80' if i == len(series) - 1 else 'white'
                 out.append(f'  \\node[font=\\sffamily\\tiny, text={color}] at ({(xa + xb) / 2:.3f},{y:.2f}) {{{v:.0f}}};')
             acum += v
     out.append('\\end{tikzpicture}')

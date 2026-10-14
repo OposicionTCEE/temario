@@ -194,7 +194,7 @@ def escribe_hoja(grupo, filas_cuadro):
 
 
 def destinos(grupo, anio):
-    """Destino de las exportaciones de cada miembro actual en un año: bloque, EE. UU., China, UE-27 y resto.
+    """Destino de las exportaciones de cada miembro actual en un año: bloque, EE. UU., China, UE-27, Reino Unido y resto.
     Guarda los datos brutos por socio en Code/datos/destinos.csv y el resumen en la hoja <GRUPO>_destinos_<año>."""
     ruta = TEMA / 'Code' / 'datos' / 'destinos.csv'
     brutos = {}
@@ -217,14 +217,15 @@ def destinos(grupo, anio):
     for e in mm:
         tot = brutos.get((e, anio, 'WLD'), 0.0)
         if not tot:
-            resumen.append((e, None, None, None, None, None))
+            resumen.append((e, None, None, None, None, None, None))
             continue
         blo = sum(brutos.get((e, anio, s), 0.0) for s in mm if s != e)
         usa = brutos.get((e, anio, 'USA'), 0.0)
         chn = brutos.get((e, anio, 'CHN'), 0.0)
         ue = sum(brutos.get((e, anio, s), 0.0) for s in UE27)
+        gbr = brutos.get((e, anio, 'GBR'), 0.0)
         resumen.append((e, 100 * blo / tot, 100 * usa / tot, 100 * chn / tot, 100 * ue / tot,
-                        100 * (tot - blo - usa - chn - ue) / tot))
+                        100 * (tot - blo - usa - chn - ue - gbr) / tot, 100 * gbr / tot))
     from openpyxl import Workbook, load_workbook
     wb = load_workbook(XLSX) if XLSX.exists() else Workbook()
     nombre = f'{grupo}_destinos_{anio}'
@@ -235,7 +236,7 @@ def destinos(grupo, anio):
     ws.append([f'Fuente: {FUENTE_WITS}; UE = suma de los 27 Estados miembros. Cálculo propio (Code/datos_comercio.py); '
                'datos brutos por socio en Code/datos/destinos.csv.'])
     ws.append([])
-    ws.append(['Exportador', f'{grupo} (resto de miembros)', 'EE. UU.', 'China', 'UE-27', 'Resto del mundo'])
+    ws.append(['Exportador', f'{grupo} (resto de miembros)', 'EE. UU.', 'China', 'UE-27', 'Resto del mundo (sin Reino Unido)', 'Reino Unido'])
     for fila in resumen:
         ws.append([fila[0]] + [None if x is None else round(x, 2) for x in fila[1:]])
     wb.save(XLSX)
