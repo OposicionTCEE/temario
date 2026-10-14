@@ -51,6 +51,28 @@ CRONOLOGIAS = {
                 (2017, 'unión aduanera Guatemala-Honduras'), (2018, 'se suma El Salvador')]),
         ],
     },
+    'CAN': {   # sustituye a la cronología normativa de Code/cronologia_bloque.py (sin carril de instituciones)
+        'eje': (1965, 2027, range(1970, 2030, 10)),
+        'estrategias': [(1969, 1987, 'Regionalismo cerrado'), (1987, 2027, 'Regionalismo abierto')],
+        'etapas': [(1969, 1980, 'impulso', 'Auge'), (1980, 1987, 'crisis', 'Crisis'),
+                   (1987, 1998, 'relanzamiento', 'Relanzamiento'),
+                   (1998, 2027, 'terceros', 'Divergencia y acuerdos con terceros')],
+        'contexto': [
+            (1973, 'golpe de Estado en Chile'), (1982, 'crisis de la deuda'), (2003, 'auge de las materias primas'),
+            (2006, 'Colombia y Perú firman TLC con EE.\\,UU.'), (2011, 'Alianza del Pacífico'), (2024, 'puerto de Chancay')],
+        'carriles': [
+            ('Miembros', (120, 120, 120), [
+                (1969, 'Bolivia, Chile, Colombia, Ecuador, Perú'), (1973, 'entra Venezuela'), (1976, 'sale Chile'),
+                (1992, 'Perú se suspende'), (2006, 'sale Venezuela'), (2024, 'Bolivia, también en MERCOSUR')]),
+            ('Comercio', (233, 160, 40), [
+                (1969, 'zona de libre comercio en etapas'), (1993, 'zona de libre comercio plena'),
+                (1995, 'arancel exterior común'), (2007, 'se permite no aplicarlo'), (2015, 'queda sin efecto'),
+                (2026, 'guerra arancelaria Colombia-Ecuador')]),
+            ('Inversión\\\\extranjera', (200, 76, 58), [
+                (1970, 'Decisión 24: control del capital extranjero'), (1987, 'Decisión 220: flexibiliza'),
+                (1991, 'Decisión 291: trato nacional')]),
+        ],
+    },
 }
 
 
