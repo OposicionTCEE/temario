@@ -83,7 +83,6 @@ def main(clave):
         def punto(n):
             return tuple(map(float, n.split(','))) if ',' in n else g['organos'][n.split('.')[0]][:2]
         (xa, ya), (xb_, yb) = punto(a), punto(b)
-        a, b = [f'{n}' if ',' not in n else n for n in (a, b)]
         pos = 'right' if abs(xa - xb_) < 0.3 else ('above' if abs(ya - yb) < 0.3 else 'sloped, above')
         o.append(f'  \\draw[-{{Stealth[length=4pt]}}, {estilos[e]}] ({a}) -- ({b}) '
                  f'node[midway, {pos}, inner sep=1.5pt, font=\\sffamily\\footnotesize\\itshape, text=black!75] {{{rot}}};')
