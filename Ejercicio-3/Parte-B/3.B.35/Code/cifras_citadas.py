@@ -59,6 +59,12 @@ CIFRAS = [
     ('CAN', 'Manufacturas en las exportaciones intracomunitarias', 82.9, '%', 2024,
      'Comunidad Andina, citada por La Cámara (2025)', 'https://lacamara.pe/can-exportaciones-logran-us-165-000-millones-en-2024-con-aumento-del-5-5/'),
     ('CAN', 'Destinos de las exportaciones por miembro', None, '%', 2023, 'Cálculo propio con WITS (hoja CAN_destinos_2023)', 'https://wits.worldbank.org'),
+    ('EFTA', 'Exportaciones a la UE-27 / totales: Noruega', 67.2, '%', 2023, 'Cálculo propio con WITS (hoja EFTA_destinos_2023)', 'https://wits.worldbank.org'),
+    ('EFTA', 'Exportaciones a la UE-27 / totales: Islandia', 63.1, '%', 2023, 'Cálculo propio con WITS (hoja EFTA_destinos_2023)', 'https://wits.worldbank.org'),
+    ('EFTA', 'Exportaciones a la UE-27 / totales: Suiza', 39.5, '%', 2023, 'Cálculo propio con WITS (hoja EFTA_destinos_2023)', 'https://wits.worldbank.org'),
+    ('EFTA', 'Exportaciones a Reino Unido / totales: Noruega', 19.0, '%', 2023, 'Cálculo propio con WITS (hoja EFTA_destinos_2023)', 'https://wits.worldbank.org'),
+    ('EFTA', 'Referéndum de Islandia sobre reanudar la negociación con la UE: votos en contra', 52.8, '%', 2026,
+     'LIGA.net (2026)', 'https://news.liga.net/en/world/news/iceland-voted-against-resuming-eu-accession-negotiations-in-a-referendum'),
     ('CAN', 'Tasa de seguridad de Ecuador sobre importaciones colombianas (inicial)', 30, '%', 2026,
      'Portafolio (2026)', 'https://www.portafolio.co/negocios/comercio/de-30-a-50-la-cronologia-de-la-guerra-comercial-que-enfrenta-a-colombia-y-ecuador-489248'),
 ]
