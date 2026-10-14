@@ -4,8 +4,8 @@ cada miembro de la Unión Económica Euroasiática en 2013, 2021 y 2023.
 
 Rusia y Bielorrusia no publican su comercio desde 2022. Para Rusia se usan en los tres años datos espejo (importaciones que
 declaran los demás países, Code/datos/espejo.csv), lo que permite comparar; en 2023 falta Bielorrusia como importadora, por
-lo que la parte del resto de la UEE está subestimada. Bielorrusia solo aparece en 2013 y 2021 (sus propios datos), porque
-sin Rusia como importadora sus datos espejo no son representativos. Kazajistán, Armenia y Kirguistán, con sus propios datos
+lo que la parte del resto de la UEE está subestimada. Bielorrusia (datos espejo) solo aparece en 2013 y 2021: en 2021 ya declaraba el 40 % de sus exportaciones sin destino, y en 2023
+faltaría Rusia como importadora. Kazajistán, Armenia y Kirguistán, con sus propios datos Kazajistán, Armenia y Kirguistán, con sus propios datos
 (Code/datos/destinos.csv). Ambos ficheros los escribe Code/datos_comercio.py (UEE destinos AÑO y UEE espejo 2013 2023).
 Uso, desde la carpeta del tema (con openpyxl):
   /tmp/v/bin/python Code/grafico_uee.py
@@ -23,7 +23,7 @@ TEMA = Path(__file__).resolve().parent.parent
 UEE = ['RUS', 'BLR', 'KAZ', 'ARM', 'KGZ']
 NOMBRES = {'RUS': 'Rusia', 'BLR': 'Bielorrusia', 'KAZ': 'Kazajistán', 'ARM': 'Armenia', 'KGZ': 'Kirguistán'}
 FILAS = [('RUS', 2013, 'espejo'), ('RUS', 2021, 'espejo'), ('RUS', 2023, 'espejo'),
-         ('BLR', 2013, 'propios'), ('BLR', 2021, 'propios'),
+         ('BLR', 2013, 'espejo'), ('BLR', 2021, 'espejo'),
          ('KAZ', 2013, 'propios'), ('KAZ', 2021, 'propios'), ('KAZ', 2023, 'propios'),
          ('ARM', 2013, 'propios'), ('ARM', 2021, 'propios'), ('ARM', 2023, 'propios'),
          ('KGZ', 2013, 'propios'), ('KGZ', 2021, 'propios'), ('KGZ', 2023, 'propios')]
