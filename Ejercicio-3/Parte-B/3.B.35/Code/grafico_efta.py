@@ -96,7 +96,7 @@ def fig_agricultura(s):
     npc = [(p, sum(s[(p, 'PNPC')][a] for a in anios) / 3) for p in orden]
     etiquetas = ','.join(NOMBRE[p] for p, _ in npc)
     o += [f'  \\begin{{axis}}[{fe.ESTILO.replace("ymajorgrids", "xmajorgrids")}, at={{(9.75cm,0cm)}}, width=4.3cm, height=4.2cm,'
-          f' xbar, bar width=7pt, y dir=reverse, symbolic y coords={{{etiquetas}}}, ytick=data, xmin=0.9, xmax={max(v for _, v in npc) * 1.18:.2f},'
+          f' xbar, bar width=7pt, y dir=reverse, symbolic y coords={{{etiquetas}}}, ytick={{{etiquetas}}}, xmin=0.9, xmax={max(v for _, v in npc) * 1.18:.2f},'
           f' enlarge y limits=0.15, title={{(b) Protección de precios, {anios[0]}-{anios[-1]}}},'
           ' nodes near coords, nodes near coords style={font=\\sffamily\\footnotesize, text=black!75, /pgf/number format/fixed,'
           ' /pgf/number format/precision=2, /pgf/number format/fixed zerofill, /pgf/number format/use comma, /pgf/number format/assume math mode=true},'
