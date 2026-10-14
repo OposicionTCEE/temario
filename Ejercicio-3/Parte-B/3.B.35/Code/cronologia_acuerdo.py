@@ -80,7 +80,7 @@ class Cronologia:
                 ancla, i0, i1 = 'west', px - 0.06, px - 0.06 + ancho
             else:
                 ancla, i0, i1 = 'east', px + 0.06 - ancho, px + 0.06
-            mejor = None
+            mejor = None   # (cruces del tallo con etiquetas más bajas, nivel, lado)
             for lado in ([h[2]] if len(h) > 2 else ['a', 'b']):
                 k = 0
                 while True:
@@ -88,13 +88,15 @@ class Cronologia:
                         ocupado[lado].append([]); tallos[lado].append([])
                     libre = all(i1 + 0.12 < a or i0 - 0.12 > b for a, b in ocupado[lado][k])
                     libre = libre and all(not (i0 - 0.05 < t < i1 + 0.05) for t in tallos[lado][k])
-                    libre = libre and all(not (a - 0.05 < px < b + 0.05) for j in range(k) for a, b in ocupado[lado][j])
                     if libre:
                         break
                     k += 1
-                if mejor is None or k < mejor[1]:
-                    mejor = (lado, k)
-            lado, k = mejor
+                cruces = sum(a - 0.05 < px < b + 0.05 for j in range(k) for a, b in ocupado[lado][j])
+                if mejor is None or (cruces, k) < mejor[:2]:
+                    mejor = (cruces, k, lado)
+            _, k, lado = mejor
+            if mejor[0]:
+                print(f'  aviso: el tallo de {anio} {texto} cruza una etiqueta')
             ocupado[lado][k].append((i0, i1))
             for j in range(k):
                 tallos[lado][j].append(px)
