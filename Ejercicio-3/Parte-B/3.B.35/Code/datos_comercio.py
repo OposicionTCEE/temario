@@ -37,7 +37,22 @@ GRUPOS = {
     'CEFTA': (['ALB', 'BIH', 'MKD', 'MNE', 'SRB', 'MDA'],
               'CEFTA 2006: Albania, Bosnia y Herzegovina, Macedonia del Norte, Montenegro, Serbia y Moldavia '
               '(Kosovo, representado por la UNMIK, no declara su comercio a UN Comtrade; Croacia salió en 2013)'),
+    'AFCFTA': (['DZA', 'AGO', 'BEN', 'BWA', 'BFA', 'BDI', 'CPV', 'CMR', 'CAF', 'TCD', 'COM', 'COG', 'COD', 'CIV', 'DJI',
+                'EGY', 'GNQ', 'SWZ', 'ETH', 'GAB', 'GMB', 'GHA', 'GIN', 'GNB', 'KEN', 'LSO', 'LBR', 'LBY', 'MDG', 'MWI',
+                'MLI', 'MRT', 'MUS', 'MAR', 'MOZ', 'NAM', 'NER', 'NGA', 'RWA', 'STP', 'SEN', 'SYC', 'SLE', 'SOM', 'ZAF',
+                'SSD', 'SDN', 'TZA', 'TGO', 'TUN', 'UGA', 'ZMB', 'ZWE'],
+               'AfCFTA: los 54 signatarios (todos los miembros de la Unión Africana salvo Eritrea), sin la República Árabe Saharaui '
+               'Democrática, sin datos de comercio. Muchos países no declaran todos los años: la cuota se calcula sobre los que '
+               'declaran (columna Miembros con datos), con su comercio hacia todos los miembros, declaren o no'),
+    'ASEAN': (['IDN', 'MYS', 'PHL', 'SGP', 'THA', 'BRN', 'VNM', 'LAO', 'MMR', 'KHM', 'TLS'],
+              'ASEAN: Indonesia, Malasia, Filipinas, Singapur y Tailandia (1967); Brunéi (1984), Vietnam (1995), Laos y '
+              'Myanmar (1997), Camboya (1999) y Timor Oriental (2025)'),
+    'UE27': (['AUT', 'BEL', 'BGR', 'HRV', 'CYP', 'CZE', 'DNK', 'EST', 'FIN', 'FRA', 'DEU', 'GRC', 'HUN', 'IRL', 'ITA', 'LVA',
+              'LTU', 'LUX', 'MLT', 'NLD', 'POL', 'PRT', 'ROU', 'SVK', 'SVN', 'ESP', 'SWE'],
+             'UE-27 (composición actual, solo como referencia de comparación)'),
 }
+# Bloques con muchos miembros que no declaran: la cuota se calcula con los que declaran
+PARCIALES = {'AFCFTA'}
 # Años de pertenencia cuando no coinciden con los de todo el bloque (los demás miembros cuentan siempre)
 PERIODOS = {
     'CAN': {'CHL': (1969, 1976), 'VEN': (1973, 2006)},
