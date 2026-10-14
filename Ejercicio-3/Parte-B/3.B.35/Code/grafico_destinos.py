@@ -9,7 +9,7 @@ Uso, desde la carpeta del tema (con openpyxl):
 import sys
 from pathlib import Path
 
-NOMBRES = {'ISL': 'Islandia', 'NOR': 'Noruega', 'CHE': 'Suiza', 'BOL': 'Bolivia', 'COL': 'Colombia', 'ECU': 'Ecuador', 'PER': 'Perú', 'GTM': 'Guatemala',
+NOMBRES = {'ARG': 'Argentina', 'BRA': 'Brasil', 'PRY': 'Paraguay', 'URY': 'Uruguay', 'ISL': 'Islandia', 'NOR': 'Noruega', 'CHE': 'Suiza', 'BOL': 'Bolivia', 'COL': 'Colombia', 'ECU': 'Ecuador', 'PER': 'Perú', 'GTM': 'Guatemala',
            'SLV': 'El Salvador', 'HND': 'Honduras', 'NIC': 'Nicaragua', 'CRI': 'Costa Rica'}
 SERIES = [  # columna de la hoja, leyenda, color RGB
     (1, 'Resto del bloque', (233, 160, 40)),
