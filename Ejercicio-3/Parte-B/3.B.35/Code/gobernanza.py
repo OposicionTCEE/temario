@@ -44,9 +44,10 @@ GOBERNANZA = {
         },
         # marcos: (izquierda, abajo, derecha, arriba, rótulo); el rótulo va arriba a la derecha
         'marcos': [(0.0, -0.55, 8.95, 5.35, 'SICA'), (0.1, 0.85, 8.85, 2.65, 'Subsistema económico')],
-        # flechas: (desde, hasta, rótulo, estilo); estilo 'o' = orienta o decide, 'a' = apoyo, 'c' = control o consulta
+        # flechas: (desde, hasta, rótulo, estilo): desde y hasta son órganos (con ancla opcional, 'pres.west') o
+        # coordenadas 'x,y'; estilo 'o' = orienta o decide, 'a' = apoyo, 'c' = control o consulta
         'flechas': [('pres', 'comieco', 'directrices', 'o'), ('sieca', 'comieco', 'apoyo', 'a'),
-                    ('parl.north', 'pres.west', 'recomienda', 'c'), ('corte.north', 'pres.east', 'controla', 'c')],
+                    ('parl.north', 'pres.west', 'recomienda', 'c'), ('corte', '7.5,2.65', 'jurisdicción', 'c')],
         # vertientes: (previsto, alcanzado), de 0 (nada) a 3 (pleno)
         'grados': [(3, 3), (3, 2), (3, 2), (3, 1), (3, 1), (2, 1), (2, 1)],
     },
@@ -79,7 +80,10 @@ def main(clave):
     estilos = {'o': 'black!75, line width=0.7pt', 'a': 'black!55, line width=0.6pt', 'c': 'black!55, line width=0.6pt, densely dashed'}
     for a, b, rot, e in g['flechas']:
         # rótulo a la derecha de las flechas verticales, encima de las horizontales y a lo largo de las oblicuas
-        (xa, ya), (xb_, yb) = [g['organos'][n.split('.')[0]][:2] for n in (a, b)]
+        def punto(n):
+            return tuple(map(float, n.split(','))) if ',' in n else g['organos'][n.split('.')[0]][:2]
+        (xa, ya), (xb_, yb) = punto(a), punto(b)
+        a, b = [f'{n}' if ',' not in n else n for n in (a, b)]
         pos = 'right' if abs(xa - xb_) < 0.3 else ('above' if abs(ya - yb) < 0.3 else 'sloped, above')
         o.append(f'  \\draw[-{{Stealth[length=4pt]}}, {estilos[e]}] ({a}) -- ({b}) '
                  f'node[midway, {pos}, inner sep=1.5pt, font=\\sffamily\\footnotesize\\itshape, text=black!75] {{{rot}}};')
