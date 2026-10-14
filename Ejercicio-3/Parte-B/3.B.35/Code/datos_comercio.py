@@ -38,6 +38,7 @@ GRUPOS = {
 # Años de pertenencia cuando no coinciden con los de todo el bloque (los demás miembros cuentan siempre)
 PERIODOS = {
     'CAN': {'CHL': (1969, 1976), 'VEN': (1973, 2006)},
+    'MERCOSUR': {'VEN': (2012, 2016)},
 }
 M49 = {'GTM': 320, 'SLV': 222, 'HND': 340, 'NIC': 558, 'CRI': 188, 'PAN': 591,
        'BOL': 68, 'COL': 170, 'ECU': 218, 'PER': 604, 'CHL': 152, 'VEN': 862,
