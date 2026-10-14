@@ -107,9 +107,11 @@ def main(ruta_geojson, clave):
     B = BLOQUES[clave]
     paises = [f for f in json.load(open(ruta_geojson))['features'] if f['properties']['ADM0_A3'] != 'ATA']
     estilo = {}
-    for g, _, _, miembros in B['grupos']:
-        for m in miembros:
-            estilo[m] = g
+    africa = [p['properties']['ADM0_A3'] for p in paises if p['properties'].get('CONTINENT') == 'Africa']
+    for g, _, _, miembros in B['grupos']:   # los grupos posteriores prevalecen sobre los anteriores
+        for m in (africa if miembros == ['@AFRICA'] else miembros):
+            if m not in B.get('excluir', []):
+                estilo[m] = g
     rayados = set(B['rayado'][1]) if B.get('rayado') else set()
 
     out = [f'% Generado por Code/mapa_bloque.py ({clave}) con Natural Earth 1:50m.',
