@@ -30,6 +30,9 @@ GRUPOS = {
              'EFTA: Islandia, Noruega y Suiza (Liechtenstein comparte territorio aduanero con Suiza y no declara por separado)'),
     'CAN': (['BOL', 'COL', 'ECU', 'PER', 'CHL', 'VEN'],
             'Comunidad Andina (Pacto Andino hasta 1996): Bolivia, Colombia, Ecuador y Perú; Chile hasta 1976; Venezuela de 1973 a 2006'),
+    'MERCOSUR': (['ARG', 'BRA', 'PRY', 'URY', 'VEN'],
+                 'MERCOSUR: Argentina, Brasil, Paraguay y Uruguay; Venezuela de 2012 a 2016 (suspendida desde entonces); '
+                 'Bolivia, miembro desde 2024, aún sin datos (la serie empieza antes del Tratado de Asunción)'),
     'NAFTA': (['USA', 'CAN', 'MEX'], 'NAFTA/USMCA: Estados Unidos, Canadá y México (la serie empieza antes del acuerdo, para ver su efecto)'),
 }
 # Años de pertenencia cuando no coinciden con los de todo el bloque (los demás miembros cuentan siempre)
