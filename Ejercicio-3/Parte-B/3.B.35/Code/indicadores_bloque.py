@@ -77,6 +77,23 @@ def composicion(grupo):
     return out
 
 
+def reparto_manufacturas(grupo):
+    """{año: {miembro: % de las exportaciones de manufacturas dentro del bloque}} (años en que declaran todos)."""
+    v = defaultdict(float)
+    for r in dp.lee(dp.CSV_COMP):
+        if r['seccion'] in MANUF:
+            v[(r['exportador'], int(r['anio']), r['socio'])] += float(r['valor_usd'])
+    out = {}
+    for a in sorted({k[1] for k in v}):
+        mm = dc.miembros(grupo, a)
+        if not all(v.get((e, a, 'WLD')) for e in mm):
+            continue
+        x = {e: sum(v.get((e, a, p), 0.0) for p in mm if p != e) for e in mm}
+        if sum(x.values()):
+            out[a] = {e: 100 * x[e] / sum(x.values()) for e in mm}
+    return out
+
+
 def cuota_manufacturas(comp):
     return [(a, 100 * sum(d[s] for s in MANUF) / sum(d.values()), 100 * sum(f[s] for s in MANUF) / sum(f.values()))
             for a, (d, f) in sorted(comp.items()) if sum(d.values()) and sum(f.values())]
