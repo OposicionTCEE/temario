@@ -34,6 +34,9 @@ GRUPOS = {
                  'MERCOSUR: Argentina, Brasil, Paraguay y Uruguay; Venezuela de 2012 a 2016 (suspendida desde entonces); '
                  'Bolivia, miembro desde 2024, aún sin datos (la serie empieza antes del Tratado de Asunción)'),
     'NAFTA': (['USA', 'CAN', 'MEX'], 'NAFTA/USMCA: Estados Unidos, Canadá y México (la serie empieza antes del acuerdo, para ver su efecto)'),
+    'CEFTA': (['ALB', 'BIH', 'MKD', 'MNE', 'SRB', 'MDA'],
+              'CEFTA 2006: Albania, Bosnia y Herzegovina, Macedonia del Norte, Montenegro, Serbia y Moldavia '
+              '(Kosovo, representado por la UNMIK, no declara su comercio a UN Comtrade; Croacia salió en 2013)'),
 }
 # Años de pertenencia cuando no coinciden con los de todo el bloque (los demás miembros cuentan siempre)
 PERIODOS = {
