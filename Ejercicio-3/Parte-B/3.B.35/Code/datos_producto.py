@@ -12,6 +12,7 @@ Caché en Code/datos/ (solo se descarga lo que falta; un año que la API devuelv
 Uso, desde la carpeta del tema:
   python3 Code/datos_producto.py MCCA composicion 1962 2023
   python3 Code/datos_producto.py MCCA productos 1965 1975 1985 1995 2005 2015 2023
+  python3 Code/datos_producto.py USA,CHN importaciones 1965 1975 1985 1995 2005 2015 2023   (mercados de referencia)
   python3 Code/datos_producto.py MCCA wdi
 """
 import csv
