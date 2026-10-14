@@ -113,10 +113,19 @@ def comtrade(exportadores, anio, socios):
     return out
 
 
+# WITS usa códigos propios para algunos países (Rumanía es ROM, Serbia SER...): se traducen a ISO3
+WITS_ISO = {'ROM': 'ROU', 'SER': 'SRB', 'MNT': 'MNE', 'ZAR': 'COD', 'TMP': 'TLS'}
+ISO_WITS = {v: k for k, v in WITS_ISO.items()}
+
+
+def iso(codigo):
+    return WITS_ISO.get(codigo, codigo)
+
+
 def wits(exportador, anio, socios=None):
-    """Exportaciones de un país a sus socios en un año (dólares); con socios=None, a todos."""
+    """Exportaciones de un país a sus socios en un año (dólares); con socios=None, a todos. Códigos ISO3 en entrada y salida."""
     url = ('https://wits.worldbank.org/API/V1/SDMX/V21/datasource/tradestats-trade/reporter/%s/year/%d/partner/all'
-           '/product/Total/indicator/XPRT-TRD-VL?format=JSON' % (exportador.lower(), anio))
+           '/product/Total/indicator/XPRT-TRD-VL?format=JSON' % (ISO_WITS.get(exportador, exportador).lower(), anio))
     texto = get(url)
     try:
         d = json.loads(texto)
