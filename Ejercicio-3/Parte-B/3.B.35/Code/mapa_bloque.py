@@ -50,14 +50,11 @@ BLOQUES = {
             # (etiqueta, grupo o None, año de inicio de la barra o None, [(año, texto, 'a'rriba/'b'ajo)], tramos [(desde, hasta, grupo)])
             ('CEPAL', None, None, [(1948, 'CEPAL', 'a'), (1960, 'ALALC', 'b'), (1980, 'ALADI', 'a'),
                                     (1994, 'regionalismo abierto', 'b')], []),
-            ('MCCA', 'mcca', 1960, [(1960, 'Tratado de Managua', 'a'), (1969, 'guerra El Salvador-Honduras', 'b'),
-                                    (1991, 'SICA', 'a'), (2006, 'DR-CAFTA', 'b'), (2013, 'Panamá', 'a')], []),
-            ('CAN', 'can', 1969, [(1969, 'Acuerdo de Cartagena', 'a'), (1976, 'sale Chile', 'b'),
-                                  (1995, 'AEC; 1996 CAN', 'a'), (2006, 'sale Venezuela', 'b')], []),
-            ('EFTA', 'efta', 1960, [(1960, 'Convenio de Estocolmo', 'a'), (1973, 'salen Reino Unido y Dinamarca', 'b'),
-                                    (1994, 'EEE', 'a'), (2001, 'Convenio de Vaduz', 'b')], []),
-            ('NAFTA/USMCA', 'nafta', 1989, [(1989, 'Canadá-EE.\\,UU.', 'a'), (1994, 'NAFTA', 'b'),
-                                            (2020, 'USMCA', 'a'), (2026, 'EE.\\,UU. no lo renueva', 'be')], []),
+            # Solo fundación y refundación (14/10/2026): los demás hitos están en la cronología de cada acuerdo
+            ('MCCA', 'mcca', 1960, [(1960, 'Tratado de Managua', 'a'), (1991, 'SICA', 'a')], []),
+            ('CAN', 'can', 1969, [(1969, 'Acuerdo de Cartagena', 'a'), (1996, 'Protocolo de Trujillo', 'a')], []),
+            ('EFTA', 'efta', 1960, [(1960, 'Convenio de Estocolmo', 'a'), (2001, 'Convenio de Vaduz', 'a')], []),
+            ('NAFTA/USMCA', 'nafta', 1989, [(1994, 'NAFTA', 'a'), (2020, 'USMCA', 'a')], []),
         ],
         'tipos': [  # corchete a la izquierda: (texto, primera fila, última fila)
             ('Regionalismo\\\\cerrado', 1, 2),
