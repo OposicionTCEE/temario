@@ -59,10 +59,10 @@ def rgb(nombre, c):
 
 def main(clave):
     g = GOBERNANZA[clave]
-    o = [f'% Generado por Code/gobernanza.py ({clave}).']
+    # los colores, dentro del tikzpicture: fuera, cada salto de línea añade un espacio a la izquierda de la figura
+    o = [f'% Generado por Code/gobernanza.py ({clave}).', '\\begin{tikzpicture}[font=\\sffamily\\footnotesize]']
     for t, (borde, relleno, _) in TIPOS.items():
-        o += [rgb(f'b{t}', borde), rgb(f'f{t}', relleno)]
-    o.append('\\begin{tikzpicture}[font=\\sffamily\\footnotesize]')
+        o += ['  ' + rgb(f'b{t}', borde), '  ' + rgb(f'f{t}', relleno)]
     # (a) organigrama
     alto_a = max(m[3] for m in g['marcos'])
     o.append(f'  \\node[anchor=south west, font=\\sffamily\\small, inner sep=0pt] at (0,{alto_a + 0.25:.2f}) {{(a) Gobernanza}};')
