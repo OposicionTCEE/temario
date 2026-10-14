@@ -76,8 +76,9 @@ def main():
     o.append('\\begin{tikzpicture}[font=\\sffamily]')
     ancho, alto, paso, x0 = 12.5, 0.36, 0.44, 2.6
     for i, (ley, _, _) in enumerate(DESTINOS):
-        o.append(f'  \\fill[cd{i}] ({x0 + i * 2.1:.2f},0.55) rectangle ++(0.3,0.16); '
-                 f'\\node[anchor=west, font=\\sffamily\\scriptsize] at ({x0 + i * 2.1 + 0.33:.2f},0.63) {{{ley}}};')
+        lx, ly = x0 + (i % 3) * 4.0, 0.95 - (i // 3) * 0.32   # leyenda en dos filas
+        o.append(f'  \\fill[cd{i}] ({lx:.2f},{ly - 0.08:.2f}) rectangle ++(0.3,0.16); '
+                 f'\\node[anchor=west, font=\\sffamily\\scriptsize] at ({lx + 0.33:.2f},{ly:.2f}) {{{ley}}};')
     y, previo = 0.0, None
     for e, a, fuente, fila, tot in res:
         if previo and e != previo:
