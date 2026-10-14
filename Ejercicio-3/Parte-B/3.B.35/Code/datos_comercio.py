@@ -42,7 +42,7 @@ PERIODOS = {
 }
 M49 = {'GTM': 320, 'SLV': 222, 'HND': 340, 'NIC': 558, 'CRI': 188, 'PAN': 591,
        'BOL': 68, 'COL': 170, 'ECU': 218, 'PER': 604, 'CHL': 152, 'VEN': 862,
-       'USA': 842, 'CAN': 124, 'MEX': 484, 'CHN': 156, 'WLD': 0}
+       'USA': 842, 'CAN': 124, 'MEX': 484, 'CHN': 156, 'ARG': 32, 'BRA': 76, 'PRY': 600, 'URY': 858, 'WLD': 0}
 # Estados miembros de la UE (27) para agregar el destino UE con WITS, que no da el agregado
 UE27 = ['AUT', 'BEL', 'BGR', 'HRV', 'CYP', 'CZE', 'DNK', 'EST', 'FIN', 'FRA', 'DEU', 'GRC', 'HUN', 'IRL',
         'ITA', 'LVA', 'LTU', 'LUX', 'MLT', 'NLD', 'POL', 'PRT', 'ROU', 'SVK', 'SVN', 'ESP', 'SWE']
