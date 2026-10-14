@@ -301,6 +301,10 @@ def escribe_brutos():
 
 
 if __name__ == '__main__':
+    if len(sys.argv) == 6 and sys.argv[2] == 'importaciones':   # p. ej.: USA importaciones 1994 2024 MEX,CAN,CHN
+        for fila in importaciones(sys.argv[1], int(sys.argv[3]), int(sys.argv[4]), sys.argv[5].split(',')):
+            print(fila)
+        sys.exit()
     if len(sys.argv) == 4 and sys.argv[2] == 'destinos':
         for fila in destinos(sys.argv[1], int(sys.argv[3])):
             print(fila)
