@@ -47,9 +47,9 @@ CRONOLOGIAS = {
                 (1971, 'Honduras se retira de hecho'), (2013, 'Panamá'),
                 (2024, 'Nicaragua deja el SICA')]),
             ('Comercio', (233, 160, 40), [
-                (1958, 'Tratado Multilateral', 'b'), (1960, 'Tratado General de Managua', 'a'),
-                (2002, 'servicios e inversión', 'a'), (2006, 'DR-CAFTA', 'a'), (2013, 'Acuerdo con la UE', 'a'),
-                (2017, 'unión aduanera Guatemala-Honduras', 'b'), (2018, 'se suma El Salvador', 'b')]),
+                (1958, 'Tratado Multilateral'), (1960, 'Tratado General de Managua'),
+                (2002, 'servicios e inversión'), (2006, 'DR-CAFTA'), (2013, 'Acuerdo con la UE'),
+                (2017, 'unión aduanera Guatemala-Honduras'), (2018, 'se suma El Salvador')]),
             ('Instituciones\\\\y personas', (30, 75, 135), [
                 (1960, 'SIECA y BCIE'), (1964, 'Consejo Monetario'), (1987, 'Parlamento'),
                 (1991, 'Protocolo de Tegucigalpa: SICA'), (1993, 'Protocolo de Guatemala'),
@@ -83,7 +83,8 @@ class Cronologia:
             anio, texto = h[0], h[1]
             px = self.x(anio)
             mejor = None   # (cruces del tallo con etiquetas más bajas, nivel, preferencia, lado, ancla, intervalo)
-            for lado in ([h[2]] if len(h) > 2 else ['a', 'b']):
+            # las que terminan en su hito van todas debajo, en escalera, para dejar arriba sitio a los tallos de las demás
+            for lado in ([h[2]] if len(h) > 2 else (['b'] if h in al_este else ['a', 'b'])):
                 for pref, ancla in enumerate(['east'] if h in al_este else ['west']):
                     i0, i1 = (px - 0.06, px - 0.06 + ancho(h)) if ancla == 'west' else (px + 0.06 - ancho(h), px + 0.06)
                     k = 0
