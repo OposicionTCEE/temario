@@ -34,15 +34,40 @@ CRONOLOGIAS = {
                 (1996, 'Protocolo de Trujillo: nace la CAN', 'a'), (2021, 'Estatuto Migratorio Andino', 'be')]),
         ],
     },
+    'AfCFTA': {
+        'eje': (2011, 2027, range(2012, 2028, 2)),
+        'fases': [(2011, 2019.41, (252, 236, 214), 'Negociación'),
+                  (2019.41, 2027, (222, 234, 246), 'Aplicación')],
+        'carriles': [
+            ('Negociación y protocolos', (120, 120, 120), [
+                (2012.05, 'decisión de la cumbre de Addis Abeba', 'be'), (2015.45, 'inicio de las negociaciones', 'a'),
+                (2023.12, 'inversión, competencia, propiedad intelectual', 'aw'),
+                (2024.13, 'comercio digital; mujeres y jóvenes', 'bw')]),
+            ('Firma y ratificación', (30, 75, 135), [
+                (2018.22, 'firma en Kigali (44 países)', 'aw'), (2019.41, 'entra en vigor (24)', 'b'),
+                (2019.52, 'firma Nigeria', 'ae'), (2026.75, '50 de 54 ratificaciones', 'bw')]),
+            ('Comercio', (233, 160, 40), [
+                (2021.0, 'comienza el comercio', 'aw'), (2022.78, 'comercio guiado (8 países)', 'b'),
+                (2025.29, 'fin de la fase guiada (39 países)', 'aw')]),
+            ('Instituciones y pagos', (200, 76, 58), [
+                (2020.6, 'Secretaría en Acra', 'aw'), (2022.03, 'sistema de pagos PAPSS', 'be')]),
+        ],
+    },
 }
 
 
+EJE = (A0, A1, range(1970, 2030, 10))
+
+
 def x(anio):
-    return X0 + (anio - A0) / (A1 - A0) * (X1 - X0)
+    a0, a1, _ = EJE
+    return X0 + (anio - a0) / (a1 - a0) * (X1 - X0)
 
 
 def main(clave):
+    global EJE
     C = CRONOLOGIAS[clave]
+    EJE = C.get('eje', EJE)
     n = len(C['carriles'])
     paso = 1.15
     ys = [(n - 1 - i) * paso for i in range(n)]
@@ -52,10 +77,10 @@ def main(clave):
         out.append('  \\definecolor{fase%d}{RGB}{%d,%d,%d}' % (i, *rgb))
         out.append(f'  \\fill[fase{i}] ({x(a):.2f},-0.6) rectangle ({x(b):.2f},{alto:.2f});')
         out.append(f'  \\node[anchor=north, font=\\sffamily\\scriptsize\\itshape, text=black!65] at ({(x(a) + x(b)) / 2:.2f},{alto - 0.03:.2f}) {{{texto}}};')
-    for d in range(1970, 2030, 10):
+    for d in EJE[2]:
         out.append(f'  \\draw[black!15, line width=0.3pt] ({x(d):.2f},-0.6) -- ({x(d):.2f},{alto - 0.35:.2f});')
     out.append(f'  \\draw[black!70, line width=0.5pt, -{{Stealth[length=4pt]}}] ({X0:.2f},-0.6) -- ({X1 + 0.1:.2f},-0.6);')
-    for d in range(1970, 2030, 10):
+    for d in EJE[2]:
         out.append(f'  \\draw[black!70] ({x(d):.2f},-0.6) -- ++(0,-0.07) node[below, font=\\sffamily\\scriptsize, inner sep=1.5pt] {{{d}}};')
     for i, ((nombre, rgb, hitos), y) in enumerate(zip(C['carriles'], ys)):
         out.append('  \\definecolor{carril%d}{RGB}{%d,%d,%d}' % (i, *rgb))
@@ -68,7 +93,7 @@ def main(clave):
             hor = {'': '', 'e': ' east', 'w': ' west'}[pos[1:]]
             dx = {'': 0, 'e': 0.1, 'w': -0.1}[pos[1:]]
             out.append(f'  \\node[anchor={vert}{hor}, font=\\sffamily\\tiny, inner sep=0.6pt, align=center] '
-                       f'at ({px + dx:.2f},{y + dy:.2f}) {{{anio} {texto}}};')
+                       f'at ({px + dx:.2f},{y + dy:.2f}) {{{int(anio)} {texto}}};')
     out.append('\\end{tikzpicture}')
     destino = Path(__file__).resolve().parent.parent / 'Img' / f'{clave}_cronologia.tikz'
     destino.write_text('\n'.join(out) + '\n', encoding='utf-8')
