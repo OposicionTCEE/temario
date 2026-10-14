@@ -93,7 +93,7 @@ def fig_integracion(grupo, it, x0=1962, x1=2024):
           f'    \\addplot[black!55, line width=1.1pt, mark=none] coordinates {{{coords(tot)}}};',
           f'    \\addplot[s1, line width=1.3pt, mark=none] coordinates {{{coords(intra)}}};',
           f'    \\node[anchor=south east, inner sep=1pt, text=black!75] at (axis cs:{tot[-1][0]},{tot[-1][1] * 1.15:.4f}) {{totales}};',
-          f'    \\node[anchor=north east, inner sep=1pt, text=black!75] at (axis cs:{intra[-1][0]},{intra[-1][1] / 1.25:.4f}) {{a los socios}};',
+          f'    \\node[anchor=north east, inner sep=1pt, text=black!75] at (axis cs:{intra[-1][0]},{intra[-1][1] / 1.7:.4f}) {{a los socios}};',
           '  \\end{axis}', '\\end{tikzpicture}']
     return o
 
