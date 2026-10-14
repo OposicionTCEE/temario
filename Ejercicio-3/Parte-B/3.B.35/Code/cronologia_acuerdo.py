@@ -37,7 +37,7 @@ CRONOLOGIAS = {
                    (1969, 1990, 'crisis', 'Crisis y guerras'), (1990, 2004, 'relanzamiento', 'Relanzamiento'),
                    (2004, 2027, 'terceros', 'Acuerdos con terceros')],
         'contexto': [
-            (1952, 'comité de ministros en la CEPAL'), (1969, 'guerra El Salvador-Honduras'),
+            (1952, 'comité de la CEPAL'), (1969, 'guerra El Salvador-Honduras'),
             (1979, 'revolución sandinista'), (1982, 'crisis de la deuda'),
             (1984, 'Iniciativa de la Cuenca del Caribe'), (1987, 'paz de Esquipulas'),
             (2001, 'El Salvador adopta el dólar'), (2025, 'aranceles de EE.\\,UU.')],
