@@ -13,6 +13,7 @@ Uso, desde la carpeta del tema:
   python3 Code/datos_producto.py MCCA composicion 1962 2023
   python3 Code/datos_producto.py MCCA productos 1965 1975 1985 1995 2005 2015 2023
   python3 Code/datos_producto.py USA,CHN importaciones 1965 1975 1985 1995 2005 2015 2023   (mercados de referencia)
+  python3 Code/datos_producto.py MCCA division68 1962 2023   (metales no ferrosos, para restarlos de las manufacturas)
   python3 Code/datos_producto.py MCCA wdi
 """
 import csv
@@ -28,6 +29,7 @@ import datos_comercio as dc  # noqa: E402
 DATOS = dc.TEMA / 'Code' / 'datos'
 CSV_COMP = DATOS / 'composicion_cuci.csv'
 CSV_PROD = DATOS / 'productos_cuci3.csv'
+CSV_68 = DATOS / 'division68_cuci.csv'
 CSV_WDI = DATOS / 'wdi_series.csv'
 WDI = {'NY.GDP.MKTP.CD': 'PIB (USD corrientes)', 'TM.VAL.MRCH.CD.WT': 'Importaciones de mercancías (USD corrientes)',
        'NY.GDP.PCAP.KD': 'PIB per cápita (USD constantes de 2015)',
@@ -89,6 +91,27 @@ def composicion(grupo, a0, a1):
         escribe(CSV_COMP, ['exportador', 'anio', 'socio', 'seccion', 'valor_usd', 'clasificacion'], filas)
 
 
+def division68(grupo, a0, a1):
+    """Exportaciones de metales no ferrosos (división 68 de la CUCI) al mundo y a cada socio: la definición de
+    manufacturas de la UNCTAD (secciones 5 a 8) los excluye, y pesan mucho en los países mineros (cobre, estaño, zinc)."""
+    previas = lee(CSV_68)
+    hechas = {(r['exportador'], int(r['anio'])) for r in previas}
+    filas = [[r[k] for k in ('exportador', 'anio', 'socio', 'valor_usd', 'clasificacion')] for r in previas]
+    todos = dc.GRUPOS[grupo][0]
+    for anio in range(a0, a1 + 1):
+        faltan = [e for e in todos if (e, anio) not in hechas]
+        if not faltan:
+            continue
+        datos, inv = comtrade(anio, faltan, ['WLD'] + todos, 'X', '68')
+        for r in datos:
+            filas.append([inv[r['reporterCode']], anio, inv[r['partnerCode']], f"{r['primaryValue']:.0f}", 'CUCI ' + revision(anio)])
+        for e in faltan:   # sin fila: no exporta metales no ferrosos ese año (se anota un cero para no volver a pedirlo)
+            if datos and not any(inv[r['reporterCode']] == e for r in datos):
+                filas.append([e, anio, 'WLD', '0', 'CUCI ' + revision(anio)])
+        print(anio, len(datos), 'filas', flush=True)
+        escribe(CSV_68, ['exportador', 'anio', 'socio', 'valor_usd', 'clasificacion'], filas)
+
+
 def productos(paises, anios, flujos=('X', 'M')):
     previas = lee(CSV_PROD)
     hechas = {(r['pais'], int(r['anio']), r['flujo']) for r in previas}
@@ -129,6 +152,8 @@ if __name__ == '__main__':
     g, que, *resto = sys.argv[1:]
     if que == 'composicion':
         composicion(g, int(resto[0]), int(resto[1]))
+    elif que == 'division68':
+        division68(g, int(resto[0]), int(resto[1]))
     elif que == 'productos':
         productos(lambda a: dc.miembros(g, a), [int(a) for a in resto])   # solo los miembros de cada año
     elif que == 'importaciones':   # mercados de referencia, solo importaciones: USA,CHN importaciones 1965 ... 2023
