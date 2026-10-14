@@ -367,6 +367,55 @@ def importaciones(importador, a0, a1, socios):
     return filas
 
 
+ESPEJO = TEMA / 'Code' / 'datos' / 'espejo.csv'
+FUENTE_ESPEJO = ('WITS (Banco Mundial), indicador MPRT-TRD-VL: importaciones declaradas por cada país desde el exportador '
+                 '(datos espejo, en dólares, valor CIF)')
+
+
+def espejo(grupo, a0, a1):
+    """Datos espejo: importaciones que todos los países declaran desde cada miembro del grupo (una consulta por
+    exportador y año, con reporter=all). Sirven cuando los exportadores no declaran o declaran sin destino, como el
+    petróleo del Golfo. Se guardan en Code/datos/espejo.csv (exportador, año, importador, valor); el importador WLD
+    es la suma de todos los que declaran."""
+    filas = {}
+    if ESPEJO.exists():
+        with open(ESPEJO, newline='', encoding='utf-8') as f:
+            for r in csv.DictReader(f):
+                filas[(r['exportador'], int(r['anio']), r['importador'])] = float(r['valor_usd'])
+    hechos = {(e, a) for (e, a, i) in filas}
+
+    def una(par):
+        e, anio = par
+        url = ('https://wits.worldbank.org/API/V1/SDMX/V21/datasource/tradestats-trade/reporter/all/year/%d/partner/%s'
+               '/product/Total/indicator/MPRT-TRD-VL?format=JSON' % (anio, ISO_WITS.get(e, e).lower()))
+        try:
+            d = json.loads(get(url))
+        except ValueError:
+            return par, {}
+        dims = d['structure']['dimensions']['series']
+        ir = [i for i, x in enumerate(dims) if x['id'] == 'REPORTER'][0]
+        valores = dims[ir]['values']
+        out = {}
+        for clave, serie in d['dataSets'][0]['series'].items():
+            imp = iso(valores[int(clave.split(':')[ir])]['id'])
+            out[imp] = out.get(imp, 0.0) + serie['observations']['0'][0] * 1000.0
+        return par, out
+
+    from concurrent.futures import ThreadPoolExecutor
+    pendientes = [(e, a) for a in range(a0, a1 + 1) for e in miembros(grupo, a) if (e, a) not in hechos]
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        for (e, a), out in ex.map(una, pendientes):
+            print(a, e, 'ok' if out.get('WLD') else 'sin datos', flush=True)
+            for imp, v in out.items():
+                filas[(e, a, imp)] = v
+    with open(ESPEJO, 'w', newline='', encoding='utf-8') as f:
+        w = csv.writer(f)
+        w.writerow(['exportador', 'anio', 'importador', 'valor_usd', 'fuente'])
+        for (e, a, i), v in sorted(filas.items()):
+            w.writerow([e, a, i, f'{v:.0f}', FUENTE_ESPEJO])
+    return filas
+
+
 def escribe_brutos():
     """Copia los datos brutos del CSV en la hoja Exportaciones_bilaterales del Excel, con su fuente."""
     from openpyxl import Workbook, load_workbook
