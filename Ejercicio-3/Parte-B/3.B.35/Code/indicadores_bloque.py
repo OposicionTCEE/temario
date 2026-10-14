@@ -29,7 +29,7 @@ MANUF = {'5', '6', '7', '8'}
 SECCIONES = [  # (secciones de la CUCI, nombre)
     (('0', '1'), 'Alimentos y bebidas'), (('2', '4'), 'Materias primas y aceites'), (('3',), 'Combustibles'),
     (('5',), 'Productos químicos'), (('6',), 'Manufacturas por material'), (('7',), 'Maquinaria y transporte'),
-    (('8',), 'Manufacturas diversas'), (('9',), 'Otros')]
+    (('8',), 'Manufacturas diversas'), (('9',), 'Oro y otros')]
 
 
 def wdi():

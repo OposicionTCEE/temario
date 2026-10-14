@@ -44,11 +44,13 @@ def cabecera(grupo, nombre_fig):
     return o
 
 
-def etapas(grupo, y0, y1):
-    """Fondo con las etapas de la cronología, entre y0 e y1 (coordenadas del eje)."""
+def etapas(grupo, y0, y1, x0=1962, x1=2024):
+    """Fondo con las etapas de la cronología, entre y0 e y1 y dentro del eje (la capa de fondo no se recorta)."""
     o = ['    \\begin{pgfonlayer}{axis background}']
     for a, b, tipo, _ in ca.CRONOLOGIAS[grupo]['etapas']:
-        o.append(f'      \\fill[et{tipo}] (axis cs:{a},{y0}) rectangle (axis cs:{b},{y1});')
+        a, b = max(a, x0), min(b, x1)
+        if a < b:
+            o.append(f'      \\fill[et{tipo}] (axis cs:{a},{y0}) rectangle (axis cs:{b},{y1});')
     o.append('    \\end{pgfonlayer}')
     return o
 
@@ -120,11 +122,13 @@ def fig_composicion(grupo, comp, cm, x0=1962, x1=2024):
           f' xbar, bar width=4.2pt, y dir=reverse, symbolic y coords={{{ylab}}}, ytick=data, xmin=0, xmax={xmax},'
           f' enlarge y limits=0.07, title={{(b) Composición, {ult}}}, xlabel={{\\% de cada destino}},'
           ' nodes near coords, nodes near coords style={font=\\sffamily\\footnotesize, text=black!75, /pgf/number format/fixed,'
-          ' /pgf/number format/precision=0}, point meta=x,'
-          ' legend style={font=\\sffamily\\footnotesize, draw=none, fill=none, at={(0.98,0.03)}, anchor=south east}, legend cell align=left]',
-          '    \\addplot[draw=none, fill=s1] coordinates {' + ' '.join(f'({vd:.1f},{n})' for n, vd, _ in cats) + '};',
+          ' /pgf/number format/precision=0, /pgf/number format/assume math mode=true}, point meta=x,'
+          ' legend style={font=\\sffamily\\footnotesize, draw=none, fill=none, at={(0.5,-0.36)}, anchor=north, legend columns=2,'
+          ' /tikz/every even column/.append style={column sep=0.3cm}}, legend cell align=left, area legend, reverse legend]',
+          # primero «fuera», que pgfplots pone debajo: así «a los socios» queda encima en cada categoría
           '    \\addplot[draw=none, fill=s2] coordinates {' + ' '.join(f'({vf:.1f},{n})' for n, _, vf in cats) + '};',
-          '    \\legend{a los socios, fuera del bloque}',
+          '    \\addplot[draw=none, fill=s1] coordinates {' + ' '.join(f'({vd:.1f},{n})' for n, vd, _ in cats) + '};',
+          '    \\legend{fuera del bloque, a los socios}',
           '  \\end{axis}', '\\end{tikzpicture}']
     return o
 
