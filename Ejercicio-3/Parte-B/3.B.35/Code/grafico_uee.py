@@ -4,9 +4,9 @@ cada miembro de la Unión Económica Euroasiática en 2013, 2021 y 2023.
 
 Rusia y Bielorrusia no publican su comercio desde 2022. Para Rusia se usan en los tres años datos espejo (importaciones que
 declaran los demás países, Code/datos/espejo.csv), lo que permite comparar; en 2023 falta Bielorrusia como importadora, por
-lo que la parte del resto de la UEE está subestimada. Bielorrusia (datos espejo) solo aparece en 2013 y 2021: en 2021 ya declaraba el 40 % de sus exportaciones sin destino, y en 2023
-faltaría Rusia como importadora. Kazajistán, Armenia y Kirguistán, con sus propios datos Kazajistán, Armenia y Kirguistán, con sus propios datos
-(Code/datos/destinos.csv). Ambos ficheros los escribe Code/datos_comercio.py (UEE destinos AÑO y UEE espejo 2013 2023).
+lo que la parte del resto de la UEE está subestimada. Bielorrusia (datos espejo) solo aparece en 2013 y 2021: en 2021 ya
+declaraba el 40 % de sus exportaciones sin destino, y en 2023 faltaría Rusia como importadora. Kazajistán, Armenia y
+Kirguistán, con sus propios datos (Code/datos/destinos.csv). Ambos ficheros los escribe Code/datos_comercio.py (UEE destinos AÑO y UEE espejo 2013 2023).
 Uso, desde la carpeta del tema (con openpyxl):
   /tmp/v/bin/python Code/grafico_uee.py
   bash Code/generar_figura.sh UEE_destinos
