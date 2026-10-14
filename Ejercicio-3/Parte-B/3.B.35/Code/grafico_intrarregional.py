@@ -23,7 +23,7 @@ HITOS = {  # año: texto (se dibujan como líneas verticales en el panel a)
     'NAFTA': [(1989, 'CUSFTA (1989)'), (1994, 'NAFTA (1994)'), (2001, 'China en la OMC (2001)'), (2020, 'USMCA (2020)')],
 }
 COLOR = {'MCCA': (200, 76, 58), 'CAN': (233, 160, 40), 'NAFTA': (30, 75, 135)}
-YMAX = {'MCCA': 45, 'CAN': 30, 'NAFTA': 70}  # techo del panel (a): deja sitio a las etiquetas de los hitos
+YMAX = {'MCCA': 45, 'CAN': 30, 'NAFTA': 90}  # techo del panel (a): deja sitio a las etiquetas de los hitos
 
 
 def main(grupo):
@@ -34,7 +34,8 @@ def main(grupo):
     intra = ' '.join(f'({a},{i / 1000:.4f})' if q is not None else f'({a},nan)' for a, i, _, q, _, _ in c)
     total = ' '.join(f'({a},{t / 1000:.4f})' if q is not None else f'({a},nan)' for a, _, t, q, _, _ in c)
     r, g, b = COLOR[grupo]
-    x0, x1 = anios[0], anios[-1]
+    con_dato = [a for a, _, _, q, _, _ in c if q is not None]
+    x0, x1 = min(con_dato), max(con_dato)
     ymax = YMAX[grupo]
     vlines = []
     for anio, texto in HITOS[grupo]:
@@ -55,7 +56,7 @@ def main(grupo):
         *vlines,
         '  \\end{axis}',
         '  \\begin{axis}[at={(a.east)}, anchor=west, xshift=1.15cm, width=7.9cm, height=6.2cm, xmin=%d, xmax=%d,' % (x0 - 1, x1 + 1),
-        '      ymode=log, log basis y=10, log ticks with fixed point, ytick={0.1,1,10,100}, xtick={1960,1970,1980,1990,2000,2010,2020},',
+        '      ymode=log, log basis y=10, log ticks with fixed point, ytick={0.1,1,10,100,1000}, xtick={1960,1970,1980,1990,2000,2010,2020},',
         '      x tick label style={/pgf/number format/1000 sep={}}, ylabel={miles de millones de USD (escala log.)},',
         '      ylabel style={font=\\sffamily\\scriptsize}, tick label style={font=\\sffamily\\scriptsize},',
         '      title={(b) Exportaciones}, title style={font=\\sffamily\\small}, axis lines*=left, unbounded coords=discard,',
