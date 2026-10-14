@@ -181,11 +181,13 @@ def descarga(grupo, a0, a1):
                 continue
             fuente = FUENTE_CT
         else:
-            res, fuente = {}, FUENTE_WITS
+            res, fuentes = {}, {}
             for e in pendientes:
-                res[e] = wits(e, anio, socios)
+                res[e], fuentes[e] = por_socio(e, anio, socios)
                 time.sleep(0.5)
         for e in pendientes:
+            if anio >= CORTE:
+                fuente = fuentes[e]
             r = res.get(e, {})
             if not r.get('WLD'):
                 print(anio, e, 'sin datos', flush=True)
