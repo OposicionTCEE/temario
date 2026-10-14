@@ -4,9 +4,10 @@
     países que declaran y sin los seis del Consejo de Cooperación del Golfo (hoja PAFTA_con_y_sin_CCG);
 (b) destino de las exportaciones de cada subregión en 2023 (hoja PAFTA_subregiones_2023).
 
-Datos: Code/datos/exportaciones_bilaterales.csv y Code/datos/destinos.csv (los escribe Code/datos_comercio.py:
-  PAFTA destinos 2023 y PAFTA 1998 2023). Solo cuentan los países que declaran cada año; se omiten los años en que
-  declara menos de la mitad del grupo correspondiente.
+Datos espejo: Code/datos/espejo.csv (Code/datos_comercio.py PAFTA espejo 1998 2023), es decir, lo que los importadores
+declaran haber comprado a cada país árabe. Los exportadores del Golfo declaran la mayor parte de su petróleo sin país de
+destino (el 77 % de las exportaciones saudíes en 2023), por lo que sus propios datos no sirven para medir destinos. Solo
+cuentan los importadores que declaran; entre los árabes faltan algunos (Irak, Siria, Libia, Yemen o Sudán según el año).
 Uso, desde la carpeta del tema (con openpyxl):
   /tmp/v/bin/python Code/grafico_pafta.py
   bash Code/generar_figura.sh PAFTA_comercio
@@ -36,26 +37,29 @@ DESTINOS = [  # (leyenda, socios o None = resto, color)
 ]
 
 
-def serie(filas, exportadores):
-    out = []
-    for anio in range(1998, 2024):
-        mm = dc.miembros('PAFTA', anio)
-        con = [e for e in exportadores if e in mm and filas.get((e, anio, 'WLD'), (0.0, ''))[0]]
-        if len(con) < len([e for e in exportadores if e in mm]) / 2:
-            out.append((anio, None, len(con)))
-            continue
-        tot = sum(filas[(e, anio, 'WLD')][0] for e in con)
-        intra = sum(filas.get((e, anio, s), (0.0, ''))[0] for e in con for s in mm if s != e)
-        out.append((anio, 100 * intra / tot, len(con)))
+def lee_espejo():
+    out = {}
+    with open(dc.ESPEJO, newline='', encoding='utf-8') as f:
+        for r in csv.DictReader(f):
+            out[(r['exportador'], int(r['anio']), r['importador'])] = float(r['valor_usd'])
     return out
 
 
-def destinos_subregion(anio=2023):
-    brutos = {}
-    with open(TEMA / 'Code' / 'datos' / 'destinos.csv', newline='', encoding='utf-8') as f:
-        for r in csv.DictReader(f):
-            if int(r['anio']) == anio:
-                brutos[(r['exportador'], r['socio'])] = float(r['valor_usd'])
+def serie(esp, exportadores):
+    """(año, cuota intra-PAFTA en %, número de importadores árabes que declaran)."""
+    out = []
+    for anio in range(1998, 2024):
+        mm = dc.miembros('PAFTA', anio)
+        exp = [e for e in exportadores if e in mm and esp.get((e, anio, 'WLD'))]
+        tot = sum(esp[(e, anio, 'WLD')] for e in exp)
+        intra = sum(esp.get((e, anio, i), 0.0) for e in exp for i in mm if i != e)
+        importadores = {i for e in exp for i in mm if esp.get((e, anio, i))}
+        out.append((anio, 100 * intra / tot if tot else None, len(importadores)))
+    return out
+
+
+def destinos_subregion(esp, anio=2023):
+    brutos = {(e, i): v for (e, a, i), v in esp.items() if a == anio}
     mm = dc.miembros('PAFTA', anio)
     res = []
     for nombre, paises in SUBREGIONES:
@@ -76,26 +80,26 @@ def destinos_subregion(anio=2023):
 
 def main():
     from openpyxl import load_workbook
-    filas = dc.lee_csv()
-    todos = serie(filas, dc.GRUPOS['PAFTA'][0])
-    sin_ccg = serie(filas, [e for e in dc.GRUPOS['PAFTA'][0] if e not in CCG])
-    sub = destinos_subregion()
+    esp = lee_espejo()
+    todos = serie(esp, dc.GRUPOS['PAFTA'][0])
+    sin_ccg = serie(esp, [e for e in dc.GRUPOS['PAFTA'][0] if e not in CCG])
+    sub = destinos_subregion(esp)
     wb = load_workbook(dc.XLSX)
     for nombre in ('PAFTA_con_y_sin_CCG', 'PAFTA_subregiones_2023'):
         if nombre in wb.sheetnames:
             del wb[nombre]
     ws = wb.create_sheet('PAFTA_con_y_sin_CCG')
-    ws.append(['Exportaciones a los demás miembros de la PAFTA / exportaciones totales (%), países que declaran'])
-    ws.append([f'Fuente: {dc.FUENTE_WITS}. Cálculo propio (Code/grafico_pafta.py). Sin cuota si declara menos de la mitad.'])
+    ws.append(['Importaciones de los miembros de la PAFTA desde otros miembros / importaciones mundiales desde los miembros (%), datos espejo'])
+    ws.append([f'Fuente: {dc.FUENTE_ESPEJO}. Cálculo propio (Code/grafico_pafta.py).'])
     ws.append([])
-    ws.append(['Año', 'Todos (%)', 'Países que declaran', 'Sin el CCG (%)', 'Países que declaran (sin CCG)'])
+    ws.append(['Año', 'Todos los exportadores (%)', 'Importadores árabes que declaran', 'Sin el CCG (%)', 'Importadores árabes que declaran (sin CCG)'])
     for (a, q1, n1), (_, q2, n2) in zip(todos, sin_ccg):
         ws.append([a, None if q1 is None else round(q1, 2), n1, None if q2 is None else round(q2, 2), n2])
     ws = wb.create_sheet('PAFTA_subregiones_2023')
     ws.append(['Destino de las exportaciones de mercancías de cada subregión de la PAFTA en 2023 (% del total)'])
-    ws.append([f'Fuente: {dc.FUENTE_WITS}; datos brutos en Code/datos/destinos.csv. Cálculo propio (Code/grafico_pafta.py).'])
+    ws.append([f'Fuente: {dc.FUENTE_ESPEJO}; datos brutos en Code/datos/espejo.csv. Cálculo propio (Code/grafico_pafta.py).'])
     ws.append([])
-    ws.append(['Subregión', 'Países que declaran'] + [d[0].replace('\\,', ' ') for d in DESTINOS] + ['Exportaciones (millones USD)'])
+    ws.append(['Subregión', 'Exportadores con datos espejo'] + [d[0].replace('\\,', ' ') for d in DESTINOS] + ['Exportaciones (millones USD)'])
     for nombre, fila, con, tot in sub:
         ws.append([nombre, ', '.join(con)] + [round(v, 2) for v in fila] + [round(tot / 1e6, 1)])
     wb.save(dc.XLSX)
