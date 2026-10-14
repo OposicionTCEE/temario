@@ -42,7 +42,7 @@ def main():
         o.append(f'  \\draw[black!12, line width=0.3pt] ({x(d):.2f},{y0 + 0.3:.2f}) -- ({x(d):.2f},{yb:.2f});')
         o.append(f'  \\node[anchor=north, font=\\sffamily\\scriptsize, inner sep=2pt] at ({x(d):.2f},{yb:.2f}) {{{d}}};')
     o.append(f'  \\draw[black!70, line width=0.5pt, -{{Stealth[length=4pt]}}] ({X0:.2f},{yb:.2f}) -- ({X1 + 0.1:.2f},{yb:.2f});')
-    o.append(f'  \\node[anchor=west, font=\\sffamily\\scriptsize\\bfseries] at (0,{y0 + 0.45:.2f}) {{Miembros del CEFTA de 1992}};')
+    o.append(f'  \\node[anchor=west, font=\\sffamily\\scriptsize\\bfseries] at (0,{y0 + 0.45:.2f}) {{Miembros del CEFTA original (1992)}};')
     for k, (pais, ent, sal) in enumerate(ANTIGUOS):
         y = y0 - k * paso
         o.append(f'  \\node[anchor=east, font=\\sffamily\\scriptsize] at ({X0 - 0.1:.2f},{y:.2f}) {{{pais}}};')
