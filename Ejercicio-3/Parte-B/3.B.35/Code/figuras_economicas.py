@@ -155,7 +155,7 @@ def fig_complementariedad(grupo, cp, sd, rm, x0=1962, x1=2024):
     c = cp[ult]
     cols = miembros_hoy + refs
     cw, ch = 0.78, 0.46
-    xm, ytop = 2.0, 7.75
+    xm, ytop = 2.0, 8.35
     vmax = max(c.values())
     o.append(f'  \\node[anchor=south west, font=\\sffamily\\small, inner sep=0pt] at (0,{ytop + 1.55:.2f}) {{(a) Complementariedad, {ult}}};')
     for jx, j in enumerate(cols):
@@ -220,8 +220,8 @@ def fig_complementariedad(grupo, cp, sd, rm, x0=1962, x1=2024):
     # (d) reparto de las exportaciones de manufacturas dentro del bloque (áreas apiladas)
     anios = sorted(rm)
     o += [f'  \\begin{{axis}}[{ESTILO}, at={{(9.3cm,0cm)}}, width=6.1cm, height=4.0cm, xmin={anios[0]}, xmax={anios[-1]}, ymin=0, ymax=100,'
-          ' xtick={1960,1970,1980,1990,2000,2010,2020}, title={(d) Reparto de las manufacturas vendidas a los socios},'
-          ' ylabel={\\%}, stack plots=y, area style]']
+          ' xtick={1960,1970,1980,1990,2000,2010,2020}, title={(d) Reparto de las manufacturas},'
+          ' ylabel={\\% de las vendidas a los socios}, stack plots=y, area style]']
     for e in dc.GRUPOS[grupo][0]:
         o.append(f'    \\addplot[draw=white, line width=0.4pt, fill={color[e]}] coordinates {{'
                  + coords((a, rm[a].get(e, 0.0)) for a in anios) + '} \\closedcycle;')
