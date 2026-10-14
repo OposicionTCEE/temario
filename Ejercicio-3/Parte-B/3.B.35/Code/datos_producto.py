@@ -94,7 +94,7 @@ def productos(paises, anios, flujos=('X', 'M')):
     hechas = {(r['pais'], int(r['anio']), r['flujo']) for r in previas}
     filas = [[r[k] for k in ('pais', 'anio', 'flujo', 'producto', 'valor_usd', 'clasificacion')] for r in previas]
     for anio in anios:
-        for pais in paises:
+        for pais in (paises(anio) if callable(paises) else paises):
             for flujo in flujos:
                 if (pais, anio, flujo) in hechas:
                     continue
@@ -130,7 +130,7 @@ if __name__ == '__main__':
     if que == 'composicion':
         composicion(g, int(resto[0]), int(resto[1]))
     elif que == 'productos':
-        productos(dc.GRUPOS[g][0], [int(a) for a in resto])
+        productos(lambda a: dc.miembros(g, a), [int(a) for a in resto])   # solo los miembros de cada año
     elif que == 'importaciones':   # mercados de referencia, solo importaciones: USA,CHN importaciones 1965 ... 2023
         productos(g.split(','), [int(a) for a in resto], ('M',))
     else:
