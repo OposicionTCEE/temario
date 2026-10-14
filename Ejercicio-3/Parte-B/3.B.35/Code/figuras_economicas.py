@@ -100,14 +100,15 @@ def fig_integracion(grupo, it, x0=1962, x1=2024):
 def fig_composicion(grupo, comp, cm, x0=1962, x1=2024):
     o = cabecera(grupo, 'composicion')
     ymax = 100
-    fin = cm[-1]
+    top = max(cm, key=lambda x: x[1])
     o += [f'  \\begin{{axis}}[{ESTILO}, width=6.0cm, height=4.4cm, xmin={x0}, xmax={x1}, ymin=0, ymax={ymax},'
           ' xtick={1960,1970,1980,1990,2000,2010,2020}, title={(a) Manufacturas en las exportaciones},'
           ' ylabel={\\% de cada destino}, at={(0cm,0cm)}]', *etapas(grupo, 0, ymax),
           f'    \\addplot[s1, line width=1.3pt, mark=none] coordinates {{{coords((a, d) for a, d, f in cm)}}};',
           f'    \\addplot[s2, line width=1.3pt, mark=none] coordinates {{{coords((a, f) for a, d, f in cm)}}};',
-          f'    \\node[anchor=south east, inner sep=1.5pt, text=black!80] at (axis cs:{fin[0]},{fin[1] + 2:.1f}) {{a los socios}};',
-          f'    \\node[anchor=north east, inner sep=1.5pt, text=black!80] at (axis cs:{fin[0]},{fin[2] - 2:.1f}) {{fuera del bloque}};',
+          # rótulos junto a cada línea, donde no hay otra: «a los socios» sobre su máximo y «fuera» al principio, abajo
+          f'    \\node[anchor=south, inner sep=1.5pt, text=black!80] at (axis cs:{top[0]},{top[1] + 2:.1f}) {{a los socios}};',
+          f'    \\node[anchor=south west, inner sep=1.5pt, text=black!80] at (axis cs:{cm[0][0]},{max(f for a, d, f in cm if a < cm[0][0] + 20) + 3:.1f}) {{fuera del bloque}};',
           '  \\end{axis}']
     ult = max(comp)
     d, f = comp[ult]
@@ -120,10 +121,10 @@ def fig_composicion(grupo, comp, cm, x0=1962, x1=2024):
     xmax = techo(max(max(vd, vf) for _, vd, vf in cats), 10)
     o += [f'  \\begin{{axis}}[{ESTILO.replace("ymajorgrids", "xmajorgrids")}, at={{(10.9cm,0cm)}}, anchor=south west, width=4.4cm, height=4.4cm,'
           f' xbar, bar width=4.2pt, y dir=reverse, symbolic y coords={{{ylab}}}, ytick=data, xmin=0, xmax={xmax},'
-          f' enlarge y limits=0.07, title={{(b) Composición, {ult}}}, xlabel={{\\% de cada destino}},'
+          f' enlarge y limits=0.07, title={{(b) Composición, {ult} (\\% de cada destino)}},'
           ' nodes near coords, nodes near coords style={font=\\sffamily\\footnotesize, text=black!75, /pgf/number format/fixed,'
           ' /pgf/number format/precision=0, /pgf/number format/assume math mode=true}, point meta=x,'
-          ' legend style={font=\\sffamily\\footnotesize, draw=none, fill=none, at={(0.5,-0.36)}, anchor=north, legend columns=2,'
+          ' legend style={font=\\sffamily\\footnotesize, draw=none, fill=none, at={(0.5,-0.13)}, anchor=north, legend columns=2,'
           ' /tikz/every even column/.append style={column sep=0.3cm}}, legend cell align=left, area legend, reverse legend]',
           # primero «fuera», que pgfplots pone debajo: así «a los socios» queda encima en cada categoría
           '    \\addplot[draw=none, fill=s2] coordinates {' + ' '.join(f'({vf:.1f},{n})' for n, _, vf in cats) + '};',
