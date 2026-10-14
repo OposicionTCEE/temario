@@ -27,7 +27,8 @@ NOMBRES = {'GTM': 'Guatemala', 'SLV': 'El Salvador', 'HND': 'Honduras', 'NIC': '
            'USA': 'EE.\\,UU.', 'CHN': 'China'}
 PALETA = ['2A78D6', 'EB6834', '1BAF7A', 'EDA100', 'E87BA4', '008300', '6250D6', 'E34948']
 REFERENCIAS = {'MCCA': ['USA'], 'CAN': ['USA', 'CHN']}
-ESTILO = ('scale only axis, axis lines*=left, set layers, tick label style={font=\\sffamily\\footnotesize}, '
+ESTILO = ('scale only axis, axis lines*=left, set layers, tick label style={font=\\sffamily\\footnotesize, '
+          '/pgf/number format/assume math mode=true}, '
           'label style={font=\\sffamily\\footnotesize}, title style={font=\\sffamily\\small, anchor=south, yshift=-2pt}, '
           'ymajorgrids, grid style={black!10}, x tick label style={/pgf/number format/1000 sep={}}, '
           'y tick label style={/pgf/number format/use comma, /pgf/number format/1000 sep={.}}, clip=true, '
@@ -75,7 +76,7 @@ def fig_integracion(grupo, it, x0=1962, x1=2024):
           f'    \\addplot[s1, line width=1.3pt, mark=none] coordinates {{{coords((f[0], f[3]) for f in cuadro)}}};',
           '  \\end{axis}']
     # (b) intensidad
-    o += [f'  \\begin{{axis}}[{comunes}, at={{({paso},0)}}, ymin=0, ymax={ymax_b}, title={{(b) Intensidad}},'
+    o += [f'  \\begin{{axis}}[{comunes}, at={{({paso}cm,0cm)}}, ymin=0, ymax={ymax_b}, title={{(b) Intensidad}},'
           f' ylabel={{cuota / peso en el comercio mundial}}]', *etapas(grupo, 0, ymax_b),
           f'    \\addplot[s1, line width=1.3pt, mark=none] coordinates {{{coords((a, i) for a, _, _, i in it)}}};',
           '  \\end{axis}']
@@ -84,7 +85,7 @@ def fig_integracion(grupo, it, x0=1962, x1=2024):
     intra = [(f[0], f[1] / 1000) for f in cuadro]
     lo = 10 ** math.floor(math.log10(min(y for _, y in intra)))
     hi = 10 ** math.ceil(math.log10(max(y for _, y in tot)))
-    o += [f'  \\begin{{axis}}[{comunes}, at={{({2 * paso},0)}}, ymode=log, ymin={lo}, ymax={hi}, log ticks with fixed point,'
+    o += [f'  \\begin{{axis}}[{comunes}, at={{({2 * paso}cm,0cm)}}, ymode=log, ymin={lo}, ymax={hi}, log ticks with fixed point,'
           f' title={{(c) Exportaciones}}, ylabel={{miles de millones de USD (log.)}}]', *etapas(grupo, lo, hi),
           f'    \\addplot[black!55, line width=1.1pt, mark=none] coordinates {{{coords(tot)}}};',
           f'    \\addplot[s1, line width=1.3pt, mark=none] coordinates {{{coords(intra)}}};',
@@ -100,7 +101,7 @@ def fig_composicion(grupo, comp, cm, x0=1962, x1=2024):
     fin = cm[-1]
     o += [f'  \\begin{{axis}}[{ESTILO}, width=6.0cm, height=4.4cm, xmin={x0}, xmax={x1}, ymin=0, ymax={ymax},'
           ' xtick={1960,1970,1980,1990,2000,2010,2020}, title={(a) Manufacturas en las exportaciones},'
-          ' ylabel={\\% de cada destino}, at={(0,0)}]', *etapas(grupo, 0, ymax),
+          ' ylabel={\\% de cada destino}, at={(0cm,0cm)}]', *etapas(grupo, 0, ymax),
           f'    \\addplot[s1, line width=1.3pt, mark=none] coordinates {{{coords((a, d) for a, d, f in cm)}}};',
           f'    \\addplot[s2, line width=1.3pt, mark=none] coordinates {{{coords((a, f) for a, d, f in cm)}}};',
           f'    \\node[anchor=south east, inner sep=1.5pt, text=black!80] at (axis cs:{fin[0]},{fin[1] + 2:.1f}) {{a los socios}};',
@@ -115,7 +116,7 @@ def fig_composicion(grupo, comp, cm, x0=1962, x1=2024):
         cats.append((nombre, vd, vf))
     ylab = ','.join(n for n, _, _ in cats)
     xmax = techo(max(max(vd, vf) for _, vd, vf in cats), 10)
-    o += [f'  \\begin{{axis}}[{ESTILO.replace("ymajorgrids", "xmajorgrids")}, at={{(10.9,0)}}, anchor=south west, width=4.4cm, height=4.4cm,'
+    o += [f'  \\begin{{axis}}[{ESTILO.replace("ymajorgrids", "xmajorgrids")}, at={{(10.9cm,0cm)}}, anchor=south west, width=4.4cm, height=4.4cm,'
           f' xbar, bar width=4.2pt, y dir=reverse, symbolic y coords={{{ylab}}}, ytick=data, xmin=0, xmax={xmax},'
           f' enlarge y limits=0.07, title={{(b) Composición, {ult}}}, xlabel={{\\% de cada destino}},'
           ' nodes near coords, nodes near coords style={font=\\sffamily\\footnotesize, text=black!75, /pgf/number format/fixed,'
@@ -171,7 +172,7 @@ def fig_complementariedad(grupo, cp, sd, rm, x0=1962, x1=2024):
             fila.append(sum(xr) / len(xr) if xr else None)
         medias.append(fila)
     ymax_b = techo(max(v for f in medias for v in f[1:] if v is not None), 10)
-    o += [f'  \\begin{{axis}}[{ESTILO}, at={{(9.3,{ytop - 2.95:.2f})}}, width=6.1cm, height=3.0cm, xmin={x0}, xmax={x1}, ymin=0,'
+    o += [f'  \\begin{{axis}}[{ESTILO}, at={{(9.3cm,{ytop - 2.95:.2f}cm)}}, width=6.1cm, height=3.0cm, xmin={x0}, xmax={x1}, ymin=0,'
           f' ymax={ymax_b}, xtick={{1960,1970,1980,1990,2000,2010,2020}}, title={{(b) Complementariedad media}}]',
           *etapas(grupo, 0, ymax_b),
           '    \\addplot[s1, line width=1.3pt, mark=*, mark size=1.6pt] coordinates {' + coords((f[0], f[1]) for f in medias if f[1] is not None) + '};']
@@ -187,7 +188,7 @@ def fig_complementariedad(grupo, cp, sd, rm, x0=1962, x1=2024):
     # (c) saldos en % del PIB
     vals = [v for _, r in sd for v in r.values()]
     lo, hi = math.floor(min(vals) / 2) * 2, math.ceil(max(vals) / 2) * 2
-    o += [f'  \\begin{{axis}}[{ESTILO}, at={{(1.1,0)}}, width=5.9cm, height=4.0cm, xmin={x0}, xmax={x1}, ymin={lo}, ymax={hi},'
+    o += [f'  \\begin{{axis}}[{ESTILO}, at={{(1.1cm,0cm)}}, width=5.9cm, height=4.0cm, xmin={x0}, xmax={x1}, ymin={lo}, ymax={hi},'
           ' xtick={1960,1970,1980,1990,2000,2010,2020}, title={(c) Saldo con el resto del bloque}, ylabel={\\% del PIB}]',
           *etapas(grupo, lo, hi), f'    \\draw[black!60, line width=0.5pt] (axis cs:{x0},0) -- (axis cs:{x1},0);']
     for e in dc.GRUPOS[grupo][0]:
@@ -197,7 +198,7 @@ def fig_complementariedad(grupo, cp, sd, rm, x0=1962, x1=2024):
     o.append('  \\end{axis}')
     # (d) reparto de las exportaciones de manufacturas dentro del bloque (áreas apiladas)
     anios = sorted(rm)
-    o += [f'  \\begin{{axis}}[{ESTILO}, at={{(9.3,0)}}, width=6.1cm, height=4.0cm, xmin={anios[0]}, xmax={anios[-1]}, ymin=0, ymax=100,'
+    o += [f'  \\begin{{axis}}[{ESTILO}, at={{(9.3cm,0cm)}}, width=6.1cm, height=4.0cm, xmin={anios[0]}, xmax={anios[-1]}, ymin=0, ymax=100,'
           ' xtick={1960,1970,1980,1990,2000,2010,2020}, title={(d) Reparto de las manufacturas vendidas a los socios},'
           ' ylabel={\\%}, stack plots=y, area style]']
     for e in dc.GRUPOS[grupo][0]:
