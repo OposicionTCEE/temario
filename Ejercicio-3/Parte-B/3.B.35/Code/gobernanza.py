@@ -6,7 +6,7 @@ Formato común del tema (nota de \\modificaciones, 14/10/2026):
     flechas con la relación (quién orienta, decide, apoya o controla). El color indica la naturaleza del órgano; el borde
     discontinuo, que sus competencias son limitadas o no las reconocen todos los miembros. Sin resumir lo que hace cada
     órgano: eso está en el texto.
-(b) siete vertientes, cada una en cuatro grados (nada, limitado, parcial, pleno): el círculo hueco es lo previsto en los
+(b) siete vertientes, cada una en cuatro grados (nada, bajo, parcial, pleno): el círculo hueco es lo previsto en los
     tratados vigentes y el relleno lo alcanzado en octubre de 2026. Es una valoración propia a partir del texto del tema.
 Letra de 8 puntos (\\footnotesize), ancho total de 16 cm.
 Uso, desde la carpeta del tema:
@@ -26,24 +26,24 @@ TIPOS = {   # naturaleza del órgano: (borde, relleno, texto de la leyenda)
 }
 VERTIENTES = ['Libre comercio interno', 'Arancel exterior común', 'Servicios e inversión', 'Movilidad de personas',
               'Macro y moneda', 'Supranacionalidad', 'Política y seguridad']
-GRADOS = ['Nada', 'Limitado', 'Parcial', 'Pleno']
+GRADOS = ['Nada', 'Bajo', 'Parcial', 'Pleno']
 
 GOBERNANZA = {
     'MCCA': {
         # órgano: (x, y, ancho, tipo, nombre, segunda línea, discontinuo)
         'organos': {
-            'pres': (4.3, 5.0, 3.6, 'intergub', 'Reunión de Presidentes', 'órgano supremo del SICA', False),
-            'parl': (0.95, 5.0, 1.9, 'parlamento', 'Parlamento', 'Centroamericano', True),
-            'corte': (7.65, 5.0, 1.9, 'judicial', 'Corte', 'Centroamericana', True),
-            'comieco': (2.15, 2.95, 2.5, 'intergub', 'COMIECO', 'ministros de Economía', False),
-            'sieca': (6.35, 2.95, 2.5, 'tecnico', 'SIECA', 'secretaría técnica', False),
-            'contro': (4.25, 1.55, 3.9, 'judicial', 'Solución de controversias', 'consultas y arbitraje', False),
+            'pres': (4.45, 4.55, 3.3, 'intergub', 'Reunión de Presidentes', 'órgano supremo', False),
+            'parl': (1.3, 3.35, 2.3, 'parlamento', 'Parlamento', 'Centroamericano', True),
+            'corte': (7.6, 3.35, 2.3, 'judicial', 'Corte', 'Centroamericana', True),
+            'contro': (1.45, 1.55, 2.4, 'judicial', 'Controversias', 'consultas y arbitraje', False),
+            'comieco': (4.45, 1.55, 2.6, 'intergub', 'COMIECO', 'ministros de Economía', False),
+            'sieca': (7.55, 1.55, 2.2, 'tecnico', 'SIECA', 'secretaría técnica', False),
             'sg': (1.45, 0.0, 2.6, 'tecnico', 'Secretaría General', 'del SICA (vacante)', True),
-            'bcie': (4.3, 0.0, 2.3, 'financiero', 'BCIE', 'banco regional', False),
-            'cmca': (7.05, 0.0, 2.6, 'financiero', 'Consejo Monetario', 'bancos centrales', False),
+            'bcie': (4.45, 0.0, 2.3, 'financiero', 'BCIE', 'banco regional', False),
+            'cmca': (7.4, 0.0, 2.6, 'financiero', 'Consejo Monetario', 'bancos centrales', False),
         },
-        # marcos: (izquierda, abajo, derecha, arriba, rótulo)
-        'marcos': [(-0.15, -0.6, 8.75, 5.95, 'SICA'), (0.55, 0.95, 8.0, 3.7, 'Subsistema de integración económica')],
+        # marcos: (izquierda, abajo, derecha, arriba, rótulo); el rótulo va arriba a la derecha
+        'marcos': [(0.0, -0.6, 8.95, 5.35, 'SICA'), (0.1, 0.8, 8.85, 2.65, 'Subsistema económico')],
         # flechas: (desde, hasta, rótulo, estilo); estilo 'o' = orienta o decide, 'a' = apoyo, 'c' = control o consulta
         'flechas': [('pres', 'comieco', 'directrices', 'o'), ('sieca', 'comieco', 'apoyo', 'a'),
                     ('parl', 'pres', 'recomienda', 'c'), ('corte', 'pres', 'controla', 'c')],
@@ -65,10 +65,10 @@ def main(clave):
     o.append('\\begin{tikzpicture}[font=\\sffamily\\footnotesize]')
     # (a) organigrama
     alto_a = max(m[3] for m in g['marcos'])
-    o.append(f'  \\node[anchor=south west, font=\\sffamily\\small, inner sep=0pt] at (-0.15,{alto_a + 0.25:.2f}) {{(a) Gobernanza}};')
+    o.append(f'  \\node[anchor=south west, font=\\sffamily\\small, inner sep=0pt] at (0,{alto_a + 0.25:.2f}) {{(a) Gobernanza}};')
     for i, (x0, y0, x1, y1, rotulo) in enumerate(g['marcos']):
         o.append(f'  \\draw[black!45, line width=0.5pt, {"densely dashed" if i else ""}, rounded corners=3pt] ({x0},{y0}) rectangle ({x1},{y1});')
-        o.append(f'  \\node[anchor=north west, inner sep=2pt, font=\\sffamily\\footnotesize\\bfseries, text=black!60] at ({x0},{y1}) {{{rotulo}}};')
+        o.append(f'  \\node[anchor=north east, inner sep=2.5pt, font=\\sffamily\\footnotesize\\bfseries, text=black!60] at ({x1},{y1}) {{{rotulo}}};')
     usados = []
     for k, (x, y, ancho, tipo, nombre, linea2, disc) in g['organos'].items():
         usados.append(tipo)
@@ -79,10 +79,10 @@ def main(clave):
     estilos = {'o': 'black!75, line width=0.7pt', 'a': 'black!55, line width=0.6pt', 'c': 'black!55, line width=0.6pt, densely dashed'}
     for a, b, rot, e in g['flechas']:
         o.append(f'  \\draw[-{{Stealth[length=4pt]}}, {estilos[e]}] ({a}) -- ({b}) '
-                 f'node[midway, fill=white, inner sep=1pt, font=\\sffamily\\footnotesize\\itshape, text=black!75] {{{rot}}};')
+                 f'node[midway, sloped, above, inner sep=1.5pt, font=\\sffamily\\footnotesize\\itshape, text=black!75] {{{rot}}};')
     # (b) vertientes y grado
-    xb, xl = 9.35, 12.85       # inicio del panel y del primer grado
-    paso_x, paso_y = 0.92, 0.62
+    xb, xl = 9.45, 12.85       # inicio del panel y del primer grado
+    paso_x, paso_y = 0.95, 0.62
     ytop = alto_a - 0.55
     o.append(f'  \\node[anchor=south west, font=\\sffamily\\small, inner sep=0pt] at ({xb},{alto_a + 0.25:.2f}) {{(b) Vertientes y grado}};')
     for j, gr in enumerate(GRADOS):
@@ -104,7 +104,7 @@ def main(clave):
     o.append(f'  \\node[anchor=west, inner sep=1pt] at ({xb + 3.95:.2f},{yl:.2f}) {{alcanzado (2026)}};')
     # leyenda de colores del organigrama, debajo de todo
     ylc = min(m[1] for m in g['marcos']) - 0.5
-    x = -0.15
+    x = 0.0
     for t in [t for t in TIPOS if t in usados]:
         o.append(f'  \\node[draw=b{t}, fill=f{t}, line width=0.6pt, minimum width=0.42cm, minimum height=0.26cm, inner sep=0pt, '
                  f'anchor=west] at ({x:.2f},{ylc:.2f}) {{}};')
