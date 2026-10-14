@@ -45,7 +45,7 @@ def main():
     for g, lista in GRUPOS:
         xa, xb = x0 + k * dx - dx / 2, x0 + (k + len(lista) - 1) * dx + dx / 2
         o.append(f'  \\draw[black!50, line width=0.5pt] ({xa + 0.04:.3f},{ybot - 0.12:.3f}) -- ({xb - 0.04:.3f},{ybot - 0.12:.3f});')
-        o.append(f'  \\node[anchor=north, font=\\sffamily\\scriptsize, text=black!70] at ({(xa + xb) / 2:.3f},{ybot - 0.15:.3f}) {{{g}}};')
+        o.append(f'  \\node[anchor=north, font=\\sffamily\\tiny, text=black!70] at ({(xa + xb) / 2:.3f},{ybot - 0.15:.3f}) {{{g}}};')
         if k:
             o.append(f'  \\draw[black!25, line width=0.4pt] ({xa:.3f},0) -- ({xa:.3f},{ybot:.3f});')
         k += len(lista)
