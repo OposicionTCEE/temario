@@ -29,7 +29,7 @@ PALETA = ['2A78D6', 'EB6834', '1BAF7A', 'EDA100', 'E87BA4', '008300', '6250D6', 
 REFERENCIAS = {'MCCA': ['USA'], 'CAN': ['USA', 'CHN']}
 ESTILO = ('scale only axis, axis lines*=left, set layers, tick label style={font=\\sffamily\\footnotesize, '
           '/pgf/number format/assume math mode=true}, '
-          'label style={font=\\sffamily\\footnotesize}, title style={font=\\sffamily\\small, anchor=south, yshift=-2pt}, '
+          'label style={font=\\sffamily\\footnotesize}, title style={font=\\sffamily\\small, at={(0.5,0)}, anchor=north, yshift=-0.62cm}, '
           'ymajorgrids, grid style={black!10}, x tick label style={/pgf/number format/1000 sep={}}, '
           'y tick label style={/pgf/number format/use comma, /pgf/number format/1000 sep={.}}, clip=true, '
           'unbounded coords=discard')
@@ -124,7 +124,7 @@ def fig_composicion(grupo, comp, cm, x0=1962, x1=2024):
           f' enlarge y limits=0.07, title={{(b) Composición, {ult} (\\%)}},'
           ' nodes near coords, nodes near coords style={font=\\sffamily\\footnotesize, text=black!75, /pgf/number format/fixed,'
           ' /pgf/number format/precision=0, /pgf/number format/assume math mode=true}, point meta=x,'
-          ' legend style={font=\\sffamily\\footnotesize, draw=none, fill=none, at={(0.5,-0.13)}, anchor=north, legend columns=2,'
+          ' legend style={font=\\sffamily\\footnotesize, draw=none, fill=none, at={(0.5,1.03)}, anchor=south, legend columns=2,'
           ' /tikz/every even column/.append style={column sep=0.3cm}}, legend cell align=left, area legend, reverse legend]',
           # primero «fuera», que pgfplots pone debajo: así «a los socios» queda encima en cada categoría
           '    \\addplot[draw=none, fill=s2] coordinates {' + ' '.join(f'({vf:.1f},{n})' for n, _, vf in cats) + '};',
@@ -155,9 +155,10 @@ def fig_complementariedad(grupo, cp, sd, rm, x0=1962, x1=2024):
     c = cp[ult]
     cols = miembros_hoy + refs
     cw, ch = 0.78, 0.46
-    xm, ytop = 2.0, 8.35
+    xm, ytop = 2.0, 8.0
     vmax = max(c.values())
-    o.append(f'  \\node[anchor=south west, font=\\sffamily\\small, inner sep=0pt] at (0,{ytop + 1.55:.2f}) {{(a) Complementariedad, {ult}}};')
+    # título debajo, a la altura del de (b)
+    o.append(f'  \\node[anchor=north, font=\\sffamily\\small, inner sep=0pt] at ({xm + len(cols) * cw / 2 - 0.5:.2f},{ytop - 3.57:.2f}) {{(a) Complementariedad, {ult}}};')
     for jx, j in enumerate(cols):
         o.append(f'  \\node[anchor=south west, rotate=40, inner sep=1pt] at ({xm + (jx + 0.3) * cw:.2f},{ytop + 0.05:.2f}) {{{NOMBRES[j]}}};')
     for iy, i in enumerate(miembros_hoy):
@@ -229,8 +230,8 @@ def fig_complementariedad(grupo, cp, sd, rm, x0=1962, x1=2024):
     # leyenda común de (c) y (d)
     x = 1.1
     for e in dc.GRUPOS[grupo][0]:
-        o.append(f'  \\fill[{color[e]}] ({x:.2f},-1.15) rectangle ({x + 0.4:.2f},-0.95);')
-        o.append(f'  \\node[anchor=west, inner sep=1pt] at ({x + 0.45:.2f},-1.05) {{{NOMBRES[e]}}};')
+        o.append(f'  \\fill[{color[e]}] ({x:.2f},-1.6) rectangle ({x + 0.4:.2f},-1.4);')
+        o.append(f'  \\node[anchor=west, inner sep=1pt] at ({x + 0.45:.2f},-1.5) {{{NOMBRES[e]}}};')
         x += 0.75 + len(NOMBRES[e]) * 0.15
     o.append('\\end{tikzpicture}')
     return o
