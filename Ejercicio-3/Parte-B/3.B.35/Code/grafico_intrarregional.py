@@ -20,9 +20,10 @@ HITOS = {  # año: texto (se dibujan como líneas verticales en el panel a)
              (1991, 'SICA (1991)'), (2006, 'DR-CAFTA (2006)'), (2017, 'Unión aduanera (2017)')],
     'CAN': [(1976, 'Sale Chile (1976)'), (1987, 'Protocolo de Quito (1987)'), (1993, 'Zona de libre comercio (1993)'),
             (2006, 'Sale Venezuela (2006)'), (2015, 'Arancel común sin efecto (2015)')],
+    'NAFTA': [(1989, 'CUSFTA (1989)'), (1994, 'NAFTA (1994)'), (2001, 'China en la OMC (2001)'), (2020, 'USMCA (2020)')],
 }
-COLOR = {'MCCA': (200, 76, 58), 'CAN': (233, 160, 40)}
-YMAX = {'MCCA': 45, 'CAN': 30}  # techo del panel (a): deja sitio a las etiquetas de los hitos
+COLOR = {'MCCA': (200, 76, 58), 'CAN': (233, 160, 40), 'NAFTA': (30, 75, 135)}
+YMAX = {'MCCA': 45, 'CAN': 30, 'NAFTA': 70}  # techo del panel (a): deja sitio a las etiquetas de los hitos
 
 
 def main(grupo):
