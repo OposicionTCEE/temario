@@ -122,6 +122,14 @@ CIFRAS = [
     ('ASEAN', 'Destinos por miembro (China: IDN 25 %, LAO 38 %; EE. UU.: VNM 27 %, KHM 42 %, PHL 16 %; bloque primer destino de MYS, SGP, THA, BRN, MMR, 24-36 %)', None, '%', 2023, 'Cálculo propio con WITS (hoja ASEAN_destinos_2023)', 'https://wits.worldbank.org'),
     ('CCG', 'Destino de las exportaciones: resto del CCG / EE. UU. / China (datos espejo)', '3,1 / 11,8 / 2,2', '%', 1998, 'Cálculo propio con WITS (hoja CCG_destinos)', 'https://wits.worldbank.org'),
     ('CCG', 'Destino de las exportaciones: resto del CCG / EE. UU. / China / India / Japón y Corea (datos espejo)', '7,6 / 3,3 / 19,0 / 10,9 / 18,9', '%', 2023, 'Cálculo propio con WITS (hoja CCG_destinos)', 'https://wits.worldbank.org'),
+    ('RCEP', 'Peso en el mundo: PIB / población / exportaciones de bienes y servicios', '28,2 / 28,6 / 26,0', '%', 2023, 'Banco Mundial, WDI (hoja Megaacuerdos_2023)', 'https://data.worldbank.org'),
+    ('CPTPP', 'Peso en el mundo (con Reino Unido): PIB / población / exportaciones', '14,7 / 7,3 / 18,2', '%', 2023, 'Banco Mundial, WDI (hoja Megaacuerdos_2023)', 'https://data.worldbank.org'),
+    ('RCEP', 'Exportaciones intrarregionales / totales', 30.8, '%', 2023, 'Cálculo propio con WITS (hoja RCEP_intrarregional)', 'https://wits.worldbank.org'),
+    ('CPTPP', 'Exportaciones intrarregionales / totales (con Reino Unido)', 8.6, '%', 2023, 'Cálculo propio con WITS (hoja CPTPP_intrarregional)', 'https://wits.worldbank.org'),
+    ('UEE', 'Exportaciones intrarregionales / totales', 11.8, '%', 2021, 'Cálculo propio con WITS (hoja UEE_intrarregional)', 'https://wits.worldbank.org'),
+    ('UEE', 'Exportaciones de Rusia: UE-27 / China / India / Turquía (datos espejo)', '46,6 / 7,8 / 0,8 / 5,1', '%', 2013, 'Cálculo propio con WITS (hoja UEE_destinos)', 'https://wits.worldbank.org'),
+    ('UEE', 'Exportaciones de Rusia: UE-27 / China / India / Turquía (datos espejo)', '12,4 / 30,2 / 15,7 / 10,7', '%', 2023, 'Cálculo propio con WITS (hoja UEE_destinos)', 'https://wits.worldbank.org'),
+    ('UEE', 'Exportaciones de Armenia al resto de la UEE', '23,8 (2013) / 43,6 (2023)', '%', '2013-2023', 'Cálculo propio con WITS (hoja UEE_destinos)', 'https://wits.worldbank.org'),
 ]
 
 
