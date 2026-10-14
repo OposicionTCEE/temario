@@ -32,21 +32,21 @@ GOBERNANZA = {
     'MCCA': {
         # órgano: (x, y, ancho, tipo, nombre, segunda línea, discontinuo)
         'organos': {
-            'pres': (4.45, 4.55, 3.3, 'intergub', 'Reunión de Presidentes', 'órgano supremo', False),
-            'parl': (1.3, 3.35, 2.3, 'parlamento', 'Parlamento', 'Centroamericano', True),
-            'corte': (7.6, 3.35, 2.3, 'judicial', 'Corte', 'Centroamericana', True),
-            'contro': (1.45, 1.55, 2.4, 'judicial', 'Controversias', 'consultas y arbitraje', False),
-            'comieco': (4.45, 1.55, 2.6, 'intergub', 'COMIECO', 'ministros de Economía', False),
-            'sieca': (7.55, 1.55, 2.2, 'tecnico', 'SIECA', 'secretaría técnica', False),
-            'sg': (1.45, 0.0, 2.6, 'tecnico', 'Secretaría General', 'del SICA (vacante)', True),
-            'bcie': (4.45, 0.0, 2.3, 'financiero', 'BCIE', 'banco regional', False),
-            'cmca': (7.4, 0.0, 2.6, 'financiero', 'Consejo Monetario', 'bancos centrales', False),
+            'pres': (4.45, 4.6, 3.8, 'intergub', 'Reunión de Presidentes', 'órgano supremo', False),
+            'parl': (1.3, 3.3, 2.5, 'parlamento', 'Parlamento', 'Centroamericano', True),
+            'corte': (7.55, 3.3, 2.6, 'judicial', 'Corte Centroamericana', 'de Justicia', True),
+            'contro': (1.3, 1.55, 2.2, 'judicial', 'Controversias', 'arbitraje', False),
+            'comieco': (4.45, 1.55, 3.3, 'intergub', 'COMIECO', 'ministros de Economía', False),
+            'sieca': (7.75, 1.55, 1.9, 'tecnico', 'SIECA', 'secretaría', False),
+            'sg': (1.5, 0.0, 2.8, 'tecnico', 'Secretaría General', 'del SICA, vacante', True),
+            'bcie': (4.45, 0.0, 2.4, 'financiero', 'BCIE', 'banco regional', False),
+            'cmca': (7.4, 0.0, 2.8, 'financiero', 'Consejo Monetario', 'bancos centrales', False),
         },
         # marcos: (izquierda, abajo, derecha, arriba, rótulo); el rótulo va arriba a la derecha
-        'marcos': [(0.0, -0.6, 8.95, 5.35, 'SICA'), (0.1, 0.8, 8.85, 2.65, 'Subsistema económico')],
+        'marcos': [(0.0, -0.55, 8.95, 5.35, 'SICA'), (0.1, 0.85, 8.85, 2.65, 'Subsistema económico')],
         # flechas: (desde, hasta, rótulo, estilo); estilo 'o' = orienta o decide, 'a' = apoyo, 'c' = control o consulta
         'flechas': [('pres', 'comieco', 'directrices', 'o'), ('sieca', 'comieco', 'apoyo', 'a'),
-                    ('parl', 'pres', 'recomienda', 'c'), ('corte', 'pres', 'controla', 'c')],
+                    ('parl.north', 'pres.west', 'recomienda', 'c'), ('corte.north', 'pres.east', 'controla', 'c')],
         # vertientes: (previsto, alcanzado), de 0 (nada) a 3 (pleno)
         'grados': [(3, 3), (3, 2), (3, 2), (3, 1), (3, 1), (2, 1), (2, 1)],
     },
@@ -74,19 +74,22 @@ def main(clave):
         usados.append(tipo)
         estilo = ', densely dashed' if disc else ''
         o.append(f'  \\node[draw=b{tipo}, fill=f{tipo}, line width=0.7pt{estilo}, rounded corners=2pt, align=center, '
-                 f'minimum width={ancho}cm, text width={ancho - 0.2:.2f}cm, inner sep=2.5pt] ({k}) at ({x},{y}) '
+                 f'minimum width={ancho}cm, text width={ancho - 0.1:.2f}cm, inner sep=2pt] ({k}) at ({x},{y}) '
                  f'{{\\textbf{{{nombre}}}\\\\[-1pt]{{\\color{{black!70}}{linea2}}}}};')
     estilos = {'o': 'black!75, line width=0.7pt', 'a': 'black!55, line width=0.6pt', 'c': 'black!55, line width=0.6pt, densely dashed'}
     for a, b, rot, e in g['flechas']:
+        # rótulo a la derecha de las flechas verticales, encima de las horizontales y a lo largo de las oblicuas
+        (xa, ya), (xb_, yb) = [g['organos'][n.split('.')[0]][:2] for n in (a, b)]
+        pos = 'right' if abs(xa - xb_) < 0.3 else ('above' if abs(ya - yb) < 0.3 else 'sloped, above')
         o.append(f'  \\draw[-{{Stealth[length=4pt]}}, {estilos[e]}] ({a}) -- ({b}) '
-                 f'node[midway, sloped, above, inner sep=1.5pt, font=\\sffamily\\footnotesize\\itshape, text=black!75] {{{rot}}};')
+                 f'node[midway, {pos}, inner sep=1.5pt, font=\\sffamily\\footnotesize\\itshape, text=black!75] {{{rot}}};')
     # (b) vertientes y grado
     xb, xl = 9.45, 12.85       # inicio del panel y del primer grado
     paso_x, paso_y = 0.95, 0.62
     ytop = alto_a - 0.55
     o.append(f'  \\node[anchor=south west, font=\\sffamily\\small, inner sep=0pt] at ({xb},{alto_a + 0.25:.2f}) {{(b) Vertientes y grado}};')
     for j, gr in enumerate(GRADOS):
-        o.append(f'  \\node[anchor=south, inner sep=1pt, text=black!70] at ({xl + j * paso_x:.2f},{ytop + 0.25:.2f}) {{{gr}}};')
+        o.append(f'  \\node[anchor=base, inner sep=1pt, text=black!70] at ({xl + j * paso_x:.2f},{ytop + 0.32:.2f}) {{{gr}}};')
         o.append(f'  \\draw[black!12, line width=0.3pt] ({xl + j * paso_x:.2f},{ytop + 0.22:.2f}) -- '
                  f'({xl + j * paso_x:.2f},{ytop - (len(VERTIENTES) - 1) * paso_y - 0.25:.2f});')
     for i, (nombre, (prev, alc)) in enumerate(zip(VERTIENTES, g['grados'])):
