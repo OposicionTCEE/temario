@@ -110,6 +110,12 @@ CIFRAS = [
     ('AfCFTA', 'Participantes al cierre de la fase de comercio guiado', 39, 'países', 2025, 'tralac (2026)', 'https://www.tralac.org/resources/afcfta-negotiations-timeline.html'),
     ('AfCFTA', 'Ratificaciones del Protocolo de libre circulación de personas (de 15 necesarias)', 4, 'países', 2025, 'Ghana News Agency (2025)', 'https://gna.org.gh/2025/03/stakeholders-dialogues-progress-on-ratifying-aus-free-movement-of-persons-protocol/'),
     ('AfCFTA', 'Aumento de las exportaciones de África en 2035 con más IED (intraafricanas: 109 %)', 32, '%', 2022, 'Banco Mundial (2022)', 'https://www.worldbank.org/en/topic/trade/publication/making-the-most-of-the-african-continental-free-trade-area'),
+    ('PAFTA', 'Comercio entre los miembros (datos espejo)', 5.7, '%', 1998, 'Cálculo propio con WITS (hoja PAFTA_con_y_sin_CCG)', 'https://wits.worldbank.org'),
+    ('PAFTA', 'Comercio entre los miembros (datos espejo; máximo)', 13.1, '%', 2016, 'Cálculo propio con WITS (hoja PAFTA_con_y_sin_CCG)', 'https://wits.worldbank.org'),
+    ('PAFTA', 'Comercio entre los miembros (datos espejo)', 10.0, '%', 2023, 'Cálculo propio con WITS (hoja PAFTA_con_y_sin_CCG)', 'https://wits.worldbank.org'),
+    ('PAFTA', 'Comercio entre los miembros sin los exportadores del CCG (datos espejo)', 9.7, '%', 2023, 'Cálculo propio con WITS (hoja PAFTA_con_y_sin_CCG)', 'https://wits.worldbank.org'),
+    ('PAFTA', 'Exportaciones de Arabia Saudí declaradas sin destino', 77.3, '%', 2023, 'WITS (Code/datos/destinos.csv, socio UNS)', 'https://wits.worldbank.org'),
+    ('PAFTA', 'Destinos por subregión (Golfo: China 19 %, Japón y Corea 19 %, India 11 %, PAFTA 10 %; Magreb: UE 66 %, PAFTA 4 %; Oriente Próximo, Sudán y Yemen: PAFTA 15 %)', None, '%', 2023, 'Cálculo propio con WITS, datos espejo (hoja PAFTA_subregiones_2023)', 'https://wits.worldbank.org'),
 ]
 
 
