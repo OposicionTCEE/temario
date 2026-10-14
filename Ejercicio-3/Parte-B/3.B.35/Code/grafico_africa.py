@@ -37,7 +37,7 @@ def main():
 
     def py(q):
         return q / ymax * H
-    o.append(f'  \\node[anchor=west, font=\\sffamily\\small] at (-0.6,{H + 0.75:.2f}) {{(a) Comercio intraafricano}};')
+    o.append(f'  \\node[anchor=west, font=\\sffamily\\small] at (-0.6,{H + 0.95:.2f}) {{(a) Comercio intraafricano}};')
     for q in range(0, ymax + 1, 5):
         o.append(f'  \\draw[black!12, line width=0.3pt] (0,{py(q):.2f}) -- ({W:.2f},{py(q):.2f}); '
                  f'\\node[anchor=east, font=\\sffamily\\scriptsize] at (-0.05,{py(q):.2f}) {{{q}}};')
@@ -45,9 +45,10 @@ def main():
         o.append(f'  \\node[anchor=north, font=\\sffamily\\scriptsize] at ({px(a):.2f},-0.05) {{{a}}};')
     o.append(f'  \\draw[black!70, line width=0.5pt] (0,0) -- ({W:.2f},0);')
     o.append(f'  \\node[rotate=90, font=\\sffamily\\scriptsize] at (-0.65,{H / 2:.2f}) {{\\% de las exportaciones}};')
-    for a, t in HITOS:
-        o.append(f'  \\draw[black!45, densely dashed, line width=0.4pt] ({px(a):.2f},0) -- ({px(a):.2f},{H:.2f}); '
-                 f'\\node[anchor=south, font=\\sffamily\\tiny, text=black!70] at ({px(a):.2f},{H:.2f}) {{{t} ({a})}};')
+    for i, (a, t) in enumerate(HITOS):
+        alto = H + 0.28 * (i % 2)   # alterna la altura de los rótulos para que no se solapen
+        o.append(f'  \\draw[black!45, densely dashed, line width=0.4pt] ({px(a):.2f},0) -- ({px(a):.2f},{alto:.2f}); '
+                 f'\\node[anchor=south, font=\\sffamily\\tiny, text=black!70] at ({px(a):.2f},{alto:.2f}) {{{t} ({a})}};')
     camino = ' -- '.join(f'({px(a):.3f},{py(q):.3f})' for a, q in puntos)
     o.append(f'  \\draw[cafr, line width=1.2pt] {camino};')
     for a, q in puntos:
@@ -61,7 +62,7 @@ def main():
         else:
             vals.append((nombre, serie(wb[f'{g}_intrarregional'])[2023][0], g))
     vals.sort(key=lambda t: -t[1])
-    o.append(f'  \\node[anchor=west, font=\\sffamily\\small] at ({X0 - 1.9:.2f},{H + 0.75:.2f}) {{(b) Comercio intrarregional, 2023}};')
+    o.append(f'  \\node[anchor=west, font=\\sffamily\\small] at ({X0 - 1.9:.2f},{H + 0.95:.2f}) {{(b) Comercio intrarregional, 2023}};')
     ytop = H - 0.1
     for t in range(0, 61, 20):
         xx = X0 + t / 60 * Wb
