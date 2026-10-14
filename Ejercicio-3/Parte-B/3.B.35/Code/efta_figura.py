@@ -8,9 +8,9 @@ Uso, desde la carpeta del tema:
 """
 from pathlib import Path
 
-# (país, entrada en la EFTA, salida de la EFTA o None, destino y año de entrada en la CEE/UE o '')
+# (país, entrada en la EFTA, salida de la EFTA o None, destino y año de entrada en la CEE/UE o '', [año de salida de la UE])
 MIEMBROS = [
-    ('Reino Unido', 1960, 1972, 'CEE, 1973'),
+    ('Reino Unido', 1960, 1972, 'CEE, 1973', 2020),
     ('Dinamarca', 1960, 1972, 'CEE, 1973'),
     ('Portugal', 1960, 1985, 'CEE, 1986'),
     ('Austria', 1960, 1994, 'UE, 1995'),
@@ -41,7 +41,7 @@ def main():
         '  \\node[font=\\sffamily\\tiny, text=black!70, align=center] at (5.0,3.35) {unión aduanera y mercado interior};',
         '  \\draw[cue, line width=0.8pt, densely dashed] (6.6,3.6) ellipse (4.75 and 2.35);',
         '  \\node[font=\\sffamily\\scriptsize\\bfseries, text=cue, align=center] at (6.6,5.65) {Espacio Económico Europeo (30)};',
-        '  \\node[font=\\sffamily\\tiny, text=black!70, align=center] at (6.6,5.3) {mercado interior sin unión aduanera ni políticas agrícola, pesquera y comercial comunes};',
+        '  \\node[font=\\sffamily\\tiny, text=black!70, align=center] at (6.6,5.3) {mercado interior sin unión aduanera ni políticas comunes};',
         '  \\fill[cefta, opacity=0.35] (11.2,3.6) ellipse (2.6 and 1.45);',
         '  \\node[font=\\sffamily\\scriptsize\\bfseries, text=cefta!60!black] at (12.4,4.75) {EFTA (4)};',
         '  \\node[font=\\sffamily\\scriptsize, align=center] at (10.0,3.6) {Islandia\\\\Liechtenstein\\\\Noruega};',
@@ -66,13 +66,16 @@ def main():
         o.append(f'  \\draw[black!12, line width=0.3pt] ({x(d):.2f},{y0 + 0.25:.2f}) -- ({x(d):.2f},{yb:.2f});')
         o.append(f'  \\node[anchor=north, font=\\sffamily\\scriptsize, inner sep=2pt] at ({x(d):.2f},{yb:.2f}) {{{d}}};')
     o.append(f'  \\draw[black!70, line width=0.5pt, -{{Stealth[length=4pt]}}] ({X0:.2f},{yb:.2f}) -- ({X1 + 0.1:.2f},{yb:.2f});')
-    for k, (pais, ent, sal, dest) in enumerate(MIEMBROS):
+    for k, (pais, ent, sal, dest, *brexit) in enumerate(MIEMBROS):
         y = y0 - k * paso
         o.append(f'  \\node[anchor=east, font=\\sffamily\\scriptsize] at ({X0 - 0.1:.2f},{y:.2f}) {{{pais}}};')
         fin = sal + 1 if sal else 2026
         o.append(f'  \\fill[cefta] ({x(ent):.2f},{y - 0.12:.2f}) rectangle ({x(fin):.2f},{y + 0.12:.2f});')
         if sal:
-            o.append(f'  \\fill[cue!35] ({x(fin):.2f},{y - 0.12:.2f}) rectangle ({x(2026):.2f},{y + 0.12:.2f});')
+            fin_ue = brexit[0] + 1 if brexit else 2026
+            o.append(f'  \\fill[cue!35] ({x(fin):.2f},{y - 0.12:.2f}) rectangle ({x(fin_ue):.2f},{y + 0.12:.2f});')
+            if brexit:
+                o.append(f'  \\node[anchor=west, font=\\sffamily\\tiny, text=black!75] at ({x(fin_ue) + 0.05:.2f},{y:.2f}) {{sale de la UE, {brexit[0]}}};')
             o.append(f'  \\node[anchor=west, font=\\sffamily\\tiny, text=black!75] at ({x(fin) + 0.05:.2f},{y:.2f}) {{en la {dest}}};')
     ly = yb - 0.75
     o.append(f'  \\fill[cefta] ({X0:.2f},{ly - 0.08:.2f}) rectangle ++(0.35,0.16); '
