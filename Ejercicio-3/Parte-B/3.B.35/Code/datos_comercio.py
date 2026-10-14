@@ -107,6 +107,10 @@ def get(url):
             req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Macintosh) datos_comercio.py'})
             with urllib.request.urlopen(req, timeout=90) as r:
                 return r.read().decode('utf-8')
+        except urllib.error.HTTPError as err:
+            if err.code == 404:   # WITS: el país no declara ese año; no tiene sentido reintentar
+                return ''
+            time.sleep(5 * (intento + 1))
         except Exception:
             time.sleep(5 * (intento + 1))
     return ''
