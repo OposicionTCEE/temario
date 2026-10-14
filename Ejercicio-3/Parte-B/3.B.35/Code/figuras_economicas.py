@@ -238,6 +238,44 @@ def fig_complementariedad(grupo, cp, sd, rm, x0=1962, x1=2024):
     return o
 
 
+def fig_convergencia(grupo, lider='USA', base=1993, x0=1980, x1=2025):
+    """(a) PIB per cápita en PPA relativo al líder (%); (b) PIB per cápita real, índice base=100 (WDI)."""
+    w = ib.wdi()
+    paises = dc.GRUPOS[grupo][0]
+    color = {e: f's{i + 1}' for i, e in enumerate(paises)}
+    o = cabecera(grupo, 'convergencia')
+    otros = [e for e in paises if e != lider]
+    rel = {e: [(a, 100 * w[(e, 'NY.GDP.PCAP.PP.KD', a)] / w[(lider, 'NY.GDP.PCAP.PP.KD', a)]) for a in range(1990, 2026)
+               if (e, 'NY.GDP.PCAP.PP.KD', a) in w and (lider, 'NY.GDP.PCAP.PP.KD', a) in w] for e in otros}
+    a0 = min(a for e in otros for a, _ in rel[e])
+    o += [f'  \\begin{{axis}}[{ESTILO}, width=5.9cm, height=4.2cm, at={{(0cm,0cm)}}, xmin={a0}, xmax={x1}, ymin=0, ymax=100,'
+          f' xtick={{1990,2000,2010,2020}}, title={{(a) PIB per cápita en PPA, \\% de {NOMBRES[lider]}}}, ylabel={{\\%}}]',
+          *etapas(grupo, 0, 100, a0, x1)]
+    for e in otros:
+        o.append(f'    \\addplot[{color[e]}, line width=1.3pt, mark=none] coordinates {{{coords(rel[e])}}};')
+        ua, uv = rel[e][-1]
+        o.append(f'    \\node[anchor=south east, inner sep=1.5pt, text=black!80] at (axis cs:{ua},{uv + 2:.1f}) {{{NOMBRES[e]}}};')
+    o.append('  \\end{axis}')
+    ind = {e: [(a, 100 * w[(e, 'NY.GDP.PCAP.KD', a)] / w[(e, 'NY.GDP.PCAP.KD', base)]) for a in range(x0, 2026)
+               if (e, 'NY.GDP.PCAP.KD', a) in w] for e in paises}
+    hi = techo(max(v for e in paises for _, v in ind[e]), 20)
+    lo = math.floor(min(v for e in paises for _, v in ind[e]) / 20) * 20
+    o += [f'  \\begin{{axis}}[{ESTILO}, width=6.0cm, height=4.2cm, at={{(8.6cm,0cm)}}, xmin={x0}, xmax={x1}, ymin={lo}, ymax={hi},'
+          f' xtick={{1980,1990,2000,2010,2020}}, title={{(b) PIB per cápita real, {base} = 100}}]',
+          *etapas(grupo, lo, hi, x0, x1), f'    \\draw[black!50, line width=0.4pt] (axis cs:{x0},100) -- (axis cs:{x1},100);']
+    for e in paises:
+        o.append(f'    \\addplot[{color[e]}, line width=1.3pt, mark=none] coordinates {{{coords(ind[e])}}};')
+    # rótulos al final de cada línea, separados si están muy cerca
+    fin = sorted(((ind[e][-1][1], e) for e in paises), reverse=True)
+    ultimo_y = None
+    for v, e in fin:
+        y = v if ultimo_y is None or ultimo_y - v > (hi - lo) * 0.08 else ultimo_y - (hi - lo) * 0.08
+        o.append(f'    \\node[anchor=south east, inner sep=1.5pt, text=black!80] at (axis cs:{ind[e][-1][0]},{y:.1f}) {{{NOMBRES[e]}}};')
+        ultimo_y = y
+    o += ['  \\end{axis}', '\\end{tikzpicture}']
+    return o
+
+
 def main(grupo):
     it, comp, cm, cp, sd, rm = ib.main(grupo)
     for nombre, lineas in (('comercio_intrarregional', fig_integracion(grupo, it)), ('composicion', fig_composicion(grupo, comp, cm)),
