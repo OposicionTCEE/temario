@@ -56,6 +56,10 @@ GRUPOS = {
     'UEE': (['RUS', 'BLR', 'KAZ', 'ARM', 'KGZ'],
             'Unión Económica Euroasiática (composición actual): Rusia, Bielorrusia, Kazajistán, Armenia y Kirguistán. '
             'Rusia y Bielorrusia no publican su comercio desde 2022'),
+    'RCEP': (['BRN', 'KHM', 'IDN', 'LAO', 'MYS', 'MMR', 'PHL', 'SGP', 'THA', 'VNM', 'CHN', 'JPN', 'KOR', 'AUS', 'NZL'],
+             'RCEP: los diez miembros de la ASEAN anteriores a 2025, China, Japón, Corea del Sur, Australia y Nueva Zelanda'),
+    'CPTPP': (['AUS', 'BRN', 'CAN', 'CHL', 'JPN', 'MYS', 'MEX', 'NZL', 'PER', 'SGP', 'VNM', 'GBR'],
+              'CPTPP: composición actual, con Reino Unido (miembro desde diciembre de 2024)'),
     'UE27': (['AUT', 'BEL', 'BGR', 'HRV', 'CYP', 'CZE', 'DNK', 'EST', 'FIN', 'FRA', 'DEU', 'GRC', 'HUN', 'IRL', 'ITA', 'LVA',
               'LTU', 'LUX', 'MLT', 'NLD', 'POL', 'PRT', 'ROU', 'SVK', 'SVN', 'ESP', 'SWE'],
              'UE-27 (composición actual, solo como referencia de comparación)'),
