@@ -435,6 +435,9 @@ def escribe_brutos():
 
 
 if __name__ == '__main__':
+    if len(sys.argv) == 5 and sys.argv[2] == 'espejo':   # p. ej.: PAFTA espejo 1998 2023
+        espejo(sys.argv[1], int(sys.argv[3]), int(sys.argv[4]))
+        sys.exit()
     if len(sys.argv) == 6 and sys.argv[2] == 'importaciones':   # p. ej.: USA importaciones 1994 2024 MEX,CAN,CHN
         for fila in importaciones(sys.argv[1], int(sys.argv[3]), int(sys.argv[4]), sys.argv[5].split(',')):
             print(fila)
