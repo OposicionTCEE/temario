@@ -83,7 +83,7 @@ def fig_agricultura(s):
     o = fe.cabecera('EFTA', 'agricultura')
     orden = ['NOR', 'ISL', 'CHE', 'EU', 'OECD']
     ult = max(max(s[(p, 'PSEP')]) for p in orden)
-    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=6.3cm, height=4.2cm, at={{(0cm,0cm)}}, xmin=1986, xmax={ult}, ymin=0, ymax=100,'
+    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=5.6cm, height=4.2cm, at={{(0cm,0cm)}}, xmin=1986, xmax={ult}, ymin=0, ymax=100,'
           ' xtick={1990,2000,2010,2020}, title={(a) Apoyo al productor (PSE)}, ylabel={\\% de los ingresos agrarios},'
           ' clip mode=individual]']
     for p in orden:
@@ -95,14 +95,17 @@ def fig_agricultura(s):
     anios = [ult - 2, ult - 1, ult]
     npc = [(p, sum(s[(p, 'PNPC')][a] for a in anios) / 3) for p in orden]
     etiquetas = ','.join(NOMBRE[p] for p, _ in npc)
-    o += [f'  \\begin{{axis}}[{fe.ESTILO.replace("ymajorgrids", "xmajorgrids")}, at={{(10.6cm,0cm)}}, width=4.6cm, height=4.2cm,'
+    o += [f'  \\begin{{axis}}[{fe.ESTILO.replace("ymajorgrids", "xmajorgrids")}, at={{(9.75cm,0cm)}}, width=4.3cm, height=4.2cm,'
           f' xbar, bar width=7pt, y dir=reverse, symbolic y coords={{{etiquetas}}}, ytick=data, xmin=0.9, xmax={max(v for _, v in npc) * 1.18:.2f},'
           f' enlarge y limits=0.15, title={{(b) Protección de precios, {anios[0]}-{anios[-1]}}},'
           ' nodes near coords, nodes near coords style={font=\\sffamily\\footnotesize, text=black!75, /pgf/number format/fixed,'
-          ' /pgf/number format/precision=2, /pgf/number format/use comma, /pgf/number format/assume math mode=true}, point meta=x]',
+          ' /pgf/number format/precision=2, /pgf/number format/fixed zerofill, /pgf/number format/use comma, /pgf/number format/assume math mode=true},'
+          ' point meta=x, x tick label style={/pgf/number format/use comma, /pgf/number format/fixed}, bar shift=0pt]',
           # 1 = precio interior igual al mundial (sin protección)
           '    \\draw[black!60, line width=0.5pt] ({axis cs:1,OCDE} |- {rel axis cs:0,0}) -- ({axis cs:1,OCDE} |- {rel axis cs:0,1});',
-          '    \\addplot[draw=none, fill=s1] coordinates {' + ' '.join(f'({v:.3f},{NOMBRE[p]})' for p, v in npc) + '};',
+          # los tres de la EFTA en el color del bloque; la UE y la OCDE, de referencia, en gris
+          '    \\addplot[draw=none, fill=s1] coordinates {' + ' '.join(f'({v:.3f},{NOMBRE[p]})' for p, v in npc if p in PAISES) + '};',
+          '    \\addplot[draw=none, fill=black!35] coordinates {' + ' '.join(f'({v:.3f},{NOMBRE[p]})' for p, v in npc if p not in PAISES) + '};',
           '  \\end{axis}', '\\end{tikzpicture}']
     return o, npc
 
