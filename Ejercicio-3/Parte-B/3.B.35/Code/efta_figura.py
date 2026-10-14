@@ -29,10 +29,10 @@ def x(a):
 
 
 def main():
-    o = ['% Generado por Code/efta_figura.py.',
-         '\\definecolor{cue}{RGB}{70,110,170}', '\\definecolor{cefta}{RGB}{110,165,215}',
-         '\\definecolor{cotro}{RGB}{150,150,150}',
-         '\\begin{tikzpicture}[font=\\sffamily]']
+    # los colores, dentro del tikzpicture: fuera, cada salto de línea añade un espacio a la izquierda de la figura
+    o = ['% Generado por Code/efta_figura.py.', '\\begin{tikzpicture}[font=\\sffamily]',
+         '  \\definecolor{cue}{RGB}{70,110,170}', '  \\definecolor{cefta}{RGB}{110,165,215}',
+         '  \\definecolor{cotro}{RGB}{150,150,150}']
     # (a) Círculos de integración con la UE
     o += [
         '  \\node[anchor=west, font=\\sffamily\\small] at (0,6.6) {(a) Grados de integración con la UE};',
