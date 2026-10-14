@@ -33,8 +33,8 @@ GOBERNANZA = {
         # órgano: (x, y, ancho, tipo, nombre, segunda línea, discontinuo)
         'organos': {
             'pres': (4.45, 4.6, 3.8, 'intergub', 'Reunión de Presidentes', 'órgano supremo', False),
-            'parl': (1.3, 3.3, 2.5, 'parlamento', 'Parlamento', 'Centroamericano', True),
-            'corte': (7.5, 3.3, 2.8, 'judicial', 'Corte de Justicia', 'Centroamericana', True),
+            'parl': (1.3, 3.45, 2.5, 'parlamento', 'Parlamento', 'Centroamericano', True),
+            'corte': (7.5, 3.5, 2.8, 'judicial', 'Corte de Justicia', 'Centroamericana', True),
             'contro': (1.3, 1.55, 2.2, 'judicial', 'Controversias', 'arbitraje', False),
             'comieco': (4.45, 1.55, 3.0, 'intergub', 'COMIECO', 'ministros de Economía', False),
             'sieca': (7.9, 1.55, 1.75, 'tecnico', 'SIECA', 'secretaría', False),
@@ -47,7 +47,7 @@ GOBERNANZA = {
         # flechas: (desde, hasta, rótulo, estilo): desde y hasta son órganos (con ancla opcional, 'pres.west') o
         # coordenadas 'x,y'; estilo 'o' = orienta o decide, 'a' = apoyo, 'c' = control o consulta
         'flechas': [('pres', 'comieco', 'directrices', 'o'), ('sieca', 'comieco', 'apoyo', 'a'),
-                    ('parl.north', 'pres.west', 'recomienda', 'c'), ('corte', '7.5,2.65', 'jurisdicción', 'c')],
+                    ('parl.north', 'pres.west', 'recomienda', 'c'), ('corte', '7.5,2.65', 'jurisdicción', 'c', 'left')],
         # vertientes: (previsto, alcanzado), de 0 (nada) a 3 (pleno)
         'grados': [(3, 3), (3, 2), (3, 2), (3, 1), (3, 1), (2, 1), (2, 1)],
     },
@@ -78,12 +78,12 @@ def main(clave):
                  f'minimum width={ancho}cm, text width={ancho - 0.1:.2f}cm, inner sep=2pt] ({k}) at ({x},{y}) '
                  f'{{\\textbf{{{nombre}}}\\\\[-1pt]{{\\color{{black!70}}{linea2}}}}};')
     estilos = {'o': 'black!75, line width=0.7pt', 'a': 'black!55, line width=0.6pt', 'c': 'black!55, line width=0.6pt, densely dashed'}
-    for a, b, rot, e in g['flechas']:
+    for a, b, rot, e, *lado in g['flechas']:
         # rótulo a la derecha de las flechas verticales, encima de las horizontales y a lo largo de las oblicuas
         def punto(n):
             return tuple(map(float, n.split(','))) if ',' in n else g['organos'][n.split('.')[0]][:2]
         (xa, ya), (xb_, yb) = punto(a), punto(b)
-        pos = 'right' if abs(xa - xb_) < 0.3 else ('above' if abs(ya - yb) < 0.3 else 'sloped, above')
+        pos = lado[0] if lado else ('right' if abs(xa - xb_) < 0.3 else ('above' if abs(ya - yb) < 0.3 else 'sloped, above'))
         o.append(f'  \\draw[-{{Stealth[length=4pt]}}, {estilos[e]}] ({a}) -- ({b}) '
                  f'node[midway, {pos}, inner sep=1.5pt, font=\\sffamily\\footnotesize\\itshape, text=black!75] {{{rot}}};')
     # (b) vertientes y grado
