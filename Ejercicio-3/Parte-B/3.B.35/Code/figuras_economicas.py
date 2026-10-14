@@ -190,19 +190,22 @@ def fig_complementariedad(grupo, cp, sd, rm, x0=1962, x1=2024):
             fila.append(sum(xr) / len(xr) if xr else None)
         medias.append(fila)
     ymax_b = techo(max(v for f in medias for v in f[1:] if v is not None), 10)
-    o += [f'  \\begin{{axis}}[{ESTILO}{ABAJO}, at={{(9.3cm,{ytop - 2.95:.2f}cm)}}, width=6.1cm, height=3.0cm, xmin={x0}, xmax={x1}, ymin=0,'
-          f' ymax={ymax_b}, xtick={{1960,1970,1980,1990,2000,2010,2020}}, title={{(b) Complementariedad media}}, xmax=2025]',
+    # eje más estrecho: los rótulos van a la derecha del último punto de cada línea, sin recortar (clip mode=individual)
+    o += [f'  \\begin{{axis}}[{ESTILO}{ABAJO}, at={{(9.3cm,{ytop - 2.95:.2f}cm)}}, width=4.75cm, height=3.0cm, xmin={x0}, xmax={x1}, ymin=0,'
+          f' ymax={ymax_b}, xtick={{1970,1990,2010}}, title={{(b) Complementariedad media}}, xmax=2025, clip mode=individual]',
           *etapas(grupo, 0, ymax_b),
           '    \\addplot[s1, line width=1.3pt, mark=*, mark size=1.6pt] coordinates {' + coords((f[0], f[1]) for f in medias if f[1] is not None) + '};']
     estilos_ref = ['black!60', 's7']
     for k, r in enumerate(refs):
         o.append(f'    \\addplot[{estilos_ref[k]}, line width=1.1pt, densely dashed, mark=*, mark size=1.4pt, mark options={{solid}}] coordinates {{'
                  + coords((f[0], f[2 + k]) for f in medias if f[2 + k] is not None) + '};')
-    ref_ult = [f for f in medias if f[1] is not None][-2]   # penúltimo año: el rótulo no toca el borde
-    o.append(f'    \\node[anchor=south, inner sep=2pt, text=black!80] at (axis cs:{ref_ult[0]},{ref_ult[1] + 1:.1f}) {{entre socios}};')
-    for k, r in enumerate(refs):
-        if ref_ult[2 + k] is not None:
-            o.append(f'    \\node[anchor=north, inner sep=2pt, text=black!80] at (axis cs:{ref_ult[0]},{ref_ult[2 + k] - 1:.1f}) {{con {NOMBRES[r]}}};')
+    ultimo = [f for f in medias if f[1] is not None][-1]
+    rotulos = [(ultimo[1], 'entre socios')] + [(ultimo[2 + k], f'con {NOMBRES[r]}') for k, r in enumerate(refs) if ultimo[2 + k] is not None]
+    previo = None
+    for v, texto in sorted(rotulos, reverse=True):   # de arriba abajo, separados al menos un 12 % del eje
+        y = v if previo is None or previo - v > ymax_b * 0.12 else previo - ymax_b * 0.12
+        o.append(f'    \\node[anchor=west, inner sep=1.5pt, text=black!80] at (axis cs:{ultimo[0] + 1},{y:.1f}) {{{texto}}};')
+        previo = y
     o.append('  \\end{axis}')
     # (c) saldos en % del PIB
     sd = movil(sd)
