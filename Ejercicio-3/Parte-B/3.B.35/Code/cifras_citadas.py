@@ -92,6 +92,16 @@ CIFRAS = [
      'LIGA.net (2026)', 'https://news.liga.net/en/world/news/iceland-voted-against-resuming-eu-accession-negotiations-in-a-referendum'),
     ('CAN', 'Tasa de seguridad de Ecuador sobre importaciones colombianas (inicial)', 30, '%', 2026,
      'Portafolio (2026)', 'https://www.portafolio.co/negocios/comercio/de-30-a-50-la-cronologia-de-la-guerra-comercial-que-enfrenta-a-colombia-y-ecuador-489248'),
+    ('CEFTA', 'Exportaciones intrarregionales / totales (sin Kosovo)', 15.1, '%', 2007, 'Cálculo propio con WITS (hoja CEFTA_intrarregional)', 'https://wits.worldbank.org'),
+    ('CEFTA', 'Exportaciones intrarregionales / totales (sin Kosovo; mínimo)', 13.2, '%', 2017, 'Cálculo propio con WITS (hoja CEFTA_intrarregional)', 'https://wits.worldbank.org'),
+    ('CEFTA', 'Exportaciones intrarregionales / totales (sin Kosovo)', 15.1, '%', 2023, 'Cálculo propio con WITS (hoja CEFTA_intrarregional)', 'https://wits.worldbank.org'),
+    ('CEFTA', 'Valor de las exportaciones intrarregionales (sin Kosovo)', 8.8, 'miles de millones USD', 2023, 'Cálculo propio con WITS (hoja CEFTA_intrarregional)', 'https://wits.worldbank.org'),
+    ('CEFTA', 'Peso de Serbia en las exportaciones intrarregionales', 54.3, '%', 2023, 'Cálculo propio con WITS (Exportaciones_bilaterales)', 'https://wits.worldbank.org'),
+    ('CEFTA', 'Destinos de las exportaciones por miembro (UE-27: MKD 79 %, BIH 73 %, ALB 72 %, MDA 65 %, SRB 63 %, MNE 36 %; bloque: MNE 45 %)', None, '%', 2023, 'Cálculo propio con WITS (hoja CEFTA_destinos_2023)', 'https://wits.worldbank.org'),
+    ('CEFTA', 'Presupuesto de la Secretaría del CEFTA', 4.57, 'millones EUR', 2026, 'Conclusiones ministeriales del Comité Mixto, 2 de diciembre de 2025', 'https://cefta.int/wp-content/uploads/2025/12/Ministerial-conclusions_2-December-2025.pdf'),
+    ('CEFTA', 'Subvención de la UE a la Secretaría (de 9,25 millones en total)', 7, 'millones EUR', '2025-2028', 'Conclusiones ministeriales del Comité Mixto, 2 de diciembre de 2025', 'https://cefta.int/wp-content/uploads/2025/12/Ministerial-conclusions_2-December-2025.pdf'),
+    ('CEFTA', 'Mecanismo de Reforma y Crecimiento para los Balcanes occidentales (2 mil millones en subvenciones y 4 mil millones en préstamos)', 6, 'miles de millones EUR', '2024-2027', 'Comisión Europea, Plan de Crecimiento para los Balcanes occidentales', 'https://enlargement.ec.europa.eu/enlargement-policy/growth-plan-western-balkans_en'),
+    ('CEFTA', 'Capítulos de adhesión cerrados provisionalmente por Montenegro', 21, 'capítulos', 2026, 'New Union Post (12/10/2026)', 'https://newunionpost.eu/2026/10/12/montenegro-eu-accession-negotiations-2/'),
 ]
 
 
