@@ -20,7 +20,7 @@ HITOS = {  # año: texto (se dibujan como líneas verticales en el panel a)
              (1991, 'SICA (1991)'), (2006, 'DR-CAFTA (2006)'), (2017, 'Unión aduanera (2017)')],
     'CAN': [(1976, 'Sale Chile (1976)'), (1987, 'Protocolo de Quito (1987)'), (1993, 'Zona de libre comercio (1993)'),
             (2006, 'Sale Venezuela (2006)'), (2015, 'Arancel común sin efecto (2015)')],
-    'NAFTA': [(1989, 'CUSFTA (1989)'), (1994, 'NAFTA (1994)'), (2001, 'China en la OMC (2001)'), (2020, 'USMCA (2020)')],
+    'NAFTA': [(1989, 'CUSFTA (1989)'), (1994, 'NAFTA (1994)'), (2001, 'China, OMC (2001)'), (2020, 'USMCA (2020)')],
 }
 COLOR = {'MCCA': (200, 76, 58), 'CAN': (233, 160, 40), 'NAFTA': (30, 75, 135)}
 YMAX = {'MCCA': 45, 'CAN': 30, 'NAFTA': 90}  # techo del panel (a): deja sitio a las etiquetas de los hitos
@@ -56,7 +56,7 @@ def main(grupo):
         *vlines,
         '  \\end{axis}',
         '  \\begin{axis}[at={(a.east)}, anchor=west, xshift=1.15cm, width=7.9cm, height=6.2cm, xmin=%d, xmax=%d,' % (x0 - 1, x1 + 1),
-        '      ymode=log, log basis y=10, log ticks with fixed point, ytick={0.1,1,10,100,1000}, xtick={1960,1970,1980,1990,2000,2010,2020},',
+        '      ymode=log, log basis y=10, log ticks with fixed point, ytick={0.1,1,10,100,1000}, y tick label style={/pgf/number format/1000 sep={.}, /pgf/number format/use comma}, xtick={1960,1970,1980,1990,2000,2010,2020},',
         '      x tick label style={/pgf/number format/1000 sep={}}, ylabel={miles de millones de USD (escala log.)},',
         '      ylabel style={font=\\sffamily\\scriptsize}, tick label style={font=\\sffamily\\scriptsize},',
         '      title={(b) Exportaciones}, title style={font=\\sffamily\\small}, axis lines*=left, unbounded coords=discard,',
