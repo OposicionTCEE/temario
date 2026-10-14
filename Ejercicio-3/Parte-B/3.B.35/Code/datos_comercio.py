@@ -30,6 +30,7 @@ GRUPOS = {
              'EFTA: Islandia, Noruega y Suiza (Liechtenstein comparte territorio aduanero con Suiza y no declara por separado)'),
     'CAN': (['BOL', 'COL', 'ECU', 'PER', 'CHL', 'VEN'],
             'Comunidad Andina (Pacto Andino hasta 1996): Bolivia, Colombia, Ecuador y Perú; Chile hasta 1976; Venezuela de 1973 a 2006'),
+    'NAFTA': (['USA', 'CAN', 'MEX'], 'NAFTA/USMCA: Estados Unidos, Canadá y México (la serie empieza antes del acuerdo, para ver su efecto)'),
 }
 # Años de pertenencia cuando no coinciden con los de todo el bloque (los demás miembros cuentan siempre)
 PERIODOS = {
