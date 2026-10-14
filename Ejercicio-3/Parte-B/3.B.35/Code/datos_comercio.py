@@ -63,6 +63,7 @@ CSV = TEMA / 'Code' / 'datos' / 'exportaciones_bilaterales.csv'
 XLSX = TEMA / 'Code' / 'datos_3B35.xlsx'
 FUENTE_CT = 'UN Comtrade (CUCI Rev. 1)'
 FUENTE_WITS = 'WITS (Banco Mundial) a partir de UN Comtrade'
+FUENTE_CT_SA = 'UN Comtrade (SA), cuando WITS no tiene el país (Serbia, Montenegro)'
 
 
 def lee_csv():
