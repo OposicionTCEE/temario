@@ -75,7 +75,7 @@ def main():
             fin_ue = brexit[0] + 1 if brexit else 2026
             o.append(f'  \\fill[cue!35] ({x(fin):.2f},{y - 0.12:.2f}) rectangle ({x(fin_ue):.2f},{y + 0.12:.2f});')
             if brexit:
-                o.append(f'  \\node[anchor=west, font=\\sffamily\\tiny, text=black!75] at ({x(fin_ue) + 0.05:.2f},{y:.2f}) {{sale de la UE, {brexit[0]}}};')
+                o.append(f'  \\node[anchor=east, font=\\sffamily\\tiny, text=black!75] at ({x(fin_ue) - 0.05:.2f},{y:.2f}) {{sale de la UE, {brexit[0]}}};')
             o.append(f'  \\node[anchor=west, font=\\sffamily\\tiny, text=black!75] at ({x(fin) + 0.05:.2f},{y:.2f}) {{en la {dest}}};')
     ly = yb - 0.75
     o.append(f'  \\fill[cefta] ({X0:.2f},{ly - 0.08:.2f}) rectangle ++(0.35,0.16); '
