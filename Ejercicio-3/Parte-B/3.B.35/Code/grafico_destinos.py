@@ -9,7 +9,7 @@ Uso, desde la carpeta del tema (con openpyxl):
 import sys
 from pathlib import Path
 
-NOMBRES = {'ARG': 'Argentina', 'BRA': 'Brasil', 'PRY': 'Paraguay', 'URY': 'Uruguay', 'ISL': 'Islandia', 'NOR': 'Noruega', 'CHE': 'Suiza', 'BOL': 'Bolivia', 'COL': 'Colombia', 'ECU': 'Ecuador', 'PER': 'Perú', 'GTM': 'Guatemala',
+NOMBRES = {'ALB': 'Albania', 'BIH': 'Bosnia y Herzegovina', 'MKD': 'Macedonia del Norte', 'MNE': 'Montenegro', 'SRB': 'Serbia', 'MDA': 'Moldavia', 'ARG': 'Argentina', 'BRA': 'Brasil', 'PRY': 'Paraguay', 'URY': 'Uruguay', 'ISL': 'Islandia', 'NOR': 'Noruega', 'CHE': 'Suiza', 'BOL': 'Bolivia', 'COL': 'Colombia', 'ECU': 'Ecuador', 'PER': 'Perú', 'GTM': 'Guatemala',
            'SLV': 'El Salvador', 'HND': 'Honduras', 'NIC': 'Nicaragua', 'CRI': 'Costa Rica'}
 SERIES = [  # columna de la hoja, leyenda, color RGB
     (1, 'Resto del bloque', (233, 160, 40)),
@@ -20,7 +20,7 @@ SERIES = [  # columna de la hoja, leyenda, color RGB
     (5, 'Resto del mundo', (190, 190, 190)),
 ]
 # Bloques en los que Reino Unido se suma al resto del mundo (no es un destino relevante)
-SIN_RU = {'CAN', 'MCCA', 'MERCOSUR'}
+SIN_RU = {'CAN', 'MCCA', 'MERCOSUR', 'CEFTA'}
 
 
 def main(grupo, anio):
