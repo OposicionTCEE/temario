@@ -120,7 +120,7 @@ def fig_composicion(grupo, comp, cm, x0=1962, x1=2024):
         cats.append((nombre, vd, vf))
     ylab = ','.join(n for n, _, _ in cats)
     xmax = techo(max(max(vd, vf) for _, vd, vf in cats), 10)
-    o += [f'  \\begin{{axis}}[{ESTILO.replace("ymajorgrids", "xmajorgrids")}, at={{(9.9cm,0cm)}}, anchor=south west, width=4.45cm, height=4.4cm,'
+    o += [f'  \\begin{{axis}}[{ESTILO.replace("ymajorgrids", "xmajorgrids")}, at={{(9.82cm,0cm)}}, anchor=south west, width=4.45cm, height=4.4cm,'
           f' xbar, bar width=4.2pt, y dir=reverse, symbolic y coords={{{ylab}}}, ytick=data, xmin=0, xmax={xmax},'
           f' enlarge y limits=0.07, title={{(b) Composición, {ult} (\\%)}},'
           ' nodes near coords, nodes near coords style={font=\\sffamily\\footnotesize, text=black!75, /pgf/number format/fixed,'
@@ -156,7 +156,7 @@ def fig_complementariedad(grupo, cp, sd, rm, x0=1962, x1=2024):
     c = cp[ult]
     cols = miembros_hoy + refs
     cw, ch = 0.78, 0.46
-    xm, ytop = 2.0, 8.0
+    xm, ytop = 2.0, 8.6
     vmax = max(c.values())
     # título debajo, a la altura del de (b)
     o.append(f'  \\node[anchor=north, font=\\sffamily\\small, inner sep=0pt] at ({xm + len(cols) * cw / 2 - 0.5:.2f},{ytop - 3.57:.2f}) {{(a) Complementariedad, {ult}}};')
