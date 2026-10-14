@@ -85,6 +85,7 @@ def main(clave):
         o += ['  ' + rgb(f'b{t}', borde), '  ' + rgb(f'f{t}', relleno)]
     # (a) organigrama
     alto_a = max([m[3] for m in g['marcos']] + [v[1] + 0.45 for v in g['organos'].values()])
+    o.append(f'  \\node[anchor=south west, font=\\sffamily\\small, inner sep=0pt] at (0,{alto_a + 0.25:.2f}) {{(a) Gobernanza}};')
     for i, (x0, y0, x1, y1, rotulo) in enumerate(g['marcos']):
         o.append(f'  \\draw[black!45, line width=0.5pt, {"densely dashed" if i else ""}, rounded corners=3pt] ({x0},{y0}) rectangle ({x1},{y1});')
         o.append(f'  \\node[anchor=north east, inner sep=2.5pt, font=\\sffamily\\footnotesize\\bfseries, text=black!60] at ({x1},{y1}) {{{rotulo}}};')
@@ -112,6 +113,7 @@ def main(clave):
     xb, xl = 9.45, 12.75       # inicio del panel y del primer grado
     paso_x, paso_y = 0.92, 0.62
     ytop = alto_a - 0.55
+    o.append(f'  \\node[anchor=south west, font=\\sffamily\\small, inner sep=0pt] at ({xb},{alto_a + 0.25:.2f}) {{(b) Vertientes y grado}};')
     for j, gr in enumerate(GRADOS):
         o.append(f'  \\node[anchor=base, inner sep=1pt, text=black!70] at ({xl + j * paso_x:.2f},{ytop + 0.32:.2f}) {{{gr}}};')
         o.append(f'  \\draw[black!12, line width=0.3pt] ({xl + j * paso_x:.2f},{ytop + 0.22:.2f}) -- '
@@ -132,11 +134,7 @@ def main(clave):
     # leyenda de colores del organigrama, debajo de todo, en filas de tres para no pasar de 16 cm
     entradas = [(f'draw=b{t}, fill=f{t}', TIPOS[t][2]) for t in TIPOS if t in usados and TIPOS[t][2]]
     entradas.append(('draw=black!60, densely dashed', 'competencias limitadas'))
-    # títulos de los paneles debajo de cada uno (petición del usuario, 14/10/2026), alineados, y la leyenda debajo
-    base = min([m[1] for m in g['marcos']] + [v[1] - 0.45 for v in g['organos'].values()])
-    o.append(f'  \\node[anchor=north, font=\\sffamily\\small, inner sep=0pt] at (4.45,{base - 0.25:.2f}) {{(a) Gobernanza}};')
-    o.append(f'  \\node[anchor=north, font=\\sffamily\\small, inner sep=0pt] at ({(xb + 16) / 2:.2f},{base - 0.25:.2f}) {{(b) Vertientes y grado}};')
-    y0 = base - 0.95
+    y0 = min([m[1] for m in g['marcos']] + [v[1] - 0.45 for v in g['organos'].values()]) - 0.45
     for n, (estilo, texto) in enumerate(entradas):
         x, y = (n % 3) * 5.45, y0 - (n // 3) * 0.45
         o.append(f'  \\node[{estilo}, line width=0.6pt, minimum width=0.42cm, minimum height=0.26cm, inner sep=0pt, '
