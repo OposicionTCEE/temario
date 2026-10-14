@@ -64,6 +64,46 @@ BLOQUES = {
             ('Sin cesión de\\\\soberanía', 3, 4),
         ],
     },
+    'afinidad': {
+        'grupos': [  # orden: los posteriores prevalecen (PAFTA sobre AfCFTA en el norte de África)
+            ('afcfta', 'AfCFTA', (60, 140, 90), ['@AFRICA']),
+            ('afsin', 'AfCFTA, sin ratificar', (160, 205, 170), ['BEN', 'SSD']),
+            ('pafta', 'Zona Pan-Árabe', (150, 90, 160), ['DZA', 'BHR', 'EGY', 'IRQ', 'KWT', 'LBN', 'LBY', 'MAR', 'OMN',
+                                                       'PSX', 'QAT', 'SAU', 'SDN', 'SYR', 'TUN', 'ARE', 'JOR', 'YEM']),
+            ('mercosur', 'MERCOSUR', (30, 75, 135), ['ARG', 'BRA', 'PRY', 'URY']),
+            ('bol', 'Bolivia', (120, 160, 210), ['BOL']),
+            ('ven', 'Venezuela', (200, 210, 225), ['VEN']),
+            ('cefta', 'CEFTA', (200, 76, 58), ['ALB', 'BIH', 'KOS', 'MKD', 'MDA', 'MNE', 'SRB']),
+        ],
+        'excluir': ['ERI'],   # único miembro de la Unión Africana que no ha firmado el AfCFTA
+        'rayado': ('también en el AfCFTA', ['DZA', 'EGY', 'LBY', 'MAR', 'SDN', 'TUN']),
+        'recuadros': [
+            {'titulo': 'Balcanes occidentales y Moldavia', 'lon': (13.0, 30.5), 'lat': (39.3, 48.6),
+             'pos': (6.35, 0.25), 'ancho': 2.15, 'esquina_mapa': 'south west'},
+        ],
+        'circulos': [],
+        'notas_mapa': [
+            ((62.0, -36.0), 'bol', 'Bolivia: miembro desde 2024, en adaptación'),
+            ((62.0, -40.5), 'ven', 'Venezuela: suspendida desde 2016'),
+            ((62.0, -45.0), 'afsin', 'AfCFTA: firmado, sin ratificar'),
+            ((62.0, -49.5), 'rayado', 'Zona Pan-Árabe también en el AfCFTA'),
+        ],
+        'filas': [
+            ('MERCOSUR', 'mercosur', 1991, [(1985, 'Foz de Iguazú', 'aw'), (1991, 'Asunción', 'b'), (1994, 'Ouro Preto', 'a'),
+                                           (1998, 'Ushuaia', 'b'), (2012, 'entra Venezuela', 'a'),
+                                           (2016, 'suspende a Venezuela', 'b'), (2026, 'acuerdo con la UE', 'ae')], []),
+            ('CEFTA', 'cefta', 1992, [(1992, 'Cracovia', 'a'), (2004, 'primeras salidas a la UE', 'b'),
+                                      (2006, 'CEFTA 2006', 'a'), (2013, 'sale Croacia', 'b')], []),
+            ('AfCFTA', 'afcfta', 2018, [(2012, 'decisión de la UA', 'ae'), (2018, 'Kigali', 'b'), (2019, 'en vigor', 'aw'),
+                                        (2021, 'empieza el comercio', 'bw')], []),
+            ('Zona Pan-Árabe', 'pafta', 1998, [(1997, 'programa ejecutivo', 'ae'), (1998, 'en vigor', 'b'),
+                                                 (2005, 'liberalización completa', 'aw')], []),
+        ],
+        'tipos': [
+            ('Régimen\\\\político', 0, 1),
+            ('Identidad\\\\panregional', 2, 3),
+        ],
+    },
 }
 
 
