@@ -34,10 +34,10 @@ GOBERNANZA = {
         'organos': {
             'pres': (4.45, 4.6, 3.8, 'intergub', 'Reunión de Presidentes', 'órgano supremo', False),
             'parl': (1.3, 3.3, 2.5, 'parlamento', 'Parlamento', 'Centroamericano', True),
-            'corte': (7.55, 3.3, 2.6, 'judicial', 'Corte Centroamericana', 'de Justicia', True),
+            'corte': (7.4, 3.3, 3.0, 'judicial', 'Corte Centroamericana', 'de Justicia', True),
             'contro': (1.3, 1.55, 2.2, 'judicial', 'Controversias', 'arbitraje', False),
-            'comieco': (4.45, 1.55, 3.3, 'intergub', 'COMIECO', 'ministros de Economía', False),
-            'sieca': (7.75, 1.55, 1.9, 'tecnico', 'SIECA', 'secretaría', False),
+            'comieco': (4.45, 1.55, 3.0, 'intergub', 'COMIECO', 'ministros de Economía', False),
+            'sieca': (7.9, 1.55, 1.75, 'tecnico', 'SIECA', 'secretaría', False),
             'sg': (1.5, 0.0, 2.8, 'tecnico', 'Secretaría General', 'del SICA, vacante', True),
             'bcie': (4.45, 0.0, 2.4, 'financiero', 'BCIE', 'banco regional', False),
             'cmca': (7.4, 0.0, 2.8, 'financiero', 'Consejo Monetario', 'bancos centrales', False),
