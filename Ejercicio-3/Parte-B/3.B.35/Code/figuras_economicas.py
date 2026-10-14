@@ -281,7 +281,7 @@ def fig_convergencia(grupo, lider='USA', base=1993, x0=1980, x1=2025):
 
 
 def main(grupo):
-    it, comp, cm, cp, sd, rm = ib.main(grupo)
+    it, comp, cm, cp, sd, rm = ib.main(grupo, tuple(REFERENCIAS[grupo]))
     for nombre, lineas in (('comercio_intrarregional', fig_integracion(grupo, it)), ('composicion', fig_composicion(grupo, comp, cm)),
                            ('complementariedad', fig_complementariedad(grupo, cp, sd, rm))):
         destino = dc.TEMA / 'Img' / f'{grupo}_{nombre}.tikz'

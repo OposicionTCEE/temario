@@ -190,12 +190,12 @@ def hoja(nombre, titulo, fuente, cabecera, filas):
     wb.save(dc.XLSX)
 
 
-def main(grupo):
+def main(grupo, referencias=('USA',)):
     desc = dc.GRUPOS[grupo][1]
     it = intensidad(grupo)
     comp = composicion(grupo)
     cm = cuota_manufacturas(comp)
-    cp = complementariedad(grupo)
+    cp = complementariedad(grupo, referencias)
     sd = saldos(grupo)
     rm = reparto_manufacturas(grupo)
     try:
