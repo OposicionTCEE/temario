@@ -133,6 +133,39 @@ def wits(exportador, anio, socios=None):
     return out
 
 
+def comtrade_sa(exportador, anio, socios=None):
+    """Alternativa a WITS: exportaciones de un país a todos sus socios en clasificación SA (UN Comtrade, vista previa).
+    Los códigos M49 de los socios se traducen a ISO3 con la tabla de referencia de Comtrade (guardada en Code/datos/)."""
+    ref = TEMA / 'Code' / 'datos' / 'comtrade_socios.json'
+    if not ref.exists():
+        ref.write_text(get('https://comtradeapi.un.org/files/v1/app/reference/partnerAreas.json'), encoding='utf-8')
+    iso = {r['PartnerCode']: r.get('PartnerCodeIsoAlpha3') for r in json.loads(ref.read_text(encoding='utf-8'))['results']}
+    iso[0] = 'WLD'
+    url = ('https://comtradeapi.un.org/public/v1/preview/C/A/HS?reporterCode=%d&period=%d&flowCode=X&cmdCode=TOTAL'
+           % (M49[exportador], anio))
+    time.sleep(4)
+    try:
+        datos = json.loads(get(url)).get('data', [])
+    except ValueError:
+        return {}
+    out = {}
+    for r in datos:
+        if r.get('partner2Code', 0) != 0 or r.get('motCode', 0) != 0 or r.get('customsCode', 'C00') != 'C00':
+            continue
+        socio = iso.get(r['partnerCode'])
+        if socio and (socios is None or socio in socios):
+            out[socio] = out.get(socio, 0.0) + r['primaryValue']
+    return out
+
+
+def por_socio(exportador, anio, socios=None):
+    """WITS y, si no tiene el país, UN Comtrade (SA). Devuelve (valores por socio, fuente)."""
+    r = wits(exportador, anio, socios)
+    if r.get('WLD') or exportador not in M49:
+        return r, FUENTE_WITS
+    return comtrade_sa(exportador, anio, socios), FUENTE_CT_SA
+
+
 def descarga(grupo, a0, a1):
     socios = GRUPOS[grupo][0] + ['WLD']
     filas = lee_csv()
