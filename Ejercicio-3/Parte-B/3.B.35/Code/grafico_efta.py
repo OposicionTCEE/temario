@@ -100,7 +100,8 @@ def fig_agricultura(s):
           f' enlarge y limits=0.15, title={{(b) Protección de precios, {anios[0]}-{anios[-1]}}},'
           ' nodes near coords, nodes near coords style={font=\\sffamily\\footnotesize, text=black!75, /pgf/number format/fixed,'
           ' /pgf/number format/precision=2, /pgf/number format/use comma, /pgf/number format/assume math mode=true}, point meta=x]',
-          '    \\draw[black!55, line width=0.5pt] (axis cs:1,{' + npc[0][0] and '' + '}) -- (axis cs:1,{});' if False else '',
+          # 1 = precio interior igual al mundial (sin protección)
+          '    \\draw[black!60, line width=0.5pt] ({axis cs:1,OCDE} |- {rel axis cs:0,0}) -- ({axis cs:1,OCDE} |- {rel axis cs:0,1});',
           '    \\addplot[draw=none, fill=s1] coordinates {' + ' '.join(f'({v:.3f},{NOMBRE[p]})' for p, v in npc) + '};',
           '  \\end{axis}', '\\end{tikzpicture}']
     return o, npc
