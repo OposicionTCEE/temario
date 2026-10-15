@@ -217,7 +217,7 @@ def ccg():
           'PIB en dólares corrientes del Banco Mundial (WDI, NY.GDP.MKTP.CD). Se usan los datos espejo porque las series de WDI '
           '(TX.VAL.FUEL.ZS.UN) de Emiratos y Bahréin tienen saltos y ceros. Los importadores suelen anotar las reexportaciones con el país '
           'de origen, no con Emiratos. Cálculo propio (Code/figuras_geoestrategicas.py).',
-          ['Año', 'Indicador'] + CCG,
+          ['Año', 'Datos'] + CCG,
           [(a, ind, *[round(s[e][a], 1) if a in s[e] else None for e in CCG]) for ind, s in (('Combustibles, % de las exportaciones', fuel),
                                                                                           ('No combustibles, % del PIB', nof))
            for a in range(2000, ult + 1)])
@@ -391,7 +391,7 @@ def asean():
           'materias primas, SoP2 bienes intermedios, SoP3 de consumo, SoP4 de capital), dólares corrientes. Solo los miembros que '
           'declaran las cuatro fases cada año (al menos siete); UE-27 como suma de sus Estados miembros. Una parte de las '
           'exportaciones de Singapur son reexportaciones. Cálculo propio (Code/figuras_geoestrategicas.py).',
-          ['Año', 'Destino', 'Materias primas (%)', 'Intermedios (%)', 'Consumo (%)', 'Capital (%)', 'Miembros que declaran'],
+          ['Año', 'Destino', 'Materias primas (%)', 'Intermedios (%)', 'Consumo (%)', 'Capital (%)', 'Miembros'],
           [(a, n, *[round(compo[(n, a)][g], 1) for g in FASES], ', '.join(cobertura[a])) for a in anios for n, _ in DESTINOS])
     print('intermedios', {n: {a: round(serie[n][a]) for a in (2000, 2005, 2010, 2015, 2020, ult) if a in serie[n]} for n, _ in DESTINOS})
     print('compo', ult, {n: {FASES_TXT[g]: round(compo[(n, ult)][g]) for g in FASES} for n, _ in DESTINOS})
@@ -469,10 +469,11 @@ def asean():
           'WITS (Banco Mundial), tradestats-tariff: arancel aplicado efectivo (AHS) medio ponderado por socio, agregado con las '
           'importaciones de cada miembro desde cada socio; NMF = arancel de nación más favorecida medio ponderado de las importaciones '
           'desde fuera de la ASEAN. Solo los miembros con datos cada año (al menos siete). Cálculo propio (Code/figuras_geoestrategicas.py).',
-          ['Año'] + [f'Desde {n} (%)' for n, _ in origenes] + ['NMF, fuera de la ASEAN (%)', 'Miembros con datos'],
-          [(a, *[round(ar[n][a], 2) if a in ar[n] else None for n, _ in origenes], round(nmf[a], 2) if a in nmf else None,
+          ['Año', 'País'] + [f'Desde {n} (%)' for n, _ in origenes] + ['NMF, fuera de la ASEAN (%)', 'Miembros'],
+          [(a, 'ASEAN', *[round(ar[n][a], 2) if a in ar[n] else None for n, _ in origenes], round(nmf[a], 2) if a in nmf else None,
             ', '.join(cob[a])) for a in range(2000, 2024) if len(cob[a]) >= 7]
-          + [(f'{por[p][0]} ({p})', *[round(x, 2) if x is not None else None for x in por[p][1:]], None, None, None) for p in orden])
+          + [(por[p][0], p, *[round(x, 2) if x is not None else None for x in por[p][1:3]], None,
+              round(por[p][3], 2) if por[p][3] is not None else None, None, None) for p in orden])
     print('arancel', {n: {a: round(ar[n][a], 1) for a in (2000, 2005, 2010, 2015, 2020, ult) if a in ar[n]} for n, _ in origenes})
     print('NMF', {a: round(nmf[a], 1) for a in (2000, 2005, 2010, 2015, 2020, ult) if a in nmf}, 'cobertura', {a: len(c) for a, c in cob.items()})
     print('por miembro', {p: tuple(round(x, 1) if isinstance(x, float) else x for x in v) for p, v in por.items()})
@@ -571,9 +572,9 @@ def rcep():
     tabla('RCEP_china', 'Peso de China y de Japón en el comercio (exportaciones más importaciones) de cada miembro del RCEP, hacia 2000 y hacia 2023, y peso de cada miembro en el comercio de China (%)',
           'WITS (Banco Mundial): exportaciones e importaciones declaradas por cada miembro por socio (2000, o 2001 si falta; 2023, o el último '
           'año disponible) y por China (2023). Cálculo propio (Code/figuras_geoestrategicas.py).',
-          ['Miembro', 'Año inicial', 'China, inicio (%)', 'Japón, inicio (%)', 'Año final', 'China, final (%)', 'Japón, final (%)',
-           'El miembro en el comercio de China (%)'],
-          [(p, *(ini[p] if p in ini else (None, None, None)), *fin[p], round(cuota[p], 2)) for p in orden])
+          ['Año', 'Miembro', 'China en su comercio (%)', 'Japón en su comercio (%)', 'El miembro en el comercio de China (%)'],
+          [(x[0], p, round(x[1], 2), round(x[2], 2) if p != 'JPN' else None, round(cuota[p], 2) if x is fin[p] else None)
+           for p in orden for x in ((ini[p],) if p in ini else ()) + (fin[p],)])
     print('RCEP', {p: (ini.get(p), fin[p], round(cuota[p], 1)) for p in orden})
     # enlaces nuevos
     ahs, mfn = dw.tabla('arancel', 'AHS', 'Total'), dw.tabla('arancel', 'MFN', 'Total')
@@ -615,10 +616,14 @@ def rcep():
           'Acuerdos: OMC (base de datos de acuerdos comerciales regionales) y textos de los acuerdos; año de entrada en vigor. Aranceles: '
           'WITS (Banco Mundial), tradestats-tariff, arancel aplicado efectivo (AHS) y de nación más favorecida (NMF) medios ponderados '
           'por el comercio, por socio. Cálculo propio (Code/figuras_geoestrategicas.py).',
-          ['Par o importador a origen', 'Año o indicador', '2018', '2019', '2020', '2021', '2022', '2023'],
-          [(f'{a}-{b}', f'{v[0] or "RCEP (2022)"} {v[1]}'.strip(), None, None, None, None, None, None) for (a, b), v in ACUERDOS_RCEP.items()]
-          + [(txt, ind, *[round(s[a], 2) if a in s else None for a in range(2018, 2024)])
-             for i, j, _, txt in pares for ind, s in (('AHS', tar[(i, j)]), ('NMF', nm[(i, j)]))])
+          ['Año', 'País', 'Socio', 'Arancel aplicado, AHS (%)', 'Arancel NMF (%)', 'Margen de preferencia (puntos)'],
+          [(a, i, j, round(tar[(i, j)][a], 2), round(nm[(i, j)][a], 2) if a in nm[(i, j)] else None,
+            round(margen[(i, j)][a], 2) if a in margen[(i, j)] else None) for i, j, _, _ in pares for a in sorted(tar[(i, j)])])
+    tabla('RCEP_acuerdos', 'Primer acuerdo de libre comercio en vigor entre cada par de las seis economías del RCEP (la ASEAN, como bloque)',
+          'OMC, base de datos de acuerdos comerciales regionales (https://rtais.wto.org), y textos de los acuerdos: año de entrada en vigor. '
+          'China-Japón y Japón-Corea no tenían acuerdo antes del RCEP (2022).',
+          ['Par', 'Año de entrada en vigor', 'Acuerdo'],
+          [(f'{a}-{b}', v[0] or 2022, v[1] or 'RCEP') for (a, b), v in ACUERDOS_RCEP.items()])
     print('aranceles', {txt: (tar[(i, j)], nm[(i, j)]) for i, j, _, txt in pares})
 
 
