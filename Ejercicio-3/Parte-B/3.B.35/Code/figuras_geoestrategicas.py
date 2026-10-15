@@ -185,12 +185,13 @@ def ccg():
             if r['importador'] == 'WLD':
                 esp[(r['exportador'], int(r['anio']))][r['producto']] = float(r['valor_usd'])
     fuel = {e: {a: 100 * esp[(e, a)]['Fuels'] / esp[(e, a)]['Total'] for a in range(2000, 2024)
-                if esp.get((e, a), {}).get('Total') and 'Fuels' in esp[(e, a)]} for e in CCG}
+                if esp.get((e, a), {}).get('Total') and esp[(e, a)].get('Fuels', 1e30) <= esp[(e, a)]['Total']} for e in CCG}
+    # (se descartan los años incoherentes, con más combustibles que total: Kuwait en 2000)
     nof = {e: {a: 100 * (esp[(e, a)]['Total'] - esp[(e, a)]['Fuels']) / w[(e, 'NY.GDP.MKTP.CD', a)] for a in fuel[e]
                if (e, 'NY.GDP.MKTP.CD', a) in w} for e in CCG}
     ult = max(max(v) for v in fuel.values())
     o = fe.cabecera('CCG', 'diversificacion')
-    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=5.2cm, height=4.4cm, at={{(0cm,0cm)}}, xmin=2000, xmax={ult}, ymin=0, ymax=100,'
+    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=4.8cm, height=4.4cm, at={{(0cm,0cm)}}, xmin=2000, xmax={ult}, ymin=0, ymax=100,'
           ' xtick={2000,2010,2020}, title={(a) Hidrocarburos en las exportaciones}, ylabel={\\% de las mercancías}, clip mode=individual]',
           *fe.etapas('CCG', 0, 100, 2000, ult)]
     for e in CCG:
@@ -198,7 +199,7 @@ def ccg():
     o += rotulos([(fuel[e][max(fuel[e])], NOMBRES[e]) for e in CCG], 100, ult + 0.4)
     o.append('  \\end{axis}')
     hi = fe.techo(max(max(v.values()) for v in nof.values()), 10)
-    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=5.2cm, height=4.4cm, at={{(8.4cm,0cm)}}, xmin=2000, xmax={ult}, ymin=0, ymax={hi},'
+    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=4.8cm, height=4.4cm, at={{(8.1cm,0cm)}}, xmin=2000, xmax={ult}, ymin=0, ymax={hi},'
           ' xtick={2000,2010,2020}, title={(b) Exportaciones no combustibles}, ylabel={\\% del PIB}, clip mode=individual]',
           *fe.etapas('CCG', 0, hi, 2000, ult)]
     for e in CCG:
