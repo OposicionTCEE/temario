@@ -93,20 +93,13 @@ TRATAMIENTOS = [  # (código, nombre, definición)
 
 # Hoja intermedia -> (fuentes, tratamientos, figura); el proyecto sale del prefijo del nombre de la hoja
 META = [
-    (r'_intrarregional$', 'COMTRADE, WITS', 'T01', '{G}_comercio_intrarregional (a, c) o cuadro comparativo'),
-    (r'_intensidad$', 'COMTRADE, WITS, WDI', 'T01, T03', '{G}_comercio_intrarregional (b)'),
-    (r'_composicion$', 'COMTRADE', 'T06, T07', '{G}_composicion'),
-    (r'_complementariedad$', 'COMTRADE', 'T06, T08', '{G}_complementariedad (a, b)'),
-    (r'_saldos$', 'COMTRADE, WITS, WDI', 'T09', '{G}_complementariedad (c)'),
-    (r'_reparto_manuf$', 'COMTRADE', 'T06, T07, T10', '{G}_complementariedad (d)'),
-    (r'_destinos_\d{4}$', 'WITS', 'T04, T11', '{G}_destinos o texto'),
+    # primero las hojas con nombre exacto; después, las reglas generales por sufijo
     (r'^UEE_destinos$', 'WITS, WITS_ESPEJO', 'T04, T05, T11', 'UEE_destinos'),
     (r'^CCG_destinos$', 'WITS_ESPEJO', 'T04, T05, T11', 'CCG_destinos'),
     (r'^EFTA_UE$', 'WITS', 'T04, T12', 'EFTA_ue'),
     (r'^EFTA_PSE$', 'OCDE_PSE', 'T14', 'EFTA_agricultura'),
     (r'^NAFTA_vehiculos$', 'OICA, USMCA', 'T00', 'NAFTA_automovil'),
     (r'^USA_importaciones$', 'WITS', 'T00', 'USA_importaciones'),
-    (r'^Megaacuerdos', 'WDI', 'T15', 'Megaacuerdos_peso'),
     (r'^MERCOSUR_tipo_cambio$', 'WDI, COMTRADE, WITS', 'T16, T01', 'MERCOSUR_tipo_cambio'),
     (r'^CEFTA_convergencia$', 'WDI', 'T17', 'CEFTA_convergencia'),
     (r'^CEFTA_ancla$', 'WITS', 'T04', 'CEFTA_ancla'),
@@ -115,11 +108,20 @@ META = [
     (r'^AFCFTA_aranceles$', 'WITS_ARANCEL, WITS', 'T20', 'AfCFTA_aranceles'),
     (r'^PAFTA_sin_petroleo$', 'WITS', 'T02, T21', 'PAFTA_sin_petroleo'),
     (r'^PAFTA_composicion$', 'WITS', 'T18', 'PAFTA_composicion'),
+    (r'_intrarregional$', 'COMTRADE, WITS', 'T01', '{G}_comercio_intrarregional (a, c) o cuadro comparativo'),
+    (r'_intensidad$', 'COMTRADE, WITS, WDI', 'T01, T03', '{G}_comercio_intrarregional (b)'),
+    (r'_composicion$', 'COMTRADE', 'T06, T07', '{G}_composicion'),
+    (r'_complementariedad$', 'COMTRADE', 'T06, T08', '{G}_complementariedad (a, b)'),
+    (r'_saldos$', 'COMTRADE, WITS, WDI', 'T09', '{G}_complementariedad (c)'),
+    (r'_reparto_manuf$', 'COMTRADE', 'T06, T07, T10', '{G}_complementariedad (d)'),
+    (r'_destinos_\d{4}$', 'WITS', 'T04, T11', '{G}_destinos o texto'),
+    (r'^Megaacuerdos', 'WDI', 'T15', 'Megaacuerdos_peso'),
     (r'^PAFTA_', 'WITS_ESPEJO', 'T02, T05', 'PAFTA_comercio'),
 ]
 PROYECTO = {'MCCA': 'MCCA', 'CAN': 'CAN', 'EFTA': 'EFTA', 'NAFTA': 'NAFTA/USMCA', 'USA': 'NAFTA/USMCA', 'MERCOSUR': 'MERCOSUR',
             'CEFTA': 'CEFTA', 'AFCFTA': 'AfCFTA', 'PAFTA': 'PAFTA', 'ASEAN': 'ASEAN', 'CCG': 'CCG', 'RCEP': 'RCEP',
             'CPTPP': 'CPTPP', 'UEE': 'UEE', 'UE27': 'UE-27 (referencia)', 'Megaacuerdos': 'RCEP, CPTPP, UE, USMCA, ASEAN'}
+FICHERO = {'AFCFTA': 'AfCFTA'}   # prefijo de los ficheros de figura cuando no coincide con el de la hoja
 DIM_PAIS = {'País', 'Miembro', 'Exportador', 'Subregión', 'Acuerdo', 'Bloque', 'Grupo'}
 DIM_SOCIO = {'Importador', 'Destino', 'Socio'}
 DIM_DESGLOSE = {'Faltan', 'Datos', 'Datos que faltan', 'Exportadores con datos espejo', 'Miembros'}
@@ -166,7 +168,7 @@ def filas_de_tabla(nombre, ws):
     fuente, trat, fig = '', '', ''
     for patron, fu, tr, fi in META:
         if re.search(patron, nombre):
-            fuente, trat, fig = fu, tr, fi.replace('{G}', grupo)
+            fuente, trat, fig = fu, tr, fi.replace('{G}', FICHERO.get(grupo, grupo))
             break
     if nombre.endswith('_intrarregional') and grupo in dc.PARCIALES:
         trat = 'T01, T02'
