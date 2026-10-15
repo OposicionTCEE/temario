@@ -334,7 +334,8 @@ def africa():
               ('s3', 'aplicado, resto de África', {p: res[p][2] or 0 for p in etiquetas}),
               ('black!35', 'aplicado, fuera de África', {p: res[p][3] or 0 for p in etiquetas}),
               ('s2', 'NMF, a África', {p: res[p][4] or 0 for p in etiquetas})]
-    o += barras_h(etiquetas, series, '(1.0cm,0cm)', 13.6, 7.0, 'Arancel medio ponderado por las importaciones (\\%)', valores=False)
+    o += barras_h(etiquetas, series, '(1.0cm,0cm)', 13.6, 7.6, 'Arancel medio ponderado por las importaciones (\\%)', valores=False,
+                  xmax=30)
     o.append('\\end{tikzpicture}')
     escribe('AfCFTA_aranceles', o)
     tabla('AFCFTA_aranceles', 'Arancel aplicado y de nación más favorecida de los países africanos según el origen de las importaciones (%)',
