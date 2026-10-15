@@ -106,6 +106,9 @@ TRATAMIENTOS = [  # (código, nombre, definición)
      'países declaran desde cada miembro; exportaciones no combustibles = total - Fuels, en % del PIB. Se descartan los años con más '
      'combustibles que total.'),
     ('T21', 'Sin combustibles', 'Exportaciones totales menos las del grupo «Fuels» de WITS (CUCI 3).'),
+    ('T28', 'Peso mutuo con la UE', 'Comercio de mercancías de los 27 con el bloque en % de su comercio con fuera de la UE (lo que '
+     'declaran los Estados miembros), y en % del comercio total de mercancías de los miembros del bloque (WDI); aproximado: '
+     'importaciones de la UE CIF y exportaciones del bloque FOB.'),
     ('T00', 'Sin tratamiento', 'Dato tal como lo publica la fuente.'),
 ]
 
@@ -136,6 +139,7 @@ META = [
     (r'^RCEP_acuerdos$', 'OMC_RTA', 'T00', 'RCEP_enlaces (a)'),
     (r'^UEE_remesas$', 'WDI', 'T00', 'UEE_remesas'),
     (r'^UEE_desvio$', 'WITS', 'T04, T26', 'UEE_desvio'),
+    (r'^UE_peso_mutuo$', 'WITS, WDI', 'T04, T28', 'Relación con la UE (texto de cada acuerdo)'),
     (r'_intrarregional$', 'COMTRADE, WITS', 'T01', '{G}_comercio_intrarregional (a, c) o cuadro comparativo'),
     (r'_intensidad$', 'COMTRADE, WITS, WDI', 'T01, T03', '{G}_comercio_intrarregional (b)'),
     (r'_composicion$', 'COMTRADE', 'T06, T07', '{G}_composicion'),
@@ -148,7 +152,7 @@ META = [
 ]
 PROYECTO = {'MCCA': 'MCCA', 'CAN': 'CAN', 'EFTA': 'EFTA', 'NAFTA': 'NAFTA/USMCA', 'USA': 'NAFTA/USMCA', 'MERCOSUR': 'MERCOSUR',
             'CEFTA': 'CEFTA', 'AFCFTA': 'AfCFTA', 'PAFTA': 'PAFTA', 'ASEAN': 'ASEAN', 'CCG': 'CCG', 'RCEP': 'RCEP',
-            'CPTPP': 'CPTPP', 'UEE': 'UEE', 'UE27': 'UE-27 (referencia)', 'Megaacuerdos': 'RCEP, CPTPP, UE, USMCA, ASEAN'}
+            'CPTPP': 'CPTPP', 'UEE': 'UEE', 'UE27': 'UE-27 (referencia)', 'UE': 'Relación con la UE', 'Megaacuerdos': 'RCEP, CPTPP, UE, USMCA, ASEAN'}
 FICHERO = {'AFCFTA': 'AfCFTA'}   # prefijo de los ficheros de figura cuando no coincide con el de la hoja
 DIM_PAIS = {'País', 'Miembro', 'Exportador', 'Subregión', 'Acuerdo', 'Bloque', 'Grupo'}
 DIM_SOCIO = {'Importador', 'Destino', 'Socio'}
@@ -407,6 +411,7 @@ def main():
          'aranceles por socio y datos espejo por grupo (bloques de afinidad y geoestratégico).'],
         ['Code/figuras_afinidad.py, Code/figuras_geoestrategicas.py', 'Figuras económicas de los bloques de afinidad y geoestratégico.'],
         ['Code/cronologia_acuerdo.py, Code/gobernanza.py, Code/mapa_bloque.py', 'Cronologías, gobernanza y mapas (sin datos numéricos).'],
+        ['Code/relacion_ue.py', 'Peso mutuo entre la UE y cada bloque (párrafos de relación con la UE).'],
         ['Code/libro_datos.py', 'Este libro.'],
     ]
     ws = wb.create_sheet('Léeme')
