@@ -219,10 +219,10 @@ GOBERNANZA = {
             'est': (4.45, 2.15, 8.8, 'estados', 'Partes (doce)', '', False),
             'pan': (1.6, 0.7, 2.9, 'judicial', 'Paneles', 'entre Estados', False),
             'isds': (4.45, 0.7, 2.4, 'judicial', 'Arbitraje', 'de inversiones', True),
-            'lab': (7.3, 0.7, 2.9, 'judicial', 'Consultas', 'laborales y ambientales', False),
+            'lab': (7.3, 0.7, 2.9, 'judicial', 'Consultas', 'trabajo y ambiente', False),
         },
         'marcos': [],
-        'flechas': [('com', 'cmt.north', 'supervisa', 'o', 'sloped, above'), ('com', 'com|-est.north', 'interpreta y admite', 'o', 'right'),
+        'flechas': [('com', 'cmt.north', 'supervisa', 'o', 'sloped, above'), ('com', 'com|-est.north', 'interpreta y admite', 'o', 'left'),
                     ('pan', 'pan|-est.south', 'resuelven', 'c', 'right'), ('isds', 'isds|-est.south', '', 'c'),
                     ('lab', 'lab|-est.south', '', 'c')],
         'grados': [(3, 2), (0, 0), (3, 2), (1, 1), (0, 0), (0, 0), (0, 0)],
@@ -230,7 +230,7 @@ GOBERNANZA = {
     'UEE': {
         'organos': {
             'sup': (4.45, 4.95, 4.4, 'intergub', 'Consejo Económico Supremo', 'jefes de Estado; consenso', False),
-            'int': (1.75, 3.55, 3.3, 'intergub', 'Consejo Intergubernamental', 'primeros ministros', False),
+            'int': (2.25, 3.55, 4.3, 'intergub', 'Consejo Intergubernamental', 'primeros ministros', False),
             'com': (7.15, 3.55, 3.3, 'supra', 'Comisión Económica', 'Moscú', False),
             'est': (4.45, 2.15, 8.8, 'estados', 'Estados miembros', '', False),
             'tri': (2.2, 0.7, 3.4, 'judicial', 'Tribunal', 'Minsk', True),
