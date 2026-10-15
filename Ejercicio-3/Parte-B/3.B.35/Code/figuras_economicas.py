@@ -235,7 +235,8 @@ def fig_complementariedad(grupo, cp, sd, rm, x0=1962, x1=2024):
     o.append('  \\end{axis}')
     # leyenda común de (c) y (d)
     x = 1.1
-    for e in dc.GRUPOS[grupo][0]:
+    con_datos = {e for _, r in sd for e in r} | {e for r in rm.values() for e in r}
+    for e in [e for e in dc.GRUPOS[grupo][0] if e in con_datos]:
         o.append(f'  \\fill[{color[e]}] ({x:.2f},-1.6) rectangle ({x + 0.4:.2f},-1.4);')
         o.append(f'  \\node[anchor=west, inner sep=1pt] at ({x + 0.45:.2f},-1.5) {{{NOMBRES[e]}}};')
         x += 0.75 + len(NOMBRES[e]) * 0.15
