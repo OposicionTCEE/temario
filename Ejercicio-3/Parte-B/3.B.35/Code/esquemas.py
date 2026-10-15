@@ -46,7 +46,7 @@ BLOQUES = {
                           r'\textbf{Vecinos} = socios naturales $\Rightarrow$ poca desviación (WONNACOTT y LUTZ, 1989; KRUGMAN, 1991)\\'
                           r'\textbf{Credibilidad}: un tratado ata las reformas (FERNÁNDEZ y PORTES, 1998)'),
         'medios': [
-            ('A', r'\textbf{Regionalismo cerrado} (CEPAL): industrializar tras un AEC, más barato que cada país solo '
+            ('A', r'\textbf{Regionalismo cerrado} (CEPAL): industrializar tras un AEC a menor coste '
                   r'(COOPER y MASSELL, 1965) $\to$ MCCA, CAN'),
             ('B', r'\textbf{Sin cesión de soberanía}: libre comercio sin AEC ni órganos supranacionales; precio: reglas de '
                   r'origen $\to$ EFTA, NAFTA'),
@@ -93,7 +93,7 @@ BLOQUES = {
                  'ue': (r'\textbf{Económica}: acuerdo solo comercial con tres socios, no con el bloque; '
                         r'$0{,}6\%$ del comercio de la UE'),
                  'tesis': (r'\textbf{No}: sin complementariedad no hay mercado regional, ni con las instituciones más '
-                           r'\textbf{supranacionales} de América Latina')},
+                           r'\textbf{supranacionales} de la región')},
             ]),
             ('B', 'Integración de mercados sin cesión de soberanía', [
                 {'titulo': 'Asociación Europea de Libre Comercio (EFTA, 1960)', 'color': (110, 165, 215),
@@ -104,11 +104,11 @@ BLOQUES = {
                  'gobierno': {
                      'nodos': [('con', 0.85, 0, 'intergub', 'Consejo', False),
                                ('sec', 2.75, 0, 'tecnico', 'Secretaría', False),
-                               ('cm', 0.8, 1, 'intergub', 'Comité Mixto', False),
-                               ('esa', 2.25, 1, 'supra', 'Vigilancia', False),
-                               ('tri', 3.4, 1, 'judicial', 'Tribunal', False)],
+                               ('cm', 0.68, 1, 'intergub', 'Comité EEE', False),
+                               ('esa', 2.05, 1, 'supra', 'Vigilancia', False),
+                               ('tri', 3.25, 1, 'judicial', 'Tribunal', False)],
                      'flechas': [('sec', 'con')],
-                     'nota': r'Abajo, el EEE; Suiza, por comités mixtos'},
+                     'nota': r'Abajo, los órganos del EEE'},
                  'valoracion': [r'Se \textbf{vació}: seis de diez miembros entraron en la CEE (efecto dominó)',
                                 r'La UE compra el $51$-$63\%$ de sus exportaciones; los socios, menos del $1\%$',
                                 r'Protección agraria ($\approx 50\%$ de los ingresos; UE, $17\%$): frena la adhesión'],
@@ -121,7 +121,7 @@ BLOQUES = {
                               r'ganado en 1988'),
                  'escala': {'ZLC': 'a', 'UA': None, 'MC': None},
                  'hitos': [('1989', r'Canadá-EE.\,UU.'), ('1994', 'NAFTA'),
-                           ('2020', 'USMCA: automóvil, China'), ('2026', r'EE.\,UU. no prorroga')],
+                           ('2020', 'USMCA, más exigente'), ('2026', r'EE.\,UU. no prorroga')],
                  'gobierno': {
                      'nodos': [('com', 1.25, 0, 'intergub', 'Comisión', False),
                                ('cmt', 3.0, 0, 'tecnico', 'Comités', False),
@@ -266,7 +266,7 @@ def main(clave):
                      f'{{\\textcolor{{eGri}}{{\\textbf{{{r0}.}}}} {a["ue"]}}};')
             o.append(f'  \\node[txt, text width={v1:.2f}cm] (tes{k}) at ([xshift={y1:.2f}cm]fondo) '
                      f'{{\\textcolor{{eGri}}{{\\textbf{{{r1}}}}} {a["tesis"]}}};')
-            o.append(f'  \\path let \\p1=(ue{k}.south), \\p2=(tes{k}.south), \\n1={{min(\\y1,\\y2)}} in coordinate (sig) at (0,\\n1-0.32cm);')
+            o.append(f'  \\path let \\p1=(ue{k}.south), \\p2=(tes{k}.south), \\n1={{min(\\y1,\\y2)}} in coordinate (sig) at (0,\\n1-0.42cm);')
             k += 1
 
     # --- Balance del bloque ---
