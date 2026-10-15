@@ -131,7 +131,7 @@ GOBERNANZA = {
         },
         'marcos': [],
         'flechas': [('cm', 'sub.north', 'encarga', 'o', 'sloped, above'), ('ue', 'sec', 'financia', 'a', 'right'),
-                    ('cm', 'cm|-est.north', 'decisiones', 'o', 'right'),
+                    ('cm', 'cm|-est.north', 'decisiones', 'o', 'left'),
                     ('dif', 'dif|-est.south', 'arbitraje', 'c', 'right')],
         'grados': [(3, 2), (0, 0), (3, 1), (2, 1), (0, 0), (0, 0), (1, 1)],
     },
