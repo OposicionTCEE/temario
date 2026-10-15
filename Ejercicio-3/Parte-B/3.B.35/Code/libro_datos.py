@@ -403,6 +403,9 @@ def main():
         ['Code/datos_efta.py', 'Comercio de la EFTA con la UE (WITS) y PSE de la OCDE.'],
         ['Code/indicadores_bloque.py', 'Intensidad, composición, complementariedad, saldos y reparto de las manufacturas.'],
         ['Code/figuras_economicas.py, Code/grafico_*.py', 'Figuras económicas (Img/*.tikz).'],
+        ['Code/descargas_afinidad.py, Code/descargas_geoestrategicas.py, Code/datos_wits.py', 'Descargas de WITS por grupos de productos, '
+         'aranceles por socio y datos espejo por grupo (bloques de afinidad y geoestratégico).'],
+        ['Code/figuras_afinidad.py, Code/figuras_geoestrategicas.py', 'Figuras económicas de los bloques de afinidad y geoestratégico.'],
         ['Code/cronologia_acuerdo.py, Code/gobernanza.py, Code/mapa_bloque.py', 'Cronologías, gobernanza y mapas (sin datos numéricos).'],
         ['Code/libro_datos.py', 'Este libro.'],
     ]
