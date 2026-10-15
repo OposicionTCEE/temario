@@ -33,8 +33,8 @@ BLOQUES = {
                           r'\textbf{Vecinos} = socios naturales $\Rightarrow$ poca desviación (WONNACOTT y LUTZ, 1989; KRUGMAN, 1991)\\'
                           r'\textbf{Credibilidad}: un tratado ata las reformas (FERNÁNDEZ y PORTES, 1998)'),
         'medios': [
-            ('A', r'\textbf{Regionalismo cerrado} (CEPAL): industrializar tras un AEC, más barato que cada '
-                  r'país solo (COOPER y MASSELL, 1965) $\to$ MCCA, CAN'),
+            ('A', r'\textbf{Regionalismo cerrado} (CEPAL): industrializar tras un AEC, a menor coste '
+                  r'(COOPER y MASSELL, 1965) $\to$ MCCA, CAN'),
             ('B', r'\textbf{Sin cesión de soberanía}: libre comercio sin AEC ni órganos supranacionales; precio: reglas de origen '
                   r'$\to$ EFTA, NAFTA'),
         ],
