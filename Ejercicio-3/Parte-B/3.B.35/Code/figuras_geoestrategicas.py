@@ -271,6 +271,77 @@ def ccg():
     print('expo', {k: {a: round(expo[k][a]) for a in (1998, 2003, 2008, 2013, 2018, 2023) if a in expo[k]} for k in expo})
 
 
+def ccg_complementariedad():
+    """Complementariedad (MICHAELY, 1996) entre los miembros del CCG y con China, la India y Japón (CUCI de 3 dígitos)."""
+    est = ib.estructuras()
+    refs = ['CHN', 'IND', 'JPN']
+    cols = CCG + refs
+    cp = {}
+    for a in (2005, 2015, 2022, 2023):
+        for i in CCG:
+            if (i, a, 'X') not in est:
+                continue
+            for j in cols:
+                if j != i and (j, a, 'M') in est:
+                    cp.setdefault(a, {})[(i, j)] = ib.michaely(est[(i, a, 'X')], est[(j, a, 'M')])
+    ult = max(cp)
+    c = cp[ult]
+    o = fe.cabecera('CCG', 'complementariedad')
+    cw, ch = 0.78, 0.5
+    xm, ytop = 1.0, 3.6
+    vmax = max(c.values())
+    o.append(f'  \\node[anchor=north, font=\\sffamily\\small, inner sep=0pt] at ({xm + len(cols) * cw / 2:.2f},{ytop - len(CCG) * ch - 0.62:.2f}) '
+             f'{{(a) Complementariedad, {ult}}};')
+    for jx, j in enumerate(cols):
+        o.append(f'  \\node[anchor=south, inner sep=1.5pt] at ({xm + (jx + 0.5) * cw:.2f},{ytop + 0.03:.2f}) {{{j}}};')
+    for iy, i in enumerate(CCG):
+        y = ytop - (iy + 1) * ch
+        o.append(f'  \\node[anchor=east, inner sep=1pt] at ({xm - 0.08:.2f},{y + ch / 2:.2f}) {{{i}}};')
+        for jx, j in enumerate(cols):
+            x = xm + jx * cw
+            if (i, j) in c:
+                v = c[(i, j)]
+                pct = int(12 + 78 * v / vmax)
+                txt = 'white' if pct > 55 else 'black!85'
+                o.append(f'  \\fill[s1!{pct}!white] ({x + 0.02:.2f},{y + 0.02:.2f}) rectangle ({x + cw - 0.02:.2f},{y + ch - 0.02:.2f});')
+                o.append(f'  \\node[text={txt}, inner sep=0pt] at ({x + cw / 2:.2f},{y + ch / 2:.2f}) {{{v:.0f}}};')
+            elif i == j:
+                o.append(f'  \\fill[black!6] ({x + 0.02:.2f},{y + 0.02:.2f}) rectangle ({x + cw - 0.02:.2f},{y + ch - 0.02:.2f});')
+    xs = xm + len(CCG) * cw
+    o.append(f'  \\draw[black!45, line width=0.5pt] ({xs:.2f},{ytop - len(CCG) * ch - 0.05:.2f}) -- ({xs:.2f},{ytop + 0.05:.2f});')
+    o.append(f'  \\node[anchor=north west, inner sep=1pt, text=black!70] at ({xm - 0.75:.2f},{ytop - len(CCG) * ch - 0.12:.2f}) '
+             '{exportador (filas), importador (columnas); 0-100};')
+    medias = []
+    for a in sorted(cp):
+        fila = [a]
+        for grupo_j in (CCG, ['CHN'], ['IND'], ['JPN']):
+            xs_ = [x for (i, j), x in cp[a].items() if j in grupo_j]
+            fila.append(sum(xs_) / len(xs_) if xs_ else None)
+        medias.append(fila)
+    hi = fe.techo(max(v for f in medias for v in f[1:] if v is not None), 10)
+    o += [f'  \\begin{{axis}}[{fe.ESTILO}{fe.ABAJO}, at={{(10.0cm,0.6cm)}}, width=3.7cm, height=3.0cm, xmin=2003, xmax=2024, ymin=0,'
+          f' ymax={hi}, xtick={{2005,2015,2023}}, title={{(b) Complementariedad media}}, clip mode=individual]',
+          *fe.etapas('CCG', 0, hi, 2003, 2024)]
+    estilos = [('s1', ''), ('s2', ', densely dashed'), ('s3', ', densely dashed'), ('s4', ', densely dashed')]
+    nombres = ['entre socios', 'con China', 'con la India', 'con Japón']
+    fin = []
+    for k, ((col, est_), nom) in enumerate(zip(estilos, nombres)):
+        pts = [(f[0], f[1 + k]) for f in medias if f[1 + k] is not None]
+        o.append(f'    \\addplot[{col}, line width=1.2pt, mark=*, mark size=1.4pt, mark options={{solid}}{est_}] coordinates {{{fe.coords(pts)}}};')
+        fin.append((pts[-1][1], nom))
+    for y, txt in coloca(fin, hi * 0.11, hi * 0.04):
+        o.append(f'    \\node[anchor=west, inner sep=1.5pt, text=black!80] at (axis cs:2024.5,{y:.1f}) {{{txt}}};')
+    o += ['  \\end{axis}', '\\end{tikzpicture}']
+    escribe('CCG_complementariedad', o)
+    tabla('CCG_complementariedad', 'Complementariedad comercial (MICHAELY, 1996) entre los miembros del CCG y con China, la India y Japón',
+          'UN Comtrade, API pública, grupos de 3 dígitos de la CUCI (Rev. 3 en 2005 y Rev. 4 desde 2007): exportaciones del primer país y '
+          'importaciones del segundo, con el mundo. Kuwait y Catar no declaran en 2005. Cálculo propio (Code/figuras_geoestrategicas.py).',
+          ['Año', 'Exportador', 'Importador', 'Índice (0-100)'],
+          [(a, i, j, round(x, 1)) for a, cc in sorted(cp.items()) for (i, j), x in sorted(cc.items())])
+    print('CCG compl', ult, {k: round(v) for k, v in sorted(c.items())})
+    print('medias', [(f[0], *[round(v) if v is not None else None for v in f[1:]]) for f in medias])
+
+
 # ---------------------------------------------------------------- ASEAN
 FASES_TXT = {'UNCTAD-SoP1': 'Materias primas', 'UNCTAD-SoP2': 'Intermedios', 'UNCTAD-SoP3': 'Consumo', 'UNCTAD-SoP4': 'Capital'}
 DESTINOS = [('ASEAN', None), ('China', ['CHN']), ('Japón y Corea', ['JPN', 'KOR']), ('EE. UU.', ['USA']), ('UE-27', dc.UE27)]
@@ -540,4 +611,4 @@ def rcep():
 
 
 if __name__ == '__main__':
-    {'UEE': uee, 'CCG': ccg, 'ASEAN': asean, 'RCEP': rcep}[sys.argv[1]]()
+    {'UEE': uee, 'CCG': ccg, 'CCG2': ccg_complementariedad, 'ASEAN': asean, 'RCEP': rcep}[sys.argv[1]]()
