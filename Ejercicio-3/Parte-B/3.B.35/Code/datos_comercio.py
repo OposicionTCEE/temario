@@ -79,7 +79,9 @@ M49 = {'GTM': 320, 'SLV': 222, 'HND': 340, 'NIC': 558, 'CRI': 188, 'PAN': 591,
        'USA': 842, 'CAN': 124, 'MEX': 484, 'CHN': 156, 'ARG': 32, 'BRA': 76, 'PRY': 600, 'URY': 858, 'WLD': 0,
        'ALB': 8, 'BIH': 70, 'MKD': 807, 'MNE': 499, 'SRB': 688, 'MDA': 498,
        'IDN': 360, 'MYS': 458, 'PHL': 608, 'SGP': 702, 'THA': 764, 'BRN': 96, 'VNM': 704, 'LAO': 418, 'MMR': 104,
-       'KHM': 116, 'TLS': 626}
+       'KHM': 116, 'TLS': 626,
+       # Golfo y mercados de referencia de Asia (complementariedad del CCG); la India es 699 en Comtrade
+       'SAU': 682, 'ARE': 784, 'KWT': 414, 'QAT': 634, 'BHR': 48, 'OMN': 512, 'IND': 699, 'JPN': 392, 'KOR': 410}
 # Estados miembros de la UE (27) para agregar el destino UE con WITS, que no da el agregado
 UE27 = ['AUT', 'BEL', 'BGR', 'HRV', 'CYP', 'CZE', 'DNK', 'EST', 'FIN', 'FRA', 'DEU', 'GRC', 'HUN', 'IRL',
         'ITA', 'LVA', 'LTU', 'LUX', 'MLT', 'NLD', 'POL', 'PRT', 'ROU', 'SVK', 'SVN', 'ESP', 'SWE']
