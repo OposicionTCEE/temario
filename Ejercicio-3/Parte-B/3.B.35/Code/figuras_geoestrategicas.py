@@ -556,8 +556,9 @@ def rcep():
         y = ytop - i * paso
         o.append(f'  \\fill[s2] ({xb0:.2f},{y + 0.01:.2f}) rectangle ({XB(fin[p][1]):.2f},{y + 0.11:.2f});')
         o.append(f'  \\fill[black!35] ({xb0:.2f},{y - 0.11:.2f}) rectangle ({XB(cuota[p]):.2f},{y - 0.01:.2f});')
-        o.append(f'  \\node[anchor=west, inner sep=1pt, text=black!70] at ({XB(fin[p][1]) + 0.05:.2f},{y + 0.06:.2f}) '
-                 f'{{\\scriptsize {fin[p][1] / max(cuota[p], 0.05):.0f} veces}};')
+        if cuota[p] > 0:
+            o.append(f'  \\node[anchor=west, inner sep=1pt, text=black!70] at ({XB(fin[p][1]) + 0.05:.2f},{y + 0.06:.2f}) '
+                     f'{{\\scriptsize {fin[p][1] / cuota[p]:.0f} veces}};')
     o.append(f'  \\draw[black!45, line width=0.4pt] ({xb0:.2f},{ytop + 0.15:.2f}) -- ({xb0:.2f},{yb - 0.15:.2f});')
     o += [f'  \\fill[s2] ({xb0 - 0.6:.2f},{yl - 0.07:.2f}) rectangle ({xb0 - 0.2:.2f},{yl + 0.07:.2f}); '
           f'\\node[anchor=west, inner sep=1pt] at ({xb0 - 0.15:.2f},{yl:.2f}) {{China en su comercio}};',
@@ -579,7 +580,7 @@ def rcep():
     tar = {(i, j): {a: ahs[(i, a)][j] for a in range(2018, 2024) if (i, a) in ahs and j in ahs[(i, a)]} for i, j, _, _ in pares}
     nm = {(i, j): {a: mfn[(i, a)][j] for a in range(2018, 2024) if (i, a) in mfn and j in mfn[(i, a)]} for i, j, _, _ in pares}
     o = fe.cabecera('RCEP', 'enlaces')
-    n, c = len(SEIS), 0.98
+    n, c = len(SEIS), 1.22
     o.append(f'  \\node[anchor=south west, font=\\sffamily\\small, inner sep=0pt] at (0,{0.62:.2f}) {{(a) Acuerdos previos al RCEP}};')
     for k, nombre in enumerate(SEIS[1:]):
         o.append(f'  \\node[anchor=south, inner sep=1pt, text=black!75] at ({1.55 + (k + 0.5) * c:.2f},0.05) {{{nombre}}};')
@@ -597,14 +598,15 @@ def rcep():
             o.append(f'  \\fill[{fill}] ({x + 0.03:.2f},{y - 0.24:.2f}) rectangle ({x + c - 0.03:.2f},{y + 0.24:.2f});')
             o.append(f'  \\node[inner sep=0pt, text={"white" if nuevo else "black!85"}, align=center, font=\\sffamily\\footnotesize] '
                      f'at ({x + c / 2:.2f},{y + (0 if nuevo else 0.07):.2f}) {{{txt}}};')
-            if not nuevo:
+            if not nuevo and nom != 'bilateral':
                 o.append(f'  \\node[inner sep=0pt, text=black!60, font=\\sffamily\\scriptsize] at ({x + c / 2:.2f},{y - 0.12:.2f}) {{{nom}}};')
     # (b) margen de preferencia = arancel NMF - arancel aplicado, con las mismas ponderaciones; antes de 2022, cero en los cuatro pares
     margen = {(i, j): {a: nm[(i, j)][a] - tar[(i, j)][a] for a in tar[(i, j)] if a in nm[(i, j)]} for i, j, _, _ in pares}
     etiquetas = [txt for _, _, _, txt in pares]
     o += barras_h(etiquetas, [('s2!45', '2022', {txt: margen[(i, j)].get(2022, 0) for i, j, _, txt in pares}),
                               ('s2', '2023', {txt: margen[(i, j)].get(2023, 0) for i, j, _, txt in pares})],
-                  '(10.9cm,-3.05cm)', 3.0, 3.15, '(b) Margen de preferencia (puntos)', xmax=1, leyenda=True, valores=False)
+                  '(11.6cm,-3.05cm)', 2.9, 3.15, '(b) Margen de preferencia (puntos)', xmax=1, leyenda=True, valores=False)
+    o = [l.replace('xbar,', 'xbar, /pgf/number format/use comma,') if 'Margen de preferencia' in l else l for l in o]
     o.append('\\end{tikzpicture}')
     escribe('RCEP_enlaces', o)
     tabla('RCEP_enlaces', 'Acuerdos de libre comercio en vigor entre las seis economías del RCEP antes de 2022 y aranceles aplicados entre China, Japón y Corea (%)',
