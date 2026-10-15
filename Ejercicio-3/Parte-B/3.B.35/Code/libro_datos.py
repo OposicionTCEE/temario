@@ -104,6 +104,12 @@ PROYECTO = {'MCCA': 'MCCA', 'CAN': 'CAN', 'EFTA': 'EFTA', 'NAFTA': 'NAFTA/USMCA'
             'CPTPP': 'CPTPP', 'UEE': 'UEE', 'UE27': 'UE-27 (referencia)', 'Megaacuerdos': 'RCEP, CPTPP, UE, USMCA, ASEAN'}
 DIM_PAIS = {'País', 'Miembro', 'Exportador', 'Subregión', 'Acuerdo', 'Bloque', 'Grupo'}
 DIM_SOCIO = {'Importador', 'Destino', 'Socio'}
+DIM_DESGLOSE = {'Faltan', 'Datos', 'Datos que faltan', 'Exportadores con datos espejo', 'Miembros'}
+ISO = set(dc.M49) | {'USA', 'CAN', 'MEX', 'CHN', 'NOR', 'ISL', 'CHE', 'RUS', 'BLR', 'KAZ', 'ARM', 'KGZ', 'ARE', 'SAU', 'EU', 'OECD'}
+NOMBRE_ISO = {'Noruega': 'NOR', 'Islandia': 'ISL', 'Suiza': 'CHE', 'EE. UU.': 'USA', 'EE.\\,UU.': 'USA', 'México': 'MEX',
+              'Canadá': 'CAN', 'UE': 'EU', 'OCDE': 'OECD', 'Guatemala': 'GTM', 'El Salvador': 'SLV', 'Honduras': 'HND',
+              'Nicaragua': 'NIC', 'Costa Rica': 'CRI', 'Bolivia': 'BOL', 'Colombia': 'COL', 'Ecuador': 'ECU', 'Perú': 'PER'}
+POR_SOCIO = r'_destinos|^PAFTA_subregiones|^USA_importaciones'   # tablas con un destino u origen por columna
 
 COLUMNAS = ['Proyecto', 'País o agregado', 'Socio o desglose', 'Indicador', 'Serie', 'Año', 'Valor', 'Unidad', 'Fuente',
             'Tratamiento', 'Figura o uso', 'Hoja de origen']
@@ -156,7 +162,9 @@ def filas_de_tabla(nombre, ws):
             if c == 'Año':
                 anio = f[j]
             elif es_dim[j]:
-                if c in DIM_PAIS or (not pais and c not in DIM_SOCIO):
+                if c in DIM_DESGLOSE:
+                    desglose.append(f'{c}: {f[j]}')
+                elif c in DIM_PAIS or (not pais and c not in DIM_SOCIO):
                     pais = pais or f[j]
                 elif c in DIM_SOCIO:
                     socio = f[j]
@@ -165,8 +173,22 @@ def filas_de_tabla(nombre, ws):
         for j, c in enumerate(cab):
             if j >= len(f) or es_dim[j] or c == 'Año' or f[j] in (None, '') or isinstance(f[j], str):
                 continue
-            out.append([PROYECTO.get(prefijo, prefijo), pais or PROYECTO.get(prefijo, prefijo), '; '.join([socio] + desglose).strip('; '),
-                        titulo, c, anio, f[j], unidad(c) or unidad(titulo), fuente, trat, fig, nombre])
+            p, s, serie = pais, socio, c
+            if re.search(POR_SOCIO, nombre):          # columnas = destinos u orígenes
+                s, serie = c, 'por destino u origen'
+                p = p or ('USA' if nombre.startswith('USA_') else '')
+            elif c in ISO:                             # columnas = países
+                p, serie = c, ''
+            elif c in NOMBRE_ISO:
+                p, serie = NOMBRE_ISO[c], ''
+            else:
+                m = re.match(r'^(PSE|NPC) (.+)$', c) or re.match(r'^(.+), (exportaciones|importaciones)$', c)
+                if m and (m.group(2) in NOMBRE_ISO or m.group(1) in NOMBRE_ISO):
+                    nom, serie = (m.group(2), m.group(1)) if m.group(2) in NOMBRE_ISO else (m.group(1), m.group(2))
+                    p = NOMBRE_ISO[nom]
+            u = unidad(c) or unidad(titulo) or ('millones de USD' if nombre.endswith('_composicion') else '')
+            out.append([PROYECTO.get(prefijo, prefijo), p or PROYECTO.get(prefijo, prefijo), '; '.join([s] + desglose).strip('; '),
+                        titulo, serie, anio, f[j], u, fuente, trat, fig, nombre])
     return out
 
 
