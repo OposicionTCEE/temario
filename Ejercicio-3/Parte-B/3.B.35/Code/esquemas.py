@@ -264,7 +264,7 @@ BLOQUES = {
         'grupos': [
             ('A', 'Seguridad frente a una amenaza', [
                 {'titulo': 'Asociación de Naciones del Sudeste Asiático (ASEAN, 1967)', 'color': (200, 76, 58),
-                 'objetivo': (r'Cinco gobiernos no comunistas frente a Indochina: el \textbf{crecimiento como defensa}'),
+                 'objetivo': (r'Cinco gobiernos frente al comunismo: el \textbf{crecimiento como defensa}'),
                  'escala': {'ZLC': 'a', 'UA': None, 'MC': 'v'},
                  'hitos': [('1967', 'Declaración de Bangkok'), ('1992', 'zona de libre comercio'), ('2015', 'Comunidad Económica')],
                  'gobierno': {
@@ -294,7 +294,7 @@ BLOQUES = {
                      'nota': r'Unanimidad en lo importante'},
                  'valoracion': [r'Cuota baja: $3\%$ (1998) $\to$ $8\%$ (2023)',
                                 r'Vende a Asia (China, $19\%$) y \textbf{se arma en Occidente} (EE.\,UU., $60$-$66\%$)',
-                                r'Hidrocarburos: hasta el $93\%$ de lo exportado'],
+                                r'Exporta hidrocarburos (hasta el $93\%$)'],
                  'ue': (r'\textbf{Geopolítica}: energía y seguridad; negociación comercial parada desde 2008; $3{,}1\%$ del '
                         r'comercio de la UE'),
                  'tesis': (r'\textbf{Sí}: la amenaza dio cohesión y unión aduanera, pero depende de la política (bloqueo a '
@@ -312,8 +312,8 @@ BLOQUES = {
                                ('pan', 2.75, 1, 'judicial', 'Paneles', False)],
                      'flechas': [('min', 'cc')],
                      'nota': r'Método ASEAN: consenso'},
-                 'valoracion': [r'Mayor bloque ($28\%$ del PIB), pero libera poco',
-                                r'Solo dos enlaces nuevos: China-Japón y Japón-Corea',
+                 'valoracion': [r'El mayor bloque, pero libera poco',
+                                r'Nuevos enlaces: China-Japón y Japón-Corea',
                                 r'\textbf{Dependencia asimétrica} de China (HIRSCHMAN)'],
                  'ue': (r'\textbf{Económica}: sus miembros pesan el $26\%$ del comercio de la UE; riesgo de desviación y '
                         r'acuerdos con cinco de ellos'),
@@ -329,9 +329,9 @@ BLOQUES = {
                                ('isds', 2.75, 1, 'judicial', 'Inversiones', True)],
                      'flechas': [('com', 'cmt')],
                      'nota': r'Ministros, por consenso'},
-                 'valoracion': [r'Sin EE.\,UU., $70\%$ menos de ganancias; aun así, $\approx 1\%$ de renta',
-                                r'Comercio interno del $9\%$: su valor está en las \textbf{reglas}',
-                                r'Candidatos (China, Taiwán): ¿quién escribe las reglas?'],
+                 'valoracion': [r'Sin EE.\,UU., $70\%$ menos de ganancias',
+                                r'Comercio interno del $9\%$: lo valioso son las \textbf{reglas}',
+                                r'China y Taiwán piden entrar'],
                  'ue': (r'\textbf{Afinidad de reglas}: ya tiene acuerdos con casi todos ($20\%$ de su comercio); diálogo '
                         r'desde 2025 frente al proteccionismo'),
                  'tesis': r'\textbf{Sí}: fija las reglas sin EE.\,UU., aunque el comercio que crea es poco'},
@@ -346,7 +346,7 @@ BLOQUES = {
                                ('ban', 2.75, 1, 'financiero', 'Banco', False)],
                      'flechas': [('sup', 'com')],
                      'nota': r'Forma supranacional, fondo ruso'},
-                 'valoracion': [r'Cuota: $9$-$13\%$ desde 2000, sin salto: no crea comercio',
+                 'valoracion': [r'No crea comercio: cuota del $9$-$13\%$',
                                 r'Movilidad laboral avanzada, pero Tayikistán, fuera, recibe más remesas',
                                 r'Tras 2022, vía de \textbf{desvío}: UE a Kirguistán $\times 9$'],
                  'ue': (r'\textbf{Geopolítica en negativo}: sin relación formal, para no legitimar la esfera rusa; vigila la '
