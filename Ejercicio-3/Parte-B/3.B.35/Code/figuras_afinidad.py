@@ -2,7 +2,7 @@
 """Figuras económicas propias del bloque de afinidad (3.B.35); las comunes (integración, composición, complementariedad) las
 hace Code/figuras_economicas.py. Mismo estilo: paleta validada, letra de 8 puntos, 16 cm, etapas de la cronología al fondo.
 
-  Img/MERCOSUR_tipo_cambio.tikz   (a) tipo de cambio real bilateral peso-real; (b) saldo comercial de Argentina con Brasil.
+  Img/MERCOSUR_tipo_cambio.tikz   (a) tipo de cambio real bilateral peso-real; (b) cuota intrarregional.
   Img/CEFTA_convergencia.tikz     (a) PIB per cápita en PPA en % de la UE-27; (b) hoy frente a los últimos en adherirse.
   Img/CEFTA_ancla.tikz            (a) peso de la UE-27 y de los socios del CEFTA en el comercio del bloque; (b) por miembro.
   Img/AfCFTA_composicion.tikz     manufacturas en las exportaciones dentro y fuera de África: (a) evolución; (b) por país.
@@ -101,22 +101,20 @@ def mercosur():
           f'    \\node[anchor=south west, inner sep=1.5pt, text=black!75, align=left] at (axis cs:1981,{hi * 0.78:.0f}) '
           '{sube: el peso se abarata\\\\frente al real};',
           '  \\end{axis}']
-    lo, hi2 = math.floor(min(saldo.values()) / 2) * 2, math.ceil(max(saldo.values()) / 2) * 2
-    marcas = list(range(lo, hi2 + 1, 2 if hi2 - lo <= 14 else 4))
-    etiquetas = ','.join(f'\\textminus {-m}' if m < 0 else str(m) for m in marcas)
-    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=5.9cm, height=4.2cm, at={{(8.6cm,0cm)}}, xmin=1980, xmax=2025, ymin={lo}, ymax={hi2},'
-          f' xtick={{1980,1990,2000,2010,2020}}, ytick={{{",".join(map(str, marcas))}}}, yticklabels={{{etiquetas}}},'
-          ' title={(b) Saldo de Argentina con Brasil}, ylabel={miles de millones de USD}]',
-          *fe.etapas('MERCOSUR', lo, hi2, 1980, 2025),
-          '    \\draw[black!50, line width=0.4pt] (axis cs:1980,0) -- (axis cs:2025,0);',
-          f'    \\addplot[s2, line width=1.3pt, mark=none] coordinates {{{fe.coords(sorted(saldo.items()))}}};',
+    cuota = {f[0]: f[3] for f in dc.cuadro('MERCOSUR', 1980, 2023, f) if f[3] is not None}
+    hi2 = fe.techo(max(cuota.values()), 5)
+    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=5.9cm, height=4.2cm, at={{(8.6cm,0cm)}}, xmin=1980, xmax=2025, ymin=0, ymax={hi2},'
+          ' xtick={1980,1990,2000,2010,2020}, title={(b) Cuota intrarregional}, ylabel={\\% de las exportaciones}]',
+          *fe.etapas('MERCOSUR', 0, hi2, 1980, 2025),
+          f'    \\addplot[s1, line width=1.3pt, mark=none] coordinates {{{fe.coords(sorted(cuota.items()))}}};',
           '  \\end{axis}', '\\end{tikzpicture}']
     escribe('MERCOSUR_tipo_cambio', o)
-    tabla('MERCOSUR_tipo_cambio', 'Tipo de cambio real bilateral peso argentino-real (índice 1995 = 100) y saldo comercial de Argentina con Brasil',
+    tabla('MERCOSUR_tipo_cambio', 'Tipo de cambio real bilateral peso argentino-real (índice 1995 = 100), cuota intrarregional y saldo de Argentina con Brasil',
           'Banco Mundial (WDI): tipos de cambio oficiales (PA.NUS.FCRF) y deflactores del PIB (NY.GDP.DEFL.ZS), porque WDI no tiene el IPC '
           'argentino; saldo con las exportaciones declaradas por cada país (Code/datos_comercio.py). Cálculo propio (Code/figuras_afinidad.py).',
-          ['Año', 'Tipo de cambio real (1995 = 100)', 'Saldo de Argentina con Brasil (miles de millones USD)'],
-          [(a, round(q[a], 1) if a in q else None, round(saldo[a], 2) if a in saldo else None) for a in range(1980, 2025)])
+          ['Año', 'Tipo de cambio real (1995 = 100)', 'Saldo de Argentina con Brasil (miles de millones USD)', 'Cuota intrarregional (%)'],
+          [(a, round(q[a], 1) if a in q else None, round(saldo[a], 2) if a in saldo else None,
+            round(cuota[a], 2) if a in cuota else None) for a in range(1980, 2025)])
     print('TCR', {a: round(q[a]) for a in (1998, 1999, 2001, 2002, 2008, 2015, 2019, 2023) if a in q})
     print('saldo', {a: round(saldo[a], 1) for a in (1998, 1999, 2001, 2002, 2003, 2008, 2015, 2019, 2023) if a in saldo})
 
