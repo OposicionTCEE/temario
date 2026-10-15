@@ -44,7 +44,7 @@ CCG = ['SAU', 'ARE', 'KWT', 'QAT', 'BHR', 'OMN']
 def uee():
     f = dc.lee_csv()
     it = ib.intensidad('UEE')
-    escribe('UEE_comercio_intrarregional', fe.fig_integracion('UEE', it, x0=1995, x1=2024, xtick='2000,2010,2020'))
+    escribe('UEE_comercio_intrarregional', fe.fig_integracion('UEE', it, x0=1998, x1=2023, xtick='2000,2010,2020'))
     try:
         dc.escribe_hoja('UEE', dc.cuadro('UEE', 1996, 2024, f))
     except ImportError:
@@ -90,8 +90,9 @@ def uee():
     base = 2021
     o = fe.cabecera('UEE', 'desvio')
     ymin, ymax = 10, 2000
+    anios = completos   # la UE aún no tiene 2024 completo
     comunes = (f'{fe.ESTILO}, width=4.9cm, height=4.4cm, xmin=2019, xmax={anios[-1]}, ymode=log, ymin={ymin}, ymax={ymax},'
-               ' log ticks with fixed point, xtick={2019,2020,2021,2022,2023,2024}, xticklabels={2019,,2021,,2023,},'
+               ' log ticks with fixed point, xtick={2019,2020,2021,2022,2023}, xticklabels={2019,,2021,,2023},'
                ' clip mode=individual')
     color = {'ARM': 's1', 'KAZ': 's2', 'KGZ': 's3', 'RUS': 'black!55'}
     o += [f'  \\begin{{axis}}[{comunes}, at={{(0cm,0cm)}}, title={{(a) Exportaciones de la UE-27}}, ylabel={{índice, {base} = 100 (log.)}}]',
@@ -369,19 +370,20 @@ def asean():
     anios = sorted(serie['ASEAN'])
     ult = anios[-1]
     o = fe.cabecera('ASEAN', 'fabrica')
-    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=5.0cm, height=4.4cm, at={{(0cm,0cm)}}, xmin=2000, xmax={ult}, ymin=0, ymax=80,'
+    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=5.0cm, height=4.4cm, at={{(0cm,0cm)}}, xmin=2000, xmax={ult}, ymin=0, ymax=40,'
           ' xtick={2000,2010,2020}, title={(a) Intermedios en las exportaciones}, ylabel={\\% de cada destino}, clip mode=individual]',
-          *fe.etapas('ASEAN', 0, 80, 2000, ult)]
+          *fe.etapas('ASEAN', 0, 40, 2000, ult)]
     for nombre, _ in DESTINOS:
         o.append(f'    \\addplot[{color[nombre]}, line width=1.3pt, mark=none] coordinates {{{fe.coords(sorted(serie[nombre].items()))}}};')
-    for y, txt in coloca([(serie[n][ult], 'a ' + n.replace('EE. UU.', 'EE.\\,UU.')) for n, _ in DESTINOS], 5.5, 3):
+    for y, txt in coloca([(serie[n][ult], 'a ' + n.replace('EE. UU.', 'EE.\\,UU.')) for n, _ in DESTINOS], 3.3, 1.5):
         o.append(f'    \\node[anchor=west, inner sep=1.5pt, text=black!80] at (axis cs:{ult + 0.4},{y:.1f}) {{{txt}}};')
     o.append('  \\end{axis}')
     etiquetas = [n.replace('EE. UU.', 'EE.\\,UU.') for n, _ in DESTINOS]
     series = [(col, FASES_TXT[g], {n.replace('EE. UU.', 'EE.\\,UU.'): compo[(n, ult)][g] for n, _ in DESTINOS})
-              for g, col in zip(FASES, ['black!25', 's7', 's6', 's8'])]
-    o += barras_h(etiquetas, series, '(9.6cm,0cm)', 4.6, 4.4, f'(b) Por fase de elaboración, {ult} (\\%)', apilar=True, xmax=100,
-                  valores=False)
+              for g, col in reversed(list(zip(FASES, ['black!25', 's7', 's6', 's8'])))]
+    o += [l.replace('legend columns=3', 'legend columns=2') for l in
+          barras_h(etiquetas, series, '(9.6cm,0cm)', 4.6, 4.4, f'(b) Por fase de elaboración, {ult} (\\%)', apilar=True, xmax=100,
+                   valores=False)]
     o.append('\\end{tikzpicture}')
     escribe('ASEAN_fabrica', o)
     tabla('ASEAN_fabrica', 'Exportaciones de los miembros de la ASEAN según el destino y la fase de elaboración (% de cada destino)',
@@ -460,7 +462,7 @@ def asean():
     o += barras_h(etiquetas, [('s1', 'de la ASEAN', {NOMBRES[p]: por[p][1] or 0 for p in orden}),
                               ('s2', 'de China', {NOMBRES[p]: por[p][2] or 0 for p in orden}),
                               ('s4', 'de la UE-27 y EE.\\,UU.', {NOMBRES[p]: por[p][3] or 0 for p in orden})],
-                  '(10.2cm,0cm)', 3.9, 4.4, '(b) Por miembro, último año (\\%)', valores=False, leyenda=False)
+                  '(10.2cm,0cm)', 3.9, 4.4, '(b) Por miembro, último año (\\%)', valores=False, xmax=12)
     o.append('\\end{tikzpicture}')
     escribe('ASEAN_preferencia', o)
     tabla('ASEAN_preferencia', 'Arancel aplicado por los miembros de la ASEAN según el origen de las importaciones (%, media ponderada por las importaciones)',
