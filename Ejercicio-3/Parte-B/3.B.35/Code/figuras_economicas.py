@@ -65,7 +65,7 @@ def coords(pares):
     return ' '.join(f'({a},{y:.4f})' for a, y in pares)
 
 
-def fig_integracion(grupo, it, x0=1962, x1=2024):
+def fig_integracion(grupo, it, x0=1962, x1=2024, xtick='1960,1980,2000,2020'):
     filas = dc.lee_csv()
     anios = sorted({a for (e, a, s) in filas if e in dc.GRUPOS[grupo][0]})
     cuadro = [f for f in dc.cuadro(grupo, anios[0], anios[-1], filas) if f[3] is not None]
@@ -73,15 +73,15 @@ def fig_integracion(grupo, it, x0=1962, x1=2024):
     ymax_b = techo(max(i for _, _, _, i in it), 20)
     o = cabecera(grupo, 'integracion')
     w, h, paso = 3.75, 4.0, 5.3
-    comunes = f'{ESTILO}, width={w}cm, height={h}cm, xmin={x0}, xmax={x1}, xtick={{1960,1980,2000,2020}}'
+    comunes = f'{ESTILO}, width={w}cm, height={h}cm, xmin={x0}, xmax={x1}, xtick={{{xtick}}}'
     # (a) cuota
     o += [f'  \\begin{{axis}}[{comunes}, at={{(0,0)}}, ymin=0, ymax={ymax_a}, title={{(a) Cuota intrarregional}},'
-          f' ylabel={{\\% de las exportaciones}}]', *etapas(grupo, 0, ymax_a),
+          f' ylabel={{\\% de las exportaciones}}]', *etapas(grupo, 0, ymax_a, x0, x1),
           f'    \\addplot[s1, line width=1.3pt, mark=none] coordinates {{{coords((f[0], f[3]) for f in cuadro)}}};',
           '  \\end{axis}']
     # (b) intensidad
     o += [f'  \\begin{{axis}}[{comunes}, at={{({paso}cm,0cm)}}, ymin=0, ymax={ymax_b}, title={{(b) Intensidad}},'
-          f' ylabel={{cuota / peso en el comercio mundial}}]', *etapas(grupo, 0, ymax_b),
+          f' ylabel={{cuota / peso en el comercio mundial}}]', *etapas(grupo, 0, ymax_b, x0, x1),
           f'    \\addplot[s1, line width=1.3pt, mark=none] coordinates {{{coords((a, i) for a, _, _, i in it)}}};',
           '  \\end{axis}']
     # (c) exportaciones, escala logarítmica
@@ -90,7 +90,7 @@ def fig_integracion(grupo, it, x0=1962, x1=2024):
     lo = 10 ** math.floor(math.log10(min(y for _, y in intra)))
     hi = 10 ** math.ceil(math.log10(max(y for _, y in tot)))
     o += [f'  \\begin{{axis}}[{comunes}, at={{({2 * paso}cm,0cm)}}, ymode=log, ymin={lo}, ymax={hi}, log ticks with fixed point,'
-          f' title={{(c) Exportaciones}}, ylabel={{miles de millones de USD (log.)}}]', *etapas(grupo, lo, hi),
+          f' title={{(c) Exportaciones}}, ylabel={{miles de millones de USD (log.)}}]', *etapas(grupo, lo, hi, x0, x1),
           f'    \\addplot[black!55, line width=1.1pt, mark=none] coordinates {{{coords(tot)}}};',
           f'    \\addplot[s1, line width=1.3pt, mark=none] coordinates {{{coords(intra)}}};',
           f'    \\node[anchor=south east, inner sep=1pt, text=black!75] at (axis cs:{tot[-1][0]},{tot[-1][1] * 1.15:.4f}) {{totales}};',
