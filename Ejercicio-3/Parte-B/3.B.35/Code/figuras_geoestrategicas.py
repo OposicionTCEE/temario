@@ -591,7 +591,7 @@ def rcep():
     etiquetas = [txt for _, _, _, txt in pares]
     o += barras_h(etiquetas, [('s2!45', '2022', {txt: margen[(i, j)].get(2022, 0) for i, j, _, txt in pares}),
                               ('s2', '2023', {txt: margen[(i, j)].get(2023, 0) for i, j, _, txt in pares})],
-                  '(10.9cm,-3.05cm)', 3.0, 3.15, '(b) Margen de preferencia (puntos)', xmax=1, leyenda=True)
+                  '(10.9cm,-3.05cm)', 3.0, 3.15, '(b) Margen de preferencia (puntos)', xmax=1, leyenda=True, valores=False)
     o.append('\\end{tikzpicture}')
     escribe('RCEP_enlaces', o)
     tabla('RCEP_enlaces', 'Acuerdos de libre comercio en vigor entre las seis economías del RCEP antes de 2022 y aranceles aplicados entre China, Japón y Corea (%)',
