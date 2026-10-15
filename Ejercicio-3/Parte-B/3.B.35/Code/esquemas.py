@@ -20,7 +20,7 @@ TEMA = Path(__file__).resolve().parent.parent
 W = 16.0                                  # cm: ancho del texto
 COLS = [2.6, 3.2, 3.9, 2.6, 2.5]          # objetivo, cómo, resultado, UE, tesis
 GAP = 0.3                                 # cm entre casillas (con una flecha)
-CABECERAS = ['Objetivo', 'Cómo se construyó', 'Resultado y por qué', '¿Qué busca la UE?', r'$\Rightarrow$ ¿Confirma la tesis?']
+CABECERAS = ['Objetivo', 'Cómo se construyó', 'Resultado y por qué', '¿Qué busca la UE?', '¿Confirma la tesis?']
 ESCALA = ['ZLC', 'UA', 'MC']              # grados de BALASSA que se dibujan
 PROB = r'\textcolor{orange}{\textsuperscript{[Probable]}}'
 
@@ -31,56 +31,55 @@ BLOQUES = {
         'justificacion': (r'\textbf{Estáticas}: creación de comercio $>$ desviación (VINER, 1950)\\'
                           r'\textbf{Dinámicas}: escala, competencia, inversión\\'
                           r'\textbf{Vecinos} = socios naturales $\Rightarrow$ poca desviación (WONNACOTT y LUTZ, 1989; KRUGMAN, 1991)\\'
-                          r'$+$ \textbf{credibilidad} de las reformas (FERNÁNDEZ y PORTES, 1998)'),
+                          r'\textbf{Credibilidad}: un tratado ata las reformas (FERNÁNDEZ y PORTES, 1998)'),
         'medios': [
-            ('A', r'\textbf{Regionalismo cerrado} (CEPAL): industrializar sustituyendo importaciones tras un AEC, a menor coste que '
-                  r'cada país solo (COOPER y MASSELL, 1965) $\to$ MCCA, CAN'),
-            ('B', r'\textbf{Sin cesión de soberanía}: libre comercio sin AEC ni órganos supranacionales, para entrar en un mercado '
-                  r'grande; precio: reglas de origen $\to$ EFTA, NAFTA/USMCA'),
+            ('A', r'\textbf{Regionalismo cerrado} (CEPAL): industrializar tras un AEC, más barato que cada país solo '
+                  r'(COOPER y MASSELL, 1965) $\to$ MCCA, CAN'),
+            ('B', r'\textbf{Sin cesión de soberanía}: libre comercio sin AEC ni órganos supranacionales; precio: reglas de origen '
+                  r'$\to$ EFTA, NAFTA'),
         ],
         'grupos': [
-            ('A', 'Regionalismo cerrado, reconvertido en abierto en los años noventa (CEPAL, 1994)', [
-                {'nombre': 'MCCA', 'anio': '1960', 'color': (200, 76, 58), 'alto': 2.55,
-                 'objetivo': 'Industrializar cinco economías de café y banano: mercado común protegido y reparto de industrias',
+            ('A', 'Regionalismo cerrado, reconvertido en abierto en los años noventa', [
+                {'nombre': 'MCCA', 'anio': '1960', 'color': (200, 76, 58), 'alto': 2.75,
+                 'objetivo': 'Industrializar cinco economías de café y banano: mercado protegido y reparto de industrias',
                  'escala': {'ZLC': 'a', 'UA': 'p', 'MC': 'v'},
-                 'como': (r'Managua 1960 $\to$ guerra de 1969 y guerras civiles $\to$ SICA 1991: regionalismo abierto\\'
-                          r'Intergubernamental: consenso, sin órgano que haga cumplir'),
-                 'grafico': ('linea', [(1965, 18, 'b'), (1970, 26, 'a'), (1986, 11, 'b'), (2023, 25, 'a')]),
-                 'resultado': (r'Cuota alta y de manufacturas, pero concentradas en Guatemala y El Salvador; Honduras y Nicaragua, '
-                               r'déficits $\Rightarrow$ \textbf{conflicto distributivo}. Hoy pesa más el DR-CAFTA'),
-                 'ue': r'\textbf{Afinidad}: Acuerdo de Asociación (2012) con la región en bloque, ligado a la democracia; $0,4\%$ de su comercio',
-                 'tesis': r'\textbf{Sí} crea comercio y escala industrial. \textbf{No} reparte: sin compensación, la industria va al más avanzado'},
-                {'nombre': 'CAN', 'anio': '1969', 'color': (233, 160, 40), 'alto': 2.55,
-                 'objetivo': 'Industrializar con más ambición: programación industrial, control de la IED y negociar en bloque',
+                 'como': (r'Managua 1960 $\to$ guerra (1969) $\to$ SICA 1991: regionalismo abierto\\'
+                          r'Intergubernamental, sin órgano que haga cumplir'),
+                 'grafico': ('linea', [(1965, 18, 'l'), (1970, 26, 'a'), (1986, 11, 'b'), (2023, 25, 'a')]),
+                 'resultado': (r'Cuota alta, de manufacturas, pero concentradas en Guatemala y El Salvador $\Rightarrow$ '
+                               r'\textbf{conflicto distributivo}'),
+                 'ue': r'\textbf{Afinidad}: acuerdo con la región en bloque, ligado a la democracia; $0{,}4\%$ del comercio de la UE',
+                 'tesis': r'\textbf{Sí} crea comercio y escala. \textbf{No} reparte: sin compensación, la industria va al más avanzado'},
+                {'nombre': 'CAN', 'anio': '1969', 'color': (233, 160, 40), 'alto': 2.75,
+                 'objetivo': 'Lo mismo, con más ambición: programación industrial, control de la IED y negociar en bloque',
                  'escala': {'ZLC': 'a', 'UA': 'x', 'MC': 'v'},
-                 'como': (r'Cartagena 1969 $\to$ sale Chile (1976) $\to$ ZLC 1993; AEC 1995, sin efecto en 2015\\'
-                          r'La más \textbf{supranacional} de América Latina: Tribunal, Decisiones directas'),
-                 'grafico': ('linea', [(1969, 3, 'b'), (1976, 6, 'a'), (1985, 2.6, 'b'), (1998, 13.9, 'a'), (2023, 6, 'a')]),
-                 'resultado': (r'Cuota baja y en caída: economías \textbf{competidoras}, que venden materias primas a China y EE.\,UU. '
-                               r'(complementariedad con China $27$, entre socios $18$); cada socio busca fuera'),
-                 'ue': r'\textbf{Económica}: acuerdo solo comercial (2012) con Colombia, Perú y Ecuador, no con el bloque; materias primas',
-                 'tesis': r'\textbf{No}: sin complementariedad no hay mercado regional, ni con las instituciones más fuertes de la región'},
+                 'como': (r'Cartagena 1969 $\to$ ZLC 1993; AEC 1995, sin efecto en 2015\\'
+                          r'La más \textbf{supranacional} de América Latina (Tribunal)'),
+                 'grafico': ('linea', [(1969, 3, 'a'), (1976, 6, 'a'), (1985, 2.6, 'b'), (1998, 13.9, 'a'), (2023, 6, 'a')]),
+                 'resultado': (r'Cuota baja y en caída: economías \textbf{competidoras}, que venden materias primas fuera '
+                               r'(complementariedad: con China $27$, entre socios $18$)'),
+                 'ue': r'\textbf{Económica}: acuerdo solo comercial con Colombia, Perú y Ecuador, no con el bloque',
+                 'tesis': r'\textbf{No}: sin complementariedad no hay mercado regional, ni con las instituciones más fuertes'},
             ]),
             ('B', 'Integración de mercados sin cesión de soberanía', [
                 {'nombre': 'EFTA', 'anio': '1960', 'color': (110, 165, 215), 'alto': 2.55,
-                 'objetivo': 'Respuesta defensiva a la CEE: libre comercio industrial sin ceder soberanía (Commonwealth, neutrales)',
+                 'objetivo': 'Respuesta defensiva a la CEE: libre comercio industrial sin ceder soberanía',
                  'escala': {'ZLC': 'a', 'UA': None, 'MC': None},
-                 'como': (r'Estocolmo 1960 $\to$ se vacía hacia la CEE (efecto dominó, BALDWIN, 1993) $\to$ EEE 1994; Suiza, bilaterales\\'
-                          r'Intergubernamental, por consenso'),
+                 'como': (r'Estocolmo 1960 $\to$ se vacía hacia la CEE (efecto dominó) $\to$ EEE 1994; Suiza, bilaterales\\'
+                          r'Intergubernamental'),
                  'grafico': ('barras', [('a la UE', 63, r'$51$-$63\%$'), ('a los socios', 1, r'$<1\%$')]),
-                 'resultado': (r'Su mercado es la UE, no los socios. La protección agraria (apoyo $\approx 50\%$ de los ingresos; '
-                               r'UE, $17\%$) frena la adhesión'),
-                 'ue': r'\textbf{Económica con afinidad}: $9,6\%$ de su comercio; el EEE les da el mercado interior sin voto',
+                 'resultado': r'Su mercado es la UE, no los socios; la protección agraria frena la adhesión',
+                 'ue': r'\textbf{Económica con afinidad}: $9{,}6\%$ del comercio de la UE; el EEE les da su mercado interior sin voto',
                  'tesis': r'Como \textbf{alternativa} a la CEE, fracasó; como \textbf{antesala}, funcionó'},
-                {'nombre': 'NAFTA/USMCA', 'anio': '1994/2020', 'color': (30, 75, 135), 'alto': 2.55,
-                 'objetivo': r'México: anclar sus reformas (credibilidad); EE.\,UU.: integración profunda; Canadá: no quedarse fuera',
+                {'nombre': 'NAFTA', 'anio': '1994; USMCA, 2020', 'color': (30, 75, 135), 'alto': 2.75,
+                 'objetivo': r'México: anclar sus reformas; EE.\,UU.: integración profunda; Canadá: no quedarse fuera',
                  'escala': {'ZLC': 'a', 'UA': None, 'MC': None},
-                 'como': (r'NAFTA 1994 $\to$ USMCA 2020: origen del automóvil, cláusula China $\to$ 2026: EE.\,UU. no prorroga\\'
+                 'como': (r'USMCA 2020: origen del automóvil, cláusula China $\to$ 2026: EE.\,UU. no prorroga\\'
                           r'Intergubernamental, con paneles'),
-                 'grafico': ('linea', [(1981, 35.5, 'b'), (1994, 48, 'b'), (2003, 56, 'a'), (2023, 50.8, 'a')]),
-                 'resultado': (r'Radios en torno a EE.\,UU.; cadena del automóvil. Bienestar pequeño y México \textbf{no converge} '
+                 'grafico': ('linea', [(1981, 35.5, 'l'), (1994, 48, 'b'), (2003, 56, 'a'), (2023, 50.8, 'a')]),
+                 'resultado': (r'Radios en torno a EE.\,UU.; cadena del automóvil. México \textbf{no converge} '
                                r'($40\% \to 29\%$ del PIB per cápita de EE.\,UU.)'),
-                 'ue': r'\textbf{Económica}: $19\%$ de su comercio, más que la UE para ellos; desde 2025, diversificar',
+                 'ue': r'\textbf{Económica}: $19\%$ del comercio de la UE, más que la UE para ellos; desde 2025, diversificar',
                  'tesis': r'\textbf{Sí} en comercio y cadenas; \textbf{no} en convergencia. Desde 2025, también geoestratégico'},
             ]),
         ],
@@ -91,7 +90,6 @@ BLOQUES = {
                      r'los socios sobre el total, \%), escala propia en cada fila; barras: destino de las exportaciones, 2023.'),
     },
 }
-
 
 def color(nombre, c):
     return r'\definecolor{%s}{RGB}{%d,%d,%d}%%' % (nombre, *c)
