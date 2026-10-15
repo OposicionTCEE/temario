@@ -24,9 +24,10 @@ import indicadores_bloque as ib  # noqa: E402
 
 NOMBRES = {'GTM': 'Guatemala', 'SLV': 'El Salvador', 'HND': 'Honduras', 'NIC': 'Nicaragua', 'CRI': 'Costa Rica',
            'BOL': 'Bolivia', 'COL': 'Colombia', 'ECU': 'Ecuador', 'PER': 'Perú', 'CHL': 'Chile', 'VEN': 'Venezuela',
-           'USA': 'EE.\\,UU.', 'CHN': 'China', 'MEX': 'México', 'CAN': 'Canadá'}   # CAN: Canadá (código ISO)
+           'USA': 'EE.\\,UU.', 'CHN': 'China', 'MEX': 'México', 'CAN': 'Canadá', 'ARG': 'Argentina', 'BRA': 'Brasil',
+           'PRY': 'Paraguay', 'URY': 'Uruguay'}   # CAN: Canadá (código ISO)
 PALETA = ['2A78D6', 'EB6834', '1BAF7A', 'EDA100', 'E87BA4', '008300', '6250D6', 'E34948']
-REFERENCIAS = {'MCCA': ['USA'], 'CAN': ['USA', 'CHN']}
+REFERENCIAS = {'MCCA': ['USA'], 'CAN': ['USA', 'CHN'], 'MERCOSUR': ['USA', 'CHN']}
 ABAJO = ', title style={at={(0.5,0)}, anchor=north, yshift=-0.62cm}'
 ESTILO = ('scale only axis, axis lines*=left, set layers, tick label style={font=\\sffamily\\footnotesize, '
           '/pgf/number format/assume math mode=true}, '
