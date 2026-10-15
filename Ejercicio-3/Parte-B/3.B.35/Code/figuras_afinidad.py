@@ -55,24 +55,32 @@ def rotulos(series, techo, x):
     return o
 
 
-def barras_h(etiquetas, series, at, ancho, alto, titulo, xlabel='', apilar=False, xmax=None, valores=True):
-    """Barras horizontales (agrupadas o apiladas) con categorías simbólicas; series = [(color, leyenda, {etiqueta: valor})]."""
+def barras_h(etiquetas, series, at, ancho, alto, titulo, xlabel='', apilar=False, xmax=None, valores=True, solapar=False,
+             con_etiquetas=True, leyenda=True):
+    """Barras horizontales (agrupadas, apiladas o superpuestas) con categorías simbólicas;
+    series = [(color, leyenda, {etiqueta: valor})]. Sin comas ni paréntesis en etiquetas y leyendas (pgfplots las parte)."""
     cats = ','.join(etiquetas)
     xm = xmax or fe.techo(max((sum(s[2].get(e, 0) for s in series) if apilar else max(s[2].get(e, 0) for s in series))
                               for e in etiquetas), 10)
     estilo = fe.ESTILO.replace('ymajorgrids', 'xmajorgrids')
-    o = [f'  \\begin{{axis}}[{estilo}, at={{{at}}}, width={ancho}cm, height={alto}cm, {"xbar stacked" if apilar else "xbar"},'
-         f' bar width={"6pt" if apilar else "3.4pt"}, y dir=reverse, symbolic y coords={{{cats}}}, ytick={{{cats}}}, xmin=0, xmax={xm},'
-         f' enlarge y limits=0.06, title={{{titulo}}}, xlabel={{{xlabel}}}, legend style={{font=\\sffamily\\footnotesize, draw=none,'
-         ' fill=none, at={(0.5,-0.2)}, anchor=north, legend columns=3, /tikz/every even column/.append style={column sep=0.25cm}},'
-         ' legend cell align=left, area legend, reverse legend'
+    tipo = 'xbar stacked' if apilar else 'xbar'
+    o = [f'  \\begin{{axis}}[{estilo}, at={{{at}}}, width={ancho}cm, height={alto}cm, {tipo},'
+         f' bar width={"6pt" if apilar or solapar else "3.4pt"}, y dir=reverse, symbolic y coords={{{cats}}}, ytick={{{cats}}},'
+         + ('' if con_etiquetas else ' yticklabels={},')
+         + f' xmin=0, xmax={xm}, enlarge y limits=0.06, title={{{titulo}}}, xlabel={{{xlabel}}},'
+         ' legend style={font=\\sffamily\\footnotesize, draw=none, fill=none, at={(0.5,-0.2)}, anchor=north, legend columns=3,'
+         ' /tikz/every even column/.append style={column sep=0.25cm}}, legend cell align=left, area legend, reverse legend'
+         + (', bar shift=0pt' if solapar else '')
          + (', nodes near coords, nodes near coords style={font=\\sffamily\\footnotesize, text=black!75, /pgf/number format/fixed,'
             ' /pgf/number format/precision=0, /pgf/number format/assume math mode=true}, point meta=x' if valores and not apilar else '')
          + ']']
-    for color, leyenda, datos in reversed(series):
-        o.append(f'    \\addplot[draw={"white" if apilar else "none"}, line width=0.3pt, fill={color}] coordinates {{'
-                 + ' '.join(f'({datos.get(e, 0):.2f},{e})' for e in etiquetas) + '};')
-    o.append('    \\legend{' + ','.join(s[1] for s in reversed(series)) + '}')
+    for color, ley, datos in reversed(series):
+        puntos = [(datos[e], e) for e in etiquetas if e in datos and (apilar or datos[e] > 0.05)]
+        if puntos:
+            o.append(f'    \\addplot[draw={"white" if apilar else "none"}, line width=0.3pt, fill={color}] coordinates {{'
+                     + ' '.join(f'({v:.2f},{e})' for v, e in puntos) + '};')
+            if leyenda:
+                o.append(f'    \\addlegendentry{{{ley}}}')
     o.append('  \\end{axis}')
     return o
 
@@ -128,7 +136,7 @@ def cefta():
     ult = max(max(rel[e]) for e in miembros if rel[e])
     color = {e: f's{i + 1}' for i, e in enumerate(miembros)}
     o = fe.cabecera('CEFTA', 'convergencia')
-    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=5.6cm, height=4.4cm, at={{(0cm,0cm)}}, xmin=1995, xmax={ult}, ymin=0, ymax=60,'
+    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=5.0cm, height=4.4cm, at={{(0cm,0cm)}}, xmin=1995, xmax={ult}, ymin=0, ymax=60,'
           ' xtick={2000,2010,2020}, title={(a) PIB per cápita en PPA, \\% de la UE-27}, ylabel={\\%}, clip mode=individual]',
           *fe.etapas('CEFTA', 0, 60, 1995, ult)]
     for e in miembros:
@@ -138,10 +146,10 @@ def cefta():
     o.append('  \\end{axis}')
     adh = {'BGR': 2007, 'ROU': 2007, 'HRV': 2013}
     hoy = {NOMBRES[e]: rel[e][ult] for e in miembros if ult in rel[e]}
-    refs = {f'{NOMBRES[e]} ({a})': rel[e][a] for e, a in adh.items() if a in rel[e]}
+    refs = {f'{NOMBRES[e]} en {a}': rel[e][a] for e, a in adh.items() if a in rel[e]}
     etiquetas = sorted(hoy, key=lambda k: -hoy[k]) + sorted(refs, key=lambda k: -refs[k])
-    o += barras_h(etiquetas, [('s1', f'miembros del CEFTA, {ult}', hoy), ('black!35', 'nuevos miembros de la UE, al adherirse', refs)],
-                  '(10.6cm,0cm)', 3.6, 4.4, '(b) Hoy, frente a los últimos adheridos', valores=True, xmax=80)
+    o += barras_h(etiquetas, [('s1', f'miembros del CEFTA en {ult}', hoy), ('black!35', 'últimos adheridos a la UE', refs)],
+                  '(9.3cm,0cm)', 4.2, 4.4, '(b) Hoy y los últimos adheridos (\\%)', valores=True, xmax=80, solapar=True)
     o.append('\\end{tikzpicture}')
     escribe('CEFTA_convergencia', o)
     tabla('CEFTA_convergencia', 'PIB per cápita en PPA de los miembros del CEFTA y de los últimos en adherirse a la UE, en % de la UE-27',
@@ -165,11 +173,11 @@ def cefta():
                 c = sum(v for s, v in d.items() if s in socios_cefta and s != p)
                 ue, cef, tot = ue + u, cef + c, tot + d['WLD']
                 por[p] = (100 * u / d['WLD'], 100 * c / d['WLD'])
-            if tot:
+            if tot and len(por) == len(dc.GRUPOS['CEFTA'][0]):   # solo años en que declaran los seis
                 out[(f, a)] = (100 * ue / tot, 100 * cef / tot, por)
     o = fe.cabecera('CEFTA', 'ancla')
     anios = sorted(a for f, a in out if f == 'X')
-    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=5.6cm, height=4.4cm, at={{(0cm,0cm)}}, xmin=2006, xmax=2023, ymin=0, ymax=80,'
+    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=5.0cm, height=4.4cm, at={{(0cm,0cm)}}, xmin=2006, xmax=2023, ymin=0, ymax=80,'
           ' xtick={2006,2010,2015,2020}, title={(a) Peso en el comercio del bloque}, ylabel={\\% del total}, clip mode=individual]']
     lin = [('s1', 'X', 0, 'UE, export.'), ('s1', 'M', 0, 'UE, import.'), ('s2', 'X', 1, 'CEFTA, export.'), ('s2', 'M', 1, 'CEFTA, import.')]
     for col, f, k, _ in lin:
@@ -182,7 +190,7 @@ def cefta():
     etiquetas = [NOMBRES[p] for p in sorted(por, key=lambda p: -por[p][0])]
     o += barras_h(etiquetas, [('s1', 'a la UE-27', {NOMBRES[p]: v[0] for p, v in por.items()}),
                               ('s2', 'a los socios del CEFTA', {NOMBRES[p]: v[1] for p, v in por.items()})],
-                  '(10.6cm,0cm)', 3.6, 4.4, f'(b) Exportaciones, {anios[-1]} (\\%)', xmax=100)
+                  '(10.7cm,0cm)', 3.5, 4.4, f'(b) Exportaciones en {anios[-1]} (\\%)', xmax=100)
     o.append('\\end{tikzpicture}')
     escribe('CEFTA_ancla', o)
     tabla('CEFTA_ancla', 'Peso de la UE-27 y de los socios del CEFTA en las exportaciones e importaciones de los miembros del CEFTA (%)',
@@ -218,7 +226,7 @@ def africa():
         if it and et:
             serie[a], n[a] = (100 * ia / it, 100 * ea / et), k
     o = fe.cabecera('AFCFTA', 'composicion')
-    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=5.4cm, height=4.4cm, at={{(0cm,0cm)}}, xmin=1999, xmax=2024, ymin=0, ymax=60,'
+    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=5.0cm, height=4.4cm, at={{(0cm,0cm)}}, xmin=1999, xmax=2024, ymin=0, ymax=60,'
           ' xtick={2000,2005,2010,2015,2020}, title={(a) Manufacturas en las exportaciones}, ylabel={\\% de cada destino},'
           ' clip mode=individual]',
           '    \\addplot[s1, line width=1.3pt, mark=*, mark size=1.6pt] coordinates {' + fe.coords((a, v[0]) for a, v in sorted(serie.items())) + '};',
@@ -229,7 +237,7 @@ def africa():
     etiquetas = sorted(por_pais, key=lambda p: -por_pais[p][0])
     o += barras_h(etiquetas, [('s1', 'a África', {p: v[0] for p, v in por_pais.items()}),
                               ('s2', 'fuera de África', {p: v[1] for p, v in por_pais.items()})],
-                  '(10.4cm,0cm)', 4.0, 4.4, '(b) Manufacturas por país, 2023 (\\%)', xmax=100)
+                  '(9.0cm,0cm)', 5.0, 4.4, '(b) Manufacturas por país en 2023 (\\%)', xmax=100)
     o.append('\\end{tikzpicture}')
     escribe('AfCFTA_composicion', o)
     tabla('AFCFTA_composicion', 'Manufacturas en las exportaciones de los países africanos a África y fuera de África (%)',
@@ -259,8 +267,8 @@ def africa():
     etiquetas = sorted(estr, key=lambda p: -estr[p]['manuf'])
     colores = [('s1', 'manuf'), ('s3', 'Food'), ('s4', 'AgrRaw'), ('s2', 'Fuels'), ('s7', 'OresMtls'), ('black!30', 'otros')]
     o += barras_h(etiquetas, [(c, GRUPOS_TXT.get(g, 'Otros'), {p: estr[p][g] for p in etiquetas}) for c, g in colores],
-                  '(0.9cm,0cm)', 5.2, 5.0, '(a) Exportaciones, 2023 (\\%)', apilar=True, xmax=100)
-    cw, ch, xm, ytop = 0.5, 0.36, 9.7, 4.75
+                  '(0.9cm,0cm)', 4.6, 5.0, '(a) Exportaciones en 2023 (\\%)', apilar=True, xmax=100)
+    cw, ch, xm, ytop = 0.52, 0.4, 8.3, 5.1
     paises = [p for p in AFRICA_GRANDES if secc[(p, 'X')]]
     vmax = max(comp.values())
     for jx, j in enumerate(paises):
@@ -273,15 +281,15 @@ def africa():
             if (i, j) in comp:
                 pct = int(10 + 80 * comp[(i, j)] / vmax)
                 o.append(f'  \\fill[s1!{pct}!white] ({x + 0.015:.3f},{y + 0.015:.3f}) rectangle ({x + cw - 0.015:.3f},{y + ch - 0.015:.3f});')
+                txt = 'white' if pct > 55 else 'black!85'
+                o.append(f'  \\node[text={txt}, inner sep=0pt, font=\\sffamily\\footnotesize] at ({x + cw / 2:.3f},{y + ch / 2:.3f}) {{{comp[(i, j)]:.0f}}};')
             else:
                 o.append(f'  \\fill[black!6] ({x + 0.015:.3f},{y + 0.015:.3f}) rectangle ({x + cw - 0.015:.3f},{y + ch - 0.015:.3f});')
-    yb = ytop - len(paises) * ch - 0.25
-    for k, (v, txt) in enumerate(((10, '10'), (vmax / 2, f'{vmax / 2:.0f}'), (vmax, f'{vmax:.0f}'))):
-        x = xm + k * 1.3
-        o.append(f'  \\fill[s1!{int(10 + 80 * v / vmax)}!white] ({x:.2f},{yb - 0.18:.2f}) rectangle ({x + 0.4:.2f},{yb:.2f});')
-        o.append(f'  \\node[anchor=west, inner sep=1pt] at ({x + 0.45:.2f},{yb - 0.09:.2f}) {{{txt}}};')
-    o.append(f'  \\node[anchor=north, font=\\sffamily\\small, inner sep=0pt] at ({xm + len(paises) * cw / 2:.2f},{yb - 0.35:.2f}) '
-             '{(b) Complementariedad, 2023};')
+    yb = ytop - len(paises) * ch - 0.12
+    o.append(f'  \\node[anchor=north west, inner sep=1pt, text=black!70] at ({xm - 0.7:.2f},{yb:.2f}) '
+             '{exportador (filas), importador (columnas); 0-100};')
+    o.append(f'  \\node[anchor=north, font=\\sffamily\\small, inner sep=0pt] at ({xm + len(paises) * cw / 2:.2f},{yb - 0.55:.2f}) '
+             '{(b) Complementariedad en 2023};')
     o.append('\\end{tikzpicture}')
     escribe('AfCFTA_materias', o)
     media = sum(comp.values()) / len(comp)
@@ -300,7 +308,7 @@ def africa():
     ahs, mfn, imp = dw.tabla('arancel', 'AHS', 'Total'), dw.tabla('arancel', 'MFN', 'Total'), dw.tabla('comercio', 'M', 'Total')
     res = {}
     for p in africa:
-        for a in (2022, 2021, 2020, 2019):
+        for a in (2021, 2022, 2020, 2019):   # 2021 primero: en 2022 WITS omite preferencias (COMESA en Kenia)
             if (p, a) in ahs and (p, a) in imp:
                 break
         else:
@@ -366,7 +374,7 @@ def pafta():
         if tt and tz and k >= len(miembros) / 2:
             serie[a] = (100 * it / tt, 100 * iz / tz, k)
     o = fe.cabecera('PAFTA', 'sin_petroleo')
-    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=5.6cm, height=4.4cm, at={{(0cm,0cm)}}, xmin=1998, xmax=2023, ymin=0, ymax=40,'
+    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=5.0cm, height=4.4cm, at={{(0cm,0cm)}}, xmin=1998, xmax=2023, ymin=0, ymax=40,'
           ' xtick={2000,2005,2010,2015,2020}, title={(a) Exportaciones a otros miembros}, ylabel={\\% del total}, clip mode=individual]',
           *fe.etapas('PAFTA', 0, 40, 1998, 2023),
           '    \\addplot[s2, line width=1.3pt, mark=none] coordinates {' + fe.coords((a, v[0]) for a, v in sorted(serie.items())) + '};',
@@ -377,7 +385,7 @@ def pafta():
     etiquetas = list(SUBREGIONES)
     o += barras_h(etiquetas, [('s2', 'todas', {n: 100 * v[0] / v[1] for n, v in sub.items()}),
                               ('s1', 'sin combustibles', {n: 100 * v[2] / v[3] for n, v in sub.items()})],
-                  '(11.4cm,0cm)', 3.6, 4.4, '(b) Por subregión, 2023 (\\%)', xmax=50)
+                  '(11.0cm,0cm)', 3.3, 4.4, '(b) Por subregión en 2023 (\\%)', xmax=50)
     o.append('\\end{tikzpicture}')
     escribe('PAFTA_sin_petroleo', o)
     tabla('PAFTA_sin_petroleo', 'Exportaciones de los miembros de la PAFTA a otros miembros, con y sin combustibles (% del total)',
@@ -402,7 +410,7 @@ def pafta():
         clave = dict(zip(cats, GRUPOS_CUCI + ['otros']))
         o += barras_h(cats, [('s1', 'a otros miembros', {c: 100 * dentro[clave[c]] / dentro['Total'] for c in cats}),
                              ('s2', 'fuera de la PAFTA', {c: 100 * fuera[clave[c]] / fuera['Total'] for c in cats})],
-                      f'({3.0 + k * 8.0}cm,0cm)', 4.2, 4.4, f'({"ab"[k]}) {a} (\\%)', xmax=100)
+                      f'({3.6 + k * 5.6}cm,0cm)', 4.6, 4.4, f'({"ab"[k]}) {a} (\\%)', xmax=100, con_etiquetas=(k == 0), leyenda=(k == 1))
         filas += [(a, 'Dentro', *[round(100 * dentro[g] / dentro['Total'], 1) for g in GRUPOS_CUCI + ['otros']]),
                   (a, 'Fuera', *[round(100 * fuera[g] / fuera['Total'], 1) for g in GRUPOS_CUCI + ['otros']])]
     o.append('\\end{tikzpicture}')
