@@ -73,16 +73,15 @@ def espejo_producto(exportadores, anios, producto):
         for clave, serie in d['dataSets'][0]['series'].items():
             v = serie['observations']['0'][0]
             if v is not None:
-                out[dc.iso(valores[int(clave.split(':')[ir])]['id'])] = v * 1000.0
+                imp = dc.iso(valores[int(clave.split(':')[ir])]['id'])
+                out[imp] = out.get(imp, 0.0) + v * 1000.0
         return par, out
     faltan = [(e, a) for e in exportadores for a in anios if (e, a, producto) not in hechos]
     print(f'espejo {producto}: {len(faltan)} consultas', flush=True)
     with ThreadPoolExecutor(max_workers=8) as ex:
         for (e, a), out in ex.map(una, faltan):
-            for i, v in out.items():
-                if i not in ('WLD', e):
-                    filas[(e, a, producto, i)] = v
-            filas[(e, a, producto, 'WLD')] = sum(v for i, v in out.items() if i not in ('WLD', e))
+            for i, v in out.items():   # WLD lo da WITS (suma de los que declaran), sin agregados regionales repetidos
+                filas[(e, a, producto, i)] = v
     with open(ESPEJO_PRODUCTO, 'w', newline='', encoding='utf-8') as f:
         w = csv.writer(f)
         w.writerow(['exportador', 'anio', 'producto', 'importador', 'valor_usd', 'fuente'])
