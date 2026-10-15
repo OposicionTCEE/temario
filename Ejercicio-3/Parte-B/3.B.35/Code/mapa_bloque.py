@@ -120,14 +120,12 @@ BLOQUES = {
             ((-34.0, -45.5), 'rayado', 'Rayado: también en el CPTPP'),
         ],
         'filas': [
-            ('ASEAN', 'asean', 1967, [(1967, 'Bangkok', 'aw'), (1976, 'Bali', 'b'), (1992, 'AFTA', 'a'),
-                                      (2007, 'Carta', 'b'), (2015, 'Comunidad Económica', 'a'), (2025, 'Timor Oriental', 'be')], []),
-            ('CCG', 'ccg', 1981, [(1981, 'Riad', 'aw'), (2003, 'unión aduanera', 'b'), (2008, 'mercado común', 'a'),
-                                  (2017, 'bloqueo de Catar', 'b'), (2021, 'Al-Ula', 'ae')], []),
-            ('RCEP', 'rcep', 2022, [(2012, 'negociación', 'ae'), (2020, 'firma', 'b'), (2022, 'en vigor', 'aw')], []),
-            ('CPTPP', 'cptpp', 2018, [(2016, 'TPP', 'ae'), (2017, 'sale EE.\\,UU.', 'be'), (2018, 'en vigor', 'aw'),
-                                      (2024, 'Reino Unido', 'b')], []),
-            ('UEE', 'uee', 2015, [(2010, 'unión aduanera', 'ae'), (2014, 'Astana', 'b'), (2015, 'en vigor', 'aw')], []),
+            # Solo fundación y refundación (15/10/2026): los demás hitos están en la cronología de cada acuerdo
+            ('ASEAN', 'asean', 1967, [(1967, 'Bangkok', 'aw'), (2007, 'Carta', 'aw')], []),
+            ('CCG', 'ccg', 1981, [(1981, 'Riad', 'aw'), (2003, 'unión aduanera', 'aw')], []),
+            ('RCEP', 'rcep', 2022, [(2022, 'en vigor', 'aw')], []),
+            ('CPTPP', 'cptpp', 2018, [(2018, 'en vigor', 'aw')], []),
+            ('UEE', 'uee', 2015, [(2015, 'en vigor', 'aw')], []),
         ],
         'tipos': [
             ('Seguridad frente\\\\a una amenaza', 0, 1),
