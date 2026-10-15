@@ -269,7 +269,7 @@ def main():
         elif ws.title != 'Exportaciones_bilaterales':
             indicadores += filas_de_tabla(ws.title, ws)
     indicadores += convergencia()
-    indicadores.sort(key=lambda f: (f[0], f[3], str(f[1]), str(f[2]), str(f[4]), f[5] or 0))
+    indicadores.sort(key=lambda f: (str(f[0]), str(f[3]), str(f[1]), str(f[2]), str(f[4]), str(f[5])))
 
     wb = Workbook(write_only=True)
     leeme = [
