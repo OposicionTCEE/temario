@@ -160,7 +160,7 @@ def cefta():
           [(a, *[round(rel[e][a], 1) if a in rel[e] else None for e in miembros + ['BGR', 'ROU', 'HRV']]) for a in range(1990, ult + 1)])
     print('CEFTA % UE', ult, {e: round(v) for e, v in hoy.items()}, {e: round(v) for e, v in refs.items()})
     # ancla de la UE
-    socios_cefta = set(miembros) | {'KSV'}
+    socios_cefta = set(dc.GRUPOS['CEFTA'][0])   # sin Kosovo: no declara y los demás lo registran de forma desigual como destino
     out = {}
 
     def atipico(t, p, a):
