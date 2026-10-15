@@ -148,6 +148,25 @@ def productos(paises, anios, flujos=('X', 'M')):
                 escribe(CSV_PROD, ['pais', 'anio', 'flujo', 'producto', 'valor_usd', 'clasificacion'], filas)
 
 
+def wdi_paises(paises, indicadores):
+    """Series del Banco Mundial de los países e indicadores indicados (además de los de WDI)."""
+    previas = lee(CSV_WDI)
+    hechas = {(r['pais'], r['indicador']) for r in previas}
+    filas = [[r[k] for k in ('pais', 'indicador', 'anio', 'valor')] for r in previas]
+    for pais in paises:
+        for ind in indicadores:
+            if (pais, ind) in hechas:
+                continue
+            url = f'https://api.worldbank.org/v2/country/{pais}/indicator/{ind}?date=1960:2024&format=json&per_page=100'
+            try:
+                serie = json.loads(dc.get(url))[1] or []
+            except (ValueError, IndexError, TypeError):
+                serie = []
+            filas += [[pais, ind, x['date'], x['value']] for x in serie if x['value'] is not None]
+            print(pais, ind, len(serie), flush=True)
+    escribe(CSV_WDI, ['pais', 'indicador', 'anio', 'valor'], filas)
+
+
 def wdi(grupo):
     previas = lee(CSV_WDI)
     hechas = {(r['pais'], r['indicador']) for r in previas}
@@ -176,6 +195,8 @@ if __name__ == '__main__':
         division68(g, int(resto[0]), int(resto[1]))
     elif que == 'productos':
         productos(lambda a: dc.miembros(g, a), [int(a) for a in resto])   # solo los miembros de cada año
+    elif que == 'wdi_extra':   # PAISES wdi_extra IND1,IND2,...   (países separados por comas)
+        wdi_paises(g.split(','), resto[0].split(','))
     elif que == 'importaciones':   # mercados de referencia, solo importaciones: USA,CHN importaciones 1965 ... 2023
         productos(g.split(','), [int(a) for a in resto], ('M',))
     else:
