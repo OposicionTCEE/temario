@@ -91,7 +91,7 @@ def uee():
     o = fe.cabecera('UEE', 'desvio')
     ymin, ymax = 10, 2000
     anios = completos   # la UE aún no tiene 2024 completo
-    comunes = (f'{fe.ESTILO}, width=4.9cm, height=4.4cm, xmin=2019, xmax={anios[-1]}, ymode=log, ymin={ymin}, ymax={ymax},'
+    comunes = (f'{fe.ESTILO}, width=4.6cm, height=4.4cm, xmin=2019, xmax={anios[-1]}, ymode=log, ymin={ymin}, ymax={ymax},'
                ' log ticks with fixed point, xtick={2019,2020,2021,2022,2023}, xticklabels={2019,,2021,,2023},'
                ' clip mode=individual')
     color = {'ARM': 's1', 'KAZ': 's2', 'KGZ': 's3', 'RUS': 'black!55'}
@@ -104,9 +104,9 @@ def uee():
         o.append(f'    \\addplot[{color[d]}, line width=1.3pt, mark=none] coordinates {{{fe.coords(sorted(s.items()))}}};')
         fin.append((math.log10(s[max(s)]), f'a {NOMBRES[d]}', max(s)))
     o += [f'    \\node[anchor=west, inner sep=1.5pt, text=black!80] at (axis cs:{x + 0.15},{10 ** y:.1f}) {{{txt}}};'
-          for y, txt, x in separa(fin, 0.13)]
+          for y, txt, x in separa(fin, 0.16)]
     o.append('  \\end{axis}')
-    o += [f'  \\begin{{axis}}[{comunes}, at={{(8.3cm,0cm)}}, title={{(b) Exportaciones a Rusia}}]',
+    o += [f'  \\begin{{axis}}[{comunes}, at={{(8.0cm,0cm)}}, title={{(b) Exportaciones a Rusia}}]',
           *fe.etapas('UEE', ymin, ymax, 2019, anios[-1]),
           f'    \\draw[black!50, line width=0.4pt] (axis cs:2019,100) -- (axis cs:{anios[-1]},100);']
     fin = []
@@ -115,7 +115,7 @@ def uee():
         o.append(f'    \\addplot[{color[p]}, line width=1.3pt, mark=none] coordinates {{{fe.coords(sorted(s.items()))}}};')
         fin.append((math.log10(s[max(s)]), f'de {NOMBRES[p]}', max(s)))
     o += [f'    \\node[anchor=west, inner sep=1.5pt, text=black!80] at (axis cs:{x + 0.15},{10 ** y:.1f}) {{{txt}}};'
-          for y, txt, x in separa(fin, 0.13)]
+          for y, txt, x in separa(fin, 0.16)]
     o += ['  \\end{axis}', '\\end{tikzpicture}']
     escribe('UEE_desvio', o)
     tabla('UEE_desvio', 'Exportaciones de la UE-27 a Armenia, Kazajistán, Kirguistán y Rusia, y exportaciones de los tres primeros a Rusia (millones de USD)',
@@ -582,7 +582,7 @@ def rcep():
     tar = {(i, j): {a: ahs[(i, a)][j] for a in range(2018, 2024) if (i, a) in ahs and j in ahs[(i, a)]} for i, j, _, _ in pares}
     nm = {(i, j): {a: mfn[(i, a)][j] for a in range(2018, 2024) if (i, a) in mfn and j in mfn[(i, a)]} for i, j, _, _ in pares}
     o = fe.cabecera('RCEP', 'enlaces')
-    n, c = len(SEIS), 1.22
+    n, c = len(SEIS), 1.34
     o.append(f'  \\node[anchor=south west, font=\\sffamily\\small, inner sep=0pt] at (0,{0.62:.2f}) {{(a) Acuerdos previos al RCEP}};')
     for k, nombre in enumerate(SEIS[1:]):
         o.append(f'  \\node[anchor=south, inner sep=1pt, text=black!75] at ({1.55 + (k + 0.5) * c:.2f},0.05) {{{nombre}}};')
