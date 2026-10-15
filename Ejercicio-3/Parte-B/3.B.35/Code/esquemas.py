@@ -123,23 +123,25 @@ def escala(x, y, grados, c):
 
 
 def grafico(x0, x1, ytop, g, c):
-    """Miniatura en lo alto de la casilla de resultado: línea (años en los extremos) o barras horizontales."""
+    """Miniatura en lo alto de la casilla de resultado: línea (años bajo el eje, en los extremos) o barras horizontales.
+    En la línea, cada punto lleva su valor arriba (a), abajo (b) o a la izquierda (l)."""
     o, tipo, datos = [], g[0], g[1]
     if tipo == 'linea':
         a0, a1 = datos[0][0], datos[-1][0]
         vmax = max(v for _, v, _ in datos)
-        xa, xb = x0 + 0.62, x1 - 0.62                      # sitio para los años
-        yb, alto = ytop - 0.78, 0.42
+        xa, xb = x0 + (0.65 if datos[0][2] == 'l' else 0.35), x1 - 0.3
+        yb, alto = ytop - 0.72, 0.38
         pts = [(xa + (a - a0) / (a1 - a0) * (xb - xa), yb + v / vmax * alto, v, p) for a, v, p in datos]
         o.append(f'  \\draw[black!30, line width=0.4pt] ({xa:.2f},{yb:.2f}) -- ({xb:.2f},{yb:.2f});')
-        o.append(f'  \\node[anchor=east, inner sep=1pt, text=black!55] at ({xa - 0.02:.2f},{yb + 0.05:.2f}) {{{a0}}};')
-        o.append(f'  \\node[anchor=west, inner sep=1pt, text=black!55] at ({xb + 0.02:.2f},{yb + 0.05:.2f}) {{{a1}}};')
+        o.append(f'  \\node[anchor=north, inner sep=1pt, text=black!55] at ({xa:.2f},{yb - 0.02:.2f}) {{{a0}}};')
+        o.append(f'  \\node[anchor=north, inner sep=1pt, text=black!55] at ({xb:.2f},{yb - 0.02:.2f}) {{{a1}}};')
         o.append(f'  \\draw[{c}, line width=0.9pt] ' + ' -- '.join(f'({px:.2f},{py:.2f})' for px, py, _, _ in pts) + ';')
         for px, py, v, p in pts:
-            et = f'{v:g}'.replace('.', ',')
+            et = f'{v:g}'.replace('.', '{,}')
+            pos = {'a': 'above', 'b': 'below', 'l': 'left'}[p]
             o.append(f'  \\fill[{c}] ({px:.2f},{py:.2f}) circle (1.2pt);')
-            o.append(f'  \\node[{"above" if p == "a" else "below"}, inner sep=1pt] at ({px:.2f},{py:.2f}) {{${et}$}};')
-        return o, 0.95
+            o.append(f'  \\node[{pos}, inner sep=1pt] at ({px:.2f},{py:.2f}) {{${et}$}};')
+        return o, 1.08
     if tipo == 'barras':
         vmax = max(v for _, v, _ in datos)
         xa, largo = x0 + 1.5, (x1 - x0) - 2.45
