@@ -6,7 +6,7 @@ Se amplía a medida que se trabajan los acuerdos. Uso, desde la carpeta del tema
 """
 from pathlib import Path
 
-XLSX = Path(__file__).resolve().parent / 'datos_3B35.xlsx'
+XLSX = Path(__file__).resolve().parent / 'datos' / 'tablas_figuras.xlsx'   # el libro final lo monta Code/libro_datos.py
 
 # (acuerdo, dato, valor, unidad, año, fuente, enlace)
 CIFRAS = [

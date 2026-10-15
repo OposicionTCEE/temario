@@ -93,7 +93,7 @@ CORTE = 1996  # desde este año, WITS (no tiene 1994-1995 para estos países); a
 
 TEMA = Path(__file__).resolve().parent.parent
 CSV = TEMA / 'Code' / 'datos' / 'exportaciones_bilaterales.csv'
-XLSX = TEMA / 'Code' / 'datos_3B35.xlsx'
+XLSX = TEMA / 'Code' / 'datos' / 'tablas_figuras.xlsx'   # tablas de cada figura; el libro final lo monta Code/libro_datos.py
 FUENTE_CT = 'UN Comtrade (CUCI Rev. 1)'
 FUENTE_WITS = 'WITS (Banco Mundial) a partir de UN Comtrade'
 FUENTE_CT_SA = 'UN Comtrade (SA), cuando WITS no tiene el país (Serbia, Montenegro)'

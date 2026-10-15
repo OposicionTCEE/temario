@@ -24,7 +24,7 @@ def serie(ws):
 
 def main():
     from openpyxl import load_workbook
-    wb = load_workbook(TEMA / 'Code' / 'datos_3B35.xlsx', read_only=True)
+    wb = load_workbook(TEMA / 'Code' / 'datos' / 'tablas_figuras.xlsx', read_only=True)
     afr = serie(wb['AFCFTA_intrarregional'])
     puntos = [(a, q) for a, (q, n) in sorted(afr.items()) if q is not None and 1996 <= a <= 2023]
     o = ['% Generado por Code/grafico_africa.py.', '\\definecolor{cafr}{RGB}{60,130,90}', '\\definecolor{cotro}{RGB}{150,150,150}',

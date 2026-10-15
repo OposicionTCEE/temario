@@ -26,7 +26,7 @@ SIN_RU = {'CAN', 'MCCA', 'MERCOSUR', 'CEFTA', 'ASEAN'}
 def main(grupo, anio):
     from openpyxl import load_workbook
     tema = Path(__file__).resolve().parent.parent
-    ws = load_workbook(tema / 'Code' / 'datos_3B35.xlsx')[f'{grupo}_destinos_{anio}']
+    ws = load_workbook(tema / 'Code' / 'datos' / 'tablas_figuras.xlsx')[f'{grupo}_destinos_{anio}']
     filas = [list(r) for r in ws.iter_rows(min_row=5, values_only=True) if r[0]]
     series = SERIES
     if grupo in SIN_RU:

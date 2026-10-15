@@ -15,7 +15,7 @@ HITOS = [(1994, 'NAFTA'), (2001, 'China, OMC'), (2018, 'Aranceles a China'), (20
 def main():
     from openpyxl import load_workbook
     tema = Path(__file__).resolve().parent.parent
-    ws = load_workbook(tema / 'Code' / 'datos_3B35.xlsx')['USA_importaciones']
+    ws = load_workbook(tema / 'Code' / 'datos' / 'tablas_figuras.xlsx')['USA_importaciones']
     cab = [c for c in next(ws.iter_rows(min_row=4, max_row=4, values_only=True))]
     filas = [r for r in ws.iter_rows(min_row=5, values_only=True) if r[0]]
     col = {s: cab.index(s) for s, _, _ in SERIES}

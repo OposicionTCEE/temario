@@ -27,7 +27,7 @@ TEMA = Path(__file__).resolve().parent.parent
 
 def hoja():
     from openpyxl import Workbook, load_workbook
-    x = TEMA / 'Code' / 'datos_3B35.xlsx'
+    x = TEMA / 'Code' / 'datos' / 'tablas_figuras.xlsx'
     wb = load_workbook(x) if x.exists() else Workbook()
     if 'NAFTA_vehiculos' in wb.sheetnames:
         del wb['NAFTA_vehiculos']
