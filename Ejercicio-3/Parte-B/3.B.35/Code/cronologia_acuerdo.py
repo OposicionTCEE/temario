@@ -168,6 +168,85 @@ CRONOLOGIAS = {
                 (2020, 'compromisos de servicios')]),
         ],
     },
+    'ASEAN': {
+        'eje': (1965, 2027, range(1970, 2030, 10)),
+        'etapas': [(1967, 1992, 'origen', 'Alianza frente al comunismo'), (1992, 2007, 'impulso', 'Zona de libre comercio (AFTA)'),
+                   (2007, 2027, 'relanzamiento', 'Carta y Comunidad Económica')],
+        'contexto': [
+            (1975, 'caída de Saigón'), (1978, 'Vietnam invade Camboya'), (1997, 'crisis asiática'), (2001, 'China entra en la OMC'),
+            (2013, 'Franja y Ruta'), (2021, 'golpe en Myanmar'), (2025, 'aranceles de EE.\\,UU.')],
+        'carriles': [
+            ('Miembros', (120, 120, 120), [
+                (1967, 'Indonesia, Malasia, Filipinas, Singapur, Tailandia'), (1984, 'Brunéi'), (1995, 'Vietnam'),
+                (1997, 'Laos y Myanmar'), (1999, 'Camboya'), (2025, 'Timor Oriental')]),
+            ('Integración', (233, 160, 40), [
+                (1976, 'Cumbre de Bali'), (1977, 'acuerdo preferencial'), (1992, 'AFTA'), (2007, 'Carta de la ASEAN'),
+                (2010, 'ATIGA; acuerdo con China'), (2015, 'Comunidad Económica'), (2018, 'aranceles internos casi a cero'),
+                (2022, 'RCEP en vigor')]),
+        ],
+    },
+    'CCG': {
+        'eje': (1977, 2027, range(1980, 2030, 10)),
+        'etapas': [(1981, 2001, 'impulso', 'Alianza y libre comercio'), (2001, 2017, 'relanzamiento', 'Unión aduanera y mercado común'),
+                   (2017, 2021, 'crisis', 'Bloqueo'), (2021, 2027, 'terceros', 'Acuerdos con terceros')],
+        'contexto': [
+            (1979, 'revolución iraní'), (1990, 'invasión de Kuwait'), (2003, 'invasión de Irak'), (2011, 'Primavera Árabe'),
+            (2014, 'caída del petróleo'), (2015, 'guerra de Yemen')],
+        'carriles': [
+            ('Integración', (233, 160, 40), [
+                (1981, 'Carta (Abu Dabi)'), (1983, 'zona de libre comercio'), (2001, 'Acuerdo Económico'), (2003, 'unión aduanera'),
+                (2008, 'mercado común'), (2015, 'unión aduanera plena'), (2026, 'acuerdo con Reino Unido')]),
+            ('Moneda', (185, 125, 20), [(2006, 'sale Omán'), (2009, 'sale Emiratos'), (2010, 'Consejo Monetario')]),
+            ('Seguridad', (30, 75, 135), [
+                (1984, 'Escudo de la Península'), (2011, 'despliegue en Baréin'), (2017, 'bloqueo a Catar'), (2021, 'Al-Ula')]),
+        ],
+    },
+    'RCEP': {
+        'eje': (2010, 2027, range(2010, 2028, 2)),
+        'etapas': [(2011.87, 2022.0, 'origen', 'Negociación y ratificación'), (2022.0, 2027, 'impulso', 'Aplicación')],
+        'contexto': [
+            (2013.7, 'Franja y Ruta'), (2016.1, 'firma del TPP'), (2017.05, 'EE.\\,UU. sale del TPP'),
+            (2018.5, 'guerra comercial EE.\\,UU.-China'), (2020.2, 'pandemia'), (2025.3, 'aranceles de EE.\\,UU.')],
+        'carriles': [
+            ('Acuerdo', (233, 160, 40), [
+                (2011.87, 'propuesta de la ASEAN'), (2012.87, 'ASEAN y seis socios'), (2019.87, 'sale la India'),
+                (2020.87, 'firma (15)'), (2022.0, 'en vigor (10)'), (2023.42, 'en vigor en Filipinas'),
+                (2025.0, 'procedimiento de adhesión'), (2026.7, 'cuatro candidatos')]),
+        ],
+    },
+    'CPTPP': {
+        'eje': (2004, 2027, range(2005, 2030, 5)),
+        'etapas': [(2005.45, 2017.05, 'origen', 'Del P4 al TPP'), (2017.05, 2018.99, 'relanzamiento', 'Rescate'),
+                   (2018.99, 2027, 'impulso', 'CPTPP y adhesiones')],
+        'contexto': [
+            (2008.7, 'crisis financiera'), (2011.9, 'giro de EE.\\,UU. hacia Asia'), (2017.05, 'Trump sale del TPP'),
+            (2018.5, 'guerra comercial EE.\\,UU.-China'), (2022.38, 'IPEF'), (2025.3, 'aranceles de EE.\\,UU.')],
+        'carriles': [
+            ('Acuerdo', (233, 160, 40), [
+                (2005.45, 'P4: Brunéi, Chile, Nueva Zelanda, Singapur'), (2008.7, 'se suma EE.\\,UU.'), (2010.2, 'negociación del TPP'),
+                (2016.1, 'firma del TPP (12)'), (2017.4, 'los once lo rescatan'), (2018.18, 'firma del CPTPP'), (2018.99, 'en vigor')]),
+            ('Adhesiones', (30, 75, 135), [
+                (2021.1, 'solicita Reino Unido'), (2021.7, 'China y Taiwán'), (2024.95, 'entra Reino Unido'),
+                (2026.4, 'Costa Rica cierra su adhesión')]),
+        ],
+    },
+    'UEE': {
+        'eje': (1990, 2027, range(1990, 2030, 10)),
+        'etapas': [(1991.95, 2010, 'origen', 'CEI e intentos de unión'), (2010, 2022.15, 'impulso', 'Unión aduanera y UEE'),
+                   (2022.15, 2027, 'crisis', 'Guerra y sanciones')],
+        'contexto': [
+            (1991.95, 'disolución de la URSS'), (2009.4, 'Asociación Oriental de la UE'), (2014.2, 'anexión de Crimea'),
+            (2022.15, 'invasión de Ucrania')],
+        'carriles': [
+            ('Miembros', (120, 120, 120), [
+                (2010, 'Rusia, Bielorrusia, Kazajistán'), (2015, 'Armenia y Kirguistán'), (2025, 'Armenia aspira a la UE')]),
+            ('Integración', (233, 160, 40), [
+                (1994, 'propuesta de Nazarbáyev'), (1995, 'acuerdo de unión aduanera'), (2000, 'Comunidad Económica Euroasiática'),
+                (2010, 'arancel exterior común'), (2012, 'Espacio Económico Común'), (2015, 'UEE en vigor'),
+                (2015.9, 'Kazajistán entra en la OMC')]),
+            ('Terceros', (30, 75, 135), [(2016.8, 'Vietnam'), (2019.8, 'Irán, provisional'), (2025.4, 'Irán, pleno'), (2026.8, 'Emiratos')]),
+        ],
+    },
 }
 
 
