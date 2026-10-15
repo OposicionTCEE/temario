@@ -59,8 +59,9 @@ def uee():
     print('UEE intensidad', [(a, round(c, 1), round(i, 1)) for a, c, p, i in it][::3])
     # remesas
     w = ib.wdi()
-    paises = [('KGZ', True), ('ARM', True), ('KAZ', True), ('TJK', False), ('UZB', False)]
-    color = {'KGZ': 's1', 'ARM': 's2', 'KAZ': 's3', 'TJK': 's4', 'UZB': 's5'}
+    # Kazajistán, país de inmigración, apenas recibe remesas (0,1-0,4 % del PIB): queda en la tabla, no en la figura
+    paises = [('KGZ', True), ('ARM', True), ('TJK', False), ('UZB', False)]
+    color = {'KGZ': 's1', 'ARM': 's2', 'TJK': 's3', 'UZB': 's4'}
     rem = {e: {a: w[(e, 'BX.TRF.PWKR.DT.GD.ZS', a)] for a in range(1995, 2025) if (e, 'BX.TRF.PWKR.DT.GD.ZS', a) in w} for e, _ in paises}
     ult = max(max(v) for v in rem.values())
     hi = fe.techo(max(max(v.values()) for v in rem.values()), 10)
@@ -76,7 +77,9 @@ def uee():
     escribe('UEE_remesas', o)
     tabla('UEE_remesas', 'Remesas personales recibidas, % del PIB: miembros de la UEE con más emigración a Rusia y no miembros de Asia central',
           'Banco Mundial (WDI), BX.TRF.PWKR.DT.GD.ZS. Tayikistán y Uzbekistán no son miembros (Uzbekistán es observador).',
-          ['Año'] + [e for e, _ in paises], [(a, *[round(rem[e][a], 2) if a in rem[e] else None for e, _ in paises]) for a in range(1995, ult + 1)])
+          ['Año'] + [e for e, _ in paises] + ['KAZ'],
+          [(a, *[round(rem[e][a], 2) if a in rem[e] else None for e, _ in paises],
+            round(w[('KAZ', 'BX.TRF.PWKR.DT.GD.ZS', a)], 2) if ('KAZ', 'BX.TRF.PWKR.DT.GD.ZS', a) in w else None) for a in range(1995, ult + 1)])
     print('remesas', {e: {a: round(rem[e][a], 1) for a in (2005, 2013, 2015, 2021, 2022, 2023, ult) if a in rem[e]} for e, _ in paises})
     # desvío por sanciones
     t = dw.tabla('comercio', 'X', 'Total')
