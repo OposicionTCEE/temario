@@ -168,8 +168,8 @@ def main(clave):
 
     # --- Rótulo del bloque y cadena: tesis -> justificación -> medios ---
     o.append(f'  \\node[anchor=south west, inner sep=0pt, font=\\small\\bfseries, text=eGri] at (0,0) {{{B["titulo"]}}};')
-    y0, h0 = -0.2, 2.75
-    xs = [(0.0, 3.2), (3.6, 9.3), (9.7, W)]
+    y0, h0 = -0.2, B.get('alto_cabeza', 2.9)
+    xs = [(0.0, 2.9), (3.25, 9.55), (9.9, W)]
     for (xa, xb), cab, cont in [(xs[0], 'Tesis', B['tesis']), (xs[1], 'Justificación', B['justificacion'])]:
         o.append(f'  \\draw[eGri, fill=eGri!8, line width=0.6pt, rounded corners=2pt] ({xa:.2f},{y0:.2f}) rectangle ({xb:.2f},{y0 - h0:.2f});')
         o.append(texto(xa + 0.1, y0 - 0.1, xb - xa - 0.2, f'\\textbf{{\\small {cab}}}\\\\[1pt] {cont}'))
@@ -226,7 +226,7 @@ def main(clave):
         y -= 0.06
 
     # --- Balance y glosario ---
-    o.append(f'  \\node[anchor=north west, draw=eGri, line width=1.1pt, rounded corners=2pt, text width={W - 0.2:.2f}cm, align=left, '
+    o.append(f'  \\node[anchor=north west, draw=eGri, fill=white, line width=1.1pt, rounded corners=2pt, text width={W - 0.2:.2f}cm, align=left, '
              f'inner sep=0.1cm] (bal) at (0,{y:.2f}) {{$\\Rightarrow$ \\textbf{{Balance del bloque}}: {B["balance"]}}};')
     o.append(f'  \\node[anchor=north west, text width={W:.2f}cm, align=left, inner sep=0pt, text=black!65] at '
              f'([yshift=-0.2cm]bal.south west) {{\\textit{{Glosario.}} {B["glosario"]} En la escala: círculo hueco, previsto; '
