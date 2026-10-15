@@ -198,7 +198,7 @@ CRONOLOGIAS = {
                 (2008, 'mercado común'), (2015, 'unión aduanera plena'), (2026, 'acuerdo con Reino Unido')]),
             ('Moneda', (105, 65, 140), [(2006, 'sale Omán'), (2009, 'sale Emiratos'), (2010, 'Consejo Monetario')]),
             ('Seguridad', (30, 75, 135), [
-                (1984, 'Escudo de la Península'), (2011, 'despliegue en Baréin'), (2017, 'bloqueo a Catar'), (2021, 'Al-Ula')]),
+                (1984, 'Escudo de la Península'), (2011, 'despliegue en Bahréin'), (2017, 'bloqueo a Catar'), (2021, 'Al-Ula')]),
         ],
     },
     'RCEP': {
