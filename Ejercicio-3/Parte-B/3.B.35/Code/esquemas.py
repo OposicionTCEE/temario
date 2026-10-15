@@ -147,35 +147,34 @@ BLOQUES = {
         'tesis': (r'Nacen de una \textbf{afinidad política o identitaria}, no de un cálculo económico: sus '
                   r'\textbf{ambiciones} van por delante del comercio'),
         'justificacion': (r'\textbf{Compromiso político}: un tratado con los vecinos encarece abandonar el régimen (FERNÁNDEZ y '
-                          r'PORTES, 1998) $\Rightarrow$ cláusulas democráticas\\'
+                          r'PORTES, 1998)\\'
                           r'\textbf{Proyecto identitario}: el mercado común como instrumento de unidad\\'
-                          r'\textbf{Pero}: entre exportadores de materias primas, poca complementariedad $\Rightarrow$ las '
-                          r'instituciones van por delante del comercio'),
+                          r'\textbf{Pero}: sin complementariedad, las instituciones van por delante del comercio'),
         'medios': [
-            ('A', r'\textbf{Afinidad de régimen político}: anclar la democracia y la economía de mercado tras las dictaduras '
-                  r'o el bloque soviético $\to$ MERCOSUR, CEFTA'),
+            ('A', r'\textbf{Afinidad de régimen}: anclar la democracia y el mercado tras las dictaduras o el bloque '
+                  r'soviético $\to$ MERCOSUR, CEFTA'),
             ('B', r'\textbf{Identidad panregional}: dar forma económica al panafricanismo (Unión Africana) y al panarabismo '
                   r'(Liga Árabe) $\to$ AfCFTA, PAFTA'),
         ],
         'grupos': [
             ('A', 'Afinidad de régimen político', [
                 {'titulo': 'Mercado Común del Sur (MERCOSUR, 1991)', 'color': (30, 75, 135),
-                 'objetivo': (r'Cimentar la \textbf{reconciliación} entre Argentina y Brasil y anclar la \textbf{democracia} '
-                              r'recuperada: la liberalización fue el instrumento'),
+                 'objetivo': (r'\textbf{Reconciliar} a Argentina y Brasil y anclar la \textbf{democracia}: el comercio, '
+                              r'instrumento'),
                  'escala': {'ZLC': 'p', 'UA': 'p', 'MC': 'v'},
                  'hitos': [('1985', 'Foz de Iguazú'), ('1991', 'Tratado de Asunción'), ('1994', 'Ouro Preto: AEC'),
                            ('1998', 'Ushuaia: democracia')],
                  'gobierno': {
-                     'nodos': [('cmc', 0.6, 0, 'intergub', 'Consejo', False),
-                               ('gmc', 2.55, 0, 'intergub', 'Grupo Mercado Común', False),
+                     'nodos': [('cmc', 0.5, 0, 'intergub', 'Consejo', False),
+                               ('gmc', 2.65, 0, 'intergub', 'Grupo Mercado Común', False),
                                ('tpr', 0.6, 1, 'judicial', 'Tribunal', False),
                                ('par', 1.85, 1, 'parlamento', 'Parlasur', True),
                                ('foc', 3.2, 1, 'financiero', 'FOCEM', False)],
                      'flechas': [('cmc', 'gmc')],
                      'nota': r'Consenso; sin aplicación directa'},
-                 'valoracion': [r'Cuota: $9\%$ (1990) $\to$ $25\%$ (1998) $\to$ $11{,}3\%$ (2023); ¿desviación? (YEATS, 1998)',
-                                r'Devaluaciones del real (1999) y del peso (2002): sin monedas estables no hay comercio',
-                                r'La negociación conjunta choca con Uruguay y con Argentina (acuerdo con EE.\,UU., 2026)'],
+                 'valoracion': [r'Cuota: $25\%$ (1998) $\to$ $11\%$ (2023); ¿desviación? (YEATS, 1998)',
+                                r'Devaluaciones de 1999 y 2002: sin monedas estables no hay comercio',
+                                r'Negociación conjunta en crisis (Uruguay, Argentina)'],
                  'ue': (r'\textbf{Geopolítica}: acuerdo (2026) para diversificar y asegurar materias primas críticas; pesa el '
                         r'$2\%$ del comercio de la UE'),
                  'tesis': (r'\textbf{Sí} en lo político; en el comercio, solo mientras hubo voluntad política y monedas '
@@ -185,7 +184,7 @@ BLOQUES = {
                               r'\textbf{antesala} de la UE'),
                  'escala': {'ZLC': 'a', 'UA': None, 'MC': None},
                  'hitos': [('1992', 'Cracovia: Visegrado'), ('2004', 'se vacía hacia la UE'), ('2006', 'CEFTA 2006: Balcanes'),
-                           ('2020', 'Mercado Regional Común')],
+                           ('2020', 'cuatro libertades')],
                  'gobierno': {
                      'nodos': [('cm', 0.85, 0, 'intergub', 'Comité Mixto', False),
                                ('sec', 2.75, 0, 'tecnico', 'Secretaría', False),
@@ -193,17 +192,16 @@ BLOQUES = {
                                ('dif', 2.75, 1, 'judicial', 'Diferencias', True)],
                      'flechas': [('sec', 'cm')],
                      'nota': r'Consenso; lo financia la UE'},
-                 'valoracion': [r'Cumplió: todos los fundadores salvo Macedonia del Norte entraron en la UE',
-                                r'Cuota: $22{,}5\%$ (2007) $\to$ $15\%$ (2023); la UE compra el $68\%$',
-                                r'Afinidad frágil: Kosovo contra Serbia (arancel del $100\%$, 2018-2020)'],
+                 'valoracion': [r'Cumplió: los fundadores, salvo Macedonia del Norte, están en la UE',
+                                r'Cuota: $22{,}5\%$ $\to$ $15\%$; la UE compra el $68\%$',
+                                r'Afinidad frágil: Kosovo contra Serbia (2018-2020)'],
                  'ue': (r'\textbf{Geopolítica}, con la adhesión como horizonte: frente a Rusia y China; pesa el $1{,}7\%$ del '
                         r'comercio de la UE'),
                  'tesis': r'\textbf{Sí}: su éxito se mide por su \textbf{desaparición}; el mercado regional nunca fue el objetivo'},
             ]),
             ('B', 'Identidad panregional', [
                 {'titulo': 'Área Continental Africana de Libre Comercio (AfCFTA, 2018)', 'color': (60, 140, 90),
-                 'objetivo': (r'Dar forma económica al \textbf{panafricanismo}: un mercado único de $54$ economías, paso hacia '
-                              r'la Comunidad Económica Africana'),
+                 'objetivo': r'Dar forma económica al \textbf{panafricanismo}: un mercado único de $54$ economías',
                  'escala': {'ZLC': 'p', 'UA': 'v', 'MC': 'v'},
                  'hitos': [('2012', 'decisión en Addis Abeba'), ('2018', 'firma en Kigali'), ('2021', 'comienza el comercio'),
                            ('2025', '39 países ya comercian')],
@@ -215,16 +213,16 @@ BLOQUES = {
                                ('pap', 3.35, 1, 'financiero', 'PAPSS', False)],
                      'flechas': [('asa', 'min')],
                      'nota': r'Sobre ocho comunidades regionales'},
-                 'valoracion': [r'Cuota: $12\%$ (finales de los noventa) $\to$ $20\%$ (2023), antes del acuerdo',
-                                r'Poca \textbf{complementariedad}: materias primas fuera; manufacturas, dentro ($41$-$54\%$)',
-                                r'Ganancias \textbf{dinámicas}: con IED, exportaciones intraafricanas $+109\%$ en 2035 (Banco Mundial, 2022)'],
+                 'valoracion': [r'Cuota: $12\%$ $\to$ $20\%$ (2023), anterior al acuerdo',
+                                r'Poca \textbf{complementariedad}: materias primas fuera, manufacturas dentro',
+                                r'Ganancias \textbf{dinámicas}: con IED, $+109\%$ de comercio intraafricano en 2035'],
                  'ue': (r'\textbf{Geopolítica} con afinidad: \textit{Global Gateway} frente a la Franja y la Ruta china; '
                         r'$6{,}8\%$ del comercio de la UE'),
                  'tesis': (r'\textbf{Sí} para firmar y ratificar casi en bloque; \textbf{no}, todavía, para aplicar: la identidad '
                            r'no crea complementariedad')},
                 {'titulo': 'Zona de Libre Comercio Pan-Árabe (PAFTA, 1998)', 'color': (150, 90, 160),
-                 'objetivo': (r'Dar contenido económico al \textbf{panarabismo} de la Liga Árabe: la versión menos ambiciosa '
-                              r'del mercado común árabe'),
+                 'objetivo': (r'Dar contenido económico al \textbf{panarabismo} de la Liga Árabe, en su versión menos '
+                              r'ambiciosa'),
                  'escala': {'ZLC': 'a', 'UA': 'v', 'MC': 'v'},
                  'hitos': [('1964', 'Mercado Común Árabe'), ('1998', 'programa ejecutivo'), ('2005', 'aranceles cero'),
                            ('2017', 'bloqueo a Catar')],
@@ -235,8 +233,8 @@ BLOQUES = {
                                ('fma', 2.75, 1, 'financiero', 'Fondo Monetario', False)],
                      'flechas': [('sg', 'ces')],
                      'nota': r'Consenso; sin arbitraje eficaz'},
-                 'valoracion': [r'Cuota: $6\%$ (1998) $\to$ $13\%$ (2016) $\to$ $10\%$ (2023): baja',
-                                r'Sin combustibles, un tercio va a otros miembros ($33\%$): el petróleo se vende fuera',
+                 'valoracion': [r'Cuota: $6\%$ (1998) $\to$ $13\%$ (2016) $\to$ $10\%$ (2023)',
+                                r'Sin combustibles, un tercio va a los socios: el petróleo se vende fuera',
                                 r'Cada subregión mira fuera: el Golfo, a Asia; el Magreb, a la UE'],
                  'ue': (r'\textbf{Geopolítica}: vecindad (estabilidad, migración, energía), nunca con el bloque; $7{,}5\%$ del '
                         r'comercio de la UE'),
@@ -250,24 +248,23 @@ BLOQUES = {
     },
     'geoestrategico': {
         'titulo': 'Integración por motivos geoestratégicos',
-        'hueco': 0.3,
+        'hueco': 0.26,
         'tesis': (r'La integración como \textbf{instrumento de política exterior}: avanza con la geopolítica, y su comercio '
                   r'mira \textbf{fuera del bloque}'),
-        'justificacion': (r'\textbf{Comercio = poder}: crea dependencias asimétricas; quien concentra los intercambios de sus '
-                          r'socios gana influencia (HIRSCHMAN, 1945)\\'
-                          r'\textbf{Se juzgan} por su efecto en el equilibrio de poder, no solo por el comercio que crean\\'
+        'justificacion': (r'\textbf{Comercio = poder}: quien concentra los intercambios de sus socios gana influencia '
+                          r'(HIRSCHMAN, 1945)\\'
+                          r'\textbf{Se juzgan} por el equilibrio de poder, no solo por el comercio\\'
                           r'\textbf{Complementariedad}: casi siempre baja'),
         'medios': [
-            ('A', r'\textbf{Seguridad frente a una amenaza}: Estados débiles que se unen frente al comunismo o a Irán, y solo '
-                  r'después comercian $\to$ ASEAN, CCG'),
-            ('B', r'\textbf{Esferas de influencia}: grandes potencias que compiten por escribir las reglas y atar a sus '
-                  r'vecinos $\to$ RCEP, CPTPP, UEE'),
+            ('A', r'\textbf{Seguridad frente a una amenaza}: Estados débiles frente al comunismo o a Irán; el comercio, '
+                  r'después $\to$ ASEAN, CCG'),
+            ('B', r'\textbf{Esferas de influencia}: potencias que compiten por escribir las reglas y atar a sus vecinos '
+                  r'$\to$ RCEP, CPTPP, UEE'),
         ],
         'grupos': [
             ('A', 'Seguridad frente a una amenaza', [
                 {'titulo': 'Asociación de Naciones del Sudeste Asiático (ASEAN, 1967)', 'color': (200, 76, 58),
-                 'objetivo': (r'Solidaridad de cinco gobiernos no comunistas frente a Indochina: el \textbf{crecimiento como '
-                              r'defensa} frente a la subversión'),
+                 'objetivo': (r'Cinco gobiernos no comunistas frente a Indochina: el \textbf{crecimiento como defensa}'),
                  'escala': {'ZLC': 'a', 'UA': None, 'MC': 'v'},
                  'hitos': [('1967', 'Declaración de Bangkok'), ('1992', 'zona de libre comercio'), ('2015', 'Comunidad Económica')],
                  'gobierno': {
@@ -277,16 +274,15 @@ BLOQUES = {
                                ('cmi', 2.75, 1, 'financiero', 'Chiang Mai', False)],
                      'flechas': [('cum', 'cc')],
                      'nota': r'Consenso y no injerencia'},
-                 'valoracion': [r'Cuota: $21\%$ (1967) $\to$ $26{,}5\%$ (máximo) $\to$ $22\%$ (2023): apenas cambia',
-                                r'\textbf{Eslabón} de la fábrica china: insumos a China; bienes finales a EE.\,UU. ($90\%$)',
-                                r'La preferencia frente a China se diluye: de $1{,}8$ a $0{,}4$ puntos'],
+                 'valoracion': [r'Cuota estancada: $21\%$ (1967), $22\%$ (2023)',
+                                r'\textbf{Eslabón} de la fábrica china: insumos a China, bienes finales a EE.\,UU.',
+                                r'Ventaja frente a China: de $1{,}8$ a $0{,}4$ puntos'],
                  'ue': (r'\textbf{Económica}, teñida de geopolítica: acuerdos bilaterales (Singapur, Vietnam, Indonesia); '
                         r'$5\%$ del comercio de la UE'),
                  'tesis': (r'\textbf{Sí} en estabilidad; el comercio mira fuera, y la rivalidad China-EE.\,UU. amenaza su '
                            r'centralidad')},
                 {'titulo': 'Consejo de Cooperación del Golfo (CCG, 1981)', 'color': (60, 140, 90),
-                 'objetivo': (r'\textbf{Alianza de seguridad} de seis monarquías frente a la revolución iraní y la guerra '
-                              r'Irán-Irak; la economía, complemento'),
+                 'objetivo': r'\textbf{Alianza de seguridad} de seis monarquías frente a Irán; la economía, complemento',
                  'escala': {'ZLC': 'a', 'UA': 'a', 'MC': 'p'},
                  'hitos': [('1981', 'fundación en Riad'), ('2008', 'mercado común'), ('2015', 'unión aduanera plena')],
                  'gobierno': {
@@ -296,18 +292,17 @@ BLOQUES = {
                                ('mon', 2.75, 1, 'financiero', 'Consejo Monetario', True)],
                      'flechas': [('sg', 'sup')],
                      'nota': r'Unanimidad en lo importante'},
-                 'valoracion': [r'Cuota (datos espejo): $3\%$ (1998) $\to$ $8\%$ (2023): economías parecidas',
-                                r'Vende a Asia (China, del $2\%$ al $19\%$) y \textbf{se arma en Occidente} (EE.\,UU., $60$-$66\%$)',
-                                r'Hidrocarburos: $81$-$93\%$ de lo exportado por Arabia Saudí, Catar y Kuwait'],
-                 'ue': (r'\textbf{Geopolítica}: energía (gas frente al ruso) y seguridad; negociación comercial parada desde '
-                        r'2008; $3{,}1\%$ del comercio de la UE'),
+                 'valoracion': [r'Cuota baja: $3\%$ (1998) $\to$ $8\%$ (2023)',
+                                r'Vende a Asia (China, $19\%$) y \textbf{se arma en Occidente} (EE.\,UU., $60$-$66\%$)',
+                                r'Hidrocarburos: hasta el $93\%$ de lo exportado'],
+                 'ue': (r'\textbf{Geopolítica}: energía y seguridad; negociación comercial parada desde 2008; $3{,}1\%$ del '
+                        r'comercio de la UE'),
                  'tesis': (r'\textbf{Sí}: la amenaza dio cohesión y unión aduanera, pero depende de la política (bloqueo a '
                            r'Catar, 2017)')},
             ]),
             ('B', 'Construcción de esferas de influencia', [
                 {'titulo': 'Asociación Económica Integral Regional (RCEP, 2022)', 'color': (233, 160, 40),
-                 'objetivo': (r'Asegurar a \textbf{China} un espacio económico propio en Asia, sin EE.\,UU. ni la India, bajo '
-                              r'el paraguas de la ASEAN'),
+                 'objetivo': r'Asegurar a \textbf{China} un espacio propio en Asia, sin EE.\,UU. ni la India',
                  'escala': {'ZLC': 'p', 'UA': None, 'MC': None},
                  'hitos': [('2012', 'lanzamiento (ASEAN)'), ('2019', 'sale la India'), ('2022', 'entra en vigor')],
                  'gobierno': {
@@ -317,15 +312,14 @@ BLOQUES = {
                                ('pan', 2.75, 1, 'judicial', 'Paneles', False)],
                      'flechas': [('min', 'cc')],
                      'nota': r'Método ASEAN: consenso'},
-                 'valoracion': [r'El mayor bloque: $28\%$ del PIB mundial; cuota interna del $31\%$, ya existente',
-                                r'Solo crea dos enlaces (China-Japón, Japón-Corea), con $0{,}3$-$0{,}6$ puntos de preferencia',
-                                r'\textbf{Dependencia asimétrica} de China: $14$-$34\%$ del comercio de cada miembro (HIRSCHMAN)'],
+                 'valoracion': [r'Mayor bloque ($28\%$ del PIB), pero libera poco',
+                                r'Solo dos enlaces nuevos: China-Japón y Japón-Corea',
+                                r'\textbf{Dependencia asimétrica} de China (HIRSCHMAN)'],
                  'ue': (r'\textbf{Económica}: sus miembros pesan el $26\%$ del comercio de la UE; riesgo de desviación y '
                         r'acuerdos con cinco de ellos'),
                  'tesis': (r'\textbf{Sí}: libera poco, pero consolida a \textbf{China} como centro de Asia en lugar de Japón')},
                 {'titulo': 'Acuerdo Amplio y Progresista de Asociación Transpacífico (CPTPP, 2018)', 'color': (30, 75, 135),
-                 'objetivo': (r'Escribir las \textbf{reglas} del comercio de Asia-Pacífico antes que China; sin EE.\,UU., un '
-                              r'club liderado por Japón'),
+                 'objetivo': r'Escribir las \textbf{reglas} de Asia-Pacífico antes que China; sin EE.\,UU., lo lidera Japón',
                  'escala': {'ZLC': 'a', 'UA': None, 'MC': None},
                  'hitos': [('2017', r'EE.\,UU. deja el TPP'), ('2018', 'CPTPP en vigor'), ('2024', 'entra Reino Unido')],
                  'gobierno': {
@@ -335,15 +329,14 @@ BLOQUES = {
                                ('isds', 2.75, 1, 'judicial', 'Inversiones', True)],
                      'flechas': [('com', 'cmt')],
                      'nota': r'Ministros, por consenso'},
-                 'valoracion': [r'Sin EE.\,UU., $70\%$ menos de ganancias; aun así, $\approx 1\%$ más de renta para sus miembros',
-                                r'Comercian poco entre sí ($9\%$): su valor está en las \textbf{reglas}',
-                                r'Cola de candidatos (China, Taiwán): ¿quién escribe las reglas en Asia?'],
+                 'valoracion': [r'Sin EE.\,UU., $70\%$ menos de ganancias; aun así, $\approx 1\%$ de renta',
+                                r'Comercio interno del $9\%$: su valor está en las \textbf{reglas}',
+                                r'Candidatos (China, Taiwán): ¿quién escribe las reglas?'],
                  'ue': (r'\textbf{Afinidad de reglas}: ya tiene acuerdos con casi todos ($20\%$ de su comercio); diálogo '
                         r'desde 2025 frente al proteccionismo'),
                  'tesis': r'\textbf{Sí}: fija las reglas sin EE.\,UU., aunque el comercio que crea es poco'},
                 {'titulo': 'Unión Económica Euroasiática (UEE, 2015)', 'color': (150, 90, 160),
-                 'objetivo': (r'Instrumento con el que \textbf{Rusia} ($80\%$ del PIB) intenta reconstruir su esfera de '
-                              r'influencia postsoviética'),
+                 'objetivo': r'Instrumento de \textbf{Rusia} ($80\%$ del PIB) para reconstruir su esfera postsoviética',
                  'escala': {'ZLC': 'a', 'UA': 'p', 'MC': 'p'},
                  'hitos': [('1994', 'idea de Nazarbáyev'), ('2010', 'unión aduanera'), ('2015', 'Unión Económica')],
                  'gobierno': {
@@ -353,9 +346,9 @@ BLOQUES = {
                                ('ban', 2.75, 1, 'financiero', 'Banco', False)],
                      'flechas': [('sup', 'com')],
                      'nota': r'Forma supranacional, fondo ruso'},
-                 'valoracion': [r'Cuota: $9$-$13\%$ desde 2000, sin salto en 2010 ni en 2015: no crea comercio',
-                                r'Movilidad laboral, lo más avanzado; pero Tayikistán, fuera, recibe más remesas',
-                                r'Tras 2022, vía de \textbf{desvío}: exportaciones de la UE a Kirguistán $\times 9$ (2021-2023)'],
+                 'valoracion': [r'Cuota: $9$-$13\%$ desde 2000, sin salto: no crea comercio',
+                                r'Movilidad laboral avanzada, pero Tayikistán, fuera, recibe más remesas',
+                                r'Tras 2022, vía de \textbf{desvío}: UE a Kirguistán $\times 9$'],
                  'ue': (r'\textbf{Geopolítica en negativo}: sin relación formal, para no legitimar la esfera rusa; vigila la '
                         r'elusión de sanciones'),
                  'tesis': (r'\textbf{Sí} para Rusia, como esfera de influencia; \textbf{no} como mercado: el comercio interno no '
