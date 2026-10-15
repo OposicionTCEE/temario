@@ -106,6 +106,68 @@ CRONOLOGIAS = {
                 (2021, 'Suiza abandona el acuerdo marco'), (2026, 'Bilaterales III; Islandia no reanuda')]),
         ],
     },
+    'MERCOSUR': {
+        'eje': (1984, 2027, range(1990, 2030, 10)),
+        'etapas': [(1985, 1991, 'origen', 'Acercamiento'), (1991, 1998, 'impulso', 'Auge'), (1998, 2003, 'crisis', 'Crisis'),
+                   (2003, 2019, 'relanzamiento', 'Giro político y social'), (2019, 2027, 'terceros', 'Acuerdos con terceros')],
+        'contexto': [
+            (1985, 'democracia en Brasil'), (1999, 'devaluación del real'), (2001, 'crisis argentina'),
+            (2003, 'auge de las materias primas'), (2025, 'aranceles de EE.\\,UU.')],
+        'carriles': [
+            ('Miembros', (120, 120, 120), [
+                (1991, 'Argentina, Brasil, Paraguay, Uruguay'), (2012, 'entra Venezuela; Paraguay, suspendido'),
+                (2016, 'Venezuela, suspendida'), (2024, 'Bolivia, miembro pleno')]),
+            ('Comercio', (233, 160, 40), [
+                (1985, 'Declaración de Foz de Iguazú'), (1991, 'Tratado de Asunción'), (1995, 'arancel externo común'),
+                (2019, 'acuerdo político con la UE'), (2025, 'acuerdo con la EFTA'), (2026, 'acuerdo con la UE, provisional')]),
+        ],
+    },
+    'CEFTA': {   # entradas y salidas en detalle: CEFTA_miembros (valoración)
+        'eje': (1989, 2027, range(1990, 2030, 10)),
+        'etapas': [(1992, 2006, 'impulso', 'CEFTA de Europa central'), (2006, 2020, 'relanzamiento', 'CEFTA 2006: Balcanes y Moldavia'),
+                   (2020, 2027, 'impulso', 'Mercado Regional')],
+        'contexto': [
+            (1991, 'disolución del COMECON'), (1995, 'paz de Dayton'), (1999, 'Pacto de Estabilidad'), (2003, 'cumbre de Salónica'),
+            (2008, 'independencia de Kosovo'), (2014, 'Proceso de Berlín'), (2022, 'invasión rusa de Ucrania')],
+        'carriles': [
+            ('Miembros', (120, 120, 120), [
+                (1992, 'Polonia, Hungría, Checoslovaquia'), (2004, 'salen hacia la UE'),
+                (2007, 'Balcanes occidentales y Moldavia'), (2013, 'sale Croacia')]),
+            ('Comercio\\\\y normas', (233, 160, 40), [
+                (1992, 'firma en Cracovia'), (2006, 'CEFTA 2006 (Bucarest)'), (2018, 'facilitación del comercio'),
+                (2020, 'Mercado Regional Común'), (2021, 'servicios'), (2025, 'solución de diferencias, en ratificación')]),
+        ],
+    },
+    'AfCFTA': {   # sustituye a la de Code/cronologia_bloque.py (sin carril de instituciones)
+        'eje': (2011, 2027, range(2012, 2028, 2)),
+        'etapas': [(2011, 2019.41, 'origen', 'Negociación'), (2019.41, 2027, 'impulso', 'Aplicación')],
+        'contexto': [
+            (2015.1, 'Agenda 2063'), (2018.1, 'protocolo de libre circulación de la UA'), (2020.2, 'pandemia de COVID-19'),
+            (2022.05, 'sistema de pagos PAPSS'), (2025.3, 'aranceles de EE.\\,UU.')],
+        'carriles': [
+            ('Firma y\\\\ratificación', (30, 75, 135), [
+                (2018.22, 'firma en Kigali (44 países)'), (2019.41, 'entra en vigor (24)'), (2019.52, 'firma Nigeria'),
+                (2026.75, '50 de 54 ratificaciones')]),
+            ('Comercio', (233, 160, 40), [
+                (2012.05, 'decisión de Addis Abeba'), (2015.45, 'inicio de las negociaciones'), (2021.0, 'comienza el comercio'),
+                (2022.78, 'comercio guiado (8 países)'), (2023.12, 'protocolos de inversión y competencia'),
+                (2024.13, 'comercio digital'), (2025.29, 'fin de la fase guiada (39)')]),
+        ],
+    },
+    'PAFTA': {
+        'eje': (1943, 2027, range(1950, 2030, 10)),
+        'etapas': [(1945, 1997, 'origen', 'Intentos de mercado común'), (1997, 2005, 'impulso', 'Desarme'),
+                   (2005, 2027, 'crisis', 'Estancamiento y conflictos')],
+        'contexto': [
+            (1945, 'nace la Liga Árabe'), (1973, 'crisis del petróleo'), (1990, 'invasión de Kuwait'), (2004, 'Acuerdo de Agadir'),
+            (2011, 'Primavera Árabe'), (2014, 'caída del precio del petróleo')],
+        'carriles': [
+            ('Comercio\\\\y servicios', (233, 160, 40), [
+                (1964, 'Mercado Común Árabe'), (1981, 'acuerdo de facilitación del comercio'), (1997, 'programa ejecutivo'),
+                (1998, 'entra en vigor'), (2001, 'calendario acelerado'), (2004, 'Ronda de Beirut (servicios)'),
+                (2005, 'aranceles cero'), (2009, 'se suma Argelia'), (2020, 'compromisos de servicios')]),
+        ],
+    },
 }
 
 
