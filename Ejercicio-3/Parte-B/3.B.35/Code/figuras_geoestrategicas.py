@@ -518,8 +518,8 @@ def rcep():
     orden = sorted([p for p in miembros if p in fin], key=lambda p: -fin[p][1])
     o = fe.cabecera('RCEP', 'china')
     # (a) dumbbell: peso de China y de Japón en el comercio de cada miembro, hacia 2000 y hacia 2023
-    x0, ancho, paso = 2.35, 5.2, 0.27
-    xmax = 50
+    x0, ancho, paso = 2.35, 5.0, 0.3
+    xmax = 40
     def X(v):
         return x0 + ancho * v / xmax
     ytop = 0.0
@@ -544,12 +544,25 @@ def rcep():
           f'  \\draw[black!60, fill=white, line width=0.7pt] (3.0,{yl:.2f}) circle (1.9pt); \\node[anchor=west, inner sep=1pt] at (3.12,{yl:.2f}) {{2000}};',
           f'  \\fill[black!60] (4.15,{yl:.2f}) circle (1.9pt); \\node[anchor=west, inner sep=1pt] at (4.27,{yl:.2f}) {{2023}};']
     # (b) dependencia asimétrica (HIRSCHMAN, 1945)
-    xb0 = 10.75
-    o.append(f'  \\node[anchor=south west, font=\\sffamily\\small, inner sep=0pt] at ({xb0 - 2.1:.2f},{ytop + 0.35:.2f}) {{(b) Dependencia asimétrica, {fin[orden[0]][0]}}};')
-    o += barras_h([NOMBRES[p] for p in orden],
-                  [('s2', 'China en el comercio del miembro', {NOMBRES[p]: fin[p][1] for p in orden}),
-                   ('black!35', 'el miembro en el comercio de China', {NOMBRES[p]: cuota[p] for p in orden})],
-                  f'({xb0}cm,{yb - 0.12:.2f}cm)', 4.3, (len(orden) - 1) * paso + 0.24, '', valores=False, xmax=50)
+    o.append(f'  \\node[anchor=south west, font=\\sffamily\\small, inner sep=0pt] at ({9.55:.2f},{ytop + 0.35:.2f}) {{(b) Dependencia asimétrica, {fin[orden[0]][0]}}};')
+    # mismas filas que (a): dos barras por miembro, sin repetir los nombres
+    xb0, anchob = 9.55, 4.6
+    def XB(v):
+        return xb0 + anchob * v / xmax
+    for v in range(0, xmax + 1, 10):
+        o.append(f'  \\draw[black!12, line width=0.3pt] ({XB(v):.2f},{ytop + 0.12:.2f}) -- ({XB(v):.2f},{yb - 0.12:.2f});')
+        o.append(f'  \\node[anchor=north, inner sep=1.5pt, text=black!70] at ({XB(v):.2f},{yb - 0.14:.2f}) {{{v}}};')
+    for i, p in enumerate(orden):
+        y = ytop - i * paso
+        o.append(f'  \\fill[s2] ({xb0:.2f},{y + 0.01:.2f}) rectangle ({XB(fin[p][1]):.2f},{y + 0.11:.2f});')
+        o.append(f'  \\fill[black!35] ({xb0:.2f},{y - 0.11:.2f}) rectangle ({XB(cuota[p]):.2f},{y - 0.01:.2f});')
+        o.append(f'  \\node[anchor=west, inner sep=1pt, text=black!70] at ({XB(fin[p][1]) + 0.05:.2f},{y + 0.06:.2f}) '
+                 f'{{\\scriptsize {fin[p][1] / max(cuota[p], 0.05):.0f} veces}};')
+    o.append(f'  \\draw[black!45, line width=0.4pt] ({xb0:.2f},{ytop + 0.15:.2f}) -- ({xb0:.2f},{yb - 0.15:.2f});')
+    o += [f'  \\fill[s2] ({xb0 - 0.6:.2f},{yl - 0.07:.2f}) rectangle ({xb0 - 0.2:.2f},{yl + 0.07:.2f}); '
+          f'\\node[anchor=west, inner sep=1pt] at ({xb0 - 0.15:.2f},{yl:.2f}) {{China en su comercio}};',
+          f'  \\fill[black!35] ({xb0 + 2.9:.2f},{yl - 0.07:.2f}) rectangle ({xb0 + 3.3:.2f},{yl + 0.07:.2f}); '
+          f'\\node[anchor=west, inner sep=1pt] at ({xb0 + 3.35:.2f},{yl:.2f}) {{él en el de China}};']
     o.append('\\end{tikzpicture}')
     escribe('RCEP_china', o)
     tabla('RCEP_china', 'Peso de China y de Japón en el comercio (exportaciones más importaciones) de cada miembro del RCEP, hacia 2000 y hacia 2023, y peso de cada miembro en el comercio de China (%)',
