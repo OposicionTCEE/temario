@@ -532,6 +532,8 @@ def rcep():
         y = ytop - i * paso
         o.append(f'  \\node[anchor=east, inner sep=1pt] at ({x0 - 0.1:.2f},{y:.2f}) {{{NOMBRES[p]}}};')
         for k, col, dy in ((2, 's1', -0.055), (1, 's2', 0.055)):
+            if p == 'JPN' and k == 2:   # el peso de Japón en su propio comercio no tiene sentido
+                continue
             if p in ini:
                 o.append(f'  \\draw[{col}!55, line width=1.2pt] ({X(ini[p][k]):.2f},{y + dy:.2f}) -- ({X(fin[p][k]):.2f},{y + dy:.2f});')
                 o.append(f'  \\draw[{col}, fill=white, line width=0.7pt] ({X(ini[p][k]):.2f},{y + dy:.2f}) circle (1.9pt);')
@@ -584,20 +586,13 @@ def rcep():
                      f'at ({x + c / 2:.2f},{y + (0 if nuevo else 0.07):.2f}) {{{txt}}};')
             if not nuevo:
                 o.append(f'  \\node[inner sep=0pt, text=black!60, font=\\sffamily\\scriptsize] at ({x + c / 2:.2f},{y - 0.12:.2f}) {{{nom}}};')
-    hi = fe.techo(max(max(s.values()) for s in list(tar.values()) + list(nm.values()) if s), 1)
-    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=4.3cm, height=3.6cm, at={{(8.6cm,-3.0cm)}}, xmin=2018, xmax=2023, ymin=0, ymax={hi},'
-          ' xtick={2018,2019,2020,2021,2022,2023}, xticklabels={2018,,2020,,2022,}, title={(b) Arancel aplicado}, ylabel={\\%, media ponderada},'
-          ' clip mode=individual]',
-          *fe.etapas('RCEP', 0, hi, 2018, 2023)]
-    fin_r = []
-    for i, j, col, txt in pares:
-        if tar[(i, j)]:
-            o.append(f'    \\addplot[{col}, line width=1.3pt, mark=*, mark size=1.2pt] coordinates {{{fe.coords(sorted(tar[(i, j)].items()))}}};')
-            u = max(tar[(i, j)])
-            fin_r.append((tar[(i, j)][u], txt))
-    for y, txt in coloca(fin_r, hi * 0.09, hi * 0.03):
-        o.append(f'    \\node[anchor=west, inner sep=1.5pt, text=black!80] at (axis cs:2023.2,{y:.2f}) {{{txt}}};')
-    o += ['  \\end{axis}', '\\end{tikzpicture}']
+    # (b) margen de preferencia = arancel NMF - arancel aplicado, con las mismas ponderaciones; antes de 2022, cero en los cuatro pares
+    margen = {(i, j): {a: nm[(i, j)][a] - tar[(i, j)][a] for a in tar[(i, j)] if a in nm[(i, j)]} for i, j, _, _ in pares}
+    etiquetas = [txt for _, _, _, txt in pares]
+    o += barras_h(etiquetas, [('s2!45', '2022', {txt: margen[(i, j)].get(2022, 0) for i, j, _, txt in pares}),
+                              ('s2', '2023', {txt: margen[(i, j)].get(2023, 0) for i, j, _, txt in pares})],
+                  '(10.9cm,-3.05cm)', 3.0, 3.15, '(b) Margen de preferencia (puntos)', xmax=1, leyenda=True)
+    o.append('\\end{tikzpicture}')
     escribe('RCEP_enlaces', o)
     tabla('RCEP_enlaces', 'Acuerdos de libre comercio en vigor entre las seis economías del RCEP antes de 2022 y aranceles aplicados entre China, Japón y Corea (%)',
           'Acuerdos: OMC (base de datos de acuerdos comerciales regionales) y textos de los acuerdos; año de entrada en vigor. Aranceles: '
