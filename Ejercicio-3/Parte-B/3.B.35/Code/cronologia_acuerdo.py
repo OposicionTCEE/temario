@@ -157,15 +157,15 @@ CRONOLOGIAS = {
     'PAFTA': {
         'eje': (1943, 2027, range(1950, 2030, 10)),
         'etapas': [(1945, 1997, 'origen', 'Intentos de mercado común'), (1997, 2005, 'impulso', 'Desarme'),
-                   (2005, 2027, 'crisis', 'Estancamiento y conflictos')],
+                   (2005, 2027, 'crisis', 'Estancamiento')],
         'contexto': [
             (1945, 'nace la Liga Árabe'), (1973, 'crisis del petróleo'), (1990, 'invasión de Kuwait'), (2004, 'Acuerdo de Agadir'),
             (2011, 'Primavera Árabe'), (2014, 'caída del precio del petróleo')],
         'carriles': [
             ('Comercio\\\\y servicios', (233, 160, 40), [
-                (1964, 'Mercado Común Árabe'), (1981, 'acuerdo de facilitación del comercio'), (1997, 'programa ejecutivo'),
-                (1998, 'entra en vigor'), (2001, 'calendario acelerado'), (2004, 'Ronda de Beirut (servicios)'),
-                (2005, 'aranceles cero'), (2009, 'se suma Argelia'), (2020, 'compromisos de servicios')]),
+                (1964, 'Mercado Común Árabe'), (1981, 'acuerdo de facilitación del comercio'), (1998, 'entra en vigor'),
+                (2004, 'Ronda de Beirut (servicios)'), (2005, 'aranceles cero'), (2009, 'se suma Argelia'),
+                (2020, 'compromisos de servicios')]),
         ],
     },
 }
