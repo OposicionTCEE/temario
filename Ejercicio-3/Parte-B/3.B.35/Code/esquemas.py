@@ -264,7 +264,7 @@ def main(clave):
             o.append(f'    \\begin{{scope}}[shift={{({x2:.2f},-0.95)}}]')
             o += ['  ' + l for l in gobierno(k, a['gobierno'])]
             o.append(f'    \\end{{scope}}')
-            o.append(f'    \\node[txt] (val{k}) at ({x3:.2f},-0.95) {{{lista(a["valoracion"], w3, marca=f"\\textcolor{{{c}}}{{$\\blacktriangleright$}}")}}};')
+            o.append(f'    \\node[txt] (val{k}) at ({x3:.2f},-0.95) {{{lista(a["valoracion"], w3, marca=f"\\textcolor{{{c}}}{{$\\triangleright$}}")}}};')
             o.append(f'  \\end{{scope}}')
             o.append(f'  \\path let \\p1=(obj{k}.south), \\p2=(como{k}.south), \\p3=(g{k}nota.south), \\p4=(val{k}.south), '
                      f'\\n1={{min(\\y1,\\y2,\\y3,\\y4)}} in coordinate (fondo) at (0,\\n1-0.22cm);')
