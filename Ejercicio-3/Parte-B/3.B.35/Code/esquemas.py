@@ -22,8 +22,8 @@ TEMA = Path(__file__).resolve().parent.parent
 
 W = 15.94                                   # cm: ancho del texto menos el grosor de las rayas
 # Columnas de cada acuerdo: (inicio, ancho, rótulo)
-COLS = [(0.0, 3.0, 'Objetivo'), (3.3, 3.5, 'Cómo se construyó'), (7.1, 3.6, 'Gobierno'), (11.0, W - 11.0, 'Valoración')]
-ABAJO = [(0.0, 7.75, 'Relación con la UE'), (8.05, W - 8.05, r'$\Rightarrow$ ¿Confirma la tesis?')]
+COLS = [(0.0, 2.85, 'Objetivo'), (3.13, 3.55, 'Cómo se construyó'), (6.96, 3.85, 'Gobierno'), (11.09, W - 11.09, 'Valoración')]
+ABAJO = [(0.0, 7.75, 'Con la UE'), (8.05, W - 8.05, r'$\Rightarrow$ ¿Confirma la tesis?')]
 ESCALA = ['ZLC', 'UA', 'MC']                # grados de BALASSA que se dibujan
 PROB = r'\textcolor{orange}{\textsuperscript{[Probable]}}'
 TIPOS = {   # naturaleza del órgano (Code/gobernanza.py): (borde, relleno)
@@ -41,15 +41,15 @@ BLOQUES = {
         'titulo': 'Lógica económica: ¿regionalismo abierto o cerrado?',
         'tesis': (r'Los cuatro nacen para \textbf{ampliar el mercado} y ganar eficiencia, escala o credibilidad, '
                   r'con \textbf{dos estrategias opuestas}'),
-        'justificacion': (r'\textbf{Estáticas}: creación $>$ desviación de comercio (VINER, 1950)\\'
+        'justificacion': (r'\textbf{Estáticas}: creación $>$ desviación (VINER, 1950)\\'
                           r'\textbf{Dinámicas}: escala, competencia, inversión\\'
                           r'\textbf{Vecinos} = socios naturales $\Rightarrow$ poca desviación (WONNACOTT y LUTZ, 1989; KRUGMAN, 1991)\\'
                           r'\textbf{Credibilidad}: un tratado ata las reformas (FERNÁNDEZ y PORTES, 1998)'),
         'medios': [
-            ('A', r'\textbf{Regionalismo cerrado} (CEPAL): industrializar tras un AEC, a menor coste que cada país solo '
+            ('A', r'\textbf{Regionalismo cerrado} (CEPAL): industrializar tras un AEC, más barato que cada país solo '
                   r'(COOPER y MASSELL, 1965) $\to$ MCCA, CAN'),
-            ('B', r'\textbf{Sin cesión de soberanía}: libre comercio sin AEC ni órganos supranacionales, para entrar en un '
-                  r'mercado grande; precio: reglas de origen $\to$ EFTA, NAFTA'),
+            ('B', r'\textbf{Sin cesión de soberanía}: libre comercio sin AEC ni órganos supranacionales; precio: reglas de '
+                  r'origen $\to$ EFTA, NAFTA'),
         ],
         'grupos': [
             ('A', 'Regionalismo cerrado, reconvertido en abierto en los años noventa (CEPAL, 1994)', [
@@ -57,67 +57,64 @@ BLOQUES = {
                  'objetivo': (r'Industrializar cinco economías de café y banano: mercado común tras un AEC y '
                               r'\textbf{reparto de las industrias}'),
                  'escala': {'ZLC': 'a', 'UA': 'p', 'MC': 'v'},
-                 'hitos': [('1960', 'Tratado de Managua'), ('1969', 'guerra Honduras-El Salvador'),
-                           ('1991', 'SICA: regionalismo abierto'), ('2017', 'unión aduanera parcial')],
+                 'hitos': [('1960', 'Tratado de Managua'), ('1969', 'guerra entre socios'),
+                           ('1993', 'regionalismo abierto'), ('2017', 'unión aduanera parcial')],
                  'gobierno': {
-                     'nodos': [('pres', 1.8, 0.0, 'intergub', 'Reunión de Presidentes', False),
-                               ('com', 1.0, -0.78, 'intergub', 'COMIECO', False),
-                               ('sie', 2.9, -0.78, 'tecnico', 'SIECA', False),
-                               ('cor', 0.9, -1.5, 'judicial', 'Corte', True),
-                               ('par', 2.7, -1.5, 'parlamento', 'Parlamento', True)],
+                     'nodos': [('pres', 0.85, 0, 'intergub', 'Presidentes', False),
+                               ('com', 2.75, 0, 'intergub', 'COMIECO', False),
+                               ('sie', 0.55, 1, 'tecnico', 'SIECA', False),
+                               ('cor', 1.65, 1, 'judicial', 'Corte', True),
+                               ('par', 3.0, 1, 'parlamento', 'Parlamento', True)],
                      'flechas': [('pres', 'com'), ('sie', 'com')],
-                     'nota': r'Por consenso: nadie hace cumplir lo acordado'},
-                 'valoracion': [r'Cuota intrarregional alta: $18\%$ (1965) $\to$ $26\%$ (1970) $\to$ $25\%$ (2023), con caída en las guerras',
-                                r'Mercado de la \textbf{industria ligera}, concentrada en Guatemala y El Salvador ($68\%$)',
-                                r'Honduras y Nicaragua, déficits de $\approx 7\%$ del PIB; el DR-CAFTA pesa más que la región'],
-                 'ue': (r'\textbf{Afinidad}: Acuerdo de Asociación (2012) con la región en bloque, ligado a la democracia; '
+                     'nota': r'Consenso: nadie hace cumplir'},
+                 'valoracion': [r'Cuota alta: $18\%$ (1965) $\to$ $26\%$ (1970) $\to$ $25\%$ (2023)',
+                                r'Mercado de la \textbf{industria ligera}, concentrada en Guatemala y El Salvador',
+                                r'Honduras y Nicaragua, déficits ($\approx 7\%$ del PIB); el DR-CAFTA pesa más'],
+                 'ue': (r'\textbf{Afinidad}: asociación (2012) con la región en bloque, ligada a la democracia; '
                         r'$0{,}4\%$ del comercio de la UE'),
-                 'tesis': (r'\textbf{Sí} crea comercio y escala; \textbf{no} reparte: la industria va al más avanzado y el '
-                           r'\textbf{conflicto distributivo} frena el mercado común')},
+                 'tesis': (r'\textbf{Sí} crea comercio y escala; \textbf{no} reparte: la industria va al más avanzado '
+                           r'(\textbf{conflicto distributivo})')},
                 {'titulo': 'Comunidad Andina de Naciones (CAN, 1969)', 'color': (233, 160, 40),
                  'objetivo': (r'Lo mismo, con más ambición: \textbf{programación industrial}, control de la IED y negociar '
-                              r'en bloque frente a la ALALC'),
+                              r'en bloque'),
                  'escala': {'ZLC': 'a', 'UA': 'x', 'MC': 'v'},
                  'hitos': [('1969', 'Acuerdo de Cartagena'), ('1976', 'sale Chile'), ('1993', 'zona de libre comercio'),
-                           ('1996', 'Protocolo de Trujillo'), ('2006', 'sale Venezuela')],
+                           ('2006', 'sale Venezuela')],
                  'gobierno': {
-                     'nodos': [('pres', 1.8, 0.0, 'intergub', 'Consejo Presidencial', False),
-                               ('min', 0.9, -0.72, 'intergub', 'Ministros', False),
-                               ('com', 2.7, -0.72, 'intergub', 'Comisión', False),
-                               ('sg', 0.9, -1.5, 'supra', 'Secretaría Gral.', False),
-                               ('tri', 2.7, -1.5, 'judicial', 'Tribunal', False)],
-                     'flechas': [('pres', 'min'), ('pres', 'com')],
-                     'nota': r'La más \textbf{supranacional} de América Latina'},
-                 'valoracion': [r'Cuota: $3\%$ (1969) $\to$ $13{,}9\%$ (1998) $\to$ $6\%$ (2023): su mejor época fue el regionalismo abierto',
-                                r'Economías \textbf{competidoras}: venden materias primas a China y EE.\,UU., no a los socios',
+                     'nodos': [('min', 0.85, 0, 'intergub', 'Ministros', False),
+                               ('com', 2.75, 0, 'intergub', 'Comisión', False),
+                               ('sg', 0.95, 1, 'supra', 'Secretaría Gral.', False),
+                               ('tri', 2.75, 1, 'judicial', 'Tribunal', False)],
+                     'flechas': [],
+                     'nota': r'Decisiones de aplicación directa'},
+                 'valoracion': [r'Cuota: $3\%$ (1969) $\to$ $13{,}9\%$ (1998) $\to$ $6\%$ (2023)',
+                                r'Economías \textbf{competidoras}: venden materias primas a China y EE.\,UU.',
                                 r'Cada socio busca fuera: Alianza del Pacífico, MERCOSUR'],
-                 'ue': (r'\textbf{Económica}: acuerdo solo comercial con Colombia, Perú y Ecuador, no con el bloque; '
+                 'ue': (r'\textbf{Económica}: acuerdo solo comercial con tres socios, no con el bloque; '
                         r'$0{,}6\%$ del comercio de la UE'),
-                 'tesis': (r'\textbf{No}: sin complementariedad no hay mercado regional, y ni las instituciones más fuertes '
-                           r'de la región lo suplen')},
+                 'tesis': (r'\textbf{No}: sin complementariedad no hay mercado regional, ni con las instituciones más '
+                           r'\textbf{supranacionales} de América Latina')},
             ]),
             ('B', 'Integración de mercados sin cesión de soberanía', [
                 {'titulo': 'Asociación Europea de Libre Comercio (EFTA, 1960)', 'color': (110, 165, 215),
-                 'objetivo': (r'Respuesta defensiva a la CEE: \textbf{libre comercio industrial} sin ceder soberanía '
-                              r'(Commonwealth, neutrales)'),
+                 'objetivo': r'Respuesta defensiva a la CEE: \textbf{libre comercio industrial} sin ceder soberanía',
                  'escala': {'ZLC': 'a', 'UA': None, 'MC': None},
-                 'hitos': [('1960', 'Convenio de Estocolmo'), ('1972', 'libre comercio con la CEE'),
+                 'hitos': [('1960', 'Convenio de Estocolmo'), ('1972', 'acuerdos con la CEE'),
                            ('1994', 'EEE, sin Suiza'), ('2026', 'Bilaterales III, Suiza')],
                  'gobierno': {
-                     'nodos': [('con', 0.9, 0.0, 'intergub', 'Consejo', False),
-                               ('sec', 2.7, 0.0, 'tecnico', 'Secretaría', False),
-                               ('cm', 1.8, -0.75, 'intergub', 'Comité Mixto del EEE', False),
-                               ('esa', 0.9, -1.5, 'supra', 'Vigilancia', False),
-                               ('tri', 2.7, -1.5, 'judicial', 'Tribunal', False)],
+                     'nodos': [('con', 0.85, 0, 'intergub', 'Consejo', False),
+                               ('sec', 2.75, 0, 'tecnico', 'Secretaría', False),
+                               ('cm', 0.8, 1, 'intergub', 'Comité Mixto', False),
+                               ('esa', 2.25, 1, 'supra', 'Vigilancia', False),
+                               ('tri', 3.4, 1, 'judicial', 'Tribunal', False)],
                      'flechas': [('sec', 'con')],
-                     'nota': r'Por consenso; Suiza, por comités mixtos'},
-                 'valoracion': [r'Se \textbf{vació}: seis de sus diez miembros entraron en la CEE (efecto dominó, BALDWIN, 1993)',
+                     'nota': r'Abajo, el EEE; Suiza, por comités mixtos'},
+                 'valoracion': [r'Se \textbf{vació}: seis de diez miembros entraron en la CEE (efecto dominó)',
                                 r'La UE compra el $51$-$63\%$ de sus exportaciones; los socios, menos del $1\%$',
-                                r'La protección agraria ($\approx 50\%$ de los ingresos; UE, $17\%$) frena la adhesión'],
-                 'ue': (r'\textbf{Económica con afinidad}: su socio más integrado ($9{,}6\%$ de su comercio); el EEE les da el '
-                        r'mercado interior sin voto'),
-                 'tesis': (r'Como \textbf{alternativa} a la CEE, fracasó; como \textbf{antesala}, funcionó: liberalizó su '
-                           r'industria antes de adherirse')},
+                                r'Protección agraria ($\approx 50\%$ de los ingresos; UE, $17\%$): frena la adhesión'],
+                 'ue': (r'\textbf{Económica con afinidad}: su socio más integrado ($9{,}6\%$ de su comercio); el EEE les da '
+                        r'el mercado interior sin voto'),
+                 'tesis': r'Como \textbf{alternativa} a la CEE, fracasó; como \textbf{antesala}, funcionó'},
                 {'titulo': 'Tratado de Libre Comercio entre Estados Unidos, México y Canadá (NAFTA, 1994; USMCA, 2020)',
                  'color': (30, 75, 135),
                  'objetivo': (r'México: \textbf{anclar sus reformas}; EE.\,UU.: integración profunda; Canadá: no perder lo '
@@ -126,19 +123,19 @@ BLOQUES = {
                  'hitos': [('1989', r'Canadá-EE.\,UU.'), ('1994', 'NAFTA'),
                            ('2020', 'USMCA: automóvil, China'), ('2026', r'EE.\,UU. no prorroga')],
                  'gobierno': {
-                     'nodos': [('com', 1.8, 0.0, 'intergub', 'Comisión de Libre Comercio', False),
-                               ('sec', 0.9, -0.75, 'tecnico', 'Secretariado', False),
-                               ('cmt', 2.7, -0.75, 'tecnico', 'Comités', False),
-                               ('pan', 0.9, -1.5, 'judicial', 'Paneles', False),
-                               ('lab', 2.7, -1.5, 'judicial', 'Mec. laboral', False)],
-                     'flechas': [('sec', 'com'), ('com', 'cmt')],
-                     'nota': r'Sin órganos supranacionales: la credibilidad está en los paneles'},
-                 'valoracion': [r'Cuota: $41\%$ (1989) $\to$ $56\%$ (2002-2004) $\to$ $51\%$ (2023); \textbf{radios} en torno a EE.\,UU.',
+                     'nodos': [('com', 1.25, 0, 'intergub', 'Comisión', False),
+                               ('cmt', 3.0, 0, 'tecnico', 'Comités', False),
+                               ('sec', 0.85, 1, 'tecnico', 'Secretariado', False),
+                               ('pan', 2.2, 1, 'judicial', 'Paneles', False),
+                               ('lab', 3.3, 1, 'judicial', 'Laboral', False)],
+                     'flechas': [('com', 'cmt')],
+                     'nota': r'Sin órganos supranacionales'},
+                 'valoracion': [r'Cuota: $41\%$ (1989) $\to$ $56\%$ (2003) $\to$ $51\%$ (2023); \textbf{radios} en torno a EE.\,UU.',
                                 r'Cadena del automóvil; bienestar pequeño (CALIENDO y PARRO, 2015)',
                                 r'México \textbf{no converge}: del $40\%$ al $29\%$ del PIB per cápita de EE.\,UU.'],
-                 'ue': (r'\textbf{Económica}: pesan el $19\%$ del comercio de la UE, más que la UE para ellos; desde 2025, '
+                 'ue': (r'\textbf{Económica}: $19\%$ del comercio de la UE, más que la UE para ellos; desde 2025, '
                         r'diversificar frente a EE.\,UU.'),
-                 'tesis': (r'\textbf{Sí} en comercio y cadenas de valor; \textbf{no} en convergencia. Desde 2025, también '
+                 'tesis': (r'\textbf{Sí} en comercio y cadenas; \textbf{no} en convergencia. Desde 2025, también '
                            r'geoestratégico')},
             ]),
         ],
@@ -175,7 +172,7 @@ def escala(x, y, grados, c):
 
 def lista(filas, ancho, marca=None):
     """Tabla de dos columnas (año o marca a la izquierda, texto que se parte): sin el paquete array, con \\tabularnewline."""
-    ancho_t = ancho - (0.75 if marca is None else 0.3)
+    ancho_t = ancho - (0.68 if marca is None else 0.3)
     cuerpo = []
     for f in filas:
         izq, der = (f if marca is None else (marca, f))
@@ -185,15 +182,14 @@ def lista(filas, ancho, marca=None):
 
 
 def gobierno(k, g):
-    """Organigrama mínimo, en coordenadas relativas al origen de la columna (x = centro de cada órgano)."""
+    """Organigrama mínimo en dos filas (0, la que decide; 1, la que apoya, vigila o juzga), relativo al origen de la columna."""
     o = []
-    for clave, x, y, tipo, txt, disc in g['nodos']:
-        o.append(f'    \\node[gob={tipo}{", dashed" if disc else ""}] (g{k}{clave}) at ({x:.2f},{y * 0.8 - 0.17:.2f}) {{{txt}}};')
+    for clave, x, fila, tipo, txt, disc in g['nodos']:
+        o.append(f'    \\node[gob={tipo}{", dashed" if disc else ""}] (g{k}{clave}) at ({x:.2f},{-0.17 - 0.62 * fila:.2f}) {{{txt}}};')
     for a, b in g['flechas']:
         o.append(f'    \\draw[gflecha] (g{k}{a}) -- (g{k}{b});')
-    ymin = min(y for _, _, y, *_ in g['nodos'])
-    o.append(f'    \\node[anchor=north west, text width=3.55cm, align=left, inner sep=0pt, font=\\footnotesize\\itshape, '
-             f'text=black!70] (g{k}nota) at (0,{ymin * 0.8 - 0.42:.2f}) {{{g["nota"]}}};')
+    o.append(f'    \\node[anchor=north west, inner sep=0pt, font=\\footnotesize\\itshape, text=black!70] (g{k}nota) '
+             f'at (0,-1.05) {{{g["nota"]}}};')
     return o
 
 
@@ -218,7 +214,7 @@ def main(clave):
     # --- Rótulo del bloque y cadena: tesis -> justificación -> medios ---
     o.append(f'  \\node[anchor=south west, inner sep=0pt, font=\\normalsize\\bfseries, text=eGri] at (0,0.05) {{{B["titulo"]}}};')
     o.append(f'  \\draw[eGri, line width=0.8pt] (0,-0.05) -- ({W},-0.05);')
-    cab = [(0.0, 3.3, 'Tesis'), (3.6, 6.0, 'Justificación'), (9.9, W - 9.9, 'Medios: dos estrategias')]
+    cab = [(0.0, 3.0, 'Tesis'), (3.3, 6.4, 'Justificación'), (10.0, W - 10.0, 'Medios: dos estrategias')]
     for i, (x, w, r) in enumerate(cab):
         o.append(f'  \\node[rot] at ({x:.2f},-0.2) {{{r}}};')
         if i < len(cab) - 1:
@@ -227,9 +223,10 @@ def main(clave):
     o.append(f'  \\node[txt, text width={cab[1][1]:.2f}cm] (just) at ({cab[1][0]:.2f},-0.6) {{{B["justificacion"]}}};')
     previo = None
     for letra, cont in B['medios']:
-        donde = f'({cab[2][0]:.2f},-0.6)' if previo is None else f'([yshift=-0.12cm]{previo}.south west)'
-        o.append(f'  \\node[txt, text width={cab[2][1]:.2f}cm] (med{letra}) at {donde} {{\\hangindent=0.45cm\\hangafter=0'
-                 f'\\llap{{\\colorbox{{eGri}}{{\\textcolor{{white}}{{\\textbf{{{letra}}}}}}}\\hspace{{0.12cm}}}}{cont}}};')
+        donde = f'({cab[2][0] + 0.45:.2f},-0.6)' if previo is None else f'([yshift=-0.14cm]{previo}.south west)'
+        o.append(f'  \\node[txt, text width={cab[2][1] - 0.45:.2f}cm] (med{letra}) at {donde} {{{cont}}};')
+        o.append(f'  \\node[anchor=north east, fill=eGri, text=white, font=\\small\\bfseries, inner sep=2pt] '
+                 f'at ([shift={{(-0.12,0.04)}}]med{letra}.north west) {{{letra}}};')
         previo = f'med{letra}'
     o.append(f'  \\path let \\p1=(tesis.south), \\p2=(just.south), \\p3=({previo}.south), \\n1={{min(\\y1,\\y2,\\y3)}} in '
              f'coordinate (sig) at (0,\\n1-0.35cm);')
@@ -246,20 +243,20 @@ def main(clave):
             o.append(f'  % ----- {a["titulo"]} -----')
             o.append(f'  \\begin{{scope}}[shift={{(sig)}}]')
             o.append(f'    \\node[anchor=north west, inner sep=0pt, font=\\small\\bfseries, text={c}!85!black] at (0,0) {{{a["titulo"]}}};')
-            o.append(f'    \\draw[{c}, line width=1pt] (0,-0.42) -- ({W},-0.42);')
+            o.append(f'    \\draw[{c}, line width=1pt] (0,-0.4) -- ({W},-0.4);')
             for i, (x, w, r) in enumerate(COLS):
-                o.append(f'    \\node[rot] at ({x:.2f},-0.55) {{{r}}};')
+                o.append(f'    \\node[rot] at ({x:.2f},-0.5) {{{r}}};')
                 if i < len(COLS) - 1:
-                    o.append(f'    \\draw[flecha] ({x + w + 0.02:.2f},-0.67) -- ({COLS[i + 1][0] - 0.04:.2f},-0.67);')
+                    o.append(f'    \\draw[flecha] ({x + w + 0.02:.2f},-0.62) -- ({COLS[i + 1][0] - 0.04:.2f},-0.62);')
             (x0, w0, _), (x1, w1, _), (x2, w2, _), (x3, w3, _) = COLS
-            o.append(f'    \\node[txt, text width={w0:.2f}cm] (obj{k}) at ({x0:.2f},-0.95) {{{a["objetivo"]}}};')
-            o += escala(x1 + 0.12, -1.07, a['escala'], c)
+            o.append(f'    \\node[txt, text width={w0:.2f}cm] (obj{k}) at ({x0:.2f},-0.88) {{{a["objetivo"]}}};')
+            o += escala(x1 + 0.12, -1.0, a['escala'], c)
             hitos = [(f'\\textbf{{\\textcolor{{{c}!85!black}}{{{an}}}}}', t) for an, t in a['hitos']]
-            o.append(f'    \\node[txt] (como{k}) at ({x1:.2f},-1.32) {{{lista(hitos, w1)}}};')
-            o.append(f'    \\begin{{scope}}[shift={{({x2:.2f},-0.95)}}]')
+            o.append(f'    \\node[txt] (como{k}) at ({x1:.2f},-1.24) {{{lista(hitos, w1)}}};')
+            o.append(f'    \\begin{{scope}}[shift={{({x2:.2f},-0.88)}}]')
             o += ['  ' + l for l in gobierno(k, a['gobierno'])]
             o.append(f'    \\end{{scope}}')
-            o.append(f'    \\node[txt] (val{k}) at ({x3:.2f},-0.95) {{{lista(a["valoracion"], w3, marca=f"\\textcolor{{{c}}}{{$\\triangleright$}}")}}};')
+            o.append(f'    \\node[txt] (val{k}) at ({x3:.2f},-0.88) {{{lista(a["valoracion"], w3, marca=f"\\textcolor{{{c}}}{{$\\triangleright$}}")}}};')
             o.append(f'  \\end{{scope}}')
             o.append(f'  \\path let \\p1=(obj{k}.south), \\p2=(como{k}.south), \\p3=(g{k}nota.south), \\p4=(val{k}.south), '
                      f'\\n1={{min(\\y1,\\y2,\\y3,\\y4)}} in coordinate (fondo) at (0,\\n1-0.2cm);')
@@ -269,7 +266,7 @@ def main(clave):
                      f'{{\\textcolor{{eGri}}{{\\textbf{{{r0}.}}}} {a["ue"]}}};')
             o.append(f'  \\node[txt, text width={v1:.2f}cm] (tes{k}) at ([xshift={y1:.2f}cm]fondo) '
                      f'{{\\textcolor{{eGri}}{{\\textbf{{{r1}}}}} {a["tesis"]}}};')
-            o.append(f'  \\path let \\p1=(ue{k}.south), \\p2=(tes{k}.south), \\n1={{min(\\y1,\\y2)}} in coordinate (sig) at (0,\\n1-0.38cm);')
+            o.append(f'  \\path let \\p1=(ue{k}.south), \\p2=(tes{k}.south), \\n1={{min(\\y1,\\y2)}} in coordinate (sig) at (0,\\n1-0.32cm);')
             k += 1
 
     # --- Balance del bloque ---
