@@ -187,6 +187,7 @@ def filas_de_tabla(nombre, ws):
                     nom, serie = (m.group(2), m.group(1)) if m.group(2) in NOMBRE_ISO else (m.group(1), m.group(2))
                     p = NOMBRE_ISO[nom]
             u = unidad(c) or unidad(titulo) or ('millones de USD' if nombre.endswith('_composicion') else '')
+            u = 'coeficiente' if serie == 'NPC' else u
             out.append([PROYECTO.get(prefijo, prefijo), p or PROYECTO.get(prefijo, prefijo), '; '.join([s] + desglose).strip('; '),
                         titulo, serie, anio, f[j], u, fuente, trat, fig, nombre])
     return out
