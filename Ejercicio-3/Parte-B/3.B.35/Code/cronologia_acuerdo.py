@@ -196,7 +196,7 @@ CRONOLOGIAS = {
             ('Integración', (233, 160, 40), [
                 (1981, 'Carta (Abu Dabi)'), (1983, 'zona de libre comercio'), (2001, 'Acuerdo Económico'), (2003, 'unión aduanera'),
                 (2008, 'mercado común'), (2015, 'unión aduanera plena'), (2026, 'acuerdo con Reino Unido')]),
-            ('Moneda', (185, 125, 20), [(2006, 'sale Omán'), (2009, 'sale Emiratos'), (2010, 'Consejo Monetario')]),
+            ('Moneda', (105, 65, 140), [(2006, 'sale Omán'), (2009, 'sale Emiratos'), (2010, 'Consejo Monetario')]),
             ('Seguridad', (30, 75, 135), [
                 (1984, 'Escudo de la Península'), (2011, 'despliegue en Baréin'), (2017, 'bloqueo a Catar'), (2021, 'Al-Ula')]),
         ],
