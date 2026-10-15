@@ -178,9 +178,16 @@ def sipri():
 def ccg():
     w = ib.wdi()
     color = {e: f's{i + 1}' for i, e in enumerate(CCG)}
-    fuel = {e: {a: w[(e, 'TX.VAL.FUEL.ZS.UN', a)] for a in range(2000, 2025) if (e, 'TX.VAL.FUEL.ZS.UN', a) in w} for e in CCG}
-    nof = {e: {a: 100 * w[(e, 'TX.VAL.MRCH.CD.WT', a)] * (1 - fuel[e][a] / 100) / w[(e, 'NY.GDP.MKTP.CD', a)] for a in fuel[e]
-               if (e, 'TX.VAL.MRCH.CD.WT', a) in w and (e, 'NY.GDP.MKTP.CD', a) in w} for e in CCG}
+    # datos espejo (lo que declaran los importadores), porque las series de WDI de Emiratos y Bahréin tienen saltos y ceros
+    esp = defaultdict(dict)
+    with open(dc.TEMA / 'Code' / 'datos' / 'espejo_productos.csv', newline='', encoding='utf-8') as fh:
+        for r in csv.DictReader(fh):
+            if r['importador'] == 'WLD':
+                esp[(r['exportador'], int(r['anio']))][r['producto']] = float(r['valor_usd'])
+    fuel = {e: {a: 100 * esp[(e, a)]['Fuels'] / esp[(e, a)]['Total'] for a in range(2000, 2024)
+                if esp.get((e, a), {}).get('Total') and 'Fuels' in esp[(e, a)]} for e in CCG}
+    nof = {e: {a: 100 * (esp[(e, a)]['Total'] - esp[(e, a)]['Fuels']) / w[(e, 'NY.GDP.MKTP.CD', a)] for a in fuel[e]
+               if (e, 'NY.GDP.MKTP.CD', a) in w} for e in CCG}
     ult = max(max(v) for v in fuel.values())
     o = fe.cabecera('CCG', 'diversificacion')
     o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=5.2cm, height=4.4cm, at={{(0cm,0cm)}}, xmin=2000, xmax={ult}, ymin=0, ymax=100,'
@@ -200,9 +207,11 @@ def ccg():
     o += ['  \\end{axis}', '\\end{tikzpicture}']
     escribe('CCG_diversificacion', o)
     tabla('CCG_diversificacion', 'Peso de los combustibles en las exportaciones de mercancías (%) y exportaciones de mercancías no combustibles (% del PIB) de los miembros del CCG',
-          'Banco Mundial (WDI): TX.VAL.FUEL.ZS.UN (combustibles, sección 3 de la CUCI, a partir de UN Comtrade), TX.VAL.MRCH.CD.WT y '
-          'NY.GDP.MKTP.CD. No combustibles = exportaciones de mercancías x (1 - parte de los combustibles). Las de Emiratos incluyen '
-          'reexportaciones. Cálculo propio (Code/figuras_geoestrategicas.py).',
+          'Datos espejo de WITS (Banco Mundial): importaciones declaradas por todos los países desde cada miembro, totales y del grupo '
+          '«Fuels» (combustibles, capítulo 27 del SA), en dólares CIF (Code/descargas_geoestrategicas.py, Code/datos/espejo_productos.csv); '
+          'PIB en dólares corrientes del Banco Mundial (WDI, NY.GDP.MKTP.CD). Se usan los datos espejo porque las series de WDI '
+          '(TX.VAL.FUEL.ZS.UN) de Emiratos y Bahréin tienen saltos y ceros. Los importadores suelen anotar las reexportaciones con el país '
+          'de origen, no con Emiratos. Cálculo propio (Code/figuras_geoestrategicas.py).',
           ['Año', 'Indicador'] + CCG,
           [(a, ind, *[round(s[e][a], 1) if a in s[e] else None for e in CCG]) for ind, s in (('Combustibles, % de las exportaciones', fuel),
                                                                                           ('No combustibles, % del PIB', nof))
