@@ -17,8 +17,8 @@ from pathlib import Path
 
 TEMA = Path(__file__).resolve().parent.parent
 
-W = 16.0                                  # cm: ancho del texto
-COLS = [2.6, 3.2, 3.9, 2.6, 2.5]          # objetivo, cómo, resultado, UE, tesis
+W = 15.94                                 # cm: ancho del texto menos el grosor de los bordes
+COLS = [2.6, 3.2, 3.9, 2.6, 2.44]          # objetivo, cómo, resultado, UE, tesis
 GAP = 0.3                                 # cm entre casillas (con una flecha)
 CABECERAS = ['Objetivo', 'Cómo se construyó', 'Resultado y por qué', '¿Qué busca la UE?', '¿Confirma la tesis?']
 ESCALA = ['ZLC', 'UA', 'MC']              # grados de BALASSA que se dibujan
@@ -33,8 +33,8 @@ BLOQUES = {
                           r'\textbf{Vecinos} = socios naturales $\Rightarrow$ poca desviación (WONNACOTT y LUTZ, 1989; KRUGMAN, 1991)\\'
                           r'\textbf{Credibilidad}: un tratado ata las reformas (FERNÁNDEZ y PORTES, 1998)'),
         'medios': [
-            ('A', r'\textbf{Regionalismo cerrado} (CEPAL): industrializar tras un AEC, más barato que cada país solo '
-                  r'(COOPER y MASSELL, 1965) $\to$ MCCA, CAN'),
+            ('A', r'\textbf{Regionalismo cerrado} (CEPAL): industrializar tras un AEC, más barato que cada '
+                  r'país solo (COOPER y MASSELL, 1965) $\to$ MCCA, CAN'),
             ('B', r'\textbf{Sin cesión de soberanía}: libre comercio sin AEC ni órganos supranacionales; precio: reglas de origen '
                   r'$\to$ EFTA, NAFTA'),
         ],
@@ -108,7 +108,7 @@ def escala(x, y, grados, c):
         xi, est = x + i * paso, grados.get(g)
         if est is None:
             o.append(f'  \\fill[black!25] ({xi:.2f},{y:.2f}) circle (1.3pt);')
-            o.append(f'  \\node[anchor=west, inner sep=1.5pt, text=black!40] at ({xi + 0.1:.2f},{y:.2f}) {{{g}}};')
+            o.append(f'  \\node[anchor=west, inner sep=1.5pt, text=black!40, fill={c}!7] at ({xi + 0.1:.2f},{y:.2f}) {{{g}}};')
             continue
         o.append(f'  \\draw[{c}, fill=white, line width=0.8pt] ({xi:.2f},{y:.2f}) circle (3.3pt);')
         if est == 'a':
@@ -118,7 +118,7 @@ def escala(x, y, grados, c):
         elif est == 'x':
             o.append(f'  \\draw[{c}, line width=0.8pt] ({xi:.2f},{y:.2f}) ++(-2.3pt,-2.3pt) -- ++(4.6pt,4.6pt) '
                      f'++(-4.6pt,0) -- ++(4.6pt,-4.6pt);')
-        o.append(f'  \\node[anchor=west, inner sep=1.5pt] at ({xi + 0.12:.2f},{y:.2f}) {{{g}}};')
+        o.append(f'  \\node[anchor=west, inner sep=1.5pt, fill={c}!7] at ({xi + 0.12:.2f},{y:.2f}) {{{g}}};')
     return o
 
 
