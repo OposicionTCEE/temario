@@ -134,6 +134,18 @@ def separa(fin, dmin):
     return out
 
 
+def coloca(rotulos, d, lo):
+    """Posiciones de rótulos [(valor, texto)] de arriba abajo, separados al menos d y sin bajar de lo: [(y, texto)]."""
+    r = sorted(rotulos, reverse=True)
+    ys = [v for v, _ in r]
+    for i in range(1, len(ys)):
+        ys[i] = min(ys[i], ys[i - 1] - d)
+    ys[-1] = max(ys[-1], lo)
+    for i in range(len(ys) - 2, -1, -1):
+        ys[i] = max(ys[i], ys[i + 1] + d)
+    return [(y, txt) for y, (_, txt) in zip(ys, r)]
+
+
 # ---------------------------------------------------------------- CCG
 def sipri():
     """{proveedor: {año: TIV}} sumando los seis receptores del CCG, y {año: total}."""
@@ -217,9 +229,9 @@ def ccg():
         for k in expo:
             expo[k][a] = 100 * sum(v for (e, i), v in d.items() if i == k) / tot if tot else None
     o = fe.cabecera('CCG', 'seguridad')
-    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=10.2cm, height=4.6cm, at={{(0cm,0cm)}}, xmin=1990, xmax=2025, ymin=0, ymax=100,'
+    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=10.2cm, height=4.6cm, at={{(0cm,0cm)}}, xmin=1990, xmax=2025, ymin=0, ymax=80,'
           ' xtick={1990,1995,2000,2005,2010,2015,2020,2025}, ylabel={\\% del total}, clip mode=individual]',
-          *fe.etapas('CCG', 0, 100, 1990, 2025)]
+          *fe.etapas('CCG', 0, 80, 1990, 2025)]
     lineas = [('s1', armas['USA'], '', 'EE.\\,UU.: armas'), ('s1', expo['USA'], ', densely dashed', 'EE.\\,UU.: exportaciones'),
               ('s2', armas['CHN'], '', 'China: armas'), ('s2', expo['CHN'], ', densely dashed', 'China: exportaciones'),
               ('s3', armas['EUR'], '', 'Europa: armas')]
@@ -228,11 +240,8 @@ def ccg():
         pts = sorted((a, v) for a, v in s.items() if v is not None and a >= 1990)
         o.append(f'    \\addplot[{col}, line width=1.3pt, mark=none{est}] coordinates {{{fe.coords(pts)}}};')
         fin.append((pts[-1][1], txt, pts[-1][0]))
-    previo = None
-    for v, txt, x in sorted(fin, reverse=True):
-        y = v if previo is None or previo - v > 8 else previo - 8
+    for y, txt in coloca([(v, txt) for v, txt, x in fin], 7, 3):
         o.append(f'    \\node[anchor=west, inner sep=1.5pt, text=black!80] at (axis cs:{2025.4},{y:.1f}) {{{txt}}};')
-        previo = y
     o += ['  \\end{axis}', '\\end{tikzpicture}']
     escribe('CCG_seguridad', o)
     tabla('CCG_seguridad', 'Peso de EE. UU., China, Europa y Rusia en las importaciones de armas de los seis miembros del CCG (TIV, sumas móviles de cinco años) y peso de EE. UU. y de China en sus exportaciones de mercancías (%)',
