@@ -170,7 +170,7 @@ CRONOLOGIAS = {
     },
     'ASEAN': {
         'eje': (1965, 2027, range(1970, 2030, 10)),
-        'etapas': [(1967, 1992, 'origen', 'Alianza frente al comunismo'), (1992, 2007, 'impulso', 'Zona de libre comercio (AFTA)'),
+        'etapas': [(1967, 1992, 'origen', 'Alianza frente al comunismo'), (1992, 2007, 'impulso', 'Libre comercio (AFTA)'),
                    (2007, 2027, 'relanzamiento', 'Carta y Comunidad Económica')],
         'contexto': [
             (1975, 'caída de Saigón'), (1978, 'Vietnam invade Camboya'), (1997, 'crisis asiática'), (2001, 'China entra en la OMC'),
@@ -187,8 +187,8 @@ CRONOLOGIAS = {
     },
     'CCG': {
         'eje': (1977, 2027, range(1980, 2030, 10)),
-        'etapas': [(1981, 2001, 'impulso', 'Alianza y libre comercio'), (2001, 2017, 'relanzamiento', 'Unión aduanera y mercado común'),
-                   (2017, 2021, 'crisis', 'Bloqueo'), (2021, 2027, 'terceros', 'Acuerdos con terceros')],
+        'etapas': [(1981, 2001, 'impulso', 'Alianza y libre comercio'), (2001, 2017, 'relanzamiento', 'Unión aduanera'),
+                   (2017, 2021, 'crisis', 'Crisis'), (2021, 2027, 'terceros', 'Terceros')],
         'contexto': [
             (1979, 'revolución iraní'), (1990, 'invasión de Kuwait'), (2003, 'invasión de Irak'), (2011, 'Primavera Árabe'),
             (2014, 'caída del petróleo'), (2015, 'guerra de Yemen')],
@@ -233,7 +233,7 @@ CRONOLOGIAS = {
     'UEE': {
         'eje': (1990, 2027, range(1990, 2030, 10)),
         'etapas': [(1991.95, 2010, 'origen', 'CEI e intentos de unión'), (2010, 2022.15, 'impulso', 'Unión aduanera y UEE'),
-                   (2022.15, 2027, 'crisis', 'Guerra y sanciones')],
+                   (2022.15, 2027, 'crisis', 'Sanciones')],
         'contexto': [
             (1991.95, 'disolución de la URSS'), (2009.4, 'Asociación Oriental de la UE'), (2014.2, 'anexión de Crimea'),
             (2022.15, 'invasión de Ucrania')],
