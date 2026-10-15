@@ -52,6 +52,11 @@ FUENTES = [  # (código, institución, base de datos, enlace, cobertura y uso)
      'https://ustr.gov/trade-agreements/free-trade-agreements/united-states-mexico-canada-agreement', 'Reglas de origen del automóvil.'),
     ('WITS_ARANCEL', 'Banco Mundial', 'WITS, aranceles por socio (tradestats-tariff)', 'https://wits.worldbank.org',
      'Arancel aplicado efectivo (AHS) y de nación más favorecida (MFN), medias ponderadas por el comercio, por socio.'),
+    ('SIPRI', 'Stockholm International Peace Research Institute', 'SIPRI Arms Transfers Database', 'https://www.sipri.org/databases/armstransfers',
+     'Entregas de armas convencionales principales por proveedor y receptor, en millones de TIV (indicador de tendencia), 1985-2025. '
+     'Consulta del 15/10/2026 (Code/datos/sipri_armas_ccg.csv).'),
+    ('OMC_RTA', 'Organización Mundial del Comercio', 'Regional Trade Agreements Database', 'https://rtais.wto.org',
+     'Año de entrada en vigor de los acuerdos de libre comercio entre las economías del RCEP.'),
     ('VARIAS', '—', 'Fuentes citadas una a una', '—', 'Hoja Cifras_citadas: la fuente de cada cifra figura en su fila.'),
 ]
 
@@ -85,8 +90,21 @@ TRATAMIENTOS = [  # (código, nombre, definición)
     ('T17', 'Convergencia con la UE', 'PIB per cápita en PPA en % del agregado UE-27 de WDI (EUU).'),
     ('T18', 'Manufacturas (WITS)', 'Grupo «manuf» de WITS: CUCI 5 a 8 sin las divisiones 667 y 68.'),
     ('T19', 'Complementariedad aproximada', 'MICHAELY (1996) con las 16 secciones del SA de WITS (más grueso que con 3 dígitos de la CUCI).'),
-    ('T20', 'Arancel según el origen', 'AHS y MFN por socio ponderados por las importaciones de cada socio; socios agrupados en misma '
-     'comunidad con libre comercio (CEDEAO, CEEAC, EAC, COMESA, SADC, UEMOA, CEMAC), resto de África y fuera de África.'),
+    ('T20', 'Arancel según el origen', 'AHS y MFN por socio ponderados por las importaciones desde cada socio, agrupando los socios '
+     'según el origen: en el AfCFTA, misma comunidad con libre comercio (CEDEAO, CEEAC, EAC, COMESA, SADC, UEMOA, CEMAC), resto de '
+     'África y fuera de África; en la ASEAN, miembros, China, Japón y Corea, UE-27 y EE. UU. (al menos siete miembros con datos).'),
+    ('T22', 'Fase de elaboración', 'Grupos de la UNCTAD en WITS (materias primas, bienes intermedios, de consumo y de capital): parte de '
+     'cada fase en las exportaciones a cada destino, con los miembros que declaran las cuatro fases.'),
+    ('T23', 'Margen de preferencia', 'Arancel NMF menos arancel aplicado (AHS), con las mismas ponderaciones de comercio, por importador '
+     'y origen; antes de un acuerdo es cero.'),
+    ('T24', 'Dependencia asimétrica', 'HIRSCHMAN (1945): peso de China en el comercio (exportaciones más importaciones) de cada miembro, '
+     'frente al peso del miembro en el comercio de China; el cociente dice cuántas veces es mayor la dependencia del miembro.'),
+    ('T25', 'Sumas móviles de cinco años', 'Parte de cada proveedor en las entregas de armas (TIV) de los cinco años hasta el indicado, '
+     'para suavizar la irregularidad de los grandes contratos.'),
+    ('T26', 'Índice 2021 = 100', 'Valor de cada año / valor de 2021 x 100, el último año antes de la invasión de Ucrania.'),
+    ('T27', 'Hidrocarburos con datos espejo', 'Parte del grupo «Fuels» de WITS (capítulo 27 del SA) en las importaciones que todos los '
+     'países declaran desde cada miembro; exportaciones no combustibles = total - Fuels, en % del PIB. Se descartan los años con más '
+     'combustibles que total.'),
     ('T21', 'Sin combustibles', 'Exportaciones totales menos las del grupo «Fuels» de WITS (CUCI 3).'),
     ('T00', 'Sin tratamiento', 'Dato tal como lo publica la fuente.'),
 ]
@@ -108,6 +126,16 @@ META = [
     (r'^AFCFTA_aranceles$', 'WITS_ARANCEL, WITS', 'T20', 'AfCFTA_aranceles'),
     (r'^PAFTA_sin_petroleo$', 'WITS', 'T02, T21', 'PAFTA_sin_petroleo'),
     (r'^PAFTA_composicion$', 'WITS', 'T18', 'PAFTA_composicion'),
+    (r'^ASEAN_fabrica$', 'WITS', 'T22, T04', 'ASEAN_fabrica'),
+    (r'^ASEAN_preferencia$', 'WITS_ARANCEL, WITS', 'T20, T04', 'ASEAN_preferencia'),
+    (r'^CCG_diversificacion$', 'WITS_ESPEJO, WDI', 'T05, T27', 'CCG_diversificacion'),
+    (r'^CCG_complementariedad$', 'COMTRADE', 'T06, T08', 'CCG_complementariedad'),
+    (r'^CCG_seguridad$', 'SIPRI, WITS_ESPEJO', 'T25, T05', 'CCG_seguridad'),
+    (r'^RCEP_china$', 'WITS', 'T24', 'RCEP_china'),
+    (r'^RCEP_enlaces$', 'WITS_ARANCEL', 'T23', 'RCEP_enlaces (b)'),
+    (r'^RCEP_acuerdos$', 'OMC_RTA', 'T00', 'RCEP_enlaces (a)'),
+    (r'^UEE_remesas$', 'WDI', 'T00', 'UEE_remesas'),
+    (r'^UEE_desvio$', 'WITS', 'T04, T26', 'UEE_desvio'),
     (r'_intrarregional$', 'COMTRADE, WITS', 'T01', '{G}_comercio_intrarregional (a, c) o cuadro comparativo'),
     (r'_intensidad$', 'COMTRADE, WITS, WDI', 'T01, T03', '{G}_comercio_intrarregional (b)'),
     (r'_composicion$', 'COMTRADE', 'T06, T07', '{G}_composicion'),
@@ -125,7 +153,8 @@ FICHERO = {'AFCFTA': 'AfCFTA'}   # prefijo de los ficheros de figura cuando no c
 DIM_PAIS = {'País', 'Miembro', 'Exportador', 'Subregión', 'Acuerdo', 'Bloque', 'Grupo'}
 DIM_SOCIO = {'Importador', 'Destino', 'Socio'}
 DIM_DESGLOSE = {'Faltan', 'Datos', 'Datos que faltan', 'Exportadores con datos espejo', 'Miembros'}
-ISO = set(dc.M49) | {'USA', 'CAN', 'MEX', 'CHN', 'NOR', 'ISL', 'CHE', 'RUS', 'BLR', 'KAZ', 'ARM', 'KGZ', 'ARE', 'SAU', 'EU', 'OECD'}
+ISO = set(dc.M49) | {'USA', 'CAN', 'MEX', 'CHN', 'NOR', 'ISL', 'CHE', 'RUS', 'BLR', 'KAZ', 'ARM', 'KGZ', 'ARE', 'SAU', 'EU', 'OECD',
+                     'TJK', 'UZB', 'AUS', 'NZL'}
 NOMBRE_ISO = {'Noruega': 'NOR', 'Islandia': 'ISL', 'Suiza': 'CHE', 'EE. UU.': 'USA', 'EE.\\,UU.': 'USA', 'México': 'MEX',
               'Canadá': 'CAN', 'UE': 'EU', 'OCDE': 'OECD', 'Guatemala': 'GTM', 'El Salvador': 'SLV', 'Honduras': 'HND',
               'Nicaragua': 'NIC', 'Costa Rica': 'CRI', 'Bolivia': 'BOL', 'Colombia': 'COL', 'Ecuador': 'ECU', 'Perú': 'PER'}
@@ -273,6 +302,9 @@ def comercio_bruto():
         if r['socio'] and r['tipo'] == 'comercio':
             yield ['WITS', 'grupos de WITS', 'Comercio por socio y grupo de productos', r['pais'], r['socio'], r['medida'],
                    r['producto'], int(r['anio']), float(r['valor'])]
+    for r in lee_csv('espejo_productos.csv'):
+        yield ['WITS_ESPEJO', 'grupos de WITS', 'Importaciones declaradas por el socio (espejo, CIF), por grupo de productos',
+               r['importador'], r['exportador'], 'M', r['producto'], int(r['anio']), float(r['valor_usd'])]
     for r in lee_csv('efta_ue.csv'):
         yield ['WITS', 'SA (grupos de WITS)', 'Comercio con la UE-27 y con el mundo', r['pais'], r['socio'], r['flujo'],
                r['producto'], int(r['anio']), float(r['valor_usd'])]
@@ -283,7 +315,12 @@ def otros_brutos():
     nombres = {'NY.GDP.MKTP.CD': 'PIB (USD corrientes)', 'TM.VAL.MRCH.CD.WT': 'Importaciones de mercancías (USD corrientes)',
                'NY.GDP.PCAP.KD': 'PIB per cápita (USD constantes de 2015)', 'NY.GDP.PCAP.PP.KD': 'PIB per cápita (PPA, 2021)',
                'NE.EXP.GNFS.CD': 'Exportaciones de bienes y servicios (USD corrientes)', 'SP.POP.TOTL': 'Población',
-               'PSEP': 'PSE (% de los ingresos agrarios brutos)', 'PNPC': 'NPC del productor'}
+               'PSEP': 'PSE (% de los ingresos agrarios brutos)', 'PNPC': 'NPC del productor',
+               'TX.VAL.FUEL.ZS.UN': 'Combustibles (% de las exportaciones de mercancías)',
+               'TX.VAL.MRCH.CD.WT': 'Exportaciones de mercancías (USD corrientes)',
+               'BX.GSR.NFSV.CD': 'Exportaciones de servicios (USD corrientes)',
+               'BX.TRF.PWKR.DT.GD.ZS': 'Remesas personales recibidas (% del PIB)',
+               'BX.TRF.PWKR.CD.DT': 'Remesas personales recibidas (USD corrientes)'}
     for r in lee_csv('wdi_series.csv'):
         yield ['WDI', r['pais'], nombres.get(r['indicador'], r['indicador']), r['indicador'], int(r['anio']), float(r['valor'])]
     for r in lee_csv('wdi_2023.csv'):
@@ -294,6 +331,29 @@ def otros_brutos():
                    float(r['valor'])]
     for r in lee_csv('pse_ocde.csv'):
         yield ['OCDE_PSE', r['pais'], nombres.get(r['medida'], r['medida']), r['medida'], int(r['anio']), float(r['valor'])]
+    yield from sipri_bruto()
+
+
+def sipri_bruto():
+    """Entregas de armas a cada miembro del CCG por proveedor (SIPRI, millones de TIV), tal como las da la consulta."""
+    cab, filas = None, []
+    with open(DATOS / 'sipri_armas_ccg.csv', encoding='utf-8') as f:
+        bloque = []
+        for fila in csv.reader(f):
+            if fila and fila[0] == 'Supplier':
+                cab, bloque = fila, []
+            elif fila and cab and fila[0].startswith('Total exports to'):
+                receptor = fila[0].replace('Total exports to ', '')
+                for prov in bloque + [fila]:
+                    for j, c in enumerate(cab):
+                        if c.isdigit() and j < len(prov) and prov[j].strip():
+                            nombre = 'Total' if prov is fila else prov[0]
+                            filas.append(['SIPRI', receptor, f'Armas entregadas por {nombre} (millones de TIV)', 'TIV', int(c),
+                                          float(prov[j])])
+                cab = None
+            elif fila and cab:
+                bloque.append(fila)
+    return filas
 
 
 def hoja(wb, nombre, cabecera, filas, anchos):
