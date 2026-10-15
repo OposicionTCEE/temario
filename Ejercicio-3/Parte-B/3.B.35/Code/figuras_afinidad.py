@@ -162,6 +162,15 @@ def cefta():
     # ancla de la UE
     socios_cefta = set(miembros) | {'KSV'}
     out = {}
+
+    def atipico(t, p, a):
+        """Dato que se aparta más de 25 puntos de los dos años vecinos en la parte de la UE (p. ej., Macedonia del Norte en
+        2017 figura con un 2 % frente al 79-80 % de 2016 y 2018: error de WITS); el año queda fuera de la serie del bloque."""
+        def ue(b):
+            d = t.get((p, b))
+            return 100 * sum(d.get(e, 0.0) for e in dc.UE27) / d['WLD'] if d and d.get('WLD') else None
+        x, v = ue(a), [ue(a - 1), ue(a + 1)]
+        return x is not None and all(y is not None and abs(x - y) > 25 for y in v)
     for f in ('X', 'M'):
         t = dw.tabla('comercio', f, 'Total')
         for a in range(2006, 2024):
@@ -169,7 +178,7 @@ def cefta():
             por = {}
             for p in dc.GRUPOS['CEFTA'][0]:
                 d = t.get((p, a))
-                if not d or not d.get('WLD'):
+                if not d or not d.get('WLD') or atipico(t, p, a):
                     continue
                 u = sum(d.get(e, 0.0) for e in dc.UE27)
                 c = sum(v for s, v in d.items() if s in socios_cefta and s != p)
@@ -188,11 +197,11 @@ def cefta():
                  + fe.coords((a, out[(f, a)][k]) for a in anios if (f, a) in out) + '};')
     o += rotulos([(out[(f, anios[-1])][k], t) for _, f, k, t in lin if (f, anios[-1]) in out], 80, anios[-1] + 0.4)
     o.append('  \\end{axis}')
-    por = out[('X', anios[-1])][2]
+    por = out[('M', anios[-1])][2]   # las exportaciones por miembro ya están en CEFTA_destinos_2023
     etiquetas = [NOMBRES[p] for p in sorted(por, key=lambda p: -por[p][0])]
-    o += barras_h(etiquetas, [('s1', 'a la UE-27', {NOMBRES[p]: v[0] for p, v in por.items()}),
-                              ('s2', 'a los socios del CEFTA', {NOMBRES[p]: v[1] for p, v in por.items()})],
-                  '(10.7cm,0cm)', 3.5, 4.4, f'(b) Exportaciones en {anios[-1]} (\\%)', xmax=100)
+    o += barras_h(etiquetas, [('s1', 'de la UE-27', {NOMBRES[p]: v[0] for p, v in por.items()}),
+                              ('s2', 'de los socios del CEFTA', {NOMBRES[p]: v[1] for p, v in por.items()})],
+                  '(10.7cm,0cm)', 3.5, 4.4, f'(b) Importaciones en {anios[-1]} (\\%)', xmax=100)
     o.append('\\end{tikzpicture}')
     escribe('CEFTA_ancla', o)
     tabla('CEFTA_ancla', 'Peso de la UE-27 y de los socios del CEFTA en las exportaciones e importaciones de los miembros del CEFTA (%)',
@@ -202,7 +211,8 @@ def cefta():
           [(a, f, round(out[(f, a)][0], 1), round(out[(f, a)][1], 1),
             *[f'{out[(f, a)][2][p][0]:.1f} / {out[(f, a)][2][p][1]:.1f}' if p in out[(f, a)][2] else None for p in dc.GRUPOS['CEFTA'][0]])
            for f in ('X', 'M') for a in range(2006, 2024) if (f, a) in out])
-    print('ancla', {f: (round(out[(f, anios[-1])][0]), round(out[(f, anios[-1])][1])) for f in ('X', 'M')}, anios[-1])
+    print('ancla', {f: (round(out[(f, anios[-1])][0]), round(out[(f, anios[-1])][1])) for f in ('X', 'M')}, anios[-1],
+          'X', {a: (round(out[('X', a)][0]), round(out[('X', a)][1])) for a in anios}, 'M', {p: tuple(round(x) for x in v) for p, v in por.items()})
 
 
 # ---------------------------------------------------------------- AfCFTA
