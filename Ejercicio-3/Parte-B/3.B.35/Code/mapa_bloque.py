@@ -123,7 +123,7 @@ BLOQUES = {
             # Solo fundación y refundación (15/10/2026): los demás hitos están en la cronología de cada acuerdo
             ('ASEAN', 'asean', 1967, [(1967, 'Bangkok', 'aw'), (2007, 'Carta', 'aw')], []),
             ('CCG', 'ccg', 1981, [(1981, 'Riad', 'aw'), (2003, 'unión aduanera', 'aw')], []),
-            ('RCEP', 'rcep', 2022, [(2022, 'en vigor', 'aw')], []),
+            ('RCEP', 'rcep', 2022, [(2022, 'en vigor', 'ae')], []),
             ('CPTPP', 'cptpp', 2018, [(2018, 'en vigor', 'aw')], []),
             ('UEE', 'uee', 2015, [(2015, 'en vigor', 'aw')], []),
         ],
