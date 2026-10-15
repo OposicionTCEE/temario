@@ -104,9 +104,9 @@ BLOQUES = {
                  'gobierno': {
                      'nodos': [('con', 0.85, 0, 'intergub', 'Consejo', False),
                                ('sec', 2.75, 0, 'tecnico', 'Secretaría', False),
-                               ('cm', 0.68, 1, 'intergub', 'Comité EEE', False),
-                               ('esa', 2.05, 1, 'supra', 'Vigilancia', False),
-                               ('tri', 3.25, 1, 'judicial', 'Tribunal', False)],
+                               ('cm', 0.5, 1, 'intergub', 'Comité', False),
+                               ('esa', 1.84, 1, 'supra', 'Vigilancia', False),
+                               ('tri', 3.27, 1, 'judicial', 'Tribunal', False)],
                      'flechas': [('sec', 'con')],
                      'nota': r'Abajo, los órganos del EEE'},
                  'valoracion': [r'Se \textbf{vació}: seis de diez miembros entraron en la CEE (efecto dominó)',
