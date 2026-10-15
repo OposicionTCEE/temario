@@ -56,7 +56,7 @@ def rotulos(series, techo, x):
 
 
 def barras_h(etiquetas, series, at, ancho, alto, titulo, xlabel='', apilar=False, xmax=None, valores=True, solapar=False,
-             con_etiquetas=True, leyenda=True):
+             con_etiquetas=True, leyenda=True, leyenda_izquierda=False):
     """Barras horizontales (agrupadas, apiladas o superpuestas) con categorías simbólicas;
     series = [(color, leyenda, {etiqueta: valor})]. Sin comas ni paréntesis en etiquetas y leyendas (pgfplots las parte)."""
     cats = ','.join(etiquetas)
@@ -68,7 +68,10 @@ def barras_h(etiquetas, series, at, ancho, alto, titulo, xlabel='', apilar=False
          f' bar width={"6pt" if apilar or solapar else "3.4pt"}, y dir=reverse, symbolic y coords={{{cats}}}, ytick={{{cats}}},'
          + ('' if con_etiquetas else ' yticklabels={},')
          + f' xmin=0, xmax={xm}, enlarge y limits=0.06, title={{{titulo}}}, xlabel={{{xlabel}}},'
-         ' legend style={font=\\sffamily\\footnotesize, draw=none, fill=none, at={(0.5,-0.2)}, anchor=north, legend columns=3,'
+         + (' legend style={font=\\sffamily\\footnotesize, draw=none, fill=none, at={(0,-0.2)}, anchor=north west, legend columns=3,'
+            if leyenda_izquierda else
+            ' legend style={font=\\sffamily\\footnotesize, draw=none, fill=none, at={(1,-0.2)}, anchor=north east, legend columns=3,')
+         + '
          ' /tikz/every even column/.append style={column sep=0.25cm}}, legend cell align=left, area legend, reverse legend'
          + (', bar shift=0pt' if solapar else '')
          + (', nodes near coords, nodes near coords style={font=\\sffamily\\footnotesize, text=black!75, /pgf/number format/fixed,'
@@ -149,7 +152,7 @@ def cefta():
     refs = {f'{NOMBRES[e]} en {a}': rel[e][a] for e, a in adh.items() if a in rel[e]}
     etiquetas = sorted(hoy, key=lambda k: -hoy[k]) + sorted(refs, key=lambda k: -refs[k])
     o += barras_h(etiquetas, [('s1', f'miembros del CEFTA en {ult}', hoy), ('black!35', 'últimos adheridos a la UE', refs)],
-                  '(9.3cm,0cm)', 4.2, 4.4, '(b) Hoy y los últimos adheridos (\\%)', valores=True, xmax=80, solapar=True)
+                  '(9.3cm,0cm)', 4.2, 4.4, '(b) Hoy y los últimos adheridos (\\%)', valores=True, xmax=80, solapar=True, leyenda=False)
     o.append('\\end{tikzpicture}')
     escribe('CEFTA_convergencia', o)
     tabla('CEFTA_convergencia', 'PIB per cápita en PPA de los miembros del CEFTA y de los últimos en adherirse a la UE, en % de la UE-27',
@@ -267,7 +270,7 @@ def africa():
     etiquetas = sorted(estr, key=lambda p: -estr[p]['manuf'])
     colores = [('s1', 'manuf'), ('s3', 'Food'), ('s4', 'AgrRaw'), ('s2', 'Fuels'), ('s7', 'OresMtls'), ('black!30', 'otros')]
     o += barras_h(etiquetas, [(c, GRUPOS_TXT.get(g, 'Otros'), {p: estr[p][g] for p in etiquetas}) for c, g in colores],
-                  '(0.9cm,0cm)', 4.6, 5.0, '(a) Exportaciones en 2023 (\\%)', apilar=True, xmax=100)
+                  '(0.9cm,0cm)', 4.6, 5.0, '(a) Exportaciones en 2023 (\\%)', apilar=True, xmax=100, leyenda_izquierda=True)
     cw, ch, xm, ytop = 0.52, 0.4, 8.3, 5.1
     paises = [p for p in AFRICA_GRANDES if secc[(p, 'X')]]
     vmax = max(comp.values())
@@ -346,7 +349,7 @@ def africa():
 
 
 # ---------------------------------------------------------------- PAFTA
-SUBREGIONES = {'Golfo (CCG)': ['ARE', 'BHR', 'KWT', 'OMN', 'QAT', 'SAU'], 'Magreb': ['DZA', 'LBY', 'MAR', 'TUN'],
+SUBREGIONES = {'Golfo': ['ARE', 'BHR', 'KWT', 'OMN', 'QAT', 'SAU'], 'Magreb': ['DZA', 'LBY', 'MAR', 'TUN'],
                'Oriente Próximo y otros': ['EGY', 'IRQ', 'JOR', 'LBN', 'PSE', 'SYR', 'SDN', 'YEM']}
 
 
