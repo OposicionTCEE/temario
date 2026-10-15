@@ -50,6 +50,8 @@ FUENTES = [  # (código, institución, base de datos, enlace, cobertura y uso)
      'https://www.oica.net/category/production-statistics/', 'Producción de vehículos de motor por país.'),
     ('USMCA', 'USTR', 'Texto del USMCA (capítulo 4 y apéndice de productos automotores)',
      'https://ustr.gov/trade-agreements/free-trade-agreements/united-states-mexico-canada-agreement', 'Reglas de origen del automóvil.'),
+    ('WITS_ARANCEL', 'Banco Mundial', 'WITS, aranceles por socio (tradestats-tariff)', 'https://wits.worldbank.org',
+     'Arancel aplicado efectivo (AHS) y de nación más favorecida (MFN), medias ponderadas por el comercio, por socio.'),
     ('VARIAS', '—', 'Fuentes citadas una a una', '—', 'Hoja Cifras_citadas: la fuente de cada cifra figura en su fila.'),
 ]
 
@@ -78,6 +80,14 @@ TRATAMIENTOS = [  # (código, nombre, definición)
     ('T14', 'Protección agraria', 'PSE: transferencias a los productores en % de los ingresos agrarios brutos; NPC: precio percibido '
      'por el productor / precio en frontera.'),
     ('T15', 'Peso en la economía mundial', 'Suma de los miembros / total mundial (PIB, exportaciones de bienes y servicios, población).'),
+    ('T16', 'Tipo de cambio real bilateral', 'Tipo de cambio peso/real (cociente de los tipos frente al dólar) por el deflactor del PIB '
+     'de Brasil sobre el de Argentina (WDI no tiene el IPC argentino); índice 1995 = 100; sube = peso más barato.'),
+    ('T17', 'Convergencia con la UE', 'PIB per cápita en PPA en % del agregado UE-27 de WDI (EUU).'),
+    ('T18', 'Manufacturas (WITS)', 'Grupo «manuf» de WITS: CUCI 5 a 8 sin las divisiones 667 y 68.'),
+    ('T19', 'Complementariedad aproximada', 'MICHAELY (1996) con las 16 secciones del SA de WITS (más grueso que con 3 dígitos de la CUCI).'),
+    ('T20', 'Arancel según el origen', 'AHS y MFN por socio ponderados por las importaciones de cada socio; socios agrupados en misma '
+     'comunidad con libre comercio (CEDEAO, CEEAC, EAC, COMESA, SADC, UEMOA, CEMAC), resto de África y fuera de África.'),
+    ('T21', 'Sin combustibles', 'Exportaciones totales menos las del grupo «Fuels» de WITS (CUCI 3).'),
     ('T00', 'Sin tratamiento', 'Dato tal como lo publica la fuente.'),
 ]
 
@@ -92,12 +102,20 @@ META = [
     (r'_destinos_\d{4}$', 'WITS', 'T04, T11', '{G}_destinos o texto'),
     (r'^UEE_destinos$', 'WITS, WITS_ESPEJO', 'T04, T05, T11', 'UEE_destinos'),
     (r'^CCG_destinos$', 'WITS_ESPEJO', 'T04, T05, T11', 'CCG_destinos'),
-    (r'^PAFTA_', 'WITS_ESPEJO', 'T02, T05', 'PAFTA_comercio'),
     (r'^EFTA_UE$', 'WITS', 'T04, T12', 'EFTA_ue'),
     (r'^EFTA_PSE$', 'OCDE_PSE', 'T14', 'EFTA_agricultura'),
     (r'^NAFTA_vehiculos$', 'OICA, USMCA', 'T00', 'NAFTA_automovil'),
     (r'^USA_importaciones$', 'WITS', 'T00', 'USA_importaciones'),
     (r'^Megaacuerdos', 'WDI', 'T15', 'Megaacuerdos_peso'),
+    (r'^MERCOSUR_tipo_cambio$', 'WDI, COMTRADE, WITS', 'T16, T01', 'MERCOSUR_tipo_cambio'),
+    (r'^CEFTA_convergencia$', 'WDI', 'T17', 'CEFTA_convergencia'),
+    (r'^CEFTA_ancla$', 'WITS', 'T04', 'CEFTA_ancla'),
+    (r'^AFCFTA_composicion$', 'WITS', 'T02, T18', 'AfCFTA_composicion'),
+    (r'^AFCFTA_materias$', 'WITS', 'T19', 'AfCFTA_materias'),
+    (r'^AFCFTA_aranceles$', 'WITS_ARANCEL, WITS', 'T20', 'AfCFTA_aranceles'),
+    (r'^PAFTA_sin_petroleo$', 'WITS', 'T02, T21', 'PAFTA_sin_petroleo'),
+    (r'^PAFTA_composicion$', 'WITS', 'T18', 'PAFTA_composicion'),
+    (r'^PAFTA_', 'WITS_ESPEJO', 'T02, T05', 'PAFTA_comercio'),
 ]
 PROYECTO = {'MCCA': 'MCCA', 'CAN': 'CAN', 'EFTA': 'EFTA', 'NAFTA': 'NAFTA/USMCA', 'USA': 'NAFTA/USMCA', 'MERCOSUR': 'MERCOSUR',
             'CEFTA': 'CEFTA', 'AFCFTA': 'AfCFTA', 'PAFTA': 'PAFTA', 'ASEAN': 'ASEAN', 'CCG': 'CCG', 'RCEP': 'RCEP',
@@ -249,6 +267,10 @@ def comercio_bruto():
     for r in lee_csv('productos_cuci3.csv'):
         yield ['COMTRADE', r['clasificacion'], 'Comercio con el mundo por grupo de 3 dígitos', r['pais'], 'WLD', r['flujo'],
                'Grupo ' + r['producto'], int(r['anio']), float(r['valor_usd'])]
+    for r in lee_csv('wits_extra.csv'):
+        if r['socio'] and r['tipo'] == 'comercio':
+            yield ['WITS', 'grupos de WITS', 'Comercio por socio y grupo de productos', r['pais'], r['socio'], r['medida'],
+                   r['producto'], int(r['anio']), float(r['valor'])]
     for r in lee_csv('efta_ue.csv'):
         yield ['WITS', 'SA (grupos de WITS)', 'Comercio con la UE-27 y con el mundo', r['pais'], r['socio'], r['flujo'],
                r['producto'], int(r['anio']), float(r['valor_usd'])]
@@ -264,6 +286,10 @@ def otros_brutos():
         yield ['WDI', r['pais'], nombres.get(r['indicador'], r['indicador']), r['indicador'], int(r['anio']), float(r['valor'])]
     for r in lee_csv('wdi_2023.csv'):
         yield ['WDI', r['pais'], nombres.get(r['indicador'], r['indicador']), r['indicador'], 2023, float(r['valor'])]
+    for r in lee_csv('wits_extra.csv'):
+        if r['socio'] and r['tipo'] == 'arancel':
+            yield ['WITS_ARANCEL', r['pais'], f"Arancel {r['medida']} ponderado frente a {r['socio']} (%)", r['medida'], int(r['anio']),
+                   float(r['valor'])]
     for r in lee_csv('pse_ocde.csv'):
         yield ['OCDE_PSE', r['pais'], nombres.get(r['medida'], r['medida']), r['medida'], int(r['anio']), float(r['valor'])]
 
