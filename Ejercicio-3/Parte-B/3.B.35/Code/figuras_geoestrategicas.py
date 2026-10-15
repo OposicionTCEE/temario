@@ -258,5 +258,273 @@ def ccg():
     print('expo', {k: {a: round(expo[k][a]) for a in (1998, 2003, 2008, 2013, 2018, 2023) if a in expo[k]} for k in expo})
 
 
+# ---------------------------------------------------------------- ASEAN
+FASES_TXT = {'UNCTAD-SoP1': 'Materias primas', 'UNCTAD-SoP2': 'Intermedios', 'UNCTAD-SoP3': 'Consumo', 'UNCTAD-SoP4': 'Capital'}
+DESTINOS = [('ASEAN', None), ('China', ['CHN']), ('Japón y Corea', ['JPN', 'KOR']), ('EE. UU.', ['USA']), ('UE-27', dc.UE27)]
+
+
+def destino(p, nombre, socios):
+    return [s for s in ASEAN10 if s != p] if nombre == 'ASEAN' else socios
+
+
+def asean():
+    fases = {g: dw.tabla('comercio', 'X', g) for g in FASES}
+    color = {'ASEAN': 's1', 'China': 's2', 'Japón y Corea': 's3', 'EE. UU.': 's4', 'UE-27': 's5'}
+    serie, compo, cobertura = defaultdict(dict), {}, {}
+    for a in range(2000, 2024):
+        con = [p for p in ASEAN10 if all((p, a) in fases[g] for g in FASES)]
+        cobertura[a] = con
+        if len(con) < 7:
+            continue
+        for nombre, socios in DESTINOS:
+            v = {g: sum(fases[g][(p, a)].get(s, 0.0) for p in con for s in destino(p, nombre, socios)) for g in FASES}
+            tot = sum(v.values())
+            if tot:
+                serie[nombre][a] = 100 * v['UNCTAD-SoP2'] / tot
+                compo[(nombre, a)] = {g: 100 * x / tot for g, x in v.items()}
+    anios = sorted(serie['ASEAN'])
+    ult = anios[-1]
+    o = fe.cabecera('ASEAN', 'fabrica')
+    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=5.0cm, height=4.4cm, at={{(0cm,0cm)}}, xmin=2000, xmax={ult}, ymin=0, ymax=80,'
+          ' xtick={2000,2010,2020}, title={(a) Intermedios en las exportaciones}, ylabel={\\% de cada destino}, clip mode=individual]',
+          *fe.etapas('ASEAN', 0, 80, 2000, ult)]
+    for nombre, _ in DESTINOS:
+        o.append(f'    \\addplot[{color[nombre]}, line width=1.3pt, mark=none] coordinates {{{fe.coords(sorted(serie[nombre].items()))}}};')
+    for y, txt in coloca([(serie[n][ult], 'a ' + n.replace('EE. UU.', 'EE.\\,UU.')) for n, _ in DESTINOS], 5.5, 3):
+        o.append(f'    \\node[anchor=west, inner sep=1.5pt, text=black!80] at (axis cs:{ult + 0.4},{y:.1f}) {{{txt}}};')
+    o.append('  \\end{axis}')
+    etiquetas = [n.replace('EE. UU.', 'EE.\\,UU.') for n, _ in DESTINOS]
+    series = [(col, FASES_TXT[g], {n.replace('EE. UU.', 'EE.\\,UU.'): compo[(n, ult)][g] for n, _ in DESTINOS})
+              for g, col in zip(FASES, ['black!25', 's7', 's6', 's8'])]
+    o += barras_h(etiquetas, series, '(9.6cm,0cm)', 4.6, 4.4, f'(b) Por fase de elaboración, {ult} (\\%)', apilar=True, xmax=100,
+                  valores=False)
+    o.append('\\end{tikzpicture}')
+    escribe('ASEAN_fabrica', o)
+    tabla('ASEAN_fabrica', 'Exportaciones de los miembros de la ASEAN según el destino y la fase de elaboración (% de cada destino)',
+          'WITS (Banco Mundial), exportaciones declaradas por cada miembro por grupos de fase de elaboración de la UNCTAD (UNCTAD-SoP1 '
+          'materias primas, SoP2 bienes intermedios, SoP3 de consumo, SoP4 de capital), dólares corrientes. Solo los miembros que '
+          'declaran las cuatro fases cada año (al menos siete); UE-27 como suma de sus Estados miembros. Una parte de las '
+          'exportaciones de Singapur son reexportaciones. Cálculo propio (Code/figuras_geoestrategicas.py).',
+          ['Año', 'Destino', 'Materias primas (%)', 'Intermedios (%)', 'Consumo (%)', 'Capital (%)', 'Miembros que declaran'],
+          [(a, n, *[round(compo[(n, a)][g], 1) for g in FASES], ', '.join(cobertura[a])) for a in anios for n, _ in DESTINOS])
+    print('intermedios', {n: {a: round(serie[n][a]) for a in (2000, 2005, 2010, 2015, 2020, ult) if a in serie[n]} for n, _ in DESTINOS})
+    print('compo', ult, {n: {FASES_TXT[g]: round(compo[(n, ult)][g]) for g in FASES} for n, _ in DESTINOS})
+    print('cobertura', {a: len(c) for a, c in cobertura.items()})
+    # sin Singapur (reexportaciones)
+    a = ult
+    con = [p for p in cobertura[a] if p != 'SGP']
+    for nombre, socios in DESTINOS:
+        v = {g: sum(fases[g][(p, a)].get(s, 0.0) for p in con for s in destino(p, nombre, socios)) for g in FASES}
+        print('  sin SGP', nombre, round(100 * v['UNCTAD-SoP2'] / sum(v.values())))
+    # margen de preferencia
+    ahs, mfn, imp = dw.tabla('arancel', 'AHS', 'Total'), dw.tabla('arancel', 'MFN', 'Total'), dw.tabla('comercio', 'M', 'Total')
+    origenes = [('ASEAN', None), ('China', ['CHN']), ('Japón y Corea', ['JPN', 'KOR']), ('UE-27 y EE. UU.', dc.UE27 + ['USA'])]
+    col_o = {'ASEAN': 's1', 'China': 's2', 'Japón y Corea': 's3', 'UE-27 y EE. UU.': 's4'}
+    ar, nmf, cob = defaultdict(dict), {}, {}
+    for a in range(2000, 2024):
+        con = [p for p in ASEAN10 if (p, a) in ahs and (p, a) in imp]
+        cob[a] = con
+        if len(con) < 7:
+            continue
+        for nombre, socios in origenes:
+            num = den = 0.0
+            for p in con:
+                for s in destino(p, nombre, socios):
+                    t, m = ahs[(p, a)].get(s), imp[(p, a)].get(s, 0.0)
+                    if t is not None and m:
+                        num, den = num + t * m, den + m
+            if den:
+                ar[nombre][a] = num / den
+        num = den = 0.0
+        for p in con:
+            if (p, a) in mfn:
+                for s, t in mfn[(p, a)].items():
+                    m = imp[(p, a)].get(s, 0.0)
+                    if m and s not in ASEAN10:
+                        num, den = num + t * m, den + m
+        if den:
+            nmf[a] = num / den
+    anios = sorted(ar['ASEAN'])
+    ult = anios[-1]
+    hi = fe.techo(max(max(s.values()) for s in ar.values()), 2)
+    o = fe.cabecera('ASEAN', 'preferencia')
+    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=5.0cm, height=4.4cm, at={{(0cm,0cm)}}, xmin=2000, xmax={ult}, ymin=0, ymax={hi},'
+          ' xtick={2000,2010,2020}, title={(a) Arancel aplicado según el origen}, ylabel={\\%, media ponderada}, clip mode=individual]',
+          *fe.etapas('ASEAN', 0, hi, 2000, ult)]
+    for nombre, _ in origenes:
+        o.append(f'    \\addplot[{col_o[nombre]}, line width=1.3pt, mark=none] coordinates {{{fe.coords(sorted(ar[nombre].items()))}}};')
+    for y, txt in coloca([(ar[n][max(ar[n])], n.replace('EE. UU.', 'EE.\\,UU.')) for n, _ in origenes], hi * 0.08, hi * 0.03):
+        o.append(f'    \\node[anchor=west, inner sep=1.5pt, text=black!80] at (axis cs:{ult + 0.4},{y:.2f}) {{{txt}}};')
+    o.append('  \\end{axis}')
+    # (b) por miembro, último año con datos de cada uno
+    por = {}
+    for p in ASEAN10:
+        anio = max((a for a in range(2015, 2024) if (p, a) in ahs and (p, a) in imp), default=None)
+        if anio is None:
+            continue
+        def media(socios, tabla_t):
+            num = den = 0.0
+            for s in socios:
+                t, m = tabla_t[(p, anio)].get(s), imp[(p, anio)].get(s, 0.0)
+                if t is not None and m:
+                    num, den = num + t * m, den + m
+            return num / den if den else None
+        por[p] = (anio, media([s for s in ASEAN10 if s != p], ahs), media(['CHN'], ahs),
+                  media(dc.UE27 + ['USA'], ahs) if (p, anio) in ahs else None)
+    orden = sorted(por, key=lambda p: -(por[p][3] or 0))
+    etiquetas = [NOMBRES[p] for p in orden]
+    o += barras_h(etiquetas, [('s1', 'de la ASEAN', {NOMBRES[p]: por[p][1] or 0 for p in orden}),
+                              ('s2', 'de China', {NOMBRES[p]: por[p][2] or 0 for p in orden}),
+                              ('s4', 'de la UE-27 y EE.\\,UU.', {NOMBRES[p]: por[p][3] or 0 for p in orden})],
+                  '(10.2cm,0cm)', 3.9, 4.4, '(b) Por miembro, último año (\\%)', valores=False, leyenda=False)
+    o.append('\\end{tikzpicture}')
+    escribe('ASEAN_preferencia', o)
+    tabla('ASEAN_preferencia', 'Arancel aplicado por los miembros de la ASEAN según el origen de las importaciones (%, media ponderada por las importaciones)',
+          'WITS (Banco Mundial), tradestats-tariff: arancel aplicado efectivo (AHS) medio ponderado por socio, agregado con las '
+          'importaciones de cada miembro desde cada socio; NMF = arancel de nación más favorecida medio ponderado de las importaciones '
+          'desde fuera de la ASEAN. Solo los miembros con datos cada año (al menos siete). Cálculo propio (Code/figuras_geoestrategicas.py).',
+          ['Año'] + [f'Desde {n} (%)' for n, _ in origenes] + ['NMF, fuera de la ASEAN (%)', 'Miembros con datos'],
+          [(a, *[round(ar[n][a], 2) if a in ar[n] else None for n, _ in origenes], round(nmf[a], 2) if a in nmf else None,
+            ', '.join(cob[a])) for a in range(2000, 2024) if len(cob[a]) >= 7]
+          + [(f'{por[p][0]} ({p})', *[round(x, 2) if x is not None else None for x in por[p][1:]], None, None, None) for p in orden])
+    print('arancel', {n: {a: round(ar[n][a], 1) for a in (2000, 2005, 2010, 2015, 2020, ult) if a in ar[n]} for n, _ in origenes})
+    print('NMF', {a: round(nmf[a], 1) for a in (2000, 2005, 2010, 2015, 2020, ult) if a in nmf}, 'cobertura', {a: len(c) for a, c in cob.items()})
+    print('por miembro', {p: tuple(round(x, 1) if isinstance(x, float) else x for x in v) for p, v in por.items()})
+
+
+# ---------------------------------------------------------------- RCEP
+ACUERDOS_RCEP = {   # primer acuerdo de libre comercio en vigor entre cada par antes del RCEP (año, nombre)
+    ('ASEAN', 'China'): (2005, 'ACFTA'), ('ASEAN', 'Japón'): (2008, 'AJCEP'), ('ASEAN', 'Corea'): (2007, 'AKFTA'),
+    ('ASEAN', 'Australia'): (2010, 'AANZFTA'), ('ASEAN', 'N. Zelanda'): (2010, 'AANZFTA'),
+    ('China', 'Japón'): (None, ''), ('China', 'Corea'): (2015, 'bilateral'), ('China', 'Australia'): (2015, 'bilateral'),
+    ('China', 'N. Zelanda'): (2008, 'bilateral'), ('Japón', 'Corea'): (None, ''), ('Japón', 'Australia'): (2015, 'bilateral'),
+    ('Japón', 'N. Zelanda'): (2018, 'CPTPP'), ('Corea', 'Australia'): (2014, 'bilateral'), ('Corea', 'N. Zelanda'): (2015, 'bilateral'),
+    ('Australia', 'N. Zelanda'): (1983, 'ANZCERTA'),
+}
+SEIS = ['ASEAN', 'China', 'Japón', 'Corea', 'Australia', 'N. Zelanda']
+
+
+def comercio_total(p, anios):
+    """(año, {socio: exportaciones + importaciones}) del primer año de la lista con los dos flujos declarados."""
+    x, m = dw.tabla('comercio', 'X', 'Total'), dw.tabla('comercio', 'M', 'Total')
+    for a in anios:
+        if (p, a) in x and (p, a) in m:
+            d = defaultdict(float)
+            for t in (x[(p, a)], m[(p, a)]):
+                for s, v in t.items():
+                    d[s] += v
+            return a, d
+    return None, {}
+
+
+def rcep():
+    miembros = [p for p in dc.GRUPOS['RCEP'][0] if p != 'CHN']
+    ini, fin, cuota = {}, {}, {}
+    for p in miembros:
+        a0, d0 = comercio_total(p, (2000, 2001))
+        a1, d1 = comercio_total(p, (2023, 2022, 2021))
+        if a0 and d0.get('WLD'):
+            ini[p] = (a0, 100 * d0.get('CHN', 0) / d0['WLD'], 100 * d0.get('JPN', 0) / d0['WLD'])
+        if a1 and d1.get('WLD'):
+            fin[p] = (a1, 100 * d1.get('CHN', 0) / d1['WLD'], 100 * d1.get('JPN', 0) / d1['WLD'])
+    ac, dch = comercio_total('CHN', (2023, 2022))
+    for p in miembros:
+        cuota[p] = 100 * dch.get(p, 0) / dch['WLD']
+    # la ASEAN como un todo: suma de los diez
+    orden = sorted([p for p in miembros if p in fin], key=lambda p: -fin[p][1])
+    o = fe.cabecera('RCEP', 'china')
+    # (a) dumbbell: peso de China y de Japón en el comercio de cada miembro, hacia 2000 y hacia 2023
+    x0, ancho, paso = 2.35, 5.2, 0.27
+    xmax = 50
+    def X(v):
+        return x0 + ancho * v / xmax
+    ytop = 0.0
+    o.append(f'  \\node[anchor=south west, font=\\sffamily\\small, inner sep=0pt] at (0,{ytop + 0.35:.2f}) {{(a) Peso en el comercio de cada miembro (\\%)}};')
+    yb = ytop - (len(orden) - 1) * paso
+    for v in range(0, xmax + 1, 10):
+        o.append(f'  \\draw[black!12, line width=0.3pt] ({X(v):.2f},{ytop + 0.12:.2f}) -- ({X(v):.2f},{yb - 0.12:.2f});')
+        o.append(f'  \\node[anchor=north, inner sep=1.5pt, text=black!70] at ({X(v):.2f},{yb - 0.14:.2f}) {{{v}}};')
+    for i, p in enumerate(orden):
+        y = ytop - i * paso
+        o.append(f'  \\node[anchor=east, inner sep=1pt] at ({x0 - 0.1:.2f},{y:.2f}) {{{NOMBRES[p]}}};')
+        for k, col, dy in ((2, 's1', -0.055), (1, 's2', 0.055)):
+            if p in ini:
+                o.append(f'  \\draw[{col}!55, line width=1.2pt] ({X(ini[p][k]):.2f},{y + dy:.2f}) -- ({X(fin[p][k]):.2f},{y + dy:.2f});')
+                o.append(f'  \\draw[{col}, fill=white, line width=0.7pt] ({X(ini[p][k]):.2f},{y + dy:.2f}) circle (1.9pt);')
+            o.append(f'  \\fill[{col}] ({X(fin[p][k]):.2f},{y + dy:.2f}) circle (1.9pt);')
+    yl = yb - 0.75
+    o += [f'  \\fill[s2] (0.2,{yl:.2f}) circle (1.9pt); \\node[anchor=west, inner sep=1pt] at (0.32,{yl:.2f}) {{China}};',
+          f'  \\fill[s1] (1.55,{yl:.2f}) circle (1.9pt); \\node[anchor=west, inner sep=1pt] at (1.67,{yl:.2f}) {{Japón}};',
+          f'  \\draw[black!60, fill=white, line width=0.7pt] (3.0,{yl:.2f}) circle (1.9pt); \\node[anchor=west, inner sep=1pt] at (3.12,{yl:.2f}) {{2000}};',
+          f'  \\fill[black!60] (4.15,{yl:.2f}) circle (1.9pt); \\node[anchor=west, inner sep=1pt] at (4.27,{yl:.2f}) {{2023}};']
+    # (b) dependencia asimétrica (HIRSCHMAN, 1945)
+    xb0 = 10.75
+    o.append(f'  \\node[anchor=south west, font=\\sffamily\\small, inner sep=0pt] at ({xb0 - 2.1:.2f},{ytop + 0.35:.2f}) {{(b) Dependencia asimétrica, {fin[orden[0]][0]}}};')
+    o += barras_h([NOMBRES[p] for p in orden],
+                  [('s2', 'China en el comercio del miembro', {NOMBRES[p]: fin[p][1] for p in orden}),
+                   ('black!35', 'el miembro en el comercio de China', {NOMBRES[p]: cuota[p] for p in orden})],
+                  f'({xb0}cm,{yb - 0.12:.2f}cm)', 4.3, (len(orden) - 1) * paso + 0.24, '', valores=False, xmax=50)
+    o.append('\\end{tikzpicture}')
+    escribe('RCEP_china', o)
+    tabla('RCEP_china', 'Peso de China y de Japón en el comercio (exportaciones más importaciones) de cada miembro del RCEP, hacia 2000 y hacia 2023, y peso de cada miembro en el comercio de China (%)',
+          'WITS (Banco Mundial): exportaciones e importaciones declaradas por cada miembro por socio (2000, o 2001 si falta; 2023, o el último '
+          'año disponible) y por China (2023). Cálculo propio (Code/figuras_geoestrategicas.py).',
+          ['Miembro', 'Año inicial', 'China, inicio (%)', 'Japón, inicio (%)', 'Año final', 'China, final (%)', 'Japón, final (%)',
+           'El miembro en el comercio de China (%)'],
+          [(p, *(ini[p] if p in ini else (None, None, None)), *fin[p], round(cuota[p], 2)) for p in orden])
+    print('RCEP', {p: (ini.get(p), fin[p], round(cuota[p], 1)) for p in orden})
+    # enlaces nuevos
+    ahs, mfn = dw.tabla('arancel', 'AHS', 'Total'), dw.tabla('arancel', 'MFN', 'Total')
+    pares = [('JPN', 'CHN', 's2', 'Japón a China'), ('JPN', 'KOR', 's3', 'Japón a Corea'),
+             ('CHN', 'JPN', 's1', 'China a Japón'), ('KOR', 'JPN', 's4', 'Corea a Japón')]
+    tar = {(i, j): {a: ahs[(i, a)][j] for a in range(2018, 2024) if (i, a) in ahs and j in ahs[(i, a)]} for i, j, _, _ in pares}
+    nm = {(i, j): {a: mfn[(i, a)][j] for a in range(2018, 2024) if (i, a) in mfn and j in mfn[(i, a)]} for i, j, _, _ in pares}
+    o = fe.cabecera('RCEP', 'enlaces')
+    n, c = len(SEIS), 0.98
+    o.append(f'  \\node[anchor=south west, font=\\sffamily\\small, inner sep=0pt] at (0,{0.62:.2f}) {{(a) Acuerdos previos al RCEP}};')
+    for k, nombre in enumerate(SEIS[1:]):
+        o.append(f'  \\node[anchor=south, inner sep=1pt, text=black!75] at ({1.55 + (k + 0.5) * c:.2f},0.05) {{{nombre}}};')
+    for i, a in enumerate(SEIS[:-1]):
+        y = -(i + 0.5) * 0.52
+        o.append(f'  \\node[anchor=east, inner sep=1pt] at (1.5,{y:.2f}) {{{a}}};')
+        for k, b in enumerate(SEIS[1:]):
+            if k < i:
+                continue
+            anio, nom = ACUERDOS_RCEP[(a, b)]
+            x = 1.55 + k * c
+            nuevo = anio is None
+            fill = 's2!80' if nuevo else 'black!8'
+            txt = '\\textbf{RCEP}' if nuevo else f'{anio}'
+            o.append(f'  \\fill[{fill}] ({x + 0.03:.2f},{y - 0.24:.2f}) rectangle ({x + c - 0.03:.2f},{y + 0.24:.2f});')
+            o.append(f'  \\node[inner sep=0pt, text={"white" if nuevo else "black!85"}, align=center, font=\\sffamily\\footnotesize] '
+                     f'at ({x + c / 2:.2f},{y + (0 if nuevo else 0.07):.2f}) {{{txt}}};')
+            if not nuevo:
+                o.append(f'  \\node[inner sep=0pt, text=black!60, font=\\sffamily\\scriptsize] at ({x + c / 2:.2f},{y - 0.12:.2f}) {{{nom}}};')
+    hi = fe.techo(max(max(s.values()) for s in list(tar.values()) + list(nm.values()) if s), 1)
+    o += [f'  \\begin{{axis}}[{fe.ESTILO}, width=4.3cm, height=3.6cm, at={{(8.6cm,-3.0cm)}}, xmin=2018, xmax=2023, ymin=0, ymax={hi},'
+          ' xtick={2018,2019,2020,2021,2022,2023}, xticklabels={2018,,2020,,2022,}, title={(b) Arancel aplicado}, ylabel={\\%, media ponderada},'
+          ' clip mode=individual]',
+          *fe.etapas('RCEP', 0, hi, 2018, 2023)]
+    fin_r = []
+    for i, j, col, txt in pares:
+        if tar[(i, j)]:
+            o.append(f'    \\addplot[{col}, line width=1.3pt, mark=*, mark size=1.2pt] coordinates {{{fe.coords(sorted(tar[(i, j)].items()))}}};')
+            u = max(tar[(i, j)])
+            fin_r.append((tar[(i, j)][u], txt))
+    for y, txt in coloca(fin_r, hi * 0.09, hi * 0.03):
+        o.append(f'    \\node[anchor=west, inner sep=1.5pt, text=black!80] at (axis cs:2023.2,{y:.2f}) {{{txt}}};')
+    o += ['  \\end{axis}', '\\end{tikzpicture}']
+    escribe('RCEP_enlaces', o)
+    tabla('RCEP_enlaces', 'Acuerdos de libre comercio en vigor entre las seis economías del RCEP antes de 2022 y aranceles aplicados entre China, Japón y Corea (%)',
+          'Acuerdos: OMC (base de datos de acuerdos comerciales regionales) y textos de los acuerdos; año de entrada en vigor. Aranceles: '
+          'WITS (Banco Mundial), tradestats-tariff, arancel aplicado efectivo (AHS) y de nación más favorecida (NMF) medios ponderados '
+          'por el comercio, por socio. Cálculo propio (Code/figuras_geoestrategicas.py).',
+          ['Par o importador a origen', 'Año o indicador', '2018', '2019', '2020', '2021', '2022', '2023'],
+          [(f'{a}-{b}', f'{v[0] or "RCEP (2022)"} {v[1]}'.strip(), None, None, None, None, None, None) for (a, b), v in ACUERDOS_RCEP.items()]
+          + [(txt, ind, *[round(s[a], 2) if a in s else None for a in range(2018, 2024)])
+             for i, j, _, txt in pares for ind, s in (('AHS', tar[(i, j)]), ('NMF', nm[(i, j)]))])
+    print('aranceles', {txt: (tar[(i, j)], nm[(i, j)]) for i, j, _, txt in pares})
+
+
 if __name__ == '__main__':
-    {'UEE': uee, 'CCG': ccg}[sys.argv[1]]()
+    {'UEE': uee, 'CCG': ccg, 'ASEAN': asean, 'RCEP': rcep}[sys.argv[1]]()
