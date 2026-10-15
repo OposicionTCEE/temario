@@ -9,7 +9,7 @@ Siete hojas, todas en formato largo y con filtros, para buscar por proyecto, pa�
                   serie, año, valor, unidad, fuente, tratamiento y figura donde se usa.
   Cifras_citadas  cada cifra del texto con su fuente (Code/cifras_citadas.py).
   Comercio_bruto  los datos de comercio descargados, tal cual (UN Comtrade y WITS).
-  Otros_brutos    los demás datos descargados, tal cual (Banco Mundial, OCDE).
+  Otros_brutos    los demás datos descargados, tal cual (Banco Mundial, aranceles de WITS, OCDE, SIPRI).
 Las tablas de cada figura las escriben sus scripts en Code/datos/tablas_figuras.xlsx (fichero intermedio); los datos
 brutos están en los CSV de Code/datos/. Este script lo reúne todo; hay que volver a ejecutarlo tras cambiar una figura.
 Uso, desde la carpeta del tema:  /ruta/a/python-con-openpyxl Code/libro_datos.py
@@ -395,7 +395,7 @@ def main():
          'Serie, Año o Tratamiento; la columna Figura o uso dice dónde aparece cada serie.'],
         ['Cifras_citadas', 'Cada cifra citada en el texto, con su fuente.'],
         ['Comercio_bruto', 'Datos de comercio descargados, sin tratar: una fila por reportero, socio, flujo, producto y año (USD).'],
-        ['Otros_brutos', 'Banco Mundial y OCDE, sin tratar.'],
+        ['Otros_brutos', 'Banco Mundial, aranceles de WITS, OCDE y SIPRI, sin tratar.'],
         [],
         ['Script', 'Qué hace'],
         ['Code/datos_comercio.py', 'Comercio total bilateral (UN Comtrade hasta 1995, WITS desde 1996), destinos y datos espejo.'],
