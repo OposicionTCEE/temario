@@ -87,15 +87,11 @@ BLOQUES = {
             ((62.0, -49.5), 'rayado', 'Zona Pan-Árabe también en el AfCFTA'),
         ],
         'filas': [
-            ('MERCOSUR', 'mercosur', 1991, [(1985, 'Foz de Iguazú', 'aw'), (1991, 'Asunción', 'b'), (1994, 'Ouro Preto', 'a'),
-                                           (1998, 'Ushuaia', 'b'), (2012, 'entra Venezuela', 'ae'),
-                                           (2016, 'suspende a Venezuela', 'b'), (2026, 'acuerdo con la UE', 'ae')], []),
-            ('CEFTA', 'cefta', 1992, [(1992, 'Cracovia', 'aw'), (2004, 'salidas a la UE', 'be'),
-                                      (2006, 'CEFTA 2006', 'aw'), (2013, 'sale Croacia', 'bw')], []),
-            ('AfCFTA', 'afcfta', 2018, [(2012, 'decisión de la UA', 'ae'), (2018, 'Kigali', 'be'), (2019, 'en vigor', 'aw'),
-                                        (2021, 'comercio', 'bw')], []),
-            ('Zona Pan-Árabe', 'pafta', 1998, [(1997, 'programa ejecutivo', 'ae'), (1998, 'en vigor', 'bw'),
-                                                 (2005, 'liberalización completa', 'aw')], []),
+            # Solo fundación y refundación (15/10/2026): los demás hitos están en la cronología de cada acuerdo
+            ('MERCOSUR', 'mercosur', 1991, [(1991, 'Tratado de Asunción', 'aw')], []),
+            ('CEFTA', 'cefta', 1992, [(1992, 'Cracovia', 'aw'), (2006, 'CEFTA 2006', 'aw')], []),
+            ('AfCFTA', 'afcfta', 2018, [(2018, 'Kigali', 'aw')], []),
+            ('Zona Pan-Árabe', 'pafta', 1998, [(1998, 'en vigor', 'aw')], []),
         ],
         'tipos': [
             ('Régimen\\\\político', 0, 1),
