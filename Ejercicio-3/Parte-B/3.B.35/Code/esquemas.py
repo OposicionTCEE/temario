@@ -22,7 +22,7 @@ TEMA = Path(__file__).resolve().parent.parent
 
 W = 15.94                                   # cm: ancho del texto menos el grosor de las rayas
 # Columnas de cada acuerdo: (inicio, ancho, rótulo)
-COLS = [(0.0, 3.15, 'Objetivo'), (3.45, 3.3, 'Cómo se construyó'), (7.05, 3.7, 'Gobierno'), (11.05, W - 11.05, 'Valoración')]
+COLS = [(0.0, 3.0, 'Objetivo'), (3.3, 3.5, 'Cómo se construyó'), (7.1, 3.6, 'Gobierno'), (11.0, W - 11.0, 'Valoración')]
 ABAJO = [(0.0, 7.75, 'Relación con la UE'), (8.05, W - 8.05, r'$\Rightarrow$ ¿Confirma la tesis?')]
 ESCALA = ['ZLC', 'UA', 'MC']                # grados de BALASSA que se dibujan
 PROB = r'\textcolor{orange}{\textsuperscript{[Probable]}}'
@@ -39,9 +39,9 @@ TIPOS = {   # naturaleza del órgano (Code/gobernanza.py): (borde, relleno)
 BLOQUES = {
     'economico': {
         'titulo': 'Lógica económica: ¿regionalismo abierto o cerrado?',
-        'tesis': (r'Los cuatro procesos nacen para \textbf{ampliar el mercado} de sus miembros y obtener ganancias económicas: '
-                  r'eficiencia, escala o credibilidad. La misma finalidad se persigue con \textbf{dos estrategias opuestas}'),
-        'justificacion': (r'\textbf{Estáticas}: creación de comercio $>$ desviación (VINER, 1950)\\'
+        'tesis': (r'Los cuatro nacen para \textbf{ampliar el mercado} y ganar eficiencia, escala o credibilidad, '
+                  r'con \textbf{dos estrategias opuestas}'),
+        'justificacion': (r'\textbf{Estáticas}: creación $>$ desviación de comercio (VINER, 1950)\\'
                           r'\textbf{Dinámicas}: escala, competencia, inversión\\'
                           r'\textbf{Vecinos} = socios naturales $\Rightarrow$ poca desviación (WONNACOTT y LUTZ, 1989; KRUGMAN, 1991)\\'
                           r'\textbf{Credibilidad}: un tratado ata las reformas (FERNÁNDEZ y PORTES, 1998)'),
@@ -54,103 +54,98 @@ BLOQUES = {
         'grupos': [
             ('A', 'Regionalismo cerrado, reconvertido en abierto en los años noventa (CEPAL, 1994)', [
                 {'titulo': 'Mercado Común Centroamericano (MCCA, 1960)', 'color': (200, 76, 58),
-                 'objetivo': (r'Industrializar cinco economías de café y banano, sin escala por separado: mercado común '
-                              r'protegido por un AEC y \textbf{reparto de las industrias} (integración planificada)'),
+                 'objetivo': (r'Industrializar cinco economías de café y banano: mercado común tras un AEC y '
+                              r'\textbf{reparto de las industrias}'),
                  'escala': {'ZLC': 'a', 'UA': 'p', 'MC': 'v'},
-                 'hitos': [('1960', 'Tratado de Managua'), ('1969', 'guerra entre El Salvador y Honduras'),
-                           ('1991', r'SICA $\to$ regionalismo abierto'), ('2017', 'unión aduanera de Guatemala y Honduras (El Salvador, 2018)')],
+                 'hitos': [('1960', 'Tratado de Managua'), ('1969', 'guerra Honduras-El Salvador'),
+                           ('1991', 'SICA: regionalismo abierto'), ('2017', 'unión aduanera parcial')],
                  'gobierno': {
-                     'nodos': [('pres', 1.85, 0.0, 'intergub', 'Reunión de Presidentes', False),
-                               ('com', 1.05, -0.78, 'intergub', 'COMIECO', False),
-                               ('sie', 2.95, -0.78, 'tecnico', 'SIECA', False),
-                               ('cor', 0.95, -1.5, 'judicial', 'Corte', True),
-                               ('par', 2.75, -1.5, 'parlamento', 'Parlamento', True)],
+                     'nodos': [('pres', 1.8, 0.0, 'intergub', 'Reunión de Presidentes', False),
+                               ('com', 1.0, -0.78, 'intergub', 'COMIECO', False),
+                               ('sie', 2.9, -0.78, 'tecnico', 'SIECA', False),
+                               ('cor', 0.9, -1.5, 'judicial', 'Corte', True),
+                               ('par', 2.7, -1.5, 'parlamento', 'Parlamento', True)],
                      'flechas': [('pres', 'com'), ('sie', 'com')],
-                     'nota': r'Ministros de Economía, por consenso: nadie hace cumplir lo acordado'},
-                 'valoracion': [r'Cuota intrarregional: $18\%$ (1965) $\to$ $26\%$ (1970) $\to$ $11\%$ tras las guerras $\to$ $25\%$ (2023): alta',
-                                r'Mercado de la \textbf{industria ligera}: química y manufacturas, $43\%$ de lo vendido a los socios y $8\%$ fuera',
-                                r'Guatemala y El Salvador venden el $68\%$ de esas manufacturas; Honduras y Nicaragua, déficits de $\approx 7\%$ del PIB',
-                                r'El DR-CAFTA (2004) pesa más que la región; Nicaragua bloquea el SICA'],
-                 'ue': (r'\textbf{Afinidad}: Acuerdo de Asociación (2012) con la región en bloque, con diálogo político y cooperación, '
-                        r'ligado a la democracia; la región pesa el $0{,}4\%$ del comercio de la UE'),
-                 'tesis': (r'\textbf{Sí} crea comercio y escala industrial; \textbf{no} reparte: sin compensación, la industria se '
-                           r'concentra en los más avanzados y el \textbf{conflicto distributivo} frena el mercado común')},
+                     'nota': r'Por consenso: nadie hace cumplir lo acordado'},
+                 'valoracion': [r'Cuota intrarregional alta: $18\%$ (1965) $\to$ $26\%$ (1970) $\to$ $25\%$ (2023), con caída en las guerras',
+                                r'Mercado de la \textbf{industria ligera}, concentrada en Guatemala y El Salvador ($68\%$)',
+                                r'Honduras y Nicaragua, déficits de $\approx 7\%$ del PIB; el DR-CAFTA pesa más que la región'],
+                 'ue': (r'\textbf{Afinidad}: Acuerdo de Asociación (2012) con la región en bloque, ligado a la democracia; '
+                        r'$0{,}4\%$ del comercio de la UE'),
+                 'tesis': (r'\textbf{Sí} crea comercio y escala; \textbf{no} reparte: la industria va al más avanzado y el '
+                           r'\textbf{conflicto distributivo} frena el mercado común')},
                 {'titulo': 'Comunidad Andina de Naciones (CAN, 1969)', 'color': (233, 160, 40),
-                 'objetivo': (r'Lo mismo, con más ambición: \textbf{programación industrial} conjunta, control de la IED y '
-                              r'negociar en bloque, para no depender de los grandes de la ALALC'),
+                 'objetivo': (r'Lo mismo, con más ambición: \textbf{programación industrial}, control de la IED y negociar '
+                              r'en bloque frente a la ALALC'),
                  'escala': {'ZLC': 'a', 'UA': 'x', 'MC': 'v'},
-                 'hitos': [('1969', 'Acuerdo de Cartagena'), ('1976', 'sale Chile'), ('1993', r'ZLC; AEC en 1995, sin efecto en 2015'),
-                           ('1996', r'Protocolo de Trujillo $\to$ CAN'), ('2006', 'sale Venezuela')],
+                 'hitos': [('1969', 'Acuerdo de Cartagena'), ('1976', 'sale Chile'), ('1993', 'zona de libre comercio'),
+                           ('1996', 'Protocolo de Trujillo'), ('2006', 'sale Venezuela')],
                  'gobierno': {
-                     'nodos': [('pres', 1.85, 0.0, 'intergub', 'Consejo Presidencial', False),
-                               ('min', 0.95, -0.72, 'intergub', 'Ministros', False),
-                               ('com', 2.75, -0.72, 'intergub', 'Comisión', False),
-                               ('sg', 0.95, -1.5, 'supra', 'Secretaría Gral.', False),
-                               ('tri', 2.75, -1.5, 'judicial', 'Tribunal', False)],
+                     'nodos': [('pres', 1.8, 0.0, 'intergub', 'Consejo Presidencial', False),
+                               ('min', 0.9, -0.72, 'intergub', 'Ministros', False),
+                               ('com', 2.7, -0.72, 'intergub', 'Comisión', False),
+                               ('sg', 0.9, -1.5, 'supra', 'Secretaría Gral.', False),
+                               ('tri', 2.7, -1.5, 'judicial', 'Tribunal', False)],
                      'flechas': [('pres', 'min'), ('pres', 'com')],
-                     'nota': r'La más \textbf{supranacional} de América Latina: Decisiones de aplicación directa'},
-                 'valoracion': [r'Cuota intrarregional: $3\%$ (1969) $\to$ $13{,}9\%$ (1998) $\to$ $6\%$ (2023): su mejor época fue el regionalismo abierto',
-                                r'Economías \textbf{competidoras}: venden materias primas a EE.\,UU. y China (complementariedad con China $27$; entre socios, $18$)',
-                                r'Las manufacturas son el $44\%$ de lo vendido a los socios y el $9\%$ de lo vendido fuera',
-                                r'Cada socio busca fuera (Alianza del Pacífico, MERCOSUR); guerra arancelaria Colombia-Ecuador (2026)'],
-                 'ue': (r'\textbf{Económica}: acuerdo solo comercial (2012) con Colombia y Perú, al que se sumó Ecuador (2017), no con '
-                        r'el bloque; materias primas y mercados en crecimiento ($0{,}6\%$ del comercio de la UE)'),
-                 'tesis': (r'\textbf{No}: sin complementariedad no hay mercado regional relevante, y ni las instituciones más fuertes '
-                           r'de la región lo suplen, aunque sirven para desactivar conflictos')},
+                     'nota': r'La más \textbf{supranacional} de América Latina'},
+                 'valoracion': [r'Cuota: $3\%$ (1969) $\to$ $13{,}9\%$ (1998) $\to$ $6\%$ (2023): su mejor época fue el regionalismo abierto',
+                                r'Economías \textbf{competidoras}: venden materias primas a China y EE.\,UU., no a los socios',
+                                r'Cada socio busca fuera: Alianza del Pacífico, MERCOSUR'],
+                 'ue': (r'\textbf{Económica}: acuerdo solo comercial con Colombia, Perú y Ecuador, no con el bloque; '
+                        r'$0{,}6\%$ del comercio de la UE'),
+                 'tesis': (r'\textbf{No}: sin complementariedad no hay mercado regional, y ni las instituciones más fuertes '
+                           r'de la región lo suplen')},
             ]),
             ('B', 'Integración de mercados sin cesión de soberanía', [
                 {'titulo': 'Asociación Europea de Libre Comercio (EFTA, 1960)', 'color': (110, 165, 215),
-                 'objetivo': (r'Respuesta defensiva a la CEE: \textbf{libre comercio industrial} sin ceder soberanía (Reino Unido y la '
-                              r'Commonwealth, neutrales) y negociar con los Seis desde más fuerza'),
+                 'objetivo': (r'Respuesta defensiva a la CEE: \textbf{libre comercio industrial} sin ceder soberanía '
+                              r'(Commonwealth, neutrales)'),
                  'escala': {'ZLC': 'a', 'UA': None, 'MC': None},
-                 'hitos': [('1960', 'Convenio de Estocolmo'), ('1972', 'libre comercio industrial con la CEE'),
-                           ('1994', 'EEE, sin Suiza'), ('2001', 'Convenio de Vaduz'), ('2026', 'Bilaterales III con Suiza')],
+                 'hitos': [('1960', 'Convenio de Estocolmo'), ('1972', 'libre comercio con la CEE'),
+                           ('1994', 'EEE, sin Suiza'), ('2026', 'Bilaterales III, Suiza')],
                  'gobierno': {
-                     'nodos': [('con', 0.95, 0.0, 'intergub', 'Consejo', False),
-                               ('sec', 2.75, 0.0, 'tecnico', 'Secretaría', False),
-                               ('cm', 1.85, -0.75, 'intergub', 'Comité Mixto del EEE', False),
-                               ('esa', 0.95, -1.5, 'supra', 'Vigilancia', False),
-                               ('tri', 2.75, -1.5, 'judicial', 'Tribunal', False)],
+                     'nodos': [('con', 0.9, 0.0, 'intergub', 'Consejo', False),
+                               ('sec', 2.7, 0.0, 'tecnico', 'Secretaría', False),
+                               ('cm', 1.8, -0.75, 'intergub', 'Comité Mixto del EEE', False),
+                               ('esa', 0.9, -1.5, 'supra', 'Vigilancia', False),
+                               ('tri', 2.7, -1.5, 'judicial', 'Tribunal', False)],
                      'flechas': [('sec', 'con')],
-                     'nota': r'Intergubernamental, por consenso; Suiza, unos veinte comités mixtos con la UE'},
-                 'valoracion': [r'Se \textbf{vació}: seis de sus diez miembros entraron en la CEE o la UE (efecto dominó, BALDWIN, 1993)',
-                                r'Su mercado es la UE, no los socios: la UE compra el $51$-$63\%$ de sus exportaciones; los socios, menos del $1\%$',
-                                r'EEE y vía suiza dan una integración comercial parecida: la diferencia es quién fija las normas',
-                                r'La protección agraria (apoyo del $48$-$52\%$ de los ingresos; UE, $17\%$) frena la adhesión'],
-                 'ue': (r'\textbf{Económica con afinidad}: su socio más integrado, el $9{,}6\%$ de su comercio exterior; el EEE les da el '
-                        r'mercado interior sin voto, y son democracias europeas que podrían adherirse'),
-                 'tesis': (r'Como \textbf{alternativa} a la CEE, fracasó; como \textbf{antesala}, funcionó: liberalizó la industria de '
-                           r'sus miembros antes de adherirse')},
+                     'nota': r'Por consenso; Suiza, por comités mixtos'},
+                 'valoracion': [r'Se \textbf{vació}: seis de sus diez miembros entraron en la CEE (efecto dominó, BALDWIN, 1993)',
+                                r'La UE compra el $51$-$63\%$ de sus exportaciones; los socios, menos del $1\%$',
+                                r'La protección agraria ($\approx 50\%$ de los ingresos; UE, $17\%$) frena la adhesión'],
+                 'ue': (r'\textbf{Económica con afinidad}: su socio más integrado ($9{,}6\%$ de su comercio); el EEE les da el '
+                        r'mercado interior sin voto'),
+                 'tesis': (r'Como \textbf{alternativa} a la CEE, fracasó; como \textbf{antesala}, funcionó: liberalizó su '
+                           r'industria antes de adherirse')},
                 {'titulo': 'Tratado de Libre Comercio entre Estados Unidos, México y Canadá (NAFTA, 1994; USMCA, 2020)',
                  'color': (30, 75, 135),
-                 'objetivo': (r'México: \textbf{anclar sus reformas} y atraer IED; EE.\,UU.: integración profunda (inversión, '
-                              r'propiedad intelectual, servicios); Canadá: defender lo ganado en 1988'),
+                 'objetivo': (r'México: \textbf{anclar sus reformas}; EE.\,UU.: integración profunda; Canadá: no perder lo '
+                              r'ganado en 1988'),
                  'escala': {'ZLC': 'a', 'UA': None, 'MC': None},
-                 'hitos': [('1989', 'acuerdo Canadá-EE.\,UU.'), ('1994', 'NAFTA'),
-                           ('2020', r'USMCA: origen del automóvil, cláusula China'), ('2026', 'EE.\,UU. no prorroga')],
+                 'hitos': [('1989', r'Canadá-EE.\,UU.'), ('1994', 'NAFTA'),
+                           ('2020', 'USMCA: automóvil, China'), ('2026', r'EE.\,UU. no prorroga')],
                  'gobierno': {
-                     'nodos': [('com', 1.85, 0.0, 'intergub', 'Comisión de Libre Comercio', False),
-                               ('sec', 0.95, -0.75, 'tecnico', 'Secretariado', False),
-                               ('cmt', 2.75, -0.75, 'tecnico', 'Comités', False),
-                               ('pan', 0.95, -1.5, 'judicial', 'Paneles', False),
-                               ('lab', 2.75, -1.5, 'judicial', 'Mec. laboral', False)],
+                     'nodos': [('com', 1.8, 0.0, 'intergub', 'Comisión de Libre Comercio', False),
+                               ('sec', 0.9, -0.75, 'tecnico', 'Secretariado', False),
+                               ('cmt', 2.7, -0.75, 'tecnico', 'Comités', False),
+                               ('pan', 0.9, -1.5, 'judicial', 'Paneles', False),
+                               ('lab', 2.7, -1.5, 'judicial', 'Mec. laboral', False)],
                      'flechas': [('sec', 'com'), ('com', 'cmt')],
-                     'nota': r'Ministros; sin AEC ni órganos supranacionales: la credibilidad está en los paneles'},
-                 'valoracion': [r'Cuota intrarregional: $41\%$ (1989) $\to$ $56\%$ (2002-2004) $\to$ $51\%$ (2023): socios naturales; China la frenó',
-                                r'\textbf{Radios} en torno a EE.\,UU.: compra el $80\%$ de lo que vende México; cadena del automóvil',
-                                r'Bienestar pequeño (CALIENDO y PARRO, 2015); perdedores locales (HAKOBYAN y McLAREN, 2016)',
-                                r'México \textbf{no converge}: del $40\%$ al $29\%$ del PIB per cápita de EE.\,UU. (1993-2024)'],
-                 'ue': (r'\textbf{Económica}: los tres pesan el $19\%$ del comercio de la UE, más que la UE para ellos ($14\%$); '
-                        r'acuerdos con México (2026) y Canadá (CETA, 2017); desde 2025, diversificar frente a EE.\,UU.'),
-                 'tesis': (r'\textbf{Sí} en comercio y cadenas de valor; \textbf{no} en convergencia. Desde 2025, la lógica es '
-                           r'también geoestratégica')},
+                     'nota': r'Sin órganos supranacionales: la credibilidad está en los paneles'},
+                 'valoracion': [r'Cuota: $41\%$ (1989) $\to$ $56\%$ (2002-2004) $\to$ $51\%$ (2023); \textbf{radios} en torno a EE.\,UU.',
+                                r'Cadena del automóvil; bienestar pequeño (CALIENDO y PARRO, 2015)',
+                                r'México \textbf{no converge}: del $40\%$ al $29\%$ del PIB per cápita de EE.\,UU.'],
+                 'ue': (r'\textbf{Económica}: pesan el $19\%$ del comercio de la UE, más que la UE para ellos; desde 2025, '
+                        r'diversificar frente a EE.\,UU.'),
+                 'tesis': (r'\textbf{Sí} en comercio y cadenas de valor; \textbf{no} en convergencia. Desde 2025, también '
+                           r'geoestratégico')},
             ]),
         ],
         'balance': (r'Hay comercio cuando los socios son complementarios o se anclan a un mercado grande (UE, EE.\,UU.), no cuando '
                     r'venden lo mismo; y ningún acuerdo reparte por sí solo las ganancias' + PROB),
     },
 }
-
 
 def color(nombre, c):
     return r'\definecolor{%s}{RGB}{%d,%d,%d}%%' % (nombre, *c)
@@ -193,12 +188,12 @@ def gobierno(k, g):
     """Organigrama mínimo, en coordenadas relativas al origen de la columna (x = centro de cada órgano)."""
     o = []
     for clave, x, y, tipo, txt, disc in g['nodos']:
-        o.append(f'    \\node[gob={tipo}{", dashed" if disc else ""}] (g{k}{clave}) at ({x:.2f},{y - 0.17:.2f}) {{{txt}}};')
+        o.append(f'    \\node[gob={tipo}{", dashed" if disc else ""}] (g{k}{clave}) at ({x:.2f},{y * 0.8 - 0.17:.2f}) {{{txt}}};')
     for a, b in g['flechas']:
         o.append(f'    \\draw[gflecha] (g{k}{a}) -- (g{k}{b});')
     ymin = min(y for _, _, y, *_ in g['nodos'])
-    o.append(f'    \\node[anchor=north west, text width=3.65cm, align=left, inner sep=0pt, font=\\footnotesize\\itshape, '
-             f'text=black!70] (g{k}nota) at (0,{ymin - 0.5:.2f}) {{{g["nota"]}}};')
+    o.append(f'    \\node[anchor=north west, text width=3.55cm, align=left, inner sep=0pt, font=\\footnotesize\\itshape, '
+             f'text=black!70] (g{k}nota) at (0,{ymin * 0.8 - 0.42:.2f}) {{{g["nota"]}}};')
     return o
 
 
@@ -223,7 +218,7 @@ def main(clave):
     # --- Rótulo del bloque y cadena: tesis -> justificación -> medios ---
     o.append(f'  \\node[anchor=south west, inner sep=0pt, font=\\normalsize\\bfseries, text=eGri] at (0,0.05) {{{B["titulo"]}}};')
     o.append(f'  \\draw[eGri, line width=0.8pt] (0,-0.05) -- ({W},-0.05);')
-    cab = [(0.0, 3.6, 'Tesis'), (3.9, 5.6, 'Justificación'), (9.8, W - 9.8, 'Medios: dos estrategias')]
+    cab = [(0.0, 3.3, 'Tesis'), (3.6, 6.0, 'Justificación'), (9.9, W - 9.9, 'Medios: dos estrategias')]
     for i, (x, w, r) in enumerate(cab):
         o.append(f'  \\node[rot] at ({x:.2f},-0.2) {{{r}}};')
         if i < len(cab) - 1:
@@ -267,14 +262,14 @@ def main(clave):
             o.append(f'    \\node[txt] (val{k}) at ({x3:.2f},-0.95) {{{lista(a["valoracion"], w3, marca=f"\\textcolor{{{c}}}{{$\\triangleright$}}")}}};')
             o.append(f'  \\end{{scope}}')
             o.append(f'  \\path let \\p1=(obj{k}.south), \\p2=(como{k}.south), \\p3=(g{k}nota.south), \\p4=(val{k}.south), '
-                     f'\\n1={{min(\\y1,\\y2,\\y3,\\y4)}} in coordinate (fondo) at (0,\\n1-0.22cm);')
+                     f'\\n1={{min(\\y1,\\y2,\\y3,\\y4)}} in coordinate (fondo) at (0,\\n1-0.2cm);')
             (y0, v0, r0), (y1, v1, r1) = ABAJO
-            o.append(f'  \\node[rot] at ([xshift={y0:.2f}cm]fondo) {{{r0}}};')
-            o.append(f'  \\node[rot] at ([xshift={y1:.2f}cm]fondo) {{{r1}}};')
-            o.append(f'  \\draw[flecha] ([shift={{({y0 + v0 + 0.02:.2f},-0.12)}}]fondo) -- ([shift={{({y1 - 0.04:.2f},-0.12)}}]fondo);')
-            o.append(f'  \\node[txt, text width={v0:.2f}cm] (ue{k}) at ([shift={{({y0:.2f},-0.37)}}]fondo) {{{a["ue"]}}};')
-            o.append(f'  \\node[txt, text width={v1:.2f}cm] (tes{k}) at ([shift={{({y1:.2f},-0.37)}}]fondo) {{{a["tesis"]}}};')
-            o.append(f'  \\path let \\p1=(ue{k}.south), \\p2=(tes{k}.south), \\n1={{min(\\y1,\\y2)}} in coordinate (sig) at (0,\\n1-0.42cm);')
+            o.append(f'  \\draw[flecha] ([shift={{({y0 + v0 + 0.02:.2f},-0.15)}}]fondo) -- ([shift={{({y1 - 0.04:.2f},-0.15)}}]fondo);')
+            o.append(f'  \\node[txt, text width={v0:.2f}cm] (ue{k}) at ([xshift={y0:.2f}cm]fondo) '
+                     f'{{\\textcolor{{eGri}}{{\\textbf{{{r0}.}}}} {a["ue"]}}};')
+            o.append(f'  \\node[txt, text width={v1:.2f}cm] (tes{k}) at ([xshift={y1:.2f}cm]fondo) '
+                     f'{{\\textcolor{{eGri}}{{\\textbf{{{r1}}}}} {a["tesis"]}}};')
+            o.append(f'  \\path let \\p1=(ue{k}.south), \\p2=(tes{k}.south), \\n1={{min(\\y1,\\y2)}} in coordinate (sig) at (0,\\n1-0.38cm);')
             k += 1
 
     # --- Balance del bloque ---
