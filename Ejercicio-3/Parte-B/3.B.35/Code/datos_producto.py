@@ -40,6 +40,24 @@ def revision(anio):
     return 'S1' if anio <= 1995 else ('S3' if anio <= 2006 else 'S4')
 
 
+def sin_cuota():
+    """La API de vista previa tiene una cuota de consultas por hora: si está agotada (HTTP 403, «Out of call volume
+    quota»), espera hasta que se reponga, para no dar por vacío un año que sí tiene datos."""
+    prueba = ('https://comtradeapi.un.org/public/v1/preview/C/A/S1?reporterCode=68&period=1990&partnerCode=0'
+              '&flowCode=X&cmdCode=TOTAL')
+    while True:
+        try:
+            urllib.request.urlopen(urllib.request.Request(prueba, headers={'User-Agent': 'Mozilla/5.0'}), timeout=60)
+            return
+        except urllib.error.HTTPError as err:
+            if err.code != 403:
+                return
+            print('  cuota agotada: espero 5 minutos', flush=True)
+            time.sleep(300)
+        except Exception:
+            return
+
+
 def comtrade(anio, reporteros, socios, flujo, nivel):
     """Filas agregadas (sin desglose por modo de transporte ni régimen aduanero) de la API de vista previa."""
     url = ('https://comtradeapi.un.org/public/v1/preview/C/A/%s?reporterCode=%s&period=%d&partnerCode=%s'
@@ -53,6 +71,7 @@ def comtrade(anio, reporteros, socios, flujo, nivel):
             datos = []
         if datos:
             break
+        sin_cuota()
     if len(datos) >= 500:
         print(f'  aviso: {anio} {reporteros} {flujo} {nivel}: 500 filas, puede faltar información')
     inv = {v: k for k, v in dc.M49.items()}
