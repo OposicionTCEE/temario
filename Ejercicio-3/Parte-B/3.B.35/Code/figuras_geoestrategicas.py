@@ -91,7 +91,7 @@ def uee():
     o = fe.cabecera('UEE', 'desvio')
     ymin, ymax = 10, 2000
     anios = completos   # la UE aún no tiene 2024 completo
-    comunes = (f'{fe.ESTILO}, width=4.6cm, height=4.4cm, xmin=2019, xmax={anios[-1]}, ymode=log, ymin={ymin}, ymax={ymax},'
+    comunes = (f'{fe.ESTILO}, width=4.5cm, height=4.4cm, xmin=2019, xmax={anios[-1]}, ymode=log, ymin={ymin}, ymax={ymax},'
                ' log ticks with fixed point, xtick={2019,2020,2021,2022,2023}, xticklabels={2019,,2021,,2023},'
                ' clip mode=individual')
     color = {'ARM': 's1', 'KAZ': 's2', 'KGZ': 's3', 'RUS': 'black!55'}
@@ -106,7 +106,7 @@ def uee():
     o += [f'    \\node[anchor=west, inner sep=1.5pt, text=black!80] at (axis cs:{x + 0.15},{10 ** y:.1f}) {{{txt}}};'
           for y, txt, x in separa(fin, 0.16)]
     o.append('  \\end{axis}')
-    o += [f'  \\begin{{axis}}[{comunes}, at={{(8.0cm,0cm)}}, title={{(b) Exportaciones a Rusia}}]',
+    o += [f'  \\begin{{axis}}[{comunes}, at={{(7.8cm,0cm)}}, title={{(b) Exportaciones a Rusia}}]',
           *fe.etapas('UEE', ymin, ymax, 2019, anios[-1]),
           f'    \\draw[black!50, line width=0.4pt] (axis cs:2019,100) -- (axis cs:{anios[-1]},100);']
     fin = []
