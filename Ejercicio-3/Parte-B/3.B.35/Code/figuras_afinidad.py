@@ -71,8 +71,7 @@ def barras_h(etiquetas, series, at, ancho, alto, titulo, xlabel='', apilar=False
          + (' legend style={font=\\sffamily\\footnotesize, draw=none, fill=none, at={(0,-0.2)}, anchor=north west, legend columns=3,'
             if leyenda_izquierda else
             ' legend style={font=\\sffamily\\footnotesize, draw=none, fill=none, at={(1,-0.2)}, anchor=north east, legend columns=3,')
-         + '
-         ' /tikz/every even column/.append style={column sep=0.25cm}}, legend cell align=left, area legend, reverse legend'
+         + ' /tikz/every even column/.append style={column sep=0.25cm}}, legend cell align=left, area legend, reverse legend'
          + (', bar shift=0pt' if solapar else '')
          + (', nodes near coords, nodes near coords style={font=\\sffamily\\footnotesize, text=black!75, /pgf/number format/fixed,'
             ' /pgf/number format/precision=0, /pgf/number format/assume math mode=true}, point meta=x' if valores and not apilar else '')
