@@ -165,8 +165,8 @@ BLOQUES = {
                  'hitos': [('1985', 'Foz de Iguazú'), ('1991', 'Tratado de Asunción'), ('1994', 'Ouro Preto: AEC'),
                            ('1998', 'Ushuaia: democracia')],
                  'gobierno': {
-                     'nodos': [('cmc', 0.5, 0, 'intergub', 'Consejo', False),
-                               ('gmc', 2.65, 0, 'intergub', 'Grupo Mercado Común', False),
+                     'nodos': [('cmc', 0.45, 0, 'intergub', 'Consejo', False),
+                               ('gmc', 2.5, 0, 'intergub', 'Grupo Mercado Común', False),
                                ('tpr', 0.6, 1, 'judicial', 'Tribunal', False),
                                ('par', 1.85, 1, 'parlamento', 'Parlasur', True),
                                ('foc', 3.2, 1, 'financiero', 'FOCEM', False)],
@@ -193,7 +193,7 @@ BLOQUES = {
                      'flechas': [('sec', 'cm')],
                      'nota': r'Consenso; lo financia la UE'},
                  'valoracion': [r'Cumplió: los fundadores, salvo Macedonia del Norte, están en la UE',
-                                r'Cuota: $22{,}5\%$ $\to$ $15\%$; la UE compra el $68\%$',
+                                r'Cuota del $22{,}5\%$ al $15\%$; la UE, el $68\%$',
                                 r'Afinidad frágil: Kosovo contra Serbia (2018-2020)'],
                  'ue': (r'\textbf{Geopolítica}, con la adhesión como horizonte: frente a Rusia y China; pesa el $1{,}7\%$ del '
                         r'comercio de la UE'),
@@ -213,7 +213,7 @@ BLOQUES = {
                                ('pap', 3.35, 1, 'financiero', 'PAPSS', False)],
                      'flechas': [('asa', 'min')],
                      'nota': r'Sobre ocho comunidades regionales'},
-                 'valoracion': [r'Cuota: $12\%$ $\to$ $20\%$ (2023), anterior al acuerdo',
+                 'valoracion': [r'Cuota: $12\%$ $\to$ $20\%$, antes del acuerdo',
                                 r'Poca \textbf{complementariedad}: materias primas fuera, manufacturas dentro',
                                 r'Ganancias \textbf{dinámicas}: con IED, $+109\%$ de comercio intraafricano en 2035'],
                  'ue': (r'\textbf{Geopolítica} con afinidad: \textit{Global Gateway} frente a la Franja y la Ruta china; '
@@ -233,7 +233,7 @@ BLOQUES = {
                                ('fma', 2.75, 1, 'financiero', 'Fondo Monetario', False)],
                      'flechas': [('sg', 'ces')],
                      'nota': r'Consenso; sin arbitraje eficaz'},
-                 'valoracion': [r'Cuota: $6\%$ (1998) $\to$ $13\%$ (2016) $\to$ $10\%$ (2023)',
+                 'valoracion': [r'Cuota: $6\%$ (1998) $\to$ $13\%$ $\to$ $10\%$ (2023)',
                                 r'Sin combustibles, un tercio va a los socios: el petróleo se vende fuera',
                                 r'Cada subregión mira fuera: el Golfo, a Asia; el Magreb, a la UE'],
                  'ue': (r'\textbf{Geopolítica}: vecindad (estabilidad, migración, energía), nunca con el bloque; $7{,}5\%$ del '
@@ -348,7 +348,7 @@ BLOQUES = {
                      'nota': r'Forma supranacional, fondo ruso'},
                  'valoracion': [r'No crea comercio: cuota del $9$-$13\%$',
                                 r'Movilidad laboral avanzada, pero Tayikistán, fuera, recibe más remesas',
-                                r'Tras 2022, vía de \textbf{desvío}: UE a Kirguistán $\times 9$'],
+                                r'Tras 2022, \textbf{desvío}: UE a Kirguistán $\times 9$'],
                  'ue': (r'\textbf{Geopolítica en negativo}: sin relación formal, para no legitimar la esfera rusa; vigila la '
                         r'elusión de sanciones'),
                  'tesis': (r'\textbf{Sí} para Rusia, como esfera de influencia; \textbf{no} como mercado: el comercio interno no '
