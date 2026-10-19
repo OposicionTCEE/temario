@@ -233,6 +233,40 @@
       \let\MyTOC@paragraph@nostar\anx@paragraph}
     \makeatother
 
+    %-------------------------- Cabecera -----------------------%
+    % En las páginas numeradas del tema (de la Introducción a la Conclusión), arriba, el título completo del tema tal como está en
+    % \title, sin «Tema X.Y.N --»: título y subtítulo seguidos. En letra pequeña; más pequeña aún si no cabe en dos líneas. Va en el
+    % margen superior, así que no cambia las páginas del tema. Se enciende con \pagenumbering{arabic} y se apaga con
+    % \pagenumbering{gobble} (bibliografía): índices, bibliografía y anexos quedan sin cabecera. Reglas: main/GUIA_TEMAS.md, §4.
+    \usepackage{fancyhdr}
+    \geometry{headheight=28pt}% hasta tres líneas de letra pequeña
+    \ExplSyntaxOn
+    \tl_new:N \g_cab_titulo_tl
+    \cs_new_protected:Npn \cab_guardar:n #1
+      {
+        \tl_gset:Nn \g_cab_titulo_tl {#1}
+        \regex_replace_once:nnN { \A \s* Tema \s+ \S+ \s* \-\-? \s* } { } \g_cab_titulo_tl % sin «Tema X.Y.N --»
+        \regex_replace_once:nnN { \.? \s* \c{\\} (\[ [^\]]* \])? \s* (\c{large} \s*)? } { .\  } \g_cab_titulo_tl % título. subtítulo
+        \regex_replace_once:nnN { [\.\s]* \Z } { } \g_cab_titulo_tl % sin subtítulo: nada detrás
+      }
+    \cs_new_eq:NN \cabGuardarTitulo \cab_guardar:n
+    \cs_new:Npn \cabTitulo { \tl_use:N \g_cab_titulo_tl }
+    \ExplSyntaxOff
+    \makeatletter
+    \let\cab@title\title
+    \renewcommand{\title}[1]{\cab@title{#1}\cabGuardarTitulo{#1}}
+    \newcommand{\cab@letra}{\footnotesize}
+    \AtBeginDocument{% si en letra pequeña ocupa más de dos líneas, una talla menos
+      \settowidth{\dimen@}{\footnotesize\itshape\cabTitulo}%
+      \ifdim\dimen@>1.9\textwidth \renewcommand{\cab@letra}{\scriptsize}\fi}
+    \fancypagestyle{tema}{%
+      \fancyhf{}%
+      \fancyhead[L]{\parbox[b]{\textwidth}{\raggedright\cab@letra\itshape\color{black!65}\cabTitulo}}%
+      \fancyfoot[C]{\thepage}%
+      \renewcommand{\headrulewidth}{0.4pt}}
+    \apptocmd{\pagenumbering}{\ifnum\pdfstrcmp{#1}{arabic}=0 \pagestyle{tema}\else\pagestyle{plain}\fi}{}{}
+    \makeatother
+
     %-------------------------- Lista de figuras (personal) -----------------------%
 \makeatletter
 \newcommand{\MyListOfFigures}{%
@@ -543,8 +577,8 @@
 
 
 % --- Datos del tema ---
-\title{La política de cooperación al desarrollo en España\\
-\large Instrumentos de cooperación técnica y financiera. Evaluación del diseño de la política y análisis de impacto económico}
+\title{La política de cooperación al desarrollo en España\\
+\large Instrumentos de cooperación técnica y financiera. Evaluación del diseño de la política y análisis de impacto económico}
 \author{Marcelo Ortega}
 \date{Septiembre 2026}
 
