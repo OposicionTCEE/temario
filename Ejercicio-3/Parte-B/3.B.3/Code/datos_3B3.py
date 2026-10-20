@@ -128,6 +128,25 @@ def main():
          "%", "LEARY y ROBERTS (2010)"),
     ]
 
+    # Cifras de la tanda 4 (bloque 3, política de dividendos).
+    d3 = "Bloque 3, «Política de dividendos»"
+    cifras += [
+        ("3", d3, "Recompras de las empresas del S&P 500 en 2024", 942.5, "mil millones de dólares",
+         "CAREY (2025), con datos de S&P Dow Jones Indices"),
+        ("3", d3, "Dividendos de las empresas del S&P 500 en 2024", 629.6, "mil millones de dólares",
+         "CAREY (2025), con datos de S&P Dow Jones Indices"),
+        ("3", d3, "Empresas cotizadas de EE. UU. que pagan dividendos, 1978", 66.5, "%", "FAMA y FRENCH (2001)"),
+        ("3", d3, "Empresas cotizadas de EE. UU. que pagan dividendos, 1999", 20.8, "%", "FAMA y FRENCH (2001)"),
+        ("3", d3, "Aumento de los dividendos tras la reforma de 2003 (empresas no financieras)", 20, "%", "CHETTY y SAEZ (2005)"),
+        ("3", d3, "Tipo máximo sobre dividendos antes y después de la reforma de 2003 en EE. UU.", "35 y 15", "%",
+         "CHETTY y SAEZ (2005)"),
+        ("3", d3, "Escala de la base del ahorro del IRPF desde 2025 (mínimo y máximo)", "19 y 30", "%",
+         "Ley 35/2006, modificada por la Ley 7/2024"),
+        ("3", d3, "Impuesto especial sobre recompras en EE. UU. desde 2023", 1, "%", "Inflation Reduction Act de 2022"),
+        ("3", d3, "Rentabilidad anormal ante aumentos y reducciones significativos del dividendo", "1,34 y -3,71", "%",
+         "GRULLON, MICHAELY y SWAMINATHAN (2002), sin verificar"),
+    ]
+
     wb = Workbook()
     hojas = {
         "Léeme": (["Hoja", "Contenido"], [
