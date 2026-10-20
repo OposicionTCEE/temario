@@ -94,6 +94,28 @@ def main():
          "puntos porcentuales", "BCE-SAFE"),
     ]
 
+    # Cifras de la literatura y de la normativa (tanda 2, bloque 2), con la obra o la norma de la que salen.
+    d = "Bloque 2, «Impuestos e insolvencia»"
+    cifras += [
+        ("2", d, "Valor del ahorro fiscal de la deuda", 9.7, "% del valor de la empresa", "GRAHAM (2000)"),
+        ("2", d, "Valor del ahorro fiscal de la deuda, neto de impuestos personales", 4.3, "% del valor de la empresa", "GRAHAM (2000)"),
+        ("2", d, "VA de las dificultades financieras, empresa BBB, ajustado por riesgo", 4.5,
+         "% del valor previo a las dificultades", "ALMEIDA y PHILIPPON (2007)"),
+        ("2", d, "VA de las dificultades financieras, empresa BBB, sin primas de riesgo", 1.4,
+         "% del valor previo a las dificultades", "ALMEIDA y PHILIPPON (2007)"),
+        ("2", d, "Costes directos de quiebra, ferrocarriles de EE. UU. (mínimo y máximo)", "1-5,3", "% del valor de la empresa",
+         "WARNER (1977)"),
+        ("2", d, "Costes de las dificultades financieras, estimación preferida", 10, "% del valor de la empresa",
+         "ANDRADE y KAPLAN (1998), versión de documento de trabajo del NBER"),
+        ("2", d, "Límite a la deducción de gastos financieros netos", 30, "% del beneficio operativo", "Art. 16 Ley 27/2014"),
+        ("2", d, "Gastos financieros netos deducibles en todo caso", 1, "millón de euros", "Art. 16 Ley 27/2014"),
+        ("2", d, "Reserva de capitalización, reducción general", 20, "% del aumento de fondos propios", "Art. 25 Ley 27/2014 (desde 2025)"),
+        ("2", d, "Reserva de capitalización, reducción máxima con aumento de plantilla", 30, "% del aumento de fondos propios",
+         "Art. 25 Ley 27/2014 (desde 2025)"),
+        ("2", "Bloque 2, «MODIGLIANI y MILLER (1958)», nota", "Empresas con calificación AAA de S&P, hace cuatro décadas y en 2020",
+         "65 y 5", "empresas", "WIGGLESWORTH (2020), Financial Times"),
+    ]
+
     wb = Workbook()
     hojas = {
         "Léeme": (["Hoja", "Contenido"], [
