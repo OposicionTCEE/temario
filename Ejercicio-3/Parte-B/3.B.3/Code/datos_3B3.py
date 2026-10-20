@@ -116,6 +116,18 @@ def main():
          "65 y 5", "empresas", "WIGGLESWORTH (2020), Financial Times"),
     ]
 
+    # Cifras de la tanda 3 (bloque 2, apartados de información asimétrica, agencia y evidencia).
+    cifras += [
+        ("2", "Bloque 2, «Agencia»", "Efectivo de las empresas del S&P 500 (octubre de 2016)", 1.45, "billones de dólares",
+         "FERNÁNDEZ-VILLAVERDE (2016), Nada es Gratis"),
+        ("2", "Bloque 2, «Agencia»", "Ratio de efectivo sobre activos de las empresas industriales de EE. UU., 1980-2006",
+         "más que se duplica", "variación", "BATES, KAHLE y STULZ (2009)"),
+        ("2", "Bloque 2, «Información asimétrica»", "Decisiones de emisión bien clasificadas por el orden jerárquico", "< 50",
+         "%", "LEARY y ROBERTS (2010)"),
+        ("2", "Bloque 2, «Información asimétrica»", "Decisiones bien clasificadas añadiendo factores de otras teorías", "> 80",
+         "%", "LEARY y ROBERTS (2010)"),
+    ]
+
     wb = Workbook()
     hojas = {
         "Léeme": (["Hoja", "Contenido"], [
