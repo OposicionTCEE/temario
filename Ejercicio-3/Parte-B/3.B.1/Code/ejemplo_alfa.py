@@ -104,6 +104,9 @@ def comprobar():
         assert d == h, f'El asiento {n} no cuadra: {d} != {h}'
 
 
+regularizacion_y_cierre()
+
+
 def num(x):
     """Cifra en formato del tema: coma decimal y, si hay millares, punto protegido ($1{.}981,14$)."""
     x = x.normalize() if x != x.to_integral() else x.quantize(D(1))
