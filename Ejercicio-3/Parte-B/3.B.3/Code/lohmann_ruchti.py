@@ -8,7 +8,6 @@ k, n, T = 10.0, 10, 40
 compras = {0: k}
 flota = [k]
 for t in range(1, T + 1):
-    vivos = {s: c for s, c in compras.items() if t - n < s <= t - 1 or (s == t - n)}
     cuota = sum(c for s, c in compras.items() if t - n <= s <= t - 1) / n
     compras[t] = cuota
     flota.append(sum(c for s, c in compras.items() if t - n < s <= t))
