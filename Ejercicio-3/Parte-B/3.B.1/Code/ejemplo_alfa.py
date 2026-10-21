@@ -138,9 +138,34 @@ def latex_sumas_y_saldos(hasta=35):
     return '\n'.join(filas)
 
 
+def efe_indirecto():
+    """Estado de flujos de efectivo 2026 por el método indirecto (modelo del PGC). Devuelve un diccionario de partidas."""
+    ini, fin = saldos(1), saldos(35)
+    sal = lambda s, c: (s[c][0] - s[c][1]) if c in s else D(0)   # saldo deudor (+) o acreedor (-)
+    bai = D(10)
+    ajustes = {'amortizacion': sal(fin, '680') + sal(fin, '681'), 'deterioro': sal(fin, '694'),
+               'enajenacion': sal(fin, '671'), 'gastos_financieros': sal(fin, '662')}
+    cc = {'existencias': sal(ini, '300') - sal(fin, '300'),
+          'deudores': (sal(ini, '430') + sal(ini, '436')) - (sal(fin, '430') + sal(fin, '436')),
+          'otros_activos_corrientes': sal(ini, '480') - sal(fin, '480'),
+          'acreedores': sum(-(sal(fin, c)) - (-(sal(ini, c))) for c in ('400', '4750', '4751', '476'))}
+    otros = {'intereses': -sal(fin, '662'), 'impuesto': -(D(3) + D('1.08'))}   # IS de 2025 pagado en julio y pagos fraccionados
+    explotacion = bai + sum(ajustes.values()) + sum(cc.values()) + sum(otros.values())
+    inversion = D(-10) + D(2)            # equipo y venta del mueble, sin IVA (el IVA se recupera en las liquidaciones)
+    financiacion = D(-10) + D(-10)       # cuota del préstamo y dividendo bruto
+    variacion = explotacion + inversion + financiacion
+    assert variacion == sal(fin, '572') - sal(ini, '572'), (variacion, sal(fin, '572') - sal(ini, '572'))
+    return dict(bai=bai, ajustes=ajustes, cc=cc, otros=otros, explotacion=explotacion, inversion=inversion,
+                financiacion=financiacion, variacion=variacion)
+
+
 if __name__ == '__main__':
     import sys
     comprobar()
+    if '--efe' in sys.argv:
+        for k, v in efe_indirecto().items():
+            print(k, v)
+        sys.exit()
     if '--latex' in sys.argv:
         print(latex_sumas_y_saldos())
         sys.exit()
