@@ -68,9 +68,9 @@ ASIENTOS[28] = a(('694', 2, 0), ('490', 0, 2))
 ASIENTOS[29] = a(('477', 55, 0), ('472', 0, 39), ('4750', 0, 16))           # liquidaciones de IVA 1T-3T
 ASIENTOS[30] = a(('4750', 16, 0), ('572', 0, 16))                           # pagos de IVA 1T-3T
 ASIENTOS[31] = a(('477', 18.92, 0), ('472', 0, 13.5), ('4750', 0, 5.42))    # liquidación del 4T
-ASIENTOS[32] = a(('473', 1.08, 0), ('572', 0, 1.08))                        # pagos fraccionados del IS
-ASIENTOS[33] = a(('610', 40, 0), ('300', 0, 40), ('300', 34.7, 0), ('610', 0, 34.7))  # existencias
-ASIENTOS[34] = a(('480', 1, 0), ('625', 0, 1))                              # seguro pagado por anticipado
+ASIENTOS[32] = a(('610', 40, 0), ('300', 0, 40), ('300', 34.7, 0), ('610', 0, 34.7))  # existencias
+ASIENTOS[33] = a(('480', 1, 0), ('625', 0, 1))                              # seguro pagado por anticipado
+ASIENTOS[34] = a(('473', 1.08, 0), ('572', 0, 1.08))                        # pagos fraccionados del IS
 ASIENTOS[35] = a(('6300', 1.5, 0), ('473', 0, 1.08), ('4752', 0, 0.42))     # impuesto sobre beneficios
 
 
