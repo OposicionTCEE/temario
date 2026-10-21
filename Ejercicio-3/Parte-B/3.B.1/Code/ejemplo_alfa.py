@@ -92,8 +92,41 @@ def comprobar():
         assert d == h, f'El asiento {n} no cuadra: {d} != {h}'
 
 
+def num(x):
+    """Cifra en formato del tema: coma decimal y, si hay millares, punto protegido ($1{.}981,14$)."""
+    x = x.normalize() if x != x.to_integral() else x.quantize(D(1))
+    t = f'{x:f}'
+    ent, _, dec = t.partition('.')
+    if len(ent) > 3:
+        ent = ent[:-3] + '{.}' + ent[-3:]
+    return '$' + ent + (',' + dec if dec else '') + '$'
+
+
+def nombre_corto(c):
+    return NOMBRES[c].replace('Hacienda Pública', 'HP').replace('Organismos de la Seguridad Social', 'Org. Seg. Social')
+
+
+def latex_sumas_y_saldos(hasta=35):
+    s = saldos(hasta)
+    filas = []
+    td = th = sd = sa = D(0)
+    for c in sorted(s, key=lambda c: (c[0], c)):
+        d, h = s[c]
+        dif = d - h
+        td += d; th += h
+        sd += dif if dif > 0 else 0; sa += -dif if dif < 0 else 0
+        filas.append(f'({c}) & \\raggedright {nombre_corto(c)} & {num(d)} & {num(h)} & '
+                     f'{num(dif) if dif > 0 else ""} & {num(-dif) if dif < 0 else ""} \\tabularnewline')
+    filas.append(f' & \\textbf{{Total}} & {num(td)} & {num(th)} & {num(sd)} & {num(sa)} \\tabularnewline')
+    return '\n'.join(filas)
+
+
 if __name__ == '__main__':
+    import sys
     comprobar()
+    if '--latex' in sys.argv:
+        print(latex_sumas_y_saldos())
+        sys.exit()
     s = saldos(35)
     orden = sorted(s, key=lambda c: (c[0], c))
     td = th = sd = sa = D(0)
