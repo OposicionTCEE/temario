@@ -1,6 +1,6 @@
 #!/bin/bash
 # Genera Img/<nombre>.pdf a partir de Img/<nombre>.tikz (solo el tikzpicture) con el pdflatex de MacTeX.
-# Uso, desde la carpeta del tema:  bash Code/generar_figura.sh TIO_cerrada
+# Uso, desde la carpeta del tema:  bash Code/generar_figura.sh circuito_contable
 set -e
 TEMA="$(cd "$(dirname "$0")/.." && pwd)"
 NOMBRE="$1"
