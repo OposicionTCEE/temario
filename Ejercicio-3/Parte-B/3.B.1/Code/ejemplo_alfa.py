@@ -103,7 +103,9 @@ def num(x):
 
 
 def nombre_corto(c):
-    return NOMBRES[c].replace('Hacienda Pública', 'HP').replace('Organismos de la Seguridad Social', 'Org. Seg. Social')
+    return (NOMBRES[c].replace('Hacienda Pública', 'HP').replace('Organismos de la Seguridad Social', 'Org. Seg. Social')
+            .replace('Amortización acumulada', 'Amort. acumulada').replace('por operaciones comerciales', 'comerciales')
+            .replace('procesos de información', 'proc. de información'))
 
 
 def latex_sumas_y_saldos(hasta=35):
