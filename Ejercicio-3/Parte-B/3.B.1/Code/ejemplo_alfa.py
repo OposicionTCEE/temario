@@ -74,6 +74,21 @@ ASIENTOS[34] = a(('473', 1.08, 0), ('572', 0, 1.08))                        # pa
 ASIENTOS[35] = a(('6300', 1.5, 0), ('473', 0, 1.08), ('4752', 0, 0.42))     # impuesto sobre beneficios
 
 
+def regularizacion_y_cierre():
+    """Añade los asientos 36 (gastos), 37 (ingresos) y 38 (cierre) a partir de los saldos tras el 35."""
+    s = saldos(35)
+    deud = [(c, d - h) for c, (d, h) in s.items() if c[0] in '67' and d - h > 0]
+    acre = [(c, h - d) for c, (d, h) in s.items() if c[0] in '67' and h - d > 0]
+    ASIENTOS[36] = [('129', sum(x for _, x in deud), D(0))] + [(c, D(0), x) for c, x in deud]
+    ASIENTOS[37] = [(c, x, D(0)) for c, x in acre] + [('129', D(0), sum(x for _, x in acre))]
+    s = saldos(37)
+    ASIENTOS[38] = [(c, h - d, D(0)) for c, (d, h) in s.items() if h - d > 0] + \
+                   [(c, D(0), d - h) for c, (d, h) in s.items() if d - h > 0]
+
+
+regularizacion_y_cierre()
+
+
 def saldos(hasta):
     s = OrderedDict()
     for n, asiento in ASIENTOS.items():
