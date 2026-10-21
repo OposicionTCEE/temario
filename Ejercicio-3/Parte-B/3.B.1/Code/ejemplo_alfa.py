@@ -86,9 +86,6 @@ def regularizacion_y_cierre():
                    [(c, D(0), d - h) for c, (d, h) in s.items() if d - h > 0]
 
 
-regularizacion_y_cierre()
-
-
 def saldos(hasta):
     s = OrderedDict()
     for n, asiento in ASIENTOS.items():
