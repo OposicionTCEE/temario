@@ -130,22 +130,25 @@ AHORRO = guarda('Supuesto', 'Ahorro de alquiler desde 2028 (un cuarto del de 202
                 'miles de euros', SUP)
 EXIST_NUEVA = guarda('Supuesto', 'Existencias / ventas desde 2028', '—', 0.085, 'tanto por uno', SUP)
 INTEGRACION = guarda('Supuesto', 'Costes de integración en 2027, antes de impuestos', 2027, 6.0, 'miles de euros', SUP)
-# ahorro de alquiler después de impuestos, renta perpetua creciente desde 2028, a k_B
-primer = AHORRO * (1 - TAU) * (1 + G) ** 2
-va_ahorro = primer / (K - G) / (1 + K)
-# menos existencias: liberación en 2028 y menor inversión en circulante después, a k_B
 ratio_ant = EXIST0 / VENTAS0
 dif = ratio_ant - EXIST_NUEVA
-va_exist = 0.0
 ventas = [VENTAS0 * (1 + CREC) ** t for t in range(0, 6)]
-va_exist += dif * ventas[2] / (1 + K) ** 2
-for t in range(3, 6):
-    va_exist += dif * (ventas[t] - ventas[t - 1]) / (1 + K) ** t
-flujo_2032 = dif * ventas[5] * G
-va_exist += flujo_2032 / (K - G) / (1 + K) ** 5
-# costes de integración después de impuestos, casi ciertos: al tipo sin riesgo
-va_integ = INTEGRACION * (1 - TAU) / (1 + GAMMA)
-S = va_ahorro + va_exist - va_integ
+
+
+def sinergia(k=K, g=G):
+    """Ahorro de alquiler (renta perpetua creciente desde 2028) y menos existencias (liberación en 2028 y menor inversión
+    en circulante después), a k_B; costes de integración, casi ciertos, al tipo sin riesgo. Todo después de impuestos."""
+    ahorro = AHORRO * (1 - TAU) * (1 + g) ** 2 / (k - g) / (1 + k)
+    exist = dif * ventas[2] / (1 + k) ** 2
+    for t in range(3, 6):
+        exist += dif * (ventas[t] - ventas[t - 1]) / (1 + k) ** t
+    exist += dif * ventas[5] * g / (k - g) / (1 + k) ** 5
+    integ = INTEGRACION * (1 - TAU) / (1 + GAMMA)
+    return ahorro + exist - integ, ahorro, exist, integ
+
+
+S, va_ahorro, va_exist, va_integ = sinergia()
+SENS_S = [[valor(k=k, g=g)[0] + sinergia(k, g)[0] for g in CRECS] for k in TASAS]
 guarda('Sinergia', 'Valor actual del ahorro de alquiler', '—', va_ahorro, 'miles de euros', 'Cálculo, a k_B')
 guarda('Sinergia', 'Valor actual de la reducción de existencias', '—', va_exist, 'miles de euros', 'Cálculo, a k_B')
 guarda('Sinergia', 'Valor actual de los costes de integración', '—', va_integ, 'miles de euros', 'Cálculo, al tipo sin riesgo')
