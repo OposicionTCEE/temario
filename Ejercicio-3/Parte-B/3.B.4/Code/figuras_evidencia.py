@@ -6,7 +6,7 @@ Lee los CSV que prepara Code/datos_evidencia.py y escribe:
                            (b) valor mundial de las fusiones transfronterizas, 1990-2025;
                            (c) número de fusiones transfronterizas con empresa comprada o comprador españoles.
   Img/anx_ciclo.tikz       (a) valor mundial de las fusiones transfronterizas en % de la capitalización bursátil
-                           mundial, 1990-2024; (b) endurecimiento del crédito bancario en EE. UU. (media anual de la
+                           mundial, 1990-2025; (b) endurecimiento del crédito bancario en EE. UU. (media anual de la
                            SLOOS) frente a la variación anual del número mundial de operaciones, 1991-2025.
   Code/datos/tablas_figuras.csv  las series de cada panel, con su tratamiento, para el libro de datos.
 Después: bash Code/generar_figura.sh anx_olas_datos y bash Code/generar_figura.sh anx_ciclo.
@@ -64,8 +64,8 @@ correlacion = st.correlation(xs, ys)
 print(f'Panel (b) de anx_ciclo: {años_b[0]}-{años_b[-1]}, n = {len(años_b)}, correlación = {correlacion:.2f}, '
       f'pendiente = {pendiente:.2f}')
 
-ETIQUETADOS = {2001: 'above right', 2002: 'below right', 2005: 'above', 2008: 'right', 2009: 'below left',
-               2020: 'below', 2021: 'above', 2023: 'below left'}
+ETIQUETADOS = {2001: 'above right', 2002: 'below right', 2005: 'left', 2008: 'above', 2009: 'below left',
+               2020: 'above left', 2021: 'above', 2023: 'below right'}
 
 olas = rf"""% Figura del anexo de olas y evidencia: las olas en los datos. Generada por Code/figuras_evidencia.py (no editar a mano).
 % (a) Fusiones registradas en la industria y la minería de EE. UU., 1895-1970: NELSON (1895-1918) y FTC (1919-1970),
@@ -78,7 +78,7 @@ olas = rf"""% Figura del anexo de olas y evidencia: las olas en los datos. Gener
       xmin=1893, xmax=1972, ymin=0, ymax=2700, xtick={{1900,1910,...,1970}}, ytick={{0,500,...,2500}},
       xticklabel style={{/pgf/number format/1000 sep=}}, yticklabel style={{/pgf/number format/1000 sep=}},
       tick label style={{font=\scriptsize}}, ylabel={{operaciones}}, ylabel style={{font=\scriptsize}},
-      legend style={{at={{(0.03,0.97)}}, anchor=north west, draw=none, font=\scriptsize, fill=none}},
+      legend style={{at={{(0.03,0.97)}}, anchor=north west, draw=none, font=\scriptsize, fill=none}}, legend cell align=left,
       legend image code/.code={{\draw[#1, draw=none] (0cm,-0.1cm) rectangle (0.25cm,0.12cm);}},
       title={{\textbf{{(a) Estados Unidos: fusiones en la industria y la minería, 1895-1970}}}},
       title style={{font=\footnotesize, yshift=-2pt}}]
@@ -99,7 +99,7 @@ olas = rf"""% Figura del anexo de olas y evidencia: las olas en los datos. Gener
       xmin=1988.5, xmax=2026.5, ymin=0, ymax=560, xtick={{1990,2000,2010,2020}}, ytick={{0,100,...,500}},
       xticklabel style={{/pgf/number format/1000 sep=}}, tick label style={{font=\scriptsize}},
       ylabel={{operaciones}}, ylabel style={{font=\scriptsize}},
-      legend style={{at={{(0.03,0.97)}}, anchor=north west, draw=none, font=\scriptsize, fill=none}},
+      legend style={{at={{(0.03,0.97)}}, anchor=north west, draw=none, font=\scriptsize, fill=none}}, legend cell align=left,
       title={{\textbf{{(c) España: número de fusiones transfronterizas}}}}, title style={{font=\footnotesize}}]
     \addplot[thick, teal!60!black, mark=*, mark size=1pt] coordinates {{{coords(sorted(esp_vendedor.items()), 0)}}};
     \addlegendentry{{empresa comprada española}}
@@ -114,7 +114,7 @@ etiquetas = '\n'.join(
     for a, pos in ETIQUETADOS.items() if a in años_b)
 ciclo = rf"""% Figura del anexo de olas y evidencia: dos indicadores del ciclo. Generada por Code/figuras_evidencia.py (no editar a mano).
 % (a) Valor de las fusiones transfronterizas netas en el mundo (UNCTAD, tabla anexa 5) en % de la capitalización bursátil
-% mundial (Banco Mundial, CM.MKT.LCAP.CD), 1990-2024. (b) Media anual del porcentaje neto de bancos de EE. UU. que
+% mundial (Banco Mundial, CM.MKT.LCAP.CD), {ratio[0][0]}-{ratio[-1][0]}. (b) Media anual del porcentaje neto de bancos de EE. UU. que
 % endurecen los criterios de los préstamos comerciales e industriales a empresas grandes y medianas (SLOOS) frente a la
 % variación anual del número mundial de fusiones transfronterizas netas (UNCTAD, tabla anexa 7), {años_b[0]}-{años_b[-1]};
 % recta de mínimos cuadrados. Correlación: {correlacion:.2f}.
