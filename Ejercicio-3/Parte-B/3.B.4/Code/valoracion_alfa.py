@@ -229,12 +229,16 @@ for j, (rot, a, b) in enumerate(barras):
     lineas.append(f'  \\fill[teal!35] ({(a - x0) * esc2:.3f},{y - 0.28:.2f}) rectangle ({(b - x0) * esc2:.3f},{y + 0.28:.2f});\n')
     lineas.append(f'  \\draw[black!70] ({(a - x0) * esc2:.3f},{y - 0.28:.2f}) rectangle ({(b - x0) * esc2:.3f},{y + 0.28:.2f});\n')
     lineas.append(f'  \\node[left] at (0,{y}) {{{rot}}};\n')
-    lineas.append(f'  \\node[left, font=\\scriptsize] at ({(a - x0) * esc2:.3f},{y}) {{${n(a, 0)}$}};\n')
+    # la cifra de la izquierda va dentro de la barra si fuera chocaría con la línea del precio
+    dentro = 0 < a - P < 14
+    lineas.append(f'  \\node[{"right" if dentro else "left"}, font=\\scriptsize] at ({(a - x0) * esc2:.3f},{y}) '
+                  f'{{${n(a, 0)}$}};\n')
     lineas.append(f'  \\node[right, font=\\scriptsize] at ({(b - x0) * esc2:.3f},{y}) {{${n(b, 0)}$}};\n')
-xmax = (240 - x0) * esc2
-lineas.append(f'  \\draw[->] (0,0.2) -- ({xmax:.2f},0.2) node[below left] {{miles de euros}};\n')
+xmax = (250 - x0) * esc2
+lineas.append(f'  \\draw[->] (0,0.2) -- ({xmax:.2f},0.2);\n')
 for v in range(100, 241, 20):
     lineas.append(f'  \\draw ({(v - x0) * esc2:.3f},0.28) -- ({(v - x0) * esc2:.3f},0.12) node[below, font=\\scriptsize] {{${v}$}};\n')
+lineas.append(f'  \\node[font=\\scriptsize] at ({(170 - x0) * esc2:.3f},-0.75) {{miles de euros}};\n')
 xp = (P - x0) * esc2
 lineas.append(f'  \\draw[dashed, thick, teal!70!black] ({xp:.3f},0.2) -- ({xp:.3f},4.7) node[above] {{$P={n(P)}$}};\n')
 lineas.append('\\end{tikzpicture}\n')
