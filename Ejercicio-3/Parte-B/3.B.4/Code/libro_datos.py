@@ -164,6 +164,8 @@ for figura, serie, economia, año, valor, unidad, trat in leer('tablas_figuras.c
 hoja(wb, 'Indicadores', ['Figura', 'Serie', 'Economía', 'Año', 'Valor', 'Unidad', 'Fuente', 'Tratamiento'], indicadores,
      [20, 60, 16, 8, 12, 22, 14, 12])
 hoja(wb, 'Cifras_citadas', ['Apartado', 'Dato', 'Valor', 'Unidad', 'Periodo', 'Fuente'], CIFRAS, [12, 70, 12, 20, 18, 45])
+caso = [(b, c, numero(a) if a != '—' else a, numero(v), u, o) for b, c, a, v, u, o in leer('caso_alfa.csv')]
+hoja(wb, 'Caso_ALFA', ['Bloque', 'Concepto', 'Año', 'Valor', 'Unidad', 'Origen'], caso, [12, 70, 8, 14, 16, 40])
 brutos = []
 for f, fuente in [('hsus_fusiones_1895_1970.csv', 'HSUS'), ('unctad_fusiones.csv', 'UNCTAD'),
                   ('wdi_capitalizacion.csv', 'WDI'), ('sloos_ci_grandes.csv', 'SLOOS')]:
