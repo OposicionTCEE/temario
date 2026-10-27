@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Monta Code/datos_3B4.xlsx, el libro único con todos los datos del tema 3.B.4 (27/10/2026).
 
-Seis hojas, en formato largo y con filtros:
+Siete hojas, en formato largo y con filtros:
   Léeme           qué hay en cada hoja y cómo se regenera.
   Fuentes         cada fuente con su código: institución, base de datos, enlace y cobertura.
   Tratamientos    cada tratamiento con su código: definición y fórmula.
   Indicadores     las series de cada panel de las figuras (Code/datos/tablas_figuras.csv).
   Cifras_citadas  cada cifra del texto con su fuente.
+  Caso_ALFA       el caso del anexo de valoración (Code/datos/caso_alfa.csv, de Code/valoracion_alfa.py).
   Brutos          los datos descargados o transcritos, tal cual (Code/datos/*.csv).
 Orden: python -I Code/datos_evidencia.py (descargas), python3 -I Code/figuras_evidencia.py (figuras y tablas),
 python -I Code/libro_datos.py (este libro, con un Python que tenga openpyxl).
