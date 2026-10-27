@@ -38,6 +38,9 @@ FUENTES = [  # (código, institución, base de datos, enlace, cobertura y uso)
      'Porcentaje neto de bancos que endurecen los criterios de los préstamos comerciales e industriales a empresas grandes '
      'y medianas, trimestral desde 1990. Consulta del 27/10/2026.'),
     ('VARIAS', '—', 'Fuentes citadas una a una', '—', 'Hoja Cifras_citadas: la fuente de cada cifra figura en su fila.'),
+    ('ALFA', 'Tema 3.B.1', 'Ejemplo ALFA, S.L.: cuentas de 2026 (3.B.1/Code/ejemplo_alfa.py)', '—',
+     'Cifras de partida del caso del anexo de valoración (miles de euros). Los demás datos del caso son supuestos '
+     'ilustrativos, marcados en la hoja Caso_ALFA.'),
 ]
 
 TRATAMIENTOS = [  # (código, nombre, definición)
