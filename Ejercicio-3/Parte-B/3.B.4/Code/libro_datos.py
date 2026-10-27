@@ -110,10 +110,13 @@ LEEME = [
     ('Tratamientos', 'Código y definición de cada cálculo aplicado a los datos.'),
     ('Indicadores', 'Series de cada panel de las figuras anx_olas_datos y anx_ciclo, con su tratamiento.'),
     ('Cifras_citadas', 'Cada cifra del texto con su fuente.'),
+    ('Caso_ALFA', 'Caso del anexo de valoración: partidas de 2026, supuestos, proyección, valor, sensibilidad, sinergia, '
+     'precio y múltiplos (Code/datos/caso_alfa.csv; tratamiento T06).'),
     ('Brutos', 'Datos descargados o transcritos, tal cual (Code/datos/*.csv; los Excel de la UNCTAD, en Code/datos/unctad/).'),
     ('Cómo se regenera', 'python -I Code/datos_evidencia.py; python3 -I Code/figuras_evidencia.py; '
-     'bash Code/generar_figura.sh anx_olas_datos; bash Code/generar_figura.sh anx_ciclo; python -I Code/libro_datos.py '
-     '(con openpyxl).'),
+     'bash Code/generar_figura.sh anx_olas_datos; bash Code/generar_figura.sh anx_ciclo; python3 -I Code/valoracion_alfa.py; '
+     'bash Code/generar_figura.sh anx_val_alfa_valor; bash Code/generar_figura.sh anx_val_alfa_precio; '
+     'python -I Code/libro_datos.py (con openpyxl).'),
 ]
 
 
