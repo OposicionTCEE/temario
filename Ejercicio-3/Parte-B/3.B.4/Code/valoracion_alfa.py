@@ -213,8 +213,9 @@ lineas.append(f'  \\draw (-0.3,0) -- ({x - 0.3:.2f},0);\n\\end{{tikzpicture}}\n'
 
 # Figura (b): intervalos de valor y precio
 sens = [v for fila in SENS for v in fila]
+sens_s = [v for fila in SENS_S for v in fila]
 barras = [('Descuento de flujos, $V_B$', min(sens), max(sens)),
-          ('Descuento de flujos con sinergia', min(sens) + S, max(sens) + S),
+          ('Descuento de flujos con sinergia, $V_B+S$', min(sens_s), max(sens_s)),
           ('Comparables cotizadas', MULT['Comparables cotizadas'][0] * BAII1, MULT['Comparables cotizadas'][2] * BAII1),
           ('Transacciones comparables', MULT['Transacciones comparables'][0] * BAII1,
            MULT['Transacciones comparables'][2] * BAII1)]
