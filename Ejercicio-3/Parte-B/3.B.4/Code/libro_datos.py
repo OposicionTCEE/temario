@@ -52,6 +52,10 @@ TRATAMIENTOS = [  # (código, nombre, definición)
     ('T04', 'Media anual de la SLOOS', 'Media de los cuatro trimestres del año; solo años completos.'),
     ('T05', 'Variación anual', '100 × (número del año / número del año anterior − 1), número mundial de fusiones '
      'transfronterizas netas (UNCTAD, vendedor). Panel (b) de anx_ciclo: correlación con T04 y recta de mínimos cuadrados.'),
+    ('T06', 'Valoración del caso ALFA', 'Code/valoracion_alfa.py: proyección 2027-2031 con las ratios de 2026 constantes; '
+     'flujo de caja libre = BAII(1 − τ) + A − I − ΔNOF; valor terminal = BAII(1 − τ)(1 + g)(1 − g/RONIC)/(k_B − g); '
+     'k_B = WACC con CAPM y beta reapalancada; sinergia = ahorro de alquiler y menos existencias a k_B, menos costes de '
+     'integración al tipo sin riesgo; precio = V_B + βS. Figuras anx_val_alfa_valor y anx_val_alfa_precio.'),
 ]
 
 CIFRAS = [  # (apartado, dato, valor, unidad, periodo, fuente)
