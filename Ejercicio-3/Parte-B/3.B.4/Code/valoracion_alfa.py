@@ -256,7 +256,7 @@ print('sensibilidad (filas k, columnas g):', [f'{100*k:.2f}' for k in TASAS], [f
 for fila in SENS:
     print(' '.join(f'{v:.1f}' for v in fila))
 print(f'sinergia: ahorro {va_ahorro:.2f}, existencias {va_exist:.2f} (liberación 2028 {dif*ventas[2]:.2f}), '
-      f'integración {va_integ:.2f}; S {S:.2f}; V_B+S {VB+S:.2f}')
+      f'integración {va_integ:.2f}; S {S:.2f}; V_B+S {VB+S:.2f}; intervalo V_B+S {min(sens_s):.1f}-{max(sens_s):.1f}')
 print(f'precio: P {P:.2f}; P acciones {P+CAJA-DEUDA:.2f}; prima {BETA_N*S:.2f} ({100*BETA_N*S/E:.1f} %); '
       f'S2 {S2:.2f}; P2 {P2:.2f}; A conserva {S-S2:.2f}')
 for nombre, (q1, med, q3) in MULT.items():
