@@ -142,7 +142,8 @@ def colas():
         garch[i] = eps_prev
     def serie(v):
         return " ".join(f"({i},{100*x:.3f})" for i, x in enumerate(v))
-    comun = rf"width=7.4cm, height=3.75cm, xmin=0, xmax={n}, ymin=-7, ymax=7, ytick={{-5,0,5}}, {PREAMBULO_EJES}"
+    lim = math.ceil(100 * max(abs(garch).max(), abs(iid).max())) + 1
+    comun = rf"width=7.4cm, height=3.75cm, xmin=0, xmax={n}, ymin=-{lim}, ymax={lim}, ytick={{-8,-4,0,4,8}}, {PREAMBULO_EJES}"
     panel_b1 = rf"""\begin{{axis}}[name=b1, at={{(a.north east)}}, anchor=north west, xshift=1.9cm, {comun},
   xticklabels={{}}, ylabel={{\%}}, title={{(b) Sin y con agrupamiento}}]
 \addplot[black, thin] coordinates {{{serie(iid)}}};
