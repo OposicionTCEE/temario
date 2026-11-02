@@ -506,7 +506,7 @@ def multiplos():
     lineas_a = []
     for b, etiqueta, pos, ancla in [(0.0, "$b=0$", (1.62, 1.0), "south"), (0.25, r"$b=1/4$", (2.0, 1.5), "south east"),
                                     (0.5, r"$b=1/2$", (1.62, 2.6), "east")]:
-        x = np.linspace(0, 2, 801)
+        x = np.linspace(0, min(2, (1 - (1 - b) / 3) / b) if b else 2, 801)
         y = (1 - b) / (1 - b * x) if b else np.ones_like(x)
         lineas_a.append(rf"\addplot[thick, black] coordinates {{{recorte(x, y)}}};")
         lineas_a.append(rf"\node[anchor={ancla}, font=\scriptsize] at (axis cs:{pos[0]},{pos[1]}) {{{etiqueta}}};")
