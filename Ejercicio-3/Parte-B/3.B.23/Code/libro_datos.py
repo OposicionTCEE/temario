@@ -149,7 +149,7 @@ def indicadores():
                                          ("Recta ajustada: pendiente", pend, "% anual por unidad de beta", "T6")):
             filas.append(("anx_sml_empirica", figura_panel, "Mercado y recta ajustada", ind, round(valor, 4), unidad,
                           periodo, "F1" if "Recta" not in ind else fuente, trat))
-    return filas + indicadores_a7(periodo) + indicadores_a8() + indicadores_a9()
+    return filas + indicadores_a7(periodo) + indicadores_a8() + indicadores_a9() + indicadores_a10()
 
 
 def indicadores_a7(periodo):
