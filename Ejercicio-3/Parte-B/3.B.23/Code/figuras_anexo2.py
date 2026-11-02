@@ -347,22 +347,23 @@ def apt_replica():
 
 
 def componentes():
-    """A7, II.5.6. Componentes principales de la matriz de covarianzas de las rentabilidades mensuales en exceso de las
-    30 carteras sectoriales de FRENCH (ponderadas por valor), julio de 1963 a diciembre de 2025: (a) proporción de la
-    varianza total que explica cada uno de los diez primeros y la acumulada; (b) cargas de cada sector en el segundo y
-    el tercero. El signo de cada componente es arbitrario: se elige con cargas positivas en el primero, la del petróleo
-    negativa en el segundo y la del tabaco negativa en el tercero."""
+    """A7, II.5.6. Componentes principales de la matriz de correlaciones de las rentabilidades mensuales en exceso de las
+    30 carteras sectoriales de FRENCH (ponderadas por valor), julio de 1963 a diciembre de 2025 (con la de covarianzas,
+    el carbón, el sector más volátil, acapara el segundo componente): (a) proporción de la varianza total de las
+    rentabilidades tipificadas que explica cada uno de los diez primeros y la acumulada; (b) cargas de cada sector en el
+    segundo y el tercero. El signo de cada componente es arbitrario: se elige con cargas positivas en el primero, la de
+    la alimentación negativa en el segundo y la del petróleo positiva en el tercero."""
     from datos_french import SECTORES, carteras, factores
     meses, F3, F5, mom = factores(*PERIODO)
     cs, Y = carteras(SECTORES, "Average Value Weighted Returns -- Monthly", meses, F3["RF"])
-    val, vec = np.linalg.eigh(np.cov(Y.T, ddof=1))
+    val, vec = np.linalg.eigh(np.corrcoef(Y.T))
     orden = np.argsort(val)[::-1]
     val, vec = val[orden], vec[:, orden]
     if vec[:, 0].sum() < 0:
         vec[:, 0] *= -1
-    if vec[cs.index("Oil"), 1] > 0:
+    if vec[cs.index("Food"), 1] > 0:
         vec[:, 1] *= -1
-    if vec[cs.index("Smoke"), 2] > 0:
+    if vec[cs.index("Oil"), 2] < 0:
         vec[:, 2] *= -1
     cuota = val / val.sum() * 100
     acum = np.cumsum(cuota)
