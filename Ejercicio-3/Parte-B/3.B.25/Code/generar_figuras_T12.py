@@ -71,9 +71,9 @@ def b2_delta():
   \draw[->] (1.15,{min(ta, 0) - 0.05:.3f}) -- (3.05,{min(ta, 0) - 0.05:.3f}) node[below] {{$S$}};
   \draw[->] (1.15,{min(ta, 0) - 0.05:.3f}) -- (1.15,1.05) node[left] {{$c$}};
   \draw[very thick] plot coordinates {{{coords(curva)}}};
-  \draw[thin] ({xa - 0.25:.3f},{tang(xa - 0.25):.3f}) -- ({xb + 0.25:.3f},{tang(xb + 0.25):.3f});
+  \draw[thin] ({xa - 0.25:.3f},{tang(xa - 0.25):.3f}) -- ({xb + 0.12:.3f},{tang(xb + 0.12):.3f});
   \node[anchor=west] at (2.90,{curva[-1][1]:.3f}) {{$c(S)$}};
-  \node[anchor=north west] at ({xb + 0.25:.3f},{tang(xb + 0.25):.3f}) {{$c_0+\Delta\,(S-S_0)$}};
+  \node[anchor=west] at ({xb + 0.12:.3f},{tang(xb + 0.12):.3f}) {{$c_0+\Delta\,(S-S_0)$}};
   \fill ({S0:.3f},{c0:.3f}) circle (1.5pt);
   \draw[dotted] ({S0:.3f},{min(ta, 0) - 0.05:.3f}) -- ({S0:.3f},{c0:.3f});
   \node[below] at ({S0:.3f},{min(ta, 0) - 0.05:.3f}) {{$S_0$}};
