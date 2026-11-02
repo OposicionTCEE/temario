@@ -12,17 +12,8 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from figuras_anexo1 import IMG, MU3, PREAMBULO_EJES, S3, constantes3, sigma_frontera, tangente_de  # noqa: E402
-
-
-MARGEN = r"\path ([yshift=1.5pt]current bounding box.north east) ([yshift=-1.5pt]current bounding box.south west);"
-
-
-def _escribir(nombre, tikz):
-    """Escribe Img/<nombre>.tikz con un margen de 1,5 pt arriba y abajo, para que el borde superior del eje no quede
-    cortado cuando la figura no lleva título dentro."""
-    (IMG / f"{nombre}.tikz").write_text(tikz.replace("\\end{tikzpicture}", MARGEN + "\n\\end{tikzpicture}"),
-                                        encoding="utf-8")
+from figuras_anexo1 import (IMG, MU3, PREAMBULO_EJES, S3, constantes3, escribir_tikz as _escribir, sigma_frontera,  # noqa: E402
+                            tangente_de)
 
 
 RF = 10.0

@@ -13,17 +13,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from figuras_anexo1 import IMG, PREAMBULO_EJES  # noqa: E402
-
-
-MARGEN = r"\path ([yshift=1.5pt]current bounding box.north east) ([yshift=-1.5pt]current bounding box.south west);"
-
-
-def _escribir(nombre, tikz):
-    """Escribe Img/<nombre>.tikz con un margen de 1,5 pt arriba y abajo, para que el borde superior del eje no quede
-    cortado cuando la figura no lleva título dentro."""
-    (IMG / f"{nombre}.tikz").write_text(tikz.replace("\\end{tikzpicture}", MARGEN + "\n\\end{tikzpicture}"),
-                                        encoding="utf-8")
+from figuras_anexo1 import IMG, PREAMBULO_EJES, escribir_tikz as _escribir  # noqa: E402
 
 DECENIOS = [(1926, 1935), (1936, 1945), (1946, 1955), (1956, 1965), (1966, 1975), (1976, 1985), (1986, 1995),
             (1996, 2005), (2006, 2015), (2016, 2025)]
