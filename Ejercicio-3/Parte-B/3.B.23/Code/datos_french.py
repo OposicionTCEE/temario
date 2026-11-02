@@ -67,3 +67,25 @@ def excesos(nombre, marca, columnas, desde, hasta):
     mercado = f[fi, cf.index("Mkt-RF")]
     carteras = np.column_stack([p[pi, cp.index(c)] for c in columnas]) - rf[:, None]
     return meses, carteras, mercado, rf
+
+
+def factores(desde, hasta):
+    """Factores mensuales en % entre dos meses (aaaamm). F3: Mkt-RF, SMB, HML y RF del modelo de tres factores; F5: los
+    del modelo de cinco (sus SMB, de las tres clasificaciones, difiere algo del de tres); Mom: impulso."""
+    m3, c3, f3 = seccion(FACTORES, ",Mkt-RF")
+    m5, c5, f5 = seccion(CINCO, ",Mkt-RF")
+    mm, cm, fm = seccion(IMPULSO, ",Mom")
+    meses = np.array([m for m in m3 if desde <= m <= hasta and m in set(m5) and m in set(mm)])
+    i3, i5, im = (np.searchsorted(x, meses) for x in (m3, m5, mm))
+    F3 = {c: f3[i3, c3.index(c)] for c in c3}
+    F5 = {c: f5[i5, c5.index(c)] for c in c5}
+    return meses, F3, F5, fm[im, cm.index("Mom")]
+
+
+def carteras(nombre, marca, meses, rf):
+    """Rentabilidades en exceso (en %) de todas las carteras de una sección mensual en los meses pedidos."""
+    mp, cp, p = seccion(nombre, marca)
+    ip = np.searchsorted(mp, meses)
+    if not (mp[ip] == meses).all():
+        raise ValueError(f"faltan meses en {nombre}")
+    return cp, p[ip] - rf[:, None]
