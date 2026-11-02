@@ -564,7 +564,7 @@ def cota_hj():
     nodos = "\n".join(rf"\node[anchor=south east, font=\scriptsize, inner sep=1.5pt] at (axis cs:{gamma_min[k]:.2f},{sr[k]:.4f}) {{${gamma_min[k]:.0f}$}};"
                       for k in estilos)
     tikz = rf"""\begin{{tikzpicture}}
-\begin{{axis}}[width=11cm, height=7.4cm, xmin=0, xmax=80, ymin=0, ymax=1.4,
+\begin{{axis}}[width=9.6cm, height=7.4cm, xmin=0, xmax=80, ymin=0, ymax=1.4,
   xlabel={{Aversión relativa al riesgo, $\gamma$}}, ylabel={{Volatilidad relativa del factor de descuento, $\sigma(m)/\mathbb E[m]$}},
   {PREAMBULO_EJES}, legend style={{at={{(1.03,0.5)}}, anchor=west}}]
 \addplot[fill=black!10, draw=none, area legend] coordinates {{(1,0) (10,0) (10,1.4) (1,1.4)}} -- cycle;
@@ -603,6 +603,8 @@ if __name__ == "__main__":
     print("componentes: cuota", np.round(c["cuota"][:6], 1), "acumulada", np.round(c["acum"][:6], 1),
           f"corr. del primero con el mercado {c['corr1']:.3f}; R² del mercado en los sectores: media"
           f" {c['r2_mercado'].mean():.2f}, mín. {c['r2_mercado'].min():.2f}, máx. {c['r2_mercado'].max():.2f}")
+    for j, cc in c["corr_componentes"].items():
+        print(f"  componente {j}: correlaciones", {k: round(v, 2) for k, v in cc.items()})
     tf = tres_factores()
     for k, r in tf["res"].items():
         print(f"{k:8s} GRS {r['grs']:.2f} {r['gl']} |alfa| medio {np.abs(r['alfa']).mean():.2f} R² medio {r['r2'].mean():.2f}"
