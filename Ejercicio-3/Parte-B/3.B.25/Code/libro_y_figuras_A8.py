@@ -270,16 +270,16 @@ def main():
     \fill[black!25] (2.0,-0.35) rectangle (2.25,-0.2); \node[anchor=west] at (2.3,-0.275) {valor de mercado};
   \end{scope}
   % ---------------- (b) Cámaras ----------------
-  \begin{scope}[xshift=8.6cm, yshift=-0.2cm]
+  \begin{scope}[xshift=7.7cm, yshift=-0.2cm]
     \node[font=\footnotesize\bfseries] at (2.9,3.75) {(b) Proporción compensada en cámaras};
     \draw[->] (0,0) -- (5.9,0);
     \draw[->] (0,0) -- (0,3.25) node[left] {$\%$};
 """ + "".join(f"    \\draw (0,{y * 0.03:.2f}) -- (-0.06,{y * 0.03:.2f}) node[left] {{{y}}};\n" for y in (25, 50, 75, 100))
-        + "".join(f"    \\draw ({(a - 1998) * 0.2:.2f},0) -- ({(a - 1998) * 0.2:.2f},-0.06) node[below] {{{a}}};\n" for a in (2000, 2010, 2020))
+        + "".join(f"    \\draw ({(a - 2009) * 0.33:.2f},0) -- ({(a - 2009) * 0.33:.2f},-0.06) node[below] {{{a}}};\n" for a in (2010, 2015, 2020, 2025))
         + r"""    \draw[very thick] plot coordinates {""" + cuota_linea("D") + r"""};
     \draw[very thick, dashed] plot coordinates {""" + cuota_linea("T") + r"""};
-    \node[anchor=east] at (3.5,2.55) {tipos de interés};
-    \node[anchor=north] at (3.4,0.75) {CDS};
+    \node[anchor=east] at (2.4,2.35) {tipos de interés};
+    \node[anchor=north west] at (1.7,0.75) {CDS};
   \end{scope}
 \end{tikzpicture}
 """)
