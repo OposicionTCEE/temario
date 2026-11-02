@@ -173,8 +173,8 @@ def correlacion():
         a = z1
         b = rho * z1 + math.sqrt(1 - rho**2) * z2
         pts = " ".join(f"({x:.3f},{y:.3f})" for x, y in zip(a, b))
-        pos = "name=p0" if i == 0 else rf"at={{(p{i-1}.east)}}, anchor=west, xshift=0.9cm, name=p{i}"
-        paneles.append(rf"""\begin{{axis}}[{pos}, width=5.6cm, height=5.6cm, xmin=-3.5, xmax=3.5, ymin=-3.5, ymax=3.5,
+        pos = "name=p0" if i == 0 else rf"at={{(p{i-1}.east)}}, anchor=west, xshift=1.3cm, name=p{i}"
+        paneles.append(rf"""\begin{{axis}}[{pos}, width=5.3cm, height=5.3cm, xmin=-3.5, xmax=3.5, ymin=-3.5, ymax=3.5,
   xtick={{-2,0,2}}, ytick={{-2,0,2}}, xlabel={{$r_A$}}, ylabel={{$r_B$}}, title={{({"abc"[i]}) $\rho_{{AB}}={etiqueta}$}},
   {PREAMBULO_EJES}]
 \addplot[only marks, mark=*, mark size=0.9pt, black!70] coordinates {{{pts}}};
@@ -209,7 +209,7 @@ def dos_acciones():
               r"\node[anchor=south east, font=\footnotesize] at (axis cs:32,18) {$B$};")
     panel_a = rf"""\begin{{axis}}[name=a, width=7.6cm, height=6.6cm, xmin=0, xmax=36, ymin=10, ymax=20,
   xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}}, title={{(a) Pesos entre $0$ y $1$}},
-  legend pos=south west, {PREAMBULO_EJES}]
+  legend pos=north west, {PREAMBULO_EJES}]
 {chr(10).join(curvas)}
 {puntos}
 \end{{axis}}"""
@@ -221,13 +221,13 @@ def dos_acciones():
     inf = " ".join("({:.3f},{:.3f})".format(*cartera(w_min + k * (1.6 - w_min) / 200, rho)) for k in range(0, 201))
     panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.6cm, xmin=0, xmax=50, ymin=6, ymax=24,
   xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}}, title={{(b) Ramas, con $\rho_{{AB}}=0$}},
-  legend pos=south east, {PREAMBULO_EJES}]
+  legend pos=north west, {PREAMBULO_EJES}]
 \addplot[very thick, black] coordinates {{{sup}}};
 \addlegendentry{{Rama eficiente}}
 \addplot[very thick, black, dashed] coordinates {{{inf}}};
 \addlegendentry{{Rama ineficiente}}
 \addplot[only marks, mark=*, mark size=1.8pt, black, forget plot] coordinates {{(20,12) (32,18) ({s_min:.3f},{m_min:.3f})}};
-\node[anchor=north west, font=\footnotesize] at (axis cs:20,12) {{$A$}};
+\node[anchor=north east, font=\footnotesize] at (axis cs:20,12) {{$A$}};
 \node[anchor=north west, font=\footnotesize] at (axis cs:32,18) {{$B$}};
 \node[anchor=east, font=\footnotesize] at (axis cs:{s_min:.3f},{m_min:.3f}) {{$MV$}};
 \end{{axis}}"""
@@ -251,12 +251,12 @@ def diversificacion():
     a30, a15 = sbar * math.sqrt(0.30), sbar * math.sqrt(0.15)
     panel_a = rf"""\begin{{axis}}[name=a, width=7.6cm, height=6.4cm, xmin=1, xmax=50, ymin=0, ymax=37,
   xlabel={{Número de acciones, $N$}}, ylabel={{Volatilidad de la cartera, $\sigma_p$ (\%)}}, title={{(a) Las dos partes del riesgo}},
-  {PREAMBULO_EJES}]
-\addplot[draw=none, fill=gray!30, forget plot] coordinates {{{c30} (50,{a30:.3f}) (1,{a30:.3f})}} -- cycle;
-\addplot[draw=none, fill=gray!65, forget plot] coordinates {{(1,0) (50,0) (50,{a30:.3f}) (1,{a30:.3f})}} -- cycle;
-\addplot[very thick, black] coordinates {{{c30}}};
-\node[font=\footnotesize] at (axis cs:28,{a30 + 6:.2f}) {{Riesgo específico}};
-\node[font=\footnotesize] at (axis cs:28,{a30 / 2:.2f}) {{Riesgo sistemático}};
+  legend pos=north east, {PREAMBULO_EJES}]
+\addplot[draw=none, fill=gray!30, area legend] coordinates {{{c30} (50,{a30:.3f}) (1,{a30:.3f})}} -- cycle;
+\addlegendentry{{Riesgo específico}}
+\addplot[draw=none, fill=gray!65, area legend] coordinates {{(1,0) (50,0) (50,{a30:.3f}) (1,{a30:.3f})}} -- cycle;
+\addlegendentry{{Riesgo sistemático}}
+\addplot[very thick, black, forget plot] coordinates {{{c30}}};
 \end{{axis}}"""
     panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.4cm, xmin=1, xmax=50, ymin=0, ymax=37,
   xlabel={{Número de acciones, $N$}}, ylabel={{Volatilidad de la cartera, $\sigma_p$ (\%)}}, title={{(b) Dos correlaciones medias}},
