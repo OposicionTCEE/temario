@@ -366,7 +366,7 @@ def tecnico_figuras():
 \node[anchor=south, font=\scriptsize] at (axis cs:106,63) {{Hombro}};
 \node[anchor=north, font=\scriptsize] at (axis cs:64,{cuello(64) - 0.8:.2f}) {{Línea de cuello}};
 \end{{axis}}
-\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.6cm, width=7.6cm, height=6cm, xmin=0, xmax=125, ymin=45, ymax=75,
+\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.6cm, width=7.6cm, height=5.2cm, xmin=0, xmax=125, ymin=45, ymax=75,
   xtick=\empty, ytick={{50,60,70}}, xlabel={{Sesiones}}, ylabel={{Precio (euros)}}, title={{(b) Triángulo}}, {PREAMBULO_EJES}]
 \addplot[thick, black!55, dashed] coordinates {{(30,{alto(30):.3f}) (94,{alto(94):.3f})}};
 \addplot[thick, black!55, dashed] coordinates {{(38,{bajo(38):.3f}) (94,{bajo(94):.3f})}};
