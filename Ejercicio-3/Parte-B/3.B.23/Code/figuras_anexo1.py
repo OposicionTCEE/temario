@@ -25,6 +25,14 @@ PREAMBULO_EJES = (
     r" title style={font=\footnotesize\bfseries, yshift=-1mm}, legend cell align=left,"
     r" legend style={font=\scriptsize, draw=none, fill=white, fill opacity=0.85, text opacity=1}"
 )
+MARGEN = r"\path ([yshift=1.5pt]current bounding box.north east) ([yshift=-1.5pt]current bounding box.south west);"
+
+
+def escribir_tikz(nombre, tikz):
+    """Escribe Img/<nombre>.tikz con un margen de 1,5 pt arriba y abajo, para que el borde superior del eje no quede
+    cortado cuando la figura no lleva título dentro. Lo usan también figuras_anexo2.py y figuras_anexo3.py."""
+    (IMG / f"{nombre}.tikz").write_text(tikz.replace("\\end{tikzpicture}", MARGEN + "\n\\end{tikzpicture}"),
+                                        encoding="utf-8")
 
 
 def residual():
@@ -113,7 +121,8 @@ def ergodicidad():
 
 
 def colas():
-    """Colas gruesas (densidades) y agrupamiento de la volatilidad (simulación)."""
+    """Dos figuras, porque se comentan en párrafos distintos: anx_colas, densidades de la normal y de la t de Student,
+    y anx_volatilidad, rentabilidades simuladas sin y con agrupamiento de la volatilidad."""
     xs = np.linspace(-6, 6, 241)
     normal = np.exp(-xs**2 / 2) / math.sqrt(2 * math.pi)
     nu = 4
@@ -122,8 +131,8 @@ def colas():
     t = (c * (1 + (xs / escala) ** 2 / nu) ** (-(nu + 1) / 2)) / escala
     coords_n = " ".join(f"({x:.3f},{y:.6g})" for x, y in zip(xs, normal))
     coords_t = " ".join(f"({x:.3f},{y:.6g})" for x, y in zip(xs, t))
-    panel_a = rf"""\begin{{axis}}[name=a, width=7.4cm, height=6.6cm, ymode=log, xmin=-6, xmax=6, ymin=1e-8, ymax=1,
-  xlabel={{Rentabilidad tipificada, $(r-\mu)/\sigma$}}, ylabel={{Densidad (escala logarítmica)}}, title={{(a) Colas}},
+    panel_a = rf"""\begin{{axis}}[width=10cm, height=6.6cm, ymode=log, xmin=-6, xmax=6, ymin=1e-8, ymax=1,
+  xlabel={{Rentabilidad tipificada, $(r-\mu)/\sigma$}}, ylabel={{Densidad (escala logarítmica)}},
   legend style={{at={{(0.5,0.03)}}, anchor=south}}, {PREAMBULO_EJES}]
 \addplot[very thick, black, dashed] coordinates {{{coords_n}}};
 \addlegendentry{{Normal}}
@@ -145,9 +154,9 @@ def colas():
     def serie(v):
         return " ".join(f"({i},{100*x:.3f})" for i, x in enumerate(v))
     lim = math.ceil(100 * max(abs(garch).max(), abs(iid).max())) + 1
-    comun = rf"width=7.4cm, height=3.75cm, xmin=0, xmax={n}, ymin=-{lim}, ymax={lim}, ytick={{-8,-4,0,4,8}}, {PREAMBULO_EJES}"
-    panel_b1 = rf"""\begin{{axis}}[name=b1, at={{(a.north east)}}, anchor=north west, xshift=1.9cm, {comun},
-  xticklabels={{}}, ylabel={{\%}}, title={{(b) Sin y con agrupamiento}}]
+    comun = rf"width=10cm, height=3.75cm, xmin=0, xmax={n}, ymin=-{lim}, ymax={lim}, ytick={{-8,-4,0,4,8}}, {PREAMBULO_EJES}"
+    panel_b1 = rf"""\begin{{axis}}[name=b1, {comun},
+  xticklabels={{}}, ylabel={{\%}}]
 \addplot[black, thin] coordinates {{{serie(iid)}}};
 \node[anchor=north west, font=\scriptsize, fill=white] at (rel axis cs:0.01,0.98) {{Normal i.i.d.}};
 \end{{axis}}"""
@@ -156,8 +165,8 @@ def colas():
 \addplot[black, thin] coordinates {{{serie(garch)}}};
 \node[anchor=north west, font=\scriptsize, fill=white] at (rel axis cs:0.01,0.98) {{GARCH$(1,1)$}};
 \end{{axis}}"""
-    tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b1 + "\n" + panel_b2 + "\n\\end{tikzpicture}\n"
-    (IMG / "anx_colas.tikz").write_text(tikz, encoding="utf-8")
+    escribir_tikz("anx_colas", "\\begin{tikzpicture}\n" + panel_a + "\n\\end{tikzpicture}\n")
+    escribir_tikz("anx_volatilidad", "\\begin{tikzpicture}\n" + panel_b1 + "\n" + panel_b2 + "\n\\end{tikzpicture}\n")
     exceso_curtosis = float(np.mean((garch - garch.mean()) ** 4) / np.var(garch) ** 2 - 3)
     return exceso_curtosis, float(garch.std() * 100), float(iid.std() * 100)
 
@@ -330,17 +339,18 @@ def dominancia():
 
 
 def frontera():
-    """A3, I.5.2-I.5.4. (a) 3000 carteras sin ventas en corto con pesos aleatorios (Dirichlet(1,1,1), semilla 5);
-    (b) frontera analítica con ventas en corto (rama eficiente e ineficiente), frontera sin ventas en corto
-    (programación cuadrática con SLSQP) y cartera de mínima varianza MV."""
+    """A3, I.5.2-I.5.4. Tres figuras, porque se comentan en párrafos distintos: anx_frontera_simulacion, 3000 carteras
+    sin ventas en corto con pesos aleatorios (Dirichlet(1,1,1), semilla 5); anx_frontera, frontera analítica con ventas
+    en corto (rama eficiente e ineficiente) y cartera de mínima varianza MV; y anx_frontera_cortos, la rama eficiente
+    frente a la frontera sin ventas en corto (programación cuadrática con SLSQP)."""
     from scipy.optimize import minimize
 
     Si, a, b, c, d = constantes3()
     rng = np.random.default_rng(5)
     W = rng.dirichlet([1, 1, 1], 3000)
     sims = " ".join(f"({math.sqrt(w @ S3 @ w):.2f},{w @ MU3:.2f})" for w in W)
-    panel_a = rf"""\begin{{axis}}[name=a, width=7.6cm, height=6.6cm, xmin=0, xmax=45, ymin=8, ymax=26,
-  xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}}, title={{(a) Carteras al azar}},
+    panel_a = rf"""\begin{{axis}}[width=10cm, height=6.6cm, xmin=0, xmax=45, ymin=8, ymax=26,
+  xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}},
   {PREAMBULO_EJES}]
 \addplot[only marks, mark=*, mark size=0.35pt, gray!70, forget plot] coordinates {{{sims}}};
 {puntos_activos()}
@@ -354,21 +364,21 @@ def frontera():
                        constraints=[{"type": "eq", "fun": lambda w: w.sum() - 1},
                                     {"type": "eq", "fun": lambda w, m=m: w @ MU3 - m}])
         largos.append(f"({math.sqrt(res.fun):.3f},{m:.3f})")
-    panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.6cm, xmin=0, xmax=45, ymin=8, ymax=26,
-  xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}}, title={{(b) Frontera}},
-  legend pos=north west, legend style={{fill=none}}, {PREAMBULO_EJES}]
-\addplot[very thick, black] coordinates {{{sup}}};
-\addlegendentry{{Eficiente}}
-\addplot[thick, black, dashed] coordinates {{{inf}}};
-\addlegendentry{{Ineficiente}}
-\addplot[thick, black!55, dotted] coordinates {{{" ".join(largos)}}};
-\addlegendentry{{Sin ventas en corto}}
-{puntos_activos()}
-\addplot[only marks, mark=square*, mark size=1.8pt, black, forget plot] coordinates {{({s_mv:.3f},{m_mv:.3f})}};
-\node[anchor=east, font=\footnotesize] at (axis cs:{s_mv - 0.5:.3f},{m_mv:.3f}) {{$MV$}};
-\end{{axis}}"""
-    tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b + "\n\\end{tikzpicture}\n"
-    (IMG / "anx_frontera.tikz").write_text(tikz, encoding="utf-8")
+    ejes = (r"width=10cm, height=6.6cm, xmin=0, xmax=45, ymin=8, ymax=26,"
+            r" xlabel={Volatilidad, $\sigma_p$ (\%)}, ylabel={Rentabilidad esperada, $\mu_p$ (\%)},"
+            r" legend pos=north west, legend style={fill=none}, ")
+    mv = (rf"\addplot[only marks, mark=square*, mark size=1.8pt, black, forget plot] coordinates {{({s_mv:.3f},{m_mv:.3f})}};"
+          "\n" rf"\node[anchor=east, font=\footnotesize] at (axis cs:{s_mv - 0.5:.3f},{m_mv:.3f}) {{$MV$}};")
+    panel_b = (rf"\begin{{axis}}[{ejes}{PREAMBULO_EJES}]" "\n"
+               rf"\addplot[very thick, black] coordinates {{{sup}}};" "\n" r"\addlegendentry{Eficiente}" "\n"
+               rf"\addplot[thick, black, dashed] coordinates {{{inf}}};" "\n" r"\addlegendentry{Ineficiente}" "\n"
+               + puntos_activos() + "\n" + mv + "\n\\end{axis}")
+    panel_c = (rf"\begin{{axis}}[{ejes}{PREAMBULO_EJES}]" "\n"
+               rf"\addplot[very thick, black] coordinates {{{sup}}};" "\n" r"\addlegendentry{Con ventas en corto}" "\n"
+               rf"\addplot[thick, black!55, dotted] coordinates {{{' '.join(largos)}}};" "\n"
+               r"\addlegendentry{Sin ventas en corto}" "\n" + puntos_activos() + "\n" + mv + "\n\\end{axis}")
+    for nombre, eje in (("anx_frontera_simulacion", panel_a), ("anx_frontera", panel_b), ("anx_frontera_cortos", panel_c)):
+        escribir_tikz(nombre, "\\begin{tikzpicture}\n" + eje + "\n\\end{tikzpicture}\n")
     return m_mv, s_mv, a, b, c, d
 
 
@@ -412,9 +422,10 @@ def tangente():
 
 
 def separacion():
-    """A3, I.6.4. (a) Dos inversores sobre la misma recta con la tangente (r_f = 10 %): curvas de indiferencia de
-    media y varianza que llevan a invertir y = 0,5 e y = 1,5 en T. (b) Tipo de préstamo 8 % y de endeudamiento 12 %:
-    tangentes T_L y T_B y conjunto eficiente quebrado."""
+    """A3, I.6.4. Dos figuras, porque se comentan en párrafos distintos: anx_separacion, dos inversores sobre la misma
+    recta con la tangente (r_f = 10 %), con curvas de indiferencia de media y varianza que llevan a invertir y = 0,5 e
+    y = 1,5 en T; y anx_separacion_tipos, tipo de préstamo del 8 % y de endeudamiento del 12 %, con las tangentes T_L y
+    T_B y el conjunto eficiente quebrado."""
     Si, a, b, c, d = constantes3()
     m_mv = a / c
     rf = 10.0
@@ -429,8 +440,8 @@ def separacion():
         pts = " ".join(f"({s:.3f},{100 * (u + g / 2 * (s / 100) ** 2):.3f})" for s in np.linspace(0, 45, 90))
         curvas.append(rf"\addplot[{est}] coordinates {{{pts}}};")
         puntos.append((s0, m0))
-    panel_a = rf"""\begin{{axis}}[name=a, width=7.6cm, height=6.6cm, xmin=0, xmax=45, ymin=8, ymax=26,
-  xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}}, title={{(a) Dos inversores}},
+    panel_a = rf"""\begin{{axis}}[width=10cm, height=6.6cm, xmin=0, xmax=45, ymin=8, ymax=26,
+  xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}},
   legend pos=south east, legend style={{fill=none}}, {PREAMBULO_EJES}]
 \addplot[thick, black!35, forget plot] coordinates {{{sup}}};
 \addplot[very thick, black, forget plot] coordinates {{(0,{rf}) (45,{rf + 45 * (mT - rf) / sT:.3f})}};
@@ -451,8 +462,8 @@ def separacion():
     arco = " ".join(f"({sigma_frontera(m, a, b, c, d):.3f},{m:.3f})" for m in np.linspace(mL, mB, 60))
     resto = " ".join(f"({sigma_frontera(m, a, b, c, d):.3f},{m:.3f})" for m in np.linspace(m_mv, 26, 120))
     pB = (mB - rb) / sB
-    panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.6cm, xmin=0, xmax=45, ymin=6, ymax=26,
-  xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}}, title={{(b) Prestar al $8\%$ y endeudarse al $12\%$}},
+    panel_b = rf"""\begin{{axis}}[width=10cm, height=6.6cm, xmin=0, xmax=45, ymin=6, ymax=26,
+  xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}},
   {PREAMBULO_EJES}]
 \addplot[thick, black!35, forget plot] coordinates {{{resto}}};
 \addplot[thin, black!50, dotted, forget plot] coordinates {{({sL:.3f},{mL:.3f}) (45,{rl + 45 * (mL - rl) / sL:.3f})}};
@@ -466,15 +477,16 @@ def separacion():
 \node[anchor=north west, font=\footnotesize] at (axis cs:0.3,{rl - 0.15}) {{$r_L$}};
 \node[anchor=south west, font=\footnotesize] at (axis cs:0.3,{rb}) {{$r_B$}};
 \end{{axis}}"""
-    tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b + "\n\\end{tikzpicture}\n"
-    (IMG / "anx_separacion.tikz").write_text(tikz, encoding="utf-8")
+    escribir_tikz("anx_separacion", "\\begin{tikzpicture}\n" + panel_a + "\n\\end{tikzpicture}\n")
+    escribir_tikz("anx_separacion_tipos", "\\begin{tikzpicture}\n" + panel_b + "\n\\end{tikzpicture}\n")
     return puntos, (sL, mL), (sB, mB)
 
 
 def eleccion():
-    """A4, I.7. (a) Curvas de indiferencia de media y varianza, mu = U + (gamma/2) sigma², para gamma = 2 y 6 y dos
-    niveles de utilidad cada una. (b) Proporción óptima en la tangente del ejemplo (rf = 10 %), y* = S_T/(gamma sigma_T),
-    con los inversores L (y = 0,5), el de y = 1 y E (y = 1,5)."""
+    """A4, I.7. Dos figuras, porque se comentan en apartados distintos: anx_eleccion, curvas de indiferencia de media y
+    varianza, mu = U + (theta/2) sigma², para theta = 2 y 6 y dos niveles de utilidad cada una; y anx_proporcion,
+    proporción óptima en la tangente del ejemplo (rf = 10 %), y* = S_T/(theta sigma_T), con los inversores L (y = 0,5),
+    el de y = 1 y E (y = 1,5)."""
     curvas = []
     for g, us, est, nombre in ((2.0, (10.0, 14.0), "thick, black", "2"), (6.0, (10.0, 14.0), "thick, black!55, dashed", "6")):
         for k, u in enumerate(us):
@@ -483,8 +495,8 @@ def eleccion():
                 curvas.append(rf"\addplot[{est}] coordinates {{{pts}}};" + "\n" + rf"\addlegendentry{{$\theta={nombre}$}}")
             else:
                 curvas.append(rf"\addplot[{est}, forget plot] coordinates {{{pts}}};")
-    panel_a = rf"""\begin{{axis}}[name=a, width=7.6cm, height=6.6cm, xmin=0, xmax=40, ymin=8, ymax=30,
-  xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}}, title={{(a) Curvas de indiferencia}},
+    panel_a = rf"""\begin{{axis}}[width=10cm, height=6.6cm, xmin=0, xmax=40, ymin=8, ymax=30,
+  xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}},
   legend pos=north west, legend style={{fill=none}}, {PREAMBULO_EJES}]
 {chr(10).join(curvas)}
 \end{{axis}}"""
@@ -495,8 +507,8 @@ def eleccion():
     marcas = [(k / 0.5, 0.5, "L"), (k / 1.0, 1.0, ""), (k / 1.5, 1.5, "E")]
     nodos = "\n".join(rf"\node[anchor=south west, font=\footnotesize] at (axis cs:{g:.3f},{y:.3f}) {{${n}$}};" for g, y, n in marcas if n)
     pts = " ".join(f"({g:.3f},{y:.3f})" for g, y, _ in marcas)
-    panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.6cm, xmin=0, xmax=10, ymin=0, ymax=3.4,
-  xlabel={{Aversión relativa al riesgo, $\theta$}}, ylabel={{Proporción en la tangente, $y^*$}}, title={{(b) Cuánto se invierte en $T$}},
+    panel_b = rf"""\begin{{axis}}[width=10cm, height=6.6cm, xmin=0, xmax=10, ymin=0, ymax=3.4,
+  xlabel={{Aversión relativa al riesgo, $\theta$}}, ylabel={{Proporción en la tangente, $y^*$}},
   {PREAMBULO_EJES}]
 \addplot[very thick, black] coordinates {{{curva}}};
 \addplot[thin, black, dotted] coordinates {{(0,1) (10,1)}};
@@ -505,8 +517,8 @@ def eleccion():
 \node[anchor=south east, font=\footnotesize] at (axis cs:9.8,1.02) {{Se endeudan}};
 \node[anchor=north east, font=\footnotesize] at (axis cs:9.8,0.98) {{Prestan}};
 \end{{axis}}"""
-    tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b + "\n\\end{tikzpicture}\n"
-    (IMG / "anx_eleccion.tikz").write_text(tikz, encoding="utf-8")
+    escribir_tikz("anx_eleccion", "\\begin{tikzpicture}\n" + panel_a + "\n\\end{tikzpicture}\n")
+    escribir_tikz("anx_proporcion", "\\begin{tikzpicture}\n" + panel_b + "\n\\end{tikzpicture}\n")
     return S_T, k, [g for g, _, _ in marcas]
 
 
