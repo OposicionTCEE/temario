@@ -511,8 +511,8 @@ def multiplos():
         lineas_a.append(rf"\addplot[thick, black] coordinates {{{recorte(x, y)}}};")
         lineas_a.append(rf"\node[anchor={ancla}, font=\scriptsize] at (axis cs:{pos[0]},{pos[1]}) {{{etiqueta}}};")
     lineas_b = []
-    for c, etiqueta, pos, ancla in [(0.0, "$g=0$", (2.0, 2.0), "north west"), (1 / 3, r"$g=k/3$", (2.0, 2.5), "west"),
-                                    (2 / 3, r"$g=2k/3$", (1.67, 3.0), "east")]:
+    for c, etiqueta, pos, ancla in [(0.0, "$g=0$", (1.75, 1.68), "north west"),
+                                    (1 / 3, r"$g=k/3$", (2.0, 2.5), "south east"), (2 / 3, r"$g=2k/3$", (1.67, 3.0), "east")]:
         x = np.linspace(c, 2, 801)
         y = (x - c) / (1 - c)
         lineas_b.append(rf"\addplot[thick, black] coordinates {{{recorte(x, y)}}};")
