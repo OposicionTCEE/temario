@@ -169,3 +169,121 @@ if __name__ == "__main__":
         print(f"  {a}-{b}: autocorrelación diaria {c:+.3f} (n {n})")
     print("banda ±", round(r["banda"], 4))
     print("Grossman-Stiglitz", grossman_stiglitz())
+
+
+# --- A9: análisis técnico ---
+
+def _indice_diario():
+    """Fechas e índice de rentabilidad total diaria del mercado (Mkt-RF + RF de FRENCH), base 1 el 30/06/1926."""
+    from datos_french import diaria
+    fechas, cd, d = diaria()
+    r = (d[:, cd.index("Mkt-RF")] + d[:, cd.index("RF")]) / 100
+    rf = d[:, cd.index("RF")] / 100
+    return fechas, np.cumprod(1 + r), r, rf
+
+
+def _media(x, n):
+    salida = np.full(len(x), np.nan)
+    c = np.cumsum(np.insert(x, 0, 0.0))
+    salida[n - 1:] = (c[n:] - c[:-n]) / n
+    return salida
+
+
+def _exponencial(x, n):
+    a = 2 / (n + 1)
+    salida = np.empty(len(x))
+    salida[0] = x[0]
+    for t in range(1, len(x)):
+        salida[t] = a * x[t] + (1 - a) * salida[t - 1]
+    return salida
+
+
+def _rsi(p, n=14):
+    """RSI de WILDER (1978) con medias suavizadas de WILDER (factor 1/n)."""
+    d = np.diff(p)
+    sube, baja = np.clip(d, 0, None), np.clip(-d, 0, None)
+    ms, mb = np.full(len(p), np.nan), np.full(len(p), np.nan)
+    ms[n], mb[n] = sube[:n].mean(), baja[:n].mean()
+    for t in range(n + 1, len(p)):
+        ms[t] = (ms[t - 1] * (n - 1) + sube[t - 1]) / n
+        mb[t] = (mb[t - 1] * (n - 1) + baja[t - 1]) / n
+    return 100 - 100 / (1 + ms / mb)
+
+
+def regla_media_movil(n=200, coste=0.001):
+    """A9, III.3.5. Regla de la media móvil de n días sobre el índice diario del mercado de Estados Unidos: se está en
+    el mercado al día siguiente de un cierre por encima de la media y en letras del Tesoro al día siguiente de uno por
+    debajo; coste de cada cambio de posición en tanto por uno. Resultados por tramos: rentabilidad anual compuesta,
+    volatilidad, ratio de SHARPE y máxima caída, frente a mantener el índice."""
+    fechas, indice, r, rf = _indice_diario()
+    sma = _media(indice, n)
+    dentro = (indice > sma).astype(float)
+    posicion = np.concatenate([[np.nan], dentro[:-1]])
+    valido = ~np.isnan(sma)
+    posicion[~np.concatenate([[False], valido[:-1]])] = np.nan
+    ok = ~np.isnan(posicion)
+    cambios = np.concatenate([[0.0], np.abs(np.diff(np.nan_to_num(posicion)))])
+    r_regla = np.where(posicion == 1, r, rf) - coste * cambios
+    anios = fechas // 10000
+
+    def medidas(serie, libre, mascara):
+        s, lr = serie[mascara], libre[mascara]
+        riqueza = np.cumprod(1 + s)
+        anual = riqueza[-1] ** (252 / len(s)) - 1
+        exceso = s - lr
+        sharpe = exceso.mean() / exceso.std(ddof=1) * math.sqrt(252)
+        caida = (riqueza / np.maximum.accumulate(riqueza) - 1).min()
+        return dict(anual=anual * 100, vol=s.std(ddof=1) * math.sqrt(252) * 100, sharpe=sharpe, caida=caida * 100)
+    tramos = {}
+    for a, b in ((1927, 2025), (1927, 1986), (1987, 2025), (1927, 1945), (1946, 1986), (1987, 2006), (2007, 2025)):
+        m = ok & (anios >= a) & (anios <= b)
+        tramos[(a, b)] = dict(mercado=medidas(r, rf, m), regla=medidas(r_regla, rf, m),
+                              en_mercado=float(posicion[m].mean()), cambios=int(cambios[m].sum()))
+    return dict(fechas=fechas, ok=ok, r=r, r_regla=r_regla, rf=rf, tramos=tramos, posicion=posicion)
+
+
+def grafico_regla_media_movil():
+    """Figura de la regla: (a) valor de un dólar invertido a principios de 1927 en el mercado y con la regla
+    (escala logarítmica); (b) ratio de SHARPE de cada estrategia por tramos."""
+    res = regla_media_movil()
+    fechas, ok = res["fechas"], res["ok"]
+    m = ok & (fechas >= 19270101) & (fechas <= 20251231)
+    f = fechas[m]
+    x = f // 10000 + ((f // 100) % 100 - 0.5) / 12
+    w_m = np.cumprod(1 + res["r"][m])
+    w_r = np.cumprod(1 + res["r_regla"][m])
+    paso = 21
+    lin_m = " ".join(f"({a:.3f},{b:.4f})" for a, b in zip(x[::paso], w_m[::paso]))
+    lin_r = " ".join(f"({a:.3f},{b:.4f})" for a, b in zip(x[::paso], w_r[::paso]))
+    panel_a = rf"""\begin{{axis}}[name=a, width=7.6cm, height=6.6cm, ymode=log, xmin=1927, xmax=2026, ymin=0.1, ymax=50000,
+  xtick={{1930,1950,1970,1990,2010}}, ytick={{0.1,1,10,100,1000,10000}}, log ticks with fixed point,
+  xlabel={{Año}}, ylabel={{Valor de un dólar invertido en $1927$}}, title={{(a) Riqueza acumulada}},
+  legend pos=north west, {PREAMBULO_EJES}]
+\addplot[very thick, black] coordinates {{{lin_m}}};
+\addlegendentry{{Mantener el mercado}}
+\addplot[thick, black!50] coordinates {{{lin_r}}};
+\addlegendentry{{Media móvil de $200$ días}}
+\end{{axis}}"""
+    claves = [(1927, 1945), (1946, 1986), (1987, 2006), (2007, 2025)]
+    barras_m = " ".join(f"({k + 1},{res['tramos'][c]['mercado']['sharpe']:.3f})" for k, c in enumerate(claves))
+    barras_r = " ".join(f"({k + 1},{res['tramos'][c]['regla']['sharpe']:.3f})" for k, c in enumerate(claves))
+    etiquetas = ",".join(f"{{${a}$-${b}$}}" for a, b in claves)
+    panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.6cm, ybar, bar width=9pt, xmin=0.4, xmax=4.6,
+  ymin=0, ymax=1.0, xtick={{1,2,3,4}}, xticklabels={{{etiquetas}}}, x tick label style={{font=\scriptsize}},
+  xlabel={{Periodo}}, ylabel={{Ratio de SHARPE anual}}, title={{(b) Rentabilidad por unidad de riesgo}},
+  legend pos=north east, {PREAMBULO_EJES}]
+\addplot[fill=black!75, draw=black] coordinates {{{barras_m}}};
+\addlegendentry{{Mantener el mercado}}
+\addplot[fill=black!30, draw=black!60] coordinates {{{barras_r}}};
+\addlegendentry{{Media móvil de $200$ días}}
+\end{{axis}}"""
+    tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b + "\n\\end{tikzpicture}\n"
+    (IMG / "anx_tecnico_regla.tikz").write_text(tikz, encoding="utf-8")
+    return res
+
+
+if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "a9":
+    res = grafico_regla_media_movil()
+    for (a, b), t in res["tramos"].items():
+        mm, rg = t["mercado"], t["regla"]
+        print(f"{a}-{b}: mercado {mm['anual']:.1f}% vol {mm['vol']:.1f} SR {mm['sharpe']:.2f} caída {mm['caida']:.0f}% | regla {rg['anual']:.1f}% vol {rg['vol']:.1f} SR {rg['sharpe']:.2f} caída {rg['caida']:.0f}% | en mercado {t['en_mercado']:.0%} cambios {t['cambios']}")
