@@ -389,7 +389,7 @@ def componentes():
 \addplot[thick, black, mark=*, mark size=1.4pt] coordinates {{{linea}}};
 \addlegendentry{{Acumulada}}
 \end{{axis}}"""
-    etiquetas = {"Food": "south west", "Beer": "north west", "Smoke": "south", "Hlth": "north west", "Util": "south",
+    etiquetas = {"Food": "south west", "Beer": "east", "Smoke": "south", "Hlth": "north west", "Util": "south",
                  "Oil": "east", "Coal": "south", "Mines": "west", "Steel": "north", "Rtail": "north", "BusEq": "north",
                  "Autos": "west"}
     x, y = vec[:, 1], vec[:, 2]
