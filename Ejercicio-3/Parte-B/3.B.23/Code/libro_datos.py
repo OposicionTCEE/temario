@@ -396,6 +396,14 @@ def series_brutas():
         if "1963" <= fecha[:4] <= "2025":
             filas.append((f"FRED_{CONSUMO}", CONSUMO, fecha, valor,
                           "dólares encadenados de 2017 por habitante, tasa anual", "F8", "T0"))
+    d = shiller_mensual()
+    for clave, serie, unidad in (("precio", "Real Price", "dólares de octubre de 2026"),
+                                 ("dividendo", "Real Dividend", "dólares de octubre de 2026, doce meses"),
+                                 ("total", "Real Total Return Price", "índice real con los dividendos reinvertidos"),
+                                 ("cape", "CAPE", "")):
+        for mes, valor in zip(d["meses"], d[clave]):
+            if not np.isnan(valor):
+                filas.append(("Shiller_ie_data", serie, int(mes), float(valor), unidad, "F10", "T0"))
     return filas
 
 
