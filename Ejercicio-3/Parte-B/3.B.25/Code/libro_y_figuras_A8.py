@@ -232,7 +232,7 @@ def main():
     \node[font=\footnotesize\bfseries] at (2.9,3.75) {(b) Valor de mercado y exposición};
 """ + ejes(36, 12, 1 / 12, r"$\$\,\text{bn}$") + r"""    \draw[very thick] plot coordinates {""" + linea(otc[("D", "A", "A", "A")], 1 / 12) + r"""};
     \draw[very thick, dashed] plot coordinates {""" + linea(otc[("H", "A", "A", "A")], 1 / 12) + r"""};
-    \node[anchor=south] at (2.3,2.95) {valor de mercado bruto};
+    \node[anchor=south] at (4.3,2.55) {valor de mercado bruto};
     \node[anchor=south] at (3.6,0.32) {exposición crediticia};
   \end{scope}
 \end{tikzpicture}
