@@ -566,9 +566,9 @@ def cota_hj():
     tikz = rf"""\begin{{tikzpicture}}
 \begin{{axis}}[width=11cm, height=7.4cm, xmin=0, xmax=80, ymin=0, ymax=1.4,
   xlabel={{Aversión relativa al riesgo, $\gamma$}}, ylabel={{Volatilidad relativa del factor de descuento, $\sigma(m)/\mathbb E[m]$}},
-  legend pos=north west, legend style={{fill=white, fill opacity=0.9}}, {PREAMBULO_EJES}]
+  {PREAMBULO_EJES}, legend style={{at={{(1.03,0.5)}}, anchor=west}}]
 \addplot[fill=black!10, draw=none, area legend] coordinates {{(1,0) (10,0) (10,1.4) (1,1.4)}} -- cycle;
-\addlegendentry{{Aversión habitual, de 1 a 10}}
+\addlegendentry{{Aversión habitual, de $1$ a $10$}}
 \addplot[very thick, black] coordinates {{{curva}}};
 \addlegendentry{{CAPM de consumo}}
 {chr(10).join(lineas)}
