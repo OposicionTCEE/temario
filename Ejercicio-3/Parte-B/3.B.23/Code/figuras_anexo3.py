@@ -304,8 +304,9 @@ def _coordenadas(x, y):
 
 
 def tecnico_niveles():
-    """A9, III.3.2. (a) Soporte en 50 y resistencia en 60 euros; la ruptura convierte la resistencia en soporte.
-    (b) Tendencia alcista: línea que une mínimos crecientes y canal paralelo por los máximos, hasta que se rompe.
+    """A9, III.3.2. Dos figuras, porque se comentan en párrafos distintos: anx_tecnico_soportes, soporte en 50 y
+    resistencia en 60 euros, cuya ruptura convierte la resistencia en soporte; y anx_tecnico_tendencias, tendencia
+    alcista con la línea que une mínimos crecientes y el canal paralelo por los máximos, hasta que se rompe.
     Esquemas sin datos (semillas 31 y 32)."""
     nudos_a = [(0, 55), (12, 59.6), (25, 50.5), (38, 59.5), (52, 50.4), (66, 59.7), (80, 50.8), (94, 59.6),
                (108, 51.5), (122, 59.4), (134, 66.5), (146, 60.6), (162, 69.5), (172, 67.2), (190, 74)]
