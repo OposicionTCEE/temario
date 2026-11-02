@@ -104,9 +104,9 @@ def razon_varianzas():
     inf = " ".join(f"({q},{1 - 1.96 * e:.4f})" for q, (_, e) in zip(reversed(qs), reversed(vr_largo)))
     panel_a = rf"""\begin{{axis}}[name=a, width=7.6cm, height=6.6cm, xmin=1, xmax=60, ymin=0.3, ymax=1.7, xtick={{1,12,24,36,48,60}},
   xlabel={{Horizonte, $q$ (meses)}}, ylabel={{Razón de varianzas}}, title={{(a) Razón de varianzas mensual}},
-  legend pos=north west, {PREAMBULO_EJES}]
+  legend pos=north west, {PREAMBULO_EJES}, legend style={{fill=none}}]
 \addplot[fill=black!10, draw=none, area legend] coordinates {{{sup} {inf}}} -- cycle;
-\addlegendentry{{Paseo aleatorio (95\%)}}
+\addlegendentry{{Paseo aleatorio ($95\%$)}}
 \addplot[very thick, black] coordinates {{{linea_l}}};
 \addlegendentry{{$1926$-$2025$}}
 \addplot[thick, black!50, dashed] coordinates {{{linea_c}}};
@@ -115,8 +115,8 @@ def razon_varianzas():
 \end{{axis}}"""
     barras = " ".join(f"({k + 1},{c:.4f})" for k, (_, _, c, _) in enumerate(autoc))
     banda = 2 / math.sqrt(np.mean([n for *_, n in autoc]))
-    etiquetas = ",".join(f"{{{str(a)[2:]}-{str(b)[2:]}}}" for a, b, _, _ in autoc)
-    panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.6cm, xmin=0.4, xmax=10.6, ymin=-0.15, ymax=0.25,
+    etiquetas = ",".join(f"{{${str(a)[2:]}$-${str(b)[2:]}$}}" for a, b, _, _ in autoc)
+    panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.6cm, xmin=0.4, xmax=10.6, ymin=-0.15, ymax=0.35,
   xtick={{1,...,10}}, xticklabels={{{etiquetas}}}, x tick label style={{rotate=60, anchor=east, font=\scriptsize}},
   xlabel={{Decenio}}, ylabel={{Autocorrelación de primer orden}}, title={{(b) Rentabilidades diarias}}, {PREAMBULO_EJES}]
 \addplot[fill=black!8, draw=none, forget plot] coordinates {{(0.4,{-banda:.4f}) (10.6,{-banda:.4f}) (10.6,{banda:.4f}) (0.4,{banda:.4f})}} -- cycle;
