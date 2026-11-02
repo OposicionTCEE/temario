@@ -507,7 +507,7 @@ def multiplos():
         m = (y >= 0) & (y <= techo + 1e-9)
         return " ".join(f"({a:.4f},{b:.4f})" for a, b in zip(x[m], y[m]))
 
-    comunes = (r"width=7.6cm, height=6.2cm, xmin=0, xmax=2.1, ymin=0, ymax=3.2, xtick={0,1,2},"
+    comunes = (r"width=9.5cm, height=6cm, xmin=0, xmax=2.1, ymin=0, ymax=3.2, xtick={0,1,2},"
                r" xticklabels={$0$,$k$,$2k$}, xlabel={Rentabilidad de los recursos propios, ROE}, " + PREAMBULO_EJES)
     lineas_a = []
     for b, etiqueta, pos, ancla in [(0.0, "$b=0$", (1.62, 1.0), "south"), (0.25, r"$b=1/4$", (2.0, 1.5), "south east"),
