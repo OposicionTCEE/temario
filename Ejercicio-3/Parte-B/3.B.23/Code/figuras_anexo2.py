@@ -389,18 +389,18 @@ def componentes():
 \addplot[thick, black, mark=*, mark size=1.4pt] coordinates {{{linea}}};
 \addlegendentry{{Acumulada}}
 \end{{axis}}"""
-    etiquetas = {"Coal": "north east", "Oil": "east", "Mines": "south east", "Steel": "west", "Rtail": "north west",
-                 "Meals": "south west", "Clths": "west", "Games": "south west", "Smoke": "north west",
-                 "Food": "north", "Beer": "south", "Hlth": "west", "BusEq": "south east", "Autos": "south west"}
+    etiquetas = {"Food": "east", "Beer": "south east", "Smoke": "south", "Hlth": "north east", "Mines": "west",
+                 "Steel": "north", "Coal": "south west", "Oil": "east", "Util": "south", "Rtail": "north",
+                 "BusEq": "north east", "Games": "west", "Autos": "south"}
     x, y = vec[:, 1], vec[:, 2]
-    lim = max(np.abs(x).max(), np.abs(y).max()) * 1.18
+    x0, x1, y0, y1 = -0.5, 0.5, -0.4, 0.55
     pts = " ".join(f"({a:.4f},{b:.4f})" for a, b in zip(x, y))
     nodos = "\n".join(rf"\node[anchor={ancla}, font=\scriptsize, inner sep=1.5pt] at (axis cs:{x[cs.index(c)]:.4f},{y[cs.index(c)]:.4f}) {{{SECTORES_ES[c]}}};"
                       for c, ancla in etiquetas.items())
-    panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.6cm, xmin={-lim:.3f}, xmax={lim:.3f}, ymin={-lim:.3f}, ymax={lim:.3f},
+    panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.6cm, xmin={x0}, xmax={x1}, ymin={y0}, ymax={y1},
   xlabel={{Carga en el segundo componente}}, ylabel={{Carga en el tercer componente}}, title={{(b) Cargas de los sectores}}, {PREAMBULO_EJES}]
-\addplot[thin, black!30] coordinates {{({-lim:.3f},0) ({lim:.3f},0)}};
-\addplot[thin, black!30] coordinates {{(0,{-lim:.3f}) (0,{lim:.3f})}};
+\addplot[thin, black!30] coordinates {{({x0},0) ({x1},0)}};
+\addplot[thin, black!30] coordinates {{(0,{y0}) (0,{y1})}};
 \addplot[only marks, mark=*, mark size=1.4pt, black] coordinates {{{pts}}};
 {nodos}
 \end{{axis}}"""
