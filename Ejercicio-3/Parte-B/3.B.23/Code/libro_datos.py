@@ -227,9 +227,18 @@ def main():
         ("Libro de datos del tema 3.B.23 (renta variable)",),
         ("Contiene los datos reales que usan las figuras y las cifras del tema; cada fila cita su fuente y su tratamiento.",),
         ("Hojas: Fuentes y Tratamientos (códigos); Indicadores (formato largo: figura, panel, cartera, indicador, valor,"
-         " unidad, periodo, fuente y tratamiento); Series_brutas (datos mensuales usados, sin tratar).",),
-        ("Figuras: anx_sml_empirica (anexo II, contraste del CAPM): deciles por beta (a) y por valor contable sobre valor"
-         " de mercado (b), julio de 1963 a diciembre de 2025.",),
+         " unidad, periodo, fuente y tratamiento; el panel «texto» son cifras citadas en el texto que no salen en la"
+         " figura); Series_brutas (datos usados, sin tratar: mensuales, la sección anual de Mkt-RF y el consumo"
+         " trimestral).",),
+        ("Figuras del anexo II, todas de julio de 1963 a diciembre de 2025:",),
+        ("· anx_sml_empirica (contraste del CAPM): deciles por beta (a) y por valor contable sobre valor de mercado (b).",),
+        ("· anx_componentes (contraste de la APT): componentes principales de los 30 sectores.",),
+        ("· anx_tres_factores (modelo de tres factores): rentabilidad observada y predicha de las 25 carteras por tamaño y"
+         " valor con el CAPM (a) y con tres factores (b); también los modelos de cinco y de cinco con impulso.",),
+        ("· anx_factores (riesgo o error): rentabilidad acumulada de los seis factores y sus medias por tramos.",),
+        ("· anx_hj (factor de descuento estocástico): cota de HANSEN y JAGANNATHAN y CAPM de consumo, con el consumo de"
+         " FRED de 1964 a 2025.",),
+        ("La figura anx_apt_replica usa el ejemplo inventado del texto y no tiene datos aquí.",),
         ("Se regenera con  python3 Code/libro_datos.py  desde la carpeta del tema.",),
         (f"Biblioteca de datos de FRENCH: {LIBRERIA}",),
     ]
