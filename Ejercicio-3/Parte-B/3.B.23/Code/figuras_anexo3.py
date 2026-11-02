@@ -584,15 +584,13 @@ def grafico_cape():
     panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.5cm, width=7.6cm, height=6.2cm, xmin=0, xmax=22,
   ymin=-8, ymax=22, xtick={{0,5,10,15,20}}, ytick={{-5,0,5,10,15,20}}, xlabel={{Rendimiento del beneficio, $1/\text{{CAPE}}$ (\%)}},
   ylabel={{Rentabilidad real a diez años (\%)}}, title={{(b) Valoración y rentabilidad posterior}},
-  legend pos=north west, {PREAMBULO_EJES}]
+  legend pos=south east, {PREAMBULO_EJES}]
 \addplot[only marks, mark=*, mark size=0.45pt, black!30] coordinates {{{puntos}}};
 \addlegendentry{{Cada mes, $1881$-$2016$}}
 \addplot[thick, black] coordinates {{{recta}}};
 \addlegendentry{{Recta de regresión}}
-\addplot[thin, black!60, dashed] coordinates {{(0,0) (22,22)}};
-\addlegendentry{{Diagonal}}
-\addplot[thin, black!60, dotted] coordinates {{({100 / res['ultimo'][1]:.3f},-8) ({100 / res['ultimo'][1]:.3f},22)}};
-\addlegendentry{{Octubre de $2026$}}
+\addplot[thin, black!60, dashed, forget plot] coordinates {{(0,0) (22,22)}};
+\addplot[thin, black!60, dotted, forget plot] coordinates {{({100 / res['ultimo'][1]:.3f},-8) ({100 / res['ultimo'][1]:.3f},22)}};
 \end{{axis}}"""
     tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b + "\n\\end{tikzpicture}\n"
     (IMG / "anx_cape.tikz").write_text(tikz, encoding="utf-8")
