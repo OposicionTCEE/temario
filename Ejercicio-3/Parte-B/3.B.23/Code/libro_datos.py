@@ -116,6 +116,13 @@ TRATAMIENTOS = [
             " debajo, con un coste del 0,1 % en cada cambio de posición. Por tramo: rentabilidad anual compuesta (252 sesiones"
             " por año), volatilidad anualizada (raíz de 252), ratio de SHARPE anualizado (media de la rentabilidad en exceso de"
             " RF entre su desviación típica, por raíz de 252) y mayor caída de la riqueza acumulada desde su máximo previo."),
+    ("T19", "CAPE: columna CAPE de F10 (precio real entre la media del beneficio real de los diez años anteriores), mensual"
+            " desde enero de 1881. Rentabilidad real a diez años de cada mes t: (Real Total Return Price de t + 120 meses /"
+            " el de t) elevado a 1/10, menos 1, para los meses de enero de 1881 a septiembre de 2016. Regresión por MCO, con"
+            " constante, de esa rentabilidad sobre 1/CAPE, con todas las ventanas mensuales solapadas. Deciles: meses con el"
+            " CAPE por encima del percentil 90 o por debajo del percentil 10 de esas ventanas. Rentabilidad real anual"
+            " compuesta con Real Total Return Price. φ de CAMPBELL y SHILLER: 1/(1 + media geométrica de Real Dividend /"
+            " Real Price desde 1881)."),
     ("T0", "Sin tratamiento: dato mensual (o trimestral, en F8, o diario, en F9) tal como lo publica la fuente."),
 ]
 
