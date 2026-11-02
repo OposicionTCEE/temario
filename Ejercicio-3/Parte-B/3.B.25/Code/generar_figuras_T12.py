@@ -83,7 +83,7 @@ def b2_delta():
   \draw[dotted] ({xb:.3f},{min(ta, 0) - 0.05:.3f}) -- ({xb:.3f},{tb:.3f});
   \node[below] at ({xa:.3f},{min(ta, 0) - 0.05:.3f}) {{$S_0-\Delta S$}};
   \node[below] at ({xb:.3f},{min(ta, 0) - 0.05:.3f}) {{$S_0+\Delta S$}};
-  \node[anchor=west] at ({xb + 0.02:.3f},{(tb + cb) / 2:.3f}) {{$\approx\tfrac12\,\Gamma\,(\Delta S)^2$}};
+  \node[anchor=north west] at ({xb + 0.02:.3f},{tb - 0.02:.3f}) {{$\approx\tfrac12\,\Gamma\,(\Delta S)^2$}};
 \end{{tikzpicture}}
 """
 
