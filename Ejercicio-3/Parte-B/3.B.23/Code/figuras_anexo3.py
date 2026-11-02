@@ -470,7 +470,9 @@ def indicadores(desde=20190701, hasta=20201231):
     for a0, a1 in ((1926, 2025), (1926, 1975), (1976, 2025)):
         s = valido & (anios >= a0) & (anios <= a1)
         proporciones[(a0, a1)] = (float(dentro[s].mean()), float((indice > sup)[s].mean()), float((indice < inf)[s].mean()), int(s.sum()))
-    return dict(eventos=salida, proporciones=proporciones)
+    serie = dict(fechas=fechas[m], indice=indice[m] / base, sma50=sma50[m] / base, sma200=sma200[m] / base,
+                 sup=sup[m] / base, inf=inf[m] / base, rsi=rsi[m], macd=macd[m] / base, senal=senal[m] / base)
+    return dict(eventos=salida, proporciones=proporciones, serie=serie)
 
 
 if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "a9":

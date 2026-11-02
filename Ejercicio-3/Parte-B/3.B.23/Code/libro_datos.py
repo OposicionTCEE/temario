@@ -19,7 +19,7 @@ from datos_fred import CONSUMO, trimestres  # noqa: E402
 from datos_fred import URL as URL_FRED  # noqa: E402
 from figuras_anexo2 import (DECILES_BETA, DECILES_BM, PERIODO, SECTORES_ES, componentes, contraste_deciles,  # noqa: E402
                             cota_hj, factores_acumulados, tres_factores)
-from figuras_anexo3 import razon_varianzas  # noqa: E402
+from figuras_anexo3 import indicadores as indicadores_tecnicos, razon_varianzas, regla_media_movil  # noqa: E402
 from xlsx_simple import escribir_xlsx  # noqa: E402
 
 LIBRERIA = "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html"
@@ -97,6 +97,17 @@ TRATAMIENTOS = [
             " la varianza mensual; error típico con rentabilidades i.i.d., raíz de 2(2q-1)(q-1)/(3qT); z = (VR - 1)/error."),
     ("T16", "Autocorrelación de primer orden de la rentabilidad total diaria del mercado (Mkt-RF + RF de F9) en cada decenio"
             " (1926-1935 a 2016-2025); banda de ±2/raíz(n), con n la media de días por decenio."),
+    ("T17", "Índice de rentabilidad total diaria del mercado: producto acumulado de 1 + (Mkt-RF + RF)/100 de F9 desde julio"
+            " de 1926. Medias móviles simples de 20, 50 y 200 sesiones; bandas de BOLLINGER: media de 20 sesiones ± 2"
+            " desviaciones típicas poblacionales de los mismos 20 cierres; RSI de 14 sesiones con el suavizado de WILDER (medias"
+            " de subidas y de bajadas con factor 1/14); MACD: EMA(12) − EMA(26) con factor 2/(n+1) y señal EMA(9) del MACD."
+            " Todo se calcula con la serie completa; en la figura, en puntos del índice con base 100 el 1 de julio de 2019."
+            " Proporción de sesiones de 1926 a 2025 con el cierre dentro, por encima o por debajo de sus bandas."),
+    ("T18", "Regla de la media de 200 sesiones: en el mercado (Mkt-RF + RF de F9) al día siguiente de un cierre del índice de"
+            " T17 por encima de su media simple de 200 sesiones y en letras del Tesoro (RF de F9) al día siguiente de uno por"
+            " debajo, con un coste del 0,1 % en cada cambio de posición. Por tramo: rentabilidad anual compuesta (252 sesiones"
+            " por año), volatilidad anualizada (raíz de 252), ratio de SHARPE anualizado (media de la rentabilidad en exceso de"
+            " RF entre su desviación típica, por raíz de 252) y mayor caída de la riqueza acumulada desde su máximo previo."),
     ("T0", "Sin tratamiento: dato mensual (o trimestral, en F8, o diario, en F9) tal como lo publica la fuente."),
 ]
 
@@ -123,7 +134,7 @@ def indicadores():
                                          ("Recta ajustada: pendiente", pend, "% anual por unidad de beta", "T6")):
             filas.append(("anx_sml_empirica", figura_panel, "Mercado y recta ajustada", ind, round(valor, 4), unidad,
                           periodo, "F1" if "Recta" not in ind else fuente, trat))
-    return filas + indicadores_a7(periodo) + indicadores_a8()
+    return filas + indicadores_a7(periodo) + indicadores_a8() + indicadores_a9()
 
 
 def indicadores_a7(periodo):
@@ -226,6 +237,55 @@ def indicadores_a8():
     return filas
 
 
+def indicadores_a9():
+    """Filas de las figuras de la A9 con datos: anx_tecnico_indicadores y anx_tecnico_regla, y cifras citadas en el texto."""
+    filas = []
+    ind = indicadores_tecnicos()
+    s = ind["serie"]
+    nombres = (("indice", "(a)", "Índice (base 100)"), ("sma50", "(a)", "Media de 50 sesiones"),
+               ("sma200", "(a)", "Media de 200 sesiones"), ("sup", "(a)", "Banda superior de BOLLINGER"),
+               ("inf", "(a)", "Banda inferior de BOLLINGER"), ("rsi", "(b)", "RSI de 14 sesiones"),
+               ("macd", "(c)", "MACD"), ("senal", "(c)", "Señal del MACD"))
+    for i, fecha in enumerate(s["fechas"]):
+        for clave, panel, nombre in nombres:
+            filas.append(("anx_tecnico_indicadores", panel, "Mercado", nombre, round(float(s[clave][i]), 4), "",
+                          str(int(fecha)), "F9", "T17"))
+    textos = {"pico": "Máximo", "minimo": "Mínimo", "bajo_banda": "Primer cierre bajo la banda inferior",
+              "rsi_30": "Primer RSI por debajo de 30", "bajo_200": "Primer cierre bajo la media de 200 sesiones",
+              "rsi_min": "RSI mínimo", "macd_alcista": "Cruce del MACD sobre su señal",
+              "cruce_muerte": "Cruce de la muerte (50 bajo 200)", "sobre_200": "Primer cierre sobre la media de 200 tras el mínimo",
+              "cruce_dorado": "Cruce dorado (50 sobre 200)"}
+    for clave, (fecha, desde_max, rsi, desde_min) in ind["eventos"].items():
+        for indicador, valor, unidad in (("Caída desde el máximo", desde_max, "%"), ("RSI", rsi, ""),
+                                         ("Subida desde el mínimo", desde_min, "%")):
+            filas.append(("anx_tecnico_indicadores", "texto", textos[clave], indicador, round(valor, 4), unidad,
+                          str(fecha), "F9", "T17"))
+    for (a, b), (dentro, encima, debajo, n) in ind["proporciones"].items():
+        for indicador, valor in (("Cierres dentro de las bandas", dentro), ("Cierres por encima", encima),
+                                 ("Cierres por debajo", debajo)):
+            filas.append(("anx_tecnico_indicadores", "texto", f"Mercado ({n} sesiones)", indicador,
+                          round(100 * valor, 4), "%", f"{a} a {b}", "F9", "T17"))
+    res = regla_media_movil()
+    for (a, b), tr in res["tramos"].items():
+        panel = "(b)" if (a, b) in ((1927, 1945), (1946, 1986), (1987, 2006), (2007, 2025)) else "texto"
+        for cartera, clave in (("Mantener el mercado", "mercado"), ("Regla de la media de 200 sesiones", "regla")):
+            for indicador, k, unidad in (("Rentabilidad anual compuesta", "anual", "%"), ("Volatilidad", "vol", "% anual"),
+                                         ("Ratio de SHARPE", "sharpe", "anual"), ("Mayor caída", "caida", "%")):
+                filas.append(("anx_tecnico_regla", panel, cartera, indicador, round(float(tr[clave][k]), 4), unidad,
+                              f"{a} a {b}", "F9", "T18"))
+        filas.append(("anx_tecnico_regla", panel, "Regla de la media de 200 sesiones", "Proporción de sesiones en el mercado",
+                      round(100 * tr["en_mercado"], 4), "%", f"{a} a {b}", "F9", "T18"))
+        filas.append(("anx_tecnico_regla", panel, "Regla de la media de 200 sesiones", "Cambios de posición",
+                      tr["cambios"], "", f"{a} a {b}", "F9", "T18"))
+    fechas = res["fechas"]
+    for desde, hasta, tramo in ((20200219, 20200630, "19/02/2020 a 30/06/2020"), (20200101, 20201231, "2020")):
+        sel = (fechas >= desde) & (fechas <= hasta)
+        for cartera, serie in (("Mantener el mercado", res["r"]), ("Regla de la media de 200 sesiones", res["r_regla"])):
+            filas.append(("anx_tecnico_regla", "texto", cartera, "Rentabilidad acumulada",
+                          round(100 * float(np.prod(1 + serie[sel]) - 1), 4), "%", tramo, "F9", "T18"))
+    return filas
+
+
 def series_brutas():
     filas = [("Fichero", "Serie", "Periodo", "Valor", "Unidad", "Fuente", "Tratamiento")]
     for fichero, marca, columnas, fuente in ((FACTORES, ",Mkt-RF", ["Mkt-RF", "SMB", "HML", "RF"], "F1"),
@@ -280,7 +340,9 @@ def main():
         ("· anx_hj (factor de descuento estocástico): cota de HANSEN y JAGANNATHAN y CAPM de consumo, con el consumo de"
          " FRED de 1964 a 2025.",),
         ("· anx_razon_varianzas (anexo III, eficiencia): razón de varianzas mensual del mercado, 1926-2025 y 1963-2025, y autocorrelación diaria por decenios, 1926-2025.",),
-        ("Las figuras anx_apt_replica, anx_conjuntos_informacion, anx_reaccion_noticias y anx_grossman_stiglitz son esquemas o ejemplos inventados y no tienen datos aquí.",),
+        ("· anx_tecnico_indicadores (anexo III, análisis técnico): índice diario del mercado, medias, bandas de BOLLINGER, RSI y MACD, de julio de 2019 a diciembre de 2020; en el panel «texto», las fechas de las señales de 2020 y la proporción de cierres dentro de las bandas, 1926-2025.",),
+        ("· anx_tecnico_regla (anexo III, análisis técnico): regla de la media de 200 sesiones frente a mantener el mercado, 1927-2025 y por tramos, y su resultado en 2020.",),
+        ("Las figuras anx_apt_replica, anx_conjuntos_informacion, anx_reaccion_noticias, anx_grossman_stiglitz, anx_tecnico_niveles y anx_tecnico_figuras son esquemas o ejemplos inventados y no tienen datos aquí.",),
         ("Se regenera con  python3 Code/libro_datos.py  desde la carpeta del tema.",),
         (f"Biblioteca de datos de FRENCH: {LIBRERIA}",),
     ]
