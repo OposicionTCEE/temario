@@ -149,7 +149,10 @@ def main():
             fila("Extrabursátil", "Nocional frente a cámaras (cuota)", RIESGO[rk], "Todos", SECTOR["K"], p,
                  round(cuota[rk][p], 2), "% del nocional", "BPI-OTC", "T2", "anx_composicion")
     # Clientes no financieros.
-    nf = 100 * otc[("A", "A", "A", "U")][ultimo] / otc[("A", "A", "A", "A")][ultimo]
+    # El BPI no publica el desglose por contraparte del total: se suman las categorías que lo tienen.
+    nf_num = sum(otc[("A", "A", c, "U")][ultimo] for c in cats if ultimo in otc.get(("A", "A", c, "U"), {}))
+    nf_den = sum(otc[("A", "A", c, "A")][ultimo] for c in cats if ultimo in otc.get(("A", "A", c, "U"), {}))
+    nf = 100 * nf_num / nf_den
     fila("Extrabursátil", "Nocional frente a clientes no financieros (cuota)", "Todas", "Todos", SECTOR["U"],
          ultimo, round(nf, 2), "% del nocional", "BPI-OTC", "T2", "texto")
 
