@@ -198,16 +198,27 @@ def indicadores_a7(periodo):
 
 
 def series_brutas():
-    filas = [("Fichero", "Serie", "Mes", "Valor", "Unidad", "Fuente", "Tratamiento")]
-    for fichero, marca, columnas, fuente in ((FACTORES, ",Mkt-RF", ["Mkt-RF", "RF"], "F1"),
+    filas = [("Fichero", "Serie", "Periodo", "Valor", "Unidad", "Fuente", "Tratamiento")]
+    for fichero, marca, columnas, fuente in ((FACTORES, ",Mkt-RF", ["Mkt-RF", "SMB", "HML", "RF"], "F1"),
                                              (BETA, "Value Weighted Returns -- Monthly", DECILES_BETA, "F2"),
-                                             (BM, "Value Weight Returns -- Monthly", DECILES_BM, "F3")):
+                                             (BM, "Value Weight Returns -- Monthly", DECILES_BM, "F3"),
+                                             (CINCO, ",Mkt-RF", ["Mkt-RF", "SMB", "HML", "RMW", "CMA", "RF"], "F4"),
+                                             (IMPULSO, ",Mom", ["Mom"], "F5"),
+                                             (TAMANO_VALOR, "Average Value Weighted Returns -- Monthly", None, "F6"),
+                                             (SECTORES, "Average Value Weighted Returns -- Monthly", None, "F7")):
         meses, cab, matriz = seccion(fichero, marca)
         dentro = (meses >= PERIODO[0]) & (meses <= PERIODO[1])
-        for col in columnas:
+        for col in columnas or cab:
             j = cab.index(col)
             for mes, valor in zip(meses[dentro], matriz[dentro, j]):
                 filas.append((fichero, col, int(mes), float(valor), "% mensual", fuente, "T0"))
+    for año, valor in sorted(anual(FACTORES, "Mkt-RF").items()):
+        if 1964 <= año <= 2025:
+            filas.append((f"{FACTORES} (sección anual)", "Mkt-RF", año, valor, "% anual", "F1", "T0"))
+    for fecha, valor in trimestres(CONSUMO):
+        if "1963" <= fecha[:4] <= "2025":
+            filas.append((f"FRED_{CONSUMO}", CONSUMO, fecha, valor,
+                          "dólares encadenados de 2017 por habitante, tasa anual", "F8", "T0"))
     return filas
 
 
