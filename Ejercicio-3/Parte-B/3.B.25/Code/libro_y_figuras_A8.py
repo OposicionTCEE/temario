@@ -242,6 +242,7 @@ def main():
     # ---------- anx_composicion ----------
     etiquetas = {"D": "Tipos de interés", "B": "Divisas", "E": "Acciones", "J": "Materias primas", "T": "Crédito"}
     barras = ""
+    pct = lambda v: (f"{v:.1f}".replace(".", "{,}") if v < 1 else f"{v:.0f}") + "\\,\\%"
     for i, c in enumerate(["D", "B", "E", "J", "T"]):
         y = 2.8 - i * 0.62
         sn = 100 * otc[("A", "A", c, "A")][ultimo] / n[ultimo]
