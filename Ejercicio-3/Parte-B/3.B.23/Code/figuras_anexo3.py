@@ -525,13 +525,12 @@ def multiplos():
         lineas_b.append(rf"\node[anchor={ancla}, font=\scriptsize] at (axis cs:{pos[0]},{pos[1]}) {{{etiqueta}}};")
     guias = (r"\addplot[thin, black!45, dashed] coordinates {(1,0) (1,3.2)};" "\n"
              r"\addplot[thin, black!45, dashed] coordinates {(0,1) (2.1,1)};")
-    panel_a = (rf"\begin{{axis}}[name=a, {comunes}, ytick={{1,2,3}}, yticklabels={{$1/k$,$2/k$,$3/k$}}, ylabel={{PER}},"
-               rf" title={{(a) Precio sobre beneficio}}]" "\n" + guias + "\n" + "\n".join(lineas_a) + "\n\\end{axis}")
-    panel_b = (rf"\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.5cm, {comunes}, ytick={{1,2,3}},"
-               rf" ylabel={{P/VC}}, title={{(b) Precio sobre valor contable}}]" "\n" + guias + "\n" + "\n".join(lineas_b)
-               + "\n\\end{axis}")
-    tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b + "\n\\end{tikzpicture}\n"
-    (IMG / "anx_multiplos.tikz").write_text(tikz, encoding="utf-8")
+    per = (rf"\begin{{axis}}[{comunes}, ytick={{1,2,3}}, yticklabels={{$1/k$,$2/k$,$3/k$}}, ylabel={{PER}}]" "\n"
+           + guias + "\n" + "\n".join(lineas_a) + "\n\\end{axis}")
+    pvc = (rf"\begin{{axis}}[{comunes}, ytick={{1,2,3}}, ylabel={{P/VC}}]" "\n" + guias + "\n" + "\n".join(lineas_b)
+           + "\n\\end{axis}")
+    for nombre, eje in (("anx_multiplos_per", per), ("anx_multiplos_pvc", pvc)):
+        (IMG / f"{nombre}.tikz").write_text("\\begin{tikzpicture}\n" + eje + "\n\\end{tikzpicture}\n", encoding="utf-8")
 
 
 def cape(hasta=202609):
