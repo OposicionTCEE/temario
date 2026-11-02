@@ -282,7 +282,205 @@ def grafico_regla_media_movil():
     return res
 
 
+def _puente(nudos, sigma, semilla):
+    """Trayectoria diaria que pasa exactamente por los nudos (sesión, precio): rectas entre nudos más un puente
+    browniano de volatilidad sigma por sesión, para que el esquema parezca un precio sin perder su forma."""
+    rng = np.random.default_rng(semilla)
+    xs, ys = [nudos[0][0]], [nudos[0][1]]
+    for (x0, y0), (x1, y1) in zip(nudos[:-1], nudos[1:]):
+        n = x1 - x0
+        paseo = np.cumsum(rng.normal(0, sigma, n))
+        puente = paseo - np.arange(1, n + 1) / n * paseo[-1]
+        for i in range(1, n + 1):
+            xs.append(x0 + i)
+            ys.append(y0 + (y1 - y0) * i / n + puente[i - 1])
+    return np.array(xs), np.array(ys)
+
+
+def _coordenadas(x, y):
+    return " ".join(f"({a:.2f},{b:.3f})" for a, b in zip(x, y))
+
+
+def tecnico_niveles():
+    """A9, III.3.2. (a) Soporte en 50 y resistencia en 60 euros; la ruptura convierte la resistencia en soporte.
+    (b) Tendencia alcista: línea que une mínimos crecientes y canal paralelo por los máximos, hasta que se rompe.
+    Esquemas sin datos (semillas 31 y 32)."""
+    nudos_a = [(0, 55), (12, 59.6), (25, 50.5), (38, 59.5), (52, 50.4), (66, 59.7), (80, 50.8), (94, 59.6),
+               (108, 51.5), (122, 59.4), (134, 66.5), (146, 60.6), (162, 69.5), (172, 67.2), (190, 74)]
+    xa, ya = _puente(nudos_a, 0.45, 31)
+    ya[:123] = np.clip(ya[:123], 50.15, 59.85)
+    soporte = lambda x: 50 + 0.12 * x  # noqa: E731
+    nudos_b = [(0, 52.5), (24, 60.9), (45, soporte(45)), (70, 66.4), (95, soporte(95)), (120, 72.4),
+               (145, soporte(145)), (160, 73.6), (176, soporte(176) - 0.3), (190, 66)]
+    xb, yb = _puente(nudos_b, 0.4, 32)
+    for i, x in enumerate(xb):
+        if x <= 170:
+            yb[i] = max(yb[i], soporte(x) + 0.12)
+            yb[i] = min(yb[i], soporte(x) + 8 - 0.12)
+    tikz = rf"""\begin{{tikzpicture}}
+\begin{{axis}}[name=a, width=7.6cm, height=6cm, xmin=0, xmax=190, ymin=45, ymax=78, xtick=\empty, ytick={{50,60,70}},
+  xlabel={{Sesiones}}, ylabel={{Precio (euros)}}, title={{(a) Soporte y resistencia}}, {PREAMBULO_EJES}]
+\addplot[thick, black!55, dashed] coordinates {{(0,50) (190,50)}};
+\addplot[thick, black!55, dashed] coordinates {{(0,60) (190,60)}};
+\addplot[thick, black] coordinates {{{_coordenadas(xa, ya)}}};
+\node[anchor=north east, font=\scriptsize] at (axis cs:189,49.6) {{Soporte}};
+\node[anchor=south west, font=\scriptsize] at (axis cs:2,60.3) {{Resistencia}};
+\end{{axis}}
+\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.6cm, width=7.6cm, height=6cm, xmin=0, xmax=190, ymin=45, ymax=80,
+  xtick=\empty, ytick={{50,60,70}}, xlabel={{Sesiones}}, ylabel={{Precio (euros)}}, title={{(b) Tendencia y canal}}, {PREAMBULO_EJES}]
+\addplot[thick, black!55] coordinates {{(0,50) (190,72.8)}};
+\addplot[thick, black!55, dashed] coordinates {{(0,58) (190,80.8)}};
+\addplot[thick, black] coordinates {{{_coordenadas(xb, yb)}}};
+\node[anchor=north west, font=\scriptsize] at (axis cs:100,{soporte(100) - 0.6:.2f}) {{Línea de tendencia}};
+\node[anchor=south east, font=\scriptsize] at (axis cs:96,{soporte(96) + 8.6:.2f}) {{Canal}};
+\end{{axis}}
+\end{{tikzpicture}}
+"""
+    (IMG / "anx_tecnico_niveles.tikz").write_text(tikz, encoding="utf-8")
+
+
+def tecnico_figuras():
+    """A9, III.3.2. (a) Hombro-cabeza-hombro, figura de vuelta: la línea de cuello une los dos mínimos y su ruptura
+    marcaría el fin de la tendencia alcista. (b) Triángulo simétrico, figura de continuación: la tendencia se detiene en
+    oscilaciones cada vez menores y se reanuda al romperse. Esquemas sin datos (semillas 33 y 34)."""
+    nudos_a = [(0, 50), (25, 62), (42, 56), (66, 70), (86, 56.6), (106, 62.4), (122, 56.5), (150, 44)]
+    xa, ya = _puente(nudos_a, 0.4, 33)
+    cuello = lambda x: 56 + 0.6 / 44 * (x - 42)  # noqa: E731
+    nudos_b = [(0, 49), (30, 62), (40, 55.2), (52, 61.1), (62, 56.6), (72, 60.1), (80, 57.7), (88, 59.4), (100, 64),
+               (125, 71)]
+    xb, yb = _puente(nudos_b, 0.3, 34)
+    alto = lambda x: 62 - 0.05 * (x - 30)  # noqa: E731
+    bajo = lambda x: 55 + 0.0625 * (x - 38)  # noqa: E731
+    for i, x in enumerate(xb):
+        if 30 <= x <= 90:
+            yb[i] = min(max(yb[i], bajo(x) + 0.1), alto(x) - 0.1)
+    tikz = rf"""\begin{{tikzpicture}}
+\begin{{axis}}[name=a, width=7.6cm, height=6cm, xmin=0, xmax=150, ymin=40, ymax=75, xtick=\empty, ytick={{50,60,70}},
+  xlabel={{Sesiones}}, ylabel={{Precio (euros)}}, title={{(a) Hombro-cabeza-hombro}}, {PREAMBULO_EJES}]
+\addplot[thick, black!55, dashed] coordinates {{(20,{cuello(20):.3f}) (150,{cuello(150):.3f})}};
+\addplot[thick, black] coordinates {{{_coordenadas(xa, ya)}}};
+\node[anchor=south, font=\scriptsize] at (axis cs:25,62.6) {{Hombro}};
+\node[anchor=south, font=\scriptsize] at (axis cs:66,70.6) {{Cabeza}};
+\node[anchor=south, font=\scriptsize] at (axis cs:106,63) {{Hombro}};
+\node[anchor=north, font=\scriptsize] at (axis cs:64,{cuello(64) - 0.8:.2f}) {{Línea de cuello}};
+\end{{axis}}
+\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.6cm, width=7.6cm, height=6cm, xmin=0, xmax=125, ymin=45, ymax=75,
+  xtick=\empty, ytick={{50,60,70}}, xlabel={{Sesiones}}, ylabel={{Precio (euros)}}, title={{(b) Triángulo}}, {PREAMBULO_EJES}]
+\addplot[thick, black!55, dashed] coordinates {{(30,{alto(30):.3f}) (94,{alto(94):.3f})}};
+\addplot[thick, black!55, dashed] coordinates {{(38,{bajo(38):.3f}) (94,{bajo(94):.3f})}};
+\addplot[thick, black] coordinates {{{_coordenadas(xb, yb)}}};
+\end{{axis}}
+\end{{tikzpicture}}
+"""
+    (IMG / "anx_tecnico_figuras.tikz").write_text(tikz, encoding="utf-8")
+
+
+def _anio_decimal(f):
+    import datetime as dt
+    d = dt.date(f // 10000, (f // 100) % 100, f % 100)
+    inicio = dt.date(d.year, 1, 1)
+    return d.year + ((d - inicio).days + 0.5) / (dt.date(d.year + 1, 1, 1) - inicio).days
+
+
+def indicadores(desde=20190701, hasta=20201231):
+    """A9, III.3.3. Indicadores técnicos sobre el índice diario de rentabilidad total del mercado de Estados Unidos
+    (base 100 el primer día): (a) índice, medias de 50 y 200 sesiones y bandas de BOLLINGER (media de 20 sesiones
+    ± 2 desviaciones típicas poblacionales de los 20 últimos cierres); (b) RSI de 14 sesiones de WILDER (1978);
+    (c) MACD de APPEL: EMA(12) − EMA(26), señal EMA(9) del MACD e histograma. Los indicadores se calculan con toda la
+    serie desde 1926 y se muestran entre las fechas dadas. Devuelve además las fechas de las señales de 2020 y la
+    proporción de sesiones de 1926-2025 en que el cierre quedó dentro de sus bandas."""
+    fechas, indice, _, _ = _indice_diario()
+    sma50, sma200, sma20 = _media(indice, 50), _media(indice, 200), _media(indice, 20)
+    desv = np.full(len(indice), np.nan)
+    for t in range(19, len(indice)):
+        desv[t] = indice[t - 19:t + 1].std()
+    sup, inf = sma20 + 2 * desv, sma20 - 2 * desv
+    rsi = _rsi(indice)
+    macd = _exponencial(indice, 12) - _exponencial(indice, 26)
+    senal = _exponencial(macd, 9)
+    m = (fechas >= desde) & (fechas <= hasta)
+    base = indice[m][0] / 100
+    x = np.array([_anio_decimal(int(f)) for f in fechas[m]])
+
+    def linea(serie, escala=1.0):
+        return " ".join(f"({a:.4f},{b / escala:.3f})" for a, b in zip(x, serie[m]))
+    banda = linea(sup, base) + " " + " ".join(f"({a:.4f},{b / base:.3f})" for a, b in zip(x[::-1], inf[m][::-1]))
+    marcas = [(20190701, r"Jul.\ $2019$"), (20191001, "Oct."), (20200101, r"Ene.\ $2020$"), (20200401, "Abr."),
+              (20200701, "Jul."), (20201001, "Oct."), (20210101, r"Ene.\ $2021$")]
+    xt = ",".join(f"{_anio_decimal(f):.4f}" for f, _ in marcas)
+    xl = ",".join("{" + e + "}" for _, e in marcas)
+    x0, x1 = _anio_decimal(desde), _anio_decimal(20210101)
+    comun = f"width=15.4cm, xmin={x0:.4f}, xmax={x1:.4f}, xtick={{{xt}}}, {PREAMBULO_EJES}"
+    hist = " ".join(f"({a:.4f},{b:.3f})" for a, b in zip(x, (macd - senal)[m] / base))
+    tikz = rf"""\begin{{tikzpicture}}
+\begin{{axis}}[name=a, {comun}, height=6.4cm, xticklabels={{}}, ymin=60, ymax=145, ylabel={{Índice (base $100$)}},
+  title={{(a) Precio, medias móviles y bandas de BOLLINGER}}, legend pos=north west, legend columns=2]
+\addplot[fill=black!12, draw=none, area legend] coordinates {{{banda}}} -- cycle;
+\addlegendentry{{Bandas de BOLLINGER ($20$ sesiones, $\pm2\sigma$)}}
+\addplot[thick, black] coordinates {{{linea(indice, base)}}};
+\addlegendentry{{Índice}}
+\addplot[thick, black!55, dashed] coordinates {{{linea(sma50, base)}}};
+\addlegendentry{{Media de $50$ sesiones}}
+\addplot[thick, black!55] coordinates {{{linea(sma200, base)}}};
+\addlegendentry{{Media de $200$ sesiones}}
+\end{{axis}}
+\begin{{axis}}[name=b, at={{(a.south west)}}, anchor=north west, yshift=-0.9cm, {comun}, height=3.4cm, xticklabels={{}},
+  ymin=0, ymax=100, ytick={{0,30,70,100}}, ylabel={{RSI}}, title={{(b) Índice de fuerza relativa ($14$ sesiones)}}]
+\addplot[thin, black!55, dashed] coordinates {{({x0:.4f},70) ({x1:.4f},70)}};
+\addplot[thin, black!55, dashed] coordinates {{({x0:.4f},30) ({x1:.4f},30)}};
+\addplot[thick, black] coordinates {{{linea(rsi)}}};
+\end{{axis}}
+\begin{{axis}}[name=c, at={{(b.south west)}}, anchor=north west, yshift=-0.9cm, {comun}, height=3.4cm, xticklabels={{{xl}}},
+  ylabel={{MACD}}, title={{(c) MACD ($12$, $26$ y $9$ sesiones)}}, legend pos=south east, legend columns=3]
+\addplot[ycomb, black!30, forget plot] coordinates {{{hist}}};
+\addplot[thick, black] coordinates {{{linea(macd, base)}}};
+\addlegendentry{{MACD}}
+\addplot[thick, black!55, dashed] coordinates {{{linea(senal, base)}}};
+\addlegendentry{{Señal}}
+\end{{axis}}
+\end{{tikzpicture}}
+"""
+    (IMG / "anx_tecnico_indicadores.tikz").write_text(tikz, encoding="utf-8")
+    # Señales de 2020 y proporción de cierres dentro de las bandas
+    a = (fechas >= 20200101) & (fechas <= 20201231)
+    ia = np.where(a)[0]
+    i_pico = ia[np.argmax(indice[ia][:60])]
+    i_min = ia[np.argmin(indice[ia])]
+
+    def primera(cond, desde_i):
+        k = np.where(cond[desde_i:])[0]
+        return desde_i + k[0] if len(k) else None
+    eventos = dict(
+        pico=i_pico, minimo=i_min,
+        bajo_banda=primera(indice < inf, i_pico),
+        bajo_200=primera(indice < sma200, i_pico),
+        cruce_muerte=primera(sma50 < sma200, i_pico),
+        rsi_30=primera(rsi < 30, i_pico),
+        rsi_min=i_pico + int(np.nanargmin(rsi[i_pico:i_pico + 60])),
+        macd_alcista=primera((macd > senal) & (np.roll(macd, 1) <= np.roll(senal, 1)), i_min - 10),
+        sobre_200=primera(indice > sma200, i_min),
+        cruce_dorado=primera(sma50 > sma200, i_min),
+    )
+    salida = {k: (int(fechas[i]), float(indice[i] / indice[i_pico] - 1) * 100,
+                  float(rsi[i]), float(indice[i] / indice[i_min] - 1) * 100) for k, i in eventos.items()}
+    valido = ~np.isnan(sup) & (fechas <= 20251231)
+    dentro = (indice <= sup) & (indice >= inf)
+    anios = fechas // 10000
+    proporciones = {}
+    for a0, a1 in ((1926, 2025), (1926, 1975), (1976, 2025)):
+        s = valido & (anios >= a0) & (anios <= a1)
+        proporciones[(a0, a1)] = (float(dentro[s].mean()), float((indice > sup)[s].mean()), float((indice < inf)[s].mean()), int(s.sum()))
+    return dict(eventos=salida, proporciones=proporciones)
+
+
 if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "a9":
+    tecnico_niveles()
+    tecnico_figuras()
+    ind = indicadores()
+    for k, (f, caida, r, sub) in ind["eventos"].items():
+        print(f"  {k}: {f}  desde el máximo {caida:+.1f}%  RSI {r:.1f}  desde el mínimo {sub:+.1f}%")
+    for (a0, a1), (p, s, b, n) in ind["proporciones"].items():
+        print(f"  Bollinger {a0}-{a1}: dentro {p:.1%} | por encima {s:.1%} | por debajo {b:.1%} (n {n})")
     res = grafico_regla_media_movil()
     for (a, b), t in res["tramos"].items():
         mm, rg = t["mercado"], t["regla"]
