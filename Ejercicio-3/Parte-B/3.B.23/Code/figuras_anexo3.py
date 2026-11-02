@@ -40,7 +40,6 @@ def reaccion_noticias():
         return " ".join(f"({x:.2f},{f(x):.4f})" for x in t)
 
     eficiente = "(-10,0) (0,0) (0,1) (10,1)"
-    insuficiente = "(-10,0) (0,0) " + serie(lambda x: 0.5 + 0.5 * (1 - math.exp(-x / 2.5)) if x >= 0 else 0).split(" (0.00,0.0000) ", 1)[-1]
     puntos_ins = [(x, 0.5 + 0.5 * (1 - math.exp(-x / 2.5))) for x in t if x >= 0]
     insuficiente = "(-10,0) (0,0) " + " ".join(f"({x:.2f},{y:.4f})" for x, y in puntos_ins)
     puntos_exc = [(x, 1 + 0.4 * math.exp(-x / 2.5)) for x in t if x >= 0]
