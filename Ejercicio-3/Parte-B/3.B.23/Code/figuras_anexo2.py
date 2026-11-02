@@ -441,14 +441,14 @@ def tres_factores():
                "FF5": np.column_stack([F5[k] for k in ("Mkt-RF", "SMB", "HML", "RMW", "CMA")]),
                "FF5+Mom": np.column_stack([F5[k] for k in ("Mkt-RF", "SMB", "HML", "RMW", "CMA")] + [mom])}
     res = {k: regresiones(Y, Z) for k, Z in modelos.items()}
-    esquinas = {"SMALL LoBM": ("pequeñas de crecimiento", "west"), "SMALL HiBM": ("pequeñas de valor", "east"),
-                "BIG LoBM": ("grandes de crecimiento", "north west"), "BIG HiBM": ("grandes de valor", "north west")}
+    esquinas = {"SMALL LoBM": ("pequeñas de crecimiento", {"CAPM": "east", "FF3": "east"}),
+                "SMALL HiBM": ("pequeñas de valor", {"CAPM": "west", "FF3": "east"})}
     paneles = []
     for i, (clave, titulo) in enumerate((("CAPM", "(a) CAPM"), ("FF3", "(b) Tres factores"))):
         r = res[clave]
         pts = " ".join(f"({p:.3f},{o:.3f})" for p, o in zip(r["prediccion"], r["media"]))
-        nodos = "\n".join(rf"\node[anchor={ancla}, font=\scriptsize, inner sep=2pt] at (axis cs:{r['prediccion'][cs.index(c)]:.3f},{r['media'][cs.index(c)]:.3f}) {{{texto}}};"
-                          for c, (texto, ancla) in esquinas.items())
+        nodos = "\n".join(rf"\node[anchor={anclas[clave]}, font=\scriptsize, inner sep=2pt] at (axis cs:{r['prediccion'][cs.index(c)]:.3f},{r['media'][cs.index(c)]:.3f}) {{{texto}}};"
+                          for c, (texto, anclas) in esquinas.items())
         pos = "name=a" if i == 0 else r"at={(a.east)}, anchor=west, xshift=1.9cm"
         paneles.append(rf"""\begin{{axis}}[{pos}, width=7.6cm, height=6.6cm, xmin=2, xmax=14, ymin=2, ymax=14,
   xlabel={{Rentabilidad media predicha (\% anual)}}, ylabel={{Rentabilidad media observada (\% anual)}}, title={{{titulo}}},
