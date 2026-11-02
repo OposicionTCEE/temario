@@ -471,6 +471,118 @@ def separacion():
     return puntos, (sL, mL), (sB, mB)
 
 
+def eleccion():
+    """A4, I.7. (a) Curvas de indiferencia de media y varianza, mu = U + (gamma/2) sigma², para gamma = 2 y 6 y dos
+    niveles de utilidad cada una. (b) Proporción óptima en la tangente del ejemplo (rf = 10 %), y* = S_T/(gamma sigma_T),
+    con los inversores L (y = 0,5), el de y = 1 y E (y = 1,5)."""
+    curvas = []
+    for g, us, est, nombre in ((2.0, (10.0, 14.0), "thick, black", "2"), (6.0, (10.0, 14.0), "thick, black!55, dashed", "6")):
+        for k, u in enumerate(us):
+            pts = " ".join(f"({s:.2f},{u + g / 2 * s * s / 100:.3f})" for s in np.linspace(0, 40, 81))
+            if k == 0:
+                curvas.append(rf"\addplot[{est}] coordinates {{{pts}}};" + "\n" + rf"\addlegendentry{{$\gamma={nombre}$}}")
+            else:
+                curvas.append(rf"\addplot[{est}, forget plot] coordinates {{{pts}}};")
+    panel_a = rf"""\begin{{axis}}[name=a, width=7.6cm, height=6.6cm, xmin=0, xmax=40, ymin=8, ymax=30,
+  xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}}, title={{(a) Curvas de indiferencia}},
+  legend pos=north west, legend style={{fill=none}}, {PREAMBULO_EJES}]
+{chr(10).join(curvas)}
+\end{{axis}}"""
+    wT, mT, sT = tangente_de(10.0)
+    S_T = (mT - 10.0) / sT
+    k = S_T / (sT / 100)
+    curva = " ".join(f"({g:.3f},{k / g:.4f})" for g in np.linspace(0.75, 10, 120))
+    marcas = [(k / 0.5, 0.5, "L"), (k / 1.0, 1.0, ""), (k / 1.5, 1.5, "E")]
+    nodos = "\n".join(rf"\node[anchor=south west, font=\footnotesize] at (axis cs:{g:.3f},{y:.3f}) {{${n}$}};" for g, y, n in marcas if n)
+    pts = " ".join(f"({g:.3f},{y:.3f})" for g, y, _ in marcas)
+    panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.6cm, xmin=0, xmax=10, ymin=0, ymax=3.4,
+  xlabel={{Aversión al riesgo, $\gamma$}}, ylabel={{Proporción en la tangente, $y^*$}}, title={{(b) Cuánto se invierte en $T$}},
+  {PREAMBULO_EJES}]
+\addplot[very thick, black] coordinates {{{curva}}};
+\addplot[thin, black, dotted] coordinates {{(0,1) (10,1)}};
+\addplot[only marks, mark=*, mark size=1.8pt, black] coordinates {{{pts}}};
+{nodos}
+\node[anchor=south east, font=\footnotesize] at (axis cs:9.8,1.02) {{Se endeudan}};
+\node[anchor=north east, font=\footnotesize] at (axis cs:9.8,0.98) {{Prestan}};
+\end{{axis}}"""
+    tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b + "\n\\end{tikzpicture}\n"
+    (IMG / "anx_eleccion.tikz").write_text(tikz, encoding="utf-8")
+    return S_T, k, [g for g, _, _ in marcas]
+
+
+def indice_unico():
+    """A4, I.8. Rectas características simuladas (semilla 9): 60 rentabilidades mensuales del mercado, N(0,8 %; 4,5 %),
+    y de dos acciones: beta 1,4 con riesgo específico mensual del 6 % y beta 0,6 con el 3 %; recta de MCO."""
+    rng = np.random.default_rng(9)
+    rm = rng.normal(0.8, 4.5, 60)
+    paneles = []
+    for i, (beta, se, etiqueta) in enumerate(((1.4, 6.0, "1{,}4"), (0.6, 3.0, "0{,}6"))):
+        rj = 0.2 + beta * rm + rng.normal(0, se, 60)
+        bh, ah = np.polyfit(rm, rj, 1)
+        pts = " ".join(f"({x:.2f},{y:.2f})" for x, y in zip(rm, rj))
+        recta = f"(-12,{ah + bh * -12:.3f}) (12,{ah + bh * 12:.3f})"
+        pos = "name=a" if i == 0 else r"at={(a.east)}, anchor=west, xshift=1.9cm"
+        paneles.append(rf"""\begin{{axis}}[{pos}, width=7.6cm, height=6.6cm, xmin=-12, xmax=12, ymin=-24, ymax=24,
+  xlabel={{Rentabilidad del mercado, $r_M$ (\%)}}, ylabel={{Rentabilidad de la acción, $r_j$ (\%)}},
+  title={{({"ab"[i]}) $\beta_j={etiqueta}$}}, {PREAMBULO_EJES}]
+\addplot[only marks, mark=*, mark size=1pt, black!65] coordinates {{{pts}}};
+\addplot[very thick, black] coordinates {{{recta}}};
+\addplot[thin, gray, dashed] coordinates {{(-12,0) (12,0)}};
+\addplot[thin, gray, dashed] coordinates {{(0,-24) (0,24)}};
+\end{{axis}}""")
+    tikz = "\\begin{tikzpicture}\n" + "\n".join(paneles) + "\n\\end{tikzpicture}\n"
+    (IMG / "anx_indice_unico.tikz").write_text(tikz, encoding="utf-8")
+
+
+def estimacion():
+    """A4, I.9.1. Error de estimación (al estilo de BROADIE, 1993): con los parámetros verdaderos del ejemplo de tres
+    acciones, 1000 muestras de 120 rentabilidades mensuales normales (semilla 21). En cada muestra se estiman μ y Σ, se
+    calcula la frontera eficiente estimada desde su cartera de mínima varianza en pasos de 1 punto de rentabilidad
+    esperada, y se evalúa cada cartera con los parámetros verdaderos. Se promedian, paso a paso, los puntos estimados
+    (lo que cree el inversor) y los realizados (lo que obtiene), frente a la frontera verdadera."""
+    mu = MU3 / 100
+    S = S3 / 1e4
+    rng = np.random.default_rng(21)
+    T, nsim, K = 120, 1000, 13
+    L = np.linalg.cholesky(S / 12)
+    est = np.zeros((nsim, K, 2))
+    rea = np.zeros((nsim, K, 2))
+    one = np.ones(3)
+    for k in range(nsim):
+        X = mu / 12 + rng.standard_normal((T, 3)) @ L.T
+        muh, Sh = X.mean(0) * 12, np.cov(X, rowvar=False) * 12
+        Si = np.linalg.inv(Sh)
+        a, b, c = one @ Si @ muh, muh @ Si @ muh, one @ Si @ one
+        d = b * c - a * a
+        for i in range(K):
+            m = a / c + 0.01 * i
+            w = ((c * m - a) * (Si @ muh) + (b - a * m) * (Si @ one)) / d
+            est[k, i] = (math.sqrt(w @ Sh @ w), m)
+            rea[k, i] = (math.sqrt(w @ S @ w), w @ mu)
+    E = est.mean(0) * 100
+    R = rea.mean(0) * 100
+    Si, a, b, c, d = constantes3()
+    m_mv = a / c
+    ver = " ".join(f"({sigma_frontera(m, a, b, c, d):.3f},{m:.3f})" for m in np.linspace(m_mv, 27, 100))
+    ce = " ".join(f"({s:.3f},{m:.3f})" for s, m in E)
+    cr = " ".join(f"({s:.3f},{m:.3f})" for s, m in R)
+    tikz = rf"""\begin{{tikzpicture}}
+\begin{{axis}}[width=11cm, height=7cm, xmin=10, xmax=50, ymin=12, ymax=28,
+  xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}},
+  legend pos=north west, legend style={{fill=none}}, {PREAMBULO_EJES}]
+\addplot[very thick, black] coordinates {{{ver}}};
+\addlegendentry{{Verdadera}}
+\addplot[thick, black, dashed, mark=*, mark size=1pt] coordinates {{{ce}}};
+\addlegendentry{{Estimada (en la muestra)}}
+\addplot[thick, black!50, mark=square*, mark size=1pt] coordinates {{{cr}}};
+\addlegendentry{{Realizada (fuera de la muestra)}}
+\end{{axis}}
+\end{{tikzpicture}}
+"""
+    (IMG / "anx_estimacion.tikz").write_text(tikz, encoding="utf-8")
+    return E, R
+
+
 if __name__ == "__main__":
     residual()
     p, esp, med = ergodicidad()
