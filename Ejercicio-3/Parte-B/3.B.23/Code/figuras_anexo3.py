@@ -269,7 +269,7 @@ def grafico_regla_media_movil():
     barras_r = " ".join(f"({k + 1},{res['tramos'][c]['regla']['sharpe']:.3f})" for k, c in enumerate(claves))
     etiquetas = ",".join(f"{{${a}$-${b}$}}" for a, b in claves)
     panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.6cm, ybar, bar width=9pt, xmin=0.4, xmax=4.6,
-  ymin=0, ymax=1.0, xtick={{1,2,3,4}}, xticklabels={{{etiquetas}}}, x tick label style={{font=\scriptsize}},
+  ymin=0, ymax=1.2, ytick={{0,0.2,...,1}}, xtick={{1,2,3,4}}, xticklabels={{{etiquetas}}}, x tick label style={{font=\scriptsize}},
   xlabel={{Periodo}}, ylabel={{Ratio de SHARPE anual}}, title={{(b) Rentabilidad por unidad de riesgo}},
   legend pos=north east, {PREAMBULO_EJES}]
 \addplot[fill=black!75, draw=black, area legend] coordinates {{{barras_m}}};
