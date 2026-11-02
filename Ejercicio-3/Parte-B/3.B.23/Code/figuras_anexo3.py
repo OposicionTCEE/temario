@@ -320,17 +320,20 @@ def tecnico_niveles():
         if x <= 170:
             yb[i] = max(yb[i], soporte(x) + 0.12)
             yb[i] = min(yb[i], soporte(x) + 8 - 0.12)
-    tikz = rf"""\begin{{tikzpicture}}
-\begin{{axis}}[name=a, width=7.6cm, height=6cm, xmin=0, xmax=190, ymin=45, ymax=78, xtick=\empty, ytick={{50,60,70}},
-  xlabel={{Sesiones}}, ylabel={{Precio (euros)}}, title={{(a) Soporte y resistencia}}, {PREAMBULO_EJES}]
+    soportes = rf"""\begin{{tikzpicture}}
+\begin{{axis}}[width=9.5cm, height=5.6cm, xmin=0, xmax=190, ymin=45, ymax=78, xtick=\empty, ytick={{50,60,70}},
+  xlabel={{Sesiones}}, ylabel={{Precio (euros)}}, {PREAMBULO_EJES}]
 \addplot[thick, black!55, dashed] coordinates {{(0,50) (190,50)}};
 \addplot[thick, black!55, dashed] coordinates {{(0,60) (190,60)}};
 \addplot[thick, black] coordinates {{{_coordenadas(xa, ya)}}};
 \node[anchor=north east, font=\scriptsize] at (axis cs:189,49.6) {{Soporte}};
 \node[anchor=south west, font=\scriptsize] at (axis cs:2,60.3) {{Resistencia}};
 \end{{axis}}
-\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.6cm, width=7.6cm, height=6cm, xmin=0, xmax=190, ymin=45, ymax=80,
-  xtick=\empty, ytick={{50,60,70}}, xlabel={{Sesiones}}, ylabel={{Precio (euros)}}, title={{(b) Tendencia y canal}}, {PREAMBULO_EJES}]
+\end{{tikzpicture}}
+"""
+    tendencias = rf"""\begin{{tikzpicture}}
+\begin{{axis}}[width=9.5cm, height=5.6cm, xmin=0, xmax=190, ymin=45, ymax=80, xtick=\empty, ytick={{50,60,70}},
+  xlabel={{Sesiones}}, ylabel={{Precio (euros)}}, {PREAMBULO_EJES}]
 \addplot[thick, black!55] coordinates {{(0,50) (190,72.8)}};
 \addplot[thick, black!55, dashed] coordinates {{(0,58) (190,80.8)}};
 \addplot[thick, black] coordinates {{{_coordenadas(xb, yb)}}};
@@ -339,7 +342,8 @@ def tecnico_niveles():
 \end{{axis}}
 \end{{tikzpicture}}
 """
-    (IMG / "anx_tecnico_niveles.tikz").write_text(tikz, encoding="utf-8")
+    (IMG / "anx_tecnico_soportes.tikz").write_text(soportes, encoding="utf-8")
+    (IMG / "anx_tecnico_tendencias.tikz").write_text(tendencias, encoding="utf-8")
 
 
 def tecnico_figuras():
