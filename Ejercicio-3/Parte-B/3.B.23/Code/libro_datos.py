@@ -34,6 +34,25 @@ FUENTES = [
      f"Code/datos/{BM}.csv", URL.format(BM), "02/11/2026", "Carteras formadas a finales de junio; valor contable del"
      " último ejercicio del año anterior dividido por el valor de mercado de diciembre. Deciles Lo 10 (crecimiento)"
      " a Hi 10 (valor)."),
+    ("F4", "Kenneth R. French Data Library: Fama/French 5 Factors (2x3) (mensual)", f"Code/datos/{CINCO}.csv",
+     URL.format(CINCO), "02/11/2026", "Base de CRSP de 202609. Mkt-RF, SMB, HML, RMW (rentabilidad operativa alta"
+     " menos baja), CMA (inversión baja menos alta) y RF, desde julio de 1963. Su SMB es la media de los de las tres"
+     " clasificaciones (valor, rentabilidad e inversión) y difiere algo del de F1."),
+    ("F5", "Kenneth R. French Data Library: Momentum Factor (Mom) (mensual)", f"Code/datos/{IMPULSO}.csv",
+     URL.format(IMPULSO), "02/11/2026", "Media de las dos carteras (grandes y pequeñas) de rentabilidad pasada alta"
+     " menos la de las dos de rentabilidad pasada baja; rentabilidad pasada de los meses -12 a -2, percentiles 30 y 70"
+     " de NYSE; carteras mensuales ponderadas por valor."),
+    ("F6", "Kenneth R. French Data Library: 25 Portfolios Formed on Size and Book-to-Market (5 x 5) (mensual,"
+     " ponderadas por valor)", f"Code/datos/{TAMANO_VALOR}.csv", URL.format(TAMANO_VALOR), "02/11/2026",
+     "Carteras formadas a finales de junio por quintiles de capitalización (NYSE) y de valor contable sobre valor de"
+     " mercado (NYSE). Columnas SMALL LoBM (pequeñas de crecimiento) a BIG HiBM (grandes de valor)."),
+    ("F7", "Kenneth R. French Data Library: 30 Industry Portfolios (mensual, ponderadas por valor)",
+     f"Code/datos/{SECTORES}.csv", URL.format(SECTORES), "02/11/2026", "Carteras sectoriales formadas a finales de"
+     " junio por el código SIC de CRSP; sección Average Value Weighted Returns -- Monthly."),
+    ("F8", "FRED (Banco de la Reserva Federal de San Luis), serie A794RX0Q048SBEA del Bureau of Economic Analysis:"
+     " gasto real en consumo personal por habitante de Estados Unidos", f"Code/datos/FRED_{CONSUMO}.csv",
+     URL_FRED.format(CONSUMO), "02/11/2026", "Trimestral, dólares encadenados de 2017, desestacionalizado, en tasa"
+     " anual. Incluye los bienes duraderos."),
 ]
 TRATAMIENTOS = [
     ("Código", "Tratamiento"),
