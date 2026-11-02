@@ -13,8 +13,11 @@ import numpy as np
 CODE = Path(__file__).resolve().parent
 sys.path.insert(0, str(CODE))
 sys.path.insert(0, "/Users/marceloortega/TCEE/main/herramientas")
-from datos_french import BETA, BM, FACTORES, URL, seccion  # noqa: E402
-from figuras_anexo2 import DECILES_BETA, DECILES_BM, PERIODO, contraste_deciles  # noqa: E402
+from datos_french import BETA, BM, CINCO, FACTORES, IMPULSO, SECTORES, TAMANO_VALOR, URL, seccion  # noqa: E402
+from datos_fred import CONSUMO, trimestres  # noqa: E402
+from datos_fred import URL as URL_FRED  # noqa: E402
+from figuras_anexo2 import (DECILES_BETA, DECILES_BM, PERIODO, SECTORES_ES, componentes, contraste_deciles,  # noqa: E402
+                            cota_hj, factores_acumulados, tres_factores)
 from xlsx_simple import escribir_xlsx  # noqa: E402
 
 LIBRERIA = "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html"
