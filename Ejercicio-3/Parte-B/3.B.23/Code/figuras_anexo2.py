@@ -332,7 +332,7 @@ def apt_replica():
     xm = 5
     ganancia = f"{e['ganancia']:.1f}".replace(".", "{,}")
     panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.6cm, xmin={x0}, xmax={x1}, ymin=-15, ymax=65,
-  xlabel={{Sorpresa del factor 1, $F_1$ (\%)}}, ylabel={{Rentabilidad (\%)}}, title={{(b) Dos factores: el fondo $j$ y su réplica}},
+  xlabel={{Sorpresa del factor $1$, $F_1$ (\%)}}, ylabel={{Rentabilidad (\%)}}, title={{(b) Dos factores: el fondo $j$ y su réplica}},
   legend pos=north west, {PREAMBULO_EJES}]
 \addplot[very thick, black] coordinates {{({x0},{e['replica'] + b1 * x0:.2f}) ({x1},{e['replica'] + b1 * x1:.2f})}};
 \addlegendentry{{Réplica}}
