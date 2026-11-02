@@ -301,6 +301,67 @@ def indicadores_a9():
     return filas
 
 
+def indicadores_a10():
+    """Filas de la figura de la A10 con datos, anx_cape, y cifras citadas en el texto."""
+    filas = []
+    res = cape_shiller()
+    meses, cape = res["meses"], res["cape"]
+    for mes, valor in zip(meses, cape):
+        filas.append(("anx_cape", "(a)", "S&P compuesto", "CAPE", round(float(valor), 4), "", str(int(mes)), "F10", "T19"))
+    filas.append(("anx_cape", "(a)", "S&P compuesto", "Media del CAPE", round(float(res["media"]), 4), "",
+                  f"{int(meses[0])} a {int(meses[-1])}", "F10", "T19"))
+    for mes, valor, r10 in zip(res["meses_r10"], res["cape_r10"], res["r10"]):
+        filas.append(("anx_cape", "(b)", "S&P compuesto", "Rendimiento del beneficio, 1/CAPE",
+                      round(100 / float(valor), 4), "%", str(int(mes)), "F10", "T19"))
+        filas.append(("anx_cape", "(b)", "S&P compuesto", "Rentabilidad real anual de los diez años siguientes",
+                      round(100 * float(r10), 4), "%", str(int(mes)), "F10", "T19"))
+    ventanas = f"{int(res['meses_r10'][0])} a {int(res['meses_r10'][-1])}"
+    for indicador, valor, unidad in (("Recta de regresión: ordenada", 100 * res["coef"][0], "%"),
+                                     ("Recta de regresión: pendiente", res["coef"][1], ""), ("R²", res["r2"], ""),
+                                     ("Número de meses", len(res["r10"]), "")):
+        filas.append(("anx_cape", "(b)", "Regresión", indicador, round(float(valor), 4), unidad, ventanas, "F10", "T19"))
+
+    def mes_extremo(desde, hasta, maximo):
+        sel = (meses >= desde) & (meses <= hasta)
+        k = np.flatnonzero(sel)[np.argmax(cape[sel]) if maximo else np.argmin(cape[sel])]
+        return str(int(meses[k])), float(cape[k])
+
+    for etiqueta, (mes, valor) in (("Máximo de 1929", mes_extremo(192901, 193012, True)),
+                                   ("Mínimo de 1920", mes_extremo(191801, 192112, False)),
+                                   ("Mínimo de 1982", mes_extremo(197801, 198412, False)),
+                                   ("Máximo de 1999", mes_extremo(199901, 200012, True)),
+                                   ("Último dato", (str(int(res["ultimo"][0])), float(res["ultimo"][1])))):
+        filas.append(("anx_cape", "texto", etiqueta, "CAPE", round(valor, 4), "", mes, "F10", "T19"))
+    altos = meses[(cape > res["ultimo"][1]) & (meses < meses[-1])]
+    filas.append(("anx_cape", "texto", "Meses con un CAPE mayor que el último", "Número de meses", len(altos), "",
+                  f"{int(altos.min())} a {int(altos.max())}", "F10", "T19"))
+    for etiqueta, (umbral, media, minimo, maximo) in (("Decil más alto del CAPE", res["caros"]),
+                                                      ("Decil más bajo del CAPE", res["baratos"])):
+        for indicador, valor, unidad in (("Umbral del CAPE", umbral, ""),
+                                         ("Rentabilidad real media de los diez años siguientes", 100 * media, "% anual"),
+                                         ("Mínima", 100 * minimo, "% anual"), ("Máxima", 100 * maximo, "% anual")):
+            filas.append(("anx_cape", "texto", etiqueta, indicador, round(float(valor), 4), unidad, ventanas, "F10", "T19"))
+    for etiqueta, indicador, valor, unidad, periodo in (
+            ("Todas las ventanas", "Rentabilidad real media de los diez años siguientes", 100 * res["media_r10"], "% anual",
+             ventanas),
+            ("Recta de regresión", "Previsión con el último CAPE", 100 * res["prevision_ultimo"], "% anual",
+             str(int(res["ultimo"][0]))),
+            ("S&P compuesto", "Meses con el CAPE por encima de su media", 100 * res["sobre_media_desde_1990"], "%",
+             f"199001 a {int(meses[-1])}"),
+            ("S&P compuesto", "Rentabilidad real anual compuesta", 100 * res["real_1990"], "%", "199001 a 202609"),
+            ("S&P compuesto", "Rentabilidad real anual compuesta", 100 * res["real_1881"], "%", "188101 a 202609")):
+        filas.append(("anx_cape", "texto", etiqueta, indicador, round(float(valor), 4), unidad, periodo, "F10", "T19"))
+    d = shiller_mensual()
+    rd = d["dividendo"] / d["precio"]
+    ok = ~np.isnan(rd) & (d["meses"] >= 188101)
+    geo = float(np.exp(np.log(rd[ok]).mean()))
+    filas.append(("anx_cape", "texto", "S&P compuesto", "Rentabilidad por dividendo, media geométrica", round(100 * geo, 4),
+                  "%", f"188101 a {int(d['meses'][ok][-1])}", "F10", "T19"))
+    filas.append(("anx_cape", "texto", "S&P compuesto", "φ de CAMPBELL y SHILLER", round(1 / (1 + geo), 4), "",
+                  f"188101 a {int(d['meses'][ok][-1])}", "F10", "T19"))
+    return filas
+
+
 def series_brutas():
     filas = [("Fichero", "Serie", "Periodo", "Valor", "Unidad", "Fuente", "Tratamiento")]
     for fichero, marca, columnas, fuente in ((FACTORES, ",Mkt-RF", ["Mkt-RF", "SMB", "HML", "RF"], "F1"),
