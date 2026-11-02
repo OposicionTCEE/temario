@@ -498,7 +498,7 @@ def factores_acumulados():
         pos = "name=a" if i == 0 else r"at={(a.east)}, anchor=west, xshift=1.9cm"
         paneles.append(rf"""\begin{{axis}}[{pos}, width=7.6cm, height=6.6cm, ymode=log, xmin=1963, xmax=2026, ymin=0.4, ymax=150,
   xtick={{1970,1980,1990,2000,2010,2020}}, ytick={{0.5,1,2,5,10,20,50,100}}, log ticks with fixed point,
-  xlabel={{Año}}, ylabel={{Valor de un dólar invertido en 1963}}, title={{{titulo}}},
+  xlabel={{Año}}, ylabel={{Valor de un dólar invertido en $1963$}}, title={{{titulo}}},
   legend pos=north west, {PREAMBULO_EJES}]
 {chr(10).join(lineas)}
 \end{{axis}}""")
