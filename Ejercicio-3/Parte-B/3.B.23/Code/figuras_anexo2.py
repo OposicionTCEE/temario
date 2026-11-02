@@ -367,8 +367,12 @@ def componentes():
         vec[:, 2] *= -1
     cuota = val / val.sum() * 100
     acum = np.cumsum(cuota)
+    z = (Y - Y.mean(0)) / Y.std(0, ddof=1)
     pesos1 = vec[:, 0] / vec[:, 0].sum()
-    r1 = Y @ pesos1
+    r1 = z @ vec[:, 0]
+    corr_componentes = {j + 1: {k: np.corrcoef(z @ vec[:, j], x)[0, 1] for k, x in
+                                (("Mkt-RF", F3["Mkt-RF"]), ("SMB", F3["SMB"]), ("HML", F3["HML"]), ("RMW", F5["RMW"]),
+                                 ("CMA", F5["CMA"]), ("Mom", mom))} for j in range(4)}
     m = F3["Mkt-RF"]
     corr1 = np.corrcoef(r1, m)[0, 1]
     r2_mercado = []
