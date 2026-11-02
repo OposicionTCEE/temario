@@ -36,8 +36,6 @@ def reaccion_noticias():
     insuficiente (deriva posterior), excesiva (corrección posterior) y con filtración previa. Esquema sin datos."""
     t = np.arange(-10, 10.01, 0.25)
 
-    def serie(f):
-        return " ".join(f"({x:.2f},{f(x):.4f})" for x in t)
 
     eficiente = "(-10,0) (0,0) (0,1) (10,1)"
     puntos_ins = [(x, 0.5 + 0.5 * (1 - math.exp(-x / 2.5))) for x in t if x >= 0]
