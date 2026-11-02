@@ -299,16 +299,17 @@ def apt_ejemplo():
 
 
 def apt_replica():
-    """A7, II.5.3. (a) Un factor: sin riesgo específico, todo activo está en la recta r_f + β λ1 (r_f = 4 % y λ1 = 11,4,
-    los del factor 1 del ejemplo); D, con β = 1,2 y μ = 22 %, queda por encima, y su réplica D′ (1,2 en la cartera
-    factorial P1 y −0,2 en el activo sin riesgo) en la recta. (b) El fondo j del ejemplo y su réplica frente a la
-    sorpresa del factor 1, con F2 = 0: rectas paralelas separadas por la ganancia del arbitraje."""
+    """A7, II.5.3. Dos figuras, porque se comentan en párrafos distintos. anx_apt_arbitraje, un factor: sin riesgo
+    específico, todo activo está en la recta r_f + β λ1 (r_f = 4 % y λ1 = 11,4, los del factor 1 del ejemplo); D, con
+    β = 1,2 y μ = 22 %, queda por encima, y su réplica D′ (1,2 en la cartera factorial P1 y −0,2 en el activo sin
+    riesgo) en la recta. anx_apt_replica: el fondo j del ejemplo y su réplica frente a la sorpresa del factor 1, con
+    F2 = 0: rectas paralelas separadas por la ganancia del arbitraje."""
     e = apt_ejemplo()
     l1 = e["lambdas"][0]
     bA, bB, bD, mD = 0.5, 1.6, 1.2, 22.0
     mD_rep = APT_RF + bD * l1
-    panel_a = rf"""\begin{{axis}}[name=a, width=7.6cm, height=6.6cm, xmin=0, xmax=2, ymin=0, ymax=30,
-  xlabel={{Beta respecto del factor, $\beta_j$}}, ylabel={{Rentabilidad esperada, $\mu_j$ (\%)}}, title={{(a) Un factor}},
+    panel_a = rf"""\begin{{axis}}[width=10cm, height=6.6cm, xmin=0, xmax=2, ymin=0, ymax=30,
+  xlabel={{Beta respecto del factor, $\beta_j$}}, ylabel={{Rentabilidad esperada, $\mu_j$ (\%)}},
   legend pos=north west, {PREAMBULO_EJES}]
 \addplot[very thick, black] coordinates {{(0,{APT_RF}) (2,{APT_RF + 2 * l1:.2f})}};
 \addlegendentry{{$r_f+\beta_j\lambda_1$}}
@@ -330,8 +331,8 @@ def apt_replica():
     b1 = APT_B[0]
     xm = 5
     ganancia = f"{e['ganancia']:.1f}".replace(".", "{,}")
-    panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.6cm, xmin={x0}, xmax={x1}, ymin=-15, ymax=65,
-  xlabel={{Sorpresa del factor $1$, $F_1$ (\%)}}, ylabel={{Rentabilidad (\%)}}, title={{(b) Dos factores: el fondo $j$ y su réplica}},
+    panel_b = rf"""\begin{{axis}}[width=10cm, height=6.6cm, xmin={x0}, xmax={x1}, ymin=-15, ymax=65,
+  xlabel={{Sorpresa del factor $1$, $F_1$ (\%)}}, ylabel={{Rentabilidad (\%)}},
   legend pos=north west, {PREAMBULO_EJES}]
 \addplot[very thick, black] coordinates {{({x0},{e['replica'] + b1 * x0:.2f}) ({x1},{e['replica'] + b1 * x1:.2f})}};
 \addlegendentry{{Réplica}}
@@ -340,8 +341,8 @@ def apt_replica():
 \draw[{{Latex[length=1.6mm]}}-{{Latex[length=1.6mm]}}, thin] (axis cs:{xm},{APT_FONDO + b1 * xm:.2f}) -- (axis cs:{xm},{e['replica'] + b1 * xm:.2f});
 \node[anchor=west, font=\scriptsize] at (axis cs:{xm + 0.2},{(APT_FONDO + e['replica']) / 2 + b1 * xm:.2f}) {{${ganancia}$}};
 \end{{axis}}"""
-    tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b + "\n\\end{tikzpicture}\n"
-    (IMG / "anx_apt_replica.tikz").write_text(tikz, encoding="utf-8")
+    for nombre, eje in (("anx_apt_arbitraje", panel_a), ("anx_apt_replica", panel_b)):
+        (IMG / f"{nombre}.tikz").write_text("\\begin{tikzpicture}\n" + eje + "\n\\end{tikzpicture}\n", encoding="utf-8")
     return e
 
 
