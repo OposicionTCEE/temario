@@ -14,6 +14,16 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from figuras_anexo1 import IMG, MU3, PREAMBULO_EJES, S3, constantes3, sigma_frontera, tangente_de  # noqa: E402
 
+
+MARGEN = r"\path ([yshift=1.5pt]current bounding box.north east) ([yshift=-1.5pt]current bounding box.south west);"
+
+
+def _escribir(nombre, tikz):
+    """Escribe Img/<nombre>.tikz con un margen de 1,5 pt arriba y abajo, para que el borde superior del eje no quede
+    cortado cuando la figura no lleva título dentro."""
+    (IMG / f"{nombre}.tikz").write_text(tikz.replace("\\end{tikzpicture}", MARGEN + "\n\\end{tikzpicture}"),
+                                        encoding="utf-8")
+
 RF = 10.0
 
 
@@ -273,7 +283,7 @@ def sml_empirica():
 \end{{axis}}
 \end{{tikzpicture}}
 """
-        (IMG / f"{nombre}.tikz").write_text(tikz, encoding="utf-8")
+        _escribir(nombre, tikz)
     return filas
 
 
@@ -342,7 +352,7 @@ def apt_replica():
 \node[anchor=west, font=\scriptsize] at (axis cs:{xm + 0.2},{(APT_FONDO + e['replica']) / 2 + b1 * xm:.2f}) {{${ganancia}$}};
 \end{{axis}}"""
     for nombre, eje in (("anx_apt_arbitraje", panel_a), ("anx_apt_replica", panel_b)):
-        (IMG / f"{nombre}.tikz").write_text("\\begin{tikzpicture}\n" + eje + "\n\\end{tikzpicture}\n", encoding="utf-8")
+        _escribir(nombre, "\\begin{tikzpicture}\n" + eje + "\n\\end{tikzpicture}\n")
     return e
 
 
