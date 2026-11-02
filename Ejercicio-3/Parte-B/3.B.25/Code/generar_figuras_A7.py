@@ -100,8 +100,8 @@ w("anx_sonrisa", r"""% Figura (Anexo II, «Sonrisa y sesgo»): (a) volatilidad i
     \draw[very thick] plot[smooth] coordinates {""" + DM + r"""};
     \draw[very thick, dashed] plot[smooth] coordinates {""" + DL + r"""};
     \draw (""" + f"{X2(1.0):.3f}" + r""",0.06) -- (""" + f"{X2(1.0):.3f}" + r""",-0.06); \node[below] at (""" + f"{X2(1.0):.3f}" + r""",0) {$1$};
-    \node[anchor=east] at (""" + f"{X2(0.93):.3f},{Y2(3.6):.3f}" + r""") {saltos};
-    \node[anchor=west] at (""" + f"{X2(1.12):.3f},{Y2(2.4):.3f}" + r""") {lognormal};
+    \node[anchor=south west] at (""" + f"{X2(0.65):.3f},{Y2(0.30):.3f}" + r""") {saltos};
+    \node[anchor=east] at (""" + f"{X2(0.895):.3f},{Y2(2.5):.3f}" + r""") {lognormal};
   \end{scope}
 \end{tikzpicture}
 """)
@@ -135,7 +135,7 @@ w("anx_garch", r"""% Figura (Anexo II, «Volatilidad aleatoria»): 250 rentabili
   \end{scope}
   % ---------------- (b) GARCH(1,1) ----------------
   \begin{scope}[xshift=7.1cm]
-    \node[font=\footnotesize\bfseries] at (3.0,""" + f"{lim+0.45:.3f}" + r""") {(b) GARCH(1,1)};
+    \node[font=\footnotesize\bfseries] at (3.0,""" + f"{lim+0.45:.3f}" + r""") {(b) GARCH$(1,1)$};
 """ + bars(rg) + r"""
     \draw[dashed] plot coordinates {""" + band + r"""};
     \draw[dashed] plot coordinates {""" + bandn + r"""};
@@ -151,7 +151,7 @@ w("anx_ciclo_arbitraje", r"""% Figura (Anexo II, «Capital del arbitrajista»): 
 % posiciones y el desajuste se amplía todavía más.
 % Generar con: bash Code/generar_figura.sh anx_ciclo_arbitraje
 \begin{tikzpicture}[font=\footnotesize, >={Stealth[length=5pt]},
-    caja/.style={draw, rounded corners=2pt, text width=2.9cm, align=center, minimum height=0.9cm}]
+    caja/.style={draw, rounded corners=2pt, text width=3.1cm, align=flush center, minimum height=0.9cm}]
   \node[caja] (A) at (0,1.75) {Se amplía el desajuste};
   \node[caja] (B) at (3.4,0) {Pérdidas del arbitrajista};
   \node[caja] (C) at (0,-1.75) {Retirada de fondos y más garantías};
