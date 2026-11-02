@@ -24,6 +24,7 @@ def _escribir(nombre, tikz):
     (IMG / f"{nombre}.tikz").write_text(tikz.replace("\\end{tikzpicture}", MARGEN + "\n\\end{tikzpicture}"),
                                         encoding="utf-8")
 
+
 RF = 10.0
 
 
