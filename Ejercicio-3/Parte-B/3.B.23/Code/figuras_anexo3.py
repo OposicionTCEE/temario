@@ -459,8 +459,8 @@ def indicadores(desde=20190701, hasta=20201231):
         rsi_min=i_pico + int(np.nanargmin(rsi[i_pico:i_pico + 60])),
         macd_alcista=primera((macd > senal) & (np.roll(macd, 1) <= np.roll(senal, 1)), i_min - 10),
         sobre_200=primera(indice > sma200, i_min),
-        cruce_dorado=primera(sma50 > sma200, i_min),
     )
+    eventos["cruce_dorado"] = primera(sma50 > sma200, eventos["cruce_muerte"])
     salida = {k: (int(fechas[i]), float(indice[i] / indice[i_pico] - 1) * 100,
                   float(rsi[i]), float(indice[i] / indice[i_min] - 1) * 100) for k, i in eventos.items()}
     valido = ~np.isnan(sup) & (fechas <= 20251231)
