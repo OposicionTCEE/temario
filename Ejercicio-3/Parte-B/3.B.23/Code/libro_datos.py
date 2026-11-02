@@ -64,7 +64,30 @@ TRATAMIENTOS = [
     ("T5", "Volatilidad anualizada: desviación típica muestral de las rentabilidades mensuales en exceso por raíz de 12."),
     ("T6", "Recta ajustada: regresión por MCO de la rentabilidad media en exceso (T3) sobre la beta (T2) de los diez"
            " deciles."),
-    ("T0", "Sin tratamiento: dato mensual tal como lo publica la fuente (en %)."),
+    ("T7", "Regresión de series temporales por MCO, con constante, de la rentabilidad mensual en exceso de cada cartera"
+           " sobre los factores (CAPM: Mkt-RF de F1; FF3: Mkt-RF, SMB y HML de F1; FF5: los cinco de F4; FF5+Mom:"
+           " además Mom de F5), julio de 1963 a diciembre de 2025. Alfa = constante por 12; predicción = suma de las"
+           " cargas por la media mensual de cada factor, por 12; R² = 1 − varianza residual / varianza total."),
+    ("T8", "Contraste de GIBBONS, ROSS y SHANKEN (1989): J = (T − N − L)/N · α'Σ⁻¹α / (1 + μ'Ω⁻¹μ), con Σ la matriz de"
+           " covarianzas residual (dividida por T − L − 1), μ y Ω la media y la covarianza muestrales de los factores;"
+           " se distribuye como una F(N, T − N − L)."),
+    ("T9", "Componentes principales de la matriz de correlaciones de las rentabilidades mensuales en exceso de los 30"
+           " sectores (rentabilidades tipificadas). Cuota = valor propio / suma de los valores propios. Signos: cargas"
+           " positivas en el primero, la de Food negativa en el segundo y la de Oil positiva en el tercero."),
+    ("T10", "Rentabilidad acumulada: producto de (1 + rentabilidad mensual/100) desde julio de 1963 (valor 1 a finales"
+            " de junio de 1963), sin sumar el tipo sin riesgo. Media de un tramo = media mensual por 12; t = media /"
+            " (desviación típica / raíz del número de meses)."),
+    ("T11", "Ratio de SHARPE máximo (cartera tangente de los factores, en la muestra): raíz de μ'Ω⁻¹μ, con μ y Ω la"
+            " media y la covarianza de las rentabilidades mensuales en exceso de los factores, por raíz de 12."),
+    ("T12", "Crecimiento del consumo: logaritmo del cociente entre la media de los cuatro trimestres de un año y la del"
+            " anterior (1964 a 2025, 62 años), en %; versión del cuarto trimestre: cociente entre el cuarto trimestre de"
+            " cada año y el del anterior."),
+    ("T13", "CAPM de consumo con utilidad CRRA y crecimiento lognormal: σ(m)/E[m] = raíz de (exp(γ²σc²) − 1). Aversión"
+            " mínima para cada cota: γ = raíz de ln(1 + SR²) / σc. Tipo sin riesgo implícito con δ = 1:"
+            " exp(γg − γ²σc²/2) − 1, con g y σc la media y la desviación típica de T12."),
+    ("T14", "Correlación entre el crecimiento del consumo (T12) y la rentabilidad anual en exceso del mercado (Mkt-RF de"
+            " la sección anual de F1, enero a diciembre), 1964 a 2025."),
+    ("T0", "Sin tratamiento: dato mensual (o trimestral, en F8) tal como lo publica la fuente."),
 ]
 
 
