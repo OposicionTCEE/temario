@@ -499,9 +499,10 @@ if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "a9":
 # --- A10: análisis fundamental ---
 
 def multiplos():
-    """A10, III.4.4. PER adelantado y precio sobre valor contable en función de la ROE, con crecimiento constante g = b·ROE:
-    (a) PER = (1 - b)/(k - b·ROE) para tres tasas de retención b; (b) P/VC = (ROE - g)/(k - g) para tres crecimientos.
-    Los ejes van en unidades de k (ROE/k y k·PER), de modo que todas las curvas se cruzan en ROE = k. Esquema sin datos."""
+    """A10, III.4.4. PER adelantado y precio sobre valor contable en función de la ROE, con crecimiento constante g = b·ROE,
+    en dos figuras porque se comentan en párrafos distintos: anx_multiplos_per, PER = (1 - b)/(k - b·ROE) para tres tasas
+    de retención b, y anx_multiplos_pvc, P/VC = (ROE - g)/(k - g) para tres crecimientos. Los ejes van en unidades de k
+    (ROE/k y k·PER), de modo que todas las curvas se cruzan en ROE = k. Esquemas sin datos."""
     def recorte(x, y, techo=3.0):
         m = (y >= 0) & (y <= techo + 1e-9)
         return " ".join(f"({a:.4f},{b:.4f})" for a, b in zip(x[m], y[m]))
