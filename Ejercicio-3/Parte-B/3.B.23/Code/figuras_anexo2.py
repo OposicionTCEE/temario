@@ -155,6 +155,130 @@ def desempeno():
     return res, (mM - RF) / sM, mM - RF
 
 
+def pesos_frontera(m):
+    """Pesos de la cartera de la frontera con rentabilidad esperada m (en %), con las constantes de MERTON (1972)."""
+    Si, a, b, c, d = constantes3()
+    return ((c * m - a) * (Si @ MU3) + (b - a * m) * (Si @ np.ones(3))) / d
+
+
+def beta_cero(mu_m=20.0):
+    """A6, II.3.1. CAPM de beta nula de BLACK (1972) con el ejemplo de tres acciones. Si no se puede pedir prestado al
+    tipo sin riesgo, la cartera de mercado queda por encima de la tangente T: aquí, la de la frontera con μ = 20 %.
+    La tangente a la frontera en M corta el eje en μ_Z, la rentabilidad de su cartera de beta nula, Z, que está en la
+    rama ineficiente. (a) Plano media-volatilidad; (b) SML de BLACK frente a la que se trazaría desde r_f."""
+    Si, a, b, c, d = constantes3()
+    wm = pesos_frontera(mu_m)
+    s_m = math.sqrt(wm @ S3 @ wm)
+    mu_z = a / c - (d / c**2) / (mu_m - a / c)
+    s_z = sigma_frontera(mu_z, a, b, c, d)
+    beta = (S3 @ wm) / s_m**2
+    wT, mT, sT = tangente_de(RF)
+    alta = " ".join(f"({sigma_frontera(m, a, b, c, d):.3f},{m:.3f})" for m in np.linspace(a / c, 26, 80))
+    baja = " ".join(f"({sigma_frontera(m, a, b, c, d):.3f},{m:.3f})" for m in np.linspace(6, a / c, 60))
+    pend = (mu_m - mu_z) / s_m
+    sig = np.sqrt(np.diag(S3))
+    acc = " ".join(f"({s:.3f},{m})" for s, m in zip(sig, MU3))
+    nodos_a = "\n".join(rf"\node[anchor=north west, font=\footnotesize] at (axis cs:{s:.3f},{m}) {{${n}$}};" for s, m, n in zip(sig, MU3, "ABC"))
+    panel_a = rf"""\begin{{axis}}[name=a, width=7.6cm, height=6.6cm, xmin=0, xmax=45, ymin=6, ymax=26,
+  xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}}, title={{(a) Cartera de beta nula}},
+  legend pos=south east, {PREAMBULO_EJES}]
+\addplot[thick, black!35] coordinates {{{alta}}};
+\addlegendentry{{Frontera}}
+\addplot[thick, black!35, forget plot] coordinates {{{baja}}};
+\addplot[thick, black] coordinates {{(0,{RF}) ({sT:.3f},{mT:.3f})}};
+\addlegendentry{{Préstamo sin riesgo}}
+\addplot[thick, black, dashed] coordinates {{(0,{mu_z:.3f}) (42,{mu_z + 42 * pend:.3f})}};
+\addlegendentry{{Tangente en $M$}}
+\addplot[thin, black, dotted, forget plot] coordinates {{(0,{mu_z:.3f}) ({s_z:.3f},{mu_z:.3f})}};
+\addplot[only marks, mark=*, mark size=1.6pt, black, forget plot] coordinates {{{acc}}};
+{nodos_a}
+\addplot[only marks, mark=square*, mark size=1.9pt, black, forget plot] coordinates {{({s_m:.3f},{mu_m:.3f}) (0,{RF}) (0,{mu_z:.3f})}};
+\addplot[only marks, mark=o, mark size=2.2pt, black, thick, forget plot] coordinates {{({sT:.3f},{mT:.3f}) ({s_z:.3f},{mu_z:.3f})}};
+\node[anchor=south east, font=\footnotesize] at (axis cs:{s_m:.3f},{mu_m:.3f}) {{$M$}};
+\node[anchor=north west, font=\footnotesize] at (axis cs:{sT:.3f},{mT:.3f}) {{$T$}};
+\node[anchor=north west, font=\footnotesize] at (axis cs:{s_z:.3f},{mu_z:.3f}) {{$Z$}};
+\node[anchor=north west, font=\footnotesize] at (axis cs:0.3,{RF - 0.15}) {{$r_f$}};
+\node[anchor=south west, font=\footnotesize] at (axis cs:0.3,{mu_z + 0.1:.3f}) {{$\mu_Z$}};
+\end{{axis}}"""
+    pts = " ".join(f"({bj:.3f},{m})" for bj, m in zip(beta, MU3))
+    nodos_b = "\n".join(rf"\node[anchor=north west, font=\footnotesize] at (axis cs:{bj:.3f},{m}) {{${n}$}};" for bj, m, n in zip(beta, MU3, "ABC"))
+    panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.6cm, xmin=0, xmax=2, ymin=6, ymax=30,
+  xlabel={{Beta respecto de $M$, $\beta_j$}}, ylabel={{Rentabilidad esperada, $\mu_j$ (\%)}}, title={{(b) Recta del mercado de valores}},
+  legend pos=north west, {PREAMBULO_EJES}]
+\addplot[very thick, black] coordinates {{(0,{mu_z:.3f}) (2,{mu_z + 2 * (mu_m - mu_z):.3f})}};
+\addlegendentry{{BLACK: desde $\mu_Z$}}
+\addplot[thick, black!55, dashed] coordinates {{(0,{RF}) (2,{RF + 2 * (mu_m - RF):.3f})}};
+\addlegendentry{{Desde $r_f$}}
+\addplot[only marks, mark=*, mark size=1.6pt, black, forget plot] coordinates {{{pts}}};
+{nodos_b}
+\addplot[only marks, mark=square*, mark size=1.9pt, black, forget plot] coordinates {{(1,{mu_m:.3f}) (0,{RF}) (0,{mu_z:.3f})}};
+\node[anchor=south east, font=\footnotesize] at (axis cs:1,{mu_m:.3f}) {{$M$}};
+\node[anchor=north west, font=\footnotesize] at (axis cs:0.02,{RF - 0.15}) {{$r_f$}};
+\node[anchor=south west, font=\footnotesize] at (axis cs:0.02,{mu_z + 0.1:.3f}) {{$\mu_Z$}};
+\end{{axis}}"""
+    tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b + "\n\\end{tikzpicture}\n"
+    (IMG / "anx_beta_cero.tikz").write_text(tikz, encoding="utf-8")
+    return dict(pesos_m=wm, sigma_m=s_m, mu_z=mu_z, sigma_z=s_z, betas=beta, tangente=(wT, mT, sT))
+
+
+DECILES_BETA = ["Lo 10", "Dec 2", "Dec 3", "Dec 4", "Dec 5", "Dec 6", "Dec 7", "Dec 8", "Dec 9", "Hi 10"]
+DECILES_BM = ["Lo 10", "2-Dec", "3-Dec", "4-Dec", "5-Dec", "6-Dec", "7-Dec", "8-Dec", "9-Dec", "Hi 10"]
+PERIODO = (196307, 202512)
+
+
+def contraste_deciles():
+    """Beta (MCO, todo el periodo), rentabilidad media en exceso anualizada (media mensual × 12), predicción del CAPM y
+    alfa de las diez carteras por beta y por valor contable/valor de mercado de FRENCH, ponderadas por valor."""
+    from datos_french import BETA, BM, excesos
+    filas = []
+    for clave, fichero, marca, columnas in (("beta", BETA, "Value Weighted Returns -- Monthly", DECILES_BETA),
+                                            ("bm", BM, "Value Weight Returns -- Monthly", DECILES_BM)):
+        meses, X, m, rf = excesos(fichero, marca, columnas, *PERIODO)
+        prima = m.mean() * 12
+        for k, col in enumerate(columnas):
+            y = X[:, k]
+            b = np.cov(y, m, ddof=1)[0, 1] / m.var(ddof=1)
+            filas.append(dict(panel=clave, decil=k + 1, columna=col, beta=b, media=y.mean() * 12, capm=b * prima,
+                              alfa=(y.mean() - b * m.mean()) * 12, vol=y.std(ddof=1) * math.sqrt(12),
+                              meses=len(meses), prima=prima, rf=rf.mean() * 12))
+    return filas
+
+
+def sml_empirica():
+    """A6, II.4.3. Rentabilidad media en exceso frente a beta de los deciles de FRENCH por beta (a) y por valor contable
+    sobre valor de mercado (b), julio de 1963 a diciembre de 2025, con la SML del CAPM (ordenada 0 y pendiente igual a
+    la prima media del mercado) y, en (a), la recta ajustada por mínimos cuadrados a los diez puntos."""
+    filas = contraste_deciles()
+    paneles = []
+    for i, (clave, titulo, extremos) in enumerate((("beta", "(a) Carteras por beta", ("beta baja", "beta alta")),
+                                                    ("bm", "(b) Carteras por valor contable sobre valor de mercado",
+                                                     ("crecimiento", "valor")))):
+        fs = [f for f in filas if f["panel"] == clave]
+        prima = fs[0]["prima"]
+        pts = " ".join(f"({f['beta']:.3f},{f['media']:.3f})" for f in fs)
+        lineas = [rf"\addplot[very thick, black] coordinates {{(0,0) (1.9,{1.9 * prima:.3f})}};",
+                  r"\addlegendentry{SML del CAPM}"]
+        if clave == "beta":
+            pend, orden = np.polyfit([f["beta"] for f in fs], [f["media"] for f in fs], 1)
+            lineas += [rf"\addplot[thick, black!55, dashed] coordinates {{(0,{orden:.3f}) (1.9,{orden + 1.9 * pend:.3f})}};",
+                       r"\addlegendentry{Recta ajustada}"]
+        lineas += [rf"\addplot[only marks, mark=*, mark size=1.6pt, black] coordinates {{{pts}}};",
+                   r"\addlegendentry{Deciles}",
+                   rf"\addplot[only marks, mark=square*, mark size=1.9pt, black, forget plot] coordinates {{(1,{prima:.3f})}};",
+                   rf"\node[anchor=north west, font=\footnotesize] at (axis cs:1,{prima:.3f}) {{$M$}};"]
+        for f, texto, ancla in ((fs[0], extremos[0], "north"), (fs[-1], extremos[1], "south")):
+            lineas.append(rf"\node[anchor={ancla}, font=\scriptsize, yshift={'-1' if ancla == 'north' else '1'}mm] at (axis cs:{f['beta']:.3f},{f['media']:.3f}) {{{texto}}};")
+        pos = "name=a" if i == 0 else r"at={(a.east)}, anchor=west, xshift=1.9cm"
+        paneles.append(rf"""\begin{{axis}}[{pos}, width=7.6cm, height=6.6cm, xmin=0, xmax=1.9, ymin=0, ymax=14,
+  xlabel={{Beta, $\beta_p$}}, ylabel={{Rentabilidad media en exceso (\% anual)}}, title={{{titulo}}},
+  legend pos=north west, {PREAMBULO_EJES}]
+{chr(10).join(lineas)}
+\end{{axis}}""")
+    tikz = "\\begin{tikzpicture}\n" + "\n".join(paneles) + "\n\\end{tikzpicture}\n"
+    (IMG / "anx_sml_empirica.tikz").write_text(tikz, encoding="utf-8")
+    return filas
+
+
 if __name__ == "__main__":
     tangencia_sharpe()
     beta, mM, sM = cml_sml()
