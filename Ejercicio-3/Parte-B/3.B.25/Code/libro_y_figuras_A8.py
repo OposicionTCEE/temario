@@ -250,10 +250,11 @@ def main():
         barras += (f"    \\fill[black!70] (0,{y:.2f}) rectangle ({sn * 0.042:.3f},{y + 0.22:.2f});\n"
                    f"    \\fill[black!25] (0,{y - 0.24:.2f}) rectangle ({sg * 0.042:.3f},{y - 0.02:.2f});\n"
                    f"    \\node[anchor=east] at (-0.05,{y - 0.01:.2f}) {{{etiquetas[c]}}};\n"
-                   f"    \\node[anchor=west, font=\\scriptsize] at ({sn * 0.042:.3f},{y + 0.11:.2f}) {{{sn:.0f}\\,\\%}};\n"
-                   f"    \\node[anchor=west, font=\\scriptsize] at ({sg * 0.042:.3f},{y - 0.13:.2f}) {{{sg:.0f}\\,\\%}};\n")
+                   f"    \\node[anchor=west, font=\\scriptsize] at ({sn * 0.042:.3f},{y + 0.11:.2f}) {{${pct(sn)}$}};\n"
+                   f"    \\node[anchor=west, font=\\scriptsize] at ({sg * 0.042:.3f},{y - 0.13:.2f}) {{${pct(sg)}$}};\n")
+    XB = lambda p: (x_anio(p) - 2009) * 0.33
     def cuota_linea(rk):
-        return " ".join(f"({X(p):.3f},{v * 0.03:.3f})" for p, v in sorted(cuota[rk].items()))
+        return " ".join(f"({XB(p):.3f},{v * 0.03:.3f})" for p, v in sorted(cuota[rk].items()))
     comp = (r"""% Figura (Anexo III, «Datos»): (a) peso de cada categoría de riesgo en el nocional (oscuro) y en el valor de mercado bruto
 % (claro) de los derivados extrabursátiles, segundo semestre de """ + ultimo[:4] + r""". (b) Proporción del nocional cuya contraparte es una
 % cámara de contrapartida central: derivados sobre tipos de interés (continua, desde 2016) y CDS (discontinua, desde 2010).
