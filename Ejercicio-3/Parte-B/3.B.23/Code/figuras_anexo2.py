@@ -243,14 +243,13 @@ def contraste_deciles():
 
 
 def sml_empirica():
-    """A6, II.4.3. Rentabilidad media en exceso frente a beta de los deciles de FRENCH por beta (a) y por valor contable
-    sobre valor de mercado (b), julio de 1963 a diciembre de 2025, con la SML del CAPM (ordenada 0 y pendiente igual a
-    la prima media del mercado) y, en (a), la recta ajustada por mínimos cuadrados a los diez puntos."""
+    """A6, II.4.3. Rentabilidad media en exceso frente a beta de los deciles de FRENCH por beta (anx_sml_empirica) y por
+    valor contable sobre valor de mercado (anx_deciles_valor), julio de 1963 a diciembre de 2025, con la SML del CAPM
+    (ordenada 0 y pendiente igual a la prima media del mercado) y, en la primera, la recta ajustada por mínimos cuadrados
+    a los diez puntos. Dos figuras, porque se comentan en párrafos distintos."""
     filas = contraste_deciles()
-    paneles = []
-    for i, (clave, titulo, extremos) in enumerate((("beta", "(a) Carteras por beta", ("beta baja", "beta alta")),
-                                                    ("bm", "(b) Carteras por valor contable sobre valor de mercado",
-                                                     ("crecimiento", "valor")))):
+    for clave, nombre, extremos in (("beta", "anx_sml_empirica", ("beta baja", "beta alta")),
+                                    ("bm", "anx_deciles_valor", ("crecimiento", "valor"))):
         fs = [f for f in filas if f["panel"] == clave]
         prima = fs[0]["prima"]
         pts = " ".join(f"({f['beta']:.3f},{f['media']:.3f})" for f in fs)
@@ -267,14 +266,14 @@ def sml_empirica():
         abajo = "anchor=west, xshift=1mm" if clave == "bm" else "anchor=north, yshift=-1mm"
         for f, texto, ancla in ((fs[0], extremos[0], abajo), (fs[-1], extremos[1], "anchor=south, yshift=1mm")):
             lineas.append(rf"\node[{ancla}, font=\scriptsize] at (axis cs:{f['beta']:.3f},{f['media']:.3f}) {{{texto}}};")
-        pos = "name=a" if i == 0 else r"at={(a.east)}, anchor=west, xshift=1.9cm"
-        paneles.append(rf"""\begin{{axis}}[{pos}, width=7.6cm, height=6.6cm, xmin=0, xmax=1.9, ymin=0, ymax=14,
-  xlabel={{Beta, $\beta_p$}}, ylabel={{Rentabilidad media en exceso (\% anual)}}, title={{{titulo}}},
-  legend pos=north west, {PREAMBULO_EJES}]
+        tikz = rf"""\begin{{tikzpicture}}
+\begin{{axis}}[width=10cm, height=6.6cm, xmin=0, xmax=1.9, ymin=0, ymax=14,
+  xlabel={{Beta, $\beta_p$}}, ylabel={{Rentabilidad media en exceso (\% anual)}}, legend pos=north west, {PREAMBULO_EJES}]
 {chr(10).join(lineas)}
-\end{{axis}}""")
-    tikz = "\\begin{tikzpicture}\n" + "\n".join(paneles) + "\n\\end{tikzpicture}\n"
-    (IMG / "anx_sml_empirica.tikz").write_text(tikz, encoding="utf-8")
+\end{{axis}}
+\end{{tikzpicture}}
+"""
+        (IMG / f"{nombre}.tikz").write_text(tikz, encoding="utf-8")
     return filas
 
 
