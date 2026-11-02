@@ -15,6 +15,16 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from figuras_anexo1 import IMG, PREAMBULO_EJES  # noqa: E402
 
+
+MARGEN = r"\path ([yshift=1.5pt]current bounding box.north east) ([yshift=-1.5pt]current bounding box.south west);"
+
+
+def _escribir(nombre, tikz):
+    """Escribe Img/<nombre>.tikz con un margen de 1,5 pt arriba y abajo, para que el borde superior del eje no quede
+    cortado cuando la figura no lleva título dentro."""
+    (IMG / f"{nombre}.tikz").write_text(tikz.replace("\\end{tikzpicture}", MARGEN + "\n\\end{tikzpicture}"),
+                                        encoding="utf-8")
+
 DECENIOS = [(1926, 1935), (1936, 1945), (1946, 1955), (1956, 1965), (1966, 1975), (1976, 1985), (1986, 1995),
             (1996, 2005), (2006, 2015), (2016, 2025)]
 
@@ -342,8 +352,8 @@ def tecnico_niveles():
 \end{{axis}}
 \end{{tikzpicture}}
 """
-    (IMG / "anx_tecnico_soportes.tikz").write_text(soportes, encoding="utf-8")
-    (IMG / "anx_tecnico_tendencias.tikz").write_text(tendencias, encoding="utf-8")
+    _escribir("anx_tecnico_soportes", soportes)
+    _escribir("anx_tecnico_tendencias", tendencias)
 
 
 def tecnico_figuras():
@@ -530,7 +540,7 @@ def multiplos():
     pvc = (rf"\begin{{axis}}[{comunes}, ytick={{1,2,3}}, ylabel={{P/VC}}]" "\n" + guias + "\n" + "\n".join(lineas_b)
            + "\n\\end{axis}")
     for nombre, eje in (("anx_multiplos_per", per), ("anx_multiplos_pvc", pvc)):
-        (IMG / f"{nombre}.tikz").write_text("\\begin{tikzpicture}\n" + eje + "\n\\end{tikzpicture}\n", encoding="utf-8")
+        _escribir(nombre, "\\begin{tikzpicture}\n" + eje + "\n\\end{tikzpicture}\n")
 
 
 def cape(hasta=202609):
@@ -603,8 +613,8 @@ def grafico_cape():
 \end{{axis}}
 \end{{tikzpicture}}
 """
-    (IMG / "anx_cape.tikz").write_text(historia, encoding="utf-8")
-    (IMG / "anx_cape_rentabilidad.tikz").write_text(rentabilidad, encoding="utf-8")
+    _escribir("anx_cape", historia)
+    _escribir("anx_cape_rentabilidad", rentabilidad)
     return res
 
 
