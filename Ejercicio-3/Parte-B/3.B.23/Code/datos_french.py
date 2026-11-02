@@ -82,6 +82,28 @@ def factores(desde, hasta):
     return meses, F3, F5, fm[im, cm.index("Mom")]
 
 
+FACTORES_DIARIOS = "F-F_Research_Data_Factors_daily"
+
+
+def diaria(nombre=FACTORES_DIARIOS, marca=",Mkt-RF"):
+    """Fechas (aaaammdd), nombres de columna y matriz de una sección diaria (en %)."""
+    lineas = fichero(nombre).read_text(encoding="latin-1").splitlines()
+    i = next(k for k, l in enumerate(lineas) if marca in l)
+    if not lineas[i].startswith(","):
+        i += 1
+    columnas = [c.strip() for c in lineas[i].split(",")[1:] if c.strip()]
+    fechas, filas = [], []
+    for l in lineas[i + 1:]:
+        partes = [p.strip() for p in l.split(",")]
+        if len(partes[0]) != 8 or not partes[0].isdigit():
+            break
+        fechas.append(int(partes[0]))
+        filas.append([float(x) for x in partes[1:len(columnas) + 1]])
+    matriz = np.array(filas)
+    matriz[matriz <= -99.99] = np.nan
+    return np.array(fechas), columnas, matriz
+
+
 def anual(nombre, columna, marca="Annual Factors"):
     """Serie anual (enero a diciembre, en %) de la sección anual de un fichero: {año: valor}."""
     lineas = fichero(nombre).read_text(encoding="latin-1").splitlines()
