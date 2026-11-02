@@ -130,9 +130,9 @@ def razon_varianzas():
 
 
 def grossman_stiglitz():
-    """A8, III.2.1. Equilibrio de GROSSMAN y STIGLITZ (1980): la ventaja de informarse, B(κ), cae con la proporción de
-    informados, κ, porque el precio revela más; los inversores se informan hasta que la ventaja iguala el coste. Con un
-    coste menor, C', hay más informados. Esquema sin datos."""
+    """A8, III.2.1. Equilibrio de GROSSMAN y STIGLITZ (1980): la ventaja de informarse, ψ(κ), cae con la proporción de
+    informados, κ, porque el precio revela más; los inversores se informan hasta que la ventaja iguala el coste, χ. Con
+    un coste menor, χ', hay más informados. Esquema sin datos."""
     k = np.linspace(0, 1, 101)
     ventaja = 1.2 * (1 - k) ** 1.6
     curva = " ".join(f"({a:.3f},{b:.4f})" for a, b in zip(k, ventaja))
@@ -141,10 +141,10 @@ def grossman_stiglitz():
     k2 = 1 - (C2 / 1.2) ** (1 / 1.6)
     tikz = rf"""\begin{{tikzpicture}}
 \begin{{axis}}[width=10cm, height=6.6cm, xmin=0, xmax=1, ymin=0, ymax=1.3, xtick={{0,{k1:.3f},{k2:.3f},1}},
-  xticklabels={{$0$,$\kappa^*$,$\kappa^{{*\prime}}$,$1$}}, ytick={{{C2},{C}}}, yticklabels={{$C'$,$C$}},
+  xticklabels={{$0$,$\kappa^*$,$\kappa^{{*\prime}}$,$1$}}, ytick={{{C2},{C}}}, yticklabels={{$\chi'$,$\chi$}},
   xlabel={{Proporción de inversores informados, $\kappa$}}, ylabel={{Ventaja y coste de informarse}}, {PREAMBULO_EJES}]
 \addplot[very thick, black] coordinates {{{curva}}};
-\node[anchor=south west, font=\footnotesize] at (axis cs:0.08,{1.2 * (0.92) ** 1.6:.3f}) {{$B(\kappa)$}};
+\node[anchor=south west, font=\footnotesize] at (axis cs:0.08,{1.2 * (0.92) ** 1.6:.3f}) {{$\psi(\kappa)$}};
 \addplot[thick, black!60, dashed] coordinates {{(0,{C}) (1,{C})}};
 \addplot[thick, black!60, dashed] coordinates {{(0,{C2}) (1,{C2})}};
 \addplot[thin, black!40, dotted] coordinates {{({k1:.3f},0) ({k1:.3f},{C})}};
