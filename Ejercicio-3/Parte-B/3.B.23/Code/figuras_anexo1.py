@@ -32,8 +32,8 @@ def residual():
     panel = []
     for i, (titulo, formula, tipo) in enumerate(
         # mín y máx con tilde, como los escribe babel (spanish) en el texto del tema
-        [("(a) Acreedores", r"$\mathrm{m\acute{\imath}n}(V_T,D)$", "deuda"),
-         ("(b) Accionistas", r"$\mathrm{m\acute{a}x}(V_T-D,\,0)$", "acciones")]
+        [("(a) Acreedores", r"$\text{mín}(V_T,D)$", "deuda"),
+         ("(b) Accionistas", r"$\text{máx}(V_T-D,\,0)$", "acciones")]
     ):
         x0 = i * 8.0
         p = []
