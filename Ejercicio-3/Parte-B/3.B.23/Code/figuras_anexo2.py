@@ -407,7 +407,7 @@ def componentes():
     tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b + "\n\\end{tikzpicture}\n"
     (IMG / "anx_componentes.tikz").write_text(tikz, encoding="utf-8")
     return dict(sectores=cs, cuota=cuota, acum=acum, cargas=vec[:, :3], corr1=corr1, pesos1=pesos1,
-                r2_mercado=np.array(r2_mercado), meses=meses)
+                r2_mercado=np.array(r2_mercado), meses=meses, corr_componentes=corr_componentes)
 
 
 def regresiones(Y, Z):
