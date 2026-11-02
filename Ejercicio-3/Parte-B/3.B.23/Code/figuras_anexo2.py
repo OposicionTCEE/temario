@@ -591,3 +591,28 @@ if __name__ == "__main__":
           f" σ_Z = {bc['sigma_z']:.2f} %, betas = {np.round(bc['betas'], 3)}")
     for f in sml_empirica():
         print(f"{f['panel']:4s} D{f['decil']:<2d} beta {f['beta']:.2f} media {f['media']:.2f} CAPM {f['capm']:.2f} alfa {f['alfa']:.2f}")
+    e = apt_replica()
+    print(f"APT: primas {e['lambdas']}, réplica {e['replica']:.2f} % (pesos {e['pesos']}), APT {e['apt']:.2f} %,"
+          f" ganancia {e['ganancia']:.2f}")
+    c = componentes()
+    print("componentes: cuota", np.round(c["cuota"][:6], 1), "acumulada", np.round(c["acum"][:6], 1),
+          f"corr. del primero con el mercado {c['corr1']:.3f}; R² del mercado en los sectores: media"
+          f" {c['r2_mercado'].mean():.2f}, mín. {c['r2_mercado'].min():.2f}, máx. {c['r2_mercado'].max():.2f}")
+    tf = tres_factores()
+    for k, r in tf["res"].items():
+        print(f"{k:8s} GRS {r['grs']:.2f} {r['gl']} |alfa| medio {np.abs(r['alfa']).mean():.2f} R² medio {r['r2'].mean():.2f}"
+              f" corr(pred, obs) {np.corrcoef(r['prediccion'], r['media'])[0, 1]:.2f}")
+    i = tf["carteras"].index("SMALL LoBM")
+    print("pequeñas de crecimiento:", {k: (round(r["media"][i], 2), round(r["prediccion"][i], 2), round(r["alfa"][i], 2))
+                                     for k, r in tf["res"].items()}, "primas", {k: round(v, 2) for k, v in tf["primas"].items()})
+    fa = factores_acumulados()
+    for k, r in fa["resumen"].items():
+        print(f"{k:7s} media {r['media']:.2f} vol {r['vol']:.2f} SR {r['sharpe']:.2f} t {r['t']:.2f} acumulado {r['acumulado']:.2f}")
+    for (k, a, b), r in fa["tramos"].items():
+        print(f"  {k} {a}-{b}: media {r['media']:.2f} t {r['t']:.2f} acumulado {r['acumulado']:.2f}")
+    print("correlaciones", fa["nombres"], "\n", np.round(fa["corr"], 2))
+    hj = cota_hj()
+    print("HJ: SR", {k: round(v, 3) for k, v in hj["sr"].items()}, f"consumo: media {hj['media_c'] * 100:.2f} %,"
+          f" σ {hj['sigma_c'] * 100:.2f} % ({hj['n_años']} años)", "γ mínima", {k: round(v, 1) for k, v in hj["gamma_min"].items()},
+          "r_f implícito", {k: round(v * 100, 1) for k, v in hj["rf_implicito"].items()},
+          f"corr consumo-mercado: cuarto trimestre {hj['corr_q4']:.2f}, medias anuales {hj['corr_media']:.2f}")
