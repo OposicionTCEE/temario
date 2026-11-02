@@ -59,6 +59,13 @@ FUENTES = [
     ("F9", "Kenneth R. French Data Library: Fama/French 3 Factors [Daily]", f"Code/datos/{FACTORES_DIARIOS}.csv",
      URL.format(FACTORES_DIARIOS), "02/11/2026", "Base de CRSP de 202609. Rentabilidades diarias en % de Mkt-RF y RF desde el 1 de"
      " julio de 1926; se usan hasta el 31 de diciembre de 2025."),
+    ("F10", "Robert J. Shiller, Online Data: US stock price, earnings and dividends as well as interest rates and"
+     " cyclically adjusted price earnings ratio (CAPE) since 1871 (mensual)", "Code/datos/Shiller_ie_data.csv",
+     PAGINA_SHILLER, "02/11/2026", "Hoja Data de ie_data.xls, guardado por su autor el 05/10/2026, pasada a CSV sin tocar"
+     " los datos (Code/datos_shiller.py). Índice S&P compuesto: medias mensuales de los cierres diarios; dividendos y"
+     " beneficios por acción de los doce meses anteriores; valores reales deflactados con el IPC-U, en dólares de octubre"
+     " de 2026. De enero de 1871 a octubre de 2026 (octubre, con el cierre del día 2 y el IPC estimado); beneficios hasta"
+     " junio de 2026."),
 ]
 TRATAMIENTOS = [
     ("Código", "Tratamiento"),
