@@ -19,7 +19,8 @@ from datos_fred import CONSUMO, trimestres  # noqa: E402
 from datos_fred import URL as URL_FRED  # noqa: E402
 from figuras_anexo2 import (DECILES_BETA, DECILES_BM, PERIODO, SECTORES_ES, componentes, contraste_deciles,  # noqa: E402
                             cota_hj, factores_acumulados, tres_factores)
-from figuras_anexo3 import indicadores as indicadores_tecnicos, razon_varianzas, regla_media_movil  # noqa: E402
+from datos_shiller import PAGINA as PAGINA_SHILLER, mensual as shiller_mensual  # noqa: E402
+from figuras_anexo3 import cape as cape_shiller, indicadores as indicadores_tecnicos, razon_varianzas, regla_media_movil  # noqa: E402
 from xlsx_simple import escribir_xlsx  # noqa: E402
 
 LIBRERIA = "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html"
