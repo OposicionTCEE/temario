@@ -413,7 +413,7 @@ def indicadores(desde=20190701, hasta=20201231):
     comun = f"width=15.4cm, xmin={x0:.4f}, xmax={x1:.4f}, xtick={{{xt}}}, {PREAMBULO_EJES}"
     hist = " ".join(f"({a:.4f},{b:.3f})" for a, b in zip(x, (macd - senal)[m] / base))
     tikz = rf"""\begin{{tikzpicture}}
-\begin{{axis}}[name=a, {comun}, height=6.4cm, xticklabels={{}}, ymin=60, ymax=145, ylabel={{Índice (base $100$)}},
+\begin{{axis}}[name=a, {comun}, height=5.4cm, xticklabels={{}}, ymin=60, ymax=145, ylabel={{Índice (base $100$)}},
   title={{(a) Precio, medias móviles y bandas de BOLLINGER}}, legend pos=north west, legend columns=2]
 \addplot[fill=black!12, draw=none, area legend] coordinates {{{banda}}} -- cycle;
 \addlegendentry{{Bandas de BOLLINGER ($20$ sesiones, $\pm2\sigma$)}}
@@ -424,13 +424,13 @@ def indicadores(desde=20190701, hasta=20201231):
 \addplot[thick, black!55] coordinates {{{linea(sma200, base)}}};
 \addlegendentry{{Media de $200$ sesiones}}
 \end{{axis}}
-\begin{{axis}}[name=b, at={{(a.south west)}}, anchor=north west, yshift=-0.9cm, {comun}, height=3.4cm, xticklabels={{}},
+\begin{{axis}}[name=b, at={{(a.south west)}}, anchor=north west, yshift=-0.8cm, {comun}, height=2.9cm, xticklabels={{}},
   ymin=0, ymax=100, ytick={{0,30,70,100}}, ylabel={{RSI}}, title={{(b) Índice de fuerza relativa}}]
 \addplot[thin, black!55, dashed] coordinates {{({x0:.4f},70) ({x1:.4f},70)}};
 \addplot[thin, black!55, dashed] coordinates {{({x0:.4f},30) ({x1:.4f},30)}};
 \addplot[thick, black] coordinates {{{linea(rsi)}}};
 \end{{axis}}
-\begin{{axis}}[name=c, at={{(b.south west)}}, anchor=north west, yshift=-0.9cm, {comun}, height=3.4cm, xticklabels={{{xl}}},
+\begin{{axis}}[name=c, at={{(b.south west)}}, anchor=north west, yshift=-0.8cm, {comun}, height=2.9cm, xticklabels={{{xl}}},
   ylabel={{MACD}}, title={{(c) MACD}}, legend pos=south east, legend columns=3]
 \addplot[ycomb, black!30, forget plot] coordinates {{{hist}}};
 \addplot[thick, black] coordinates {{{linea(macd, base)}}};
