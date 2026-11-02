@@ -356,7 +356,7 @@ def frontera():
         largos.append(f"({math.sqrt(res.fun):.3f},{m:.3f})")
     panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.6cm, xmin=0, xmax=45, ymin=8, ymax=26,
   xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}}, title={{(b) Frontera}},
-  legend pos=south east, legend style={{fill=none}}, {PREAMBULO_EJES}]
+  legend pos=north west, legend style={{fill=none}}, {PREAMBULO_EJES}]
 \addplot[very thick, black] coordinates {{{sup}}};
 \addlegendentry{{Eficiente}}
 \addplot[thick, black, dashed] coordinates {{{inf}}};
@@ -389,7 +389,7 @@ def tangente():
     t = rf"""\begin{{tikzpicture}}
 \begin{{axis}}[width=11cm, height=7.4cm, xmin=0, xmax=45, ymin=8, ymax=26,
   xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}},
-  legend pos=south east, legend style={{fill=none}}, {PREAMBULO_EJES}]
+  legend pos=north west, legend style={{fill=none}}, {PREAMBULO_EJES}]
 \addplot[thick, black!40] coordinates {{{sup}}};
 \addlegendentry{{Frontera eficiente}}
 \addplot[thick, black!40, dashed, forget plot] coordinates {{{inf}}};
@@ -403,7 +403,7 @@ def tangente():
 \addplot[only marks, mark=square*, mark size=1.8pt, black, forget plot] coordinates {{({s_mv:.3f},{m_mv:.3f}) ({sT:.3f},{mT:.3f}) (0,{rf})}};
 \node[anchor=north west, font=\footnotesize] at (axis cs:{s_mv:.3f},{m_mv:.3f}) {{$MV$}};
 \node[anchor=south east, font=\footnotesize] at (axis cs:{sT:.3f},{mT:.3f}) {{$T$}};
-\node[anchor=south west, font=\footnotesize] at (axis cs:0.3,{rf}) {{$r_f$}};
+\node[anchor=north west, font=\footnotesize] at (axis cs:0.3,{rf - 0.15}) {{$r_f$}};
 \end{{axis}}
 \end{{tikzpicture}}
 """
@@ -442,7 +442,7 @@ def separacion():
 \node[anchor=north west, font=\footnotesize] at (axis cs:{puntos[0][0]:.3f},{puntos[0][1]:.3f}) {{$L$}};
 \node[anchor=north west, font=\footnotesize] at (axis cs:{puntos[1][0]:.3f},{puntos[1][1]:.3f}) {{$E$}};
 \node[anchor=north west, font=\footnotesize] at (axis cs:{sT:.3f},{mT:.3f}) {{$T$}};
-\node[anchor=south west, font=\footnotesize] at (axis cs:0.3,{rf}) {{$r_f$}};
+\node[anchor=north west, font=\footnotesize] at (axis cs:0.3,{rf - 0.15}) {{$r_f$}};
 \end{{axis}}"""
 
     rl, rb = 8.0, 12.0
@@ -463,7 +463,7 @@ def separacion():
 \addplot[only marks, mark=*, mark size=1.8pt, black, forget plot] coordinates {{({sL:.3f},{mL:.3f}) ({sB:.3f},{mB:.3f}) (0,{rl}) (0,{rb})}};
 \node[anchor=south east, font=\footnotesize] at (axis cs:{sL:.3f},{mL:.3f}) {{$T_L$}};
 \node[anchor=north west, font=\footnotesize] at (axis cs:{sB:.3f},{mB:.3f}) {{$T_B$}};
-\node[anchor=south west, font=\footnotesize] at (axis cs:0.3,{rl}) {{$r_L$}};
+\node[anchor=north west, font=\footnotesize] at (axis cs:0.3,{rl - 0.15}) {{$r_L$}};
 \node[anchor=south west, font=\footnotesize] at (axis cs:0.3,{rb}) {{$r_B$}};
 \end{{axis}}"""
     tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b + "\n\\end{tikzpicture}\n"
