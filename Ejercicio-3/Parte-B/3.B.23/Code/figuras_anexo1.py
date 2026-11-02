@@ -602,3 +602,8 @@ if __name__ == "__main__":
     print(f"tangente (rf=10 %): pesos={np.round(wT, 4)}, mu={mT:.2f} %, sigma={sT:.2f} %, SHARPE T={shT:.3f}, MV={shMV:.3f}, A={shA:.3f}")
     puntos, TL, TB = separacion()
     print(f"separación: L={puntos[0]}, E={puntos[1]}, T_L={TL}, T_B={TB}")
+    S_T, kk, gammas = eleccion()
+    print(f"elección: S_T = {S_T:.4f}; y* = {kk:.4f}/gamma; gammas de L, y=1 y E: {np.round(gammas, 3)}")
+    indice_unico()
+    E, R = estimacion()
+    print("estimación (σ, μ) en %, pasos 0, 6 y 12:", np.round(E[[0, 6, 12]], 1).tolist(), np.round(R[[0, 6, 12]], 1).tolist())
