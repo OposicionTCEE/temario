@@ -569,36 +569,42 @@ def cape(hasta=202609):
 
 
 def grafico_cape():
-    """Figura del CAPE: (a) CAPE mensual de 1881 a 2026 y su media; (b) rentabilidad real anual de los diez años
-    siguientes frente al rendimiento del beneficio ajustado, 1/CAPE, con la recta de regresión y la diagonal."""
+    """Figuras del CAPE, dos porque se comentan en párrafos distintos: anx_cape, CAPE mensual de 1881 a 2026 y su media;
+    y anx_cape_rentabilidad, rentabilidad real anual de los diez años siguientes frente al rendimiento del beneficio
+    ajustado, 1/CAPE, con la recta de regresión, la diagonal y el CAPE del último mes."""
     res = cape()
     meses, valores = res["meses"], res["cape"]
     anio = meses // 100 + (meses % 100 - 0.5) / 12
     serie = " ".join(f"({a:.3f},{b:.2f})" for a, b in zip(anio, valores))
-    panel_a = rf"""\begin{{axis}}[name=a, width=7.6cm, height=6.2cm, xmin=1880, xmax=2027, ymin=0, ymax=47,
-  xtick={{1900,1925,1950,1975,2000,2025}}, ytick={{0,10,20,30,40}}, xlabel={{Año}}, ylabel={{CAPE}},
-  title={{(a) Precio sobre beneficio medio de diez años}}, legend pos=north west, {PREAMBULO_EJES}]
+    historia = rf"""\begin{{tikzpicture}}
+\begin{{axis}}[width=15cm, height=5.6cm, xmin=1880, xmax=2027, ymin=0, ymax=47,
+  xtick={{1880,1900,1920,1940,1960,1980,2000,2020}}, ytick={{0,10,20,30,40}}, xlabel={{Año}}, ylabel={{CAPE}},
+  legend pos=north west, {PREAMBULO_EJES}]
 \addplot[thin, black] coordinates {{{serie}}};
 \addlegendentry{{CAPE}}
 \addplot[thick, black!45, dashed] coordinates {{(1880,{res['media']:.2f}) (2027,{res['media']:.2f})}};
 \addlegendentry{{Media de $1881$-$2026$}}
-\end{{axis}}"""
+\end{{axis}}
+\end{{tikzpicture}}
+"""
     puntos = " ".join(f"({100 * a:.3f},{100 * b:.3f})" for a, b in zip(1 / res["cape_r10"], res["r10"]))
     a0, a1 = res["coef"]
     recta = f"(1,{100 * a0 + a1:.3f}) (22,{100 * a0 + 22 * a1:.3f})"
-    panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.5cm, width=7.6cm, height=6.2cm, xmin=0, xmax=22,
-  ymin=-8, ymax=22, xtick={{0,5,10,15,20}}, ytick={{-5,0,5,10,15,20}}, xlabel={{Rendimiento del beneficio, $1/\text{{CAPE}}$ (\%)}},
-  ylabel={{Rentabilidad real a diez años (\%)}}, title={{(b) Valoración y rentabilidad posterior}},
-  legend pos=south east, {PREAMBULO_EJES}]
+    rentabilidad = rf"""\begin{{tikzpicture}}
+\begin{{axis}}[width=10cm, height=6.6cm, xmin=0, xmax=22, ymin=-8, ymax=22, xtick={{0,5,10,15,20}},
+  ytick={{-5,0,5,10,15,20}}, xlabel={{Rendimiento del beneficio, $1/\text{{CAPE}}$ (\%)}},
+  ylabel={{Rentabilidad real a diez años (\%)}}, legend pos=south east, {PREAMBULO_EJES}]
 \addplot[only marks, mark=*, mark size=0.45pt, black!30] coordinates {{{puntos}}};
 \addlegendentry{{Cada mes, $1881$-$2016$}}
 \addplot[thick, black] coordinates {{{recta}}};
 \addlegendentry{{Recta de regresión}}
 \addplot[thin, black!60, dashed, forget plot] coordinates {{(0,0) (22,22)}};
 \addplot[thin, black!60, dotted, forget plot] coordinates {{({100 / res['ultimo'][1]:.3f},-8) ({100 / res['ultimo'][1]:.3f},22)}};
-\end{{axis}}"""
-    tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b + "\n\\end{tikzpicture}\n"
-    (IMG / "anx_cape.tikz").write_text(tikz, encoding="utf-8")
+\end{{axis}}
+\end{{tikzpicture}}
+"""
+    (IMG / "anx_cape.tikz").write_text(historia, encoding="utf-8")
+    (IMG / "anx_cape_rentabilidad.tikz").write_text(rentabilidad, encoding="utf-8")
     return res
 
 
