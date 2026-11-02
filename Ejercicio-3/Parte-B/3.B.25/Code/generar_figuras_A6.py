@@ -26,7 +26,7 @@ w("anx_estados", r"""% Figura (Anexo II, «Precios de estado»): espacio de pago
   \draw[thick] (-1.28,1.6) -- (1.28,-1.6);
   \node[anchor=south east, inner sep=1pt] at (-1.28,1.6) {$\psi\cdot x=0$};
   \draw[dashed] (-0.3,2.625) -- (2.4,-0.75);
-  \node[anchor=north west, inner sep=2pt] at (2.4,-0.75) {$\psi\cdot x=e^{-rT}$};
+  \node[anchor=north west, inner sep=2pt] at (2.4,-0.75) {$\psi\cdot x=e^{-r_fT}$};
   \draw[->, very thick] (0,0) -- (0.75,0.6);
   \node[anchor=north west, inner sep=1pt] at (0.72,0.6) {$\psi$};
   \fill (1,1) circle (1.8pt); \node[anchor=south west, inner sep=2pt] at (1,1) {$\mathbf{1}$};
@@ -56,7 +56,7 @@ w("anx_medidas", r"""% Figura (Anexo II, «Cambio de medida»): densidad del pre
   \draw[very thick, dashed] plot[smooth] coordinates {""" + Q + r"""};
   \draw[dotted] (1.2214,0) -- (1.2214,1.10);
   \draw[dotted] (1.0202,0) -- (1.0202,1.32);
-  \node[anchor=north east, inner xsep=1pt] at (1.0202,0) {$S_0e^{rT}$};
+  \node[anchor=north east, inner xsep=1pt] at (1.0202,0) {$S_0e^{r_fT}$};
   \node[anchor=north west, inner xsep=1pt] at (1.2214,0) {$S_0e^{\mu T}$};
   \node[anchor=south west] at (1.5,0.65) {$P$};
   \node[anchor=east] at (0.7,1.12) {$Q$};
@@ -105,7 +105,7 @@ w("anx_breeden", r"""% Figura (Anexo II, «Precios implícitos»): (a) precio de
     \draw[very thick] plot[smooth] coordinates {""" + QD + r"""};
     \draw[dotted] (""" + f"{X(k0):.3f},0) -- ({X(k0):.3f},{qd(k0):.3f}" + r""");
     \node[anchor=north] at (""" + f"{X(k0):.3f}" + r""",0) {$K_0$};
-    \node[anchor=south west] at (""" + f"{X(1.85):.3f},{qd(1.85)+0.01:.3f}" + r""") {$e^{-rT}q(K)=\dfrac{\partial^2c}{\partial K^2}$};
+    \node[anchor=south west] at (""" + f"{X(1.85):.3f},{qd(1.85)+0.01:.3f}" + r""") {$e^{-r_fT}q(K)=\dfrac{\partial^2c}{\partial K^2}$};
   \end{scope}
 \end{tikzpicture}
 """)
@@ -223,7 +223,7 @@ w("anx_seguro", r"""% Figura (Anexo II, «Seguro de carteras»): (a) valor de la
     \draw[dashed] (0,0) -- (3.2,3.2);
     \draw[dotted] (0,""" + f"{fl:.3f}) -- (3.2,{fl:.3f}" + r""");
     \draw[very thick] plot[smooth] coordinates {""" + INS + r"""};
-    \node[anchor=east] at (0,""" + f"{fl:.3f}" + r""") {$Ke^{-rT}$};
+    \node[anchor=east] at (0,""" + f"{fl:.3f}" + r""") {$Ke^{-r_fT}$};
     \node[anchor=north west] at (1.2,1.15) {$S$};
     \node[anchor=south east] at (2.3,2.55) {$S+p$};
     \draw (2,0.06) -- (2,-0.06); \node[below] at (2,0) {$K$};
