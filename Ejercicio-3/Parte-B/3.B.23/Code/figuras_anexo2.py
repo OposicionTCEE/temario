@@ -318,8 +318,8 @@ def apt_replica():
 \addplot[only marks, mark=o, thick, mark size=2.2pt, black] coordinates {{({bD},{mD_rep:.2f})}};
 \addlegendentry{{Réplica de $D$}}
 \addplot[only marks, mark=square*, mark size=1.9pt, black, forget plot] coordinates {{(0,{APT_RF}) (1,{APT_MU[0]})}};
-\draw[{{Latex[length=1.6mm]}}-{{Latex[length=1.6mm]}}, thin] (axis cs:{bD + 0.06},{mD_rep:.2f}) -- (axis cs:{bD + 0.06},{mD});
-\node[anchor=west, font=\scriptsize] at (axis cs:{bD + 0.08},{(mD + mD_rep) / 2:.2f}) {{$\alpha_D$}};
+\draw[{{Latex[length=1.6mm]}}-{{Latex[length=1.6mm]}}, thin] (axis cs:{bD - 0.07},{mD_rep + 0.3:.2f}) -- (axis cs:{bD - 0.07},{mD - 0.1});
+\node[anchor=east, font=\scriptsize] at (axis cs:{bD - 0.09},{(mD + mD_rep) / 2:.2f}) {{$\alpha_D$}};
 \node[anchor=north west, font=\footnotesize] at (axis cs:{bA},{APT_RF + bA * l1:.2f}) {{$A$}};
 \node[anchor=north west, font=\footnotesize] at (axis cs:{bB},{APT_RF + bB * l1:.2f}) {{$B$}};
 \node[anchor=south east, font=\footnotesize] at (axis cs:{bD},{mD}) {{$D$}};
