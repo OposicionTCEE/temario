@@ -5,7 +5,8 @@ el 05/10/2026 y descargado el 02/11/2026: datos mensuales de enero de 1871 a oct
 con el cierre del día 2 y el IPC estimado). La hoja se guarda tal cual, en CSV, en Code/datos/Shiller_ie_data.csv, con
 la fecha como aaaamm. Si falta, `python3 Code/datos_shiller.py` la descarga y la convierte de nuevo, para lo que hace
 falta el paquete xlrd (la versión nueva puede traer datos revisados); el resto del código solo lee el CSV.
-Columnas: índice S&P compuesto (P), dividendo (D) y beneficio (E) por acción de los últimos doce meses, IPC, tipo a
+Columnas: índice S&P compuesto (P, media mensual de los cierres diarios), dividendo (D) y beneficio (E) por acción de
+los últimos doce meses, IPC, tipo a
 diez años, precio y dividendo reales, precio real con los dividendos reinvertidos (Real Total Return Price), beneficio
 real y CAPE (precio real entre la media del beneficio real de los diez años anteriores), entre otras.
 """
