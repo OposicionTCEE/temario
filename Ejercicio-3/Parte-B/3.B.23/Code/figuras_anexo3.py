@@ -157,7 +157,7 @@ def grossman_stiglitz():
     return k1, k2
 
 
-if __name__ == "__main__":
+if __name__ == "__main__" and (len(sys.argv) == 1 or sys.argv[1] == "a8"):
     conjuntos_informacion()
     reaccion_noticias()
     r = razon_varianzas()
