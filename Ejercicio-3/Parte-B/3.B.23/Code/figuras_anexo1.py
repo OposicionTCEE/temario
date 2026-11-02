@@ -1,4 +1,4 @@
-"""Figuras del anexo I del 3.B.23 (A1): anx_residual, anx_ergodicidad y anx_colas.
+"""Figuras del anexo I del 3.B.23 (A1-A4): anx_residual, anx_ergodicidad, anx_colas, anx_volatilidad y las demás.
 
 Escribe los .tikz en Img/ con los datos incrustados; después, desde la carpeta del tema:
     bash Code/generar_figura.sh anx_residual   (y lo mismo con los otros dos)
@@ -7,8 +7,8 @@ anx_ergodicidad: apuesta multiplicativa con +50 % o -40 % con probabilidad 1/2 e
   Esperanza por ronda 1,05; crecimiento temporal sqrt(1,5 * 0,6) = 0,9487. Panel (a): 20 trayectorias
   simuladas (semilla 7) durante 60 rondas, con la esperanza y la mediana teóricas. Panel (b): distribución
   exacta (binomial) de la riqueza tras 60 rondas.
-anx_colas: panel (a) densidad normal estándar frente a t de Student con 4 grados de libertad reescalada a
-  varianza 1; panel (b) 1.000 rentabilidades diarias simuladas (semilla 3): i.i.d. normales con sigma = 1 % y
+anx_colas: densidad normal estándar frente a t de Student con 4 grados de libertad reescalada a varianza 1.
+anx_volatilidad: 1.000 rentabilidades diarias simuladas (semilla 3): i.i.d. normales con sigma = 1 % y
   GARCH(1,1) con a0 = 2e-6, a1 = 0,10, b1 = 0,88 (varianza incondicional 1e-4, es decir, sigma = 1 %),
   semilla 48, elegida entre 59 por mostrar con claridad el agrupamiento (exceso de curtosis de la muestra: 6,7).
 """
