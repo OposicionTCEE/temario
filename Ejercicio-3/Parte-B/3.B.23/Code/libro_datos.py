@@ -131,7 +131,7 @@ def indicadores():
     filas = [("Figura", "Panel", "Cartera", "Indicador", "Valor", "Unidad", "Periodo", "Fuente", "Tratamiento")]
     periodo = "1963-07 a 2025-12"
     datos = contraste_deciles()
-    for panel, fuente, figura_panel in (("beta", "F1, F2", "(a)"), ("bm", "F1, F3", "(b)")):
+    for panel, fuente, figura in (("beta", "F1, F2", "anx_sml_empirica"), ("bm", "F1, F3", "anx_deciles_valor")):
         fs = [f for f in datos if f["panel"] == panel]
         for f in fs:
             cartera = f"Decil {f['decil']} ({f['columna']})"
@@ -140,14 +140,14 @@ def indicadores():
                                               ("Predicción del CAPM", "capm", "% anual", "T4"),
                                               ("Alfa", "alfa", "% anual", "T4"),
                                               ("Volatilidad", "vol", "% anual", "T5")):
-                filas.append(("anx_sml_empirica", figura_panel, cartera, ind, round(f[clave], 4), unidad, periodo,
+                filas.append((figura, "", cartera, ind, round(f[clave], 4), unidad, periodo,
                               fuente, trat))
         pend, orden = np.polyfit([f["beta"] for f in fs], [f["media"] for f in fs], 1)
         for ind, valor, unidad, trat in (("Prima media del mercado (Mkt-RF)", fs[0]["prima"], "% anual", "T3"),
                                          ("Tipo sin riesgo medio (RF)", fs[0]["rf"], "% anual", "T3"),
                                          ("Recta ajustada: ordenada", orden, "% anual", "T6"),
                                          ("Recta ajustada: pendiente", pend, "% anual por unidad de beta", "T6")):
-            filas.append(("anx_sml_empirica", figura_panel, "Mercado y recta ajustada", ind, round(valor, 4), unidad,
+            filas.append((figura, "", "Mercado y recta ajustada", ind, round(valor, 4), unidad,
                           periodo, "F1" if "Recta" not in ind else fuente, trat))
     return filas + indicadores_a7(periodo) + indicadores_a8() + indicadores_a9() + indicadores_a10()
 
@@ -307,19 +307,19 @@ def indicadores_a10():
     res = cape_shiller()
     meses, cape = res["meses"], res["cape"]
     for mes, valor in zip(meses, cape):
-        filas.append(("anx_cape", "(a)", "S&P compuesto", "CAPE", round(float(valor), 4), "", str(int(mes)), "F10", "T19"))
-    filas.append(("anx_cape", "(a)", "S&P compuesto", "Media del CAPE", round(float(res["media"]), 4), "",
+        filas.append(("anx_cape", "", "S&P compuesto", "CAPE", round(float(valor), 4), "", str(int(mes)), "F10", "T19"))
+    filas.append(("anx_cape", "", "S&P compuesto", "Media del CAPE", round(float(res["media"]), 4), "",
                   f"{int(meses[0])} a {int(meses[-1])}", "F10", "T19"))
     for mes, valor, r10 in zip(res["meses_r10"], res["cape_r10"], res["r10"]):
-        filas.append(("anx_cape", "(b)", "S&P compuesto", "Rendimiento del beneficio, 1/CAPE",
+        filas.append(("anx_cape_rentabilidad", "", "S&P compuesto", "Rendimiento del beneficio, 1/CAPE",
                       round(100 / float(valor), 4), "%", str(int(mes)), "F10", "T19"))
-        filas.append(("anx_cape", "(b)", "S&P compuesto", "Rentabilidad real anual de los diez años siguientes",
+        filas.append(("anx_cape_rentabilidad", "", "S&P compuesto", "Rentabilidad real anual de los diez años siguientes",
                       round(100 * float(r10), 4), "%", str(int(mes)), "F10", "T19"))
     ventanas = f"{int(res['meses_r10'][0])} a {int(res['meses_r10'][-1])}"
     for indicador, valor, unidad in (("Recta de regresión: ordenada", 100 * res["coef"][0], "%"),
                                      ("Recta de regresión: pendiente", res["coef"][1], ""), ("R²", res["r2"], ""),
                                      ("Número de meses", len(res["r10"]), "")):
-        filas.append(("anx_cape", "(b)", "Regresión", indicador, round(float(valor), 4), unidad, ventanas, "F10", "T19"))
+        filas.append(("anx_cape_rentabilidad", "", "Regresión", indicador, round(float(valor), 4), unidad, ventanas, "F10", "T19"))
 
     def mes_extremo(desde, hasta, maximo):
         sel = (meses >= desde) & (meses <= hasta)
@@ -340,7 +340,8 @@ def indicadores_a10():
         for indicador, valor, unidad in (("Umbral del CAPE", umbral, ""),
                                          ("Rentabilidad real media de los diez años siguientes", 100 * media, "% anual"),
                                          ("Mínima", 100 * minimo, "% anual"), ("Máxima", 100 * maximo, "% anual")):
-            filas.append(("anx_cape", "texto", etiqueta, indicador, round(float(valor), 4), unidad, ventanas, "F10", "T19"))
+            filas.append(("anx_cape_rentabilidad", "texto", etiqueta, indicador, round(float(valor), 4), unidad, ventanas,
+                          "F10", "T19"))
     for etiqueta, indicador, valor, unidad, periodo in (
             ("Todas las ventanas", "Rentabilidad real media de los diez años siguientes", 100 * res["media_r10"], "% anual",
              ventanas),
@@ -350,7 +351,8 @@ def indicadores_a10():
              f"199001 a {int(meses[-1])}"),
             ("S&P compuesto", "Rentabilidad real anual compuesta", 100 * res["real_1990"], "%", "199001 a 202609"),
             ("S&P compuesto", "Rentabilidad real anual compuesta", 100 * res["real_1881"], "%", "188101 a 202609")):
-        filas.append(("anx_cape", "texto", etiqueta, indicador, round(float(valor), 4), unidad, periodo, "F10", "T19"))
+        figura = "anx_cape_rentabilidad" if etiqueta in ("Todas las ventanas", "Recta de regresión") else "anx_cape"
+        filas.append((figura, "texto", etiqueta, indicador, round(float(valor), 4), unidad, periodo, "F10", "T19"))
     d = shiller_mensual()
     rd = d["dividendo"] / d["precio"]
     ok = ~np.isnan(rd) & (d["meses"] >= 188101)
@@ -416,7 +418,7 @@ def main():
          " figura); Series_brutas (datos usados, sin tratar: mensuales, la sección anual de Mkt-RF y el consumo"
          " trimestral).",),
         ("Figuras del anexo II, todas de julio de 1963 a diciembre de 2025:",),
-        ("· anx_sml_empirica (contraste del CAPM): deciles por beta (a) y por valor contable sobre valor de mercado (b).",),
+        ("· anx_sml_empirica y anx_deciles_valor (contraste del CAPM): deciles por beta y por valor contable sobre valor de mercado.",),
         ("· anx_componentes (contraste de la APT): componentes principales de los 30 sectores.",),
         ("· anx_tres_factores (modelo de tres factores): rentabilidad observada y predicha de las 25 carteras por tamaño y"
          " valor con el CAPM (a) y con tres factores (b); también los modelos de cinco y de cinco con impulso.",),
@@ -426,8 +428,8 @@ def main():
         ("· anx_razon_varianzas (anexo III, eficiencia): razón de varianzas mensual del mercado, 1926-2025 y 1963-2025, y autocorrelación diaria por decenios, 1926-2025.",),
         ("· anx_tecnico_indicadores (anexo III, análisis técnico): índice diario del mercado, medias, bandas de BOLLINGER, RSI y MACD, de julio de 2019 a diciembre de 2020; en el panel «texto», las fechas de las señales de 2020 y la proporción de cierres dentro de las bandas, 1926-2025.",),
         ("· anx_tecnico_regla (anexo III, análisis técnico): regla de la media de 200 sesiones frente a mantener el mercado, 1927-2025 y por tramos, y su resultado en 2020.",),
-        ("· anx_cape (anexo III, análisis fundamental): CAPE mensual de SHILLER, 1881-2026, y rentabilidad real de los diez años siguientes frente a 1/CAPE, con la regresión; en el panel «texto», los extremos, los deciles y la rentabilidad desde 1990.",),
-        ("Las figuras anx_apt_replica, anx_conjuntos_informacion, anx_reaccion_noticias, anx_grossman_stiglitz, anx_tecnico_niveles, anx_tecnico_figuras, anx_multiplos y anx_treynor_black son esquemas o ejemplos inventados y no tienen datos aquí.",),
+        ("· anx_cape y anx_cape_rentabilidad (anexo III, análisis fundamental): CAPE mensual de SHILLER, 1881-2026, y rentabilidad real de los diez años siguientes frente a 1/CAPE, con la regresión; en el panel «texto», los extremos, los deciles y la rentabilidad desde 1990.",),
+        ("Las figuras anx_apt_arbitraje, anx_apt_replica, anx_conjuntos_informacion, anx_reaccion_noticias, anx_grossman_stiglitz, anx_tecnico_soportes, anx_tecnico_tendencias, anx_tecnico_figuras, anx_multiplos_per, anx_multiplos_pvc y anx_treynor_black son esquemas o ejemplos inventados y no tienen datos aquí.",),
         ("Se regenera con  python3 Code/libro_datos.py  desde la carpeta del tema.",),
         (f"Biblioteca de datos de FRENCH: {LIBRERIA}",),
     ]
