@@ -273,6 +273,204 @@ def diversificacion():
     return a30, a15, sigma(10, 0.30), sigma(30, 0.30)
 
 
+# --- A3: ejemplo de tres acciones del texto viejo (A y B son las de I.3.2; C se añade), en % y %² ---
+MU3 = np.array([12.0, 18.0, 22.0])
+S3 = np.array([[0.040, 0.002, -0.013], [0.002, 0.102, 0.004], [-0.013, 0.004, 0.130]]) * 1e4
+ACTIVOS3 = [("A", 12.0), ("B", 18.0), ("C", 22.0)]
+
+
+def constantes3():
+    """Constantes de la frontera de MERTON (1972): a = 1'Σ⁻¹μ, b = μ'Σ⁻¹μ, c = 1'Σ⁻¹1, d = bc − a²."""
+    Si = np.linalg.inv(S3)
+    one = np.ones(3)
+    a, b, c = one @ Si @ MU3, MU3 @ Si @ MU3, one @ Si @ one
+    return Si, a, b, c, b * c - a * a
+
+
+def sigma_frontera(m, a, b, c, d):
+    return math.sqrt((c * m * m - 2 * a * m + b) / d)
+
+
+def tangente_de(rf):
+    """Cartera tangente para un tipo sin riesgo rf (en %): ω_T = Σ⁻¹(μ − rf·1) / 1'Σ⁻¹(μ − rf·1)."""
+    Si = np.linalg.inv(S3)
+    z = Si @ (MU3 - rf)
+    w = z / z.sum()
+    return w, float(w @ MU3), float(math.sqrt(w @ S3 @ w))
+
+
+def puntos_activos(etiquetas=True):
+    sig = np.sqrt(np.diag(S3))
+    pts = " ".join(f"({s:.3f},{m:.3f})" for s, (_, m) in zip(sig, ACTIVOS3))
+    out = [rf"\addplot[only marks, mark=*, mark size=1.6pt, black, forget plot] coordinates {{{pts}}};"]
+    if etiquetas:
+        for s, (n, m) in zip(sig, ACTIVOS3):
+            out.append(rf"\node[anchor=north west, font=\footnotesize] at (axis cs:{s:.3f},{m:.3f}) {{${n}$}};")
+    return "\n".join(out)
+
+
+def dominancia():
+    """A3, I.5.1. Criterio de media y varianza: regiones que dominan a una cartera P, dominadas por ella y no
+    comparables. Figura abstracta, sin cifras."""
+    t = r"""\begin{tikzpicture}[font=\footnotesize]
+\fill[gray!22] (0,3.0) rectangle (3.6,5.4);
+\fill[gray!55] (3.6,0) rectangle (7.4,3.0);
+\draw[-{Stealth[length=2mm]}] (0,0) -- (7.8,0) node[below left] {Volatilidad, $\sigma_p$};
+\draw[-{Stealth[length=2mm]}] (0,0) -- (0,5.8) node[above] {Rentabilidad esperada, $\mu_p$};
+\draw[dashed] (3.6,0) -- (3.6,5.4);
+\draw[dashed] (0,3.0) -- (7.4,3.0);
+\fill (3.6,3.0) circle (2.2pt) node[above right] {$P$};
+\node[align=center] at (1.8,4.25) {Dominan\\a $P$};
+\node[align=center] at (5.5,1.5) {Dominadas\\por $P$};
+\node[align=center] at (5.5,4.25) {No\\comparables};
+\node[align=center] at (1.8,1.5) {No\\comparables};
+\end{tikzpicture}
+"""
+    (IMG / "anx_dominancia.tikz").write_text(t, encoding="utf-8")
+
+
+def frontera():
+    """A3, I.5.2-I.5.4. (a) 3000 carteras sin ventas en corto con pesos aleatorios (Dirichlet(1,1,1), semilla 5);
+    (b) frontera analítica con ventas en corto (rama eficiente e ineficiente), frontera sin ventas en corto
+    (programación cuadrática con SLSQP) y cartera de mínima varianza MV."""
+    from scipy.optimize import minimize
+
+    Si, a, b, c, d = constantes3()
+    rng = np.random.default_rng(5)
+    W = rng.dirichlet([1, 1, 1], 3000)
+    sims = " ".join(f"({math.sqrt(w @ S3 @ w):.2f},{w @ MU3:.2f})" for w in W)
+    panel_a = rf"""\begin{{axis}}[name=a, width=7.6cm, height=6.6cm, xmin=0, xmax=45, ymin=8, ymax=26,
+  xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}}, title={{(a) Carteras al azar}},
+  {PREAMBULO_EJES}]
+\addplot[only marks, mark=*, mark size=0.35pt, gray!70, forget plot] coordinates {{{sims}}};
+{puntos_activos()}
+\end{{axis}}"""
+    m_mv, s_mv = a / c, math.sqrt(1 / c)
+    sup = " ".join(f"({sigma_frontera(m, a, b, c, d):.3f},{m:.3f})" for m in np.linspace(m_mv, 26, 120))
+    inf = " ".join(f"({sigma_frontera(m, a, b, c, d):.3f},{m:.3f})" for m in np.linspace(8, m_mv, 80))
+    largos = []
+    for m in np.linspace(12.0, 22.0, 81):
+        res = minimize(lambda w: w @ S3 @ w, np.ones(3) / 3, method="SLSQP", bounds=[(0, 1)] * 3,
+                       constraints=[{"type": "eq", "fun": lambda w: w.sum() - 1},
+                                    {"type": "eq", "fun": lambda w, m=m: w @ MU3 - m}])
+        largos.append(f"({math.sqrt(res.fun):.3f},{m:.3f})")
+    panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.6cm, xmin=0, xmax=45, ymin=8, ymax=26,
+  xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}}, title={{(b) Frontera}},
+  legend pos=south east, legend style={{fill=none}}, {PREAMBULO_EJES}]
+\addplot[very thick, black] coordinates {{{sup}}};
+\addlegendentry{{Eficiente}}
+\addplot[thick, black, dashed] coordinates {{{inf}}};
+\addlegendentry{{Ineficiente}}
+\addplot[thick, black!55, dotted] coordinates {{{" ".join(largos)}}};
+\addlegendentry{{Sin ventas en corto}}
+{puntos_activos()}
+\addplot[only marks, mark=square*, mark size=1.8pt, black, forget plot] coordinates {{({s_mv:.3f},{m_mv:.3f})}};
+\node[anchor=east, font=\footnotesize] at (axis cs:{s_mv - 0.5:.3f},{m_mv:.3f}) {{$MV$}};
+\end{{axis}}"""
+    tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b + "\n\\end{tikzpicture}\n"
+    (IMG / "anx_frontera.tikz").write_text(tikz, encoding="utf-8")
+    return m_mv, s_mv, a, b, c, d
+
+
+def tangente():
+    """A3, I.6.1-I.6.3. Tipo sin riesgo del 10 %; tres rectas de asignación de capital: con MV, con A y con la
+    cartera tangente T."""
+    Si, a, b, c, d = constantes3()
+    rf = 10.0
+    wT, mT, sT = tangente_de(rf)
+    m_mv, s_mv = a / c, math.sqrt(1 / c)
+    sup = " ".join(f"({sigma_frontera(m, a, b, c, d):.3f},{m:.3f})" for m in np.linspace(m_mv, 26, 120))
+    inf = " ".join(f"({sigma_frontera(m, a, b, c, d):.3f},{m:.3f})" for m in np.linspace(9, m_mv, 80))
+
+    def recta(m, s):
+        pend = (m - rf) / s
+        return f"(0,{rf:.3f}) (45,{rf + 45 * pend:.3f})"
+
+    t = rf"""\begin{{tikzpicture}}
+\begin{{axis}}[width=11cm, height=7.4cm, xmin=0, xmax=45, ymin=8, ymax=26,
+  xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}},
+  legend pos=south east, legend style={{fill=none}}, {PREAMBULO_EJES}]
+\addplot[thick, black!40] coordinates {{{sup}}};
+\addlegendentry{{Frontera eficiente}}
+\addplot[thick, black!40, dashed, forget plot] coordinates {{{inf}}};
+\addplot[thick, black!55, dash dot] coordinates {{{recta(12.0, 20.0)}}};
+\addlegendentry{{Recta con $A$}}
+\addplot[thick, black!70, dashed] coordinates {{{recta(m_mv, s_mv)}}};
+\addlegendentry{{Recta con $MV$}}
+\addplot[very thick, black] coordinates {{{recta(mT, sT)}}};
+\addlegendentry{{Recta con $T$}}
+{puntos_activos()}
+\addplot[only marks, mark=square*, mark size=1.8pt, black, forget plot] coordinates {{({s_mv:.3f},{m_mv:.3f}) ({sT:.3f},{mT:.3f}) (0,{rf})}};
+\node[anchor=north west, font=\footnotesize] at (axis cs:{s_mv:.3f},{m_mv:.3f}) {{$MV$}};
+\node[anchor=south east, font=\footnotesize] at (axis cs:{sT:.3f},{mT:.3f}) {{$T$}};
+\node[anchor=south west, font=\footnotesize] at (axis cs:0.3,{rf}) {{$r_f$}};
+\end{{axis}}
+\end{{tikzpicture}}
+"""
+    (IMG / "anx_tangente.tikz").write_text(t, encoding="utf-8")
+    return wT, mT, sT, (mT - rf) / sT, (m_mv - rf) / s_mv, (12.0 - rf) / 20.0
+
+
+def separacion():
+    """A3, I.6.4. (a) Dos inversores sobre la misma recta con la tangente (r_f = 10 %): curvas de indiferencia de
+    media y varianza que llevan a invertir y = 0,5 e y = 1,5 en T. (b) Tipo de préstamo 8 % y de endeudamiento 12 %:
+    tangentes T_L y T_B y conjunto eficiente quebrado."""
+    Si, a, b, c, d = constantes3()
+    m_mv = a / c
+    rf = 10.0
+    wT, mT, sT = tangente_de(rf)
+    sup = " ".join(f"({sigma_frontera(m, a, b, c, d):.3f},{m:.3f})" for m in np.linspace(m_mv, 26, 120))
+    curvas, puntos = [], []
+    for y, est in ((0.5, "thick, black!60"), (1.5, "thick, black!60, dashed")):
+        # en decimales: y* = (mu_T − rf) / (gamma sigma_T²)  ⇒  gamma = (mu_T − rf) / (y* sigma_T²)
+        g = ((mT - rf) / 100) / (y * (sT / 100) ** 2)
+        s0, m0 = y * sT, rf + y * (mT - rf)
+        u = m0 / 100 - g / 2 * (s0 / 100) ** 2
+        pts = " ".join(f"({s:.3f},{100 * (u + g / 2 * (s / 100) ** 2):.3f})" for s in np.linspace(0, 45, 90))
+        curvas.append(rf"\addplot[{est}] coordinates {{{pts}}};")
+        puntos.append((s0, m0))
+    panel_a = rf"""\begin{{axis}}[name=a, width=7.6cm, height=6.6cm, xmin=0, xmax=45, ymin=8, ymax=26,
+  xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}}, title={{(a) Dos inversores}},
+  legend pos=south east, legend style={{fill=none}}, {PREAMBULO_EJES}]
+\addplot[thick, black!35, forget plot] coordinates {{{sup}}};
+\addplot[very thick, black, forget plot] coordinates {{(0,{rf}) (45,{rf + 45 * (mT - rf) / sT:.3f})}};
+{curvas[0]}
+\addlegendentry{{Más averso}}
+{curvas[1]}
+\addlegendentry{{Menos averso}}
+\addplot[only marks, mark=*, mark size=1.8pt, black, forget plot] coordinates {{({puntos[0][0]:.3f},{puntos[0][1]:.3f}) ({puntos[1][0]:.3f},{puntos[1][1]:.3f}) ({sT:.3f},{mT:.3f}) (0,{rf})}};
+\node[anchor=north west, font=\footnotesize] at (axis cs:{puntos[0][0]:.3f},{puntos[0][1]:.3f}) {{$L$}};
+\node[anchor=north west, font=\footnotesize] at (axis cs:{puntos[1][0]:.3f},{puntos[1][1]:.3f}) {{$E$}};
+\node[anchor=north west, font=\footnotesize] at (axis cs:{sT:.3f},{mT:.3f}) {{$T$}};
+\node[anchor=south west, font=\footnotesize] at (axis cs:0.3,{rf}) {{$r_f$}};
+\end{{axis}}"""
+
+    rl, rb = 8.0, 12.0
+    _, mL, sL = tangente_de(rl)
+    _, mB, sB = tangente_de(rb)
+    arco = " ".join(f"({sigma_frontera(m, a, b, c, d):.3f},{m:.3f})" for m in np.linspace(mL, mB, 60))
+    resto = " ".join(f"({sigma_frontera(m, a, b, c, d):.3f},{m:.3f})" for m in np.linspace(m_mv, 26, 120))
+    pB = (mB - rb) / sB
+    panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.6cm, xmin=0, xmax=45, ymin=6, ymax=26,
+  xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}}, title={{(b) Prestar al $8\%$ y endeudarse al $12\%$}},
+  {PREAMBULO_EJES}]
+\addplot[thick, black!35, forget plot] coordinates {{{resto}}};
+\addplot[thin, black!50, dotted, forget plot] coordinates {{({sL:.3f},{mL:.3f}) (45,{rl + 45 * (mL - rl) / sL:.3f})}};
+\addplot[thin, black!50, dotted, forget plot] coordinates {{(0,{rb}) ({sB:.3f},{mB:.3f})}};
+\addplot[very thick, black, forget plot] coordinates {{(0,{rl}) ({sL:.3f},{mL:.3f})}};
+\addplot[very thick, black, forget plot] coordinates {{{arco}}};
+\addplot[very thick, black, forget plot] coordinates {{({sB:.3f},{mB:.3f}) (45,{rb + 45 * pB:.3f})}};
+\addplot[only marks, mark=*, mark size=1.8pt, black, forget plot] coordinates {{({sL:.3f},{mL:.3f}) ({sB:.3f},{mB:.3f}) (0,{rl}) (0,{rb})}};
+\node[anchor=south east, font=\footnotesize] at (axis cs:{sL:.3f},{mL:.3f}) {{$T_L$}};
+\node[anchor=north west, font=\footnotesize] at (axis cs:{sB:.3f},{mB:.3f}) {{$T_B$}};
+\node[anchor=south west, font=\footnotesize] at (axis cs:0.3,{rl}) {{$r_L$}};
+\node[anchor=south west, font=\footnotesize] at (axis cs:0.3,{rb}) {{$r_B$}};
+\end{{axis}}"""
+    tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b + "\n\\end{tikzpicture}\n"
+    (IMG / "anx_separacion.tikz").write_text(tikz, encoding="utf-8")
+    return puntos, (sL, mL), (sB, mB)
+
+
 if __name__ == "__main__":
     residual()
     p, esp, med = ergodicidad()
