@@ -17,6 +17,10 @@ URL = "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/{}_CSV.zip"
 FACTORES = "F-F_Research_Data_Factors"
 BETA = "Portfolios_Formed_on_BETA"
 BM = "Portfolios_Formed_on_BE-ME"
+CINCO = "F-F_Research_Data_5_Factors_2x3"
+IMPULSO = "F-F_Momentum_Factor"
+TAMANO_VALOR = "25_Portfolios_5x5"
+SECTORES = "30_Industry_Portfolios"
 
 
 def fichero(nombre):
