@@ -357,7 +357,7 @@ def tecnico_figuras():
         if 30 <= x <= 89:
             yb[i] = min(max(yb[i], bajo(x) + 0.1), alto(x) - 0.1)
     tikz = rf"""\begin{{tikzpicture}}
-\begin{{axis}}[name=a, width=7.6cm, height=6cm, xmin=0, xmax=150, ymin=40, ymax=75, xtick=\empty, ytick={{50,60,70}},
+\begin{{axis}}[name=a, width=7.6cm, height=5.2cm, xmin=0, xmax=150, ymin=40, ymax=75, xtick=\empty, ytick={{50,60,70}},
   xlabel={{Sesiones}}, ylabel={{Precio (euros)}}, title={{(a) Hombro-cabeza-hombro}}, {PREAMBULO_EJES}]
 \addplot[thick, black!55, dashed] coordinates {{(20,{cuello(20):.3f}) (150,{cuello(150):.3f})}};
 \addplot[thick, black] coordinates {{{_coordenadas(xa, ya)}}};
