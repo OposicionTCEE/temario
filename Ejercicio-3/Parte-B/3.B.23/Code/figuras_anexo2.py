@@ -339,8 +339,8 @@ def apt_replica():
 \addplot[very thick, black!45] coordinates {{({x0},{APT_FONDO + b1 * x0:.2f}) ({x1},{APT_FONDO + b1 * x1:.2f})}};
 \addlegendentry{{Fondo $j$}}
 \draw[{{Latex[length=1.6mm]}}-{{Latex[length=1.6mm]}}, thin] (axis cs:{xm},{APT_FONDO + b1 * xm:.2f}) -- (axis cs:{xm},{e['replica'] + b1 * xm:.2f});
-\node[anchor=west, font=\scriptsize] at (axis cs:{xm + 0.2},{(APT_FONDO + e['replica']) / 2 + b1 * xm:.2f}) {{${e['ganancia']:.1f}$}};
-\end{{axis}}""".replace(f"${e['ganancia']:.1f}$", "$" + f"{e['ganancia']:.1f}".replace(".", "{,}") + "$")
+\node[anchor=west, font=\scriptsize] at (axis cs:{xm + 0.2},{(APT_FONDO + e['replica']) / 2 + b1 * xm:.2f}) {{${ganancia}$}};
+\end{{axis}}"""
     tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b + "\n\\end{tikzpicture}\n"
     (IMG / "anx_apt_replica.tikz").write_text(tikz, encoding="utf-8")
     return e
