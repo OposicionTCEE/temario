@@ -259,10 +259,10 @@ def grafico_regla_media_movil():
   xtick={{1930,1950,1970,1990,2010}}, ytick={{0.1,1,10,100,1000,10000}}, log ticks with fixed point,
   xlabel={{Año}}, ylabel={{Valor de un dólar invertido en $1927$}}, title={{(a) Riqueza acumulada}},
   legend pos=north west, {PREAMBULO_EJES}]
-\addplot[very thick, black] coordinates {{{lin_m}}};
+\addplot[thick, black] coordinates {{{lin_m}}};
 \addlegendentry{{Mantener el mercado}}
-\addplot[thick, black!50] coordinates {{{lin_r}}};
-\addlegendentry{{Media móvil de $200$ días}}
+\addplot[thick, black!45] coordinates {{{lin_r}}};
+\addlegendentry{{Regla de la media de $200$ sesiones}}
 \end{{axis}}"""
     claves = [(1927, 1945), (1946, 1986), (1987, 2006), (2007, 2025)]
     barras_m = " ".join(f"({k + 1},{res['tramos'][c]['mercado']['sharpe']:.3f})" for k, c in enumerate(claves))
@@ -272,10 +272,10 @@ def grafico_regla_media_movil():
   ymin=0, ymax=1.0, xtick={{1,2,3,4}}, xticklabels={{{etiquetas}}}, x tick label style={{font=\scriptsize}},
   xlabel={{Periodo}}, ylabel={{Ratio de SHARPE anual}}, title={{(b) Rentabilidad por unidad de riesgo}},
   legend pos=north east, {PREAMBULO_EJES}]
-\addplot[fill=black!75, draw=black] coordinates {{{barras_m}}};
+\addplot[fill=black!75, draw=black, area legend] coordinates {{{barras_m}}};
 \addlegendentry{{Mantener el mercado}}
-\addplot[fill=black!30, draw=black!60] coordinates {{{barras_r}}};
-\addlegendentry{{Media móvil de $200$ días}}
+\addplot[fill=black!30, draw=black!60, area legend] coordinates {{{barras_r}}};
+\addlegendentry{{Regla de la media de $200$ sesiones}}
 \end{{axis}}"""
     tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b + "\n\\end{tikzpicture}\n"
     (IMG / "anx_tecnico_regla.tikz").write_text(tikz, encoding="utf-8")
@@ -346,13 +346,13 @@ def tecnico_figuras():
     nudos_a = [(0, 50), (25, 62), (42, 56), (66, 70), (86, 56.6), (106, 62.4), (122, 56.5), (150, 44)]
     xa, ya = _puente(nudos_a, 0.4, 33)
     cuello = lambda x: 56 + 0.6 / 44 * (x - 42)  # noqa: E731
-    nudos_b = [(0, 49), (30, 62), (40, 55.2), (52, 61.1), (62, 56.6), (72, 60.1), (80, 57.7), (88, 59.4), (100, 64),
-               (125, 71)]
+    nudos_b = [(0, 49), (30, 62), (40, 55.4), (52, 60.8), (62, 56.6), (72, 59.8), (80, 57.8), (86, 59.1), (89, 58.7),
+               (100, 64), (125, 71)]
     xb, yb = _puente(nudos_b, 0.3, 34)
     alto = lambda x: 62 - 0.05 * (x - 30)  # noqa: E731
     bajo = lambda x: 55 + 0.0625 * (x - 38)  # noqa: E731
     for i, x in enumerate(xb):
-        if 30 <= x <= 90:
+        if 30 <= x <= 89:
             yb[i] = min(max(yb[i], bajo(x) + 0.1), alto(x) - 0.1)
     tikz = rf"""\begin{{tikzpicture}}
 \begin{{axis}}[name=a, width=7.6cm, height=6cm, xmin=0, xmax=150, ymin=40, ymax=75, xtick=\empty, ytick={{50,60,70}},
@@ -425,13 +425,13 @@ def indicadores(desde=20190701, hasta=20201231):
 \addlegendentry{{Media de $200$ sesiones}}
 \end{{axis}}
 \begin{{axis}}[name=b, at={{(a.south west)}}, anchor=north west, yshift=-0.9cm, {comun}, height=3.4cm, xticklabels={{}},
-  ymin=0, ymax=100, ytick={{0,30,70,100}}, ylabel={{RSI}}, title={{(b) Índice de fuerza relativa ($14$ sesiones)}}]
+  ymin=0, ymax=100, ytick={{0,30,70,100}}, ylabel={{RSI}}, title={{(b) Índice de fuerza relativa}}]
 \addplot[thin, black!55, dashed] coordinates {{({x0:.4f},70) ({x1:.4f},70)}};
 \addplot[thin, black!55, dashed] coordinates {{({x0:.4f},30) ({x1:.4f},30)}};
 \addplot[thick, black] coordinates {{{linea(rsi)}}};
 \end{{axis}}
 \begin{{axis}}[name=c, at={{(b.south west)}}, anchor=north west, yshift=-0.9cm, {comun}, height=3.4cm, xticklabels={{{xl}}},
-  ylabel={{MACD}}, title={{(c) MACD ($12$, $26$ y $9$ sesiones)}}, legend pos=south east, legend columns=3]
+  ylabel={{MACD}}, title={{(c) MACD}}, legend pos=south east, legend columns=3]
 \addplot[ycomb, black!30, forget plot] coordinates {{{hist}}};
 \addplot[thick, black] coordinates {{{linea(macd, base)}}};
 \addlegendentry{{MACD}}
