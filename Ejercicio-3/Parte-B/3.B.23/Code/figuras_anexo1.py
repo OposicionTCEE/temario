@@ -209,7 +209,7 @@ def dos_acciones():
               r"\node[anchor=south east, font=\footnotesize] at (axis cs:32,18) {$B$};")
     panel_a = rf"""\begin{{axis}}[name=a, width=7.6cm, height=6.6cm, xmin=0, xmax=36, ymin=10, ymax=20,
   xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}}, title={{(a) Pesos entre $0$ y $1$}},
-  legend pos=north west, {PREAMBULO_EJES}]
+  legend pos=north west, {PREAMBULO_EJES}, legend style={{fill=none}}]
 {chr(10).join(curvas)}
 {puntos}
 \end{{axis}}"""
