@@ -113,6 +113,87 @@ def indicadores():
                                          ("Recta ajustada: pendiente", pend, "% anual por unidad de beta", "T6")):
             filas.append(("anx_sml_empirica", figura_panel, "Mercado y recta ajustada", ind, round(valor, 4), unidad,
                           periodo, "F1" if "Recta" not in ind else fuente, trat))
+    return filas + indicadores_a7(periodo)
+
+
+def indicadores_a7(periodo):
+    """Filas de las figuras de la A7: anx_componentes, anx_tres_factores, anx_factores y anx_hj."""
+    filas = []
+    c = componentes()
+    for k in range(10):
+        filas.append(("anx_componentes", "(a)", f"Componente {k + 1}", "Varianza explicada", round(c["cuota"][k], 4),
+                      "% del total", periodo, "F1, F7", "T1, T9"))
+        filas.append(("anx_componentes", "(a)", f"Componente {k + 1}", "Varianza explicada acumulada",
+                      round(c["acum"][k], 4), "% del total", periodo, "F1, F7", "T1, T9"))
+    for j, sector in enumerate(c["sectores"]):
+        for comp in (2, 3):
+            filas.append(("anx_componentes", "(b)", f"{sector} ({SECTORES_ES[sector]})", f"Carga en el componente {comp}",
+                          round(float(c["cargas"][j, comp - 1]), 4), "", periodo, "F1, F7", "T1, T9"))
+        filas.append(("anx_componentes", "texto", f"{sector} ({SECTORES_ES[sector]})", "R² del mercado (CAPM)",
+                      round(float(c["r2_mercado"][j]), 4), "", periodo, "F1, F7", "T1, T7"))
+    for comp, corr in c["corr_componentes"].items():
+        for factor, valor in corr.items():
+            filas.append(("anx_componentes", "texto", f"Componente {comp}", f"Correlación con {factor}",
+                          round(float(valor), 4), "", periodo, "F1, F4, F5, F7", "T9"))
+    tf = tres_factores()
+    for modelo, r in tf["res"].items():
+        fuente = {"CAPM": "F1, F6", "FF3": "F1, F6", "FF5": "F4, F6", "FF5+Mom": "F4, F5, F6"}[modelo]
+        for ind, valor, unidad, trat in (("Estadístico GRS", r["grs"], f"F({r['gl'][0]}, {r['gl'][1]})", "T7, T8"),
+                                         ("Alfa medio en valor absoluto", np.abs(r["alfa"]).mean(), "% anual", "T7"),
+                                         ("R² medio", r["r2"].mean(), "", "T7"),
+                                         ("Correlación entre predicción y observación",
+                                          np.corrcoef(r["prediccion"], r["media"])[0, 1], "", "T7")):
+            filas.append(("anx_tres_factores", "(a)" if modelo == "CAPM" else "(b)" if modelo == "FF3" else "texto",
+                          f"25 carteras, modelo {modelo}", ind, round(float(valor), 4), unidad, periodo, fuente, trat))
+        for i, cartera in enumerate(tf["carteras"]):
+            for ind, valor in (("Rentabilidad media en exceso", r["media"][i]), ("Predicción", r["prediccion"][i]),
+                               ("Alfa", r["alfa"][i])):
+                if ind == "Rentabilidad media en exceso" and modelo != "CAPM":
+                    continue
+                filas.append(("anx_tres_factores", "(a)" if modelo == "CAPM" else "(b)" if modelo == "FF3" else "texto",
+                              f"{cartera}, modelo {modelo}" if ind != "Rentabilidad media en exceso" else cartera, ind,
+                              round(float(valor), 4), "% anual", periodo, fuente, "T1, T3" if "media" in ind else "T7"))
+    for factor, prima in tf["primas"].items():
+        filas.append(("anx_tres_factores", "texto", factor, "Prima media", round(float(prima), 4), "% anual", periodo,
+                      "F1", "T3"))
+    fa = factores_acumulados()
+    fuentes_factor = {"Mkt-RF": "F1", "SMB": "F1", "HML": "F1", "RMW": "F4", "CMA": "F4", "Mom": "F5"}
+    for factor, r in fa["resumen"].items():
+        for ind, clave, unidad in (("Media", "media", "% anual"), ("Volatilidad", "vol", "% anual"),
+                                   ("Ratio de SHARPE", "sharpe", ""), ("Estadístico t de la media", "t", ""),
+                                   ("Valor acumulado de un dólar", "acumulado", "dólares")):
+            filas.append(("anx_factores", "(a)" if factor in ("Mkt-RF", "SMB", "HML") else "(b)", factor, ind,
+                          round(float(r[clave]), 4), unidad, periodo, fuentes_factor[factor], "T10"))
+    for (factor, a, b), r in fa["tramos"].items():
+        tramo = f"{str(a)[:4]}-{str(a)[4:]} a {str(b)[:4]}-{str(b)[4:]}"
+        for ind, clave, unidad in (("Media", "media", "% anual"), ("Estadístico t de la media", "t", ""),
+                                   ("Valor acumulado de un dólar", "acumulado", "dólares")):
+            filas.append(("anx_factores", "texto", factor, ind, round(float(r[clave]), 4), unidad, tramo,
+                          fuentes_factor[factor], "T10"))
+    for i, f1 in enumerate(fa["nombres"]):
+        for j, f2 in enumerate(fa["nombres"]):
+            if j > i:
+                filas.append(("anx_factores", "texto", f"{f1} y {f2}", "Correlación", round(float(fa["corr"][i, j]), 4),
+                              "", periodo, f"{fuentes_factor[f1]}, {fuentes_factor[f2]}", "T0"))
+    hj = cota_hj()
+    fuentes_hj = {"Mercado": "F1", "Tres factores": "F1", "Cinco factores": "F4", "Cinco factores e impulso": "F4, F5"}
+    for conjunto, sr in hj["sr"].items():
+        filas.append(("anx_hj", "", conjunto, "Ratio de SHARPE máximo", round(sr, 4), "anual", periodo,
+                      fuentes_hj[conjunto], "T11"))
+        filas.append(("anx_hj", "", conjunto, "Aversión mínima del CAPM de consumo", round(hj["gamma_min"][conjunto], 4),
+                      "", "1964 a 2025", f"{fuentes_hj[conjunto]}, F8", "T11, T12, T13"))
+        filas.append(("anx_hj", "texto", conjunto, "Tipo sin riesgo implícito con esa aversión (δ = 1)",
+                      round(hj["rf_implicito"][conjunto] * 100, 4), "% anual", "1964 a 2025",
+                      f"{fuentes_hj[conjunto]}, F8", "T12, T13"))
+    for ind, valor, unidad in (("Crecimiento medio del consumo real por habitante", hj["media_c"] * 100, "% anual"),
+                               ("Volatilidad del crecimiento del consumo", hj["sigma_c"] * 100, "% anual"),
+                               ("Correlación con Mkt-RF (consumo del cuarto trimestre)", hj["corr_q4"], ""),
+                               ("Correlación con Mkt-RF (consumo medio del año)", hj["corr_media"], "")):
+        filas.append(("anx_hj", "texto", "Consumo", ind, round(float(valor), 4), unidad, "1964 a 2025",
+                      "F8" if "Correlación" not in ind else "F1, F8", "T12" if "Correlación" not in ind else "T12, T14"))
+    for año, g in sorted(hj["crecimiento"].items()):
+        filas.append(("anx_hj", "", "Consumo", "Crecimiento anual del consumo real por habitante", round(g, 4), "%",
+                      str(año), "F8", "T12"))
     return filas
 
 
