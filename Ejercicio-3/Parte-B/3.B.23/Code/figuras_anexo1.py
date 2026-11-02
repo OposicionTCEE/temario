@@ -31,7 +31,9 @@ def residual():
     """Pagos al vencimiento de acreedores y accionistas en función del valor de los activos."""
     panel = []
     for i, (titulo, formula, tipo) in enumerate(
-        [("(a) Acreedores", r"$\min(V_T,D)$", "deuda"), ("(b) Accionistas", r"$\max(V_T-D,\,0)$", "acciones")]
+        # mín y máx con tilde, como los escribe babel (spanish) en el texto del tema
+        [("(a) Acreedores", r"$\mathrm{m\acute{\imath}n}(V_T,D)$", "deuda"),
+         ("(b) Accionistas", r"$\mathrm{m\acute{a}x}(V_T-D,\,0)$", "acciones")]
     ):
         x0 = i * 8.0
         p = []
