@@ -181,7 +181,7 @@ def beta_cero(mu_m=20.0):
     nodos_a = "\n".join(rf"\node[anchor=north west, font=\footnotesize] at (axis cs:{s:.3f},{m}) {{${n}$}};" for s, m, n in zip(sig, MU3, "ABC"))
     panel_a = rf"""\begin{{axis}}[name=a, width=7.6cm, height=6.6cm, xmin=0, xmax=45, ymin=6, ymax=26,
   xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}}, title={{(a) Cartera de beta nula}},
-  legend pos=south east, {PREAMBULO_EJES}]
+  extra y ticks={{{mu_z:.3f}}}, extra y tick labels={{$\mu_Z$}}, legend pos=north west, {PREAMBULO_EJES}]
 \addplot[thick, black!35] coordinates {{{alta}}};
 \addlegendentry{{Frontera}}
 \addplot[thick, black!35, forget plot] coordinates {{{baja}}};
@@ -196,25 +196,23 @@ def beta_cero(mu_m=20.0):
 \addplot[only marks, mark=o, mark size=2.2pt, black, thick, forget plot] coordinates {{({sT:.3f},{mT:.3f}) ({s_z:.3f},{mu_z:.3f})}};
 \node[anchor=south east, font=\footnotesize] at (axis cs:{s_m:.3f},{mu_m:.3f}) {{$M$}};
 \node[anchor=north west, font=\footnotesize] at (axis cs:{sT:.3f},{mT:.3f}) {{$T$}};
-\node[anchor=north west, font=\footnotesize] at (axis cs:{s_z:.3f},{mu_z:.3f}) {{$Z$}};
+\node[anchor=north east, font=\footnotesize] at (axis cs:{s_z:.3f},{mu_z:.3f}) {{$Z$}};
 \node[anchor=north west, font=\footnotesize] at (axis cs:0.3,{RF - 0.15}) {{$r_f$}};
-\node[anchor=south west, font=\footnotesize] at (axis cs:0.3,{mu_z + 0.1:.3f}) {{$\mu_Z$}};
 \end{{axis}}"""
     pts = " ".join(f"({bj:.3f},{m})" for bj, m in zip(beta, MU3))
     nodos_b = "\n".join(rf"\node[anchor=north west, font=\footnotesize] at (axis cs:{bj:.3f},{m}) {{${n}$}};" for bj, m, n in zip(beta, MU3, "ABC"))
-    panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.6cm, xmin=0, xmax=2, ymin=6, ymax=30,
+    panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.6cm, xmin=-0.25, xmax=2, ymin=6, ymax=30,
   xlabel={{Beta respecto de $M$, $\beta_j$}}, ylabel={{Rentabilidad esperada, $\mu_j$ (\%)}}, title={{(b) Recta del mercado de valores}},
-  legend pos=north west, {PREAMBULO_EJES}]
-\addplot[very thick, black] coordinates {{(0,{mu_z:.3f}) (2,{mu_z + 2 * (mu_m - mu_z):.3f})}};
+  extra y ticks={{{mu_z:.3f}}}, extra y tick labels={{$\mu_Z$}}, legend pos=north west, {PREAMBULO_EJES}]
+\addplot[very thick, black] coordinates {{(-0.25,{mu_z - 0.25 * (mu_m - mu_z):.3f}) (2,{mu_z + 2 * (mu_m - mu_z):.3f})}};
 \addlegendentry{{BLACK: desde $\mu_Z$}}
-\addplot[thick, black!55, dashed] coordinates {{(0,{RF}) (2,{RF + 2 * (mu_m - RF):.3f})}};
+\addplot[thick, black!55, dashed] coordinates {{(-0.25,{RF - 0.25 * (mu_m - RF):.3f}) (2,{RF + 2 * (mu_m - RF):.3f})}};
 \addlegendentry{{Desde $r_f$}}
 \addplot[only marks, mark=*, mark size=1.6pt, black, forget plot] coordinates {{{pts}}};
 {nodos_b}
 \addplot[only marks, mark=square*, mark size=1.9pt, black, forget plot] coordinates {{(1,{mu_m:.3f}) (0,{RF}) (0,{mu_z:.3f})}};
 \node[anchor=south east, font=\footnotesize] at (axis cs:1,{mu_m:.3f}) {{$M$}};
 \node[anchor=north west, font=\footnotesize] at (axis cs:0.02,{RF - 0.15}) {{$r_f$}};
-\node[anchor=south west, font=\footnotesize] at (axis cs:0.02,{mu_z + 0.1:.3f}) {{$\mu_Z$}};
 \end{{axis}}"""
     tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b + "\n\\end{tikzpicture}\n"
     (IMG / "anx_beta_cero.tikz").write_text(tikz, encoding="utf-8")
@@ -264,10 +262,11 @@ def sml_empirica():
                        r"\addlegendentry{Recta ajustada}"]
         lineas += [rf"\addplot[only marks, mark=*, mark size=1.6pt, black] coordinates {{{pts}}};",
                    r"\addlegendentry{Deciles}",
-                   rf"\addplot[only marks, mark=square*, mark size=1.9pt, black, forget plot] coordinates {{(1,{prima:.3f})}};",
-                   rf"\node[anchor=north west, font=\footnotesize] at (axis cs:1,{prima:.3f}) {{$M$}};"]
-        for f, texto, ancla in ((fs[0], extremos[0], "north"), (fs[-1], extremos[1], "south")):
-            lineas.append(rf"\node[anchor={ancla}, font=\scriptsize, yshift={'-1' if ancla == 'north' else '1'}mm] at (axis cs:{f['beta']:.3f},{f['media']:.3f}) {{{texto}}};")
+                   rf"\addplot[only marks, mark=square*, mark size=1.9pt, black] coordinates {{(1,{prima:.3f})}};",
+                   r"\addlegendentry{Mercado}"]
+        abajo = "anchor=west, xshift=1mm" if clave == "bm" else "anchor=north, yshift=-1mm"
+        for f, texto, ancla in ((fs[0], extremos[0], abajo), (fs[-1], extremos[1], "anchor=south, yshift=1mm")):
+            lineas.append(rf"\node[{ancla}, font=\scriptsize] at (axis cs:{f['beta']:.3f},{f['media']:.3f}) {{{texto}}};")
         pos = "name=a" if i == 0 else r"at={(a.east)}, anchor=west, xshift=1.9cm"
         paneles.append(rf"""\begin{{axis}}[{pos}, width=7.6cm, height=6.6cm, xmin=0, xmax=1.9, ymin=0, ymax=14,
   xlabel={{Beta, $\beta_p$}}, ylabel={{Rentabilidad media en exceso (\% anual)}}, title={{{titulo}}},
