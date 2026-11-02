@@ -487,3 +487,163 @@ if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "a9":
     for (a, b), t in res["tramos"].items():
         mm, rg = t["mercado"], t["regla"]
         print(f"{a}-{b}: mercado {mm['anual']:.1f}% vol {mm['vol']:.1f} SR {mm['sharpe']:.2f} caída {mm['caida']:.0f}% | regla {rg['anual']:.1f}% vol {rg['vol']:.1f} SR {rg['sharpe']:.2f} caída {rg['caida']:.0f}% | en mercado {t['en_mercado']:.0%} cambios {t['cambios']}")
+
+
+# --- A10: análisis fundamental ---
+
+def multiplos():
+    """A10, III.4.4. PER adelantado y precio sobre valor contable en función de la ROE, con crecimiento constante g = b·ROE:
+    (a) PER = (1 - b)/(k - b·ROE) para tres tasas de retención b; (b) P/VC = (ROE - g)/(k - g) para tres crecimientos.
+    Los ejes van en unidades de k (ROE/k y k·PER), de modo que todas las curvas se cruzan en ROE = k. Esquema sin datos."""
+    def recorte(x, y, techo=3.0):
+        m = (y >= 0) & (y <= techo + 1e-9)
+        return " ".join(f"({a:.4f},{b:.4f})" for a, b in zip(x[m], y[m]))
+
+    comunes = (r"width=7.6cm, height=6.2cm, xmin=0, xmax=2.1, ymin=0, ymax=3.2, xtick={0,1,2},"
+               r" xticklabels={$0$,$k$,$2k$}, xlabel={Rentabilidad de los recursos propios, ROE}, " + PREAMBULO_EJES)
+    lineas_a = []
+    for b, etiqueta, pos, ancla in [(0.0, "$b=0$", (1.62, 1.0), "south"), (0.25, r"$b=1/4$", (2.0, 1.5), "south east"),
+                                    (0.5, r"$b=1/2$", (1.62, 2.6), "east")]:
+        x = np.linspace(0, 2, 801)
+        y = (1 - b) / (1 - b * x) if b else np.ones_like(x)
+        lineas_a.append(rf"\addplot[thick, black] coordinates {{{recorte(x, y)}}};")
+        lineas_a.append(rf"\node[anchor={ancla}, font=\scriptsize] at (axis cs:{pos[0]},{pos[1]}) {{{etiqueta}}};")
+    lineas_b = []
+    for c, etiqueta, pos, ancla in [(0.0, "$g=0$", (2.0, 2.0), "north west"), (1 / 3, r"$g=k/3$", (2.0, 2.5), "west"),
+                                    (2 / 3, r"$g=2k/3$", (1.67, 3.0), "east")]:
+        x = np.linspace(c, 2, 801)
+        y = (x - c) / (1 - c)
+        lineas_b.append(rf"\addplot[thick, black] coordinates {{{recorte(x, y)}}};")
+        lineas_b.append(rf"\node[anchor={ancla}, font=\scriptsize] at (axis cs:{pos[0]},{pos[1]}) {{{etiqueta}}};")
+    guias = (r"\addplot[thin, black!45, dashed] coordinates {(1,0) (1,3.2)};" "\n"
+             r"\addplot[thin, black!45, dashed] coordinates {(0,1) (2.1,1)};")
+    panel_a = (rf"\begin{{axis}}[name=a, {comunes}, ytick={{1,2,3}}, yticklabels={{$1/k$,$2/k$,$3/k$}}, ylabel={{PER}},"
+               rf" title={{(a) Precio sobre beneficio}}]" "\n" + guias + "\n" + "\n".join(lineas_a) + "\n\\end{axis}")
+    panel_b = (rf"\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.5cm, {comunes}, ytick={{1,2,3}},"
+               rf" ylabel={{P/VC}}, title={{(b) Precio sobre valor contable}}]" "\n" + guias + "\n" + "\n".join(lineas_b)
+               + "\n\\end{axis}")
+    tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b + "\n\\end{tikzpicture}\n"
+    (IMG / "anx_multiplos.tikz").write_text(tikz, encoding="utf-8")
+
+
+def cape(hasta=202609):
+    """A10, III.4.6. CAPE de SHILLER (precio real del índice S&P compuesto entre la media del beneficio real de los diez
+    años anteriores) desde enero de 1881 y rentabilidad real anual, con los dividendos reinvertidos, de los diez años
+    siguientes a cada mes (ventanas que terminan, como tarde, en el mes `hasta`). Devuelve las series y las cifras del
+    texto: media, extremos, regresión de la rentabilidad sobre 1/CAPE y rentabilidad según el CAPE de partida."""
+    from datos_shiller import mensual
+    d = mensual()
+    m, c, total = d["meses"], d["cape"], d["total"]
+    ok = ~np.isnan(c)
+    fin = np.array([k + 120 < len(m) and m[k + 120] <= hasta for k in range(len(m))])
+    v = ok & fin
+    k = np.flatnonzero(v)
+    r10 = (total[k + 120] / total[k]) ** 0.1 - 1
+    x = 1 / c[v]
+    X = np.column_stack([np.ones_like(x), x])
+    coef = np.linalg.lstsq(X, r10, rcond=None)[0]
+    r2 = 1 - np.var(r10 - X @ coef) / np.var(r10)
+    q10, q90 = np.quantile(c[v], [0.1, 0.9])
+    caros, baratos = c[v] >= q90, c[v] < q10
+    cm, cc = m[ok], c[ok]
+    desde90 = cm >= 199001
+    i90, ifin = int(np.flatnonzero(m == 199001)[0]), int(np.flatnonzero(m == hasta)[0])
+    i81 = int(np.flatnonzero(m == 188101)[0])
+    return dict(
+        meses=cm, cape=cc, meses_r10=m[v], cape_r10=c[v], r10=r10, coef=coef, r2=r2, media=cc.mean(),
+        maximo=(cm[cc.argmax()], cc.max()), minimo=(cm[cc.argmin()], cc.min()),
+        pico_1929=max((b, a) for a, b in zip(cm, cc) if 192901 <= a <= 193012)[::-1],
+        ultimo=(cm[-1], cc[-1]), prevision_ultimo=coef[0] + coef[1] / cc[-1], media_r10=r10.mean(),
+        caros=(q90, r10[caros].mean(), r10[caros].min(), r10[caros].max()),
+        baratos=(q10, r10[baratos].mean(), r10[baratos].min(), r10[baratos].max()),
+        sobre_media_desde_1990=(cc[desde90] > cc.mean()).mean(),
+        real_1990=(total[ifin] / total[i90]) ** (12 / (ifin - i90)) - 1,
+        real_1881=(total[ifin] / total[i81]) ** (12 / (ifin - i81)) - 1)
+
+
+def grafico_cape():
+    """Figura del CAPE: (a) CAPE mensual de 1881 a 2026 y su media; (b) rentabilidad real anual de los diez años
+    siguientes frente al rendimiento del beneficio ajustado, 1/CAPE, con la recta de regresión y la diagonal."""
+    res = cape()
+    meses, valores = res["meses"], res["cape"]
+    anio = meses // 100 + (meses % 100 - 0.5) / 12
+    serie = " ".join(f"({a:.3f},{b:.2f})" for a, b in zip(anio, valores))
+    panel_a = rf"""\begin{{axis}}[name=a, width=7.6cm, height=6.2cm, xmin=1880, xmax=2027, ymin=0, ymax=47,
+  xtick={{1900,1925,1950,1975,2000,2025}}, ytick={{0,10,20,30,40}}, xlabel={{Año}}, ylabel={{CAPE}},
+  title={{(a) Precio sobre beneficio medio de diez años}}, legend pos=north west, {PREAMBULO_EJES}]
+\addplot[thin, black] coordinates {{{serie}}};
+\addlegendentry{{CAPE}}
+\addplot[thick, black!45, dashed] coordinates {{(1880,{res['media']:.2f}) (2027,{res['media']:.2f})}};
+\addlegendentry{{Media de $1881$-$2026$}}
+\end{{axis}}"""
+    puntos = " ".join(f"({100 * a:.3f},{100 * b:.3f})" for a, b in zip(1 / res["cape_r10"], res["r10"]))
+    a0, a1 = res["coef"]
+    recta = f"(1,{100 * a0 + a1:.3f}) (22,{100 * a0 + 22 * a1:.3f})"
+    panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.5cm, width=7.6cm, height=6.2cm, xmin=0, xmax=22,
+  ymin=-8, ymax=22, xtick={{0,5,10,15,20}}, ytick={{-5,0,5,10,15,20}}, xlabel={{Rendimiento del beneficio, $1/\text{{CAPE}}$ (\%)}},
+  ylabel={{Rentabilidad real a diez años (\%)}}, title={{(b) Valoración y rentabilidad posterior}},
+  legend pos=north west, {PREAMBULO_EJES}]
+\addplot[only marks, mark=*, mark size=0.45pt, black!30] coordinates {{{puntos}}};
+\addlegendentry{{Cada mes, $1881$-$2016$}}
+\addplot[thick, black] coordinates {{{recta}}};
+\addlegendentry{{Recta de regresión}}
+\addplot[thin, black!60, dashed] coordinates {{(0,0) (22,22)}};
+\addlegendentry{{Diagonal}}
+\addplot[thin, black!60, dotted] coordinates {{({100 / res['ultimo'][1]:.3f},-8) ({100 / res['ultimo'][1]:.3f},22)}};
+\addlegendentry{{Octubre de $2026$}}
+\end{{axis}}"""
+    tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b + "\n\\end{tikzpicture}\n"
+    (IMG / "anx_cape.tikz").write_text(tikz, encoding="utf-8")
+    return res
+
+
+def treynor_black(rf=3.0, prima=6.0, sigma_m=18.0, beta_a=0.5, alfa_a=6.0, sigma_e=30.0):
+    """A10, III.4.8. Cartera activa de TREYNOR y BLACK (1973) en el plano de volatilidad y rentabilidad esperada, con
+    números inventados: tipo sin riesgo del 3 %, mercado con una prima del 6 % y una volatilidad del 18 %, y una cartera
+    activa A con beta 0,5, alfa del 6 % y riesgo específico del 30 % (ratio de información 0,2), que queda por debajo de
+    la CML. Devuelve el peso óptimo de A y las ratios de SHARPE."""
+    def cartera(w):
+        exceso = (1 - w) * prima + w * (beta_a * prima + alfa_a)
+        beta = (1 - w) + w * beta_a
+        return math.sqrt(beta ** 2 * sigma_m ** 2 + (w * sigma_e) ** 2), rf + exceso
+
+    z_m, z_q = prima / sigma_m ** 2, alfa_a / sigma_e ** 2
+    w0 = z_q / z_m
+    w = w0 / (1 + (1 - beta_a) * w0)
+    s_m = prima / sigma_m
+    s_t = math.sqrt(s_m ** 2 + (alfa_a / sigma_e) ** 2)
+    sa, ma = cartera(1)
+    st, mt = cartera(w)
+    curva = " ".join("({:.3f},{:.3f})".format(*cartera(u)) for u in np.linspace(-0.15, 1.25, 141))
+    tikz = rf"""\begin{{tikzpicture}}
+\begin{{axis}}[width=10cm, height=6.6cm, xmin=0, xmax=42, ymin=0, ymax=19, xtick=\empty, ytick={{{rf}}},
+  yticklabels={{$r_f$}}, xlabel={{Volatilidad, $\sigma$}}, ylabel={{Rentabilidad esperada, $\mu$}},
+  legend pos=south east, {PREAMBULO_EJES}]
+\addplot[thick, black] coordinates {{(0,{rf}) (42,{rf + 42 * s_m:.3f})}};
+\addlegendentry{{Línea del mercado de capitales, pendiente $S_M$}}
+\addplot[thick, black, dashed] coordinates {{(0,{rf}) (42,{rf + 42 * s_t:.3f})}};
+\addlegendentry{{Con la cartera activa, pendiente $S_{{T^*}}$}}
+\addplot[thin, black!50] coordinates {{{curva}}};
+\addlegendentry{{Combinaciones de $M$ y $A$}}
+\addplot[only marks, mark=*, mark size=1.8pt, black] coordinates {{({sigma_m},{rf + prima}) ({sa:.3f},{ma:.3f}) ({st:.3f},{mt:.3f})}};
+\node[anchor=north west, font=\footnotesize] at (axis cs:{sigma_m},{rf + prima}) {{$M$}};
+\node[anchor=north west, font=\footnotesize] at (axis cs:{sa:.3f},{ma:.3f}) {{$A$}};
+\node[anchor=south east, font=\footnotesize] at (axis cs:{st:.3f},{mt:.3f}) {{$T^*$}};
+\end{{axis}}
+\end{{tikzpicture}}
+"""
+    (IMG / "anx_treynor_black.tikz").write_text(tikz, encoding="utf-8")
+    return dict(w0=w0, w=w, s_m=s_m, s_t=s_t, a=(sa, ma), t=(st, mt), cml_a=rf + s_m * sa)
+
+
+if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "a10":
+    multiplos()
+    res = grafico_cape()
+    print(f"CAPE: media {res['media']:.2f}; máximo {res['maximo']}; mínimo {res['minimo']}; 1929 {res['pico_1929']};"
+          f" último {res['ultimo']}")
+    print(f"r10 = {res['coef'][0]:.4f} + {res['coef'][1]:.3f}/CAPE, R2 {res['r2']:.3f}, n {len(res['r10'])},"
+          f" media {res['media_r10']:.4f}; previsión con el último CAPE {res['prevision_ultimo']:.4f}")
+    print("caros (umbral, media, mín, máx)", np.round(res["caros"], 4), "baratos", np.round(res["baratos"], 4))
+    print(f"desde 1990 sobre la media {res['sobre_media_desde_1990']:.3f}; real anual 1990-2026 {res['real_1990']:.4f};"
+          f" 1881-2026 {res['real_1881']:.4f}")
+    print("Treynor-Black", treynor_black())
