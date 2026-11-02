@@ -82,6 +82,21 @@ def factores(desde, hasta):
     return meses, F3, F5, fm[im, cm.index("Mom")]
 
 
+def anual(nombre, columna, marca="Annual Factors"):
+    """Serie anual (enero a diciembre, en %) de la sección anual de un fichero: {año: valor}."""
+    lineas = fichero(nombre).read_text(encoding="latin-1").splitlines()
+    i = next(k for k, l in enumerate(lineas) if marca in l)
+    cabecera = next(k for k in range(i, len(lineas)) if lineas[k].startswith(","))
+    columnas = [c.strip() for c in lineas[cabecera].split(",")[1:]]
+    serie = {}
+    for l in lineas[cabecera + 1:]:
+        partes = [p.strip() for p in l.split(",")]
+        if not partes[0].isdigit():
+            break
+        serie[int(partes[0])] = float(partes[1 + columnas.index(columna)])
+    return serie
+
+
 def carteras(nombre, marca, meses, rf):
     """Rentabilidades en exceso (en %) de todas las carteras de una sección mensual en los meses pedidos."""
     mp, cp, p = seccion(nombre, marca)
