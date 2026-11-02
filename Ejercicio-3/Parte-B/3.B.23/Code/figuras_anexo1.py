@@ -9,7 +9,8 @@ anx_ergodicidad: apuesta multiplicativa con +50 % o -40 % con probabilidad 1/2 e
   exacta (binomial) de la riqueza tras 60 rondas.
 anx_colas: panel (a) densidad normal estándar frente a t de Student con 4 grados de libertad reescalada a
   varianza 1; panel (b) 1.000 rentabilidades diarias simuladas (semilla 3): i.i.d. normales con sigma = 1 % y
-  GARCH(1,1) con a0 = 2e-6, a1 = 0,08, b1 = 0,90 (varianza incondicional 1e-4, es decir, sigma = 1 %).
+  GARCH(1,1) con a0 = 2e-6, a1 = 0,10, b1 = 0,88 (varianza incondicional 1e-4, es decir, sigma = 1 %),
+  semilla 48, elegida entre 59 por mostrar con claridad el agrupamiento (exceso de curtosis de la muestra: 6,7).
 """
 import math
 from pathlib import Path
@@ -21,7 +22,8 @@ IMG = Path(__file__).resolve().parent.parent / "Img"
 PREAMBULO_EJES = (
     r"/pgf/number format/use comma, /pgf/number format/1000 sep={},"
     r" tick label style={font=\scriptsize}, label style={font=\footnotesize},"
-    r" title style={font=\footnotesize\bfseries, yshift=-1mm}, legend style={font=\scriptsize, draw=none, fill=white, fill opacity=0.85, text opacity=1}"
+    r" title style={font=\footnotesize\bfseries, yshift=-1mm}, legend cell align=left,"
+    r" legend style={font=\scriptsize, draw=none, fill=white, fill opacity=0.85, text opacity=1}"
 )
 
 
@@ -69,8 +71,8 @@ def ergodicidad():
     esperanza = " ".join(f"({t},{1.05**t:.6g})" for t in range(rondas + 1))
     mediana = " ".join(f"({t},{math.sqrt(up*down)**t:.6g})" for t in range(rondas + 1))
 
-    panel_a = rf"""\begin{{axis}}[name=a, width=8.1cm, height=6.2cm, ymode=log, xmin=0, xmax={rondas}, ymin=1e-5, ymax=1e3,
-  xlabel={{Ronda, $t$}}, ylabel={{Riqueza, $W_t$ (escala logarítmica)}}, title={{(a) Veinte trayectorias}},
+    panel_a = rf"""\begin{{axis}}[name=a, width=7.4cm, height=6.2cm, ymode=log, xmin=0, xmax={rondas}, ymin=1e-5, ymax=1e3,
+  xlabel={{Ronda, $t$}}, ylabel={{Riqueza, $W_t$ (escala logarítmica)}}, title={{(a) Veinte trayectorias simuladas}},
   legend pos=south west, {PREAMBULO_EJES}]
 {chr(10).join(lineas)}
 \addplot[very thick, black] coordinates {{{esperanza}}};
@@ -91,16 +93,17 @@ def ergodicidad():
     p_ganar = sum(math.comb(rondas, h) for h in range(rondas + 1) if up**h * down ** (rondas - h) > 1) / 2**rondas
     log_media = rondas * math.log10(1.05)
     log_mediana = rondas * math.log10(math.sqrt(up * down))
-    panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.3cm, width=8.1cm, height=6.2cm, ybar, bar width=1.2pt,
-  xmin=-6, xmax=3, ymin=0, ymax=0.12, xtick={{-6,-4,-2,0,2}}, xticklabels={{$10^{{-6}}$,$10^{{-4}}$,$10^{{-2}}$,$1$,$10^{{2}}$}},
-  xlabel={{Riqueza tras {rondas} rondas, $W_{{{rondas}}}$}}, ylabel={{Probabilidad}}, title={{(b) Distribución de $W_{{{rondas}}}$}},
+    panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.4cm, height=6.2cm,
+  xmin=-6, xmax=3, ymin=0, ymax=0.12, ytick={{0,0.04,0.08,0.12}}, scaled y ticks=false,
+  yticklabel style={{/pgf/number format/fixed, /pgf/number format/precision=2, /pgf/number format/fixed zerofill}}, xtick={{-6,-4,-2,0,2}}, xticklabels={{$10^{{-6}}$,$10^{{-4}}$,$10^{{-2}}$,$1$,$10^{{2}}$}},
+  xlabel={{Riqueza tras ${rondas}$ rondas, $W_{{{rondas}}}$}}, ylabel={{Probabilidad}}, title={{(b) Distribución de $W_{{{rondas}}}$}},
   legend pos=north west, {PREAMBULO_EJES}]
-\addplot[fill=gray!50, draw=gray!70, forget plot] coordinates {{{" ".join(barras)}}};
-\addplot[ybar=0pt, sharp plot, very thick, black] coordinates {{({log_media:.4f},0) ({log_media:.4f},0.12)}};
+\addplot[ybar, bar width=0.28, fill=gray!45, draw=gray!70, forget plot] coordinates {{{" ".join(barras)}}};
+\addplot[very thick, black] coordinates {{({log_media:.4f},0) ({log_media:.4f},0.12)}};
 \addlegendentry{{Esperanza}}
-\addplot[ybar=0pt, sharp plot, very thick, black, dashed] coordinates {{({log_mediana:.4f},0) ({log_mediana:.4f},0.12)}};
+\addplot[very thick, black, dashed] coordinates {{({log_mediana:.4f},0) ({log_mediana:.4f},0.12)}};
 \addlegendentry{{Mediana}}
-\addplot[ybar=0pt, sharp plot, thin, black, dotted, forget plot] coordinates {{(0,0) (0,0.12)}};
+\addplot[thin, black, dotted, forget plot] coordinates {{(0,0) (0,0.12)}};
 \end{{axis}}"""
     tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b + "\n\\end{tikzpicture}\n"
     (IMG / "anx_ergodicidad.tikz").write_text(tikz, encoding="utf-8")
@@ -117,19 +120,19 @@ def colas():
     t = (c * (1 + (xs / escala) ** 2 / nu) ** (-(nu + 1) / 2)) / escala
     coords_n = " ".join(f"({x:.3f},{y:.6g})" for x, y in zip(xs, normal))
     coords_t = " ".join(f"({x:.3f},{y:.6g})" for x, y in zip(xs, t))
-    panel_a = rf"""\begin{{axis}}[name=a, width=8.1cm, height=6.6cm, ymode=log, xmin=-6, xmax=6, ymin=1e-8, ymax=1,
+    panel_a = rf"""\begin{{axis}}[name=a, width=7.4cm, height=6.6cm, ymode=log, xmin=-6, xmax=6, ymin=1e-8, ymax=1,
   xlabel={{Rentabilidad tipificada, $(r-\mu)/\sigma$}}, ylabel={{Densidad (escala logarítmica)}}, title={{(a) Colas}},
-  legend pos=south center, {PREAMBULO_EJES}]
+  legend style={{at={{(0.5,0.03)}}, anchor=south}}, {PREAMBULO_EJES}]
 \addplot[very thick, black, dashed] coordinates {{{coords_n}}};
 \addlegendentry{{Normal}}
 \addplot[very thick, black] coordinates {{{coords_t}}};
-\addlegendentry{{$t$ de Student, $\nu=4$, varianza 1}}
+\addlegendentry{{$t$ de Student, $\nu=4$, varianza $1$}}
 \end{{axis}}"""
 
-    rng = np.random.default_rng(3)
     n = 1000
-    iid = rng.normal(0, 0.01, n)
-    a0, a1, b1 = 2e-6, 0.08, 0.90
+    iid = np.random.default_rng(3).normal(0, 0.01, n)
+    rng = np.random.default_rng(48)
+    a0, a1, b1 = 2e-6, 0.10, 0.88
     var = a0 / (1 - a1 - b1)
     garch = np.empty(n)
     eps_prev = 0.0
@@ -139,8 +142,8 @@ def colas():
         garch[i] = eps_prev
     def serie(v):
         return " ".join(f"({i},{100*x:.3f})" for i, x in enumerate(v))
-    comun = rf"width=8.1cm, height=3.75cm, xmin=0, xmax={n}, ymin=-7, ymax=7, ytick={{-5,0,5}}, {PREAMBULO_EJES}"
-    panel_b1 = rf"""\begin{{axis}}[name=b1, at={{(a.north east)}}, anchor=north west, xshift=1.3cm, {comun},
+    comun = rf"width=7.4cm, height=3.75cm, xmin=0, xmax={n}, ymin=-7, ymax=7, ytick={{-5,0,5}}, {PREAMBULO_EJES}"
+    panel_b1 = rf"""\begin{{axis}}[name=b1, at={{(a.north east)}}, anchor=north west, xshift=1.9cm, {comun},
   xticklabels={{}}, ylabel={{\%}}, title={{(b) Sin y con agrupamiento}}]
 \addplot[black, thin] coordinates {{{serie(iid)}}};
 \node[anchor=north west, font=\scriptsize, fill=white] at (rel axis cs:0.01,0.98) {{Normal i.i.d.}};
@@ -148,7 +151,7 @@ def colas():
     panel_b2 = rf"""\begin{{axis}}[at={{(b1.south west)}}, anchor=north west, yshift=-0.25cm, {comun},
   xlabel={{Día}}, ylabel={{\%}}]
 \addplot[black, thin] coordinates {{{serie(garch)}}};
-\node[anchor=north west, font=\scriptsize, fill=white] at (rel axis cs:0.01,0.98) {{GARCH(1,1)}};
+\node[anchor=north west, font=\scriptsize, fill=white] at (rel axis cs:0.01,0.98) {{GARCH$(1,1)$}};
 \end{{axis}}"""
     tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b1 + "\n" + panel_b2 + "\n\\end{tikzpicture}\n"
     (IMG / "anx_colas.tikz").write_text(tikz, encoding="utf-8")
