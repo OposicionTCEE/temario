@@ -194,13 +194,13 @@ def beta_cero(mu_m=20.0):
 {nodos_a}
 \addplot[only marks, mark=square*, mark size=1.9pt, black, forget plot] coordinates {{({s_m:.3f},{mu_m:.3f}) (0,{RF}) (0,{mu_z:.3f})}};
 \addplot[only marks, mark=o, mark size=2.2pt, black, thick, forget plot] coordinates {{({sT:.3f},{mT:.3f}) ({s_z:.3f},{mu_z:.3f})}};
-\node[anchor=south east, font=\footnotesize] at (axis cs:{s_m:.3f},{mu_m:.3f}) {{$M$}};
+\node[anchor=north west, font=\footnotesize] at (axis cs:{s_m:.3f},{mu_m:.3f}) {{$M$}};
 \node[anchor=north west, font=\footnotesize] at (axis cs:{sT:.3f},{mT:.3f}) {{$T$}};
 \node[anchor=north east, font=\footnotesize] at (axis cs:{s_z:.3f},{mu_z:.3f}) {{$Z$}};
 \node[anchor=north west, font=\footnotesize] at (axis cs:0.3,{RF - 0.15}) {{$r_f$}};
 \end{{axis}}"""
     pts = " ".join(f"({bj:.3f},{m})" for bj, m in zip(beta, MU3))
-    nodos_b = "\n".join(rf"\node[anchor=north west, font=\footnotesize] at (axis cs:{bj:.3f},{m}) {{${n}$}};" for bj, m, n in zip(beta, MU3, "ABC"))
+    nodos_b = "\n".join(rf"\node[anchor={'south east' if n == 'A' else 'north west'}, font=\footnotesize] at (axis cs:{bj:.3f},{m}) {{${n}$}};" for bj, m, n in zip(beta, MU3, "ABC"))
     panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.6cm, xmin=-0.25, xmax=2, ymin=6, ymax=30,
   xlabel={{Beta respecto de $M$, $\beta_j$}}, ylabel={{Rentabilidad esperada, $\mu_j$ (\%)}}, title={{(b) Recta del mercado de valores}},
   extra y ticks={{{mu_z:.3f}}}, extra y tick labels={{$\mu_Z$}}, legend pos=north west, {PREAMBULO_EJES}]
