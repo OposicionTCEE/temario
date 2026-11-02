@@ -162,9 +162,126 @@ def colas():
     return exceso_curtosis, float(garch.std() * 100), float(iid.std() * 100)
 
 
+def correlacion():
+    """A2, I.3.1. Tres nubes de 150 pares de rentabilidades normales simuladas (semilla 11) con correlación
+    0,8, 0 y -0,6, misma media (0) y misma volatilidad (1) en las dos acciones."""
+    rng = np.random.default_rng(11)
+    paneles = []
+    for i, (rho, etiqueta) in enumerate([(0.8, "0{,}8"), (0.0, "0"), (-0.6, "-0{,}6")]):
+        z1 = rng.normal(size=150)
+        z2 = rng.normal(size=150)
+        a = z1
+        b = rho * z1 + math.sqrt(1 - rho**2) * z2
+        pts = " ".join(f"({x:.3f},{y:.3f})" for x, y in zip(a, b))
+        pos = "name=p0" if i == 0 else rf"at={{(p{i-1}.east)}}, anchor=west, xshift=0.9cm, name=p{i}"
+        paneles.append(rf"""\begin{{axis}}[{pos}, width=5.6cm, height=5.6cm, xmin=-3.5, xmax=3.5, ymin=-3.5, ymax=3.5,
+  xtick={{-2,0,2}}, ytick={{-2,0,2}}, xlabel={{$r_A$}}, ylabel={{$r_B$}}, title={{({"abc"[i]}) $\rho_{{AB}}={etiqueta}$}},
+  {PREAMBULO_EJES}]
+\addplot[only marks, mark=*, mark size=0.9pt, black!70] coordinates {{{pts}}};
+\addplot[thin, gray, dashed] coordinates {{(-3.5,0) (3.5,0)}};
+\addplot[thin, gray, dashed] coordinates {{(0,-3.5) (0,3.5)}};
+\end{{axis}}""")
+    tikz = "\\begin{tikzpicture}\n" + "\n".join(paneles) + "\n\\end{tikzpicture}\n"
+    (IMG / "anx_correlacion.tikz").write_text(tikz, encoding="utf-8")
+
+
+def dos_acciones():
+    """A2, I.3.2. Combinaciones de dos acciones: A con media 12 % y volatilidad 20 %; B con 18 % y 32 % (ejemplo del
+    texto viejo). Panel (a): pesos entre 0 y 1 con rho = 1, 0,5, 0, -0,5, -1. Panel (b): rho = 0 con ventas en corto
+    (peso de A entre -0,6 y 1,6), rama eficiente continua e ineficiente discontinua; cartera de mínima varianza."""
+    mA, sA, mB, sB = 12.0, 20.0, 18.0, 32.0
+
+    def cartera(w, rho):
+        m = w * mA + (1 - w) * mB
+        v = w**2 * sA**2 + (1 - w) ** 2 * sB**2 + 2 * w * (1 - w) * rho * sA * sB
+        return math.sqrt(max(v, 0.0)), m
+
+    estilos = {1.0: "very thick, black", 0.5: "thick, black!75", 0.0: "thick, black!60, dashed",
+               -0.5: "thick, black!45, dash dot", -1.0: "very thick, black!35"}
+    nombres = {1.0: "1", 0.5: "0{,}5", 0.0: "0", -0.5: "-0{,}5", -1.0: "-1"}
+    curvas = []
+    for rho in (1.0, 0.5, 0.0, -0.5, -1.0):
+        pts = " ".join("({:.3f},{:.3f})".format(*cartera(w / 200, rho)) for w in range(0, 201))
+        curvas.append(rf"\addplot[{estilos[rho]}] coordinates {{{pts}}};" + "\n"
+                      + rf"\addlegendentry{{$\rho_{{AB}}={nombres[rho]}$}}")
+    puntos = (r"\addplot[only marks, mark=*, mark size=1.8pt, black] coordinates {(20,12) (32,18)};" "\n"
+              r"\node[anchor=north west, font=\footnotesize] at (axis cs:20,12) {$A$};" "\n"
+              r"\node[anchor=south east, font=\footnotesize] at (axis cs:32,18) {$B$};")
+    panel_a = rf"""\begin{{axis}}[name=a, width=7.6cm, height=6.6cm, xmin=0, xmax=36, ymin=10, ymax=20,
+  xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}}, title={{(a) Pesos entre $0$ y $1$}},
+  legend pos=south west, {PREAMBULO_EJES}]
+{chr(10).join(curvas)}
+{puntos}
+\end{{axis}}"""
+
+    rho = 0.0
+    w_min = (sB**2 - rho * sA * sB) / (sA**2 + sB**2 - 2 * rho * sA * sB)
+    s_min, m_min = cartera(w_min, rho)
+    sup = " ".join("({:.3f},{:.3f})".format(*cartera(w_min - k * (w_min + 0.6) / 200, rho)) for k in range(0, 201))
+    inf = " ".join("({:.3f},{:.3f})".format(*cartera(w_min + k * (1.6 - w_min) / 200, rho)) for k in range(0, 201))
+    panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.6cm, xmin=0, xmax=50, ymin=6, ymax=24,
+  xlabel={{Volatilidad, $\sigma_p$ (\%)}}, ylabel={{Rentabilidad esperada, $\mu_p$ (\%)}}, title={{(b) Ramas, con $\rho_{{AB}}=0$}},
+  legend pos=south east, {PREAMBULO_EJES}]
+\addplot[very thick, black] coordinates {{{sup}}};
+\addlegendentry{{Rama eficiente}}
+\addplot[very thick, black, dashed] coordinates {{{inf}}};
+\addlegendentry{{Rama ineficiente}}
+\addplot[only marks, mark=*, mark size=1.8pt, black, forget plot] coordinates {{(20,12) (32,18) ({s_min:.3f},{m_min:.3f})}};
+\node[anchor=north west, font=\footnotesize] at (axis cs:20,12) {{$A$}};
+\node[anchor=north west, font=\footnotesize] at (axis cs:32,18) {{$B$}};
+\node[anchor=east, font=\footnotesize] at (axis cs:{s_min:.3f},{m_min:.3f}) {{$MV$}};
+\end{{axis}}"""
+    tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b + "\n\\end{tikzpicture}\n"
+    (IMG / "anx_dos_acciones.tikz").write_text(tikz, encoding="utf-8")
+    w_cero = sB / (sA + sB)
+    return w_min, s_min, m_min, w_cero, w_cero * mA + (1 - w_cero) * mB
+
+
+def diversificacion():
+    """A2, I.4.1. Volatilidad de una cartera equiponderada de N acciones con volatilidad media 35 % y correlación
+    media 0,30 (panel a, con las dos zonas) o 0,15 y 0,30 (panel b). Valores ilustrativos."""
+    sbar = 35.0
+
+    def sigma(n, rho):
+        return math.sqrt(sbar**2 / n + (1 - 1 / n) * rho * sbar**2)
+
+    ns = list(range(1, 51))
+    c30 = " ".join(f"({n},{sigma(n, 0.30):.3f})" for n in ns)
+    c15 = " ".join(f"({n},{sigma(n, 0.15):.3f})" for n in ns)
+    a30, a15 = sbar * math.sqrt(0.30), sbar * math.sqrt(0.15)
+    panel_a = rf"""\begin{{axis}}[name=a, width=7.6cm, height=6.4cm, xmin=1, xmax=50, ymin=0, ymax=37,
+  xlabel={{Número de acciones, $N$}}, ylabel={{Volatilidad de la cartera, $\sigma_p$ (\%)}}, title={{(a) Las dos partes del riesgo}},
+  {PREAMBULO_EJES}]
+\addplot[draw=none, fill=gray!30, forget plot] coordinates {{{c30} (50,{a30:.3f}) (1,{a30:.3f})}} -- cycle;
+\addplot[draw=none, fill=gray!65, forget plot] coordinates {{(1,0) (50,0) (50,{a30:.3f}) (1,{a30:.3f})}} -- cycle;
+\addplot[very thick, black] coordinates {{{c30}}};
+\node[font=\footnotesize] at (axis cs:28,{a30 + 6:.2f}) {{Riesgo específico}};
+\node[font=\footnotesize] at (axis cs:28,{a30 / 2:.2f}) {{Riesgo sistemático}};
+\end{{axis}}"""
+    panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.4cm, xmin=1, xmax=50, ymin=0, ymax=37,
+  xlabel={{Número de acciones, $N$}}, ylabel={{Volatilidad de la cartera, $\sigma_p$ (\%)}}, title={{(b) Dos correlaciones medias}},
+  legend pos=north east, {PREAMBULO_EJES}]
+\addplot[very thick, black] coordinates {{{c30}}};
+\addlegendentry{{$\bar\rho=0{{,}}30$}}
+\addplot[very thick, black!55, dashed] coordinates {{{c15}}};
+\addlegendentry{{$\bar\rho=0{{,}}15$}}
+\addplot[thin, black, dotted, forget plot] coordinates {{(1,{a30:.3f}) (50,{a30:.3f})}};
+\addplot[thin, black!55, dotted, forget plot] coordinates {{(1,{a15:.3f}) (50,{a15:.3f})}};
+\end{{axis}}"""
+    tikz = "\\begin{tikzpicture}\n" + panel_a + "\n" + panel_b + "\n\\end{tikzpicture}\n"
+    (IMG / "anx_diversificacion.tikz").write_text(tikz, encoding="utf-8")
+    return a30, a15, sigma(10, 0.30), sigma(30, 0.30)
+
+
 if __name__ == "__main__":
     residual()
     p, esp, med = ergodicidad()
     print(f"ergodicidad: P(W60 > 1) = {p:.4f}; E[W60] = {esp:.2f}; mediana = {med:.4f}")
     k, sg, si = colas()
     print(f"colas: exceso de curtosis GARCH simulado = {k:.2f}; sigma GARCH = {sg:.2f} %; sigma iid = {si:.2f} %")
+    correlacion()
+    w_min, s_min, m_min, w_cero, m_cero = dos_acciones()
+    print(f"dos acciones (rho=0): w_A min = {w_min:.4f}, sigma = {s_min:.2f} %, mu = {m_min:.2f} %;"
+          f" rho=-1: w_A sin riesgo = {w_cero:.4f}, mu = {m_cero:.2f} %")
+    a30, a15, s10, s30 = diversificacion()
+    print(f"diversificación: asíntotas {a30:.2f} % y {a15:.2f} %; sigma(10) = {s10:.2f} %; sigma(30) = {s30:.2f} %")
