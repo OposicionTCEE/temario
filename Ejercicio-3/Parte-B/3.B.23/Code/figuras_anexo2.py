@@ -565,7 +565,7 @@ def cota_hj():
                       for k in estilos)
     tikz = rf"""\begin{{tikzpicture}}
 \begin{{axis}}[width=9.6cm, height=7.4cm, xmin=0, xmax=80, ymin=0, ymax=1.4,
-  xlabel={{Aversión relativa al riesgo, $\gamma$}}, ylabel={{Volatilidad relativa del factor de descuento, $\sigma(m)/\mathbb E[m]$}},
+  xlabel={{Aversión relativa al riesgo, $\theta$}}, ylabel={{Volatilidad relativa del factor de descuento, $\sigma(m)/\mathbb E[m]$}},
   {PREAMBULO_EJES}, legend style={{at={{(1.03,0.5)}}, anchor=west}}]
 \addplot[fill=black!10, draw=none, area legend] coordinates {{(1,0) (10,0) (10,1.4) (1,1.4)}} -- cycle;
 \addlegendentry{{Aversión habitual, de $1$ a $10$}}

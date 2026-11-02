@@ -480,7 +480,7 @@ def eleccion():
         for k, u in enumerate(us):
             pts = " ".join(f"({s:.2f},{u + g / 2 * s * s / 100:.3f})" for s in np.linspace(0, 40, 81))
             if k == 0:
-                curvas.append(rf"\addplot[{est}] coordinates {{{pts}}};" + "\n" + rf"\addlegendentry{{$\gamma={nombre}$}}")
+                curvas.append(rf"\addplot[{est}] coordinates {{{pts}}};" + "\n" + rf"\addlegendentry{{$\theta={nombre}$}}")
             else:
                 curvas.append(rf"\addplot[{est}, forget plot] coordinates {{{pts}}};")
     panel_a = rf"""\begin{{axis}}[name=a, width=7.6cm, height=6.6cm, xmin=0, xmax=40, ymin=8, ymax=30,
@@ -496,7 +496,7 @@ def eleccion():
     nodos = "\n".join(rf"\node[anchor=south west, font=\footnotesize] at (axis cs:{g:.3f},{y:.3f}) {{${n}$}};" for g, y, n in marcas if n)
     pts = " ".join(f"({g:.3f},{y:.3f})" for g, y, _ in marcas)
     panel_b = rf"""\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.9cm, width=7.6cm, height=6.6cm, xmin=0, xmax=10, ymin=0, ymax=3.4,
-  xlabel={{Aversión al riesgo, $\gamma$}}, ylabel={{Proporción en la tangente, $y^*$}}, title={{(b) Cuánto se invierte en $T$}},
+  xlabel={{Aversión relativa al riesgo, $\theta$}}, ylabel={{Proporción en la tangente, $y^*$}}, title={{(b) Cuánto se invierte en $T$}},
   {PREAMBULO_EJES}]
 \addplot[very thick, black] coordinates {{{curva}}};
 \addplot[thin, black, dotted] coordinates {{(0,1) (10,1)}};
