@@ -81,8 +81,8 @@ def b1_dos_acciones():
 \node[anchor=south west, font=\footnotesize] at (axis cs:{sB},{mB}) {{$B$}};
 \node[anchor=east, font=\footnotesize] at (axis cs:{sig(0)[i0] - 0.01:.4f},{mu[i0]:.4f}) {{$MV$}};
 \node[anchor=north west, font=\scriptsize] at (axis cs:0.50,0.56) {{$\rho=1$}};
-\node[anchor=south east, font=\scriptsize] at (axis cs:0.33,0.56) {{$\rho=0$}};
-\node[anchor=south west, font=\scriptsize] at (axis cs:0.03,{m0 + 0.02:.4f}) {{$\rho=-1$}};
+\node[anchor=west, font=\scriptsize] at (axis cs:0.31,0.45) {{$\rho=0$}};
+\node[anchor=north west, font=\scriptsize] at (axis cs:0.08,0.37) {{$\rho=-1$}};
 \end{{axis}}
 \end{{tikzpicture}}
 """
@@ -186,7 +186,7 @@ def b1_eleccion():
         curvas.append(rf"\addplot[{estilo}] coordinates {{{_coords(s, u + theta / 2 * s ** 2)}}};")
         puntos.append((s0, m0))
     tikz = rf"""\begin{{tikzpicture}}
-\begin{{axis}}[width=9.5cm, height=6.4cm, xmin=0, xmax=0.85, ymin=0.05, ymax=0.95, legend pos=south east,
+\begin{{axis}}[width=9.5cm, height=6.4cm, xmin=0, xmax=0.85, ymin=0.05, ymax=1.05, legend pos=south east,
   legend style={{fill=none}}, {PLANO}]
 \addplot[thick, black!25, forget plot] coordinates {{{_coords(_sigma(mu_s), mu_s)}}};
 \addplot[very thick, black, forget plot] coordinates {{(0,{RF}) (0.85,{RF + 0.85 * pT:.4f})}};
