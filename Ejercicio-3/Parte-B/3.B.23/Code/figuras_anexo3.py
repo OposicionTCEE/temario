@@ -2,7 +2,7 @@
 
 Las de datos usan la biblioteca de FRENCH (Code/datos_french.py): rentabilidades del mercado de Estados Unidos, todas
 las acciones de CRSP ponderadas por su valor, Mkt-RF + RF. Las demás son esquemas sin datos.
-Uso, desde la carpeta del tema:  python3 -B Code/figuras_anexo3.py  y después  bash Code/generar_figura.sh <nombre>
+Uso, desde la carpeta del tema:  python3 -B Code/figuras_anexo3.py [a8 | a9]  y después  bash Code/generar_figura.sh <nombre>
 """
 import math
 import sys
