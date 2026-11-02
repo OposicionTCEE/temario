@@ -426,7 +426,8 @@ def main():
         ("· anx_razon_varianzas (anexo III, eficiencia): razón de varianzas mensual del mercado, 1926-2025 y 1963-2025, y autocorrelación diaria por decenios, 1926-2025.",),
         ("· anx_tecnico_indicadores (anexo III, análisis técnico): índice diario del mercado, medias, bandas de BOLLINGER, RSI y MACD, de julio de 2019 a diciembre de 2020; en el panel «texto», las fechas de las señales de 2020 y la proporción de cierres dentro de las bandas, 1926-2025.",),
         ("· anx_tecnico_regla (anexo III, análisis técnico): regla de la media de 200 sesiones frente a mantener el mercado, 1927-2025 y por tramos, y su resultado en 2020.",),
-        ("Las figuras anx_apt_replica, anx_conjuntos_informacion, anx_reaccion_noticias, anx_grossman_stiglitz, anx_tecnico_niveles y anx_tecnico_figuras son esquemas o ejemplos inventados y no tienen datos aquí.",),
+        ("· anx_cape (anexo III, análisis fundamental): CAPE mensual de SHILLER, 1881-2026, y rentabilidad real de los diez años siguientes frente a 1/CAPE, con la regresión; en el panel «texto», los extremos, los deciles y la rentabilidad desde 1990.",),
+        ("Las figuras anx_apt_replica, anx_conjuntos_informacion, anx_reaccion_noticias, anx_grossman_stiglitz, anx_tecnico_niveles, anx_tecnico_figuras, anx_multiplos y anx_treynor_black son esquemas o ejemplos inventados y no tienen datos aquí.",),
         ("Se regenera con  python3 Code/libro_datos.py  desde la carpeta del tema.",),
         (f"Biblioteca de datos de FRENCH: {LIBRERIA}",),
     ]
