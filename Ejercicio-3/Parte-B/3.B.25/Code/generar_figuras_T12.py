@@ -40,8 +40,8 @@ def b2_valor():
   \draw[thin] (0.8,0) -- ({disc:.3f},0) -- (3.4,{3.4 - disc:.3f});
   \draw[very thick] plot coordinates {{{coords(baja)}}};
   \draw[very thick, dashed] plot coordinates {{{coords(alta)}}};
-  \node[anchor=west] at (3.4,{baja[-1][1]:.3f}) {{$\sigma_1$}};
-  \node[anchor=west] at (3.4,{alta[-1][1] + 0.06:.3f}) {{$\sigma_2>\sigma_1$}};
+  \node[anchor=north west] at (3.4,{baja[-1][1]:.3f}) {{$\sigma_1$}};
+  \node[anchor=south west] at (3.4,{alta[-1][1]:.3f}) {{$\sigma_2>\sigma_1$}};
   \node[anchor=north west] at (2.62,{2.62 - disc - 0.02:.3f}) {{$\max\{{S-Ke^{{-r_fT}},0\}}$}};
   \draw ({disc:.3f},0.04) -- ({disc:.3f},-0.04);
   \node[below] at ({disc:.3f},0) {{$Ke^{{-r_fT}}$}};
