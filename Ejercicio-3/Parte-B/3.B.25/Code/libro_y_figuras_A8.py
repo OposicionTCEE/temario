@@ -209,7 +209,7 @@ def main():
         return " ".join(f"({X(p):.3f},{v * escala:.3f})" for p, v in sorted(serie.items()))
     org = {p: xtd["C"][p] + xtd["B"][p] for p in xtd["C"] if p.endswith(("Q2", "Q4")) and p >= "1998" and p in xtd["B"]}
     ejes = lambda ymax, paso, esc, etiqueta: (
-        f"    \\draw[->] (0,0) -- (5.9,0);\n    \\draw[->] (0,0) -- (0,{ymax * esc + 0.25:.2f}) node[left] {{{etiqueta}}};\n"
+        f"    \\draw[->] (0,0) -- (5.9,0);\n    \\draw[->] (0,0) -- (0,{ymax * esc + 0.25:.2f});\n"
         + "".join(f"    \\draw (0,{y * esc:.3f}) -- (-0.06,{y * esc:.3f}) node[left] {{{y}}};\n" for y in range(paso, ymax + 1, paso))
         + "".join(f"    \\draw ({(a - 1998) * 0.2:.2f},0) -- ({(a - 1998) * 0.2:.2f},-0.06) node[below] {{{a}}};\n" for a in (2000, 2010, 2020)))
     tam = (r"""% Figura (Anexo III, «Datos»): (a) nocional vivo de los derivados extrabursátiles (continua) y posición abierta nocional de los
