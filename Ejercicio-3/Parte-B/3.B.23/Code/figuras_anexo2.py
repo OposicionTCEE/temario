@@ -288,3 +288,8 @@ if __name__ == "__main__":
     print(f"mercado: SHARPE {sh_m:.3f}, TREYNOR {tr_m:.2f}")
     for n, r in res.items():
         print(n, {k: round(v, 3) for k, v in r.items()})
+    bc = beta_cero()
+    print(f"beta nula: M = {np.round(bc['pesos_m'] * 100, 1)} %, σ_M = {bc['sigma_m']:.2f} %, μ_Z = {bc['mu_z']:.2f} %,"
+          f" σ_Z = {bc['sigma_z']:.2f} %, betas = {np.round(bc['betas'], 3)}")
+    for f in sml_empirica():
+        print(f"{f['panel']:4s} D{f['decil']:<2d} beta {f['beta']:.2f} media {f['media']:.2f} CAPM {f['capm']:.2f} alfa {f['alfa']:.2f}")
