@@ -13,11 +13,13 @@ import numpy as np
 CODE = Path(__file__).resolve().parent
 sys.path.insert(0, str(CODE))
 sys.path.insert(0, "/Users/marceloortega/TCEE/main/herramientas")
-from datos_french import BETA, BM, CINCO, FACTORES, IMPULSO, SECTORES, TAMANO_VALOR, URL, anual, seccion  # noqa: E402
+from datos_french import (BETA, BM, CINCO, FACTORES, FACTORES_DIARIOS, IMPULSO, SECTORES, TAMANO_VALOR, URL,  # noqa: E402
+                          anual, diaria, seccion)
 from datos_fred import CONSUMO, trimestres  # noqa: E402
 from datos_fred import URL as URL_FRED  # noqa: E402
 from figuras_anexo2 import (DECILES_BETA, DECILES_BM, PERIODO, SECTORES_ES, componentes, contraste_deciles,  # noqa: E402
                             cota_hj, factores_acumulados, tres_factores)
+from figuras_anexo3 import razon_varianzas  # noqa: E402
 from xlsx_simple import escribir_xlsx  # noqa: E402
 
 LIBRERIA = "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html"
@@ -53,6 +55,9 @@ FUENTES = [
      " gasto real en consumo personal por habitante de Estados Unidos", f"Code/datos/FRED_{CONSUMO}.csv",
      URL_FRED.format(CONSUMO), "02/11/2026", "Trimestral, dólares encadenados de 2017, desestacionalizado, en tasa"
      " anual. Incluye los bienes duraderos."),
+    ("F9", "Kenneth R. French Data Library: Fama/French 3 Factors [Daily]", f"Code/datos/{FACTORES_DIARIOS}.csv",
+     URL.format(FACTORES_DIARIOS), "02/11/2026", "Base de CRSP de 202609. Rentabilidades diarias en % de Mkt-RF y RF desde el 1 de"
+     " julio de 1926; se usan hasta el 31 de diciembre de 2025."),
 ]
 TRATAMIENTOS = [
     ("Código", "Tratamiento"),
@@ -87,7 +92,12 @@ TRATAMIENTOS = [
             " exp(γg − γ²σc²/2) − 1, con g y σc la media y la desviación típica de T12."),
     ("T14", "Correlación entre el crecimiento del consumo (T12) y la rentabilidad anual en exceso del mercado (Mkt-RF de"
             " la sección anual de F1, enero a diciembre), 1964 a 2025."),
-    ("T0", "Sin tratamiento: dato mensual (o trimestral, en F8) tal como lo publica la fuente."),
+    ("T15", "Razón de varianzas de LO y MacKINLAY (1988): rentabilidad total mensual del mercado (Mkt-RF + RF de F1) en"
+            " logaritmos, ln(1 + r/100); varianza de las sumas solapadas de q meses con corrección del sesgo, dividida por q veces"
+            " la varianza mensual; error típico con rentabilidades i.i.d., raíz de 2(2q-1)(q-1)/(3qT); z = (VR - 1)/error."),
+    ("T16", "Autocorrelación de primer orden de la rentabilidad total diaria del mercado (Mkt-RF + RF de F9) en cada decenio"
+            " (1926-1935 a 2016-2025); banda de ±2/raíz(n), con n la media de días por decenio."),
+    ("T0", "Sin tratamiento: dato mensual (o trimestral, en F8, o diario, en F9) tal como lo publica la fuente."),
 ]
 
 
@@ -113,7 +123,7 @@ def indicadores():
                                          ("Recta ajustada: pendiente", pend, "% anual por unidad de beta", "T6")):
             filas.append(("anx_sml_empirica", figura_panel, "Mercado y recta ajustada", ind, round(valor, 4), unidad,
                           periodo, "F1" if "Recta" not in ind else fuente, trat))
-    return filas + indicadores_a7(periodo)
+    return filas + indicadores_a7(periodo) + indicadores_a8()
 
 
 def indicadores_a7(periodo):
@@ -197,6 +207,25 @@ def indicadores_a7(periodo):
     return filas
 
 
+def indicadores_a8():
+    """Filas de la figura de la A8 con datos: anx_razon_varianzas."""
+    filas = []
+    r = razon_varianzas()
+    for nombre, clave, tramo in (("1926-2025", "vr_largo", "1926-07 a 2025-12"), ("1963-2025", "vr_corto", "1963-07 a 2025-12")):
+        for q, (vr, error) in zip(r["qs"], r[clave]):
+            filas.append(("anx_razon_varianzas", "(a)", f"Mercado, {nombre}", f"Razón de varianzas a {q} meses", round(float(vr), 4),
+                          "", tramo, "F1", "T15"))
+            if q > 1:
+                filas.append(("anx_razon_varianzas", "(a)", f"Mercado, {nombre}", f"Estadístico z a {q} meses",
+                              round(float((vr - 1) / error), 4), "", tramo, "F1", "T15"))
+    for a, b, c, n in r["autoc"]:
+        filas.append(("anx_razon_varianzas", "(b)", "Mercado, rentabilidad diaria", "Autocorrelación de primer orden", round(float(c), 4),
+                      f"{n} días", f"{a} a {b}", "F9", "T16"))
+    filas.append(("anx_razon_varianzas", "(b)", "Mercado, rentabilidad diaria", "Banda de ±2/raíz(n)", round(float(r["banda"]), 4), "",
+                  "1926 a 2025", "F9", "T16"))
+    return filas
+
+
 def series_brutas():
     filas = [("Fichero", "Serie", "Periodo", "Valor", "Unidad", "Fuente", "Tratamiento")]
     for fichero, marca, columnas, fuente in ((FACTORES, ",Mkt-RF", ["Mkt-RF", "SMB", "HML", "RF"], "F1"),
@@ -212,6 +241,18 @@ def series_brutas():
             j = cab.index(col)
             for mes, valor in zip(meses[dentro], matriz[dentro, j]):
                 filas.append((fichero, col, int(mes), float(valor), "% mensual", fuente, "T0"))
+    meses, cab, matriz = seccion(FACTORES, ",Mkt-RF")
+    antes = (meses >= 192607) & (meses < PERIODO[0])
+    for col in ("Mkt-RF", "RF"):
+        j = cab.index(col)
+        for mes, valor in zip(meses[antes], matriz[antes, j]):
+            filas.append((FACTORES, col, int(mes), float(valor), "% mensual", "F1", "T0"))
+    fechas, cd, d = diaria()
+    dentro = fechas <= 20251231
+    for col in ("Mkt-RF", "RF"):
+        j = cd.index(col)
+        for fecha, valor in zip(fechas[dentro], d[dentro, j]):
+            filas.append((FACTORES_DIARIOS, col, int(fecha), float(valor), "% diario", "F9", "T0"))
     for año, valor in sorted(anual(FACTORES, "Mkt-RF").items()):
         if 1964 <= año <= 2025:
             filas.append((f"{FACTORES} (sección anual)", "Mkt-RF", año, valor, "% anual", "F1", "T0"))
@@ -238,7 +279,8 @@ def main():
         ("· anx_factores (riesgo o error): rentabilidad acumulada de los seis factores y sus medias por tramos.",),
         ("· anx_hj (factor de descuento estocástico): cota de HANSEN y JAGANNATHAN y CAPM de consumo, con el consumo de"
          " FRED de 1964 a 2025.",),
-        ("La figura anx_apt_replica usa el ejemplo inventado del texto y no tiene datos aquí.",),
+        ("· anx_razon_varianzas (anexo III, eficiencia): razón de varianzas mensual del mercado, 1926-2025 y 1963-2025, y autocorrelación diaria por decenios, 1926-2025.",),
+        ("Las figuras anx_apt_replica, anx_conjuntos_informacion, anx_reaccion_noticias y anx_grossman_stiglitz son esquemas o ejemplos inventados y no tienen datos aquí.",),
         ("Se regenera con  python3 Code/libro_datos.py  desde la carpeta del tema.",),
         (f"Biblioteca de datos de FRENCH: {LIBRERIA}",),
     ]
