@@ -359,3 +359,113 @@ if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "b2":
     b2_contraste()
     b2_apt()
     b2_factores()
+
+
+# --- T13: bloque 3 ---
+
+def b3_conjuntos():
+    """B3, 4.1. Las tres formas de eficiencia como conjuntos de información anidados y la práctica que apuesta contra
+    cada una."""
+    tikz = r"""\begin{tikzpicture}[font=\footnotesize]
+\draw[fill=black!5, rounded corners=8pt] (0,0) rectangle (13,5.2);
+\draw[fill=black!13, rounded corners=8pt] (0.45,0.4) rectangle (9.0,4.8);
+\draw[fill=black!24, rounded corners=8pt] (0.9,0.8) rectangle (5.0,4.4);
+\node[align=center] at (2.95,2.6) {\textbf{Forma débil}\\[2pt]Precios y volúmenes\\pasados\\[6pt]\textit{Análisis técnico}};
+\node[align=center] at (7.0,2.6) {\textbf{Forma semifuerte}\\[2pt]Toda la información\\pública\\[6pt]\textit{Análisis fundamental}};
+\node[align=center] at (11.0,2.6) {\textbf{Forma fuerte}\\[2pt]Toda la información,\\también la privada\\[6pt]\textit{Información privilegiada}};
+\end{tikzpicture}
+"""
+    escribir_tikz("b3_conjuntos", tikz)
+
+
+def b3_grossman():
+    """B3, 4.2. Equilibrio de GROSSMAN y STIGLITZ (1980): la ventaja de informarse, psi(kappa), cae con la proporción de
+    informados, kappa, y en equilibrio iguala el coste, chi, en kappa* < 1."""
+    k = np.linspace(0, 1, 101)
+    ventaja = 1.2 * (1 - k) ** 1.6
+    C = 0.36
+    k1 = 1 - (C / 1.2) ** (1 / 1.6)
+    tikz = rf"""\begin{{tikzpicture}}
+\begin{{axis}}[width=9.5cm, height=6.2cm, xmin=0, xmax=1, ymin=0, ymax=1.3, xtick={{0,{k1:.3f},1}},
+  xticklabels={{$0$,$\kappa^*$,$1$}}, ytick={{{C}}}, yticklabels={{$\chi$}},
+  xlabel={{Proporción de inversores informados, $\kappa$}}, ylabel={{Ventaja y coste de informarse}}, {PREAMBULO_EJES}]
+\addplot[very thick, black] coordinates {{{_coords(k, ventaja)}}};
+\node[anchor=south west, font=\footnotesize] at (axis cs:0.08,{1.2 * 0.92 ** 1.6:.3f}) {{$\psi(\kappa)$}};
+\addplot[thick, black!60, dashed] coordinates {{(0,{C}) (1,{C})}};
+\addplot[thin, black!40, dotted] coordinates {{({k1:.3f},0) ({k1:.3f},{C})}};
+\addplot[only marks, mark=*, mark size=1.8pt, black] coordinates {{({k1:.3f},{C})}};
+\end{{axis}}
+\end{{tikzpicture}}
+"""
+    escribir_tikz("b3_grossman", tikz)
+
+
+def b3_tecnico(n=50):
+    """B3, 4.3. Una regla técnica convierte la historia del precio en una posición: estar en el mercado (omega = 1) cuando
+    el precio supera su media móvil de n sesiones y fuera (omega = 0) cuando cae por debajo. Trayectoria simulada con
+    tramos de tendencia alcista, bajista y alcista (semilla 41)."""
+    rng = np.random.default_rng(41)
+    deriva = np.concatenate([np.full(140, 0.0025), np.full(110, -0.0035), np.full(150, 0.003)])
+    r = deriva + rng.normal(0, 0.011, deriva.size)
+    p = 100 * np.exp(np.cumsum(r))
+    media = np.convolve(p, np.ones(n) / n, mode="valid")
+    t = np.arange(n - 1, p.size)
+    precio = p[n - 1:]
+    dentro = precio > media
+    zonas = []
+    i = 0
+    while i < len(t):
+        if dentro[i]:
+            j = i
+            while j + 1 < len(t) and dentro[j + 1]:
+                j += 1
+            zonas.append((t[i], t[j]))
+            i = j + 1
+        else:
+            i += 1
+    ymin, ymax = float(np.floor(p.min() / 5) * 5 - 5), float(np.ceil(p.max() / 5) * 5 + 5)
+    bandas = "\n".join(rf"\fill[black!10] (axis cs:{a},{ymin}) rectangle (axis cs:{b},{ymax});" for a, b in zonas if b > a)
+    tikz = rf"""\begin{{tikzpicture}}
+\begin{{axis}}[width=13cm, height=6.2cm, xmin={n - 1}, xmax={p.size - 1}, ymin={ymin}, ymax={ymax}, xtick=\empty, ytick=\empty,
+  xlabel={{Sesiones}}, ylabel={{Precio}}, axis on top, legend pos=north west, {PREAMBULO_EJES}]
+{bandas}
+\addplot[thin, black] coordinates {{{_coords(t, precio)}}};
+\addlegendentry{{Precio}}
+\addplot[very thick, black!55] coordinates {{{_coords(t, media)}}};
+\addlegendentry{{Media móvil}}
+\addlegendimage{{area legend, fill=black!10, draw=none}}
+\addlegendentry{{En el mercado, $\omega_t=1$}}
+\end{{axis}}
+\end{{tikzpicture}}
+"""
+    escribir_tikz("b3_tecnico", tikz)
+    return len(zonas)
+
+
+def b3_valor():
+    """B3, 4.4. Ratio entre precio y valor contable en función de la ROE, P/VC = (ROE - g)/(k - g), sin crecimiento y con
+    crecimiento: las dos rectas se cortan en ROE = k, donde la ratio es uno, y crecer eleva el valor a la derecha de ese
+    punto y lo reduce a su izquierda."""
+    x = np.linspace(0, 2, 201)
+    c = 0.5
+    xg = np.linspace(c, 2, 151)
+    tikz = rf"""\begin{{tikzpicture}}
+\begin{{axis}}[width=9.5cm, height=6cm, xmin=0, xmax=2.1, ymin=0, ymax=3.2, xtick={{0,1,2}}, xticklabels={{$0$,$k$,$2k$}},
+  ytick={{1,2,3}}, xlabel={{Rentabilidad de los recursos propios, ROE}}, ylabel={{P/VC}}, {PREAMBULO_EJES}]
+\addplot[thin, black!45, dashed] coordinates {{(1,0) (1,3.2)}};
+\addplot[thin, black!45, dashed] coordinates {{(0,1) (2.1,1)}};
+\addplot[thick, black] coordinates {{{_coords(x, x)}}};
+\addplot[very thick, black!55] coordinates {{{_coords(xg, (xg - c) / (1 - c))}}};
+\node[anchor=north west, font=\scriptsize] at (axis cs:1.75,1.68) {{$g=0$}};
+\node[anchor=south east, font=\scriptsize] at (axis cs:1.9,2.75) {{$g>0$}};
+\end{{axis}}
+\end{{tikzpicture}}
+"""
+    escribir_tikz("b3_valor", tikz)
+
+
+if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "b3":
+    b3_conjuntos()
+    b3_grossman()
+    print("tramos dentro del mercado:", b3_tecnico())
+    b3_valor()
