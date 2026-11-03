@@ -451,7 +451,7 @@ def b3_valor():
     xg = np.linspace(c, 2, 151)
     tikz = rf"""\begin{{tikzpicture}}
 \begin{{axis}}[width=9.5cm, height=6cm, xmin=0, xmax=2.1, ymin=0, ymax=3.2, xtick={{0,1,2}}, xticklabels={{$0$,$k$,$2k$}},
-  ytick={{1,2,3}}, xlabel={{Rentabilidad de los recursos propios, ROE}}, ylabel={{P/VC}}, {PREAMBULO_EJES}]
+  ytick={{1}}, xlabel={{Rentabilidad de los recursos propios, ROE}}, ylabel={{P/VC}}, {PREAMBULO_EJES}]
 \addplot[thin, black!45, dashed] coordinates {{(1,0) (1,3.2)}};
 \addplot[thin, black!45, dashed] coordinates {{(0,1) (2.1,1)}};
 \addplot[thick, black] coordinates {{{_coords(x, x)}}};
