@@ -241,6 +241,7 @@ if __name__ == "__main__" and (len(sys.argv) == 1 or sys.argv[1] == "b1"):
     print("dos acciones: peso de A sin riesgo con rho = -1 y de mínima varianza con rho = 0:", b1_dos_acciones())
     b1_diversificacion()
     b1_frontera()
+    b1_dos_fondos()
     print("tangente (sigma, mu, pendiente):", b1_tangente())
     b1_eleccion()
 
