@@ -140,6 +140,37 @@ def b1_frontera():
     escribir_tikz("b1_frontera", tikz)
 
 
+def b1_dos_fondos():
+    """B1, 1.4. Propiedad de los dos fondos (BLACK, 1972): combinando dos carteras de la frontera, F1 y F2, con pesos a y
+    1 - a se recorre la frontera entera; entre ellas con pesos positivos, más allá de F2 vendiendo en corto F1 (a < 0) y
+    hacia MV y la rama ineficiente vendiendo en corto F2 (a > 1)."""
+    m1, m2 = M0 + 0.15, M0 + 0.40
+    s1, s2 = float(_sigma(m1)), float(_sigma(m2))
+    tramo = np.linspace(m1, m2, 120)
+    arriba = np.linspace(m2, 0.95, 80)
+    abajo = np.linspace(0.05, m1, 160)
+    todo = np.linspace(0.05, 0.95, 300)
+    tikz = rf"""\begin{{tikzpicture}}
+\begin{{axis}}[width=9.5cm, height=6.4cm, xmin=0, xmax=0.85, ymin=0.05, ymax=0.95, legend pos=south east,
+  legend style={{fill=none}}, {PLANO}]
+\addplot[line width=3pt, black!12, forget plot] coordinates {{{_coords(_sigma(todo), todo)}}};
+\addplot[very thick, black] coordinates {{{_coords(_sigma(tramo), tramo)}}};
+\addlegendentry{{Entre los dos fondos, $0\le a\le 1$}}
+\addplot[thick, black, dashed] coordinates {{{_coords(_sigma(arriba), arriba)}}};
+\addlegendentry{{Venta en corto de $F_1$, $a<0$}}
+\addplot[thick, black, dotted] coordinates {{{_coords(_sigma(abajo), abajo)}}};
+\addlegendentry{{Venta en corto de $F_2$, $a>1$}}
+\addplot[only marks, mark=*, mark size=1.8pt, black, forget plot] coordinates {{({s1:.4f},{m1:.4f}) ({s2:.4f},{m2:.4f})}};
+\addplot[only marks, mark=square*, mark size=1.8pt, black, forget plot] coordinates {{({S0},{M0})}};
+\node[anchor=west, font=\footnotesize] at (axis cs:{s1 + 0.012:.4f},{m1:.4f}) {{$F_1$}};
+\node[anchor=west, font=\footnotesize] at (axis cs:{s2 + 0.012:.4f},{m2:.4f}) {{$F_2$}};
+\node[anchor=east, font=\footnotesize] at (axis cs:{S0 - 0.01},{M0}) {{$MV$}};
+\end{{axis}}
+\end{{tikzpicture}}
+"""
+    escribir_tikz("b1_dos_fondos", tikz)
+
+
 def b1_tangente():
     """B1, 1.5. Desde el activo sin riesgo, las combinaciones con cada cartera de la frontera forman una recta cuya
     pendiente es su ratio de SHARPE; la de mayor pendiente toca la frontera en la cartera tangente T."""
