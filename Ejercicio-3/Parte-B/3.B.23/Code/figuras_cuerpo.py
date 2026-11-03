@@ -141,9 +141,9 @@ def b1_frontera():
 
 
 def b1_dos_fondos():
-    """B1, 1.4. Propiedad de los dos fondos (BLACK, 1972): combinando dos carteras de la frontera, F1 y F2, con pesos a y
-    1 - a se recorre la frontera entera; entre ellas con pesos positivos, más allá de F2 vendiendo en corto F1 (a < 0) y
-    hacia MV y la rama ineficiente vendiendo en corto F2 (a > 1)."""
+    """B1, 1.4. Propiedad de los dos fondos (BLACK, 1972): combinando dos carteras de la frontera, C1 y C2, con pesos ω y
+    1 - ω se recorre la frontera entera; entre ellas con pesos positivos, más allá de C2 vendiendo en corto C1 (ω < 0) y
+    hacia MV y la rama ineficiente vendiendo en corto C2 (ω > 1)."""
     m1, m2 = M0 + 0.15, M0 + 0.40
     s1, s2 = float(_sigma(m1)), float(_sigma(m2))
     tramo = np.linspace(m1, m2, 120)
@@ -155,15 +155,15 @@ def b1_dos_fondos():
   legend style={{fill=none}}, {PLANO}]
 \addplot[line width=3pt, black!12, forget plot] coordinates {{{_coords(_sigma(todo), todo)}}};
 \addplot[very thick, black] coordinates {{{_coords(_sigma(tramo), tramo)}}};
-\addlegendentry{{Entre los dos fondos, $0\le a\le 1$}}
+\addlegendentry{{Entre los dos fondos, $0\le\omega\le 1$}}
 \addplot[thick, black, dashed] coordinates {{{_coords(_sigma(arriba), arriba)}}};
-\addlegendentry{{Venta en corto de $F_1$, $a<0$}}
+\addlegendentry{{Venta en corto de $C_1$, $\omega<0$}}
 \addplot[thick, black, dotted] coordinates {{{_coords(_sigma(abajo), abajo)}}};
-\addlegendentry{{Venta en corto de $F_2$, $a>1$}}
+\addlegendentry{{Venta en corto de $C_2$, $\omega>1$}}
 \addplot[only marks, mark=*, mark size=1.8pt, black, forget plot] coordinates {{({s1:.4f},{m1:.4f}) ({s2:.4f},{m2:.4f})}};
 \addplot[only marks, mark=square*, mark size=1.8pt, black, forget plot] coordinates {{({S0},{M0})}};
-\node[anchor=west, font=\footnotesize] at (axis cs:{s1 + 0.012:.4f},{m1:.4f}) {{$F_1$}};
-\node[anchor=west, font=\footnotesize] at (axis cs:{s2 + 0.012:.4f},{m2:.4f}) {{$F_2$}};
+\node[anchor=west, font=\footnotesize] at (axis cs:{s1 + 0.012:.4f},{m1:.4f}) {{$C_1$}};
+\node[anchor=west, font=\footnotesize] at (axis cs:{s2 + 0.012:.4f},{m2:.4f}) {{$C_2$}};
 \node[anchor=east, font=\footnotesize] at (axis cs:{S0 - 0.01},{M0}) {{$MV$}};
 \end{{axis}}
 \end{{tikzpicture}}
