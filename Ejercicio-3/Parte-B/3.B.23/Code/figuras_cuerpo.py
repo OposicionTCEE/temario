@@ -323,7 +323,7 @@ def b2_cml_sml():
         rf"\node[anchor=south east, font=\footnotesize] at (axis cs:{se:.4f},{m:.4f}) {{${n}'$}};" for n, s, m, se in puntos_a)
     linea_b = lambda b: RF + LAMBDA * b  # noqa: E731
     tikz = rf"""\begin{{tikzpicture}}
-\begin{{axis}}[name=a, width=7.8cm, height=5.8cm, xmin=0, xmax=0.75, ymin=0, ymax=0.82, title={{(a) Volatilidad}},
+\begin{{axis}}[name=a, width=7.6cm, height=5.6cm, xmin=0, xmax=0.75, ymin=0, ymax=0.82, title={{(a) Volatilidad}},
   xlabel={{Volatilidad, $\sigma_j$}}, ylabel={{Rentabilidad esperada, $\mu_j$}}, xtick=\empty, ytick={{{RF}}}, yticklabels={{$r_f$}},
   {PREAMBULO_EJES}]
 \addplot[very thick, black] coordinates {{(0,{RF}) (0.70,{RF + 0.70 * pend:.4f})}};
@@ -335,8 +335,8 @@ def b2_cml_sml():
 \node[anchor=south east, font=\footnotesize] at (axis cs:{sM},{mM:.4f}) {{$M$}};
 {etiquetas}
 \end{{axis}}
-\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.1cm, width=7.8cm, height=5.8cm, xmin=0, xmax=2, ymin=0, ymax=0.82,
-  title={{(b) Beta}}, xtick={{0,1}}, ytick={{{RF}}}, yticklabels={{$r_f$}}, {BETA}]
+\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=0.5cm, width=7.6cm, height=5.6cm, xmin=0, xmax=2, ymin=0, ymax=0.82,
+  title={{(b) Beta}}, xtick={{0,1}}, ytick={{{RF}}}, yticklabels={{$r_f$}}, {BETA}, ylabel={{}}]
 \addplot[very thick, black] coordinates {{(0,{RF}) (2,{linea_b(2):.4f})}};
 \node[anchor=south east, font=\scriptsize] at (axis cs:1.85,{linea_b(1.85):.4f}) {{SML}};
 \addplot[only marks, mark=*, mark size=1.8pt, black] coordinates {{({acc["A"][0]},{linea_b(acc["A"][0]):.4f}) ({acc["B"][0]},{linea_b(acc["B"][0]):.4f})}};
