@@ -228,7 +228,7 @@ def b2_cml():
     mu_i = np.linspace(0.05, M0, 120)
     acciones = [(0.45, 0.35), (0.55, 0.62), (0.70, 0.78), (0.60, 0.45), (0.38, 0.50), (0.66, 0.30)]
     tikz = rf"""\begin{{tikzpicture}}
-\begin{{axis}}[width=9.5cm, height=6.4cm, xmin=0, xmax=0.85, ymin=0.05, ymax=1.05, legend pos=south east,
+\begin{{axis}}[width=9.5cm, height=6.4cm, xmin=0, xmax=0.85, ymin=0.05, ymax=1.05, legend pos=north west,
   legend style={{fill=none}}, {PLANO}]
 \addplot[very thick, black] coordinates {{(0,{RF}) (0.85,{RF + 0.85 * pT:.4f})}};
 \addlegendentry{{Línea del mercado de capitales}}
