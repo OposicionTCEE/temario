@@ -427,7 +427,7 @@ def b3_tecnico(n=50):
     bandas = "\n".join(rf"\fill[black!10] (axis cs:{a},{ymin}) rectangle (axis cs:{b},{ymax});" for a, b in zonas if b > a)
     tikz = rf"""\begin{{tikzpicture}}
 \begin{{axis}}[width=13cm, height=6.2cm, xmin={n - 1}, xmax={p.size - 1}, ymin={ymin}, ymax={ymax}, xtick=\empty, ytick=\empty,
-  xlabel={{Sesiones}}, ylabel={{Precio}}, axis on top, legend pos=north west, {PREAMBULO_EJES}]
+  xlabel={{Sesiones}}, ylabel={{Precio}}, axis on top, legend pos=south west, {PREAMBULO_EJES}]
 {bandas}
 \addplot[thin, black] coordinates {{{_coords(t, precio)}}};
 \addlegendentry{{Precio}}
