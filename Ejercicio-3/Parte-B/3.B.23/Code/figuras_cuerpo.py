@@ -279,11 +279,83 @@ def b2_cml():
 
 
 def b2_sml():
-    """B2, 2.2. Línea del mercado de valores: rentabilidad esperada frente a beta, por (0, r_f) y (1, mu_M). Las acciones
-    bien valoradas, A y B, están sobre ella; P, por encima, tiene un alfa positivo y está infravalorada; Q, por debajo,
-    un alfa negativo y está sobrevalorada."""
+    """B2, 2.2. Línea del mercado de valores: rentabilidad esperada frente a beta, por (0, r_f) y (1, mu_M). En equilibrio
+    todas las acciones están sobre ella, como A y B. Las acciones fuera de la recta se dibujan aparte, en b2_alfa."""
     linea = lambda b: RF + LAMBDA * b  # noqa: E731
-    bA, bB, bP, bQ = 0.55, 1.5, 0.8, 1.25
+    bA, bB = 0.55, 1.5
+    tikz = rf"""\begin{{tikzpicture}}
+\begin{{axis}}[width=9.5cm, height=6.4cm, xmin=0, xmax=2, ymin=0, ymax=0.82, xtick={{0,1}}, ytick={{{RF},{RF + LAMBDA}}},
+  yticklabels={{$r_f$,$\mu_M$}}, {BETA}]
+\addplot[very thick, black] coordinates {{(0,{RF}) (2,{linea(2):.4f})}};
+\addplot[thin, black!40, dashed] coordinates {{(1,0) (1,{RF + LAMBDA})}};
+\addplot[thin, black!40, dashed] coordinates {{(0,{RF + LAMBDA}) (1,{RF + LAMBDA})}};
+\addplot[only marks, mark=*, mark size=1.8pt, black] coordinates {{({bA},{linea(bA):.4f}) ({bB},{linea(bB):.4f})}};
+\addplot[only marks, mark=square*, mark size=1.8pt, black] coordinates {{(1,{RF + LAMBDA}) (0,{RF})}};
+\node[anchor=north west, font=\footnotesize] at (axis cs:{bA},{linea(bA):.4f}) {{$A$}};
+\node[anchor=north west, font=\footnotesize] at (axis cs:{bB},{linea(bB):.4f}) {{$B$}};
+\node[anchor=south east, font=\footnotesize] at (axis cs:1,{RF + LAMBDA}) {{$M$}};
+\end{{axis}}
+\end{{tikzpicture}}
+"""
+    escribir_tikz("b2_sml", tikz)
+
+
+def b2_cml_sml():
+    """B2, 2.2. Las mismas acciones en los dos planos. (a) En el de volatilidad y rentabilidad esperada, A y B quedan por
+    debajo de la CML; A' y B', combinaciones del mercado con el activo sin riesgo con la misma beta, están sobre ella y
+    ofrecen la misma rentabilidad esperada con menos volatilidad. (b) En el de la beta, A y A' (B y B') coinciden sobre la
+    SML. Números arbitrarios: r_f = 0,12, mu_M = 0,42, sigma_M = 0,30."""
+    sM, mM = 0.30, RF + LAMBDA
+    pend = (mM - RF) / sM
+    acc = {"A": (0.55, 0.36), "B": (1.5, 0.62)}  # beta, volatilidad total
+    puntos_a, prima, nodos = [], [], []
+    for n, (b, s) in acc.items():
+        m = RF + b * LAMBDA
+        se = b * sM
+        assert s > se and m < RF + pend * s
+        puntos_a.append((n, s, m, se))
+    lineas = "\n".join(
+        rf"\addplot[thin, black, dotted] coordinates {{({se:.4f},{m:.4f}) ({s:.4f},{m:.4f})}};" for n, s, m, se in puntos_a)
+    marcas = " ".join(f"({s:.4f},{m:.4f})" for n, s, m, se in puntos_a)
+    marcas2 = " ".join(f"({se:.4f},{m:.4f})" for n, s, m, se in puntos_a)
+    etiquetas = "\n".join(
+        rf"\node[anchor=west, font=\footnotesize] at (axis cs:{s + 0.01:.4f},{m:.4f}) {{${n}$}};" "\n"
+        rf"\node[anchor=south east, font=\footnotesize] at (axis cs:{se:.4f},{m:.4f}) {{${n}'$}};" for n, s, m, se in puntos_a)
+    linea_b = lambda b: RF + LAMBDA * b  # noqa: E731
+    tikz = rf"""\begin{{tikzpicture}}
+\begin{{axis}}[name=a, width=7.8cm, height=5.8cm, xmin=0, xmax=0.75, ymin=0, ymax=0.82, title={{(a) Volatilidad}},
+  xlabel={{Volatilidad, $\sigma_j$}}, ylabel={{Rentabilidad esperada, $\mu_j$}}, xtick=\empty, ytick={{{RF}}}, yticklabels={{$r_f$}},
+  {PREAMBULO_EJES}]
+\addplot[very thick, black] coordinates {{(0,{RF}) (0.70,{RF + 0.70 * pend:.4f})}};
+\node[anchor=south east, font=\scriptsize] at (axis cs:0.62,{RF + 0.62 * pend:.4f}) {{CML}};
+{lineas}
+\addplot[only marks, mark=*, mark size=1.8pt, black] coordinates {{{marcas}}};
+\addplot[only marks, mark=o, mark size=1.8pt, black] coordinates {{{marcas2}}};
+\addplot[only marks, mark=square*, mark size=1.8pt, black] coordinates {{({sM},{mM:.4f})}};
+\node[anchor=south east, font=\footnotesize] at (axis cs:{sM},{mM:.4f}) {{$M$}};
+{etiquetas}
+\end{{axis}}
+\begin{{axis}}[at={{(a.east)}}, anchor=west, xshift=1.1cm, width=7.8cm, height=5.8cm, xmin=0, xmax=2, ymin=0, ymax=0.82,
+  title={{(b) Beta}}, xtick={{0,1}}, ytick={{{RF}}}, yticklabels={{$r_f$}}, {BETA}]
+\addplot[very thick, black] coordinates {{(0,{RF}) (2,{linea_b(2):.4f})}};
+\node[anchor=south east, font=\scriptsize] at (axis cs:1.85,{linea_b(1.85):.4f}) {{SML}};
+\addplot[only marks, mark=*, mark size=1.8pt, black] coordinates {{({acc["A"][0]},{linea_b(acc["A"][0]):.4f}) ({acc["B"][0]},{linea_b(acc["B"][0]):.4f})}};
+\addplot[only marks, mark=square*, mark size=1.8pt, black] coordinates {{(1,{mM:.4f})}};
+\node[anchor=south east, font=\footnotesize] at (axis cs:1,{mM:.4f}) {{$M$}};
+\node[anchor=north west, font=\footnotesize] at (axis cs:{acc["A"][0]},{linea_b(acc["A"][0]):.4f}) {{$A=A'$}};
+\node[anchor=north west, font=\footnotesize] at (axis cs:{acc["B"][0]},{linea_b(acc["B"][0]):.4f}) {{$B=B'$}};
+\end{{axis}}
+\end{{tikzpicture}}
+"""
+    escribir_tikz("b2_cml_sml", tikz)
+
+
+def b2_alfa():
+    """B2, 2.2. Acciones fuera de la SML: P, por encima, con alfa positivo (infravalorada), y Q, por debajo, con alfa
+    negativo (sobrevalorada). Las flechas indican el ajuste: la beta no cambia, la rentabilidad esperada vuelve a la
+    recta, en sentido contrario al del precio."""
+    linea = lambda b: RF + LAMBDA * b  # noqa: E731
+    bP, bQ = 0.8, 1.25
     mP, mQ = linea(bP) + 0.10, linea(bQ) - 0.09
     tikz = rf"""\begin{{tikzpicture}}
 \begin{{axis}}[width=9.5cm, height=6.4cm, xmin=0, xmax=2, ymin=0, ymax=0.82, xtick={{0,1}}, ytick={{{RF},{RF + LAMBDA}}},
@@ -291,21 +363,19 @@ def b2_sml():
 \addplot[very thick, black] coordinates {{(0,{RF}) (2,{linea(2):.4f})}};
 \addplot[thin, black!40, dashed] coordinates {{(1,0) (1,{RF + LAMBDA})}};
 \addplot[thin, black!40, dashed] coordinates {{(0,{RF + LAMBDA}) (1,{RF + LAMBDA})}};
-\addplot[only marks, mark=*, mark size=1.8pt, black] coordinates {{({bA},{linea(bA):.4f}) ({bB},{linea(bB):.4f}) ({bP},{mP:.4f}) ({bQ},{mQ:.4f})}};
+\addplot[only marks, mark=*, mark size=1.8pt, black] coordinates {{({bP},{mP:.4f}) ({bQ},{mQ:.4f})}};
 \addplot[only marks, mark=square*, mark size=1.8pt, black] coordinates {{(1,{RF + LAMBDA}) (0,{RF})}};
-\addplot[thin, black, dotted] coordinates {{({bP},{linea(bP):.4f}) ({bP},{mP:.4f})}};
-\addplot[thin, black, dotted] coordinates {{({bQ},{linea(bQ):.4f}) ({bQ},{mQ:.4f})}};
-\node[anchor=north west, font=\footnotesize] at (axis cs:{bA},{linea(bA):.4f}) {{$A$}};
-\node[anchor=north west, font=\footnotesize] at (axis cs:{bB},{linea(bB):.4f}) {{$B$}};
-\node[anchor=south east, font=\footnotesize] at (axis cs:1,{RF + LAMBDA}) {{$M$}};
+\draw[-{{Stealth[length=2mm]}}, thick] (axis cs:{bP},{mP - 0.012:.4f}) -- (axis cs:{bP},{linea(bP) + 0.008:.4f});
+\draw[-{{Stealth[length=2mm]}}, thick] (axis cs:{bQ},{mQ + 0.012:.4f}) -- (axis cs:{bQ},{linea(bQ) - 0.008:.4f});
 \node[anchor=south, font=\footnotesize] at (axis cs:{bP},{mP:.4f}) {{$P$}};
 \node[anchor=north, font=\footnotesize] at (axis cs:{bQ},{mQ:.4f}) {{$Q$}};
-\node[anchor=east, font=\scriptsize] at (axis cs:{bP - 0.02},{(linea(bP) + mP) / 2:.4f}) {{$\alpha_P$}};
-\node[anchor=west, font=\scriptsize] at (axis cs:{bQ + 0.02},{(linea(bQ) + mQ) / 2:.4f}) {{$\alpha_Q$}};
+\node[anchor=east, font=\scriptsize] at (axis cs:{bP - 0.03},{(linea(bP) + mP) / 2:.4f}) {{$\alpha_P>0$}};
+\node[anchor=west, font=\scriptsize] at (axis cs:{bQ + 0.03},{(linea(bQ) + mQ) / 2:.4f}) {{$\alpha_Q<0$}};
+\node[anchor=south east, font=\footnotesize] at (axis cs:1,{RF + LAMBDA}) {{$M$}};
 \end{{axis}}
 \end{{tikzpicture}}
 """
-    escribir_tikz("b2_sml", tikz)
+    escribir_tikz("b2_alfa", tikz)
 
 
 def b2_contraste():
@@ -388,6 +458,8 @@ def b2_factores():
 if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "b2":
     b2_cml()
     b2_sml()
+    b2_cml_sml()
+    b2_alfa()
     b2_contraste()
     b2_apt()
     b2_factores()
