@@ -60,10 +60,27 @@ SERIES = [  # (código FRED, país, indicador, unidad, fuente, tratamiento, uso)
     ("AAA", "Estados Unidos", "Rendimiento de los bonos de empresa Aaa de Moody's (media mensual)", "% anual", "F4", "T0",
      "Referencia (diferencial Baa-Aaa desde 1919)"),
     ("GS10", "Estados Unidos", "Rendimiento del Tesoro a 10 años, vencimiento constante (media mensual)", "% anual", "F5", "T0",
-     "Figura anx_diferencial_credito (I.4.3)"),
+     "Figuras anx_diferencial_credito (I.4.3), anx_curvas_eeuu y anx_componentes (I.11)"),
     ("USREC", "Estados Unidos", "Indicador de recesión del NBER (1 = recesión)", "0/1", "F6", "T4",
      "Bandas de la figura anx_diferencial_credito"),
+    ("IR3TIB01ESM156N", "España", "Tipo interbancario a tres meses (media mensual)", "% anual", "F1", "T7",
+     "Cifra citada en I.11.1 (curva invertida en España)"),
+    ("IRLTLT01ESM156N", "España", "Rendimiento de la deuda pública a largo plazo, 10 años (media mensual)", "% anual", "F1",
+     "T7", "Cifra citada en I.11.1 (curva invertida en España)"),
 ]
+# Tesoro de EE. UU. a vencimiento constante para la segunda parte del anexo I (GS10 ya figura arriba)
+for _c, _p, _uso in [("GS1M", "1 mes", "Figura anx_curvas_eeuu (I.11.1)"),
+                     ("GS3M", "3 meses", "Figuras anx_curvas_eeuu y anx_componentes (I.11); pendiente (I.11.1)"),
+                     ("GS6M", "6 meses", "Figuras anx_curvas_eeuu y anx_componentes (I.11)"),
+                     ("GS1", "1 año", "Figuras anx_curvas_eeuu y anx_componentes (I.11)"),
+                     ("GS2", "2 años", "Figuras anx_curvas_eeuu y anx_componentes (I.11)"),
+                     ("GS3", "3 años", "Figuras anx_curvas_eeuu y anx_componentes (I.11)"),
+                     ("GS5", "5 años", "Figuras anx_curvas_eeuu y anx_componentes (I.11)"),
+                     ("GS7", "7 años", "Figuras anx_curvas_eeuu y anx_componentes (I.11)"),
+                     ("GS20", "20 años", "Figura anx_curvas_eeuu (I.11.1)"),
+                     ("GS30", "30 años", "Figura anx_curvas_eeuu (I.11.1)")]:
+    SERIES.append((_c, "Estados Unidos", f"Rendimiento del Tesoro a {_p}, vencimiento constante (media mensual)",
+                   "% anual", "F5", "T0", _uso))
 
 
 def serie_fred(codigo):
