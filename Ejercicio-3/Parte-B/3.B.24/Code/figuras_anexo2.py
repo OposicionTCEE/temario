@@ -16,7 +16,7 @@ from figuras_anexo1 import escribir  # noqa: E402
 # anx_hitos: cronología esquemática (escala no proporcional) de los hitos que estudia II.1.
 # anx_prelacion: orden de cobro de los acreedores de un banco europeo; esquemática.
 # anx_cedulas_titulizacion: bono garantizado (doble recurso) frente a titulización (venta a un fondo y tramos).
-HITOS = [(r"h.~1800 a.~C.", "Hammurabi limita el interés"), ("1262", "Monte Vecchio de Venecia"),
+HITOS = [(r"h.~1800 a.~C.", "Hammurabi limita el interés"), ("1262", r"Monte Vecchio\\de Venecia"),
          ("1694", "Banco de Inglaterra"), ("1751", "consols"), ("1820-1830", r"impagos\\latinoamericanos"),
          ("años cincuenta", "eurodólares"), ("1963", "primer eurobono"), ("1982", "crisis de la deuda"),
          ("1989", "Plan Brady y primer bono global"), ("1999", "euro"), ("2007", "primer bono verde"),
