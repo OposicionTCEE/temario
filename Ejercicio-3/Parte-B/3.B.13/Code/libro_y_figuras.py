@@ -541,8 +541,8 @@ def main():
     # ---------- anx_plazas: (a) cuota de las plazas, 1989-2025; (b) dónde se negocia cada moneda, 2025 ----------
     XL = lambda p: (int(p) - 1989) * 0.17
     YL = lambda c: c * 0.085
-    def curva_p(serie):
-        return " ".join(f"({XL(p):.3f},{YL(100 * serie[p] / tot_ng[p]):.3f})" for p in ANIOS if serie.get(p))
+    def curva_p(serie, desde="1989"):
+        return " ".join(f"({XL(p):.3f},{YL(100 * serie[p] / tot_ng[p]):.3f})" for p in ANIOS if serie.get(p) and p >= desde)
     plazas = [("GB", "line width=1.6pt", "Reino Unido"), ("US", "very thick", "Estados Unidos"),
               ("SG", "very thick, dashed", "Singapur"), ("HK", "very thick, dotted", "Hong Kong"),
               ("JP", "very thick, dash dot", "Japón")]
