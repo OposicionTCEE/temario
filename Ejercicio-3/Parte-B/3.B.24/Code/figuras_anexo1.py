@@ -752,7 +752,214 @@ def componentes():
              "% Generar con: bash Code/generar_figura.sh anx_componentes\n" + "\n".join(out) + "\n")
 
 
+# =====================  Tanda A6 (I.12 Expectativas, I.13 Primas, I.14 Modelos)  =====================
+# anx_expectativas: tres sendas del tipo a un año esperado, E[i_k] = ib + (i0 - ib) e^{-0,35 k} (sube: i0 = 2,
+#   ib = 5,5; constante: 3,8; baja: i0 = 6, ib = 2,5), y las curvas al contado de la hipótesis pura de las
+#   expectativas, media de la senda (capitalización continua): r_n = ib + (i0 - ib)(1 - e^{-0,35 n})/(0,35 n). Esquemática.
+# anx_plazo_realizado: tipo a plazo a un año dentro de un año, 2 y(2) - y(1) con los tipos continuos de KIM y WRIGHT
+#   (FRED: THREEFY1 y THREEFY2, medias mensuales), frente al tipo a un año observado doce meses después, ambos en la
+#   fecha a la que se refiere la previsión; recesiones del NBER (USREC).
+# anx_prima: tipo corto esperado constante (4 %) y curvas con prima por plazo positiva, nula y negativa,
+#   phi_n = 1,4 (1 - e^{-n/5}) y -1,0 (1 - e^{-n/5}). Esquemática.
+# anx_prima_kw: tipo a 10 años de KIM y WRIGHT (THREEFY10), su prima por plazo (THREEFYTP10) y su diferencia, la media
+#   de los tipos cortos esperados; medias mensuales desde 1990; recesiones del NBER.
+# anx_vasicek: curvas de VASICEK sin prima de riesgo con ib = 4,5 %, kappa = 0,25 y sigma = 2 %, para i = 1,5 %, 4,5 %
+#   y 7,5 %: r_n = r_inf + (i - r_inf) b_n + sigma^2 n b_n^2 / (4 kappa), b_n = (1 - e^{-kappa n})/(kappa n),
+#   r_inf = ib - sigma^2/(2 kappa^2) = 4,18 %.
+# anx_sombra: tipo efectivo de los fondos federales y tipo sombra de WU y XIA (Banco de la Reserva Federal de Atlanta),
+#   datos de fin de mes, 2007-01 a 2022-02; recesiones del NBER.
+def _anio(d):
+    return int(d[:4]) + (int(d[5:7]) - 1) / 12
+
+
+def _media_mensual(codigo):
+    acc = {}
+    for d, v in serie(codigo).items():
+        acc.setdefault(d[:7], []).append(v)
+    return {m: sum(x) / len(x) for m, x in acc.items()}
+
+
+def _mas_meses(m, k):
+    t = int(m[:4]) * 12 + int(m[5:7]) - 1 + k
+    return f"{t // 12}-{t % 12 + 1:02d}"
+
+
+def _bandas_recesion(desde, hasta, ymin, ymax):
+    rec = serie("USREC")
+    tramos, ini = [], None
+    for d in sorted(rec):
+        a = _anio(d)
+        if a < desde or a > hasta:
+            continue
+        if rec[d] == 1 and ini is None:
+            ini = a
+        if rec[d] == 0 and ini is not None:
+            tramos.append((ini, a))
+            ini = None
+    return [rf"\addplot[fill=black!10, draw=none] coordinates {{({a:.3f},{ymin}) ({a:.3f},{ymax}) ({b:.3f},{ymax})"
+            rf" ({b:.3f},{ymin}) ({a:.3f},{ymin})}};" for a, b in tramos]
+
+
+def expectativas():
+    casos = [("sube", "creciente", 2.0, 5.5, "very thick"), ("constante", "plana", 3.8, 3.8, "thick, black!45"),
+             ("baja", "invertida", 6.0, 2.5, "very thick, densely dashed")]
+    a = 0.35
+    senda = lambda i0, ib, k: ib + (i0 - ib) * math.exp(-a * k)
+    curva = lambda i0, ib, n: i0 if n == 0 else ib + (i0 - ib) * (1 - math.exp(-a * n)) / (a * n)
+    xs = [0.1 * j for j in range(0, 101)]
+    comun = (r"width=6.2cm, height=5.2cm, axis lines=left, xmin=0, xmax=10, ymin=1.5, ymax=6.5, xtick={0,10},"
+             r" ytick=\empty, title style={font=\footnotesize\bfseries}, label style={font=\footnotesize},"
+             r" tick label style={font=\scriptsize}, clip=false")
+    out = [r"\begin{tikzpicture}[font=\footnotesize]"]
+    out.append(r"\begin{axis}[name=pa, " + comun + r", xlabel={Años desde hoy, $k$}, ylabel={Tipo},"
+               r" title={Tipo a un año esperado, $E[i_k]$}]")
+    for _, _, i0, ib, est in casos:
+        out.append(rf"\addplot[{est}, mark=none] coordinates {{{coords([(x, senda(i0, ib, x)) for x in xs])}}};")
+    out += _etiquetas(10, 10.5, [(senda(i0, ib, 10), et) for et, _, i0, ib, _ in casos], 0.42)
+    out.append(r"\end{axis}")
+    out.append(r"\begin{axis}[at={(pa.outer east)}, anchor=outer west, xshift=1.5cm, " + comun +
+               r", xlabel={Plazo, $n$}, title={Tipo al contado, $r_n$}]")
+    for _, _, i0, ib, est in casos:
+        out.append(rf"\addplot[{est}, mark=none] coordinates {{{coords([(x, curva(i0, ib, x)) for x in xs])}}};")
+    out += _etiquetas(10, 10.5, [(curva(i0, ib, 10), et) for _, et, i0, ib, _ in casos], 0.42)
+    out.append(r"\end{axis}")
+    out.append(r"\end{tikzpicture}")
+    escribir("anx_expectativas", "% Figura (Anexo I, I.12, «Hipótesis»): sendas del tipo a un año esperado y curvas al contado de la\n"
+             "% hipótesis pura de las expectativas (media de la senda); esquemática.\n"
+             "% Generar con: bash Code/generar_figura.sh anx_expectativas\n" + "\n".join(out) + "\n")
+
+
+def plazo_realizado():
+    y1, y2 = _media_mensual("THREEFY1"), _media_mensual("THREEFY2")
+    meses = [m for m in sorted(y1) if _mas_meses(m, 12) in y1 and m in y2]
+    plazo = [(_anio(_mas_meses(m, 12)), 2 * y2[m] - y1[m]) for m in meses]
+    real = [(_anio(_mas_meses(m, 12)), y1[_mas_meses(m, 12)]) for m in meses]
+    x0, x1, ymin, ymax = plazo[0][0], plazo[-1][0], -0.5, 9
+    out = [r"\begin{tikzpicture}[font=\footnotesize]"]
+    out.append(rf"\begin{{axis}}[width=14cm, height=5.8cm, axis lines=left, xmin={x0:.3f}, xmax={x1:.3f}, ymin={ymin}, ymax={ymax},"
+               r" xtick={1995,2000,2005,2010,2015,2020,2025}, ytick={0,2,4,6,8},"
+               r" /pgf/number format/use comma, /pgf/number format/1000 sep={}, tick label style={font=\scriptsize},"
+               r" label style={font=\footnotesize}, ylabel={Tipo a un año (\%)}, clip=false]")
+    out += _bandas_recesion(x0, x1, ymin, ymax)
+    out.append(rf"\draw[black!30] (axis cs:{x0:.3f},0) -- (axis cs:{x1:.3f},0);")
+    out.append(rf"\addplot[thick, black!50, mark=none] coordinates {{{coords(plazo)}}};")
+    out.append(rf"\addplot[line width=0.7pt, black, mark=none] coordinates {{{coords(real)}}};")
+    out += _etiquetas(x1, x1 + 0.8, [(plazo[-1][1], "a plazo"), (real[-1][1], "realizado")], 0.55)
+    out.append(r"\end{axis}")
+    out.append(r"\end{tikzpicture}")
+    err = [p - r for (_, p), (_, r) in zip(plazo, real)]
+    escribir("anx_plazo_realizado", "% Figura (Anexo I, I.12, «Contraste»): tipo a plazo a un año dentro de un año (2 y2 - y1, KIM y WRIGHT)\n"
+             f"% frente al tipo a un año observado un año después; previsiones de {meses[0]} a {meses[-1]}; error medio"
+             f" {sum(err)/len(err):.2f}; a plazo > realizado en el {100*sum(e > 0 for e in err)/len(err):.1f} % de los meses.\n"
+             "% Generar con: bash Code/generar_figura.sh anx_plazo_realizado\n" + "\n".join(out) + "\n")
+
+
+def prima():
+    base = 4.0
+    xs = [0.2 * j for j in range(0, 101)]
+    pos = lambda n: base + 1.4 * (1 - math.exp(-n / 5))
+    neg = lambda n: base - 1.0 * (1 - math.exp(-n / 5))
+    out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
+    out.append(r"\begin{axis}[width=12.5cm, height=6cm, axis lines=left, xmin=0, xmax=20, ymin=2, ymax=6.2,"
+               r" xtick={0,20}, xticklabels={$0$,$n$}, ytick={4}, yticklabels={$E[i_k]$}, label style={font=\footnotesize},"
+               r" xlabel={Plazo}, ylabel={Tipo}, clip=false]")
+    out.append(rf"\addplot[very thick, mark=none] coordinates {{{coords([(x, pos(x)) for x in xs])}}};")
+    out.append(rf"\addplot[thick, black!45, mark=none] coordinates {{(0,{base}) (20,{base})}};")
+    out.append(rf"\addplot[very thick, densely dashed, mark=none] coordinates {{{coords([(x, neg(x)) for x in xs])}}};")
+    out.append(rf"\draw[<->, black!60] (axis cs:16,{base:.3f}) -- (axis cs:16,{pos(16):.3f}) node[midway, right] {{$\phi_n$}};")
+    out += _etiquetas(20, 21.0, [(pos(20), r"$\phi_n>0$"), (base, r"$\phi_n=0$"), (neg(20), r"$\phi_n<0$")], 0.3)
+    out.append(r"\end{axis}")
+    out.append(r"\end{tikzpicture}")
+    escribir("anx_prima", "% Figura (Anexo I, I.13, «Riesgo»): tipo corto esperado constante y curvas con prima por plazo positiva,\n"
+             "% nula y negativa; esquemática.\n% Generar con: bash Code/generar_figura.sh anx_prima\n" + "\n".join(out) + "\n")
+
+
+def prima_kw():
+    y10, tp = _media_mensual("THREEFY10"), _media_mensual("THREEFYTP10")
+    meses = [m for m in sorted(y10) if m in tp]
+    tipo = [(_anio(m), y10[m]) for m in meses]
+    prima_ = [(_anio(m), tp[m]) for m in meses]
+    esper = [(_anio(m), y10[m] - tp[m]) for m in meses]
+    x0, x1, ymin, ymax = tipo[0][0], tipo[-1][0], -1.2, 9
+    out = [r"\begin{tikzpicture}[font=\footnotesize]"]
+    out.append(rf"\begin{{axis}}[width=14cm, height=6cm, axis lines=left, xmin={x0:.3f}, xmax={x1:.3f}, ymin={ymin}, ymax={ymax},"
+               r" xtick={1990,1995,2000,2005,2010,2015,2020,2025}, ytick={0,2,4,6,8},"
+               r" /pgf/number format/use comma, /pgf/number format/1000 sep={}, tick label style={font=\scriptsize},"
+               r" label style={font=\footnotesize}, ylabel={Puntos porcentuales}, clip=false]")
+    out += _bandas_recesion(x0, x1, ymin, ymax)
+    out.append(rf"\draw[black!30] (axis cs:{x0:.3f},0) -- (axis cs:{x1:.3f},0);")
+    out.append(rf"\addplot[line width=0.7pt, black, mark=none] coordinates {{{coords(tipo)}}};")
+    out.append(rf"\addplot[thick, densely dashed, mark=none] coordinates {{{coords(esper)}}};")
+    out.append(rf"\addplot[thick, black!50, mark=none] coordinates {{{coords(prima_)}}};")
+    out += _etiquetas(x1, x1 + 0.8, [(tipo[-1][1], r"$r_{10}$"), (esper[-1][1], r"$r_{10}-\phi_{10}$"),
+                                     (prima_[-1][1], r"$\phi_{10}$")], 0.6)
+    out.append(r"\end{axis}")
+    out.append(r"\end{tikzpicture}")
+    mn = min(prima_, key=lambda p: p[1])
+    escribir("anx_prima_kw", "% Figura (Anexo I, I.13, «Estimaciones»): tipo a 10 años de KIM y WRIGHT, su prima por plazo y la media\n"
+             f"% de los tipos cortos esperados (diferencia), {meses[0]} a {meses[-1]}; último mes: {tipo[-1][1]:.2f} = "
+             f"{esper[-1][1]:.2f} + {prima_[-1][1]:.2f}; prima mínima {mn[1]:.2f} en {mn[0]:.2f}.\n"
+             "% Generar con: bash Code/generar_figura.sh anx_prima_kw\n" + "\n".join(out) + "\n")
+
+
+def vasicek():
+    ib, k, s = 4.5, 0.25, 0.02
+    rinf = ib - 100 * s * s / (2 * k * k)
+    b = lambda n: (1 - math.exp(-k * n)) / (k * n)
+    r = lambda i, n: i if n == 0 else rinf + (i - rinf) * b(n) + 100 * s * s * n * b(n) ** 2 / (4 * k)
+    xs = [0.25 * j for j in range(0, 121)]
+    casos = [(1.5, r"$i<\bar\imath$", "very thick"), (4.5, r"$i=\bar\imath$", "thick, black!45"),
+             (7.5, r"$i>\bar\imath$", "very thick, densely dashed")]
+    out = [r"\begin{tikzpicture}[font=\footnotesize]"]
+    out.append(r"\begin{axis}[width=12.5cm, height=6.2cm, axis lines=left, xmin=0, xmax=30, ymin=1, ymax=8,"
+               r" xtick={0,10,20,30}, ytick={4.5}, yticklabels={$\bar\imath$}, tick label style={font=\scriptsize},"
+               r" label style={font=\footnotesize}, xlabel={Plazo, $n$ (años)}, ylabel={Tipo al contado, $r_n$}, clip=false]")
+    out.append(rf"\draw[black!40, dashed] (axis cs:0,{rinf:.3f}) -- (axis cs:30,{rinf:.3f});")
+    out.append(rf"\node[anchor=north west, font=\footnotesize, text=black!60, inner sep=1.5pt] at (axis cs:0.4,{rinf:.3f}) {{$r_\infty$}};")
+    for i, _, est in casos:
+        out.append(rf"\addplot[{est}, mark=none] coordinates {{{coords([(x, r(i, x)) for x in xs])}}};")
+    out += _etiquetas(30, 31.0, [(r(i, 30), et) for i, et, _ in casos], 0.42)
+    out.append(r"\end{axis}")
+    out.append(r"\end{tikzpicture}")
+    escribir("anx_vasicek", "% Figura (Anexo I, I.14, «Equilibrio»): curvas de VASICEK sin prima de riesgo (ib = 4,5 %, kappa = 0,25,\n"
+             f"% sigma = 2 %) para i = 1,5 %, 4,5 % y 7,5 %; r_inf = {rinf:.2f} %; a 30 años: "
+             + ", ".join(f"{r(i, 30):.2f}" for i, _, _ in casos) + ".\n"
+             "% Generar con: bash Code/generar_figura.sh anx_vasicek\n" + "\n".join(out) + "\n")
+
+
+def sombra():
+    import csv
+    filas = list(csv.reader((DATOS / "wuxia_sombra.csv").open(encoding="utf-8")))[1:]
+    datos = [(d[:7], float(ff), float(sh)) for d, ff, sh in filas if sh and "2007-01" <= d[:7] <= "2022-02"]
+    ff = [(_anio(m), f) for m, f, _ in datos]
+    sh = [(_anio(m), s) for m, _, s in datos]
+    x0, x1, ymin, ymax = ff[0][0], ff[-1][0], -3.5, 5.5
+    out = [r"\begin{tikzpicture}[font=\footnotesize]"]
+    out.append(rf"\begin{{axis}}[width=14cm, height=5.8cm, axis lines=left, xmin={x0:.3f}, xmax={x1:.3f}, ymin={ymin}, ymax={ymax},"
+               r" xtick={2008,2010,2012,2014,2016,2018,2020,2022}, ytick={-3,-2,-1,0,1,2,3,4,5},"
+               r" /pgf/number format/use comma, /pgf/number format/1000 sep={}, tick label style={font=\scriptsize},"
+               r" label style={font=\footnotesize}, ylabel={\%}, clip=false]")
+    out += _bandas_recesion(x0, x1, ymin, ymax)
+    out.append(rf"\draw[black!30] (axis cs:{x0:.3f},0) -- (axis cs:{x1:.3f},0);")
+    out.append(rf"\addplot[line width=0.7pt, black, mark=none] coordinates {{{coords(ff)}}};")
+    out.append(rf"\addplot[very thick, densely dashed, mark=none] coordinates {{{coords(sh)}}};")
+    out.append(r"\node[anchor=south west, font=\footnotesize, inner sep=1.5pt] at (axis cs:2010.2,0.25) {fondos federales};")
+    out.append(r"\node[anchor=north west, font=\footnotesize, inner sep=1.5pt] at (axis cs:2014.6,-2.6) {tipo sombra};")
+    out.append(r"\end{axis}")
+    out.append(r"\end{tikzpicture}")
+    mn = min(datos, key=lambda t: t[2])
+    escribir("anx_sombra", "% Figura (Anexo I, I.14, «Límite inferior»): tipo efectivo de los fondos federales y tipo sombra de WU y\n"
+             f"% XIA, fin de mes, {datos[0][0]} a {datos[-1][0]}; mínimo del tipo sombra {mn[2]:.2f} en {mn[0]}.\n"
+             "% Generar con: bash Code/generar_figura.sh anx_sombra\n" + "\n".join(out) + "\n")
+
+
 if __name__ == "__main__":
+    expectativas()
+    plazo_realizado()
+    prima()
+    prima_kw()
+    vasicek()
+    sombra()
     curvas()
     nelson_siegel()
     curvas_eeuu()
