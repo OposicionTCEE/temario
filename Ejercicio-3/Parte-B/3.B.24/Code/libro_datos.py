@@ -479,6 +479,28 @@ def main():
                 "mil millones de francos", "F14", "T0", "II.2.5"),
                ("Primer bono verde del Tesoro (septiembre de 2021, vencimiento 30/07/2042): importe y demanda",
                 "unos 5 mil millones; demanda de unos 60 mil millones", "euros", "F15", "T0", "II.2.8")]
+    # A9: emisión (II.3), negociación (II.4) y segmentos (II.5)
+    alemania = {d[:7]: x for d, x in serie_fred("IRLTLT01DEM156N")}
+    for codigo, pais in (("IRLTLT01ESM156N", "España"), ("IRLTLT01ITM156N", "Italia"), ("IRLTLT01PTM156N", "Portugal"),
+                         ("IRLTLT01GRM156N", "Grecia"), ("IRLTLT01FRM156N", "Francia")):
+        x = {d[:7]: v for d, v in serie_fred(codigo)}
+        prima = {m: x[m] - alemania[m] for m in sorted(x) if m in alemania and m >= "1993-07"}
+        for m, v in prima.items():
+            indicadores.append((f"{codigo}-DE", pais, "Prima a 10 años frente a Alemania", m + "-01", round(v, 4),
+                                "puntos porcentuales", "F1", "T15", "Figura anx_diferenciales_euro (II.5.1)"))
+        mx = max(((m, v) for m, v in prima.items() if m >= "1999-01"), key=lambda t: t[1])
+        ult = max(prima)
+        cifras.append((f"Prima a 10 años de {pais} frente a Alemania: máximo desde 1999 ({mx[0]}) / último ({ult})",
+                       f"{mx[1]:.2f} / {prima[ult]:.2f}", "puntos porcentuales", "F1", "T15", "II.5.1"))
+    cifras += [("Bonos en circulación en el mundo / capitalización bursátil mundial, finales de 2025",
+                "160,7 / 157,8 billones de dólares; 38,1 % de los bonos, de emisores de EE. UU.", "", "F17", "T0", "II.5"),
+               ("Negociación diaria del mercado de divisas, abril de 2025", 9.6, "billones de dólares", "F18", "T0", "II.5"),
+               ("Emisiones de deuda privada española en 2025: total / en el exterior / en España",
+                "192,8 / 103,9 / 88,9", "mil millones de euros", "F19", "T0", "II.5.3"),
+               ("Compras de deuda pública de la Reserva Federal en 2020 (bonos y notes)", "casi 2", "billones de dólares",
+                "F20", "T0", "II.4.5"),
+               ("Compensación central obligatoria de la deuda pública de EE. UU. (SEC): contado / repos",
+                "31/12/2026 / 30/06/2027", "fecha", "F21", "T0", "II.4.4")]
     cifras.append(("Cambio de un día del tipo a 10 años en los anuncios de compras de 2008-2009",
                    "; ".join(f"{e}: {c:+d}" for e, c in cambios) + f"; suma {sum(c for _, c in cambios):+d}",
                    "puntos básicos", "F5", "T14", "I.16.2"))
