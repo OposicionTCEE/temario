@@ -456,7 +456,7 @@ def convexidad():
     y0, P0 = 0.06, _precio_ref(0.06)
     Ds = sum(t * (6 + (100 if t == 10 else 0)) / 1.06 ** (t + 1) for t in range(1, 11)) / P0
     tg = lambda yy: P0 * (1 - Ds * (yy - y0))
-    out.append(rf"\draw[thick, dashed] ({X(0.01):.3f},{Y(tg(0.01)):.3f}) -- ({X(0.125):.3f},{Y(tg(0.125)):.3f});")
+    out.append(rf"\draw[thick, dashed] ({X(0.01):.3f},{Y(tg(0.01)):.3f}) -- ({X(0.11):.3f},{Y(tg(0.11)):.3f});")
     out.append(rf"\fill ({X(y0):.3f},{Y(P0):.3f}) circle (1.7pt);")
     for dy in (-0.05, 0.05):
         yy = y0 + dy
