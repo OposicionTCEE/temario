@@ -510,6 +510,29 @@ def main():
     cifras.append(("Cambio de un día del tipo a 10 años en los anuncios de compras de 2008-2009",
                    "; ".join(f"{e}: {c:+d}" for e, c in cambios) + f"; suma {sum(c for _, c in cambios):+d}",
                    "puntos básicos", "F5", "T14", "I.16.2"))
+    # T13: datos de las figuras viejas retiradas con el cuerpo viejo (Fig1, Fig3, Fig5 y Fig6), con fuentes oficiales
+    fechas = ("2019-11-27", "2020-11-24", "2025-12-30", "2026-05-22")
+    for c, p in (("DGS3MO", "3 meses"), ("DGS1", "1 año"), ("DGS2", "2 años"), ("DGS5", "5 años"), ("DGS10", "10 años"),
+                 ("DGS30", "30 años")):
+        x = dict(serie_fred(c))
+        for d in fechas:
+            indicadores.append((c, "Estados Unidos", f"Rendimiento del Tesoro a {p}, vencimiento constante, diario", d,
+                                x[d], "% anual", "F5", "T0", "Nota de I.11.1 (pandemia y guerra con Irán)"))
+        cifras.append((f"Tesoro de EE. UU. a {p}: " + " / ".join(fechas), " / ".join(f"{x[d]:.2f}" for d in fechas),
+                       "% anual", "F5", "T0", "I.11.1"))
+    for p in ("2Y", "10Y", "30Y"):
+        filas = list(csv.DictReader((DATOS / f"bce_aaa_SR_{p}.csv").open(encoding="utf-8")))
+        x = {f["TIME_PERIOD"]: float(f["OBS_VALUE"]) for f in filas}
+        for d in ("2025-05-22", "2026-05-22"):
+            indicadores.append((f"YC.B.U2.EUR.4F.G_N_A.SV_C_YM.SR_{p}", "Zona del euro",
+                                f"Tipo al contado a {p[:-1]} años, deuda pública central AAA", d, round(x[d], 4),
+                                "% anual", "F22", "T0", "Nota de I.11.1"))
+        cifras.append((f"Curva AAA del BCE a {p[:-1]} años: 2025-05-22 / 2026-05-22",
+                       f"{x['2025-05-22']:.2f} / {x['2026-05-22']:.2f}", "% anual", "F22", "T0", "I.11.1"))
+    cifras += [("Bonos en circulación en el mundo, finales de 2014 / 2024", "83,4 / 145,1", "billones de dólares",
+                "F23", "T0", "II.5"),
+               ("Cuota de China / UE / Japón / EE. UU. en los bonos del mundo, 2014 → 2024",
+                "7,0 → 17,3 / 24,0 → 18,0 / 12,7 → 7,3 / 40,5 → 40,1", "%", "F23", "T0", "II.5")]
 
     leeme =[("Libro de datos del Tema 3.B.24 (renta fija)",),
              ("Cada dato cita su fuente (hoja Fuentes) y su tratamiento (hoja Tratamientos).",),
