@@ -50,46 +50,47 @@ def tir(P, c, n, N=100.0):
 
 # ---------- anx_perfiles ----------
 def perfiles():
-    dx, hN, hC = 0.7, 1.6, 0.3          # cm por periodo, altura del nominal y del cupón (esquemáticas)
+    # Los cuatro perfiles en una sola fila (15,5 x 3,8 cm), para que la figura quepa tras el párrafo que la comenta.
+    dx, hN, hC, w = 0.38, 1.5, 0.28, 0.1   # cm por periodo, altura del nominal y del cupón, media anchura de barra
     claro, oscuro = "black!22", "black!62"
-    paneles = [("Con cupón", 0.0, 0.0), ("Cupón cero", 7.6, 0.0), ("Amortizable", 0.0, -4.0), ("Perpetuo", 7.6, -4.0)]
+    paneles = [("Con cupón", 0.0), ("Cupón cero", 3.95), ("Amortizable", 7.9), ("Perpetuo", 11.85)]
     out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
-    for titulo, x0, y0 in paneles:
-        out.append(rf"\begin{{scope}}[xshift={x0}cm, yshift={y0}cm]")
-        out.append(rf"\node[font=\footnotesize\bfseries, anchor=west] at (-0.2,2.45) {{{titulo}}};")
-        fin = 6.6 if titulo == "Perpetuo" else 6.2
-        out.append(rf"\draw[->] (-0.2,0) -- ({fin},0) node[below] {{$t$}};")
-        out.append(r"\draw[->, thick] (0,0) -- (0,-0.85) node[below] {$P$};")
-        out.append(r"\node[above left] at (0,0) {$0$};")
+    for titulo, x0 in paneles:
+        out.append(rf"\begin{{scope}}[xshift={x0}cm]")
+        out.append(rf"\node[font=\footnotesize\bfseries, anchor=west] at (-0.15,2.15) {{{titulo}}};")
+        fin = 3.6 if titulo == "Perpetuo" else 3.4
+        out.append(rf"\draw[->] (-0.15,0) -- ({fin},0) node[below] {{$t$}};")
+        out.append(r"\draw[->, thick] (0,0) -- (0,-0.6) node[below] {$P$};")
+        out.append(r"\node[above left, inner sep=1pt] at (0,0) {$0$};")
         if titulo != "Perpetuo":
-            out.append(rf"\draw ({8*dx},0.06) -- ({8*dx},-0.06) node[below] {{$T$}};")
+            out.append(rf"\draw ({8*dx:.2f},0.06) -- ({8*dx:.2f},-0.06) node[below] {{$T$}};")
         for t in range(1, 9):
             x = t * dx
             if titulo == "Con cupón":
-                out.append(rf"\fill[{claro}] ({x-0.17},0) rectangle ({x+0.17},{hC});")
+                out.append(rf"\fill[{claro}] ({x-w:.3f},0) rectangle ({x+w:.3f},{hC});")
                 if t == 8:
-                    out.append(rf"\fill[{oscuro}] ({x-0.17},{hC}) rectangle ({x+0.17},{hC+hN});")
+                    out.append(rf"\fill[{oscuro}] ({x-w:.3f},{hC}) rectangle ({x+w:.3f},{hC+hN});")
             elif titulo == "Cupón cero" and t == 8:
-                out.append(rf"\fill[{oscuro}] ({x-0.17},0) rectangle ({x+0.17},{hN});")
+                out.append(rf"\fill[{oscuro}] ({x-w:.3f},0) rectangle ({x+w:.3f},{hN});")
             elif titulo == "Amortizable":
                 amort = hN / 8
                 interes = hC * (9 - t) / 8
-                out.append(rf"\fill[{oscuro}] ({x-0.17},0) rectangle ({x+0.17},{amort:.3f});")
-                out.append(rf"\fill[{claro}] ({x-0.17},{amort:.3f}) rectangle ({x+0.17},{amort+interes:.3f});")
+                out.append(rf"\fill[{oscuro}] ({x-w:.3f},0) rectangle ({x+w:.3f},{amort:.3f});")
+                out.append(rf"\fill[{claro}] ({x-w:.3f},{amort:.3f}) rectangle ({x+w:.3f},{amort+interes:.3f});")
             elif titulo == "Perpetuo":
-                out.append(rf"\fill[{claro}] ({x-0.17},0) rectangle ({x+0.17},{hC});")
+                out.append(rf"\fill[{claro}] ({x-w:.3f},0) rectangle ({x+w:.3f},{hC});")
         if titulo == "Con cupón":
             out.append(rf"\node[above] at ({dx},{hC}) {{$cN$}};")
-            out.append(rf"\node[left] at ({8*dx-0.17},{hC+hN/2}) {{$N$}};")
+            out.append(rf"\node[left] at ({8*dx-w:.3f},{hC+hN/2}) {{$N$}};")
         elif titulo == "Cupón cero":
-            out.append(rf"\node[left] at ({8*dx-0.17},{hN/2}) {{$N$}};")
+            out.append(rf"\node[left] at ({8*dx-w:.3f},{hN/2}) {{$N$}};")
         elif titulo == "Perpetuo":
             out.append(rf"\node[above] at ({dx},{hC}) {{$cN$}};")
-            out.append(rf"\node at ({8*dx+0.6},{hC/2}) {{$\cdots$}};")
+            out.append(rf"\node at ({8*dx+0.32:.2f},{hC/2}) {{$\cdots$}};")
         out.append(r"\end{scope}")
     # leyenda común
-    out.append(rf"\fill[{claro}] (3.2,-5.75) rectangle (3.5,-5.5); \node[anchor=west] at (3.55,-5.62) {{Intereses}};")
-    out.append(rf"\fill[{oscuro}] (6.4,-5.75) rectangle (6.7,-5.5); \node[anchor=west] at (6.75,-5.62) {{Nominal}};")
+    out.append(rf"\fill[{claro}] (4.6,-1.45) rectangle (4.9,-1.2); \node[anchor=west] at (4.95,-1.32) {{Intereses}};")
+    out.append(rf"\fill[{oscuro}] (8.0,-1.45) rectangle (8.3,-1.2); \node[anchor=west] at (8.35,-1.32) {{Nominal}};")
     out.append(r"\end{tikzpicture}")
     escribir("anx_perfiles", "% Figura (Anexo I, I.1, «Promesa»): perfiles de pagos de cuatro bonos. Esquemática, sin escala.\n"
              "% Generar con: bash Code/generar_figura.sh anx_perfiles\n" + "\n".join(out) + "\n")
