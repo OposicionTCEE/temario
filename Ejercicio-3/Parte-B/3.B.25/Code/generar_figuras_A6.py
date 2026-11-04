@@ -58,8 +58,8 @@ w("anx_medidas", r"""% Figura (Anexo II, «Cambio de medida»): densidad del pre
   \draw[dotted] (1.0202,0) -- (1.0202,1.32);
   \node[anchor=north east, inner xsep=1pt] at (1.0202,0) {$S_0e^{r_fT}$};
   \node[anchor=north west, inner xsep=1pt] at (1.2214,0) {$S_0e^{\mu T}$};
-  \node[anchor=south west] at (1.5,0.65) {$P$};
-  \node[anchor=east] at (0.7,1.12) {$Q$};
+  \node[anchor=south west] at (1.5,0.65) {$\mathbb{P}$};
+  \node[anchor=east] at (0.7,1.12) {$\mathbb{Q}$};
 \end{tikzpicture}
 """)
 
@@ -78,10 +78,10 @@ band=[1.8+0.05*i for i in range(0,17)]
 QB=coords([(X(K),qd(K)) for K in band])
 k0,dk=2.2,0.8
 w("anx_breeden", r"""% Figura (Anexo II, «Precios implícitos»): (a) precio de una call frente a su precio de ejercicio, decreciente y convexo; la
-% cuerda entre K_0 - Delta K y K_0 + Delta K queda por encima del precio en K_0, y la diferencia es el precio de la mariposa,
+% cuerda entre K_1 y K_3 queda por encima del precio en K_2, y la diferencia es el precio de la mariposa,
 % que no puede ser negativo. (b) Segunda derivada del precio respecto a K: la densidad neutral al riesgo descontada,
-% e^{-rT} q(K) (BREEDEN y LITZENBERGER, 1978); el área sombreada, de anchura Delta K, es el precio de un título que paga si S_T
-% termina cerca de K_0. Valores ilustrativos: S_0 = 2, rT = 0,05, sigma raíz de T = 0,35, K_0 = 2,2, Delta K = 0,8.
+% e^{-rT} q(K) (BREEDEN y LITZENBERGER, 1978); el área sombreada, de anchura K_2 - K_1, es el precio de un título que paga si S_T
+% termina cerca de K_2. Valores ilustrativos: S_0 = 2, rT = 0,05, sigma raíz de T = 0,35, K_2 = 2,2, K_2 - K_1 = 0,8.
 % Generar con: bash Code/generar_figura.sh anx_breeden
 \begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]
   % ---------------- (a) Precio de la call ----------------
@@ -92,9 +92,9 @@ w("anx_breeden", r"""% Figura (Anexo II, «Precios implícitos»): (a) precio de
     \draw[very thick] plot[smooth] coordinates {""" + CK + r"""};
     \draw[dashed] (""" + f"{X(k0-dk):.3f},{c(k0-dk):.3f}" + r""") -- (""" + f"{X(k0+dk):.3f},{c(k0+dk):.3f}" + r""");
     \foreach \k/\c in {""" + f"{X(k0-dk):.3f}/{c(k0-dk):.3f}, {X(k0):.3f}/{c(k0):.3f}, {X(k0+dk):.3f}/{c(k0+dk):.3f}" + r"""} { \fill (\k,\c) circle (1.6pt); \draw[dotted] (\k,0) -- (\k,\c); }
-    \node[anchor=north] at (""" + f"{X(k0-dk):.3f}" + r""",0) {$K_0-\Delta K$};
-    \node[anchor=north] at (""" + f"{X(k0):.3f}" + r""",0) {$K_0$};
-    \node[anchor=north] at (""" + f"{X(k0+dk):.3f}" + r""",0) {$K_0+\Delta K$};
+    \node[anchor=north] at (""" + f"{X(k0-dk):.3f}" + r""",0) {$K_1$};
+    \node[anchor=north] at (""" + f"{X(k0):.3f}" + r""",0) {$K_2$};
+    \node[anchor=north] at (""" + f"{X(k0+dk):.3f}" + r""",0) {$K_3$};
   \end{scope}
   % ---------------- (b) Precios de estado ----------------
   \begin{scope}[xshift=6.6cm, x=1.2cm, y=3.0cm]
@@ -104,7 +104,7 @@ w("anx_breeden", r"""% Figura (Anexo II, «Precios implícitos»): (a) precio de
     \draw[->] (0,0) -- (0,0.92);
     \draw[very thick] plot[smooth] coordinates {""" + QD + r"""};
     \draw[dotted] (""" + f"{X(k0):.3f},0) -- ({X(k0):.3f},{qd(k0):.3f}" + r""");
-    \node[anchor=north] at (""" + f"{X(k0):.3f}" + r""",0) {$K_0$};
+    \node[anchor=north] at (""" + f"{X(k0):.3f}" + r""",0) {$K_2$};
     \node[anchor=south west] at (""" + f"{X(1.85):.3f},{qd(1.85)+0.01:.3f}" + r""") {$e^{-r_fT}q(K)=\dfrac{\partial^2c}{\partial K^2}$};
   \end{scope}
 \end{tikzpicture}
@@ -156,21 +156,21 @@ w("anx_griegas", body)
 
 # ---------- anx_theta_gamma ----------
 w("anx_theta_gamma", r"""% Figura (Anexo II, «Theta y gamma»): resultado durante un intervalo corto de una opción comprada y cubierta en delta, frente
-% al movimiento del subyacente: la curvatura da 1/2 Gamma Delta S^2 (discontinua) con cualquier movimiento y el paso del
-% tiempo resta Theta Delta t (punteada); el resultado (continua) es positivo si |Delta S| supera sigma S raíz de Delta t.
-% Unidades: Delta S en múltiplos de sigma S raíz de Delta t; Gamma S^2 = 1.
+% al movimiento del subyacente: la curvatura da 1/2 Gamma dS^2 (discontinua) con cualquier movimiento y el paso del
+% tiempo resta Theta dt (punteada); el resultado (continua) es positivo si |dS| supera sigma S raíz de dt.
+% Unidades: dS en múltiplos de sigma S raíz de dt; Gamma S^2 = 1.
 % Generar con: bash Code/generar_figura.sh anx_theta_gamma
 \begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}, x=1.25cm, y=1.25cm]
-  \draw[->] (-2.5,0) -- (2.6,0) node[below] {$\Delta S$};
-  \draw[->] (0,-0.85) -- (0,2.05) node[left] {$\Delta\Pi$};
+  \draw[->] (-2.5,0) -- (2.6,0) node[below] {$dS$};
+  \draw[->] (0,-0.85) -- (0,2.05) node[left] {$d\Pi$};
   \draw[dashed] plot[domain=-1.9:1.9, samples=50] (\x,{0.5*\x*\x});
   \draw[dotted, thick] (-2.15,-0.5) -- (2.15,-0.5);
   \draw[very thick] plot[domain=-2.1:2.1, samples=60] (\x,{0.5*(\x*\x-1)});
   \fill (-1,0) circle (1.6pt); \fill (1,0) circle (1.6pt);
-  \node[anchor=north east, inner xsep=1pt] at (-1,0) {$-\sigma S\sqrt{\Delta t}$};
-  \node[anchor=north west, inner xsep=1pt] at (1,0) {$\sigma S\sqrt{\Delta t}$};
-  \node[anchor=east] at (-2.15,-0.5) {$\Theta\,\Delta t$};
-  \node[anchor=south] at (1.9,1.81) {$\tfrac{1}{2}\Gamma\,\Delta S^2$};
+  \node[anchor=north east, inner xsep=1pt] at (-1,0) {$-\sigma S\sqrt{dt}$};
+  \node[anchor=north west, inner xsep=1pt] at (1,0) {$\sigma S\sqrt{dt}$};
+  \node[anchor=east] at (-2.15,-0.5) {$\Theta\,dt$};
+  \node[anchor=south] at (1.9,1.81) {$\tfrac{1}{2}\Gamma\,dS^2$};
 \end{tikzpicture}
 """)
 
@@ -185,14 +185,14 @@ cov=sum((a-mx)*(b-my) for a,b in pts)/69; vx=sum((a-mx)**2 for a,_ in pts)/69
 h=cov/vx
 dots=", ".join(f"{a:.2f}/{b:.2f}" for a,b in pts)
 x1,x2=-2.4,2.4
-w("anx_minvar", r"""% Figura (Anexo II, «Mínima varianza»): nube de cambios del precio expuesto, Delta S, frente a los del futuro, Delta F; la
+w("anx_minvar", r"""% Figura (Anexo II, «Mínima varianza»): nube de cambios del precio expuesto, dS, frente a los del futuro, dF; la
 % razón de cobertura de mínima varianza, h^*, es la pendiente de la recta de regresión, y la dispersión en torno a ella es el
-% riesgo que queda. Simulación: Delta F normal estándar, Delta S = 0,8 Delta F + 0,45 e, 70 observaciones, semilla 5
+% riesgo que queda. Simulación: dF normal estándar, dS = 0,8 dF + 0,45 e, 70 observaciones, semilla 5
 % (h^* estimada = """ + f"{h:.2f}".replace('.',',') + r""").
 % Generar con: bash Code/generar_figura.sh anx_minvar
 \begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}, x=0.85cm, y=0.85cm]
-  \draw[->] (-2.7,0) -- (2.8,0) node[below] {$\Delta F$};
-  \draw[->] (0,-2.7) -- (0,2.75) node[left] {$\Delta S$};
+  \draw[->] (-2.7,0) -- (2.8,0) node[below] {$dF$};
+  \draw[->] (0,-2.7) -- (0,2.75) node[left] {$dS$};
   \foreach \x/\y in {""" + dots + r"""} \fill[black!55] (\x,\y) circle (1.3pt);
   \draw[very thick] (""" + f"{x1},{my+h*(x1-mx):.3f}) -- ({x2},{my+h*(x2-mx):.3f}" + r""");
   \node[anchor=west] at (""" + f"{x2},{my+h*(x2-mx):.3f}" + r""") {$h^*$};
