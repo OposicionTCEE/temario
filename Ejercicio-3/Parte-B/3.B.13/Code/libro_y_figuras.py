@@ -59,6 +59,21 @@ PLAZO = {"3": "Un día", "4": "Más de un día y menos de siete", "G": "Siete d�
          "J": "Más de un mes y hasta tres", "V": "Más de tres meses y hasta seis", "2": "Más de seis meses",
          "P": "Más de siete días y hasta un año", "W": "Más de un año"}
 PRIORIDAD = ["EUR", "GBP", "AUD", "NZD", "USD", "CAD", "CHF", "JPY"]
+# Liquidación (dimensión DER_RATING del volumen). 2022: volumen de abril por método de liquidación; 2025: obligaciones de
+# pago brutas liquidadas en abril, con preguntas nuevas que no son comparables con las de 2022.
+LIQ_2022 = {"K": "Volumen que se liquida con dos pagos (contado y plazo)", "L": "Volumen que se liquida con cuatro pagos (swaps)",
+            "J": "Volumen que se liquida con un solo pago (sin entrega)", "O": "Con protección: pago contra pago y mismo liquidador sin exposición",
+            "P": "Por CLS (pago contra pago)", "Q": "Por otros sistemas de pago contra pago",
+            "R": "Mismo liquidador o en la propia entidad, sin exposición", "S": "Sin pago contra pago",
+            "T": "Mismo liquidador o en la propia entidad, con exposición"}
+LIQ_2025 = {"2": "Obligaciones de pago brutas liquidadas", "3": "Por sistemas de pago contra pago",
+            "4": "Sujetas a neteo previo (importe bruto)", "5": "Importe neto tras el neteo",
+            "7": "Dentro del grupo: entre sucursales", "8": "Dentro del grupo: entre filiales",
+            "9": "En cuentas en que el intermediario controla el momento del pago",
+            "C": "Liquidación bruta bilateral", "G": "Bruta bilateral pese a poder liquidarse con pago contra pago",
+            "U": "Bruta bilateral por no poder liquidarse con pago contra pago",
+            "V": "No admitidas: par de monedas", "W": "No admitidas: tipo de operación",
+            "X": "No admitidas: la contraparte no es miembro", "Y": "Fallidas (no liquidadas en la fecha prevista)"}
 DIMS = ["DER_INSTR:Instrument", "DER_REP_CTY:Reporting country", "DER_SECTOR_CPY:Counterparty sector",
         "DER_CPC:Counterparty country", "DER_CURR_LEG1:Currency leg 1", "DER_CURR_LEG2:Currency leg 2",
         "DER_ISSUE_MAT:Maturity", "DER_RATING:Rating (outstanding) or settlement (FX turnover)",
