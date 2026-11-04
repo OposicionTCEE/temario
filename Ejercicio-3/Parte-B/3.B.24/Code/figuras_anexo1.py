@@ -585,14 +585,14 @@ def brecha():
     fondo = lambda yy: 100 * g(yy, 8) - 90 * g(yy, 20)
     ys = [0.01 + 0.001 * j for j in range(0, 81)]
     out = [r"\begin{tikzpicture}[font=\footnotesize]"]
-    out.append(r"\begin{axis}[width=12cm, height=6.3cm, axis lines=middle, xmin=1, xmax=9.4, ymin=-45, ymax=45,"
+    out.append(r"\begin{axis}[width=12cm, height=6.6cm, axis lines=middle, xmin=1, xmax=9.4, ymin=-62, ymax=40,"
                r" xtick={5}, xticklabels={$y_0$}, ytick={0}, tick label style={font=\scriptsize},"
                r" label style={font=\footnotesize}, xlabel={$y$}, ylabel={Capital, $A-L$},"
-               r" x label style={anchor=west}, y label style={anchor=south}, clip=false]")
+               r" x label style={anchor=west}, y label style={anchor=south}, clip=true]")
     out.append(rf"\addplot[very thick, mark=none] coordinates {{{coords([(100*yy, banco(yy)) for yy in ys])}}};")
     out.append(rf"\addplot[very thick, densely dashed, mark=none] coordinates {{{coords([(100*yy, fondo(yy)) for yy in ys])}}};")
-    out.append(r"\node[anchor=south west, font=\footnotesize] at (axis cs:1.2,26) {Banco: $D_A>D_L$};")
-    out.append(r"\node[anchor=north west, font=\footnotesize] at (axis cs:1.2,-30) {Fondo de pensiones: $D_A<D_L$};")
+    out.append(r"\node[anchor=north east, font=\footnotesize] at (axis cs:9.3,-9) {Banco: $D_A>D_L$};")
+    out.append(r"\node[anchor=south east, font=\footnotesize] at (axis cs:7.0,28) {Fondo de pensiones: $D_A<D_L$};")
     out.append(r"\end{axis}")
     out.append(r"\end{tikzpicture}")
     escribir("anx_brecha", "% Figura (Anexo I, I.8, «Balances»): valor del capital frente al tipo de interés de un banco (activo cupón cero\n"
