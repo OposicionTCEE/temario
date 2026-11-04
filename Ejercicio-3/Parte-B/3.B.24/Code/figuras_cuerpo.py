@@ -493,7 +493,205 @@ def referencia():
              + "\n".join(out) + "\n")
 
 
+# =====================  Tanda T12 (bloque 3, «Estructura temporal»)  =====================
+# b3_curvas: curvas al contado, a plazo (un año) y par, plana (las tres iguales) y creciente (NELSON-SIEGEL con beta0 = 5,
+#   beta1 = -4, beta2 = 1 y tau = 3, tipos anuales, como anx_curvas); esquemática.
+# b3_bootstrapping: pagos de tres bonos a 1, 2 y 3 años; en cada uno, el último pago deja una sola incógnita, el factor
+#   de descuento nuevo, y los anteriores se valoran con los factores ya conocidos; esquemática.
+# b3_factores: una curva de NELSON-SIEGEL (beta0 = 4, beta1 = -2, beta2 = 1, tau = 2,5) y su desplazamiento por cada
+#   factor: nivel (+0,8), pendiente (beta1 + 1,4) y curvatura (beta2 + 2,2); esquemática.
+# b3_expectativas: senda esperada del tipo a un año, E[i_k] = ib + (i0 - ib) e^{-0,35 k}, y curva al contado que es su
+#   media, si se esperan subidas (i0 = 2, ib = 5,5) o bajadas (i0 = 6, ib = 2,5); esquemática.
+# b3_plazo_realizado: tipo a un año realizado (5 - 0,25 t + 0,5 sen 1,1 t) y, en cinco fechas, los tipos a plazo de ese
+#   momento (crecientes); esquemática.
+# b3_oferta: prima por plazo que exigen los arbitrajistas según la oferta neta de bonos largos; esquemática.
+# b3_politica: instrumentos, componente de la curva sobre el que actúa cada uno y teoría que lo sostiene; esquemática.
+def _ns(m, b0, b1, b2, tau):
+    x = m / tau
+    l1 = (1 - math.exp(-x)) / x
+    return b0 + b1 * l1 + b2 * (l1 - math.exp(-x))
+
+
+def curvas():
+    p = dict(b0=5.0, b1=-4.0, b2=1.0, tau=3.0)
+    rc = lambda m: _ns(m, **p) / 100
+    B = lambda t: math.exp(-rc(t) * t)
+    contado = lambda m: 100 * (math.exp(rc(m)) - 1)
+    plazo = lambda m: 100 * (B(m) / B(m + 1) - 1)
+    sx, sy, base, ancho = 5.0 / 20, 3.4 / 6.0, 0.5, 5.0
+    X = lambda m: m * sx
+    Y = lambda v: (v - base) * sy
+    out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
+    for k, titulo in enumerate(("Curva plana", "Curva creciente")):
+        x0 = k * 7.2
+        out.append(rf"\begin{{scope}}[xshift={x0}cm]")
+        out.append(rf"\node[font=\footnotesize\bfseries, anchor=west] at (-0.1,{Y(6.5)+0.55:.2f}) {{{titulo}}};")
+        out.append(rf"\draw[->] (0,0) -- ({ancho+0.35:.2f},0) node[below left] {{Plazo, $n$}};")
+        out.append(rf"\draw[->] (0,0) -- (0,{Y(6.5):.2f}) node[above] {{Tipo}};")
+        if k == 0:
+            out.append(rf"\draw[very thick] (0,{Y(3.8):.3f}) -- ({X(20):.3f},{Y(3.8):.3f});")
+            out.append(rf"\node[anchor=south east] at ({X(20):.3f},{Y(3.8)+0.05:.3f}) {{$r_n=f=c_n=r$}};")
+        else:
+            ms = [0.25 * j for j in range(1, 81)]
+            out.append(rf"\draw[very thick, black!45] plot[smooth] coordinates {{{coords([(X(m), Y(plazo(m))) for m in ms])}}};")
+            out.append(rf"\draw[very thick] plot[smooth] coordinates {{{coords([(X(m), Y(contado(m))) for m in ms])}}};")
+            par = [(X(T), Y(100 * (1 - B(T)) / sum(B(t) for t in range(1, T + 1)))) for T in range(1, 21)]
+            out.append(rf"\draw[very thick, densely dashed] plot[smooth] coordinates {{{coords(par)}}};")
+            fin = [(Y(plazo(20)), "$f$"), (Y(contado(20)), "$r_n$"), (par[-1][1], "$c_n$")]
+            orden = sorted(fin)
+            pos = [orden[0][0] - 0.12, orden[1][0], orden[2][0] + 0.12]
+            for (y, et), yr in zip(orden, pos):
+                out.append(rf"\node[anchor=west, inner sep=1.5pt] at ({X(20)+0.05:.3f},{yr:.3f}) {{{et}}};")
+        out.append(r"\end{scope}")
+    out.append(r"\end{tikzpicture}")
+    escribir("b3_curvas", _cabecera("b3_curvas", "B3, «Tipos a plazo»: curvas al contado, a plazo y par, plana y creciente;"
+                                    f" a 20 años en la creciente: {contado(20):.2f}, {plazo(20):.2f} y"
+                                    f" {100 * (1 - B(20)) / sum(B(t) for t in range(1, 21)):.2f}") + "\n".join(out) + "\n")
+
+
+def bootstrapping():
+    xs = {1: 3.3, 2: 5.1, 3: 6.9}
+    filas = [("Bono a un año", 2.5, 1), ("Bono a dos años", 1.25, 2), ("Bono a tres años", 0.0, 3)]
+    hc, hn, w = 0.22, 0.8, 0.2
+    out = [r"\begin{tikzpicture}[font=\footnotesize]"]
+    for nombre, y, T in filas:
+        out.append(rf"\node[anchor=west] at (0,{y+0.35:.2f}) {{{nombre}}};")
+        out.append(rf"\draw[black!40] (2.7,{y:.2f}) -- (7.5,{y:.2f});")
+        for t in range(1, T + 1):
+            x = xs[t]
+            if t < T:
+                out.append(rf"\fill[{CLARO}] ({x-w:.2f},{y:.2f}) rectangle ({x+w:.2f},{y+hc:.2f});")
+                out.append(rf"\node[anchor=west, text=black!55, inner sep=1.5pt] at ({x+w:.2f},{y+0.13:.2f}) {{$B(0,{t})$}};")
+            else:
+                out.append(rf"\fill[{OSCURO}] ({x-w:.2f},{y:.2f}) rectangle ({x+w:.2f},{y+hn:.2f});")
+                out.append(rf"\node[anchor=west, inner sep=1.5pt] at ({x+w:.2f},{y+hn-0.12:.2f}) {{$B(0,{t})$}};")
+    for t, x in xs.items():
+        out.append(rf"\node[below] at ({x:.2f},-0.05) {{$t={t}$}};")
+    out.append(r"\end{tikzpicture}")
+    escribir("b3_bootstrapping", _cabecera("b3_bootstrapping", "B3, «Bootstrapping»: pagos de tres bonos y factor de"
+                                           " descuento que despeja cada uno; esquemática") + "\n".join(out) + "\n")
+
+
+def factores():
+    base = dict(b0=4.0, b1=-2.0, b2=1.0, tau=2.5)
+    cambios = [("Nivel", dict(base, b0=4.8)), ("Pendiente", dict(base, b1=-0.6)), ("Curvatura", dict(base, b2=3.2))]
+    sx, sy, y0, ancho, alto = 3.8 / 20, 2.7 / 4.0, 1.6, 3.8, 2.9
+    X = lambda m: m * sx
+    Y = lambda v: (v - y0) * sy
+    ms = [0.25 * j for j in range(1, 81)]
+    out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
+    for k, (titulo, p) in enumerate(cambios):
+        x0 = k * 5.0
+        out.append(rf"\begin{{scope}}[xshift={x0}cm]")
+        out.append(rf"\node[font=\footnotesize\bfseries, anchor=west] at (-0.1,{alto+0.5:.2f}) {{{titulo}}};")
+        out.append(rf"\draw[->] (0,0) -- ({ancho+0.3:.2f},0) node[below left] {{Plazo}};")
+        out.append(rf"\draw[->] (0,0) -- (0,{alto:.2f}) node[above] {{Tipo}};")
+        out.append(rf"\draw[very thick, black!40] plot[smooth] coordinates {{{coords([(X(m), Y(_ns(m, **base))) for m in ms])}}};")
+        out.append(rf"\draw[very thick] plot[smooth] coordinates {{{coords([(X(m), Y(_ns(m, **p))) for m in ms])}}};")
+        out.append(r"\end{scope}")
+    out.append(r"\end{tikzpicture}")
+    escribir("b3_factores", _cabecera("b3_factores", "B3, «Movimientos»: curva de partida (gris) y desplazada por cada factor"
+                                      " (negra); esquemática") + "\n".join(out) + "\n")
+
+
+def expectativas():
+    a = 0.35
+    senda = lambda i0, ib, k: ib + (i0 - ib) * math.exp(-a * k)
+    curva = lambda i0, ib, n: i0 if n == 0 else ib + (i0 - ib) * (1 - math.exp(-a * n)) / (a * n)
+    sx, sy, y0, ancho, alto = 5.0 / 10, 3.0 / 5.0, 1.5, 5.0, 3.2
+    X = lambda k: k * sx
+    Y = lambda v: (v - y0) * sy
+    ks = [0.1 * j for j in range(0, 101)]
+    out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
+    for j, (titulo, i0, ib) in enumerate((("Se esperan subidas", 2.0, 5.5), ("Se esperan bajadas", 6.0, 2.5))):
+        x0 = j * 7.0
+        out.append(rf"\begin{{scope}}[xshift={x0}cm]")
+        out.append(rf"\node[font=\footnotesize\bfseries, anchor=west] at (-0.1,{alto+0.5:.2f}) {{{titulo}}};")
+        out.append(rf"\draw[->] (0,0) -- ({ancho+0.35:.2f},0) node[below left] {{$k$, $n$}};")
+        out.append(rf"\draw[->] (0,0) -- (0,{alto:.2f}) node[above] {{Tipo}};")
+        out.append(rf"\draw[very thick, densely dashed] plot[smooth] coordinates {{{coords([(X(k), Y(senda(i0, ib, k))) for k in ks])}}};")
+        out.append(rf"\draw[very thick] plot[smooth] coordinates {{{coords([(X(k), Y(curva(i0, ib, k))) for k in ks])}}};")
+        e, r = Y(senda(i0, ib, 10)), Y(curva(i0, ib, 10))
+        out.append(rf"\node[anchor=west, inner sep=1.5pt] at ({X(10)+0.05:.3f},{e:.3f}) {{$E[i_k]$}};")
+        out.append(rf"\node[anchor=west, inner sep=1.5pt] at ({X(10)+0.05:.3f},{r:.3f}) {{$r_n$}};")
+        out.append(rf"\node[left] at (0,{Y(i0):.3f}) {{$i_0$}};")
+        out.append(r"\end{scope}")
+    out.append(r"\end{tikzpicture}")
+    escribir("b3_expectativas", _cabecera("b3_expectativas", "B3, «Hipótesis»: senda esperada del tipo a un año (discontinua)"
+                                          " y curva al contado (continua), su media; esquemática") + "\n".join(out) + "\n")
+
+
+def plazo_realizado():
+    real = lambda t: 5 - 0.25 * t + 0.5 * math.sin(1.1 * t)
+    sx, sy, y0, ancho, alto = 12.0 / 13, 3.3 / 5.5, 1.0, 12.0, 3.5
+    X = lambda t: t * sx
+    Y = lambda v: (v - y0) * sy
+    ts = [0.1 * j for j in range(0, 131)]
+    out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
+    out.append(rf"\draw[->] (0,0) -- ({ancho+0.4:.2f},0) node[below left] {{Tiempo}};")
+    out.append(rf"\draw[->] (0,0) -- (0,{alto:.2f}) node[above] {{Tipo a un año}};")
+    for t0 in (0.0, 2.6, 5.2, 7.8, 10.4):
+        hs = [0.1 * j for j in range(0, 26)]
+        pts = [(X(t0 + h), Y(real(t0) + 1.4 * (1 - math.exp(-h / 1.6)))) for h in hs]
+        out.append(rf"\draw[thick, black!45, densely dashed] plot[smooth] coordinates {{{coords(pts)}}};")
+        out.append(rf"\fill[black!45] ({X(t0):.3f},{Y(real(t0)):.3f}) circle (1.3pt);")
+    out.append(rf"\draw[very thick] plot[smooth] coordinates {{{coords([(X(t), Y(real(t))) for t in ts])}}};")
+    out.append(rf"\node[anchor=west, inner sep=1.5pt] at ({X(13)+0.05:.3f},{Y(real(13)):.3f}) {{$i_k$}};")
+    t0 = 10.4
+    out.append(rf"\node[anchor=south, inner sep=1.5pt] at ({X(t0+2.5):.3f},{Y(real(t0)+1.4*(1-math.exp(-2.5/1.6)))+0.02:.3f}) {{$f$}};")
+    out.append(r"\end{tikzpicture}")
+    escribir("b3_plazo_realizado", _cabecera("b3_plazo_realizado", "B3, «Contraste»: tipo a un año realizado (continua) y tipos"
+                                             " a plazo de cada fecha (discontinuas); esquemática") + "\n".join(out) + "\n")
+
+
+def oferta():
+    out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
+    out.append(r"\draw[->] (0,0) -- (6.4,0) node[below left] {Oferta neta de bonos largos};")
+    out.append(r"\draw[->] (0,0) -- (0,3.7) node[above] {Prima por plazo, $\phi_n$};")
+    d = lambda q: 0.35 + 0.5 * q
+    out.append(rf"\draw[very thick] (0.3,{d(0.3):.3f}) -- (5.6,{d(5.6):.3f}) node[right] {{$D$}};")
+    for q, et in ((2.4, "S_0"), (4.0, "S_1")):
+        out.append(rf"\draw[thick, black!55] ({q},0) -- ({q},3.4) node[above] {{${et}$}};")
+        out.append(rf"\draw[densely dotted] (0,{d(q):.3f}) -- ({q},{d(q):.3f});")
+        out.append(rf"\fill ({q},{d(q):.3f}) circle (1.6pt);")
+    out.append(rf"\node[left] at (0,{d(2.4):.3f}) {{$\phi_0$}};")
+    out.append(rf"\node[left] at (0,{d(4.0):.3f}) {{$\phi_1$}};")
+    out.append(r"\draw[->, thick] (2.55,3.0) -- (3.85,3.0);")
+    out.append(r"\end{tikzpicture}")
+    escribir("b3_oferta", _cabecera("b3_oferta", "B3, «Hábitat»: prima que exigen los arbitrajistas según la oferta neta de"
+                                    " bonos largos; esquemática") + "\n".join(out) + "\n")
+
+
+def politica():
+    caja = (r"rounded corners=2pt, fill=black!7, draw=black!45, align=center, minimum height=0.62cm, inner sep=2pt,"
+            r" font=\footnotesize")
+    filas = [("Tipo oficial", 2.4), ("Orientación sobre los tipos", 1.6), ("Compras de deuda y\\\\control de la curva", 0.8),
+             ("Gestión de la deuda", 0.0)]
+    out = [r"\begin{tikzpicture}[>={Stealth[length=4pt]}]"]
+    out.append(r"\node[font=\footnotesize\bfseries] at (0,3.25) {Instrumento};")
+    out.append(r"\node[font=\footnotesize\bfseries] at (4.3,3.25) {Actúa sobre};")
+    out.append(r"\node[font=\footnotesize\bfseries] at (8.1,3.25) {Funciona si es cierta};")
+    for k, (et, y) in enumerate(filas):
+        out.append(rf"\node[{caja}, text width=3.3cm] (i{k}) at (0,{y:.2f}) {{{et}}};")
+    out.append(rf"\node[{caja}, text width=1.5cm] (c0) at (4.3,2.4) {{$i_0$}};")
+    out.append(rf"\node[{caja}, text width=1.5cm] (c1) at (4.3,1.6) {{$E[i_k]$}};")
+    out.append(rf"\node[{caja}, text width=1.5cm, minimum height=1.42cm] (c2) at (4.3,0.4) {{$\phi_n$}};")
+    out.append(rf"\node[{caja}, text width=3.0cm] (t1) at (8.1,1.6) {{la hipótesis de las expectativas}};")
+    out.append(rf"\node[{caja}, text width=3.0cm, minimum height=1.42cm] (t2) at (8.1,0.4) {{la teoría del hábitat preferido}};")
+    out.append(r"\draw[->, black!60] (i0.east) -- (c0.west);")
+    out.append(r"\draw[->, black!60] (i1.east) -- (c1.west);")
+    out.append(r"\draw[->, black!60] (i2.east) -- (c2.west |- i2.east);")
+    out.append(r"\draw[->, black!60] (i3.east) -- (c2.west |- i3.east);")
+    out.append(r"\draw[->, black!60] (c1.east) -- (t1.west);")
+    out.append(r"\draw[->, black!60] (c2.east) -- (t2.west);")
+    out.append(r"\node[font=\footnotesize] at (4.3,-0.95) {$r_n=\dfrac{1}{n}\displaystyle\sum_{k=0}^{n-1}E[i_k]+\phi_n$};")
+    out.append(r"\end{tikzpicture}")
+    escribir("b3_politica", _cabecera("b3_politica", "B3, «Acción»: instrumentos, componente de la curva sobre el que actúan y"
+                                      " teoría que los sostiene; esquemática") + "\n".join(out) + "\n")
+
+
 if __name__ == "__main__":
     for f in (flujos, convergencia, precio_rendimiento, diferencial, balanza, tangente, convexidad, pesas_bala,
-              convexidad_negativa, inmunizacion, brecha, variantes, liquidez, referencia):
+              convexidad_negativa, inmunizacion, brecha, variantes, liquidez, referencia, curvas, bootstrapping,
+              factores, expectativas, plazo_realizado, oferta, politica):
         f()
