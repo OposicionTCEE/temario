@@ -44,6 +44,14 @@ TRATAMIENTOS = [
 SERIES = [  # (código FRED, país, indicador, unidad, fuente, tratamiento, uso)
     ("IRLTLT01DEM156N", "Alemania", "Rendimiento de la deuda pública a 10 años (media mensual)", "% anual", "F1", "T1",
      "Cifra citada en I.3.1 (rendimientos negativos)"),
+    ("BAA", "Estados Unidos", "Rendimiento de los bonos de empresa Baa de Moody's (media mensual)", "% anual", "F4", "T0",
+     "Figura anx_diferencial_credito (I.4.3)"),
+    ("AAA", "Estados Unidos", "Rendimiento de los bonos de empresa Aaa de Moody's (media mensual)", "% anual", "F4", "T0",
+     "Referencia (diferencial Baa-Aaa desde 1919)"),
+    ("GS10", "Estados Unidos", "Rendimiento del Tesoro a 10 años, vencimiento constante (media mensual)", "% anual", "F5", "T0",
+     "Figura anx_diferencial_credito (I.4.3)"),
+    ("USREC", "Estados Unidos", "Indicador de recesión del NBER (1 = recesión)", "0/1", "F6", "T4",
+     "Bandas de la figura anx_diferencial_credito"),
 ]
 
 
