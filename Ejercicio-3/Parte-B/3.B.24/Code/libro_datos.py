@@ -152,6 +152,23 @@ def main():
     calculos.append(("anx_duracion_vencimiento", "Máximo de la duración con c = 2 % e y = 6 % (años) y vencimiento en que se alcanza",
                      f"{mx[1]:.2f} en T = {mx[0]}", "años", "F0", "T2"))
 
+    # A4: inmunización (I.8), con el bono de referencia y un cambio inmediato y permanente del tipo
+    def rr(H, y1):
+        W = sum((6 + (100 if t == 10 else 0)) * (1 + y1) ** (H - t) for t in range(1, 11))
+        return (W / 100) ** (1 / H) - 1
+
+    for y1 in (0.04, 0.08):
+        calculos.append(("anx_inmunizacion", f"Rentabilidad realizada con H = D = {d:.2f} años si el tipo pasa al {100*y1:.0f} %",
+                         round(100 * rr(d, y1), 3), "%", "F0", "T2"))
+    f = lambda yy, t, y0=0.06: (1 + y0) ** t / (1 + yy) ** t
+    for yy in (0.02, 0.10):
+        calculos.append(("anx_redington", f"Excedente con y = {100*yy:.0f} %: inmunizada / desajustada",
+                         f"{50*f(yy,5)+50*f(yy,15)-100*f(yy,10):.2f} / {100*f(yy,5)-100*f(yy,10):.2f}", "euros por 100", "F0", "T2"))
+    g = lambda yy, t: 1.05 ** t / (1 + yy) ** t
+    for yy in (0.01, 0.09):
+        calculos.append(("anx_brecha", f"Capital con y = {100*yy:.0f} %: banco / fondo de pensiones",
+                         f"{100*g(yy,6)-90*g(yy,1):.1f} / {100*g(yy,8)-90*g(yy,20):.1f}", "euros por 100 de activo", "F0", "T2"))
+
     leeme = [("Libro de datos del Tema 3.B.24 (renta fija)",),
              ("Cada dato cita su fuente (hoja Fuentes) y su tratamiento (hoja Tratamientos).",),
              ("Indicadores: series en formato largo, filtrables por serie, país e indicador.",),
