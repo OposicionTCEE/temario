@@ -268,7 +268,7 @@ def main():
               "T9", "anx_plazas")
     for p in ANIOS:
         F("Volumen de divisas y comercio", "Volumen anual de divisas entre exportaciones mundiales", "Todos", "Todas", "Todas",
-          "Mundo", "Todos", p, p, round(tot[p] * DIAS_HABILES / 1e3 / exp[p], 1), "veces", "BPI-TOV y BM-WDI", "T6", "texto")
+          "Mundo", "Todos", p, p, round(tot[p] * DIAS_HABILES / 1e3 / exp[p], 1), "veces", "BPI-TOV y BM-WDI", "T6", "b3_comercio")
     F("Volumen de divisas y comercio", "Volumen anual con clientes no financieros entre exportaciones mundiales", "Todos",
       SECTOR["U"], "Todas", "Mundo", "Todos", "2025", "2025", round(s(sec="U")["2025"] * DIAS_HABILES / 1e3 / exp["2025"], 1),
       "veces", "BPI-TOV y BM-WDI", "T6", "texto")
