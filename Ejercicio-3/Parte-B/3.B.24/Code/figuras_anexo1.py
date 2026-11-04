@@ -130,7 +130,8 @@ def precio_sucio():
     sx, sy, base = 4.0, 0.4, 116.0
     Pk = [precio(c, y, T - k) for k in range(0, 4)]
     out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
-    out.append(r"\draw[->] (0,0) -- (12.6,0) node[below left] {Tiempo};")
+    out.append(r"\draw[->] (0,0) -- (13.4,0);")
+    out.append(r"\node[anchor=north east] at (13.4,-0.05) {Tiempo};")
     out.append(r"\draw[->] (0,0) -- (0,6.3) node[above] {Precio};")
     for k in range(0, 4):
         out.append(rf"\draw ({k*sx},0.06) -- ({k*sx},-0.06) node[below] {{${k}$}};")
