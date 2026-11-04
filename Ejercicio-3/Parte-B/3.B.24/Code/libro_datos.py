@@ -25,6 +25,12 @@ FUENTES = [
      "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2026-678"),
     ("F3", "HM Treasury (27 de marzo de 2015), Repayment of £2.6 billion historical debt to be completed by government",
      "https://www.gov.uk/government/news/repayment-of-26-billion-historical-debt-to-be-completed-by-government"),
+    ("F4", "Moody's, Seasoned Baa y Aaa Corporate Bond Yield, vía FRED", "https://fred.stlouisfed.org/series/BAA"),
+    ("F5", "Junta de Gobernadores de la Reserva Federal, rendimiento del Tesoro a 10 años (GS10), vía FRED",
+     "https://fred.stlouisfed.org/series/GS10"),
+    ("F6", "NBER, indicador de recesión de Estados Unidos (USREC), vía FRED", "https://fred.stlouisfed.org/series/USREC"),
+    ("F7", "Instituto de Crédito Oficial, página de financiación (garantía del Estado)",
+     "https://www.ico.es/web/ico_en/ico/investor_relations/funding"),
     ("F0", "Cálculo propio (sin datos)", ""),
 ]
 TRATAMIENTOS = [
