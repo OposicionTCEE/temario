@@ -236,10 +236,133 @@ def fuentes():
     escribir("anx_fuentes", cab + "\n".join(out) + "\n")
 
 
+# =====================  Tanda A2 (I.4 Crédito e I.5 Liquidez y otros diferenciales)  =====================
+# anx_arbol_impago: bono que promete CF en un periodo; paga con probabilidad 1 - p y recupera (1 - l) CF si impaga.
+# anx_diferencial_credito: rendimiento medio mensual de los bonos Baa de Moody's menos el del Tesoro de EE. UU. a 10 años
+#   (FRED: BAA y GS10, abril de 1953 a la última observación), con las recesiones del NBER (FRED: USREC) sombreadas.
+# anx_clientelas: rendimiento exigido frente a la horquilla con tres clientelas de horizontes H1 < H2 < H3 (AMIHUD y
+#   MENDELSON, 1986): tramos de pendiente 1/H decreciente; esquemática.
+# anx_descomposicion: rendimiento de un bono de empresa frente al soberano del mismo plazo; esquemática.
+DATOS = Path(__file__).resolve().parent / "datos"
+
+
+def serie(codigo):
+    import csv
+    filas = list(csv.reader((DATOS / f"fred_{codigo}.csv").open(encoding="utf-8")))[1:]
+    return {d: float(v) for d, v in filas if v not in ("", ".")}
+
+
+def arbol_impago():
+    out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
+    out.append(r"\node (P) at (0,0) {$P$};")
+    out.append(r"\node[anchor=west] (A) at (4.2,1.1) {$CF$};")
+    out.append(r"\node[anchor=west] (B) at (4.2,-1.1) {$(1-\ell)\,CF$};")
+    out.append(r"\draw[->, thick] (P.east) -- (A.west) node[midway, above, sloped] {$1-p$};")
+    out.append(r"\draw[->, thick] (P.east) -- (B.west) node[midway, below, sloped] {$p$};")
+    out.append(r"\node[anchor=west, text=black!60] at ($(A.east)+(0.15,0)$) {paga};")
+    out.append(r"\node[anchor=west, text=black!60] at ($(B.east)+(0.15,0)$) {impaga};")
+    out.append(r"\draw[black!40] (-0.3,-1.9) -- (6.6,-1.9);")
+    out.append(r"\node[below] at (0,-1.9) {$t=0$};")
+    out.append(r"\node[below] at (4.6,-1.9) {$t=1$};")
+    out.append(r"\end{tikzpicture}")
+    escribir("anx_arbol_impago", "% Figura (Anexo I, I.4, «Pérdida esperada»): árbol de un periodo de un bono con riesgo de impago.\n"
+             "% Generar con: bash Code/generar_figura.sh anx_arbol_impago\n" + "\n".join(out) + "\n")
+
+
+def diferencial_credito():
+    baa, gs, rec = serie("BAA"), serie("GS10"), serie("USREC")
+    fechas = sorted(d for d in gs if d in baa)
+    año = lambda d: int(d[:4]) + (int(d[5:7]) - 1) / 12
+    pts = [(año(d), baa[d] - gs[d]) for d in fechas]
+    # tramos de recesión dentro del periodo de la serie
+    tramos, ini = [], None
+    for d in sorted(rec):
+        if d < fechas[0]:
+            continue
+        if rec[d] == 1 and ini is None:
+            ini = año(d)
+        if rec[d] == 0 and ini is not None:
+            tramos.append((ini, año(d)))
+            ini = None
+    ymax = 6.6
+    out = [r"\begin{tikzpicture}[font=\footnotesize]"]
+    out.append(r"\begin{axis}[width=15.2cm, height=5.6cm, axis lines=left, xmin=1953, xmax=2027, ymin=0, ymax=" + str(ymax) + ","
+               r" xtick={1960,1970,1980,1990,2000,2010,2020}, ytick={0,1,2,3,4,5,6},"
+               r" /pgf/number format/use comma, /pgf/number format/1000 sep={},"
+               r" tick label style={font=\scriptsize}, label style={font=\footnotesize},"
+               r" ylabel={Puntos porcentuales}, enlarge x limits=false, clip=true]")
+    for a, b in tramos:
+        out.append(rf"\addplot[fill=black!12, draw=none] coordinates {{({a:.3f},0) ({a:.3f},{ymax}) ({b:.3f},{ymax}) ({b:.3f},0) ({a:.3f},0)}};")
+    out.append(r"\addplot[line width=0.6pt, black, mark=none] coordinates {" + coords(pts) + "};")
+    out.append(r"\end{axis}")
+    out.append(r"\end{tikzpicture}")
+    media = sum(v for _, v in pts) / len(pts)
+    mx = max(pts, key=lambda x: x[1])
+    cab = ("% Figura (Anexo I, I.4, «Diferencial de crédito»): rendimiento medio mensual de los bonos Baa de Moody's menos el del\n"
+           f"% Tesoro de EE. UU. a 10 años, {fechas[0][:7]} a {fechas[-1][:7]} (FRED: BAA, GS10); recesiones del NBER (USREC)\n"
+           f"% sombreadas. Media {media:.2f} puntos; máximo {mx[1]:.2f} en {mx[0]:.2f}.\n"
+           "% Generar con: bash Code/generar_figura.sh anx_diferencial_credito\n")
+    escribir("anx_diferencial_credito", cab + "\n".join(out) + "\n")
+
+
+def clientelas():
+    y0 = 1.0
+    tramos = [(0.0, 2.6, 0.62, r"$H_1$"), (2.6, 5.6, 0.30, r"$H_2$"), (5.6, 8.6, 0.12, r"$H_3$")]
+    out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
+    out.append(r"\draw[->] (0,0) -- (9.4,0) node[below left] {Horquilla, $h$};")
+    out.append(r"\draw[->] (0,0) -- (0,4.9) node[above] {Rendimiento exigido};")
+    out.append(rf"\node[left] at (0,{y0}) {{$y^*$}};")
+    y = y0
+    for i, (a, b, m, et) in enumerate(tramos):
+        yb = y + m * (b - a)
+        out.append(rf"\draw[very thick] ({a},{y:.3f}) -- ({b},{yb:.3f});")
+        if i < 2:   # prolongación: lo que exigiría esa clientela por bonos aún menos líquidos
+            out.append(rf"\draw[dashed, black!45] ({b},{yb:.3f}) -- ({b+1.9},{yb + m*1.9:.3f});")
+            out.append(rf"\draw[densely dotted, black!45] ({b},0) -- ({b},{yb:.3f});")
+        xm, ym = (a + b) / 2, (y + yb) / 2
+        out.append(rf"\node[below right, inner sep=2pt] at ({xm:.2f},{ym:.3f}) {{{et}}};")
+        y = yb
+    out.append(r"\end{tikzpicture}")
+    escribir("anx_clientelas", "% Figura (Anexo I, I.5, «Liquidez»): rendimiento exigido frente a la horquilla con tres clientelas\n"
+             "% (AMIHUD y MENDELSON, 1986): pendientes 1/H decrecientes; discontinuas, lo que exigiría cada clientela fuera de su tramo.\n"
+             "% Generar con: bash Code/generar_figura.sh anx_clientelas\n" + "\n".join(out) + "\n")
+
+
+def descomposicion():
+    piezas = [("Precio del tiempo", 3.0, "black!62"), ("Pérdida esperada", 0.55, "black!40"),
+              ("Prima por riesgo de impago", 0.8, "black!28"), ("Prima de liquidez", 0.5, "black!16"),
+              ("Impuestos y opciones", 0.3, "black!7")]
+    out = [r"\begin{tikzpicture}[font=\footnotesize]"]
+    out.append(r"\draw (-0.4,0) -- (6.2,0);")
+    # soberano
+    out.append(r"\fill[black!62] (0,0) rectangle (1.3,3.0);")
+    out.append(r"\node[below] at (0.65,0) {Soberano};")
+    # empresa
+    y = 0.0
+    for nombre, h, color in piezas:
+        out.append(rf"\fill[{color}] (2.6,{y:.2f}) rectangle (3.9,{y+h:.2f});")
+        out.append(rf"\draw[black!30, very thin] (3.9,{y+h/2:.3f}) -- (4.25,{y+h/2:.3f});")
+        out.append(rf"\node[anchor=west, inner sep=1pt] at (4.3,{y+h/2:.3f}) {{{nombre}}};")
+        y += h
+    out.append(r"\node[below] at (3.25,0) {Empresa};")
+    out.append(r"\draw[densely dotted] (1.3,3.0) -- (2.6,3.0);")
+    out.append(rf"\draw[decorate, decoration={{brace, amplitude=4pt}}] (2.45,3.0) -- (2.45,{y:.2f}) node[midway, left=5pt] {{$s$}};")
+    out.append(rf"\draw[decorate, decoration={{brace, amplitude=4pt, mirror}}] (-0.15,0) -- (-0.15,3.0) node[midway, left=5pt] {{$r_f$}};")
+    out.append(r"\end{tikzpicture}")
+    escribir("anx_descomposicion", "% Figura (Anexo I, I.5, «Descomposición»): rendimiento de un bono de empresa frente al soberano del\n"
+             "% mismo plazo; esquemática, sin escala.\n% Generar con: bash Code/generar_figura.sh anx_descomposicion\n"
+             + "\n".join(out) + "\n")
+
+
 if __name__ == "__main__":
     perfiles()
     convergencia()
     precio_sucio()
     precio_rendimiento()
     fuentes()
-    print("Escritas: anx_perfiles, anx_convergencia, anx_precio_sucio, anx_precio_rendimiento, anx_fuentes")
+    arbol_impago()
+    diferencial_credito()
+    clientelas()
+    descomposicion()
+    print("Escritas: anx_perfiles, anx_convergencia, anx_precio_sucio, anx_precio_rendimiento, anx_fuentes,"
+          " anx_arbol_impago, anx_diferencial_credito, anx_clientelas, anx_descomposicion")
