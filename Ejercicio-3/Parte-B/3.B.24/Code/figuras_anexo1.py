@@ -1009,7 +1009,7 @@ def inflacion_implicita():
     out.append(rf"\draw[black!40, densely dotted] (axis cs:{x0:.3f},2) -- (axis cs:{x1:.3f},2);")
     out.append(rf"\addplot[line width=0.7pt, black, mark=none] coordinates {{{coords(p10)}}};")
     out.append(rf"\addplot[thick, densely dashed, mark=none] coordinates {{{coords(p55)}}};")
-    out += _etiquetas(x1, x1 + 0.6, [(p10[-1][1], "a diez años"), (p55[-1][1], "a cinco años dentro de cinco")], 0.32)
+    out += _etiquetas(x1, x1 + 0.6, [(p10[-1][1], "a 10 años"), (p55[-1][1], "a 5 años dentro de 5")], 0.32)
     out.append(r"\end{axis}")
     out.append(r"\end{tikzpicture}")
     mn = min(p10, key=lambda p: p[1]); mx = max(p10, key=lambda p: p[1])
