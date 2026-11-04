@@ -438,7 +438,7 @@ def duracion_vencimiento():
     out.append(r"\node[anchor=south east, font=\footnotesize] at (axis cs:24,22.5) {$c=0$};")
     out.append(r"\node[anchor=south, font=\footnotesize] at (axis cs:46,20.2) {$c<y$};")
     out.append(r"\node[anchor=north, font=\footnotesize] at (axis cs:70,16.6) {$c\geq y$};")
-    out.append(r"\node[anchor=south west, font=\footnotesize] at (axis cs:80,17.7) {$(1+y)/y$};")
+    out.append(r"\node[anchor=south west, font=\footnotesize] at (axis cs:1,17.8) {$(1+y)/y$};")
     out.append(r"\end{axis}")
     out.append(r"\end{tikzpicture}")
     mx = max(curvas[0.02], key=lambda x: x[1])
