@@ -654,7 +654,7 @@ def main():
         borde = "very thick" if tono == "white" else ""
         cuerpo += (f"  \\filldraw[fill={tono}{', ' + borde if borde else ''}] (0,{y - 0.17:.2f}) rectangle ({c * 0.2:.3f},{y + 0.17:.2f});\n"
                    f"  \\node[anchor=east] at (-0.08,{y:.2f}) {{{nombre}}};\n"
-                   f"  \\node[anchor=west] at ({c * 0.2 + 0.05:.3f},{y:.2f}) {{${coma(c)}\\%$ ($" + coma(v / 1000) + "$ billones)};\n")
+                   f"  \\node[anchor=west] at ({c * 0.2 + 0.05:.3f},{y:.2f}) {{${coma(c)}\\%$ ($" + coma(v / 1000 + 1e-9) + "$ billones)};\n")
     fig7 = (r"""% Figura (Anexo III, «Riesgos»): obligaciones de pago brutas liquidadas en una media diaria de abril de 2025 (unos 14,2
 % billones de dólares), por método de liquidación, en porcentaje del total y en billones de dólares. En gris oscuro, el
 % pago contra pago, que elimina el riesgo de liquidación; en gris claro, los métodos que lo reducen sin eliminarlo (neteo
