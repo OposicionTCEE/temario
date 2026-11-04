@@ -62,10 +62,10 @@ def b2_delta():
     (xa, ca, ta), (xb, cb, tb) = pts
     return rf"""% Figura (cuerpo, 2.4 «Cobertura»): la cobertura delta y la curvatura. Precio de una call (gruesa) frente al del
 % subyacente y su tangente en S_0 (fina), que es el valor de la cartera réplica de Delta = N(d_1) unidades del subyacente y
-% un préstamo, sin recomponer. Si el precio se mueve de S_0 a S_0 - Delta S o a S_0 + Delta S, la opción vale más que la
-% réplica (tramos gruesos verticales): es la curvatura, aproximadamente 1/2 Gamma (Delta S)^2, que gana quien tiene la
+% un préstamo, sin recomponer. Si el precio se mueve de S_0 a S_0 - x o a S_0 + x, la opción vale más que la
+% réplica (tramos gruesos verticales): es la curvatura, aproximadamente 1/2 Gamma x^2, que gana quien tiene la
 % opción y pierde quien la ha vendido y se ha cubierto en delta. Valores ilustrativos: K = 2, r_f T = 0,05, sigma raíz de
-% T = 0,35, S_0 = 2, Delta S = 0,55 (Delta = {delta:.3f}). Generado por Code/generar_figuras_T12.py; generar el PDF con:
+% T = 0,35, S_0 = 2, x = 0,55 (Delta = {delta:.3f}). Generado por Code/generar_figuras_T12.py; generar el PDF con:
 % bash Code/generar_figura.sh b2_delta
 \begin{{tikzpicture}}[font=\footnotesize, >={{Stealth[length=4pt]}}, x=4.4cm, y=4.4cm]
   \draw[->] (1.15,{min(ta, 0) - 0.05:.3f}) -- (3.05,{min(ta, 0) - 0.05:.3f}) node[below] {{$S$}};
@@ -81,9 +81,9 @@ def b2_delta():
   \draw[line width=1.6pt] ({xb:.3f},{tb:.3f}) -- ({xb:.3f},{cb:.3f});
   \draw[dotted] ({xa:.3f},{min(ta, 0) - 0.05:.3f}) -- ({xa:.3f},{ta:.3f});
   \draw[dotted] ({xb:.3f},{min(ta, 0) - 0.05:.3f}) -- ({xb:.3f},{tb:.3f});
-  \node[below] at ({xa:.3f},{min(ta, 0) - 0.05:.3f}) {{$S_0-\Delta S$}};
-  \node[below] at ({xb:.3f},{min(ta, 0) - 0.05:.3f}) {{$S_0+\Delta S$}};
-  \node[anchor=north west] at ({xb + 0.02:.3f},{tb - 0.02:.3f}) {{$\approx\tfrac12\,\Gamma\,(\Delta S)^2$}};
+  \node[below] at ({xa:.3f},{min(ta, 0) - 0.05:.3f}) {{$S_0-x$}};
+  \node[below] at ({xb:.3f},{min(ta, 0) - 0.05:.3f}) {{$S_0+x$}};
+  \node[anchor=north west] at ({xb + 0.02:.3f},{tb - 0.02:.3f}) {{$\approx\tfrac12\,\Gamma\,x^2$}};
 \end{{tikzpicture}}
 """
 
