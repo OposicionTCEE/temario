@@ -675,7 +675,7 @@ def nelson_siegel():
     out = [r"\begin{tikzpicture}[font=\footnotesize]"]
     out.append(r"\begin{axis}[width=12.5cm, height=6cm, axis lines=left, xmin=0, xmax=30, ymin=0, ymax=1.15,"
                r" xtick={0,10,20,30}, ytick={0,0.5,1}, /pgf/number format/use comma, tick label style={font=\scriptsize},"
-               r" label style={font=\footnotesize}, xlabel={Plazo, $m$ (años)}, ylabel={Carga}, clip=false]")
+               r" label style={font=\footnotesize}, xlabel={Plazo, $n$ (años)}, ylabel={Carga}, clip=false]")
     out.append(r"\addplot[very thick, black!45, mark=none, domain=0:30] {1};")
     out.append(rf"\addplot[very thick, mark=none] coordinates {{{coords([(m, l1(m)) for m in ms])}}};")
     out.append(rf"\addplot[very thick, densely dashed, mark=none] coordinates {{{coords([(m, l2(m)) for m in ms])}}};")
