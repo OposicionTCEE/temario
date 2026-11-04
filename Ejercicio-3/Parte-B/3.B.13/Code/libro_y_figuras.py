@@ -1,5 +1,5 @@
 # Libro de datos del tema (Code/datos_3B13.xlsx) y figuras con datos del anexo III (anx_contrapartes, anx_lineas_swap_uso,
-# anx_volumen, anx_pares, anx_monedas y anx_plazas). Fuentes: Banco de Pagos Internacionales (BPI), encuesta trienal del
+# anx_volumen, anx_pares, anx_monedas, anx_plazas y anx_liquidacion). Fuentes: Banco de Pagos Internacionales (BPI), encuesta trienal del
 # volumen de divisas y derivados extrabursátiles (conjunto WS_DER_OTC_TOV), saldos semestrales de los derivados
 # extrabursátiles (WS_OTC_DERIV2) y volumen de los derivados negociados en bolsa (WS_XTD_DERIV), descargas masivas de
 # data.bis.org; saldo semanal de las líneas swap de la Reserva Federal (serie SWPT de FRED, Banco de la Reserva Federal de
