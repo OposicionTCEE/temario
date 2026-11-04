@@ -678,9 +678,8 @@ def nelson_siegel():
     out.append(r"\addplot[very thick, black!45, mark=none, domain=0:30] {1};")
     out.append(rf"\addplot[very thick, mark=none] coordinates {{{coords([(m, l1(m)) for m in ms])}}};")
     out.append(rf"\addplot[very thick, densely dashed, mark=none] coordinates {{{coords([(m, l2(m)) for m in ms])}}};")
-    out.append(r"\node[anchor=west, font=\footnotesize] at (axis cs:30.3,1) {nivel, $\beta_0$};")
-    out.append(rf"\node[anchor=west, font=\footnotesize] at (axis cs:30.3,{l1(30)+0.03:.3f}) {{pendiente, $\beta_1$}};")
-    out.append(rf"\node[anchor=west, font=\footnotesize] at (axis cs:30.3,{l2(30)-0.05:.3f}) {{curvatura, $\beta_2$}};")
+    out += _etiquetas(30, 31.2, [(1.0, r"nivel, $\beta_0$"), (l1(30), r"pendiente, $\beta_1$"),
+                                 (l2(30), r"curvatura, $\beta_2$")], 0.12)
     out.append(r"\end{axis}")
     out.append(r"\end{tikzpicture}")
     escribir("anx_nelson_siegel", "% Figura (Anexo I, I.10, «Modelos paramétricos»): cargas de los tres factores de NELSON-SIEGEL con tau = 2,5.\n"
