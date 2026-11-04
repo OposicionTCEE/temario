@@ -381,6 +381,25 @@ def main():
         for c in lista:
             C(f"{MONEDA[mon]} negociado en {PAIS.get(c, c)}", round(reparto[mon][c], 1), "% del volumen de la moneda", "2025",
               "BPI-TOV", "T9", "III.7")
+    C("Volumen entregable (dos y cuatro pagos)", round(entregable22, 0), MB, "2022", "BPI-TOV", "T12", "III.8")
+    for cod in ("P", "Q", "R", "S", "T"):
+        C(f"Liquidación 2022: {LIQ_2022[cod]}", round(100 * s(rat=cod)["2022"] / entregable22, 1), "% del volumen entregable",
+          "2022", "BPI-TOV", "T12", "III.8")
+    C("Liquidación 2022: sin pago contra pago", round(s(rat="S")["2022"], 0), MB, "2022", "BPI-TOV", "T12", "III.8")
+    C("Liquidación 2022: neteo previo", round(100 * (entregable22 - s(rat="O")["2022"] - s(rat="S")["2022"]) / entregable22, 1),
+      "% del volumen entregable", "2022", "BPI-TOV", "T12", "III.8")
+    C("Liquidación 2025: obligaciones de pago brutas", round(oblig25, 0), MB, "2025", "BPI-TOV", "T13", "III.8")
+    for cod in ("3", "4", "9", "C", "G", "U", "Y"):
+        C(f"Liquidación 2025: {LIQ_2025[cod]}", round(100 * s(rat=cod)["2025"] / oblig25, 2), "% de las obligaciones", "2025",
+          "BPI-TOV", "T13", "III.8")
+        C(f"Liquidación 2025: {LIQ_2025[cod]}", round(s(rat=cod)["2025"], 0), MB, "2025", "BPI-TOV", "T13", "III.8")
+    C("Liquidación 2025: dentro del grupo (sucursales y filiales)", round(100 * (s(rat="7")["2025"] + s(rat="8")["2025"]) / oblig25, 1),
+      "% de las obligaciones", "2025", "BPI-TOV", "T13", "III.8")
+    C("Liquidación 2025: bruta bilateral que podía usar pago contra pago", round(100 * s(rat="G")["2025"] / s(rat="C")["2025"], 1),
+      "% de la bruta bilateral", "2025", "BPI-TOV", "T13", "III.8")
+    for cod in ("V", "W", "X"):
+        C(f"Liquidación 2025: {LIQ_2025[cod]}", round(100 * s(rat=cod)["2025"] / s(rat="U")["2025"], 1),
+          "% de la bruta bilateral no admitida (los motivos se solapan)", "2025", "BPI-TOV", "T13", "III.8")
 
     leeme = [["Léeme"],
              ["Libro de datos del tema 3.B.13 (mercado de divisas). Una fila por dato, en formato largo; filtrar por conjunto, medida, instrumento, contraparte, moneda o par, plaza, plazo y periodo."],
