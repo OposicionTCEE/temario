@@ -88,7 +88,7 @@ def cedulas_titulizacion():
     # (b) titulización: el banco vende los préstamos a un fondo que emite bonos por tramos (inversores debajo)
     dx = 5.6
     out.append(rf"\node[font=\footnotesize\bfseries] at ({dx + 3.4:.2f},3.5) {{Titulización}};")
-    out.append(rf"\node[caja, fill=black!5] (ori) at ({dx + 0.85:.2f},1.25) {{Banco\\originador}};")
+    out.append(rf"\node[caja, fill=black!5] (ori) at ({dx + 0.85:.2f},1.15) {{Banco\\originador}};")
     out.append(rf"\draw[black!60, rounded corners=2pt] ({dx + 3.0:.2f},0) rectangle ({dx + 6.5:.2f},3.0);")
     out.append(rf"\node[anchor=north] at ({dx + 4.75:.2f},2.95) {{Fondo de titulización}};")
     out.append(rf"\node[caja, fill=black!12, minimum width=1.6cm, minimum height=1.9cm] (pre) at ({dx + 3.9:.2f},1.15) {{Préstamos}};")
