@@ -89,6 +89,8 @@ TRATAMIENTOS = [
     ("T13", "Medias mensuales de datos diarios, sin el último mes si tiene menos de 15 observaciones."),
     ("T14", "Cambio de un día del rendimiento a 10 años (DGS10) en cada anuncio de GAGNON et al. (2011): dato del día "
             "menos el del día hábil anterior, en puntos básicos."),
+    ("T15", "Prima de riesgo = rendimiento a 10 años del país menos el de Alemania (medias mensuales de la OCDE), desde "
+            "1993-07; máximo desde 1999 y último dato."),
 ]
 SERIES = [  # (código FRED, país, indicador, unidad, fuente, tratamiento, uso)
     ("IRLTLT01DEM156N", "Alemania", "Rendimiento de la deuda pública a 10 años (media mensual)", "% anual", "F1", "T1",
