@@ -127,6 +127,31 @@ def main():
         calculos.append(("anx_fuentes", f"Intereses de los intereses sobre la ganancia, {anos} años",
                          round(100 * (g - cup) / g, 1), "%", "F0", "T2"))
 
+    # A3: bono de referencia a 10 años, cupón anual del 6 %, rendimiento del 6 % (I.6 e I.7)
+    def P(c, y, T):
+        return sum(c * 100 / (1 + y) ** t for t in range(1, T + 1)) + 100 / (1 + y) ** T
+
+    def dur(c, y, T):
+        return sum(t * (c * 100 + (100 if t == T else 0)) / (1 + y) ** t for t in range(1, T + 1)) / P(c, y, T)
+
+    def conv(c, y, T):
+        return sum(t * (t + 1) * (c * 100 + (100 if t == T else 0)) / (1 + y) ** (t + 2) for t in range(1, T + 1)) / P(c, y, T)
+
+    d, cv = dur(0.06, 0.06, 10), conv(0.06, 0.06, 10)
+    ds = d / 1.06
+    calculos += [("I.6-I.7", "Duración de MACAULAY del bono de referencia", round(d, 4), "años", "F0", "T2"),
+                 ("I.6-I.7", "Duración modificada del bono de referencia", round(ds, 4), "años", "F0", "T2"),
+                 ("I.6-I.7", "Convexidad del bono de referencia", round(cv, 4), "años al cuadrado", "F0", "T2"),
+                 ("I.6", "Peso del último pago en el precio del bono de referencia", round(106 / 1.06 ** 10, 2), "%", "F0", "T2"),
+                 ("I.6", "Duración de una perpetuidad con y = 5 %", 21.0, "años", "F0", "T2")]
+    for dy in (-0.03, -0.01, 0.01, 0.03):
+        ex = (P(0.06, 0.06 + dy, 10) - 100) / 100 * 100
+        calculos.append(("cuadro I.7", f"Cambio de {100*dy:+.0f} puntos: exacto / duración / duración y convexidad",
+                         f"{ex:+.2f} / {-ds*dy*100:+.2f} / {(-ds*dy+0.5*cv*dy*dy)*100:+.2f}", "%", "F0", "T2"))
+    mx = max(((T, dur(0.02, 0.06, T)) for T in range(1, 201)), key=lambda x: x[1])
+    calculos.append(("anx_duracion_vencimiento", "Máximo de la duración con c = 2 % e y = 6 % (años) y vencimiento en que se alcanza",
+                     f"{mx[1]:.2f} en T = {mx[0]}", "años", "F0", "T2"))
+
     leeme = [("Libro de datos del Tema 3.B.24 (renta fija)",),
              ("Cada dato cita su fuente (hoja Fuentes) y su tratamiento (hoja Tratamientos).",),
              ("Indicadores: series en formato largo, filtrables por serie, país e indicador.",),
