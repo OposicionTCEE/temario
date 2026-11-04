@@ -65,6 +65,13 @@ TRATAMIENTOS = [
     ("T10", "Media de los tipos cortos esperados = tipo a 10 años menos prima por plazo (KIM y WRIGHT); medias por periodos."),
     ("T11", "Datos de fin de mes del Banco de la Reserva Federal de Atlanta (fechas de Excel convertidas a meses); mínimo "
             "del tipo sombra en cada episodio de tipos en el límite."),
+    ("T12", "Pendiente = GS10 menos TB3MS convertido a rendimiento equivalente, 365 d / (360 - 91 d), mensual desde 1953-04; "
+            "inversión = pendiente negativa; recesión anunciada si hay inversión en los 24 meses anteriores a su inicio "
+            "(NBER); probit de la recesión doce meses después sobre la pendiente, por máxima verosimilitud (Newton), "
+            "con datos de 1959-01 a 2025-10."),
+    ("T13", "Medias mensuales de datos diarios, sin el último mes si tiene menos de 15 observaciones."),
+    ("T14", "Cambio de un día del rendimiento a 10 años (DGS10) en cada anuncio de GAGNON et al. (2011): dato del día "
+            "menos el del día hábil anterior, en puntos básicos."),
 ]
 SERIES = [  # (código FRED, país, indicador, unidad, fuente, tratamiento, uso)
     ("IRLTLT01DEM156N", "Alemania", "Rendimiento de la deuda pública a 10 años (media mensual)", "% anual", "F1", "T1",
