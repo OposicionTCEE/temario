@@ -31,6 +31,8 @@ FUENTES = [
     ("F6", "NBER, indicador de recesión de Estados Unidos (USREC), vía FRED", "https://fred.stlouisfed.org/series/USREC"),
     ("F7", "Instituto de Crédito Oficial, página de financiación (garantía del Estado)",
      "https://www.ico.es/web/ico_en/ico/investor_relations/funding"),
+    ("F8", "Banco Central Europeo (10 de julio de 2007), First release of daily euro area government bond yield curves",
+     "https://www.ecb.europa.eu/press/pr/date/2007/html/pr070710.en.html"),
     ("F0", "Cálculo propio (sin datos)", ""),
 ]
 TRATAMIENTOS = [
