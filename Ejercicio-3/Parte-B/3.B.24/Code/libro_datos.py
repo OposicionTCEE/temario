@@ -97,6 +97,21 @@ def main():
                            "; ".join(f"{a} a {b}" for a, b in tr), "meses", fte, trt, "I.3.1"))
             cifras.append(("Mínimo del rendimiento medio mensual, bono alemán a 10 años (" + minimo[0][:7] + ")",
                            round(minimo[1], 2), "% anual", fte, trt, "I.3.1"))
+    baa = dict(serie_fred("BAA"))
+    gs = dict(serie_fred("GS10"))
+    dif = [(d, baa[d] - gs[d]) for d in sorted(gs) if d in baa]
+    for d, v in dif:
+        indicadores.append(("BAA-GS10", "Estados Unidos", "Diferencial Baa frente al Tesoro a 10 años", d, round(v, 4),
+                            "puntos porcentuales", "F4, F5", "T3", "Figura anx_diferencial_credito (I.4.3)"))
+    media = sum(v for _, v in dif) / len(dif)
+    maximo = max(dif, key=lambda x: x[1])
+    cifras.append((f"Diferencial Baa frente al Tesoro a 10 años: media desde {dif[0][0][:7]}", round(media, 2),
+                   "puntos porcentuales", "F4, F5", "T3", "I.4.3"))
+    cifras.append((f"Diferencial Baa frente al Tesoro a 10 años: máximo ({maximo[0][:7]})", round(maximo[1], 2),
+                   "puntos porcentuales", "F4, F5", "T3", "I.4.3"))
+    cifras.append(("Diferencial Baa frente al Tesoro a 10 años en 2020-03", round(dict(dif)["2020-03-01"], 2),
+                   "puntos porcentuales", "F4, F5", "T3", "I.4.3"))
+    cifras.append(("Deuda del ICO con garantía explícita, irrevocable, incondicional y directa del Estado", None, "", "F7", "T0", "I.5.1"))
     cifras.append(("Últimos bonos británicos sin vencimiento (consols y demás) amortizados", 2015, "año", "F3", "T0", "I.1.1"))
     cifras.append(("Fórmula del precio de las Letras a un año o menos: P = 100 / (1 + d i / 360)", None, "", "F2", "T0", "I.3.4"))
     cifras.append(("Fórmula del precio de las Letras a más de un año: P = 100 / (1 + i)^(d/360)", None, "", "F2", "T0", "I.3.4"))
