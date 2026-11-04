@@ -33,6 +33,10 @@ FUENTES = [
      "https://www.ico.es/web/ico_en/ico/investor_relations/funding"),
     ("F8", "Banco Central Europeo (10 de julio de 2007), First release of daily euro area government bond yield curves",
      "https://www.ecb.europa.eu/press/pr/date/2007/html/pr070710.en.html"),
+    ("F9", "Junta de Gobernadores de la Reserva Federal, modelo de KIM y WRIGHT: tipos cupón cero ajustados y prima por "
+     "plazo (THREEFY1, THREEFY2, THREEFY10, THREEFYTP10), vía FRED", "https://fred.stlouisfed.org/series/THREEFYTP10"),
+    ("F10", "Banco de la Reserva Federal de Atlanta, Wu-Xia shadow federal funds rate (WU y XIA, 2016)",
+     "https://www.atlantafed.org/research-and-data/data/wu-xia-shadow-federal-funds-rate"),
     ("F0", "Cálculo propio (sin datos)", ""),
 ]
 TRATAMIENTOS = [
