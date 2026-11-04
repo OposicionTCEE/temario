@@ -163,7 +163,7 @@ def main():
 \begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]
   % ---------------- (a) Evolución ----------------
   \begin{scope}
-    \node[font=\footnotesize\bfseries] at (3.0,4.0) {(a) Cuota en el volumen, $1998$-$2025$};
+    \node[font=\footnotesize\bfseries\boldmath] at (3.0,4.0) {(a) Cuota en el volumen, $1998$-$2025$};
 """ + ejes + r"""    \draw[very thick] plot coordinates {""" + linea("B") + r"""};
     \draw[very thick, dashed] plot coordinates {""" + linea("C") + r"""};
     \draw[very thick, dotted] plot coordinates {""" + linea("U") + r"""};
@@ -173,7 +173,7 @@ def main():
   \end{scope}
   % ---------------- (b) Desglose de 2025 ----------------
   \begin{scope}[xshift=10.6cm, yshift=0.1cm]
-    \node[font=\footnotesize\bfseries] at (0.3,3.9) {(b) Desglose de $2025$ ($\%$ del volumen)};
+    \node[font=\footnotesize\bfseries\boldmath] at (0.3,3.9) {(b) Desglose de $2025$ ($\%$ del volumen)};
     \draw (0,0.05) -- (0,3.3);
 """ + barras + r"""  \end{scope}
 \end{tikzpicture}
