@@ -411,7 +411,7 @@ def tangente():
     out.append(rf"\draw[densely dotted] ({X(y0):.3f},0) -- ({X(y0):.3f},{Y(P0):.3f}) -- (0,{Y(P0):.3f});")
     out.append(rf"\node[below] at ({X(y0):.3f},0) {{$y_0$}};")
     out.append(rf"\node[left] at (0,{Y(P0):.3f}) {{$P_0$}};")
-    out.append(rf"\node[anchor=south west] at ({X(0.095):.3f},{Y(tg(0.095)):.3f}) {{pendiente $-D^*P_0$}};")
+    out.append(rf"\node[anchor=north east] at ({X(0.118):.3f},{Y(tg(0.118))-0.08:.3f}) {{pendiente $-D^*P_0$}};")
     out.append(r"\end{tikzpicture}")
     escribir("anx_tangente", "% Figura (Anexo I, I.6, «Duración modificada»): precio del bono de referencia y su tangente en y0 = 6 %.\n"
              "% Generar con: bash Code/generar_figura.sh anx_tangente\n" + "\n".join(out) + "\n")
