@@ -163,17 +163,17 @@ def main():
 \begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]
   % ---------------- (a) Evolución ----------------
   \begin{scope}
-    \node[font=\footnotesize\bfseries] at (3.0,4.0) {(a) Cuota en el volumen, 1998-2025};
+    \node[font=\footnotesize\bfseries] at (3.0,4.0) {(a) Cuota en el volumen, $1998$-$2025$};
 """ + ejes + r"""    \draw[very thick] plot coordinates {""" + linea("B") + r"""};
     \draw[very thick, dashed] plot coordinates {""" + linea("C") + r"""};
     \draw[very thick, dotted] plot coordinates {""" + linea("U") + r"""};
     \node[anchor=west] at (0.15,3.42) {intermediarios declarantes};
-    \node[anchor=west, align=left] at (3.55,3.05) {otras instituciones\\financieras};
+    \node[anchor=west, align=left] at (3.55,3.17) {otras instituciones\\financieras};
     \node[anchor=west] at (3.3,0.62) {clientes no financieros};
   \end{scope}
   % ---------------- (b) Desglose de 2025 ----------------
   \begin{scope}[xshift=10.6cm, yshift=0.1cm]
-    \node[font=\footnotesize\bfseries] at (0.3,3.9) {(b) Desglose de 2025 ($\%$ del volumen)};
+    \node[font=\footnotesize\bfseries] at (0.3,3.9) {(b) Desglose de $2025$ ($\%$ del volumen)};
     \draw (0,0.05) -- (0,3.3);
 """ + barras + r"""  \end{scope}
 \end{tikzpicture}
@@ -186,7 +186,7 @@ def main():
     serie = " ".join(f"({XS(d):.3f},{YS(v):.3f})" for d, v in swpt if d >= "2007-01-01")
     mes = {"01": "enero", "02": "febrero", "03": "marzo", "04": "abril", "05": "mayo", "06": "junio", "07": "julio",
            "08": "agosto", "09": "septiembre", "10": "octubre", "11": "noviembre", "12": "diciembre"}
-    rot = lambda d, v: f"{mes[d[5:7]]} de {d[:4]}: ${v:.0f}$"
+    rot = lambda d, v: f"{mes[d[5:7]]} de ${d[:4]}$: ${v:.0f}$"
     ejes_s = ("  \\draw[->] (0,0) -- (14.3,0);\n  \\draw[->] (0,0) -- (0,4.35);\n"
               + "".join(f"  \\draw (0,{YS(y):.2f}) -- (-0.06,{YS(y):.2f}) node[left] {{${y}$}};\n" for y in (200, 400, 600))
               + "".join(f"  \\draw ({XS(f'{a}-01-01'):.2f},0) -- ({XS(f'{a}-01-01'):.2f},-0.06) node[below] {{${a}$}};\n"
