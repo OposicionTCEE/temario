@@ -609,14 +609,14 @@ def b3_treynor_black():
     """B3, 4.4. Cartera activa de TREYNOR y BLACK en el plano de volatilidad y rentabilidad esperada: A, con las acciones
     que el analista cree infravaloradas, queda por debajo de la CML (su alfa no compensa su riesgo específico), pero la
     curva de combinaciones con M se separa de ella, y la mejor combinación, T*, da una recta más empinada que la CML.
-    Números arbitrarios: r_f = 0,12; M con prima 0,30 y volatilidad 0,30; A con beta 1, alfa 0,25 y riesgo específico 0,5."""
+    Números arbitrarios: r_f = 0,12; M con prima 0,30 y volatilidad 0,30; A con beta 0,5, alfa 0,17 y riesgo específico 0,32."""
     sM, lam = 0.30, LAMBDA
     mM = RF + lam
-    bA, aA, se = 1.0, 0.25, 0.5
+    bA, aA, se = 0.5, 0.17, 0.32
     mA = RF + bA * lam + aA
     sA = math.sqrt(bA ** 2 * sM ** 2 + se ** 2)
     cov = bA * sM ** 2
-    w = np.linspace(-0.25, 1.15, 300)
+    w = np.linspace(-0.35, 1.45, 300)
     mu = w * mA + (1 - w) * mM
     sig = np.sqrt(w ** 2 * sA ** 2 + (1 - w) ** 2 * sM ** 2 + 2 * w * (1 - w) * cov)
     w0 = (aA / se ** 2) / (lam / sM ** 2)
@@ -626,18 +626,18 @@ def b3_treynor_black():
     pM, pT = lam / sM, (mT - RF) / sT
     assert (mA - RF) / sA < pM < pT
     tikz = rf"""\begin{{tikzpicture}}
-\begin{{axis}}[width=9.5cm, height=6.4cm, xmin=0, xmax=0.8, ymin=0, ymax=1.1, legend pos=north west, legend style={{fill=none}},
-  ytick={{{RF}}}, yticklabels={{$r_f$}}, {PLANO}]
-\addplot[very thick, black] coordinates {{(0,{RF}) (0.78,{RF + 0.78 * pM:.4f})}};
+\begin{{axis}}[width=9.5cm, height=6.4cm, xmin=0, xmax=0.5, ymin=0, ymax=0.78, legend pos=north west, legend style={{fill=none}}, {PLANO}]
+\addplot[very thick, black] coordinates {{(0,{RF}) (0.48,{RF + 0.48 * pM:.4f})}};
 \addlegendentry{{Línea del mercado de capitales}}
 \addplot[thick, black!40] coordinates {{{_coords(sig, mu)}}};
 \addlegendentry{{Combinaciones de $M$ y $A$}}
-\addplot[thick, black, dashed] coordinates {{(0,{RF}) (0.78,{RF + 0.78 * pT:.4f})}};
+\addplot[thick, black, dashed] coordinates {{(0,{RF}) (0.48,{RF + 0.48 * pT:.4f})}};
 \addlegendentry{{Recta con la mejor combinación, $T^*$}}
 \addplot[only marks, mark=square*, mark size=1.8pt, black, forget plot] coordinates {{({sM},{mM:.4f}) (0,{RF})}};
 \addplot[only marks, mark=*, mark size=1.8pt, black, forget plot] coordinates {{({sA:.4f},{mA:.4f}) ({sT:.4f},{mT:.4f})}};
 \node[anchor=north west, font=\footnotesize] at (axis cs:{sM},{mM:.4f}) {{$M$}};
-\node[anchor=north west, font=\footnotesize] at (axis cs:{sA:.4f},{mA:.4f}) {{$A$}};
+\node[anchor=north west, font=\footnotesize] at (axis cs:0.005,{RF - 0.005}) {{$r_f$}};
+\node[anchor=west, font=\footnotesize] at (axis cs:{sA + 0.005:.4f},{mA:.4f}) {{$A$}};
 \node[anchor=south east, font=\footnotesize] at (axis cs:{sT:.4f},{mT:.4f}) {{$T^*$}};
 \end{{axis}}
 \end{{tikzpicture}}
