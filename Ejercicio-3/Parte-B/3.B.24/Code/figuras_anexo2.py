@@ -95,7 +95,7 @@ def cedulas_titulizacion():
     for k, (tramo, color) in enumerate([("sénior", "black!5"), ("intermedio", "black!18"), ("subordinado", "black!35")]):
         y = 1.8 - 0.62 * k
         out.append(rf"\node[caja, fill={color}, minimum width=1.65cm, minimum height=0.55cm] (t{k}) at ({dx + 5.6:.2f},{y:.2f}) {{{tramo}}};")
-    out.append(rf"\node[caja, fill=black!5] (inv) at ({dx + 4.75:.2f},-1.45) {{Inversores}};")
+    out.append(rf"\node[caja, fill=black!5] (inv) at ({dx + 4.75:.2f},-1.05) {{Inversores}};")
     out.append(r"\draw[->, thick] (ori.east) -- node[above, font=\scriptsize, align=center] {vende\\los préstamos} (pre.west);")
     out.append(rf"\draw[->, thick] ({dx + 4.75:.2f},0) -- node[right, font=\scriptsize] {{bonos por tramos}} (inv.north);")
     out.append(r"\end{tikzpicture}")
