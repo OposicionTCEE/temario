@@ -360,6 +360,89 @@ def main():
         r30 = rinf + (i0 - rinf) * bn(30) + 100 * sig ** 2 * 30 * bn(30) ** 2 / (4 * kap)
         calculos.append(("anx_vasicek", f"Tipo a 30 años con i = {i0} % (r_inf = {rinf:.2f} %)", round(r30, 2), "%", "F0", "T8"))
 
+    # A7: información (I.15) y política (I.16)
+    gsm = {d[:7]: x for d, x in serie_fred("GS10")}
+    tbm = {d[:7]: x for d, x in serie_fred("TB3MS")}
+    recm = {d[:7]: x for d, x in serie_fred("USREC")}
+    bey = lambda d: 100 * 365 * (d / 100) / (360 - 91 * (d / 100))
+    mm = sorted(m for m in gsm if m in tbm)
+    sp = {m: gsm[m] - bey(tbm[m]) for m in mm}
+    for m in mm:
+        indicadores.append(("GS10-TB3MS", "Estados Unidos", "Pendiente: 10 años menos Letras a 3 meses (equivalente)",
+                            m + "-01", round(sp[m], 4), "puntos porcentuales", "F5", "T12",
+                            "Figura anx_pendiente_recesiones (I.15.2)"))
+    k = lambda m: int(m[:4]) * 12 + int(m[5:7])
+    km = lambda t: f"{(t - 1) // 12}-{(t - 1) % 12 + 1:02d}"
+    inicios = [m for m in sorted(recm) if recm[m] == 1 and recm.get(km(k(m) - 1), 0) == 0 and m >= "1969-01"]
+    avisos = []
+    for r0 in inicios:
+        inv = [km(t) for t in range(k(r0) - 24, k(r0)) if km(t) in sp and sp[km(t)] < 0]
+        avisos.append(f"{r0}: {k(r0) - k(inv[0])} meses" if inv else f"{r0}: sin inversión")
+    cifras.append(("Recesiones desde 1969 y adelanto de la primera inversión de los 24 meses previos", "; ".join(avisos),
+                   "meses", "F5, F6", "T12", "I.15.2"))
+    tramos_inv, ini = [], None
+    for m in mm:
+        if sp[m] < 0 and ini is None:
+            ini = m
+        if sp[m] >= 0 and ini is not None:
+            tramos_inv.append((ini, prev))
+            ini = None
+        prev = m
+    largo = max(tramos_inv, key=lambda t: k(t[1]) - k(t[0]))
+    cifras.append(("Inversión más larga desde 1953", f"{largo[0]} a {largo[1]} ({k(largo[1]) - k(largo[0]) + 1} meses)",
+                   "meses", "F5", "T12", "I.15.2"))
+    import numpy as np
+    X = np.array([sp[m] for m in mm if m >= "1959-01" and km(k(m) + 12) in recm])
+    Y = np.array([recm[km(k(m) + 12)] for m in mm if m >= "1959-01" and km(k(m) + 12) in recm])
+    Phi = lambda z: 0.5 * (1 + np.vectorize(math.erf)(z / math.sqrt(2)))
+    dens = lambda z: np.exp(-z * z / 2) / math.sqrt(2 * math.pi)
+    b = np.array([-1.0, -0.5])
+    for _ in range(100):
+        z = b[0] + b[1] * X
+        p = np.clip(Phi(z), 1e-10, 1 - 1e-10)
+        w = dens(z) / (p * (1 - p))
+        g = np.array([np.sum((Y - p) * w), np.sum((Y - p) * w * X)])
+        h = dens(z) ** 2 / (p * (1 - p))
+        H = -np.array([[h.sum(), (h * X).sum()], [(h * X).sum(), (h * X * X).sum()]])
+        b = b - np.linalg.solve(H, g)
+    calculos.append(("I.15.2 (probit)", "Probit de la recesión a doce meses sobre la pendiente: constante / pendiente",
+                     f"{b[0]:.3f} / {b[1]:.3f}", "", "F5, F6", "T12"))
+    prob = {m: float(Phi(b[0] + b[1] * sp[m])) for m in mm}
+    pk = max((prob[m], m) for m in mm if m >= "2022-01")
+    cifras.append((f"Probabilidad de recesión a un año según la pendiente, máximo desde 2022 ({pk[1]})", round(100 * pk[0], 1),
+                   "%", "F5, F6", "T12", "I.15.2"))
+    cifras.append(("Máximo anterior de esa probabilidad (desde 1959)",
+                   "{1:} ({0:.1f} %)".format(*max((100 * prob[m], m) for m in mm if "1959-01" <= m < "2022-01")),
+                   "", "F5, F6", "T12", "I.15.2"))
+    for c in ("T10YIE", "T5YIFR"):
+        obs = serie_fred(c)
+        acc = {}
+        for d, x in obs:
+            acc.setdefault(d[:7], []).append(x)
+        med = {m: sum(v) / len(v) for m, v in acc.items() if len(v) >= 15}
+        nombre = "Inflación implícita a 10 años" if c == "T10YIE" else "Inflación implícita a 5 años dentro de 5"
+        for m in sorted(med):
+            indicadores.append((c, "Estados Unidos", nombre + ", media mensual", m + "-01", round(med[m], 4), "% anual",
+                                "F11", "T13", "Figura anx_inflacion_implicita (I.15.3)"))
+        mn, mx = min(med.items(), key=lambda t: t[1]), max(med.items(), key=lambda t: t[1])
+        cifras.append((f"{nombre}: mínimo ({mn[0]}) / máximo ({mx[0]}) / 2020-03 / 2026-10",
+                       f"{mn[1]:.2f} / {mx[1]:.2f} / {med['2020-03']:.2f} / {med['2026-10']:.2f}", "% anual", "F11", "T13", "I.15.3"))
+        if c == "T5YIFR":
+            v = [x for m, x in med.items() if "2021-01" <= m <= "2022-12"]
+            cifras.append(("Inflación implícita a 5 años dentro de 5, mínimo y máximo de 2021-2022",
+                           f"{min(v):.2f} y {max(v):.2f}", "% anual", "F11", "T13", "I.15.3"))
+    d10 = dict(serie_fred("DGS10"))
+    dias = sorted(d10)
+    for d in dias:
+        if "2008-10-01" <= d <= "2009-12-31":
+            indicadores.append(("DGS10", "Estados Unidos", "Rendimiento del Tesoro a 10 años, diario", d, d10[d], "% anual",
+                                "F5", "T0", "Figura anx_qe_eventos (I.16.2)"))
+    ev = ["2008-11-25", "2008-12-01", "2008-12-16", "2009-01-28", "2009-03-18", "2009-08-12", "2009-09-23", "2009-11-04"]
+    cambios = [(e, round(100 * (d10[e] - d10[dias[dias.index(e) - 1]]))) for e in ev]
+    cifras.append(("Cambio de un día del tipo a 10 años en los anuncios de compras de 2008-2009",
+                   "; ".join(f"{e}: {c:+d}" for e, c in cambios) + f"; suma {sum(c for _, c in cambios):+d}",
+                   "puntos básicos", "F5", "T14", "I.16.2"))
+
     leeme =[("Libro de datos del Tema 3.B.24 (renta fija)",),
              ("Cada dato cita su fuente (hoja Fuentes) y su tratamiento (hoja Tratamientos).",),
              ("Indicadores: series en formato largo, filtrables por serie, país e indicador.",),
