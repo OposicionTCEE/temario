@@ -404,7 +404,7 @@ def main():
     leeme = [["Léeme"],
              ["Libro de datos del tema 3.B.13 (mercado de divisas). Una fila por dato, en formato largo; filtrar por conjunto, medida, instrumento, contraparte, moneda o par, plaza, plazo y periodo."],
              ["Hojas: Fuentes (códigos de fuente), Tratamientos (códigos de tratamiento), Indicadores (todas las series usadas en figuras y texto) y Cifras_citadas (las cifras que aparecen en el texto, con su apartado)."],
-             [f"Datos descargados el {FECHA_DESCARGA}. Script: Code/libro_y_figuras.py, que vuelve a descargarlos y rehace el libro y las figuras anx_contrapartes, anx_lineas_swap_uso, anx_volumen, anx_pares, anx_monedas, anx_plazas y anx_liquidacion."],
+             [f"Datos descargados el {FECHA_DESCARGA}. Script: Code/libro_y_figuras.py, que vuelve a descargarlos y rehace el libro y las figuras anx_contrapartes, anx_lineas_swap_uso, anx_volumen, anx_pares, anx_monedas, anx_plazas y anx_liquidacion (anexo III) y b3_comercio (cuerpo)."],
              ["Encuesta trienal: abril de cada año de encuesta (1989-2025), media diaria. Saldos de derivados: final de junio (S1) y de diciembre (S2). Derivados en bolsa: media diaria del año. Líneas swap: saldo de cada miércoles. Exportaciones: año natural."]]
     fuentes = [["Código", "Fuente", "Dirección", "Descarga"],
                ["BPI-TOV", "Banco de Pagos Internacionales, encuesta trienal de bancos centrales, volumen de divisas y derivados extrabursátiles (conjunto WS_DER_OTC_TOV)", URL_TOV, FECHA_DESCARGA],
