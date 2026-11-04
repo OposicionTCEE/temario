@@ -456,6 +456,42 @@ def b2_factores():
     escribir_tikz("b2_factores", tikz)
 
 
+def b2_tres_factores():
+    """B2, 2.5. Prima esperada de dos acciones con la misma carga en el mercado, en cascada: la pequeña de valor (cargas
+    positivas en SMB y HML) suma las dos primas al escalón del mercado, que es lo que le pagaría el CAPM; la grande de
+    crecimiento (cargas negativas) las resta. Alturas arbitrarias."""
+    hm = 1.8
+    grupos = [(0.0, "Acción pequeña de valor", (0.8, 1.0)), (6.0, "Acción grande de crecimiento", (-0.45, -0.6))]
+    w, paso = 0.9, 1.4
+    lineas = []
+    for x0, titulo, (ds, dh) in grupos:
+        xs = [x0 + paso * i for i in range(4)]
+        y1, y2 = hm + ds, hm + ds + dh
+        tramos = [(0, hm, "black!25", r"$b\,(\mu_M-r_f)$"), (hm, y1, "black!45", r"$s\,\lambda_{\text{SMB}}$"),
+                  (y1, y2, "black!65", r"$h\,\lambda_{\text{HML}}$"), (0, y2, "black!10", r"$\mu_j-r_f$")]
+        for i, (x, (a, b, tono, etq)) in enumerate(zip(xs, tramos)):
+            borde = "very thick" if i == 3 else "thin"
+            lineas.append(rf"\draw[{borde}, fill={tono}] ({x - w / 2:.2f},{a:.2f}) rectangle ({x + w / 2:.2f},{b:.2f});")
+            arriba = b >= a
+            ancla, y = ("south", max(a, b) + 0.05) if arriba else ("north", min(a, b) - 0.05)
+            lineas.append(rf"\node[anchor={ancla}, font=\scriptsize] at ({x:.2f},{y:.2f}) {{{etq}}};")
+        for (xa, ya), xb in zip([(xs[0], hm), (xs[1], y1), (xs[2], y2)], xs[1:]):
+            lineas.append(rf"\draw[densely dotted] ({xa + w / 2:.2f},{ya:.2f}) -- ({xb - w / 2:.2f},{ya:.2f});")
+        for x, n in zip(xs, ("Mercado", "Tamaño", "Valor", "Prima")):
+            lineas.append(rf"\node[anchor=north, font=\footnotesize] at ({x:.2f},-0.08) {{{n}}};")
+        lineas.append(rf"\node[anchor=north, font=\footnotesize\itshape] at ({(xs[0] + xs[3]) / 2:.2f},-0.6) {{{titulo}}};")
+    xfin = grupos[1][0] + 3 * paso + 0.9
+    tikz = r"""\begin{tikzpicture}
+\draw[thin] (-0.9,0) -- (""" + f"{xfin:.2f}" + r""",0);
+\draw[-{Stealth[length=2mm]}, thin] (-0.9,0) -- (-0.9,4.3) node[midway, above, rotate=90, font=\footnotesize] {Prima esperada, $\mu_j-r_f$};
+\draw[dashed, black!60] (-0.9,""" + f"{hm}" + r""") -- (""" + f"{xfin:.2f},{hm}" + r""");
+\node[anchor=south east, font=\scriptsize, black!70] at (""" + f"{xfin:.2f},{hm}" + r""") {Prima según el CAPM};
+""" + "\n".join(lineas) + r"""
+\end{tikzpicture}
+"""
+    escribir_tikz("b2_tres_factores", tikz)
+
+
 if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "b2":
     b2_cml()
     b2_sml()
