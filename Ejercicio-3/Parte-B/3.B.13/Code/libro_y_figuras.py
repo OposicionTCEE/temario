@@ -678,7 +678,7 @@ def main():
     pts = [(p, tot[p] * DIAS_HABILES / 1e3 / exp[p]) for p in ANIOS]
     cuerpo = (f"  \\draw[very thick] plot coordinates {{{' '.join(f'({XC(p):.3f},{YC(r):.3f})' for p, r in pts)}}};\n"
               + "".join(f"  \\fill ({XC(p):.3f},{YC(r):.3f}) circle (1.5pt);\n" for p, r in pts)
-              + f"  \\node[above] at ({XC(pts[0][0]):.3f},{YC(pts[0][1]) + 0.05:.3f}) {{${pts[0][1]:.0f}$}};\n"
+              + f"  \\node[below right] at ({XC(pts[0][0]) + 0.05:.3f},{YC(pts[0][1]):.3f}) {{${pts[0][1]:.0f}$}};\n"
               + f"  \\node[above] at ({XC(pts[-1][0]):.3f},{YC(pts[-1][1]) + 0.05:.3f}) {{${pts[-1][1]:.0f}$}};\n")
     ejes_c = (f"  \\draw (0,0) -- ({XC('2025') + 0.4:.2f},0);\n  \\draw[->] (0,0) -- (0,4.5) node[left] {{veces}};\n"
               + "".join(f"  \\draw (0,{YC(y):.2f}) -- (-0.06,{YC(y):.2f}) node[left] {{${y}$}};\n" for y in (20, 40, 60))
