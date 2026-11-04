@@ -458,14 +458,14 @@ def convexidad():
     tg = lambda yy: P0 * (1 - Ds * (yy - y0))
     out.append(rf"\draw[thick, dashed] ({X(0.01):.3f},{Y(tg(0.01)):.3f}) -- ({X(0.125):.3f},{Y(tg(0.125)):.3f});")
     out.append(rf"\fill ({X(y0):.3f},{Y(P0):.3f}) circle (1.7pt);")
-    for dy, lado in ((-0.03, "left"), (0.03, "right")):
+    for dy in (-0.05, 0.05):
         yy = y0 + dy
         out.append(rf"\draw[densely dotted] ({X(yy):.3f},0) -- ({X(yy):.3f},{Y(_precio_ref(yy)):.3f});")
-        out.append(rf"\draw[line width=1.4pt, black!55] ({X(yy):.3f},{Y(tg(yy)):.3f}) -- ({X(yy):.3f},{Y(_precio_ref(yy)):.3f});")
-    out.append(rf"\node[anchor=east] at ({X(0.03)-0.08:.3f},{(Y(tg(0.03))+Y(_precio_ref(0.03)))/2:.3f}) {{$\approx\tfrac12\,C\,(\Delta y)^2P_0$}};")
-    out.append(rf"\node[below] at ({X(0.03):.3f},0) {{$y_0-\Delta y$}};")
+        out.append(rf"\draw[line width=1.6pt, black!55] ({X(yy):.3f},{Y(tg(yy)):.3f}) -- ({X(yy):.3f},{Y(_precio_ref(yy)):.3f});")
+    out.append(rf"\node[anchor=north west] at ({X(0.11)+0.05:.3f},{Y(tg(0.11))-0.05:.3f}) {{$\approx\tfrac12\,C\,(\Delta y)^2P_0$}};")
+    out.append(rf"\node[below] at ({X(0.01):.3f},0) {{$y_0-\Delta y$}};")
     out.append(rf"\node[below] at ({X(y0):.3f},0) {{$y_0$}};")
-    out.append(rf"\node[below] at ({X(0.09):.3f},0) {{$y_0+\Delta y$}};")
+    out.append(rf"\node[below] at ({X(0.11):.3f},0) {{$y_0+\Delta y$}};")
     out.append(r"\end{tikzpicture}")
     escribir("anx_convexidad", "% Figura (Anexo I, I.7, «Segundo orden»): curva de precios del bono de referencia, tangente en y0 = 6 % y\n"
              "% errores de la duración (segmentos grises) con cambios de 3 puntos. Generar con: bash Code/generar_figura.sh anx_convexidad\n"
