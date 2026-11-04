@@ -569,7 +569,8 @@ def main():
                        f"    \\node[anchor=west, font=\\scriptsize] at ({vg * 0.075:.3f},{y - 0.35:.2f}) {{${coma(vg)}$}};\n")
     fig6 = (r"""% Figura (Anexo III, «Concentración»): (a) cuota de las principales plazas en el volumen del mercado de divisas en abril de
 % cada año de encuesta, 1989-2025 (por la ubicación de la mesa que negocia, base neta-bruta), con la de la Unión Europea
-% (suma de sus miembros actuales que declaran, en gris). (b) Parte del volumen de cada moneda que se negocia en su propio
+% (suma de sus miembros actuales que declaran, en gris, desde 1992: antes no declaraba Alemania). (b) Parte del volumen de
+% cada moneda que se negocia en su propio
 % país (zona del euro para el euro; Reino Unido para la libra) y en el Reino Unido, en abril de 2025.
 % Fuente: BPI, encuesta trienal, conjunto WS_DER_OTC_TOV, base neta-bruta, descarga del """ + FECHA_DESCARGA + r""".
 % Datos y tratamientos en Code/datos_3B13.xlsx; generada con Code/libro_y_figuras.py.
