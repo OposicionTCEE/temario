@@ -537,7 +537,7 @@ def inmunizacion():
     lo = min(v for s in series.values() for _, v in s)
     hi = max(v for s in series.values() for _, v in s)
     out = [r"\begin{tikzpicture}[font=\footnotesize]"]
-    out.append(rf"\begin{{axis}}[width=13cm, height=6.3cm, axis lines=left, xmin=2, xmax=20, ymin={math.floor(lo)}, ymax={math.ceil(hi)},"
+    out.append(rf"\begin{{axis}}[width=13cm, height=5.3cm, axis lines=left, xmin=2, xmax=20, ymin={math.floor(lo)}, ymax={math.ceil(hi)},"
                r" xtick={2,5,7.8,10,15,20}, xticklabels={$2$,$5$,$D$,$10$,$15$,$20$}, /pgf/number format/use comma,"
                r" tick label style={font=\scriptsize}, label style={font=\footnotesize},"
                r" xlabel={Horizonte, $H$ (años)}, ylabel={Rentabilidad realizada (\%)}, clip=false]")
