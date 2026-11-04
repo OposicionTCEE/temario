@@ -953,7 +953,132 @@ def sombra():
              "% Generar con: bash Code/generar_figura.sh anx_sombra\n" + "\n".join(out) + "\n")
 
 
+# =====================  Tanda A7 (I.15 Información, I.16 Política)  =====================
+# anx_pendiente_recesiones: GS10 menos TB3MS convertido a rendimiento equivalente, 365 d / (360 - 91 d), medias
+#   mensuales desde 1953-04 (FRED); recesiones del NBER (USREC).
+# anx_inflacion_implicita: inflación implícita a diez años (T10YIE) y a cinco años dentro de cinco (T5YIFR), medias
+#   mensuales desde 2003 (FRED); línea de referencia en el 2 %; recesiones del NBER.
+# anx_qe_eventos: rendimiento diario del Tesoro a diez años (DGS10) de octubre de 2008 a diciembre de 2009, con los ocho
+#   anuncios de compras que estudian GAGNON et al. (2011): 25/11/2008, 1/12/2008, 16/12/2008, 28/1/2009, 18/3/2009,
+#   12/8/2009, 23/9/2009 y 4/11/2009.
+# anx_instrumentos: curva observada = media de los tipos cortos esperados + prima por plazo, y el tramo sobre el que actúa
+#   cada instrumento; esquemática (e_n = 2 + 1,4 (1 - e^{-n/5}), phi_n = 1,1 (1 - e^{-n/8})).
+def _bey(d):
+    return 100 * 365 * (d / 100) / (360 - 91 * (d / 100))
+
+
+def pendiente_recesiones():
+    gs = {d[:7]: v for d, v in serie("GS10").items()}
+    tb = {d[:7]: v for d, v in serie("TB3MS").items()}
+    meses = sorted(m for m in gs if m in tb)
+    pts = [(_anio(m), gs[m] - _bey(tb[m])) for m in meses]
+    x0, x1, ymin, ymax = pts[0][0], pts[-1][0], -4, 5
+    out = [r"\begin{tikzpicture}[font=\footnotesize]"]
+    out.append(rf"\begin{{axis}}[width=15.2cm, height=5.8cm, axis lines=left, xmin={x0:.3f}, xmax={x1:.3f}, ymin={ymin}, ymax={ymax},"
+               r" xtick={1960,1970,1980,1990,2000,2010,2020}, ytick={-4,-2,0,2,4},"
+               r" /pgf/number format/use comma, /pgf/number format/1000 sep={}, tick label style={font=\scriptsize},"
+               r" label style={font=\footnotesize}, ylabel={Puntos porcentuales}, clip=false]")
+    out += _bandas_recesion(x0, x1, ymin, ymax)
+    out.append(rf"\draw[black!40] (axis cs:{x0:.3f},0) -- (axis cs:{x1:.3f},0);")
+    out.append(rf"\addplot[line width=0.6pt, black, mark=none] coordinates {{{coords(pts)}}};")
+    out.append(r"\node[anchor=north, font=\scriptsize, text=black!70] at (axis cs:1966.8,-0.7) {1966-1967};")
+    out.append(r"\node[anchor=north, font=\scriptsize, text=black!70] at (axis cs:2023.6,-1.9) {2022-2024};")
+    out.append(r"\end{axis}")
+    out.append(r"\end{tikzpicture}")
+    neg = [m for m, (_, v) in zip(meses, pts) if v < 0]
+    escribir("anx_pendiente_recesiones", "% Figura (Anexo I, I.15, «Ciclo»): tipo a 10 años menos tipo a 3 meses (equivalente) en EE. UU.,\n"
+             f"% {meses[0]} a {meses[-1]}; {len(neg)} meses con la curva invertida; recesiones del NBER sombreadas.\n"
+             "% Generar con: bash Code/generar_figura.sh anx_pendiente_recesiones\n" + "\n".join(out) + "\n")
+
+
+def inflacion_implicita():
+    be, f55 = _media_mensual("T10YIE"), _media_mensual("T5YIFR")
+    meses = [m for m in sorted(be) if m in f55]
+    p10 = [(_anio(m), be[m]) for m in meses]
+    p55 = [(_anio(m), f55[m]) for m in meses]
+    x0, x1, ymin, ymax = p10[0][0], p10[-1][0], 0, 3.2
+    out = [r"\begin{tikzpicture}[font=\footnotesize]"]
+    out.append(rf"\begin{{axis}}[width=14cm, height=5.8cm, axis lines=left, xmin={x0:.3f}, xmax={x1:.3f}, ymin={ymin}, ymax={ymax},"
+               r" xtick={2005,2010,2015,2020,2025}, ytick={0,1,2,3},"
+               r" /pgf/number format/use comma, /pgf/number format/1000 sep={}, tick label style={font=\scriptsize},"
+               r" label style={font=\footnotesize}, ylabel={\%}, clip=false]")
+    out += _bandas_recesion(x0, x1, ymin, ymax)
+    out.append(rf"\draw[black!40, densely dotted] (axis cs:{x0:.3f},2) -- (axis cs:{x1:.3f},2);")
+    out.append(rf"\addplot[line width=0.7pt, black, mark=none] coordinates {{{coords(p10)}}};")
+    out.append(rf"\addplot[thick, densely dashed, mark=none] coordinates {{{coords(p55)}}};")
+    out += _etiquetas(x1, x1 + 0.6, [(p10[-1][1], "a diez años"), (p55[-1][1], "a cinco años dentro de cinco")], 0.32)
+    out.append(r"\end{axis}")
+    out.append(r"\end{tikzpicture}")
+    mn = min(p10, key=lambda p: p[1]); mx = max(p10, key=lambda p: p[1])
+    escribir("anx_inflacion_implicita", "% Figura (Anexo I, I.15, «Inflación»): inflación implícita a 10 años y a 5 años dentro de 5 en EE. UU.,\n"
+             f"% {meses[0]} a {meses[-1]}; a 10 años: mínimo {mn[1]:.2f} ({mn[0]:.2f}), máximo {mx[1]:.2f} ({mx[0]:.2f}).\n"
+             "% Generar con: bash Code/generar_figura.sh anx_inflacion_implicita\n" + "\n".join(out) + "\n")
+
+
+def qe_eventos():
+    import datetime as dt
+    d10 = serie("DGS10")
+    dec = lambda s: (lambda f: f.year + (f.timetuple().tm_yday - 1) / 365)(dt.date.fromisoformat(s))
+    dias = [d for d in sorted(d10) if "2008-10-01" <= d <= "2009-12-31"]
+    pts = [(dec(d), d10[d]) for d in dias]
+    ev = ["2008-11-25", "2008-12-01", "2008-12-16", "2009-01-28", "2009-03-18", "2009-08-12", "2009-09-23", "2009-11-04"]
+    ymin, ymax = 1.8, 4.2
+    out = [r"\begin{tikzpicture}[font=\footnotesize]"]
+    ticks = [("2008-10-01", "oct. 2008"), ("2009-01-01", "ene. 2009"), ("2009-04-01", "abr. 2009"),
+             ("2009-07-01", "jul. 2009"), ("2009-10-01", "oct. 2009")]
+    out.append(rf"\begin{{axis}}[width=14cm, height=5.6cm, axis lines=left, xmin={pts[0][0]:.4f}, xmax={pts[-1][0]:.4f},"
+               rf" ymin={ymin}, ymax={ymax}, xtick={{{','.join(f'{dec(t):.4f}' for t, _ in ticks)}}},"
+               rf" xticklabels={{{','.join(e for _, e in ticks)}}}, ytick={{2,2.5,3,3.5,4}},"
+               r" /pgf/number format/use comma, tick label style={font=\scriptsize}, label style={font=\footnotesize},"
+               r" ylabel={Rendimiento (\%)}, clip=false]")
+    for e in ev:
+        out.append(rf"\draw[black!35, densely dashed] (axis cs:{dec(e):.4f},{ymin}) -- (axis cs:{dec(e):.4f},{ymax});")
+    out.append(rf"\addplot[line width=0.6pt, black, mark=none] coordinates {{{coords(pts)}}};")
+    i = sorted(d10).index("2009-03-18")
+    caida = 100 * (d10["2009-03-18"] - d10[sorted(d10)[i - 1]])
+    out.append(rf"\node[anchor=west, font=\scriptsize, text=black!70, inner sep=1.5pt] at (axis cs:{dec('2009-03-18') + 0.01:.4f},2.35)"
+               rf" {{18/3/2009: ${caida:.0f}$ pb}};")
+    out.append(r"\end{axis}")
+    out.append(r"\end{tikzpicture}")
+    tot = sum(100 * (d10[e] - d10[sorted(d10)[sorted(d10).index(e) - 1]]) for e in ev)
+    escribir("anx_qe_eventos", "% Figura (Anexo I, I.16, «Compras de bonos»): rendimiento diario del Tesoro a 10 años (DGS10), 2008-10 a\n"
+             f"% 2009-12, y los ocho anuncios de GAGNON et al. (2011); suma de los cambios de un día: {tot:.0f} pb.\n"
+             "% Generar con: bash Code/generar_figura.sh anx_qe_eventos\n" + "\n".join(out) + "\n")
+
+
+def instrumentos():
+    xs = [0.25 * j for j in range(0, 121)]
+    e = lambda n: 2 + 1.4 * (1 - math.exp(-n / 5))
+    phi = lambda n: 1.1 * (1 - math.exp(-n / 8))
+    r = lambda n: e(n) + phi(n)
+    out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
+    out.append(r"\begin{axis}[width=12.5cm, height=6.4cm, axis lines=left, xmin=0, xmax=30, ymin=0.8, ymax=5.6,"
+               r" xtick={0,30}, xticklabels={$0$,$n$}, ytick=\empty, label style={font=\footnotesize},"
+               r" xlabel={Plazo}, ylabel={Tipo}, clip=false]")
+    out.append(rf"\addplot[very thick, mark=none] coordinates {{{coords([(x, r(x)) for x in xs])}}};")
+    out.append(rf"\addplot[thick, densely dashed, mark=none] coordinates {{{coords([(x, e(x)) for x in xs])}}};")
+    out.append(r"\draw[<->, thick] (axis cs:0.6,1.35) -- (axis cs:0.6,2.65);")
+    out.append(r"\node[anchor=west, font=\footnotesize] at (axis cs:0.9,1.25) {tipo oficial};")
+    out.append(rf"\draw[->, thick, black!70] (axis cs:7,{e(7) + 0.95:.3f}) to[bend left=25] (axis cs:7,{e(7) + 0.08:.3f});")
+    out.append(rf"\node[anchor=south, font=\footnotesize] at (axis cs:7,{e(7) + 0.95:.3f}) {{orientación sobre los tipos}};")
+    out.append(rf"\draw[<->, black!60] (axis cs:24,{e(24):.3f}) -- (axis cs:24,{r(24):.3f}) node[midway, left] {{$\phi_n$}};")
+    out.append(rf"\draw[->, thick, black!70] (axis cs:25.5,{r(25.5) + 0.75:.3f}) -- (axis cs:25.5,{r(25.5) + 0.08:.3f});")
+    out.append(rf"\node[anchor=south, font=\footnotesize, align=center] at (axis cs:25.5,{r(25.5) + 0.75:.3f}) {{compras y gestión\\ de la deuda}};")
+    out.append(rf"\draw[line width=1.6pt, black!60] (axis cs:13.8,{r(15):.3f}) -- (axis cs:16.2,{r(15):.3f});")
+    out.append(rf"\node[anchor=north, font=\footnotesize] at (axis cs:15,{r(15) - 0.12:.3f}) {{control de la curva}};")
+    out += _etiquetas(30, 31.0, [(r(30), r"$r_n$"), (e(30), r"media de $E[i_k]$")], 0.35)
+    out.append(r"\end{axis}")
+    out.append(r"\end{tikzpicture}")
+    escribir("anx_instrumentos", "% Figura (Anexo I, I.16, introducción): curva = media de los tipos cortos esperados + prima por plazo, y el\n"
+             "% tramo sobre el que actúa cada instrumento; esquemática.\n"
+             "% Generar con: bash Code/generar_figura.sh anx_instrumentos\n" + "\n".join(out) + "\n")
+
+
 if __name__ == "__main__":
+    pendiente_recesiones()
+    inflacion_implicita()
+    qe_eventos()
+    instrumentos()
     expectativas()
     plazo_realizado()
     prima()
