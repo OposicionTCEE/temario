@@ -404,7 +404,8 @@ def b2_contraste():
 
 def b2_apt():
     """B2, 2.4. Arbitraje con un factor y sin riesgo específico: todos los activos tienen que estar en la recta
-    r_f + beta lambda_1; D, por encima, puede venderse caro frente a su réplica D' con el factor y el activo sin riesgo."""
+    r_f + beta lambda_1; D, por encima, rinde más que su réplica D' (P_1 y el activo sin riesgo con su misma beta):
+    comprar D y vender D' es un arbitraje que devuelve D a la recta."""
     linea = lambda b: RF + LAMBDA * b  # noqa: E731
     bA, bB, bD = 0.5, 1.6, 1.15
     mD = linea(bD) + 0.11
