@@ -423,7 +423,9 @@ def main():
             ["T8", "Media diaria anual publicada en millones de dólares, dividida por mil: miles de millones de dólares; todas las bolsas y monedas."],
             ["T9", "Cuota de una plaza en el volumen de una moneda: volumen neto-bruto en esa moneda declarado en la plaza dividido por la suma del de todas las plazas."],
             ["T10", "Cuota de un plazo: volumen del instrumento a ese plazo dividido por el volumen total del instrumento. Desde 2019 los plazos se detallan más (un día, hasta siete días, hasta un mes, tres, seis y más de seis meses)."],
-            ["T11", "Valor publicado en dólares corrientes, dividido por un billón: billones de dólares."]]
+            ["T11", "Valor publicado en dólares corrientes, dividido por un billón: billones de dólares."],
+            ["T12", "Liquidación en 2022: volumen de abril por método de liquidación (base neta-neta), en miles de millones de dólares, y su cuota en el volumen entregable, el que se liquida con dos pagos (contado y plazo) o con cuatro (swaps); el neteo previo es la diferencia entre el volumen entregable y el liquidado con y sin pago contra pago."],
+            ["T13", "Liquidación en 2025: obligaciones de pago brutas liquidadas en abril, media diaria, según las preguntas nuevas de la encuesta (no comparables con las de 2022); cuota en el total de obligaciones; dentro del grupo es la suma de lo liquidado entre sucursales y entre filiales; los motivos por los que una operación no admitía el pago contra pago se solapan y su cuota se calcula sobre la liquidación bruta bilateral no admitida."]]
     escribir_xlsx(os.path.join(TEMA, "Code", "datos_3B13.xlsx"),
                   [("Léeme", leeme), ("Fuentes", fuentes), ("Tratamientos", trat), ("Indicadores", filas),
                    ("Cifras_citadas", cifras)])
