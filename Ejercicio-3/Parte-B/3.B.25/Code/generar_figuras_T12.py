@@ -31,18 +31,18 @@ def b2_valor():
     alta = [(x, call(x, K, rT, 0.45)[0]) for x in xs]
     return rf"""% Figura (cuerpo, 2.2 «Opciones»): el valor de la volatilidad. Precio de una call (BLACK-SCHOLES, activo sin rentas) frente
 % al precio del subyacente con una volatilidad baja, sigma_1 (continua), y una alta, sigma_2 (discontinua), y su cota
-% inferior, max{{S - K e^{{-r_f T}}, 0}} (fina). La distancia entre cada curva y la cota es el valor de la protección frente a
+% inferior, max{{S_0 - K e^{{-r_f T}}, 0}} (fina). La distancia entre cada curva y la cota es el valor de la protección frente a
 % la caída, que crece con la volatilidad. Valores ilustrativos: K = 2, r_f T = 0,05, sigma_1 raíz de T = 0,20 y
 % sigma_2 raíz de T = 0,45. Generado por Code/generar_figuras_T12.py; generar el PDF con: bash Code/generar_figura.sh b2_valor
 \begin{{tikzpicture}}[font=\footnotesize, >={{Stealth[length=4pt]}}, x=3.1cm, y=2.4cm]
-  \draw[->] (0.8,0) -- (3.55,0) node[below] {{$S$}};
+  \draw[->] (0.8,0) -- (3.55,0) node[below] {{$S_0$}};
   \draw[->] (0.8,0) -- (0.8,1.75) node[left] {{$c$}};
   \draw[thin] (0.8,0) -- ({disc:.3f},0) -- (3.4,{3.4 - disc:.3f});
   \draw[very thick] plot coordinates {{{coords(baja)}}};
   \draw[very thick, dashed] plot coordinates {{{coords(alta)}}};
   \node[anchor=north west] at (3.4,{baja[-1][1]:.3f}) {{$\sigma_1$}};
   \node[anchor=south west] at (3.4,{alta[-1][1]:.3f}) {{$\sigma_2>\sigma_1$}};
-  \node[anchor=north west] at (2.62,{2.62 - disc - 0.02:.3f}) {{$\max\{{S-Ke^{{-r_fT}},0\}}$}};
+  \node[anchor=north west] at (2.62,{2.62 - disc - 0.02:.3f}) {{$\max\{{S_0-Ke^{{-r_fT}},0\}}$}};
   \draw ({disc:.3f},0.04) -- ({disc:.3f},-0.04);
   \node[below] at ({disc:.3f},0) {{$Ke^{{-r_fT}}$}};
 \end{{tikzpicture}}
