@@ -99,11 +99,11 @@ def perfiles():
 # ---------- anx_convergencia ----------
 def convergencia():
     T, r = 10, 0.05
-    sx, sy, base = 1.2, 0.1, 70.0          # cm por año, cm por unidad de precio, precio en el eje
+    sx, sy, base = 1.2, 0.075, 70.0        # cm por año, cm por unidad de precio, precio en el eje
     out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
     out.append(rf"\draw[->] (0,0) -- ({T*sx+1.4},0);")
     out.append(rf"\node[anchor=north east] at ({T*sx+1.4},-0.05) {{Tiempo}};")
-    out.append(r"\draw[->] (0,0) -- (0,6.4) node[above] {Precio};")
+    out.append(r"\draw[->] (0,0) -- (0,4.9) node[above] {Precio};")
     yN = (100 - base) * sy
     out.append(rf"\draw[dashed, black!45] (0,{yN}) -- ({T*sx},{yN});")
     out.append(rf"\node[left] at (0,{yN}) {{$N$}};")
