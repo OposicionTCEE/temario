@@ -35,7 +35,7 @@ def hitos():
         ancla = "south" if arriba else "north"
         out.append(rf"\fill ({x:.2f},0) circle (1.6pt);")
         out.append(rf"\draw[black!40] ({x:.2f},0) -- ({x:.2f},{y:.2f});")
-        out.append(rf"\node[anchor={ancla}, text width=2.25cm, align=center, inner sep=1.5pt] at ({x:.2f},{y:.2f})"
+        out.append(rf"\node[anchor={ancla}, text width=2.1cm, align=center, inner sep=1.5pt] at ({x:.2f},{y:.2f})"
                    rf" {{\textbf{{{anio}}}\\{texto}}};")
     out.append(r"\end{tikzpicture}")
     escribir("anx_hitos", "% Figura (Anexo II, II.1, introducción): cronología de los mercados de deuda; escala no proporcional.\n"
