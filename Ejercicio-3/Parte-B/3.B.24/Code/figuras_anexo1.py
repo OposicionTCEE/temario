@@ -701,10 +701,12 @@ def curvas_eeuu():
                r" xtick={0.0833,0.25,0.5,1,2,5,10,30}, xticklabels={$1$ m,$3$ m,$6$ m,$1$,$2$,$5$,$10$,$30$},"
                r" ytick={0,1,2,3,4,5,6}, /pgf/number format/use comma, tick label style={font=\scriptsize},"
                r" label style={font=\footnotesize}, xlabel={Plazo (años; escala logarítmica)}, ylabel={Rendimiento (\%)}, clip=false]")
+    finales = []
     for f, et, est in fechas:
         pts = [(m, datos[c][f]) for c, m in plazos if f in datos[c]]
         out.append(rf"\addplot[{est}, mark=*, mark size=0.9pt] coordinates {{{coords(pts)}}};")
-        out.append(rf"\node[anchor=west, font=\footnotesize] at (axis cs:31,{pts[-1][1]:.3f}) {{{et}}};")
+        finales.append((pts[-1][1], et))
+    out += _etiquetas(30, 38, finales, 0.38)
     out.append(r"\end{axis}")
     out.append(r"\end{tikzpicture}")
     resumen = "; ".join(f"{et}: {datos['GS3M'][f]:.2f} a 3 meses y {datos['GS10'][f]:.2f} a 10 años" for f, et, _ in fechas)
