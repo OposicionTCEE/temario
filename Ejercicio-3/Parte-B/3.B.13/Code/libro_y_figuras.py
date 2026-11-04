@@ -547,7 +547,7 @@ def main():
               ("SG", "very thick, dashed", "Singapur"), ("HK", "very thick, dotted", "Hong Kong"),
               ("JP", "very thick, dash dot", "Japón")]
     cuerpo = "".join(f"    \\draw[{e}] plot coordinates {{{curva_p(s(rep=c, bas='B'))}}};\n" for c, e, _ in plazas)
-    cuerpo += f"    \\draw[very thick, black!45] plot coordinates {{{curva_p(suma(UE))}}};\n"
+    cuerpo += f"    \\draw[very thick, black!45] plot coordinates {{{curva_p(suma(UE), '1992')}}};\n"
     finales = repartir([(YL(100 * s(rep=c, bas="B")["2025"] / tot_ng["2025"]), t) for c, _, t in plazas]
                        + [(YL(100 * suma(UE)["2025"] / tot_ng["2025"]), "Unión Europea")], 0.27)
     cuerpo += "".join(f"    \\node[anchor=west{', black!60' if t == 'Unión Europea' else ''}] at ({XL('2025') + 0.08:.2f},{y:.3f}) {{{t}}};\n"
