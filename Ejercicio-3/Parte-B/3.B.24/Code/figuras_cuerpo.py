@@ -583,7 +583,7 @@ def factores():
     for k, (titulo, p) in enumerate(cambios):
         x0 = k * 5.0
         out.append(rf"\begin{{scope}}[xshift={x0}cm]")
-        out.append(rf"\node[font=\footnotesize\bfseries, anchor=west] at (-0.1,{alto+0.5:.2f}) {{{titulo}}};")
+        out.append(rf"\node[font=\footnotesize\bfseries, anchor=west] at (-0.1,{alto+0.85:.2f}) {{{titulo}}};")
         out.append(rf"\draw[->] (0,0) -- ({ancho+0.3:.2f},0) node[below left] {{Plazo}};")
         out.append(rf"\draw[->] (0,0) -- (0,{alto:.2f}) node[above] {{Tipo}};")
         out.append(rf"\draw[very thick, black!40] plot[smooth] coordinates {{{coords([(X(m), Y(_ns(m, **base))) for m in ms])}}};")
@@ -606,7 +606,7 @@ def expectativas():
     for j, (titulo, i0, ib) in enumerate((("Se esperan subidas", 2.0, 5.5), ("Se esperan bajadas", 6.0, 2.5))):
         x0 = j * 7.0
         out.append(rf"\begin{{scope}}[xshift={x0}cm]")
-        out.append(rf"\node[font=\footnotesize\bfseries, anchor=west] at (-0.1,{alto+0.5:.2f}) {{{titulo}}};")
+        out.append(rf"\node[font=\footnotesize\bfseries, anchor=west] at (-0.1,{alto+0.85:.2f}) {{{titulo}}};")
         out.append(rf"\draw[->] (0,0) -- ({ancho+0.35:.2f},0) node[below left] {{$k$, $n$}};")
         out.append(rf"\draw[->] (0,0) -- (0,{alto:.2f}) node[above] {{Tipo}};")
         out.append(rf"\draw[very thick, densely dashed] plot[smooth] coordinates {{{coords([(X(k), Y(senda(i0, ib, k))) for k in ks])}}};")
@@ -677,7 +677,7 @@ def politica():
     out.append(rf"\node[{caja}, text width=1.5cm] (c1) at (4.3,1.6) {{$E[i_k]$}};")
     out.append(rf"\node[{caja}, text width=1.5cm, minimum height=1.42cm] (c2) at (4.3,0.4) {{$\phi_n$}};")
     out.append(rf"\node[{caja}, text width=3.0cm] (t1) at (8.1,1.6) {{la hipótesis de las expectativas}};")
-    out.append(rf"\node[{caja}, text width=3.0cm, minimum height=1.42cm] (t2) at (8.1,0.4) {{la teoría del hábitat preferido}};")
+    out.append(rf"\node[{caja}, text width=3.0cm, minimum height=1.42cm] (t2) at (8.1,0.4) {{la teoría del\\hábitat preferido}};")
     out.append(r"\draw[->, black!60] (i0.east) -- (c0.west);")
     out.append(r"\draw[->, black!60] (i1.east) -- (c1.west);")
     out.append(r"\draw[->, black!60] (i2.east) -- (c2.west |- i2.east);")
