@@ -531,4 +531,5 @@ if __name__ == "__main__":
     clientelas()
     descomposicion()
     print("Escritas: anx_perfiles, anx_convergencia, anx_precio_sucio, anx_precio_rendimiento, anx_fuentes,"
-          " anx_arbol_impago, anx_diferencial_credito, anx_clientelas, anx_descomposicion")
+          " anx_arbol_impago, anx_diferencial_credito, anx_clientelas, anx_descomposicion, anx_balanza, anx_tangente,"
+          " anx_duracion_vencimiento, anx_convexidad, anx_pesas_bala, anx_convexidad_negativa")
