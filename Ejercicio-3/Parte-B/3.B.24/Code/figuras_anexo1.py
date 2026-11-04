@@ -993,7 +993,10 @@ def pendiente_recesiones():
 
 def inflacion_implicita():
     be, f55 = _media_mensual("T10YIE"), _media_mensual("T5YIFR")
-    meses = [m for m in sorted(be) if m in f55]
+    n_obs = {}
+    for d in serie("T10YIE"):
+        n_obs[d[:7]] = n_obs.get(d[:7], 0) + 1
+    meses = [m for m in sorted(be) if m in f55 and n_obs[m] >= 15]   # sin el último mes si está incompleto
     p10 = [(_anio(m), be[m]) for m in meses]
     p55 = [(_anio(m), f55[m]) for m in meses]
     x0, x1, ymin, ymax = p10[0][0], p10[-1][0], 0, 3.2
