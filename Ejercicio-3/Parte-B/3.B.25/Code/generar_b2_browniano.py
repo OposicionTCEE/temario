@@ -11,7 +11,7 @@ import math
 import random
 import sys
 
-S0, SIGMA, T, PASOS, SEMILLA = 1.5, 0.35, 1.0, 80, 11
+S0, SIGMA, T, PASOS, SEMILLA = 1.5, 0.35, 1.0, 80, 1463
 ESC_X, ESC_Y, Y0 = 6.0, 1.9, 0.55   # cm por unidad de tiempo y de precio; precio en el eje horizontal
 
 
