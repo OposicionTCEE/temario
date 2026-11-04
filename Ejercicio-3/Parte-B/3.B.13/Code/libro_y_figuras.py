@@ -288,6 +288,21 @@ def main():
             for p, v in sorted(ser.items()):
                 F("Derivados de divisas en bolsa", "Media diaria del año", XTD_I[ins], "Todas", "Todas", "Todas las bolsas",
                   "Todos", p, p, round(v, 1), MB, "BPI-XTD", "T8", "texto")
+    entregable22 = s(rat="K")["2022"] + s(rat="L")["2022"]
+    for cod, nombre in LIQ_2022.items():
+        v = s(rat=cod)["2022"]
+        F("Liquidación de divisas, 2022", "Volumen de abril por método de liquidación", "Todos", "Todas", "Todas", "Mundo",
+          "Todos", "2022", "2022-04", round(v, 1), MB, "BPI-TOV", "T12", "texto")
+        F("Liquidación de divisas, 2022", "Cuota en el volumen entregable", "Todos", "Todas", nombre, "Mundo", "Todos", "2022",
+          "2022-04", round(100 * v / entregable22, 2), "% del volumen entregable", "BPI-TOV", "T12", "texto")
+    oblig25 = s(rat="2")["2025"]
+    for cod, nombre in LIQ_2025.items():
+        v = s(rat=cod)["2025"]
+        fig = "anx_liquidacion" if cod in ("3", "4", "7", "8", "9", "C") else "texto"
+        F("Liquidación de divisas, 2025", "Obligaciones de pago brutas liquidadas en abril", "Todos", "Todas", nombre, "Mundo",
+          "Todos", "2025", "2025-04", round(v, 1), MB, "BPI-TOV", "T13", fig)
+        F("Liquidación de divisas, 2025", "Cuota en las obligaciones de pago brutas", "Todos", "Todas", nombre, "Mundo",
+          "Todos", "2025", "2025-04", round(100 * v / oblig25, 2), "% de las obligaciones", "BPI-TOV", "T13", fig)
     for d, v in swpt:
         if d >= "2007-01-01":
             F("Líneas swap de la Reserva Federal", "Saldo vivo del miércoles", "Swaps de liquidez entre bancos centrales",
