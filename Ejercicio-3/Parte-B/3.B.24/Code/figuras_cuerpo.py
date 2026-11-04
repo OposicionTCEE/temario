@@ -24,7 +24,7 @@ def _curva(f, a, b, X, Y, n=80):
 
 # =====================  Tanda T10 (bloque 1, «Instrumentos»)  =====================
 # b1_flujos: pagos prometidos (gris claro) y su valor actual (gris oscuro) de un bono con T = 8 cupones anuales;
-#   c = 12 % y r = 9 % (solo fijan la forma); a la izquierda, el precio como suma de los valores actuales.
+#   c = 16 % y r = 9 % (solo fijan la forma); a la izquierda, el precio como suma de los valores actuales.
 # b1_convergencia: precio ex cupón de tres bonos a T = 10 años con r = 5 % y cupones del 8 %, 5 % y 2 %; en
 #   discontinua, el bono a la par si en k = 4 el tipo sube al 7 %.
 # b1_precio_rendimiento: precio de un bono con c = 6 % y T = 10 frente a su rendimiento (0 % a 16 %); P0 = 80.
@@ -43,8 +43,8 @@ CLARO, MEDIO, OSCURO = "black!16", "black!40", "black!62"
 
 
 def flujos():
-    T, c, r = 8, 0.12, 0.09
-    dx, hN, w = 1.3, 2.3, 0.17
+    T, c, r = 8, 0.16, 0.09
+    dx, hN, w = 1.3, 2.4, 0.17
     out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
     out.append(rf"\draw[->] (-1.0,0) -- ({T*dx+0.7:.2f},0) node[below] {{$t$}};")
     va = []
@@ -71,13 +71,13 @@ def flujos():
     out.append(rf"\draw[decorate, decoration={{brace, amplitude=4pt}}] (-0.42,0) -- (-0.42,{y:.3f})"
                r" node[midway, left=5pt] {$P$};")
     # leyenda
-    lx, ly = 1.9 * dx, 2.45
+    lx, ly = 1.9 * dx, 2.6
     out.append(rf"\fill[{CLARO}] ({lx:.2f},{ly:.2f}) rectangle ({lx+0.3:.2f},{ly+0.22:.2f});")
     out.append(rf"\node[anchor=west] at ({lx+0.38:.2f},{ly+0.11:.2f}) {{Pago prometido, $CF_t$}};")
     out.append(rf"\fill[{OSCURO}] ({lx:.2f},{ly-0.45:.2f}) rectangle ({lx+0.3:.2f},{ly-0.23:.2f});")
     out.append(rf"\node[anchor=west] at ({lx+0.38:.2f},{ly-0.34:.2f}) {{Valor actual, $CF_t/(1+r)^t$}};")
     out.append(r"\end{tikzpicture}")
-    escribir("b1_flujos", _cabecera("b1_flujos", "B1, «Valor actual»: pagos de un bono con c = 12 %, r = 9 % y T = 8, y su"
+    escribir("b1_flujos", _cabecera("b1_flujos", "B1, «Valor actual»: pagos de un bono con c = 16 %, r = 9 % y T = 8, y su"
                                     f" valor actual; P = {y/hN*100:.1f} por cada 100 de nominal") + "\n".join(out) + "\n")
 
 
@@ -98,7 +98,7 @@ def convergencia():
     pts = [(X(t), Y(precio(0.05, r2, T - t))) for t in range(k, T + 1)]
     out.append(rf"\draw[thick, densely dashed] ({X(k):.3f},{Y(100):.3f}) -- ({X(k):.3f},{Y(p_k):.3f});")
     out.append(rf"\draw[thick, densely dashed] {' -- '.join(f'({x:.3f},{y:.3f})' for x, y in pts)};")
-    out.append(rf"\node[anchor=north west, inner sep=2pt] at ({X(k+1.2):.3f},{Y(precio(0.05, r2, T-k-1)) - 0.05:.3f}) {{$r'>r$}};")
+    out.append(rf"\node[anchor=south west, inner sep=2pt] at ({X(k+0.9):.3f},{Y(precio(0.05, r2, T-k-1)) + 0.03:.3f}) {{$r'>r$}};")
     out.append(rf"\node[anchor=south west] at ({X(0.15):.3f},{Y(precio(0.08, r, T)):.3f}) {{$c>r$}};")
     out.append(rf"\node[anchor=south west] at ({X(0.15):.3f},{Y(100):.3f}) {{$c=r$}};")
     out.append(rf"\node[anchor=north west] at ({X(0.15):.3f},{Y(precio(0.02, r, T)):.3f}) {{$c<r$}};")
@@ -230,7 +230,7 @@ def tangente():
         tg = lambda v: 100 * (1 - Ds * (v - y0))
         a, b = y0 - 0.022, y0 + 0.031
         out.append(rf"\draw[thick, densely dashed] ({X(a):.3f},{Y(tg(a)):.3f}) -- ({X(b):.3f},{Y(tg(b)):.3f});")
-        out.append(rf"\draw[<->, thin] ({X(y0+dy):.3f},{Y(100)-0.02:.3f}) -- ({X(y0+dy):.3f},{Y(tg(y0+dy))+0.02:.3f});")
+        out.append(rf"\draw[{{Stealth[length=2.5pt]}}-{{Stealth[length=2.5pt]}}, thin] ({X(y0+dy):.3f},{Y(100):.3f}) -- ({X(y0+dy):.3f},{Y(tg(y0+dy)):.3f});")
     out.append(rf"\node[anchor=south west] at ({X(0.031):.3f},{Y(precio(0.06, 0.031, 20)):.3f}) {{$A$}};")
     out.append(rf"\node[anchor=south west] at ({X(0.031):.3f},{Y(precio(0.06, 0.031, 3)):.3f}) {{$B$}};")
     DsA, DsB = _dmod(0.06, y0, 20), _dmod(0.06, y0, 3)
@@ -243,8 +243,8 @@ def tangente():
     out.append(rf"\node[below] at ({X(y0):.3f},0) {{$y_0$}};")
     out.append(rf"\node[below] at ({X(y0+dy):.3f},0) {{$y_0+\Delta y$}};")
     out.append(rf"\node[left] at (0,{Y(100):.3f}) {{$P_0$}};")
-    out.append(rf"\node[anchor=west] at ({X(0.091):.3f},{Y(100*(1-DsB*0.031)):.3f}) {{pendiente $-D_B^*P_0$}};")
-    out.append(rf"\node[anchor=north west] at ({X(0.0835):.3f},{Y(100*(1-DsA*0.0235)):.3f}) {{pendiente $-D_A^*P_0$}};")
+    out.append(rf"\node[anchor=south west, inner sep=1.5pt] at ({X(0.091):.3f},{Y(100*(1-DsB*0.031))+0.08:.3f}) {{pendiente $-D_B^*P_0$}};")
+    out.append(rf"\node[anchor=north west, inner sep=1.5pt] at ({X(0.091):.3f},{Y(100*(1-DsA*0.031)):.3f}) {{pendiente $-D_A^*P_0$}};")
     out.append(r"\end{tikzpicture}")
     escribir("b1_tangente", _cabecera("b1_tangente", f"B1, «Sensibilidad»: bonos a la par con c = y0 = 6 % a 20 años"
                                       f" (D* = {DsA:.2f}) y a 3 años (D* = {DsB:.2f}); tangentes en y0") + "\n".join(out) + "\n")
@@ -257,8 +257,8 @@ def convexidad():
     Ds = _dmod(c, y0, T)
     tg = lambda v: 100 * (1 - Ds * (v - y0))
     out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
-    X, Y = _ejes(out, ymin, ymax, base, sx, sy, top=150)
-    out.append(rf"\draw[very thick] plot[smooth] coordinates {{{_curva(P, 0.005, ymax, X, Y)}}};")
+    X, Y = _ejes(out, ymin, ymax, base, sx, sy, top=158)
+    out.append(rf"\draw[very thick] plot[smooth] coordinates {{{_curva(P, 0.012, ymax, X, Y)}}};")
     out.append(rf"\draw[thick, densely dashed] ({X(0.012):.3f},{Y(tg(0.012)):.3f}) -- ({X(0.112):.3f},{Y(tg(0.112)):.3f});")
     out.append(rf"\draw[densely dotted] (0,{Y(100):.3f}) -- ({X(y0+dy)+0.3:.3f},{Y(100):.3f});")
     for v in (y0 - dy, y0 + dy):
@@ -273,7 +273,7 @@ def convexidad():
     out.append(rf"\node[below] at ({X(y0):.3f},0) {{$y_0$}};")
     out.append(rf"\node[below] at ({X(y0+dy):.3f},0) {{$y_0+\Delta y$}};")
     out.append(rf"\node[anchor=south west] at ({X(0.112):.3f},{Y(P(0.112)):.3f}) {{$P(y)$}};")
-    out.append(rf"\node[anchor=north east] at ({X(0.112):.3f},{Y(tg(0.112))-0.05:.3f}) {{$P_0\,(1-D^*\Delta y)$}};")
+    out.append(rf"\node[anchor=north west, inner sep=1.5pt] at ({X(0.112):.3f},{Y(tg(0.112)):.3f}) {{$P_0\,(1-D^*\Delta y)$}};")
     out.append(r"\end{tikzpicture}")
     escribir("b1_convexidad", _cabecera("b1_convexidad", f"B1, «Segundo orden»: bono a 10 años con c = y0 = 6 %, cambios de"
                                         f" 4 puntos; ganancia {P(y0-dy)-100:.1f} y pérdida {100-P(y0+dy):.1f}; la tangente"
@@ -284,7 +284,7 @@ def pesas_bala():
     out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
     # izquierda: dónde están los pagos (valor actual como peso), con la misma duración
     dx, esc, w, D = 0.27, 1.25, 0.16, 10
-    out.append(r"\node[font=\footnotesize\bfseries, anchor=west] at (-0.1,4.25) {Pagos};")
+    out.append(r"\node[font=\footnotesize\bfseries, anchor=west] at (-0.1,4.6) {Pagos};")
     for nombre, y_base, barras in (("Bala", 2.2, [(D, 1.0)]), ("Pesas", 0.0, [(2, 0.5), (18, 0.5)])):
         for t, v in barras:
             out.append(rf"\fill[{OSCURO}] ({t*dx-w:.3f},{y_base+0.03:.3f}) rectangle ({t*dx+w:.3f},{y_base+0.03+v*esc:.3f});")
@@ -299,7 +299,7 @@ def pesas_bala():
     Y = lambda p: (p - base) * sy
     bala = lambda v: 100 * (1.06 / (1 + v)) ** 10
     pesas = lambda v: 50 * (1.06 / (1 + v)) ** 2 + 50 * (1.06 / (1 + v)) ** 18
-    out.append(rf"\node[font=\footnotesize\bfseries, anchor=west] at ({x0-0.1:.2f},4.25) {{Precio}};")
+    out.append(rf"\node[font=\footnotesize\bfseries, anchor=west] at ({x0-0.1:.2f},4.6) {{Precio}};")
     out.append(rf"\draw[->] ({x0:.2f},0) -- ({X(ymax)+0.4:.3f},0) node[below left] {{$y$}};")
     out.append(rf"\draw[->] ({x0:.2f},0) -- ({x0:.2f},{Y(210):.3f}) node[above] {{$P$}};")
     out.append(rf"\draw[very thick] plot[smooth] coordinates {{{_curva(pesas, ymin, ymax, X, Y)}}};")
@@ -332,7 +332,7 @@ def convexidad_negativa():
                rf" ({X(v)+0.08:.3f},{Y(P(v))-0.03:.3f}) node[midway, right=5pt] {{Opción}};")
     out.append(rf"\node[anchor=south west] at ({X(0.014):.3f},{Y(P(0.014)):.3f}) {{Sin opción}};")
     out.append(rf"\node[anchor=north] at ({X(0.022):.3f},{Y(amort(0.022))-0.1:.3f}) {{Amortizable}};")
-    out.append(rf"\node[anchor=south west] at ({X(0.052):.3f},{Y(amort(0.052))+0.02:.3f}) {{$C<0$}};")
+    out.append(rf"\node[anchor=north] at ({X(0.05):.3f},{Y(amort(0.05))-0.12:.3f}) {{$C<0$}};")
     out.append(rf"\node[anchor=north east] at ({X(0.112):.3f},{Y(amort(0.112))-0.05:.3f}) {{$C>0$}};")
     out.append(r"\end{tikzpicture}")
     escribir("b1_convexidad_negativa", _cabecera("b1_convexidad_negativa", "B1, «Convexidad negativa»: bono a 10 años"
@@ -342,14 +342,14 @@ def convexidad_negativa():
 
 def inmunizacion():
     a = 1.0                      # medio intervalo del tipo, en unidades del dibujo
-    sx, sy, y0p = 3.0, 1.9, 1.15  # cm por unidad y altura de la línea de y0
+    sx, sy, y0p = 3.0, 1.4, 1.0   # cm por unidad y altura de la línea de y0
     X = lambda u: (u + a) * sx
     Y = lambda v: y0p + v * sy
-    curvas = {r"$D<H$": (0.55, 0.12, "very thick, black!45"), r"$D=H$": (0.0, 0.32, "very thick"),
-              r"$D>H$": (-0.85, 0.14, "very thick, densely dashed")}
+    curvas = {r"$D<H$": (0.45, 0.12, "very thick, black!45"), r"$D=H$": (0.0, 0.3, "very thick"),
+              r"$D>H$": (-0.6, 0.14, "very thick, densely dashed")}
     out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
     out.append(rf"\draw[->] (0,0) -- ({X(a)+0.5:.2f},0) node[below left] {{Tipo tras la compra, $y$}};")
-    out.append(rf"\draw[->] (0,0) -- (0,{Y(0.75):.2f}) node[above] {{Rentabilidad realizada en $H$}};")
+    out.append(rf"\draw[->] (0,0) -- (0,{Y(0.95):.2f}) node[above] {{Rentabilidad realizada en $H$}};")
     for et, (m, q, est) in curvas.items():
         f = lambda u: m * u + q * u * u
         pts = [(X(-a + j * 2 * a / 60), Y(f(-a + j * 2 * a / 60))) for j in range(61)]
@@ -367,7 +367,7 @@ def inmunizacion():
 
 
 def brecha():
-    A, L, dA, dL = 3.8, 3.25, 0.55, 0.12
+    A, L, dA, dL = 3.8, 3.25, 0.55, 0.2
     ancho = 1.5
     out = [r"\begin{tikzpicture}[font=\footnotesize]"]
 
@@ -384,14 +384,14 @@ def brecha():
         if a - l > 0.35:
             out.append(rf"\node[text=white] at ({x0+1.5*ancho:.2f},{(a+l)/2:.3f}) {{$E$}};")
         else:
-            out.append(rf"\draw[black!50] ({x0+2*ancho:.2f},{(a+l)/2:.3f}) -- ({x0+2*ancho+0.35:.2f},{(a+l)/2:.3f})"
+            out.append(rf"\draw[black!50] ({x0+2*ancho:.2f},{(a+l)/2:.3f}) -- ({x0+2*ancho+0.35:.2f},{(a+l)/2-0.15:.3f})"
                        r" node[right, text=black] {$E$};")
         if perdidas:
             out.append(rf"\draw[densely dashed] ({x0:.2f},{a:.3f}) rectangle ({x0+ancho:.2f},{A:.3f});")
             out.append(rf"\node at ({x0+ancho/2:.2f},{(a+A)/2:.3f}) {{$\Delta A$}};")
             out.append(rf"\draw[densely dashed] ({x0+ancho:.2f},{l:.3f}) -- ({x0+ancho:.2f},{L:.3f}) --"
                        rf" ({x0+2*ancho:.2f},{L:.3f});")
-            out.append(rf"\draw[black!50] ({x0+2*ancho:.2f},{(l+L)/2+0.0:.3f}) -- ({x0+2*ancho+0.35:.2f},{L+0.25:.3f})"
+            out.append(rf"\draw[black!50] ({x0+2*ancho:.2f},{(l+L)/2:.3f}) -- ({x0+2*ancho+0.35:.2f},{L+0.4:.3f})"
                        r" node[right, text=black] {$\Delta L$};")
 
     balance(0.0, "Antes", A, L, False)
