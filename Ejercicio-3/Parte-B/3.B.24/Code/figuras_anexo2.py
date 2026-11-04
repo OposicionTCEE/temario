@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from figuras_anexo1 import escribir  # noqa: E402
+from figuras_anexo1 import escribir, coords, serie, _anio, _etiquetas  # noqa: E402
 
 
 # =====================  Tanda A8 (II.1 Historia, II.2 Instrumentos)  =====================
