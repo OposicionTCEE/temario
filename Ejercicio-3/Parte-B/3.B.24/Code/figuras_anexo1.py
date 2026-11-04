@@ -354,7 +354,173 @@ def descomposicion():
              + "\n".join(out) + "\n")
 
 
+# =====================  Tanda A3 (I.6 Duración e I.7 Convexidad)  =====================
+# Bono de referencia: 10 años, cupón anual del 6 %, rendimiento del 6 % (precio 100): D = 7,80, D* = 7,36, C = 69,7.
+# anx_balanza: valor actual de cada pago (barras) y duración como punto de equilibrio.
+# anx_tangente: precio frente a rendimiento (0 % a 14 %) y tangente en y0 = 6 % (pendiente -D* P).
+# anx_duracion_vencimiento: duración de MACAULAY frente al vencimiento (1 a 100 años) con y = 6 % para cupones del 0 %,
+#   2 %, 6 % y 10 %; asíntota (1 + y)/y = 17,67.
+# anx_convexidad: curva, tangente y errores de la duración con cambios de +-3 puntos.
+# anx_pesas_bala: bala = cupón cero a 10 años; pesas = cupones cero a 2 y 20 años con pesos 10/18 y 8/18 (misma duración
+#   de MACAULAY, 10 años, y mismo valor, 100, con y0 = 6 %).
+# anx_convexidad_negativa: bono sin opción (el de referencia) y amortizable esquemático, mínimo suave del precio sin opción
+#   y del precio de rescate K = 104 (P_am = -ln(e^{-kP} + e^{-kK})/k, k = 0,12).
+def _precio_ref(y, c=0.06, T=10):
+    return precio(c, y, T)
+
+
+def balanza():
+    c, y, T = 0.06, 0.06, 10
+    vals = [(t, (c * 100 + (100 if t == T else 0)) / (1 + y) ** t) for t in range(1, T + 1)]
+    P0 = sum(v for _, v in vals)
+    D = sum(t * v for t, v in vals) / P0
+    esc = 4.4 / max(v for _, v in vals)
+    out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
+    for t, v in vals:
+        out.append(rf"\fill[black!45] ({t-0.22:.2f},0) rectangle ({t+0.22:.2f},{v*esc:.3f});")
+    out.append(r"\draw[line width=1.6pt] (0.4,0) -- (10.6,0);")
+    out.append(rf"\fill[black] ({D:.3f},-0.04) -- ({D-0.28:.3f},-0.55) -- ({D+0.28:.3f},-0.55) -- cycle;")
+    out.append(rf"\node[below] at ({D:.3f},-0.55) {{$D$}};")
+    out.append(r"\node[below] at (1,-0.05) {$1$};")
+    out.append(r"\node[below] at (10,-0.05) {$T$};")
+    out.append(r"\draw[->] (10.6,0) -- (11.2,0) node[right] {$t$};")
+    out.append(r"\end{tikzpicture}")
+    escribir("anx_balanza", f"% Figura (Anexo I, I.6, «Duración de MACAULAY»): valor actual de los pagos del bono a 10 años al 6 % con y = 6 %;\n"
+             f"% D = {D:.2f} años. Generar con: bash Code/generar_figura.sh anx_balanza\n" + "\n".join(out) + "\n")
+
+
+def _ejes_precio(out, ymin, ymax, base, sx, sy, etx="Rendimiento, $y$", ety="Precio, $P$", top=180):
+    X = lambda yy: (yy - ymin) * sx
+    Y = lambda p: (p - base) * sy
+    out.append(rf"\draw[->] (0,0) -- ({X(ymax)+0.5:.3f},0) node[below left] {{{etx}}};")
+    out.append(rf"\draw[->] (0,0) -- (0,{Y(top):.3f}) node[above] {{{ety}}};")
+    return X, Y
+
+
+def tangente():
+    ymin, ymax, base, sx, sy = 0.0, 0.14, 40.0, 70.0, 0.04
+    out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
+    X, Y = _ejes_precio(out, ymin, ymax, base, sx, sy)
+    pts = [(X(ymin + j * (ymax - ymin) / 70), Y(_precio_ref(ymin + j * (ymax - ymin) / 70))) for j in range(0, 71)]
+    out.append(rf"\draw[very thick] plot[smooth] coordinates {{{coords(pts)}}};")
+    y0, P0 = 0.06, _precio_ref(0.06)
+    Ds = sum(t * (6 + (100 if t == 10 else 0)) / 1.06 ** (t + 1) for t in range(1, 11)) / P0
+    tg = lambda yy: P0 * (1 - Ds * (yy - y0))
+    out.append(rf"\draw[thick, dashed] ({X(0.01):.3f},{Y(tg(0.01)):.3f}) -- ({X(0.125):.3f},{Y(tg(0.125)):.3f});")
+    out.append(rf"\fill ({X(y0):.3f},{Y(P0):.3f}) circle (1.7pt);")
+    out.append(rf"\draw[densely dotted] ({X(y0):.3f},0) -- ({X(y0):.3f},{Y(P0):.3f}) -- (0,{Y(P0):.3f});")
+    out.append(rf"\node[below] at ({X(y0):.3f},0) {{$y_0$}};")
+    out.append(rf"\node[left] at (0,{Y(P0):.3f}) {{$P_0$}};")
+    out.append(rf"\node[anchor=south west] at ({X(0.095):.3f},{Y(tg(0.095)):.3f}) {{pendiente $-D^*P_0$}};")
+    out.append(r"\end{tikzpicture}")
+    escribir("anx_tangente", "% Figura (Anexo I, I.6, «Duración modificada»): precio del bono de referencia y su tangente en y0 = 6 %.\n"
+             "% Generar con: bash Code/generar_figura.sh anx_tangente\n" + "\n".join(out) + "\n")
+
+
+def duracion_vencimiento():
+    y = 0.06
+    def D(c, T):
+        p = precio(c, y, T)
+        return sum(t * (c * 100 + (100 if t == T else 0)) / (1 + y) ** t for t in range(1, T + 1)) / p
+    curvas = {0.02: [], 0.06: [], 0.10: []}
+    for c in curvas:
+        curvas[c] = [(T, D(c, T)) for T in list(range(1, 30)) + list(range(30, 101, 2))]
+    out = [r"\begin{tikzpicture}[font=\footnotesize]"]
+    out.append(r"\begin{axis}[width=13.5cm, height=6.4cm, axis lines=left, xmin=0, xmax=100, ymin=0, ymax=25,"
+               r" xtick={0,20,40,60,80,100}, ytick={0,5,10,15,20,25}, /pgf/number format/use comma,"
+               r" tick label style={font=\scriptsize}, label style={font=\footnotesize},"
+               r" xlabel={Vencimiento, $T$ (años)}, ylabel={Duración, $D$ (años)}, clip=true]")
+    out.append(r"\addplot[thick, black!50, densely dotted, domain=0:25] {x};")
+    out.append(r"\addplot[thin, dashed, black, domain=0:100] {17.6667};")
+    estilos = {0.02: "very thick", 0.06: "very thick, black!55", 0.10: "very thick, densely dashed"}
+    for c, pts in curvas.items():
+        out.append(rf"\addplot[{estilos[c]}, mark=none] coordinates {{{coords(pts)}}};")
+    out.append(r"\node[anchor=south east, font=\footnotesize] at (axis cs:24,22.5) {$c=0$};")
+    out.append(r"\node[anchor=south, font=\footnotesize] at (axis cs:46,20.2) {$c<y$};")
+    out.append(r"\node[anchor=north, font=\footnotesize] at (axis cs:70,16.6) {$c\geq y$};")
+    out.append(r"\node[anchor=south west, font=\footnotesize] at (axis cs:80,17.7) {$(1+y)/y$};")
+    out.append(r"\end{axis}")
+    out.append(r"\end{tikzpicture}")
+    mx = max(curvas[0.02], key=lambda x: x[1])
+    escribir("anx_duracion_vencimiento", "% Figura (Anexo I, I.6, «Duración modificada»): duración frente al vencimiento con y = 6 % para\n"
+             f"% cupones del 0 % (D = T), 2 %, 6 % y 10 %; con el 2 %, máximo de {mx[1]:.2f} años en T = {mx[0]}; asíntota 17,67.\n"
+             "% Generar con: bash Code/generar_figura.sh anx_duracion_vencimiento\n" + "\n".join(out) + "\n")
+
+
+def convexidad():
+    ymin, ymax, base, sx, sy = 0.0, 0.14, 40.0, 70.0, 0.04
+    out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
+    X, Y = _ejes_precio(out, ymin, ymax, base, sx, sy)
+    pts = [(X(ymin + j * (ymax - ymin) / 70), Y(_precio_ref(ymin + j * (ymax - ymin) / 70))) for j in range(0, 71)]
+    out.append(rf"\draw[very thick] plot[smooth] coordinates {{{coords(pts)}}};")
+    y0, P0 = 0.06, _precio_ref(0.06)
+    Ds = sum(t * (6 + (100 if t == 10 else 0)) / 1.06 ** (t + 1) for t in range(1, 11)) / P0
+    tg = lambda yy: P0 * (1 - Ds * (yy - y0))
+    out.append(rf"\draw[thick, dashed] ({X(0.01):.3f},{Y(tg(0.01)):.3f}) -- ({X(0.125):.3f},{Y(tg(0.125)):.3f});")
+    out.append(rf"\fill ({X(y0):.3f},{Y(P0):.3f}) circle (1.7pt);")
+    for dy, lado in ((-0.03, "left"), (0.03, "right")):
+        yy = y0 + dy
+        out.append(rf"\draw[densely dotted] ({X(yy):.3f},0) -- ({X(yy):.3f},{Y(_precio_ref(yy)):.3f});")
+        out.append(rf"\draw[line width=1.4pt, black!55] ({X(yy):.3f},{Y(tg(yy)):.3f}) -- ({X(yy):.3f},{Y(_precio_ref(yy)):.3f});")
+    out.append(rf"\node[anchor=east] at ({X(0.03)-0.08:.3f},{(Y(tg(0.03))+Y(_precio_ref(0.03)))/2:.3f}) {{$\approx\tfrac12\,C\,(\Delta y)^2P_0$}};")
+    out.append(rf"\node[below] at ({X(0.03):.3f},0) {{$y_0-\Delta y$}};")
+    out.append(rf"\node[below] at ({X(y0):.3f},0) {{$y_0$}};")
+    out.append(rf"\node[below] at ({X(0.09):.3f},0) {{$y_0+\Delta y$}};")
+    out.append(r"\end{tikzpicture}")
+    escribir("anx_convexidad", "% Figura (Anexo I, I.7, «Segundo orden»): curva de precios del bono de referencia, tangente en y0 = 6 % y\n"
+             "% errores de la duración (segmentos grises) con cambios de 3 puntos. Generar con: bash Code/generar_figura.sh anx_convexidad\n"
+             + "\n".join(out) + "\n")
+
+
+def pesas_bala():
+    ymin, ymax, base, sx, sy = 0.0, 0.14, 40.0, 70.0, 0.03
+    w = 10 / 18
+    bala = lambda yy: 100 * (1.06 / (1 + yy)) ** 10
+    pesas = lambda yy: 100 * (w * (1.06 / (1 + yy)) ** 2 + (1 - w) * (1.06 / (1 + yy)) ** 20)
+    out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
+    X, Y = _ejes_precio(out, ymin, ymax, base, sx, sy, top=215)
+    for f, est in ((pesas, "very thick"), (bala, "very thick, black!50")):
+        pts = [(X(ymin + j * (ymax - ymin) / 70), Y(f(ymin + j * (ymax - ymin) / 70))) for j in range(0, 71)]
+        out.append(rf"\draw[{est}] plot[smooth] coordinates {{{coords(pts)}}};")
+    out.append(rf"\fill ({X(0.06):.3f},{Y(100):.3f}) circle (1.7pt);")
+    out.append(rf"\draw[densely dotted] ({X(0.06):.3f},0) -- ({X(0.06):.3f},{Y(100):.3f}) -- (0,{Y(100):.3f});")
+    out.append(rf"\node[below] at ({X(0.06):.3f},0) {{$y_0$}};")
+    out.append(rf"\node[left] at (0,{Y(100):.3f}) {{$P_0$}};")
+    out.append(rf"\node[anchor=south west] at ({X(0.005):.3f},{Y(pesas(0.005)):.3f}) {{Pesas}};")
+    out.append(rf"\node[anchor=north east] at ({X(0.012):.3f},{Y(bala(0.012))-0.05:.3f}) {{Bala}};")
+    out.append(r"\end{tikzpicture}")
+    escribir("anx_pesas_bala", "% Figura (Anexo I, I.7, «Determinantes»): valor de una cartera en bala (cupón cero a 10 años) y otra en\n"
+             f"% pesas (cupones cero a 2 y 20 años, pesos {w:.4f} y {1-w:.4f}) con el mismo valor y la misma duración en y0 = 6 %.\n"
+             f"% Valores: y = 0 %: pesas {pesas(0):.1f}, bala {bala(0):.1f}; y = 14 %: pesas {pesas(0.14):.1f}, bala {bala(0.14):.1f}.\n"
+             "% Generar con: bash Code/generar_figura.sh anx_pesas_bala\n" + "\n".join(out) + "\n")
+
+
+def convexidad_negativa():
+    ymin, ymax, base, sx, sy = 0.01, 0.13, 40.0, 75.0, 0.045
+    K, k = 104.0, 0.12
+    amort = lambda yy: -math.log(math.exp(-k * _precio_ref(yy)) + math.exp(-k * K)) / k
+    out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
+    X, Y = _ejes_precio(out, ymin, ymax, base, sx, sy, top=155)
+    for f, est in ((_precio_ref, "very thick, black!45"), (amort, "very thick")):
+        pts = [(X(ymin + j * (ymax - ymin) / 70), Y(f(ymin + j * (ymax - ymin) / 70))) for j in range(0, 71)]
+        out.append(rf"\draw[{est}] plot[smooth] coordinates {{{coords(pts)}}};")
+    out.append(rf"\draw[dashed] (0,{Y(K):.3f}) -- ({X(ymax):.3f},{Y(K):.3f});")
+    out.append(rf"\node[left] at (0,{Y(K):.3f}) {{$K$}};")
+    out.append(rf"\node[anchor=south west] at ({X(0.016):.3f},{Y(_precio_ref(0.016)):.3f}) {{Sin opción}};")
+    out.append(rf"\node[anchor=north east] at ({X(0.03):.3f},{Y(amort(0.03))-0.08:.3f}) {{Amortizable}};")
+    out.append(r"\end{tikzpicture}")
+    escribir("anx_convexidad_negativa", "% Figura (Anexo I, I.7, «Convexidad negativa»): bono sin opción (el de referencia) y bono amortizable\n"
+             "% esquemático con precio de rescate K = 104 (mínimo suave, k = 0,12). Generar con: bash Code/generar_figura.sh anx_convexidad_negativa\n"
+             + "\n".join(out) + "\n")
+
+
 if __name__ == "__main__":
+    balanza()
+    tangente()
+    duracion_vencimiento()
+    convexidad()
+    pesas_bala()
+    convexidad_negativa()
     perfiles()
     convergencia()
     precio_sucio()
