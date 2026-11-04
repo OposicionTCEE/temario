@@ -103,8 +103,69 @@ def cedulas_titulizacion():
              "% Generar con: bash Code/generar_figura.sh anx_cedulas_titulizacion\n" + "\n".join(out) + "\n")
 
 
+# =====================  Tanda A9 (II.3 Emisión, II.4 Negociación, II.5 Segmentos)  =====================
+# anx_mercado_secundario: los dos niveles del mercado secundario (inversores y creadores de mercado; creadores de
+#   mercado entre sí) y la compensación y liquidación; esquemática.
+# anx_diferenciales_euro: rendimiento a 10 años de España, Italia, Portugal y Francia menos el de Alemania (OCDE, FRED:
+#   IRLTLT01xxM156N), medias mensuales desde 1993-07; líneas en el euro (1999-01), el compromiso del BCE (2012-07) y el
+#   instrumento para la protección de la transmisión (2022-07). Grecia no se dibuja (27,4 puntos en 2012-02).
+def mercado_secundario():
+    out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=5pt]},"
+           r" caja/.style={draw=black!60, rounded corners=2pt, align=center, inner sep=4pt}]"]
+    out.append(r"\node[caja, fill=black!5, text width=3.0cm] (inv) at (0,0) {Inversores finales\\{\scriptsize fondos, aseguradoras,"
+               r" bancos, bancos centrales}};")
+    out.append(r"\node[caja, fill=black!15, text width=3.0cm] (cm) at (5.6,0) {Creadores de mercado\\{\scriptsize inventario propio}};")
+    out.append(r"\node[caja, fill=black!5, text width=3.0cm] (cm2) at (11.2,0) {Otros creadores\\de mercado};")
+    out.append(r"\draw[<->, thick] (inv.east) -- node[above, font=\scriptsize, align=center] {precios de compra y venta}"
+               r" node[below, font=\scriptsize, align=center] {teléfono o plataformas\\con varios creadores} (cm.west);")
+    out.append(r"\draw[<->, thick] (cm.east) -- node[above, font=\scriptsize, align=center] {cobertura y reparto}"
+               r" node[below, font=\scriptsize, align=center] {plataformas entre\\intermediarios} (cm2.west);")
+    out.append(r"\node[caja, fill=black!10, text width=12.4cm] (liq) at (5.6,-2.4) {Compensación y liquidación:"
+               r" cámaras de contrapartida central y depositarios centrales};")
+    for n in ("inv", "cm", "cm2"):
+        out.append(rf"\draw[->, black!50, densely dashed] ({n}.south) -- ({n}.south |- liq.north);")
+    out.append(r"\end{tikzpicture}")
+    escribir("anx_mercado_secundario", "% Figura (Anexo II, II.4, «Estructura»): niveles del mercado secundario de bonos; esquemática.\n"
+             "% Generar con: bash Code/generar_figura.sh anx_mercado_secundario\n" + "\n".join(out) + "\n")
+
+
+PAISES = [("IRLTLT01ESM156N", "España", "very thick"), ("IRLTLT01ITM156N", "Italia", "thick, densely dashed"),
+          ("IRLTLT01PTM156N", "Portugal", "thick, black!45"), ("IRLTLT01FRM156N", "Francia", "thick, densely dotted")]
+
+
+def diferenciales_euro():
+    de = {d[:7]: v for d, v in serie("IRLTLT01DEM156N").items()}
+    out = [r"\begin{tikzpicture}[font=\footnotesize]"]
+    x0, x1, ymin, ymax = 1993.5, 2026.75, -0.6, 12.8
+    out.append(rf"\begin{{axis}}[width=14cm, height=6.2cm, axis lines=left, xmin={x0}, xmax={x1}, ymin={ymin}, ymax={ymax},"
+               r" xtick={1995,2000,2005,2010,2015,2020,2025}, ytick={0,2,4,6,8,10,12},"
+               r" /pgf/number format/use comma, /pgf/number format/1000 sep={}, tick label style={font=\scriptsize},"
+               r" label style={font=\footnotesize}, ylabel={Puntos porcentuales}, clip=false]")
+    out.append(rf"\draw[black!30] (axis cs:{x0},0) -- (axis cs:{x1},0);")
+    for x, txt in ((1999.0, "euro"), (2012.5, "BCE, 2012"), (2022.5, "BCE, 2022")):
+        out.append(rf"\draw[black!35, densely dashed] (axis cs:{x:.2f},{ymin}) -- (axis cs:{x:.2f},{ymax});")
+        out.append(rf"\node[anchor=south, font=\scriptsize, text=black!65] at (axis cs:{x:.2f},{ymax}) {{{txt}}};")
+    finales = []
+    resumen = []
+    for codigo, nombre, est in PAISES:
+        x = {d[:7]: v for d, v in serie(codigo).items()}
+        meses = [m for m in sorted(x) if m in de and m >= "1993-07"]
+        pts = [(_anio(m), x[m] - de[m]) for m in meses]
+        out.append(rf"\addplot[{est}, mark=none] coordinates {{{coords(pts)}}};")
+        finales.append((pts[-1][1], nombre))
+        mx = max(pts, key=lambda p: p[1])
+        resumen.append(f"{nombre}: máx. {mx[1]:.2f} ({mx[0]:.2f}), último {pts[-1][1]:.2f} ({meses[-1]})")
+    out += _etiquetas(x1, x1 + 0.6, finales, 0.75)
+    out.append(r"\end{axis}")
+    out.append(r"\end{tikzpicture}")
+    escribir("anx_diferenciales_euro", "% Figura (Anexo II, II.5, «Deuda pública»): primas a 10 años frente a Alemania, medias mensuales (OCDE);\n"
+             f"% {'; '.join(resumen)}.\n% Generar con: bash Code/generar_figura.sh anx_diferenciales_euro\n" + "\n".join(out) + "\n")
+
+
 if __name__ == "__main__":
     hitos()
     prelacion()
     cedulas_titulizacion()
-    print("Escritas: anx_hitos, anx_prelacion, anx_cedulas_titulizacion")
+    mercado_secundario()
+    diferenciales_euro()
+    print("Escritas: anx_hitos, anx_prelacion, anx_cedulas_titulizacion, anx_mercado_secundario, anx_diferenciales_euro")
