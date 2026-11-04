@@ -602,8 +602,9 @@ def brecha():
 
 
 # =====================  Tanda A5 (I.9 Curvas, I.10 Estimación, I.11 Movimientos)  =====================
-# anx_curvas: curvas al contado, a plazo (instantánea) y par de una ETTI de NELSON-SIEGEL con beta0 = 5, beta1 = -3,
-#   beta2 = 2 y tau = 2,5 (tipos continuos en %); par con cupones anuales: c(T) = (1 - B(T)) / sum B(t). Esquemática.
+# anx_curvas: curvas al contado, a plazo (préstamo de un año que empieza en cada plazo) y par de una ETTI de
+#   NELSON-SIEGEL con beta0 = 5, beta1 = -4, beta2 = 1 y tau = 3, todos los tipos en capitalización anual; par con
+#   cupones anuales: c(T) = (1 - B(T)) / sum B(t). Esquemática.
 # anx_nelson_siegel: cargas del nivel (1), la pendiente ((1 - e^{-m/tau})/(m/tau)) y la curvatura (la anterior menos
 #   e^{-m/tau}) con tau = 2,5.
 # anx_curvas_eeuu: rendimientos medios mensuales del Tesoro de EE. UU. (FRED: GS1M a GS30) en dic. 2006, dic. 2010,
