@@ -24,7 +24,7 @@ HITOS = [(r"h.~1800 a.~C.", "Hammurabi limita el interés"), ("1262", "Monte Vec
 
 
 def hitos():
-    paso = 1.22
+    paso = 1.12
     out = [r"\begin{tikzpicture}[font=\scriptsize]"]
     x_fin = paso * (len(HITOS) - 1)
     out.append(rf"\draw[black!55, line width=0.8pt, -{{Stealth[length=5pt]}}] (-0.3,0) -- ({x_fin + 0.5:.2f},0);")
