@@ -944,7 +944,7 @@ def sombra():
     out.append(rf"\addplot[line width=0.7pt, black, mark=none] coordinates {{{coords(ff)}}};")
     out.append(rf"\addplot[very thick, densely dashed, mark=none] coordinates {{{coords(sh)}}};")
     out.append(r"\node[anchor=south west, font=\footnotesize, inner sep=1.5pt] at (axis cs:2010.2,0.25) {fondos federales};")
-    out.append(r"\node[anchor=north west, font=\footnotesize, inner sep=1.5pt] at (axis cs:2014.6,-2.6) {tipo sombra};")
+    out.append(r"\node[anchor=west, font=\footnotesize, inner sep=1.5pt] at (axis cs:2015.6,-2.9) {tipo sombra};")
     out.append(r"\end{axis}")
     out.append(r"\end{tikzpicture}")
     mn = min(datos, key=lambda t: t[2])
