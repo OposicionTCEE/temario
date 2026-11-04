@@ -28,7 +28,8 @@ FUENTES = [
      "https://www.gov.uk/government/news/repayment-of-26-billion-historical-debt-to-be-completed-by-government"),
     ("F4", "Moody's, Seasoned Baa y Aaa Corporate Bond Yield, vía FRED", "https://fred.stlouisfed.org/series/BAA"),
     ("F5", "Junta de Gobernadores de la Reserva Federal, rendimientos del Tesoro de EE. UU. a vencimiento constante "
-     "(GS1M a GS30), vía FRED", "https://fred.stlouisfed.org/categories/115"),
+     "(GS1M a GS30 y DGS10 diario) y Letras a tres meses en el mercado secundario (TB3MS), vía FRED",
+     "https://fred.stlouisfed.org/categories/115"),
     ("F6", "NBER, indicador de recesión de Estados Unidos (USREC), vía FRED", "https://fred.stlouisfed.org/series/USREC"),
     ("F7", "Instituto de Crédito Oficial, página de financiación (garantía del Estado)",
      "https://www.ico.es/web/ico_en/ico/investor_relations/funding"),
