@@ -581,7 +581,7 @@ def main():
     \node[font=\footnotesize\bfseries\boldmath] at (3.5,4.55) {(a) Cuota de cada plaza, $1989$-$2025$};
 """ + ejes_l + cuerpo + r"""  \end{scope}
   % ---------------- (b) Monedas ----------------
-  \begin{scope}[xshift=10.85cm]
+  \begin{scope}[xshift=10.55cm]
     \node[font=\footnotesize\bfseries\boldmath] at (1.6,4.55) {(b) Dónde se negocia cada moneda, $2025$};
     \fill[black!60] (-0.2,3.95) rectangle (0.1,4.12); \node[anchor=west] at (0.12,4.03) {en su país};
     \fill[black!22] (1.9,3.95) rectangle (2.2,4.12); \node[anchor=west] at (2.22,4.03) {en el Reino Unido};
