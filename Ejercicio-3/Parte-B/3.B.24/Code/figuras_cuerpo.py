@@ -38,7 +38,8 @@ def _curva(f, a, b, X, Y, n=80):
 # b1_convexidad_negativa: bono a 10 años con c = 6 % sin opción y amortizable esquemático (precio de rescate K = 104,
 #   mínimo suave con k = 0,12, como anx_convexidad_negativa).
 # b1_inmunizacion: rentabilidad realizada en H frente al tipo que rige tras la compra, esquemática.
-# b1_brecha: balance de un banco antes y después de una subida de los tipos, esquemático.
+# b1_brecha: balance de un banco antes y después de una subida de los tipos, esquemático: el activo cae ΔA (en
+#   discontinua) y el pasivo menos, de modo que el capital E se reduce a menos de la mitad.
 CLARO, MEDIO, OSCURO = "black!16", "black!40", "black!62"
 
 
@@ -367,7 +368,7 @@ def inmunizacion():
 
 
 def brecha():
-    A, L, dA, dL = 3.8, 3.25, 0.55, 0.2
+    A, L, dA, dL = 3.8, 3.25, 0.45, 0.15
     ancho = 1.5
     out = [r"\begin{tikzpicture}[font=\footnotesize]"]
 
@@ -384,15 +385,11 @@ def brecha():
         if a - l > 0.35:
             out.append(rf"\node[text=white] at ({x0+1.5*ancho:.2f},{(a+l)/2:.3f}) {{$E$}};")
         else:
-            out.append(rf"\draw[black!50] ({x0+2*ancho:.2f},{(a+l)/2:.3f}) -- ({x0+2*ancho+0.35:.2f},{(a+l)/2-0.15:.3f})"
+            out.append(rf"\draw[black!50] ({x0+2*ancho:.2f},{(a+l)/2:.3f}) -- ({x0+2*ancho+0.35:.2f},{(a+l)/2:.3f})"
                        r" node[right, text=black] {$E$};")
         if perdidas:
             out.append(rf"\draw[densely dashed] ({x0:.2f},{a:.3f}) rectangle ({x0+ancho:.2f},{A:.3f});")
             out.append(rf"\node at ({x0+ancho/2:.2f},{(a+A)/2:.3f}) {{$\Delta A$}};")
-            out.append(rf"\draw[densely dashed] ({x0+ancho:.2f},{l:.3f}) -- ({x0+ancho:.2f},{L:.3f}) --"
-                       rf" ({x0+2*ancho:.2f},{L:.3f});")
-            out.append(rf"\draw[black!50] ({x0+2*ancho:.2f},{(l+L)/2:.3f}) -- ({x0+2*ancho+0.35:.2f},{L+0.4:.3f})"
-                       r" node[right, text=black] {$\Delta L$};")
 
     balance(0.0, "Antes", A, L, False)
     balance(4.6, r"Tras una subida de los tipos", A - dA, L - dL, True)
