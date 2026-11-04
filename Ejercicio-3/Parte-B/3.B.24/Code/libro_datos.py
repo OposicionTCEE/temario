@@ -109,6 +109,14 @@ SERIES = [  # (código FRED, país, indicador, unidad, fuente, tratamiento, uso)
      "T7", "Cifra citada en I.11.1 (curva invertida en España)"),
     ("TB3MS", "Estados Unidos", "Letras del Tesoro a 3 meses, mercado secundario, al descuento (media mensual)", "% anual",
      "F5", "T12", "Figura anx_pendiente_recesiones (I.15.2)"),
+    ("IRLTLT01ITM156N", "Italia", "Rendimiento de la deuda pública a 10 años (media mensual)", "% anual", "F1", "T15",
+     "Figura anx_diferenciales_euro (II.5.1)"),
+    ("IRLTLT01FRM156N", "Francia", "Rendimiento de la deuda pública a 10 años (media mensual)", "% anual", "F1", "T15",
+     "Figura anx_diferenciales_euro (II.5.1)"),
+    ("IRLTLT01PTM156N", "Portugal", "Rendimiento de la deuda pública a 10 años (media mensual)", "% anual", "F1", "T15",
+     "Figura anx_diferenciales_euro (II.5.1)"),
+    ("IRLTLT01GRM156N", "Grecia", "Rendimiento de la deuda pública a 10 años (media mensual)", "% anual", "F1", "T15",
+     "Cifra citada en II.5.1 (prima máxima de 2012)"),
 ]
 # Tesoro de EE. UU. a vencimiento constante para la segunda parte del anexo I (GS10 ya figura arriba)
 for _c, _p, _uso in [("GS1M", "1 mes", "Figura anx_curvas_eeuu (I.11.1)"),
