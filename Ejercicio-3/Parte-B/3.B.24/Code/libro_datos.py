@@ -38,6 +38,8 @@ TRATAMIENTOS = [
     ("T0", "Sin tratamiento: dato tal como lo publica la fuente."),
     ("T1", "Medias mensuales de datos diarios (las calcula la OCDE); se buscan los tramos de meses consecutivos con valor negativo."),
     ("T2", "Cálculo con las fórmulas del anexo I (valor actual con tipo único y reinversión al mismo tipo)."),
+    ("T3", "Diferencia mensual entre el rendimiento Baa de Moody's y el del Tesoro a 10 años (puntos porcentuales)."),
+    ("T4", "Meses de recesión según el NBER (valor 1), agrupados en tramos para sombrearlos en la figura."),
 ]
 SERIES = [  # (código FRED, país, indicador, unidad, fuente, tratamiento, uso)
     ("IRLTLT01DEM156N", "Alemania", "Rendimiento de la deuda pública a 10 años (media mensual)", "% anual", "F1", "T1",
