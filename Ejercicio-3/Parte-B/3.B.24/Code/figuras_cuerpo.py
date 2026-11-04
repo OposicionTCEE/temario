@@ -368,8 +368,8 @@ def inmunizacion():
 
 
 def brecha():
-    A, L, dA, dL = 3.8, 3.25, 0.45, 0.15
-    ancho = 1.5
+    A, L, dA, dL = 2.5, 2.14, 0.3, 0.1
+    ancho = 1.35
     out = [r"\begin{tikzpicture}[font=\footnotesize]"]
 
     def balance(x0, titulo, a, l, perdidas):
@@ -392,9 +392,9 @@ def brecha():
             out.append(rf"\node at ({x0+ancho/2:.2f},{(a+A)/2:.3f}) {{$\Delta A$}};")
 
     balance(0.0, "Antes", A, L, False)
-    balance(4.6, r"Tras una subida de los tipos", A - dA, L - dL, True)
+    balance(4.3, r"Tras una subida de los tipos", A - dA, L - dL, True)
     out.append(rf"\node[anchor=north] at ({ancho:.2f},-0.12) {{$D_A^*>D_L^*$}};")
-    out.append(rf"\node[anchor=north] at ({4.6+ancho:.2f},-0.12) {{$\Delta A>\Delta L$}};")
+    out.append(rf"\node[anchor=north] at ({4.3+ancho:.2f},-0.12) {{$\Delta A>\Delta L$}};")
     out.append(r"\end{tikzpicture}")
     escribir("b1_brecha", _cabecera("b1_brecha", "B1, «Balances»: activo, pasivo y capital de un banco con activos más largos"
                                     " que sus pasivos antes y después de una subida de los tipos; esquemática")
