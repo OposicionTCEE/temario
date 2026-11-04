@@ -275,6 +275,78 @@ def main():
     cifras.append(("BCE: curvas diarias del área del euro desde el 10 de julio de 2007 (SVENSSON; bonos AAA y de todos "
                    "los Estados)", None, "", "F8", "T0", "I.10.2"))
 
+    # A6: expectativas (I.12), primas (I.13) y modelos (I.14)
+    def media_mensual(codigo):
+        acc = {}
+        for d, x in serie_fred(codigo):
+            acc.setdefault(d[:7], []).append(x)
+        return {m: sum(x) / len(x) for m, x in acc.items()}
+
+    def mas12(m):
+        t = int(m[:4]) * 12 + int(m[5:7]) + 11
+        return f"{t // 12}-{t % 12 + 1:02d}"
+
+    kw = {c: media_mensual(c) for c in ("THREEFY1", "THREEFY2", "THREEFY10", "THREEFYTP10")}
+    nombres_kw = {"THREEFY1": "Tipo cupón cero a 1 año ajustado (KIM y WRIGHT)", "THREEFY2": "Tipo cupón cero a 2 años "
+                  "ajustado (KIM y WRIGHT)", "THREEFY10": "Tipo cupón cero a 10 años ajustado (KIM y WRIGHT)",
+                  "THREEFYTP10": "Prima por plazo a 10 años (KIM y WRIGHT)"}
+    usos_kw = {"THREEFY1": "Figura anx_plazo_realizado (I.12.2)", "THREEFY2": "Figura anx_plazo_realizado (I.12.2)",
+               "THREEFY10": "Figura anx_prima_kw (I.13.3)", "THREEFYTP10": "Figura anx_prima_kw (I.13.3)"}
+    for c, obs in kw.items():
+        for m in sorted(obs):
+            indicadores.append((c, "Estados Unidos", nombres_kw[c] + ", media mensual", m + "-01", round(obs[m], 4),
+                                "% anual, continuo", "F9", "T9", usos_kw[c]))
+    y1, y2 = kw["THREEFY1"], kw["THREEFY2"]
+    pares = [(2 * y2[m] - y1[m], y1[mas12(m)], y1[m]) for m in sorted(y1) if mas12(m) in y1 and m in y2]
+    err = [f - r for f, r, _ in pares]
+    xs = [f - s for f, _, s in pares]
+    ys = [r - s for _, r, s in pares]
+    mx_, my_ = sum(xs) / len(xs), sum(ys) / len(ys)
+    pend = sum((a - mx_) * (b - my_) for a, b in zip(xs, ys)) / sum((a - mx_) ** 2 for a in xs)
+    meses_prev = [m for m in sorted(y1) if mas12(m) in y1 and m in y2]
+    cifras.append((f"Tipo a plazo a un año menos realizado: media, previsiones de {meses_prev[0]} a {meses_prev[-1]}",
+                   round(sum(err) / len(err), 2), "puntos porcentuales", "F9", "T9", "I.12.2"))
+    cifras.append(("Meses en que el tipo a plazo superó al realizado", round(100 * sum(e > 0 for e in err) / len(err), 1),
+                   "% de los meses", "F9", "T9", "I.12.2"))
+    cifras.append(("Pendiente del cambio del tipo a un año sobre el diferencial entre el tipo a plazo y el de contado",
+                   round(pend, 2), "", "F9", "T9", "I.12.2"))
+    tp, y10 = kw["THREEFYTP10"], kw["THREEFY10"]
+    for a, b in (("1990-01", "1999-12"), ("2000-01", "2007-12"), ("2008-01", "2015-12"), ("2016-01", "2021-12"),
+                 ("2022-01", "2026-12")):
+        v = [x for m, x in tp.items() if a <= m <= b]
+        cifras.append((f"Prima por plazo a 10 años, media de {a} a {b}", round(sum(v) / len(v), 2), "puntos porcentuales",
+                       "F9", "T10", "I.13.3"))
+    mn = min(tp.items(), key=lambda t: t[1])
+    cifras.append((f"Prima por plazo a 10 años, mínimo ({mn[0]})", round(mn[1], 2), "puntos porcentuales", "F9", "T10", "I.13.3"))
+    ult = max(m for m in tp if m in y10)
+    cifras.append((f"Tipo a 10 años = media de tipos cortos esperados + prima ({ult})",
+                   f"{y10[ult]:.2f} = {y10[ult]-tp[ult]:.2f} + {tp[ult]:.2f}", "puntos porcentuales", "F9", "T10", "I.13.3"))
+    filas_wx = list(csv.reader((DATOS / "wuxia_sombra.csv").open(encoding="utf-8")))[1:]
+    sombra = []
+    for d, ff, sh in filas_wx:
+        if ff:
+            indicadores.append(("FF_efectivo", "Estados Unidos", "Tipo efectivo de los fondos federales, fin de mes", d,
+                                float(ff), "% anual", "F10", "T11", "Figura anx_sombra (I.14.4)"))
+        if sh:
+            indicadores.append(("sombra_WuXia", "Estados Unidos", "Tipo sombra de WU y XIA, fin de mes", d, float(sh),
+                                "% anual", "F10", "T11", "Figura anx_sombra (I.14.4)"))
+            sombra.append((d[:7], float(sh)))
+    for a, b in (("2009-01", "2015-12"), ("2020-03", "2022-02")):
+        m, x = min(((m, x) for m, x in sombra if a <= m <= b), key=lambda t: t[1])
+        cifras.append((f"Tipo sombra de WU y XIA, mínimo entre {a} y {b} ({m})", round(x, 2), "% anual", "F10", "T11", "I.14.4"))
+    f13 = (Bd[1] / Bd[3]) ** 0.5 - 1
+    calculos += [("I.12.3 (paso del tiempo)", "Cupón cero a 3 años con la curva quieta: precio hoy / dentro de un año / "
+                  "rentabilidad", f"{Bd[3]:.5f} / {Bd[2]:.5f} / {100*(Bd[2]/Bd[3]-1):.2f}", "por euro; %", "F0", "T8"),
+                 ("I.12.3 (paso del tiempo)", "Con la curva esperada: tipo a plazo entre el año 1 y el 3 / precio dentro de "
+                  "un año / rentabilidad", f"{100*f13:.2f} / {Bd[3]/Bd[1]:.5f} / {100*(1/Bd[1]-1):.2f}", "%; por euro; %",
+                  "F0", "T8")]
+    ib, kap, sig = 4.5, 0.25, 0.02
+    rinf = ib - 100 * sig ** 2 / (2 * kap ** 2)
+    bn = lambda n: (1 - math.exp(-kap * n)) / (kap * n)
+    for i0 in (1.5, 4.5, 7.5):
+        r30 = rinf + (i0 - rinf) * bn(30) + 100 * sig ** 2 * 30 * bn(30) ** 2 / (4 * kap)
+        calculos.append(("anx_vasicek", f"Tipo a 30 años con i = {i0} % (r_inf = {rinf:.2f} %)", round(r30, 2), "%", "F0", "T8"))
+
     leeme =[("Libro de datos del Tema 3.B.24 (renta fija)",),
              ("Cada dato cita su fuente (hoja Fuentes) y su tratamiento (hoja Tratamientos).",),
              ("Indicadores: series en formato largo, filtrables por serie, país e indicador.",),
