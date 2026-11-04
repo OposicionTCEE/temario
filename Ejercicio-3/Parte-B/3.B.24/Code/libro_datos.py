@@ -55,6 +55,12 @@ TRATAMIENTOS = [
            "tramos de meses con diferencia positiva (curva invertida)."),
     ("T8", "Cálculo con las fórmulas de la segunda parte del anexo I: factores de descuento despejados bono a bono y "
            "tipos al contado, a plazo y par con capitalización anual."),
+    ("T9", "Medias mensuales de datos diarios de KIM y WRIGHT (capitalización continua); tipo a plazo a un año dentro de "
+           "un año = 2 y(2) - y(1), comparado con y(1) doce meses después: error medio, porcentaje de meses con error "
+           "positivo y pendiente de la regresión del cambio de y(1) sobre el diferencial entre el tipo a plazo y y(1)."),
+    ("T10", "Media de los tipos cortos esperados = tipo a 10 años menos prima por plazo (KIM y WRIGHT); medias por periodos."),
+    ("T11", "Datos de fin de mes del Banco de la Reserva Federal de Atlanta (fechas de Excel convertidas a meses); mínimo "
+            "del tipo sombra en cada episodio de tipos en el límite."),
 ]
 SERIES = [  # (código FRED, país, indicador, unidad, fuente, tratamiento, uso)
     ("IRLTLT01DEM156N", "Alemania", "Rendimiento de la deuda pública a 10 años (media mensual)", "% anual", "F1", "T1",
