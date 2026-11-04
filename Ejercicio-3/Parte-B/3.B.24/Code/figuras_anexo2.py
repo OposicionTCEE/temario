@@ -75,30 +75,29 @@ def prelacion():
 def cedulas_titulizacion():
     out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=5pt]},"
            r" caja/.style={draw=black!60, rounded corners=1pt, align=center, inner sep=3pt}]"]
-    # (a) bono garantizado: el banco conserva los préstamos; doble recurso del tenedor
-    out.append(r"\node[font=\footnotesize\bfseries] at (2.9,3.55) {Bono garantizado (cédula)};")
-    out.append(r"\draw[black!60, rounded corners=2pt] (0,0) rectangle (4.5,3.05);")
-    out.append(r"\node[anchor=north] at (2.25,3.0) {Banco emisor};")
-    out.append(r"\node[caja, fill=black!12, minimum width=1.85cm, minimum height=1.6cm] (cob) at (1.17,1.15) {Préstamos\\de cobertura};")
-    out.append(r"\node[caja, minimum width=1.85cm, minimum height=1.6cm] (pas) at (3.33,1.15) {Cédulas\\y resto\\del pasivo};")
-    out.append(r"\node[caja, fill=black!5, minimum width=1.6cm] (ten) at (6.1,2.1) {Tenedores\\de cédulas};")
-    out.append(r"\draw[->, thick] (ten.west) -- (4.5,2.1) node[midway, above, font=\scriptsize] {1};")
-    out.append(r"\draw[->, thick] (ten.south) to[out=-90, in=-90, looseness=0.75] node[pos=0.25, right, font=\scriptsize] {2} (cob.south);")
-    out.append(r"\node[align=left, font=\scriptsize, anchor=north west] at (4.75,1.35) {1: derecho frente\\al banco\\2: preferencia sobre\\la cobertura};")
-    # (b) titulización: el banco vende los préstamos a un fondo que emite bonos por tramos
-    dx = 8.6
-    out.append(rf"\node[font=\footnotesize\bfseries] at ({dx + 3.5:.2f},3.55) {{Titulización}};")
-    out.append(rf"\node[caja, fill=black!5, minimum width=1.6cm] (ori) at ({dx + 0.75:.2f},1.5) {{Banco\\originador}};")
-    out.append(rf"\draw[black!60, rounded corners=2pt] ({dx + 2.1:.2f},0) rectangle ({dx + 5.6:.2f},3.05);")
-    out.append(rf"\node[anchor=north] at ({dx + 3.85:.2f},3.0) {{Fondo de titulización}};")
-    out.append(rf"\node[caja, fill=black!12, minimum width=1.35cm, minimum height=1.9cm] (pre) at ({dx + 2.9:.2f},1.2) {{Présta-\\mos}};")
+    # (a) bono garantizado: el banco conserva los préstamos; doble recurso del tenedor (inversores debajo)
+    out.append(r"\node[font=\footnotesize\bfseries] at (2.3,3.5) {Bono garantizado (cédula)};")
+    out.append(r"\draw[black!60, rounded corners=2pt] (0,0) rectangle (4.6,3.0);")
+    out.append(r"\node[anchor=north] at (2.3,2.95) {Banco emisor};")
+    out.append(r"\node[caja, fill=black!12, minimum width=1.9cm, minimum height=1.6cm] (cob) at (1.2,1.25) {Préstamos\\de cobertura};")
+    out.append(r"\node[caja, minimum width=1.9cm, minimum height=1.6cm] (pas) at (3.4,1.25) {Cédulas\\y resto\\del pasivo};")
+    out.append(r"\node[caja, fill=black!5] (ten) at (2.3,-1.45) {Tenedores de cédulas};")
+    out.append(r"\draw[->, thick] ([xshift=-0.45cm]ten.north) -- node[left, font=\scriptsize] {2} (cob.south);")
+    out.append(r"\draw[->, thick] ([xshift=0.45cm]ten.north) -- node[right, font=\scriptsize] {1} (3.4,0);")
+    out.append(r"\node[align=center, font=\scriptsize, anchor=north] at (2.3,-1.85) {1: derecho frente al banco\\2: preferencia sobre la cobertura};")
+    # (b) titulización: el banco vende los préstamos a un fondo que emite bonos por tramos (inversores debajo)
+    dx = 5.6
+    out.append(rf"\node[font=\footnotesize\bfseries] at ({dx + 3.4:.2f},3.5) {{Titulización}};")
+    out.append(rf"\node[caja, fill=black!5] (ori) at ({dx + 0.85:.2f},1.25) {{Banco\\originador}};")
+    out.append(rf"\draw[black!60, rounded corners=2pt] ({dx + 3.0:.2f},0) rectangle ({dx + 6.5:.2f},3.0);")
+    out.append(rf"\node[anchor=north] at ({dx + 4.75:.2f},2.95) {{Fondo de titulización}};")
+    out.append(rf"\node[caja, fill=black!12, minimum width=1.6cm, minimum height=1.9cm] (pre) at ({dx + 3.9:.2f},1.15) {{Préstamos}};")
     for k, (tramo, color) in enumerate([("sénior", "black!5"), ("intermedio", "black!18"), ("subordinado", "black!35")]):
-        y = 1.85 - 0.62 * k
-        out.append(rf"\node[caja, fill={color}, minimum width=1.7cm, minimum height=0.55cm] (t{k}) at ({dx + 4.68:.2f},{y:.2f}) {{{tramo}}};")
-    out.append(rf"\node[caja, fill=black!5, minimum width=1.3cm] (inv) at ({dx + 6.75:.2f},1.2) {{Inversores}};")
-    out.append(r"\draw[->, thick] (ori.east) -- node[above, font=\scriptsize, align=center] {vende los\\préstamos} (pre.west);")
-    out.append(r"\draw[->, thick] (t1.east) -- (inv.west);")
-    out.append(rf"\node[font=\scriptsize, align=center] at ({dx + 6.75:.2f},0.25) {{bonos\\por tramos}};")
+        y = 1.8 - 0.62 * k
+        out.append(rf"\node[caja, fill={color}, minimum width=1.65cm, minimum height=0.55cm] (t{k}) at ({dx + 5.6:.2f},{y:.2f}) {{{tramo}}};")
+    out.append(rf"\node[caja, fill=black!5] (inv) at ({dx + 4.75:.2f},-1.45) {{Inversores}};")
+    out.append(r"\draw[->, thick] (ori.east) -- node[above, font=\scriptsize, align=center] {vende\\los préstamos} (pre.west);")
+    out.append(rf"\draw[->, thick] ({dx + 4.75:.2f},0) -- node[right, font=\scriptsize] {{bonos por tramos}} (inv.north);")
     out.append(r"\end{tikzpicture}")
     escribir("anx_cedulas_titulizacion", "% Figura (Anexo II, II.2, «Garantía y prelación»): bono garantizado frente a titulización; esquemática.\n"
              "% Generar con: bash Code/generar_figura.sh anx_cedulas_titulizacion\n" + "\n".join(out) + "\n")
