@@ -665,9 +665,9 @@ def main():
 % Generar con: bash Code/generar_figura.sh anx_liquidacion
 \begin{tikzpicture}[font=\footnotesize]
   \draw (0,0.1) -- (0,2.95);
-""" + cuerpo + r"""  \filldraw[fill=black!70] (5.6,2.55) rectangle (5.9,2.75); \node[anchor=west] at (5.95,2.65) {elimina el riesgo};
-  \filldraw[fill=black!35] (5.6,2.1) rectangle (5.9,2.3); \node[anchor=west] at (5.95,2.2) {lo reduce};
-  \filldraw[fill=white, very thick] (5.6,1.65) rectangle (5.9,1.85); \node[anchor=west] at (5.95,1.75) {expuesta por todo el importe};
+""" + cuerpo + r"""  \filldraw[fill=black!70] (-3.4,-0.42) rectangle (-3.1,-0.22); \node[anchor=west] at (-3.05,-0.32) {elimina el riesgo};
+  \filldraw[fill=black!35] (0.6,-0.42) rectangle (0.9,-0.22); \node[anchor=west] at (0.95,-0.32) {lo reduce};
+  \filldraw[fill=white, very thick] (3.4,-0.42) rectangle (3.7,-0.22); \node[anchor=west] at (3.75,-0.32) {expuesta por todo el importe};
 \end{tikzpicture}
 """)
     open(os.path.join(TEMA, "Img", "anx_liquidacion.tikz"), "w", encoding="utf-8").write(fig7)
