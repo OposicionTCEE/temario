@@ -197,7 +197,75 @@ def main():
         calculos.append(("anx_brecha", f"Capital con y = {100*yy:.0f} %: banco / fondo de pensiones",
                          f"{100*g(yy,6)-90*g(yy,1):.1f} / {100*g(yy,8)-90*g(yy,20):.1f}", "euros por 100 de activo", "F0", "T2"))
 
-    leeme = [("Libro de datos del Tema 3.B.24 (renta fija)",),
+    # A5: curvas (I.9), estimación (I.10) y movimientos (I.11)
+    def tir(flujos, precio):
+        a, b = -0.5, 1.0
+        for _ in range(200):
+            m = (a + b) / 2
+            if sum(cf / (1 + m) ** t for t, cf in flujos) > precio:
+                a = m
+            else:
+                b = m
+        return m
+
+    Bd = {1: 1 / 1.03, 2: 1 / 1.036 ** 2, 3: 1 / 1.04 ** 3}
+    bonos = [("A", 1, 0.0), ("B", 2, 0.04), ("C", 3, 0.05)]
+    for nombre, T, c in bonos:
+        flujos = [(t, 100 * c + (100 if t == T else 0)) for t in range(1, T + 1)]
+        precio = sum(cf * Bd[t] for t, cf in flujos)
+        fwd = 1 / Bd[1] - 1 if T == 1 else Bd[T - 1] / Bd[T] - 1
+        calculos.append(("cuadro I.10 (bootstrapping)", f"Bono {nombre} ({T} años, cupón {100*c:.0f} %): precio / B(0,{T}) / "
+                         "contado / a plazo del año / rendimiento al vencimiento",
+                         f"{precio:.3f} / {Bd[T]:.5f} / {100*(Bd[T]**(-1/T)-1):.2f} / {100*fwd:.2f} / {100*tir(flujos, precio):.3f}",
+                         "por 100 de nominal; %", "F0", "T8"))
+    for T in (1, 2, 3):
+        par = (1 - Bd[T]) / sum(Bd[t] for t in range(1, T + 1))
+        calculos.append(("I.9.3", f"Tipo par a {T} años con la curva del cuadro", round(100 * par, 3), "%", "F0", "T8"))
+    for c in (0.05, 0.10):
+        flujos = [(t, 100 * c + (100 if t == 3 else 0)) for t in range(1, 4)]
+        calculos.append(("I.9.4 (efecto cupón)", f"Rendimiento al vencimiento de un bono a 3 años con cupón del {100*c:.0f} %",
+                         round(100 * tir(flujos, sum(cf * Bd[t] for t, cf in flujos)), 3), "%", "F0", "T8"))
+
+    import numpy as np
+    mens = {c: {d[:7]: v for d, v in serie_fred(c)} for c in
+            ("GS1M", "GS3M", "GS6M", "GS1", "GS2", "GS3", "GS5", "GS7", "GS10", "GS20", "GS30")}
+    desde = sorted(f for f in set(mens["GS3M"]) & set(mens["GS10"]) if f >= "1982-01")
+    pend = [mens["GS10"][f] - mens["GS3M"][f] for f in desde]
+    cifras.append((f"Pendiente media GS10 menos GS3M, {desde[0]} a {desde[-1]}", round(sum(pend) / len(pend), 2),
+                   "puntos porcentuales", "F5", "T5", "I.11.1"))
+    cifras.append((f"Meses con GS10 por debajo de GS3M, {desde[0]} a {desde[-1]}",
+                   round(100 * sum(p < 0 for p in pend) / len(pend), 1), "% de los meses", "F5", "T5", "I.11.1"))
+    for f, corto, largo in (("2006-12", "GS6M", "GS10"), ("2023-06", "GS1", "GS10"), ("2026-10", "GS10", "GS3M")):
+        cifras.append((f"{corto} menos {largo} en {f}", round(mens[corto][f] - mens[largo][f], 2), "puntos porcentuales",
+                       "F5", "T0", "I.11.1"))
+    pcs = ["GS3M", "GS6M", "GS1", "GS2", "GS3", "GS5", "GS7", "GS10"]
+    comun = sorted(f for f in set.intersection(*[set(mens[c]) for c in pcs]) if f >= "1982-01")
+    dX = np.diff(np.array([[mens[c][f] for c in pcs] for f in comun]), axis=0)
+    cor = np.corrcoef(dX, rowvar=False)
+    for a, b in (("GS2", "GS10"), ("GS3M", "GS10")):
+        cifras.append((f"Correlación de las variaciones mensuales de {a} y {b}, {comun[0]} a {comun[-1]}",
+                       round(float(cor[pcs.index(a), pcs.index(b)]), 2), "", "F5", "T6", "I.11.1"))
+    w, v = np.linalg.eigh(np.cov(dX, rowvar=False))
+    orden = np.argsort(w)[::-1]
+    w, v = w[orden], v[:, orden]
+    if v[:, 0].sum() < 0: v[:, 0] *= -1
+    if v[-1, 1] < v[0, 1]: v[:, 1] *= -1
+    if v[0, 2] < 0: v[:, 2] *= -1
+    cuota = 100 * w / w.sum()
+    cifras.append((f"Varianza explicada por nivel / pendiente / curvatura, {comun[0]} a {comun[-1]}",
+                   f"{cuota[0]:.1f} / {cuota[1]:.1f} / {cuota[2]:.1f}", "%", "F5", "T6", "I.11.2"))
+    for i, c in enumerate(pcs):
+        calculos.append(("anx_componentes", f"Cargas de {c}: nivel / pendiente / curvatura",
+                         f"{v[i,0]:.3f} / {v[i,1]:.3f} / {v[i,2]:.3f}", "", "F5", "T6"))
+    es3 = {d[:7]: x for d, x in serie_fred("IR3TIB01ESM156N")}
+    es10 = {d[:7]: x for d, x in serie_fred("IRLTLT01ESM156N")}
+    inv = [(f + "-01", es10[f] - es3[f]) for f in sorted(set(es3) & set(es10))]
+    cifras.append(("España: tramos de meses con el interbancario a 3 meses por encima de la deuda a largo plazo",
+                   "; ".join(f"{a} a {b}" for a, b in tramos_negativos(inv)), "meses", "F1", "T7", "I.11.1"))
+    cifras.append(("BCE: curvas diarias del área del euro desde el 10 de julio de 2007 (SVENSSON; bonos AAA y de todos "
+                   "los Estados)", None, "", "F8", "T0", "I.10.2"))
+
+    leeme =[("Libro de datos del Tema 3.B.24 (renta fija)",),
              ("Cada dato cita su fuente (hoja Fuentes) y su tratamiento (hoja Tratamientos).",),
              ("Indicadores: series en formato largo, filtrables por serie, país e indicador.",),
              ("Cifras_citadas: cifras y reglas que el tema cita sin figura.",),
