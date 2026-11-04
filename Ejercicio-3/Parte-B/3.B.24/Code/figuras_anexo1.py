@@ -642,24 +642,28 @@ def _ns_fwd(m, b0=NS["b0"], b1=NS["b1"], b2=NS["b2"], tau=NS["tau"]):
 
 
 def curvas():
-    ms = [0.05 + 0.25 * j for j in range(0, 120)]
-    B = lambda t: math.exp(-_ns_spot(t) / 100 * t)
-    par = [(T, 100 * (1 - B(T)) / sum(B(t) for t in range(1, T + 1))) for T in range(1, 31)]
+    # Curva propia de la figura (más pendiente que la de NS por defecto, para que se distingan las tres) y todos los tipos
+    # en capitalización anual: contado (1 + r)^m = e^{r_c m}, a plazo de un año en m y par con cupones anuales.
+    p = dict(b0=5.0, b1=-4.0, b2=1.0, tau=3.0)
+    rc = lambda m: _ns_spot(m, **p) / 100
+    B = lambda t: math.exp(-rc(t) * t)
+    ms = [0.25 * j for j in range(1, 81)]
+    contado = [(m, 100 * (math.exp(rc(m)) - 1)) for m in ms]
+    plazo = [(m, 100 * (B(m) / B(m + 1) - 1)) for m in ms]
+    par = [(T, 100 * (1 - B(T)) / sum(B(t) for t in range(1, T + 1))) for T in range(1, 21)]
     out = [r"\begin{tikzpicture}[font=\footnotesize]"]
-    out.append(r"\begin{axis}[width=13cm, height=6.4cm, axis lines=left, xmin=0, xmax=30, ymin=1.5, ymax=6.5,"
-               r" xtick={0,30}, xticklabels={$0$,$T$}, ytick=\empty, label style={font=\footnotesize},"
+    out.append(r"\begin{axis}[width=12.5cm, height=6.4cm, axis lines=left, xmin=0, xmax=20, ymin=0.5, ymax=6.2,"
+               r" xtick={0,20}, xticklabels={$0$,$T$}, ytick=\empty, label style={font=\footnotesize},"
                r" xlabel={Plazo}, ylabel={Tipo}, clip=false]")
-    out.append(rf"\addplot[very thick, black!45, mark=none] coordinates {{{coords([(m, _ns_fwd(m)) for m in ms])}}};")
-    out.append(rf"\addplot[very thick, mark=none] coordinates {{{coords([(m, _ns_spot(m)) for m in ms])}}};")
+    out.append(rf"\addplot[very thick, black!45, mark=none] coordinates {{{coords(plazo)}}};")
+    out.append(rf"\addplot[very thick, mark=none] coordinates {{{coords(contado)}}};")
     out.append(rf"\addplot[very thick, densely dashed, mark=none] coordinates {{{coords(par)}}};")
-    out.append(rf"\node[anchor=west, font=\footnotesize] at (axis cs:30.3,{_ns_fwd(30):.3f}) {{a plazo}};")
-    out.append(rf"\node[anchor=west, font=\footnotesize] at (axis cs:30.3,{_ns_spot(30)+0.12:.3f}) {{al contado}};")
-    out.append(rf"\node[anchor=west, font=\footnotesize] at (axis cs:30.3,{par[-1][1]-0.15:.3f}) {{par}};")
+    out += _etiquetas(20, 21.2, [(plazo[-1][1], "a plazo"), (contado[-1][1], "al contado"), (par[-1][1], "par")], 0.42)
     out.append(r"\end{axis}")
     out.append(r"\end{tikzpicture}")
-    escribir("anx_curvas", "% Figura (Anexo I, I.9, «Tipos par»): curvas al contado, a plazo y par de una ETTI de NELSON-SIEGEL\n"
-             f"% (beta0 = 5, beta1 = -3, beta2 = 2, tau = 2,5); a 30 años: contado {_ns_spot(30):.2f}, plazo {_ns_fwd(30):.2f}, par {par[-1][1]:.2f}.\n"
-             "% Generar con: bash Code/generar_figura.sh anx_curvas\n" + "\n".join(out) + "\n")
+    escribir("anx_curvas", "% Figura (Anexo I, I.9, «Tipos par»): curvas al contado, a plazo (un año) y par de una ETTI de NELSON-SIEGEL\n"
+             f"% (beta0 = 5, beta1 = -4, beta2 = 1, tau = 3), tipos anuales; a 20 años: contado {contado[-1][1]:.2f}, plazo {plazo[-1][1]:.2f},"
+             f" par {par[-1][1]:.2f}.\n% Generar con: bash Code/generar_figura.sh anx_curvas\n" + "\n".join(out) + "\n")
 
 
 def nelson_siegel():
