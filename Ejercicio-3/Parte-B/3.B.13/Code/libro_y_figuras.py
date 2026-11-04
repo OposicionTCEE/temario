@@ -642,8 +642,38 @@ def main():
 """)
     open(os.path.join(TEMA, "Img", "anx_plazas.tikz"), "w", encoding="utf-8").write(fig6)
 
+    # ---------- anx_liquidacion: cómo se liquidaron las obligaciones de pago, abril de 2025 ----------
+    metodos = [("pago contra pago", ["3"], "black!70"), ("neteo previo", ["4"], "black!35"),
+               ("dentro del grupo", ["7", "8"], "black!35"), ("cuentas con control del pago", ["9"], "black!35"),
+               ("liquidación bruta bilateral", ["C"], "white")]
+    cuerpo = ""
+    for i, (nombre, cods, tono) in enumerate(metodos):
+        v = sum(s(rat=c)["2025"] for c in cods)
+        c = 100 * v / oblig25
+        y = 2.6 - i * 0.55
+        borde = "very thick" if tono == "white" else ""
+        cuerpo += (f"  \\filldraw[fill={tono}{', ' + borde if borde else ''}] (0,{y - 0.17:.2f}) rectangle ({c * 0.2:.3f},{y + 0.17:.2f});\n"
+                   f"  \\node[anchor=east] at (-0.08,{y:.2f}) {{{nombre}}};\n"
+                   f"  \\node[anchor=west] at ({c * 0.2 + 0.05:.3f},{y:.2f}) {{${coma(c)}\\%$ ($" + coma(v / 1000) + "$ billones)};\n")
+    fig7 = (r"""% Figura (Anexo III, «Riesgos»): obligaciones de pago brutas liquidadas en una media diaria de abril de 2025 (unos 14,2
+% billones de dólares), por método de liquidación, en porcentaje del total y en billones de dólares. En gris oscuro, el
+% pago contra pago, que elimina el riesgo de liquidación; en gris claro, los métodos que lo reducen sin eliminarlo (neteo
+% previo, liquidación dentro del grupo y cuentas en que el intermediario controla el momento del pago); en blanco, la
+% liquidación bruta bilateral, expuesta por todo el importe.
+% Fuente: BPI, encuesta trienal, conjunto WS_DER_OTC_TOV (preguntas de liquidación de 2025), descarga del """ + FECHA_DESCARGA + r""".
+% Datos y tratamientos en Code/datos_3B13.xlsx; generada con Code/libro_y_figuras.py.
+% Generar con: bash Code/generar_figura.sh anx_liquidacion
+\begin{tikzpicture}[font=\footnotesize]
+  \draw (0,0.1) -- (0,2.95);
+""" + cuerpo + r"""  \filldraw[fill=black!70] (5.6,2.55) rectangle (5.9,2.75); \node[anchor=west] at (5.95,2.65) {elimina el riesgo};
+  \filldraw[fill=black!35] (5.6,2.1) rectangle (5.9,2.3); \node[anchor=west] at (5.95,2.2) {lo reduce};
+  \filldraw[fill=white, very thick] (5.6,1.65) rectangle (5.9,1.85); \node[anchor=west] at (5.95,1.75) {expuesta por todo el importe};
+\end{tikzpicture}
+""")
+    open(os.path.join(TEMA, "Img", "anx_liquidacion.tikz"), "w", encoding="utf-8").write(fig7)
+
     for fila_c in cifras[1:]:
-        if fila_c[6].startswith("III.5") or fila_c[6].startswith("III.6") or fila_c[6].startswith("III.7") or "III.6" in fila_c[6]:
+        if fila_c[6].startswith("III.8"):
             print(fila_c[0], "|", fila_c[1], fila_c[2], "|", fila_c[3])
 
 
