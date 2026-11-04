@@ -613,6 +613,23 @@ def brecha():
 NS = dict(b0=5.0, b1=-3.0, b2=2.0, tau=2.5)
 
 
+def _etiquetas(x_fin, x_rot, items, sep):
+    """Rótulos al final de varias curvas que convergen: separa sus alturas al menos sep (unidades del eje) y une cada
+    rótulo con el final de su curva con una línea guía fina. items = [(y_final, texto)]."""
+    orden = sorted(items, key=lambda it: it[0])
+    pos = [y for y, _ in orden]
+    for _ in range(50):
+        for i in range(1, len(pos)):
+            if pos[i] - pos[i - 1] < sep:
+                medio = (pos[i] + pos[i - 1]) / 2
+                pos[i - 1], pos[i] = medio - sep / 2, medio + sep / 2
+    out = []
+    for (y, texto), yr in zip(orden, pos):
+        out.append(rf"\draw[black!35, very thin] (axis cs:{x_fin},{y:.3f}) -- (axis cs:{x_rot},{yr:.3f});")
+        out.append(rf"\node[anchor=west, font=\footnotesize, inner sep=1.5pt] at (axis cs:{x_rot},{yr:.3f}) {{{texto}}};")
+    return out
+
+
 def _ns_spot(m, b0=NS["b0"], b1=NS["b1"], b2=NS["b2"], tau=NS["tau"]):
     x = m / tau
     l1 = (1 - math.exp(-x)) / x
