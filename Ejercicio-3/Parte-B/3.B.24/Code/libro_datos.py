@@ -50,6 +50,14 @@ FUENTES = [
     ("F15", "Energías Renovables (8 de septiembre de 2021), España recibe una demanda de 60.000 millones para su primer bono verde",
      "https://www.energias-renovables.com/panorama/espana-recibe-una-demanda-de-60-000-20210908"),
     ("F16", "HOMER, S., y SYLLA, R. (2005), A history of interest rates, 4.ª ed., Wiley", ""),
+    ("F17", "SIFMA (2026), Capital markets fact book, 2026", "https://www.sifma.org/resources/research/fact-book/"),
+    ("F18", "Banco de Pagos Internacionales (2025), Triennial Central Bank Survey 2025", "https://www.bis.org/statistics/rpfx25.htm"),
+    ("F19", "CNMV (2026), Informe anual sobre los mercados de valores, ejercicio 2025: resumen",
+     "https://www.cnmv.es/DocPortal/Publicaciones/Informes/Resumen_InformeAnualCNMV2025.pdf"),
+    ("F20", "Banco de la Reserva Federal de Nueva York (julio de 2025), The Fed's Treasury purchase prices during the pandemic",
+     "https://libertystreeteconomics.newyorkfed.org/2025/07/the-feds-treasury-purchase-prices-during-the-pandemic"),
+    ("F21", "DTCC (2025), Navigating the new timeline: SEC extension for US Treasury clearing compliance",
+     "https://www.dtcc.com/insights/2025/navigating-the-new-timeline-sec-extension-for-us-treasury-clearing-compliance"),
     ("F0", "Cálculo propio (sin datos)", ""),
 ]
 TRATAMIENTOS = [
