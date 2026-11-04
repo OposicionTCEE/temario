@@ -734,11 +734,13 @@ def componentes():
                r" ytick={-0.5,0,0.5}, /pgf/number format/use comma, tick label style={font=\scriptsize},"
                r" label style={font=\footnotesize}, xlabel={Plazo (años; escala logarítmica)}, ylabel={Carga}, clip=false]")
     out.append(r"\draw[black!30] (axis cs:0.22,0) -- (axis cs:10,0);")
+    finales = []
     for k in range(3):
         pts = [(m, float(v[i, k])) for i, (_, m) in enumerate(plazos)]
         out.append(rf"\addplot[{est[k]}, mark=*, mark size=0.9pt] coordinates {{{coords(pts)}}};")
         c = f"{cuota[k]:.1f}".replace(".", "{,}")
-        out.append(rf"\node[anchor=west, font=\footnotesize] at (axis cs:10.5,{pts[-1][1]:.3f}) {{{nombres[k]} (${c}\%$)}};")
+        finales.append((pts[-1][1], rf"{nombres[k]} (${c}\%$)"))
+    out += _etiquetas(10, 12.5, finales, 0.13)
     out.append(r"\end{axis}")
     out.append(r"\end{tikzpicture}")
     escribir("anx_componentes", "% Figura (Anexo I, I.11, «Factores»): cargas de los tres primeros componentes principales de las variaciones\n"
