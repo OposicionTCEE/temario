@@ -58,6 +58,12 @@ FUENTES = [
      "https://libertystreeteconomics.newyorkfed.org/2025/07/the-feds-treasury-purchase-prices-during-the-pandemic"),
     ("F21", "DTCC (2025), Navigating the new timeline: SEC extension for US Treasury clearing compliance",
      "https://www.dtcc.com/insights/2025/navigating-the-new-timeline-sec-extension-for-us-treasury-clearing-compliance"),
+    ("F22", "Banco Central Europeo, curvas de tipos del área del euro: deuda pública central con calificación AAA, tipos "
+     "al contado a 2, 10 y 30 años (YC.B.U2.EUR.4F.G_N_A.SV_C_YM.SR_2Y, SR_10Y y SR_30Y), Portal de datos del BCE",
+     "https://data.ecb.europa.eu/data/datasets/YC"),
+    ("F23", "SIFMA (2025), Capital markets fact book, 2025: bonos en circulación en el mundo y cuota de cada mercado "
+     "(datos del Banco de Pagos Internacionales)",
+     "https://www.sifma.org/wp-content/uploads/2024/07/2025-SIFMA-Capital-Markets-Factbook.pdf"),
     ("F0", "Cálculo propio (sin datos)", ""),
 ]
 TRATAMIENTOS = [
