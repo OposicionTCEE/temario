@@ -601,7 +601,137 @@ def brecha():
              "% Generar con: bash Code/generar_figura.sh anx_brecha\n" + "\n".join(out) + "\n")
 
 
+# =====================  Tanda A5 (I.9 Curvas, I.10 Estimación, I.11 Movimientos)  =====================
+# anx_curvas: curvas al contado, a plazo (instantánea) y par de una ETTI de NELSON-SIEGEL con beta0 = 5, beta1 = -3,
+#   beta2 = 2 y tau = 2,5 (tipos continuos en %); par con cupones anuales: c(T) = (1 - B(T)) / sum B(t). Esquemática.
+# anx_nelson_siegel: cargas del nivel (1), la pendiente ((1 - e^{-m/tau})/(m/tau)) y la curvatura (la anterior menos
+#   e^{-m/tau}) con tau = 2,5.
+# anx_curvas_eeuu: rendimientos medios mensuales del Tesoro de EE. UU. (FRED: GS1M a GS30) en dic. 2006, dic. 2010,
+#   jun. 2023 y oct. 2026; eje del plazo logarítmico.
+# anx_componentes: cargas de los tres primeros componentes principales de las variaciones mensuales de GS3M, GS6M, GS1,
+#   GS2, GS3, GS5, GS7 y GS10 (1982-2026), con la parte de la varianza que explica cada uno.
+NS = dict(b0=5.0, b1=-3.0, b2=2.0, tau=2.5)
+
+
+def _ns_spot(m, b0=NS["b0"], b1=NS["b1"], b2=NS["b2"], tau=NS["tau"]):
+    x = m / tau
+    l1 = (1 - math.exp(-x)) / x
+    return b0 + b1 * l1 + b2 * (l1 - math.exp(-x))
+
+
+def _ns_fwd(m, b0=NS["b0"], b1=NS["b1"], b2=NS["b2"], tau=NS["tau"]):
+    x = m / tau
+    return b0 + b1 * math.exp(-x) + b2 * x * math.exp(-x)
+
+
+def curvas():
+    ms = [0.05 + 0.25 * j for j in range(0, 120)]
+    B = lambda t: math.exp(-_ns_spot(t) / 100 * t)
+    par = [(T, 100 * (1 - B(T)) / sum(B(t) for t in range(1, T + 1))) for T in range(1, 31)]
+    out = [r"\begin{tikzpicture}[font=\footnotesize]"]
+    out.append(r"\begin{axis}[width=13cm, height=6.4cm, axis lines=left, xmin=0, xmax=30, ymin=1.5, ymax=6.5,"
+               r" xtick={0,30}, xticklabels={$0$,$T$}, ytick=\empty, label style={font=\footnotesize},"
+               r" xlabel={Plazo}, ylabel={Tipo}, clip=false]")
+    out.append(rf"\addplot[very thick, black!45, mark=none] coordinates {{{coords([(m, _ns_fwd(m)) for m in ms])}}};")
+    out.append(rf"\addplot[very thick, mark=none] coordinates {{{coords([(m, _ns_spot(m)) for m in ms])}}};")
+    out.append(rf"\addplot[very thick, densely dashed, mark=none] coordinates {{{coords(par)}}};")
+    out.append(rf"\node[anchor=west, font=\footnotesize] at (axis cs:30.3,{_ns_fwd(30):.3f}) {{a plazo}};")
+    out.append(rf"\node[anchor=west, font=\footnotesize] at (axis cs:30.3,{_ns_spot(30)+0.12:.3f}) {{al contado}};")
+    out.append(rf"\node[anchor=west, font=\footnotesize] at (axis cs:30.3,{par[-1][1]-0.15:.3f}) {{par}};")
+    out.append(r"\end{axis}")
+    out.append(r"\end{tikzpicture}")
+    escribir("anx_curvas", "% Figura (Anexo I, I.9, «Tipos par»): curvas al contado, a plazo y par de una ETTI de NELSON-SIEGEL\n"
+             f"% (beta0 = 5, beta1 = -3, beta2 = 2, tau = 2,5); a 30 años: contado {_ns_spot(30):.2f}, plazo {_ns_fwd(30):.2f}, par {par[-1][1]:.2f}.\n"
+             "% Generar con: bash Code/generar_figura.sh anx_curvas\n" + "\n".join(out) + "\n")
+
+
+def nelson_siegel():
+    tau = NS["tau"]
+    ms = [0.05 + 0.25 * j for j in range(0, 120)]
+    l1 = lambda m: (1 - math.exp(-m / tau)) / (m / tau)
+    l2 = lambda m: l1(m) - math.exp(-m / tau)
+    out = [r"\begin{tikzpicture}[font=\footnotesize]"]
+    out.append(r"\begin{axis}[width=12.5cm, height=6cm, axis lines=left, xmin=0, xmax=30, ymin=0, ymax=1.15,"
+               r" xtick={0,10,20,30}, ytick={0,0.5,1}, /pgf/number format/use comma, tick label style={font=\scriptsize},"
+               r" label style={font=\footnotesize}, xlabel={Plazo, $m$ (años)}, ylabel={Carga}, clip=false]")
+    out.append(r"\addplot[very thick, black!45, mark=none, domain=0:30] {1};")
+    out.append(rf"\addplot[very thick, mark=none] coordinates {{{coords([(m, l1(m)) for m in ms])}}};")
+    out.append(rf"\addplot[very thick, densely dashed, mark=none] coordinates {{{coords([(m, l2(m)) for m in ms])}}};")
+    out.append(r"\node[anchor=west, font=\footnotesize] at (axis cs:30.3,1) {nivel, $\beta_0$};")
+    out.append(rf"\node[anchor=west, font=\footnotesize] at (axis cs:30.3,{l1(30)+0.03:.3f}) {{pendiente, $\beta_1$}};")
+    out.append(rf"\node[anchor=west, font=\footnotesize] at (axis cs:30.3,{l2(30)-0.05:.3f}) {{curvatura, $\beta_2$}};")
+    out.append(r"\end{axis}")
+    out.append(r"\end{tikzpicture}")
+    escribir("anx_nelson_siegel", "% Figura (Anexo I, I.10, «Modelos paramétricos»): cargas de los tres factores de NELSON-SIEGEL con tau = 2,5.\n"
+             "% Generar con: bash Code/generar_figura.sh anx_nelson_siegel\n" + "\n".join(out) + "\n")
+
+
+def _fred_mensual(codigo):
+    return {d[:7]: v for d, v in serie(codigo).items()}
+
+
+def curvas_eeuu():
+    plazos = [("GS1M", 1 / 12), ("GS3M", 0.25), ("GS6M", 0.5), ("GS1", 1), ("GS2", 2), ("GS3", 3), ("GS5", 5), ("GS7", 7),
+              ("GS10", 10), ("GS20", 20), ("GS30", 30)]
+    datos = {c: _fred_mensual(c) for c, _ in plazos}
+    fechas = [("2006-12", "dic. 2006", "thick, black!45"), ("2010-12", "dic. 2010", "very thick"),
+              ("2023-06", "jun. 2023", "very thick, densely dashed"), ("2026-10", "oct. 2026", "very thick, black!70, densely dotted")]
+    out = [r"\begin{tikzpicture}[font=\footnotesize]"]
+    out.append(r"\begin{axis}[width=13cm, height=6.6cm, axis lines=left, xmode=log, xmin=0.08, xmax=30, ymin=0, ymax=6,"
+               r" xtick={0.0833,0.25,0.5,1,2,5,10,30}, xticklabels={$1$ m,$3$ m,$6$ m,$1$,$2$,$5$,$10$,$30$},"
+               r" ytick={0,1,2,3,4,5,6}, /pgf/number format/use comma, tick label style={font=\scriptsize},"
+               r" label style={font=\footnotesize}, xlabel={Plazo (años; escala logarítmica)}, ylabel={Rendimiento (\%)}, clip=false]")
+    for f, et, est in fechas:
+        pts = [(m, datos[c][f]) for c, m in plazos if f in datos[c]]
+        out.append(rf"\addplot[{est}, mark=*, mark size=0.9pt] coordinates {{{coords(pts)}}};")
+        out.append(rf"\node[anchor=west, font=\footnotesize] at (axis cs:31,{pts[-1][1]:.3f}) {{{et}}};")
+    out.append(r"\end{axis}")
+    out.append(r"\end{tikzpicture}")
+    resumen = "; ".join(f"{et}: {datos['GS3M'][f]:.2f} a 3 meses y {datos['GS10'][f]:.2f} a 10 años" for f, et, _ in fechas)
+    escribir("anx_curvas_eeuu", "% Figura (Anexo I, I.11, «Hechos»): curvas del Tesoro de EE. UU. (medias mensuales, FRED) en cuatro fechas;\n"
+             f"% {resumen}.\n% Generar con: bash Code/generar_figura.sh anx_curvas_eeuu\n" + "\n".join(out) + "\n")
+
+
+def componentes():
+    import numpy as np
+    plazos = [("GS3M", 0.25), ("GS6M", 0.5), ("GS1", 1), ("GS2", 2), ("GS3", 3), ("GS5", 5), ("GS7", 7), ("GS10", 10)]
+    datos = {c: _fred_mensual(c) for c, _ in plazos}
+    fechas = sorted(f for f in set.intersection(*[set(datos[c]) for c, _ in plazos]) if f >= "1982-01")
+    X = np.array([[datos[c][f] for c, _ in plazos] for f in fechas])
+    w, v = np.linalg.eigh(np.cov(np.diff(X, axis=0), rowvar=False))
+    orden = np.argsort(w)[::-1]
+    w, v = w[orden], v[:, orden]
+    cuota = 100 * w / w.sum()
+    # signos: nivel positivo; pendiente creciente con el plazo; curvatura positiva en los extremos
+    if v[:, 0].sum() < 0: v[:, 0] *= -1
+    if v[-1, 1] < v[0, 1]: v[:, 1] *= -1
+    if v[0, 2] < 0: v[:, 2] *= -1
+    nombres = ["Nivel", "Pendiente", "Curvatura"]
+    est = ["very thick", "very thick, densely dashed", "thick, black!50"]
+    out = [r"\begin{tikzpicture}[font=\footnotesize]"]
+    out.append(r"\begin{axis}[width=12.5cm, height=6.4cm, axis lines=left, xmode=log, xmin=0.22, xmax=10, ymin=-0.7, ymax=0.7,"
+               r" xtick={0.25,0.5,1,2,3,5,7,10}, xticklabels={$3$ m,$6$ m,$1$,$2$,$3$,$5$,$7$,$10$},"
+               r" ytick={-0.5,0,0.5}, /pgf/number format/use comma, tick label style={font=\scriptsize},"
+               r" label style={font=\footnotesize}, xlabel={Plazo (años; escala logarítmica)}, ylabel={Carga}, clip=false]")
+    out.append(r"\draw[black!30] (axis cs:0.22,0) -- (axis cs:10,0);")
+    for k in range(3):
+        pts = [(m, float(v[i, k])) for i, (_, m) in enumerate(plazos)]
+        out.append(rf"\addplot[{est[k]}, mark=*, mark size=0.9pt] coordinates {{{coords(pts)}}};")
+        c = f"{cuota[k]:.1f}".replace(".", "{,}")
+        out.append(rf"\node[anchor=west, font=\footnotesize] at (axis cs:10.5,{pts[-1][1]:.3f}) {{{nombres[k]} (${c}\%$)}};")
+    out.append(r"\end{axis}")
+    out.append(r"\end{tikzpicture}")
+    escribir("anx_componentes", "% Figura (Anexo I, I.11, «Factores»): cargas de los tres primeros componentes principales de las variaciones\n"
+             f"% mensuales de los rendimientos del Tesoro de EE. UU. de 3 meses a 10 años, {fechas[0]} a {fechas[-1]} ({len(fechas)-1} meses);\n"
+             f"% varianza explicada: {cuota[0]:.1f} %, {cuota[1]:.1f} % y {cuota[2]:.1f} % (acumulada {cuota[:3].sum():.1f} %).\n"
+             "% Generar con: bash Code/generar_figura.sh anx_componentes\n" + "\n".join(out) + "\n")
+
+
 if __name__ == "__main__":
+    curvas()
+    nelson_siegel()
+    curvas_eeuu()
+    componentes()
     inmunizacion()
     redington()
     brecha()
