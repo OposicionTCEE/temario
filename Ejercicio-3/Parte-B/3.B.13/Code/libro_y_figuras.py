@@ -472,7 +472,7 @@ def main():
                    f"  \\node[below] at ({XV(i):.2f},0) {{${p}$}};\n")
     leyenda = ""
     for j, (texto, estilo) in enumerate((("contado", "fill=black!75"), ("plazo simple", "fill=black!50"), ("\\textit{FX swaps}", "fill=black!25"),
-                                         ("swaps de divisas, opciones y otros", "fill=white"), ("sin desglose ($1989$)", "dashed"))):
+                                         ("swaps de divisas, opciones y otros", "fill=white"), ("sin desglose ($1989$)", "dashed, fill=white"))):
         yl = 4.55 - j * 0.36
         cuerpo += (f"  \\filldraw[{estilo}] (0.55,{yl - 0.1:.2f}) rectangle (0.85,{yl + 0.1:.2f});\n"
                    f"  \\node[anchor=west] at (0.9,{yl:.2f}) {{{texto}}};\n")
