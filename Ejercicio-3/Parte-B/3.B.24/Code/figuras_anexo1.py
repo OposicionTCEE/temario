@@ -514,7 +514,97 @@ def convexidad_negativa():
              + "\n".join(out) + "\n")
 
 
+# =====================  Tanda A4 (I.8 Gestión de carteras)  =====================
+# anx_inmunizacion: rentabilidad realizada anual a cada horizonte H (2 a 20 años) del bono de referencia comprado a la par
+#   (10 años, cupón del 6 %) si, justo después de la compra, el tipo pasa al 4 %, se queda en el 6 % o sube al 8 % para
+#   siempre; cupones reinvertidos a ese tipo y venta en H (o reinversión del nominal desde el año 10). Con H = D = 7,80,
+#   6,02 % en los dos escenarios extremos.
+# anx_redington: excedente A - L de un pasivo cupón cero a 10 años (valor 100 con el 6 %) cubierto con (a) cupones cero a
+#   5 y 15 años a partes iguales (misma duración, más dispersión) y (b) un cupón cero a 5 años (duración menor).
+# anx_brecha: valor del capital de un banco (activo a 6 años, valor 100; pasivo a 1 año, valor 90) y de un fondo de
+#   pensiones (activo a 8 años, 100; pasivo a 20 años, 90), en cupones cero, con y0 = 5 %.
+def _rr(H, y1):
+    W = 0.0
+    for t in range(1, 11):
+        cf = 6 + (100 if t == 10 else 0)
+        W += cf * (1 + y1) ** (H - t)      # si t > H, es el valor actual en H del pago pendiente
+    return (W / 100) ** (1 / H) - 1
+
+
+def inmunizacion():
+    Hs = [2 + 0.25 * j for j in range(0, 73)]
+    series = {y1: [(H, 100 * _rr(H, y1)) for H in Hs] for y1 in (0.04, 0.06, 0.08)}
+    lo = min(v for s in series.values() for _, v in s)
+    hi = max(v for s in series.values() for _, v in s)
+    out = [r"\begin{tikzpicture}[font=\footnotesize]"]
+    out.append(rf"\begin{{axis}}[width=13cm, height=6.3cm, axis lines=left, xmin=2, xmax=20, ymin={math.floor(lo)}, ymax={math.ceil(hi)},"
+               r" xtick={2,5,7.8,10,15,20}, xticklabels={$2$,$5$,$D$,$10$,$15$,$20$}, /pgf/number format/use comma,"
+               r" tick label style={font=\scriptsize}, label style={font=\footnotesize},"
+               r" xlabel={Horizonte, $H$ (años)}, ylabel={Rentabilidad realizada (\%)}, clip=false]")
+    est = {0.04: "very thick", 0.06: "thick, black!45", 0.08: "very thick, densely dashed"}
+    for y1, pts in series.items():
+        out.append(rf"\addplot[{est[y1]}, mark=none] coordinates {{{coords(pts)}}};")
+    out.append(rf"\draw[densely dotted] (axis cs:7.802,{math.floor(lo)}) -- (axis cs:7.802,{math.ceil(hi)});")
+    out.append(r"\node[anchor=south west, font=\footnotesize] at (axis cs:2.3,9.4) {los tipos bajan};")
+    out.append(r"\node[anchor=north west, font=\footnotesize] at (axis cs:2.3,3.2) {los tipos suben};")
+    out.append(r"\node[anchor=west, font=\footnotesize] at (axis cs:20.2,6) {$y_0$};")
+    out.append(r"\end{axis}")
+    out.append(r"\end{tikzpicture}")
+    escribir("anx_inmunizacion", "% Figura (Anexo I, I.8, «Inmunización»): rentabilidad realizada a cada horizonte del bono de referencia\n"
+             f"% tras un cambio inmediato y permanente del tipo al 4 %, 6 % u 8 %; con H = D, {100*_rr(7.802,0.04):.3f} % y {100*_rr(7.802,0.08):.3f} %.\n"
+             "% Generar con: bash Code/generar_figura.sh anx_inmunizacion\n" + "\n".join(out) + "\n")
+
+
+def redington():
+    f = lambda yy, t: (1.06 / (1 + yy)) ** t
+    L = lambda yy: 100 * f(yy, 10)
+    A1 = lambda yy: 50 * f(yy, 5) + 50 * f(yy, 15)
+    A2 = lambda yy: 100 * f(yy, 5)
+    ys = [0.02 + 0.001 * j for j in range(0, 81)]
+    s1 = [(100 * yy, A1(yy) - L(yy)) for yy in ys]
+    s2 = [(100 * yy, A2(yy) - L(yy)) for yy in ys]
+    out = [r"\begin{tikzpicture}[font=\footnotesize]"]
+    out.append(r"\begin{axis}[width=12cm, height=6.3cm, axis lines=middle, xmin=2, xmax=10.4, ymin=-28, ymax=18,"
+               r" xtick={6}, xticklabels={$y_0$}, ytick={0}, tick label style={font=\scriptsize},"
+               r" label style={font=\footnotesize}, xlabel={$y$}, ylabel={Excedente, $A-L$},"
+               r" x label style={anchor=west}, y label style={anchor=south}, clip=false]")
+    out.append(rf"\addplot[very thick, mark=none] coordinates {{{coords(s1)}}};")
+    out.append(rf"\addplot[very thick, black!45, mark=none] coordinates {{{coords(s2)}}};")
+    out.append(r"\node[anchor=south, font=\footnotesize] at (axis cs:3.3,3.2) {$D_A=D_L$, más dispersión};")
+    out.append(r"\node[anchor=north west, font=\footnotesize] at (axis cs:2.4,-20) {$D_A<D_L$};")
+    out.append(r"\end{axis}")
+    out.append(r"\end{tikzpicture}")
+    escribir("anx_redington", "% Figura (Anexo I, I.8, «Activos y pasivos»): excedente de dos carteras frente a un pasivo cupón cero a 10\n"
+             f"% años; con y = 2 % y 10 %: inmunizada {A1(0.02)-L(0.02):.2f} y {A1(0.10)-L(0.10):.2f}; desajustada {A2(0.02)-L(0.02):.2f} y {A2(0.10)-L(0.10):.2f}.\n"
+             "% Generar con: bash Code/generar_figura.sh anx_redington\n" + "\n".join(out) + "\n")
+
+
+def brecha():
+    g = lambda yy, t: (1.05 / (1 + yy)) ** t
+    banco = lambda yy: 100 * g(yy, 6) - 90 * g(yy, 1)
+    fondo = lambda yy: 100 * g(yy, 8) - 90 * g(yy, 20)
+    ys = [0.01 + 0.001 * j for j in range(0, 81)]
+    out = [r"\begin{tikzpicture}[font=\footnotesize]"]
+    out.append(r"\begin{axis}[width=12cm, height=6.3cm, axis lines=middle, xmin=1, xmax=9.4, ymin=-45, ymax=45,"
+               r" xtick={5}, xticklabels={$y_0$}, ytick={0}, tick label style={font=\scriptsize},"
+               r" label style={font=\footnotesize}, xlabel={$y$}, ylabel={Capital, $A-L$},"
+               r" x label style={anchor=west}, y label style={anchor=south}, clip=false]")
+    out.append(rf"\addplot[very thick, mark=none] coordinates {{{coords([(100*yy, banco(yy)) for yy in ys])}}};")
+    out.append(rf"\addplot[very thick, densely dashed, mark=none] coordinates {{{coords([(100*yy, fondo(yy)) for yy in ys])}}};")
+    out.append(r"\node[anchor=south west, font=\footnotesize] at (axis cs:1.2,26) {Banco: $D_A>D_L$};")
+    out.append(r"\node[anchor=north west, font=\footnotesize] at (axis cs:1.2,-30) {Fondo de pensiones: $D_A<D_L$};")
+    out.append(r"\end{axis}")
+    out.append(r"\end{tikzpicture}")
+    escribir("anx_brecha", "% Figura (Anexo I, I.8, «Balances»): valor del capital frente al tipo de interés de un banco (activo cupón cero\n"
+             f"% a 6 años, 100; pasivo a 1 año, 90) y de un fondo de pensiones (activo a 8 años, 100; pasivo a 20 años, 90), y0 = 5 %;\n"
+             f"% banco: {banco(0.01):.1f} con el 1 % y {banco(0.09):.1f} con el 9 %; fondo: {fondo(0.01):.1f} y {fondo(0.09):.1f}.\n"
+             "% Generar con: bash Code/generar_figura.sh anx_brecha\n" + "\n".join(out) + "\n")
+
+
 if __name__ == "__main__":
+    inmunizacion()
+    redington()
+    brecha()
     balanza()
     tangente()
     duracion_vencimiento()
