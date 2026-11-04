@@ -672,6 +672,28 @@ def main():
 """)
     open(os.path.join(TEMA, "Img", "anx_liquidacion.tikz"), "w", encoding="utf-8").write(fig7)
 
+    # ---------- b3_comercio (cuerpo, bloque 3): volumen anual de divisas entre exportaciones mundiales, 1989-2025 ----------
+    XC = lambda p: (int(p) - 1989) * 0.27
+    YC = lambda r: r * 0.055
+    pts = [(p, tot[p] * DIAS_HABILES / 1e3 / exp[p]) for p in ANIOS]
+    cuerpo = (f"  \\draw[very thick] plot coordinates {{{' '.join(f'({XC(p):.3f},{YC(r):.3f})' for p, r in pts)}}};\n"
+              + "".join(f"  \\fill ({XC(p):.3f},{YC(r):.3f}) circle (1.5pt);\n" for p, r in pts)
+              + f"  \\node[above] at ({XC(pts[0][0]):.3f},{YC(pts[0][1]) + 0.05:.3f}) {{${pts[0][1]:.0f}$}};\n"
+              + f"  \\node[above] at ({XC(pts[-1][0]):.3f},{YC(pts[-1][1]) + 0.05:.3f}) {{${pts[-1][1]:.0f}$}};\n")
+    ejes_c = (f"  \\draw (0,0) -- ({XC('2025') + 0.4:.2f},0);\n  \\draw[->] (0,0) -- (0,4.5) node[left] {{veces}};\n"
+              + "".join(f"  \\draw (0,{YC(y):.2f}) -- (-0.06,{YC(y):.2f}) node[left] {{${y}$}};\n" for y in (20, 40, 60))
+              + "".join(f"  \\draw ({XC(str(a)):.2f},0) -- ({XC(str(a)):.2f},-0.06) node[below] {{${a}$}};\n"
+                        for a in (1989, 1998, 2007, 2016, 2025)))
+    fig8 = (r"""% Figura (cuerpo, bloque 3, «Tamaño»): volumen anual del mercado de divisas (media diaria de abril por 250 días hábiles)
+% dividido entre las exportaciones mundiales de bienes y servicios del mismo año, en los años de encuesta, 1989-2025.
+% Fuente: BPI, encuesta trienal, conjunto WS_DER_OTC_TOV, base neta-neta, y Banco Mundial, NE.EXP.GNFS.CD, descarga del """ + FECHA_DESCARGA + r""".
+% Datos y tratamientos en Code/datos_3B13.xlsx (tratamiento T6); generada con Code/libro_y_figuras.py.
+% Generar con: bash Code/generar_figura.sh b3_comercio
+\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]
+""" + ejes_c + cuerpo + r"""\end{tikzpicture}
+""")
+    open(os.path.join(TEMA, "Img", "b3_comercio.tikz"), "w", encoding="utf-8").write(fig8)
+
     for fila_c in cifras[1:]:
         if fila_c[6].startswith("III.8"):
             print(fila_c[0], "|", fila_c[1], fila_c[2], "|", fila_c[3])
