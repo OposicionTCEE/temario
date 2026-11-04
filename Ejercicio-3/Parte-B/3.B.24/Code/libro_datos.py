@@ -39,6 +39,8 @@ FUENTES = [
      "plazo (THREEFY1, THREEFY2, THREEFY10, THREEFYTP10), vía FRED", "https://fred.stlouisfed.org/series/THREEFYTP10"),
     ("F10", "Banco de la Reserva Federal de Atlanta, Wu-Xia shadow federal funds rate (WU y XIA, 2016)",
      "https://www.atlantafed.org/research-and-data/data/wu-xia-shadow-federal-funds-rate"),
+    ("F11", "Banco de la Reserva Federal de San Luis, inflación implícita a 10 años (T10YIE) y a 5 años dentro de 5 "
+     "(T5YIFR), vía FRED", "https://fred.stlouisfed.org/series/T5YIFR"),
     ("F0", "Cálculo propio (sin datos)", ""),
 ]
 TRATAMIENTOS = [
