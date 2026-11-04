@@ -405,7 +405,7 @@ def brecha():
 # b2_variantes: variantes del bono ordinario ordenadas, en cada riesgo, por el que dejan al inversor (izquierda, menos
 #   riesgo y menor rendimiento; derecha, más riesgo y mayor rendimiento); esquemática.
 # b2_liquidez: precios a los que vende (P_v) y compra (P_c) un intermediario según la cantidad, en un bono líquido
-#   (horquilla 0,25 y pendiente 0,08) y en uno poco líquido (0,9 y 0,32); esquemática, sin escala.
+#   (horquilla 0,25 y pendiente 0,08) y en uno poco líquido (0,9 y 0,26); esquemática, sin escala.
 # b2_referencia: rendimiento a un mismo plazo de la deuda alemana y de la de otro Estado del euro, con la prima de
 #   riesgo descompuesta; esquemática, sin escala.
 def variantes():
@@ -440,15 +440,15 @@ def variantes():
 
 
 def liquidez():
-    Q, V, alto = 4.6, 1.9, 3.8
-    paneles = [("Bono líquido", 0.0, 0.25, 0.08), ("Bono poco líquido", 6.6, 0.9, 0.32)]
+    Q, V, alto = 4.6, 2.1, 4.1
+    paneles = [("Bono líquido", 0.0, 0.25, 0.08), ("Bono poco líquido", 6.6, 0.9, 0.26)]
     out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
     for titulo, x0, h, k in paneles:
         out.append(rf"\begin{{scope}}[xshift={x0}cm]")
         out.append(rf"\node[font=\footnotesize\bfseries, anchor=west] at (-0.1,{alto+0.45:.2f}) {{{titulo}}};")
         out.append(rf"\draw[->] (0,0) -- ({Q+0.4:.2f},0) node[below left] {{Cantidad}};")
         out.append(rf"\draw[->] (0,0) -- (0,{alto:.2f}) node[above] {{Precio}};")
-        out.append(rf"\draw[densely dotted] (0,{V:.2f}) -- ({Q:.2f},{V:.2f});")
+        out.append(rf"\draw[densely dotted] (0.6,{V:.2f}) -- ({Q:.2f},{V:.2f});")
         out.append(rf"\node[left] at (0,{V:.2f}) {{$V$}};")
         out.append(rf"\draw[very thick] (0,{V+h/2:.3f}) -- ({Q:.2f},{V+h/2+k*Q:.3f}) node[right] {{$P_v$}};")
         out.append(rf"\draw[very thick, black!45] (0,{V-h/2:.3f}) -- ({Q:.2f},{V-h/2-k*Q:.3f}) node[right] {{$P_c$}};")
