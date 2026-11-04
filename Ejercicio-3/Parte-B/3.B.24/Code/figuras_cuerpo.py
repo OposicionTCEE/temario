@@ -401,7 +401,99 @@ def brecha():
              + "\n".join(out) + "\n")
 
 
+# =====================  Tanda T11 (bloque 2, «Mercados»)  =====================
+# b2_variantes: variantes del bono ordinario ordenadas, en cada riesgo, por el que dejan al inversor (izquierda, menos
+#   riesgo y menor rendimiento; derecha, más riesgo y mayor rendimiento); esquemática.
+# b2_liquidez: precios a los que vende (P_v) y compra (P_c) un intermediario según la cantidad, en un bono líquido
+#   (horquilla 0,25 y pendiente 0,08) y en uno poco líquido (0,9 y 0,32); esquemática, sin escala.
+# b2_referencia: rendimiento a un mismo plazo de la deuda alemana y de la de otro Estado del euro, con la prima de
+#   riesgo descompuesta; esquemática, sin escala.
+def variantes():
+    filas = [("Tipo de interés", 2.2, ["Con opción de venta", "Tipo variable"], ["Amortizable anticipadamente"]),
+             ("Inflación", 1.1, ["Indexado"], []),
+             ("Crédito", 0.0, ["Cédula"], ["Subordinado", "Convertible contingente"])]
+    xs_izq, xs_der = [-2.5, -4.85], [2.5, 4.85]
+    caja = (r"rounded corners=2pt, fill=black!7, draw=black!45, text width=2.0cm, align=center, minimum height=0.62cm,"
+            r" inner sep=2pt, font=\footnotesize")
+    out = [r"\begin{tikzpicture}[>={Stealth[length=4pt]}]"]
+    out.append(r"\fill[black!22, rounded corners=2pt] (-0.85,-0.42) rectangle (0.85,2.62);")
+    out.append(r"\node[align=center, font=\footnotesize\bfseries] at (0,1.1) {Bono\\ordinario};")
+    for nombre, y, izq, der in filas:
+        out.append(rf"\node[anchor=west, font=\footnotesize\bfseries] at (-8.25,{y:.2f}) {{{nombre}}};")
+        prev = -0.85
+        for x, et in zip(xs_izq, izq):
+            out.append(rf"\node[{caja}] (n) at ({x:.2f},{y:.2f}) {{{et}}};")
+            out.append(rf"\draw[->, black!60] ({prev:.2f},{y:.2f}) -- (n.east);")
+            prev = x - 1.06
+        prev = 0.85
+        for x, et in zip(xs_der, der):
+            out.append(rf"\node[{caja}] (n) at ({x:.2f},{y:.2f}) {{{et}}};")
+            out.append(rf"\draw[->, black!60] ({prev:.2f},{y:.2f}) -- (n.west);")
+            prev = x + 1.06
+    out.append(r"\draw[<->, thick] (-5.9,-0.95) -- (5.9,-0.95);")
+    out.append(r"\node[anchor=east, font=\footnotesize] at (-5.95,-0.95) {$-$};")
+    out.append(r"\node[anchor=west, font=\footnotesize] at (5.95,-0.95) {$+$};")
+    out.append(r"\node[anchor=north, font=\footnotesize] at (0,-1.05) {Riesgo para el inversor y rendimiento exigido};")
+    out.append(r"\end{tikzpicture}")
+    escribir("b2_variantes", _cabecera("b2_variantes", "B2, «Variantes»: variantes del bono ordinario según el riesgo que"
+                                       " reparten; esquemática") + "\n".join(out) + "\n")
+
+
+def liquidez():
+    Q, V, alto = 4.6, 1.9, 3.8
+    paneles = [("Bono líquido", 0.0, 0.25, 0.08), ("Bono poco líquido", 6.6, 0.9, 0.32)]
+    out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
+    for titulo, x0, h, k in paneles:
+        out.append(rf"\begin{{scope}}[xshift={x0}cm]")
+        out.append(rf"\node[font=\footnotesize\bfseries, anchor=west] at (-0.1,{alto+0.45:.2f}) {{{titulo}}};")
+        out.append(rf"\draw[->] (0,0) -- ({Q+0.4:.2f},0) node[below left] {{Cantidad}};")
+        out.append(rf"\draw[->] (0,0) -- (0,{alto:.2f}) node[above] {{Precio}};")
+        out.append(rf"\draw[densely dotted] (0,{V:.2f}) -- ({Q:.2f},{V:.2f});")
+        out.append(rf"\node[left] at (0,{V:.2f}) {{$V$}};")
+        out.append(rf"\draw[very thick] (0,{V+h/2:.3f}) -- ({Q:.2f},{V+h/2+k*Q:.3f}) node[right] {{$P_v$}};")
+        out.append(rf"\draw[very thick, black!45] (0,{V-h/2:.3f}) -- ({Q:.2f},{V-h/2-k*Q:.3f}) node[right] {{$P_c$}};")
+        out.append(rf"\draw[decorate, decoration={{brace, amplitude=2.5pt, mirror}}] (0.12,{V-h/2:.3f}) -- (0.12,{V+h/2:.3f})"
+                   r" node[midway, right=3pt] {$h$};")
+        out.append(r"\end{scope}")
+    out.append(r"\end{tikzpicture}")
+    escribir("b2_liquidez", _cabecera("b2_liquidez", "B2, «Secundario»: precios de un intermediario según la cantidad en un"
+                                      " bono líquido y en uno poco líquido; esquemática, sin escala") + "\n".join(out) + "\n")
+
+
+def referencia():
+    rf_h = 2.0
+    piezas = [("Riesgo de crédito", 0.7, MEDIO), ("Liquidez", 0.35, "black!26"), ("Redenominación", 0.5, CLARO)]
+    ancho, paso = 1.25, 2.5
+    out = [r"\begin{tikzpicture}[font=\footnotesize]"]
+    out.append(rf"\draw (-0.5,0) -- ({paso+ancho+0.3:.2f},0);")
+    for k, nombre in enumerate(("Alemania", "Otro Estado del euro")):
+        x0 = k * paso
+        out.append(rf"\fill[{OSCURO}] ({x0:.2f},0) rectangle ({x0+ancho:.2f},{rf_h:.2f});")
+        out.append(rf"\node[below, align=center, text width=2.4cm] at ({x0+ancho/2:.3f},0) {{{nombre}}};")
+    y = rf_h
+    for _, h, tono in piezas:
+        out.append(rf"\fill[{tono}] ({paso:.2f},{y:.3f}) rectangle ({paso+ancho:.2f},{y+h:.3f});")
+        y += h
+    out.append(rf"\draw[decorate, decoration={{brace, amplitude=3.5pt}}] ({paso-0.1:.2f},{rf_h:.2f}) -- ({paso-0.1:.2f},{y:.3f})"
+               r" node[midway, left=4pt] {$s$};")
+    out.append(rf"\draw[densely dotted] (-0.3,{rf_h:.2f}) -- ({paso+ancho+0.2:.2f},{rf_h:.2f});")
+    out.append(rf"\draw[decorate, decoration={{brace, amplitude=4pt, mirror}}] (-0.15,0) -- (-0.15,{rf_h:.2f})"
+               r" node[midway, left=5pt] {$r_f$};")
+    lx, ly = paso + ancho + 0.7, 2.95
+    for k, (nombre, _, tono) in enumerate(reversed(piezas)):
+        yy = ly - 0.5 * k
+        out.append(rf"\fill[{tono}] ({lx:.2f},{yy:.2f}) rectangle ({lx+0.3:.2f},{yy+0.22:.2f});")
+        out.append(rf"\node[anchor=west] at ({lx+0.38:.2f},{yy+0.11:.2f}) {{{nombre}}};")
+    yy = ly - 1.5
+    out.append(rf"\fill[{OSCURO}] ({lx:.2f},{yy:.2f}) rectangle ({lx+0.3:.2f},{yy+0.22:.2f});")
+    out.append(rf"\node[anchor=west] at ({lx+0.38:.2f},{yy+0.11:.2f}) {{Precio del tiempo, $r_f$}};")
+    out.append(r"\end{tikzpicture}")
+    escribir("b2_referencia", _cabecera("b2_referencia", "B2, «Zona del euro»: rendimiento a un mismo plazo de la deuda"
+                                        " alemana y de la de otro Estado del euro; esquemática, sin escala")
+             + "\n".join(out) + "\n")
+
+
 if __name__ == "__main__":
     for f in (flujos, convergencia, precio_rendimiento, diferencial, balanza, tangente, convexidad, pesas_bala,
-              convexidad_negativa, inmunizacion, brecha):
+              convexidad_negativa, inmunizacion, brecha, variantes, liquidez, referencia):
         f()
