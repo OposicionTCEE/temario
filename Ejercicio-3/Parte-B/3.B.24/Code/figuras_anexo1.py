@@ -468,7 +468,7 @@ def convexidad():
     out.append(rf"\node[below] at ({X(0.11):.3f},0) {{$y_0+\Delta y$}};")
     out.append(r"\end{tikzpicture}")
     escribir("anx_convexidad", "% Figura (Anexo I, I.7, «Segundo orden»): curva de precios del bono de referencia, tangente en y0 = 6 % y\n"
-             "% errores de la duración (segmentos grises) con cambios de 3 puntos. Generar con: bash Code/generar_figura.sh anx_convexidad\n"
+             "% errores de la duración (segmentos grises) con cambios de 5 puntos. Generar con: bash Code/generar_figura.sh anx_convexidad\n"
              + "\n".join(out) + "\n")
 
 
