@@ -545,9 +545,9 @@ def inmunizacion():
     for y1, pts in series.items():
         out.append(rf"\addplot[{est[y1]}, mark=none] coordinates {{{coords(pts)}}};")
     out.append(rf"\draw[densely dotted] (axis cs:7.802,{math.floor(lo)}) -- (axis cs:7.802,{math.ceil(hi)});")
-    out.append(r"\node[anchor=south west, font=\footnotesize] at (axis cs:2.3,9.4) {los tipos bajan};")
-    out.append(r"\node[anchor=north west, font=\footnotesize] at (axis cs:2.3,3.2) {los tipos suben};")
-    out.append(r"\node[anchor=west, font=\footnotesize] at (axis cs:20.2,6) {$y_0$};")
+    out.append(r"\node[anchor=west, font=\footnotesize] at (axis cs:20.2,%.3f) {$y_1<y_0$};" % (100 * _rr(20, 0.04)))
+    out.append(r"\node[anchor=west, font=\footnotesize] at (axis cs:20.2,6) {$y_1=y_0$};")
+    out.append(r"\node[anchor=west, font=\footnotesize] at (axis cs:20.2,%.3f) {$y_1>y_0$};" % (100 * _rr(20, 0.08)))
     out.append(r"\end{axis}")
     out.append(r"\end{tikzpicture}")
     escribir("anx_inmunizacion", "% Figura (Anexo I, I.8, «Inmunización»): rentabilidad realizada a cada horizonte del bono de referencia\n"
