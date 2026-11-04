@@ -448,6 +448,19 @@ def main():
                                 "F5", "T0", "Figura anx_qe_eventos (I.16.2)"))
     ev = ["2008-11-25", "2008-12-01", "2008-12-16", "2009-01-28", "2009-03-18", "2009-08-12", "2009-09-23", "2009-11-04"]
     cambios = [(e, round(100 * (d10[e] - d10[dias[dias.index(e) - 1]]))) for e in ev]
+    # A8: historia (II.1) e instrumentos (II.2); cifras citadas sin figura de datos
+    cifras += [("Código de Hammurabi (h. 1800 a. C.): tipo máximo de los préstamos de grano", "33 1/3", "% anual", "F16",
+                "T0", "II.1.1"),
+               ("Primer eurobono (Autostrade, julio de 1963): importe y plazo", "15 millones de dólares a 15 años", "",
+                "F12", "T0", "II.1.5"),
+               ("NextGenerationEU: emisiones previstas hasta 2026 y parte verde", "unos 800 mil millones de euros; hasta 30 %",
+                "", "F13", "T0", "II.1.7"),
+               ("Primer bono verde de NextGenerationEU (12 de octubre de 2021)", "12 mil millones de euros a 15 años", "",
+                "F13", "T0", "II.1.7"),
+               ("Bonos AT1 de Credit Suisse amortizados por orden de FINMA (19 de marzo de 2023)", 16,
+                "mil millones de francos", "F14", "T0", "II.2.5"),
+               ("Primer bono verde del Tesoro (septiembre de 2021, vencimiento 30/07/2042): importe y demanda",
+                "unos 5 mil millones; demanda de unos 60 mil millones", "euros", "F15", "T0", "II.2.8")]
     cifras.append(("Cambio de un día del tipo a 10 años en los anuncios de compras de 2008-2009",
                    "; ".join(f"{e}: {c:+d}" for e, c in cambios) + f"; suma {sum(c for _, c in cambios):+d}",
                    "puntos básicos", "F5", "T14", "I.16.2"))
