@@ -42,6 +42,15 @@ TRATAMIENTOS = [
     ("T2", "Cálculo con las fórmulas del anexo I (valor actual con tipo único y reinversión al mismo tipo)."),
     ("T3", "Diferencia mensual entre el rendimiento Baa de Moody's y el del Tesoro a 10 años (puntos porcentuales)."),
     ("T4", "Meses de recesión según el NBER (valor 1), agrupados en tramos para sombrearlos en la figura."),
+    ("T5", "Pendiente de la curva de EE. UU.: GS10 menos GS3M (puntos porcentuales), mensual desde 1982-01; media y "
+           "porcentaje de meses con pendiente negativa."),
+    ("T6", "Variaciones mensuales (primeras diferencias) de los rendimientos de GS3M a GS10 desde 1982-01: correlaciones "
+           "entre plazos y componentes principales de su matriz de covarianzas (signos de la figura: nivel positivo, "
+           "pendiente creciente con el plazo, curvatura positiva en el extremo corto)."),
+    ("T7", "España: tipo interbancario a tres meses menos rendimiento de la deuda pública a largo plazo (OCDE), mensual; "
+           "tramos de meses con diferencia positiva (curva invertida)."),
+    ("T8", "Cálculo con las fórmulas de la segunda parte del anexo I: factores de descuento despejados bono a bono y "
+           "tipos al contado, a plazo y par con capitalización anual."),
 ]
 SERIES = [  # (código FRED, país, indicador, unidad, fuente, tratamiento, uso)
     ("IRLTLT01DEM156N", "Alemania", "Rendimiento de la deuda pública a 10 años (media mensual)", "% anual", "F1", "T1",
