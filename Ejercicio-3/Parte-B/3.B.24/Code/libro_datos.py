@@ -41,6 +41,15 @@ FUENTES = [
      "https://www.atlantafed.org/research-and-data/data/wu-xia-shadow-federal-funds-rate"),
     ("F11", "Banco de la Reserva Federal de San Luis, inflación implícita a 10 años (T10YIE) y a 5 años dentro de 5 "
      "(T5YIFR), vía FRED", "https://fred.stlouisfed.org/series/T5YIFR"),
+    ("F12", "International Capital Market Association, History of the Eurobond market",
+     "https://www.icmagroup.org/about-icma/history/history-of-the-eurobond-market/"),
+    ("F13", "Comisión Europea, NextGenerationEU green bonds",
+     "https://commission.europa.eu/strategy-and-policy/eu-budget/eu-borrower-investor-relations/nextgenerationeu-green-bonds_en"),
+    ("F14", "CNBC (23 de marzo de 2023), Swiss regulator says central bank loan to Credit Suisse justified AT1 bond writedown",
+     "https://www.cnbc.com/2023/03/23/swiss-regulator-says-central-bank-loan-to-credit-suisse-justified-at1-bond-writedown.html"),
+    ("F15", "Energías Renovables (8 de septiembre de 2021), España recibe una demanda de 60.000 millones para su primer bono verde",
+     "https://www.energias-renovables.com/panorama/espana-recibe-una-demanda-de-60-000-20210908"),
+    ("F16", "HOMER, S., y SYLLA, R. (2005), A history of interest rates, 4.ª ed., Wiley", ""),
     ("F0", "Cálculo propio (sin datos)", ""),
 ]
 TRATAMIENTOS = [
