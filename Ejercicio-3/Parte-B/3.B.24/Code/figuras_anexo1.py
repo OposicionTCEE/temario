@@ -1001,7 +1001,7 @@ def inflacion_implicita():
     p55 = [(_anio(m), f55[m]) for m in meses]
     x0, x1, ymin, ymax = p10[0][0], p10[-1][0], 0, 3.2
     out = [r"\begin{tikzpicture}[font=\footnotesize]"]
-    out.append(rf"\begin{{axis}}[width=13.4cm, height=5.8cm, axis lines=left, xmin={x0:.3f}, xmax={x1:.3f}, ymin={ymin}, ymax={ymax},"
+    out.append(rf"\begin{{axis}}[width=13.4cm, height=5.0cm, axis lines=left, xmin={x0:.3f}, xmax={x1:.3f}, ymin={ymin}, ymax={ymax},"
                r" xtick={2005,2010,2015,2020,2025}, ytick={0,1,2,3},"
                r" /pgf/number format/use comma, /pgf/number format/1000 sep={}, tick label style={font=\scriptsize},"
                r" label style={font=\footnotesize}, ylabel={\%}, clip=false]")
