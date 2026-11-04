@@ -985,4 +985,5 @@ if __name__ == "__main__":
     print("Escritas: anx_perfiles, anx_convergencia, anx_precio_sucio, anx_precio_rendimiento, anx_fuentes,"
           " anx_arbol_impago, anx_diferencial_credito, anx_clientelas, anx_descomposicion, anx_balanza, anx_tangente,"
           " anx_duracion_vencimiento, anx_convexidad, anx_pesas_bala, anx_convexidad_negativa, anx_inmunizacion,"
-          " anx_redington, anx_brecha, anx_curvas, anx_nelson_siegel, anx_curvas_eeuu, anx_componentes")
+          " anx_redington, anx_brecha, anx_curvas, anx_nelson_siegel, anx_curvas_eeuu, anx_componentes,"
+          " anx_expectativas, anx_plazo_realizado, anx_prima, anx_prima_kw, anx_vasicek, anx_sombra")
