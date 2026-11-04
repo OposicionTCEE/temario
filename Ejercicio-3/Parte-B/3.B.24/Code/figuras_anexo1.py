@@ -570,7 +570,7 @@ def redington():
                r" x label style={anchor=west}, y label style={anchor=south}, clip=false]")
     out.append(rf"\addplot[very thick, mark=none] coordinates {{{coords(s1)}}};")
     out.append(rf"\addplot[very thick, black!45, mark=none] coordinates {{{coords(s2)}}};")
-    out.append(r"\node[anchor=south, font=\footnotesize] at (axis cs:3.3,3.2) {$D_A=D_L$, más dispersión};")
+    out.append(r"\node[anchor=south, font=\footnotesize] at (axis cs:3.6,3.2) {$D_A=D_L$, $M_A^2>M_L^2$};")
     out.append(r"\node[anchor=north west, font=\footnotesize] at (axis cs:2.4,-20) {$D_A<D_L$};")
     out.append(r"\end{axis}")
     out.append(r"\end{tikzpicture}")
