@@ -692,6 +692,6 @@ def politica():
 
 if __name__ == "__main__":
     for f in (flujos, convergencia, precio_rendimiento, diferencial, balanza, tangente, convexidad, pesas_bala,
-              convexidad_negativa, inmunizacion, brecha, variantes, liquidez, referencia, curvas, bootstrapping,
+              convexidad_negativa, inmunizacion, variantes, liquidez, referencia, curvas, bootstrapping,
               factores, expectativas, plazo_realizado, oferta, politica):
         f()
