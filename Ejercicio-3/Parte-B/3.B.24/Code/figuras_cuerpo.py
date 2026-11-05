@@ -709,7 +709,8 @@ def realizada():
     Y = lambda p: p * sy
     P0, P1 = Pf(y0), Pf(y1)
     out.append(rf"\node[anchor=south] at ({X(ymax)/2:.2f},{Y(178):.2f}) {{Precio hoy}};")
-    out.append(rf"\draw[->] (0,0) -- ({X(ymax)+0.3:.2f},0) node[below left] {{Rendimiento, $y$}};")
+    out.append(rf"\draw[->] (0,0) -- ({X(ymax)+0.3:.2f},0);")
+    out.append(rf"\node[anchor=north east] at ({X(ymax)+0.3:.2f},-0.42) {{Rendimiento, $y$}};")
     out.append(rf"\draw[->] (0,0) -- (0,{Y(170):.2f}) node[above] {{$P$}};")
     out.append(rf"\draw[very thick] plot[smooth] coordinates {{{_curva(Pf, 0, ymax, X, Y)}}};")
     out.append(rf"\draw[densely dotted] ({X(y0):.3f},0) -- ({X(y0):.3f},{Y(P0):.3f}) -- (0,{Y(P0):.3f});")
@@ -728,7 +729,8 @@ def realizada():
     U = lambda y: x0 + (y - a) * sx2
     V = lambda g: cero + g * sy2
     out.append(rf"\node[anchor=south] at ({U((a+b)/2):.2f},{Y(178):.2f}) {{En el horizonte, $H$}};")
-    out.append(rf"\draw[->] ({x0:.2f},0) -- ({U(b)+0.4:.2f},0) node[below left] {{Tipo tras la compra, $y$}};")
+    out.append(rf"\draw[->] ({x0:.2f},0) -- ({U(b)+0.4:.2f},0);")
+    out.append(rf"\node[anchor=north east] at ({U(b)+0.4:.2f},-0.42) {{Rendimiento tras la compra, $y$}};")
     out.append(rf"\draw[->] ({x0:.2f},0) -- ({x0:.2f},{Y(170):.2f}) node[above] {{Ganancia en $H$}};")
     out.append(rf"\draw[densely dotted] ({x0:.2f},{V(0):.3f}) -- ({U(b):.3f},{V(0):.3f});")
     out.append(rf"\node[left] at ({x0:.2f},{V(0):.3f}) {{$0$}};")
