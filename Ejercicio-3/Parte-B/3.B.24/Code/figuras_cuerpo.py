@@ -750,6 +750,6 @@ def realizada():
 
 if __name__ == "__main__":
     for f in (flujos, convergencia, precio_rendimiento, diferencial, balanza, tangente, convexidad, pesas_bala,
-              convexidad_negativa, inmunizacion, variantes, liquidez, referencia, curvas, bootstrapping,
-              factores, expectativas, plazo_realizado, oferta, politica):
+              convexidad_negativa, variantes, liquidez, referencia, curvas, bootstrapping,
+              factores, expectativas, plazo_realizado, oferta, politica, realizada):
         f()
