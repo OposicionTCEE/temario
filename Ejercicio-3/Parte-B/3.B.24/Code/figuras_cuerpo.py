@@ -690,6 +690,64 @@ def politica():
                                       " teoría que los sostiene; esquemática") + "\n".join(out) + "\n")
 
 
+# =====================  Segunda pasada, S2 (bloque 1: Precio y Rendimiento)  =====================
+# b1_realizada: dos paneles con el rendimiento en el eje horizontal. Izquierda, la curva común precio-rendimiento
+#   (c = 6 %, T = 10): una subida de y0 = 6 % a y1 = 9 % baja el precio de 100 a 80,75. Derecha, ganancia en el
+#   horizonte H = D = 7,80 años según el tipo que rige tras la compra (3 % a 9 %): precio de venta del bono
+#   (cae unos 6 puntos con el 9 %), cupones reinvertidos (suben unos 6,4) y total (sube 0,6 en los extremos).
+def realizada():
+    c, T, N, y0, y1 = 0.06, 10, 100.0, 0.06, 0.09
+    CF = [(t, c * N + (N if t == T else 0)) for t in range(1, T + 1)]
+    Pf = lambda y: sum(f / (1 + y) ** t for t, f in CF)
+    H = sum(t * f / (1 + y0) ** t for t, f in CF) / Pf(y0)
+    venta = lambda y: sum(f / (1 + y) ** (t - H) for t, f in CF if t > H)
+    reinv = lambda y: sum(f * (1 + y) ** (H - t) for t, f in CF if t <= H)
+    out = [r"\begin{tikzpicture}[font=\footnotesize, >={Stealth[length=4pt]}]"]
+    # Izquierda: la curva común
+    sx, sy, ymax = 36.0, 0.023, 0.14
+    X = lambda y: y * sx
+    Y = lambda p: p * sy
+    P0, P1 = Pf(y0), Pf(y1)
+    out.append(rf"\node[anchor=south] at ({X(ymax)/2:.2f},{Y(178):.2f}) {{Precio hoy}};")
+    out.append(rf"\draw[->] (0,0) -- ({X(ymax)+0.3:.2f},0) node[below left] {{Rendimiento, $y$}};")
+    out.append(rf"\draw[->] (0,0) -- (0,{Y(170):.2f}) node[above] {{$P$}};")
+    out.append(rf"\draw[very thick] plot[smooth] coordinates {{{_curva(Pf, 0, ymax, X, Y)}}};")
+    out.append(rf"\draw[densely dotted] ({X(y0):.3f},0) -- ({X(y0):.3f},{Y(P0):.3f}) -- (0,{Y(P0):.3f});")
+    out.append(rf"\draw[densely dotted] ({X(y1):.3f},0) -- ({X(y1):.3f},{Y(P1):.3f}) -- (0,{Y(P1):.3f});")
+    out.append(rf"\draw[densely dotted] ({X(y0):.3f},{Y(P0):.3f}) -- ({X(y1)+0.25:.3f},{Y(P0):.3f});")
+    out.append(rf"\draw[->, thick] ({X(y1)+0.25:.3f},{Y(P0):.3f}) -- ({X(y1)+0.25:.3f},{Y(P1)+0.03:.3f});")
+    out.append(rf"\node[anchor=west] at ({X(y1)+0.3:.3f},{Y((P0+P1)/2):.3f}) {{$\Delta P<0$}};")
+    for y, P in ((y0, P0), (y1, P1)):
+        out.append(rf"\fill ({X(y):.3f},{Y(P):.3f}) circle (1.6pt);")
+    out.append(rf"\node[below] at ({X(y0):.3f},0) {{$y_0$}};")
+    out.append(rf"\node[below] at ({X(y1):.3f},0) {{$y_1$}};")
+    out.append(rf"\node[left] at (0,{Y(P0):.3f}) {{$P_0$}};")
+    out.append(rf"\node[left] at (0,{Y(P1):.3f}) {{$P_1$}};")
+    # Derecha: lo que ocurre en el horizonte
+    x0, a, b, sx2, cero, sy2 = 7.0, 0.03, 0.09, 75.0, 1.95, 0.27
+    U = lambda y: x0 + (y - a) * sx2
+    V = lambda g: cero + g * sy2
+    out.append(rf"\node[anchor=south] at ({U((a+b)/2):.2f},{Y(178):.2f}) {{En el horizonte, $H$}};")
+    out.append(rf"\draw[->] ({x0:.2f},0) -- ({U(b)+0.4:.2f},0) node[below left] {{Tipo tras la compra, $y$}};")
+    out.append(rf"\draw[->] ({x0:.2f},0) -- ({x0:.2f},{Y(170):.2f}) node[above] {{Ganancia en $H$}};")
+    out.append(rf"\draw[densely dotted] ({x0:.2f},{V(0):.3f}) -- ({U(b):.3f},{V(0):.3f});")
+    out.append(rf"\node[left] at ({x0:.2f},{V(0):.3f}) {{$0$}};")
+    curvas = [(lambda y: venta(y) - venta(y0), "thick, black!45", "precio de venta"),
+              (lambda y: reinv(y) - reinv(y0), "thick, densely dashed", "cupones reinvertidos"),
+              (lambda y: venta(y) + reinv(y) - venta(y0) - reinv(y0), "very thick", "total")]
+    for f, est, et in curvas:
+        out.append(rf"\draw[{est}] plot[smooth] coordinates {{{_curva(f, a, b, U, V)}}};")
+        out.append(rf"\node[anchor=west] at ({U(b)+0.05:.3f},{V(f(b)):.3f}) {{{et}}};")
+    out.append(rf"\draw[densely dotted] ({U(y0):.3f},0) -- ({U(y0):.3f},{V(0):.3f});")
+    out.append(rf"\fill ({U(y0):.3f},{V(0):.3f}) circle (1.6pt);")
+    out.append(rf"\node[below] at ({U(y0):.3f},0) {{$y_0$}};")
+    out.append(r"\end{tikzpicture}")
+    g = lambda y: venta(y) + reinv(y) - venta(y0) - reinv(y0)
+    escribir("b1_realizada", _cabecera("b1_realizada", f"B1, «Rentabilidad realizada»: c = 6 %, T = 10, y0 = 6 %; H = D ="
+                                       f" {H:.2f}; con y = 9 %: venta {venta(y1)-venta(y0):+.2f}, reinversión"
+                                       f" {reinv(y1)-reinv(y0):+.2f}, total {g(y1):+.2f}") + "\n".join(out) + "\n")
+
+
 if __name__ == "__main__":
     for f in (flujos, convergencia, precio_rendimiento, diferencial, balanza, tangente, convexidad, pesas_bala,
               convexidad_negativa, inmunizacion, variantes, liquidez, referencia, curvas, bootstrapping,
