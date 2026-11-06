@@ -249,7 +249,7 @@ def fig_bigmac(bm, pib25):
     recta = [(x, math.exp(a + b * math.log(x))) for x in (900.0, 2000.0, 5000.0, 10000.0, 20000.0, 50000.0, 140000.0)]
     pus = float(us["dollar_price"])
     tikz = "% Precio de un Big Mac en dólares (edición de julio de 2026) y PIB por habitante de 2025 en dólares\n"
-    tikz += "% (The Economist, big-mac-data; Banco Mundial, NY.GDP.PCAP.CD; %d economías). Línea discontinua: precio en EE. UU.;\n" % len(filas)
+    tikz += "%% (The Economist, big-mac-data; Banco Mundial, NY.GDP.PCAP.CD; %d economías). Línea discontinua: precio en EE. UU.;\n" % len(filas)
     tikz += "% recta: regresión en logaritmos. Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_bigmac\n"
     tikz += "\\begin{tikzpicture}\n" + EJES
     tikz += r"""  xmode=log, xmin=800, xmax=150000, ymin=0, ymax=10.5,
