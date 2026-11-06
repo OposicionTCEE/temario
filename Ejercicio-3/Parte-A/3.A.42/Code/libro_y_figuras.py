@@ -918,10 +918,23 @@ def main():
         cron.append(["CEPR", "Zona del euro", p, v, None, "trimestres", "CEPR; 2008T1-2009T2 sin comprobar en la página del comité"])
     for p, v, d, ap, av in NBER_DESDE_1990:
         cron.append(["NBER", "Estados Unidos", p, v, d, "meses", "NBER; anuncios del pico el %s y del valle el %s" % (ap, av)])
+    for s, nombre in SERIES_A2.items():
+        fuentes.append([s, nombre, "Estados Unidos", "ver FRED", "trimestral o mensual (media trimestral)", "FRED, Banco de la Reserva Federal de San Luis", FRED + s, FECHA_DESCARGA])
+    fuentes.append(["ALFRED GDPC1", "Ediciones del PIB real de EE. UU., diciembre de 1991-2019", "Estados Unidos", "miles de millones de dólares encadenados de cada edición",
+                    "trimestral", "ALFRED, Banco de la Reserva Federal de San Luis", "https://alfred.stlouisfed.org/series?seid=GDPC1", FECHA_DESCARGA])
+    for nombre, consulta in EUROSTAT.items():
+        fuentes.append(["Eurostat " + consulta.split("?")[0], nombre, "España y zona del euro", "CLV10_MEUR, PD10_EUR, THS_PER o THS_HW", "trimestral",
+                        "Eurostat", "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/" + consulta, FECHA_DESCARGA])
+    for b, nombre in (("WS_TC", "Crédito total al sector privado no financiero"), ("WS_CREDIT_GAP", "Brechas de crédito sobre el PIB"),
+                      ("WS_SPP", "Precios de la vivienda seleccionados")):
+        fuentes.append(["BPI " + b, nombre, "España y Estados Unidos", "porcentaje del PIB o índice 2010 = 100", "trimestral",
+                        "Banco de Pagos Internacionales", "https://data.bis.org/static/bulk/%s_csv_flat.zip" % b, FECHA_DESCARGA])
     cif = [["Cifra", "Valor", "Unidad", "Apartado"]] + [list(c) for c in cifras]
     simul = [["Simulación", "Descripción", "Figura"]] + [list(s) for s in sint]
+    mom = [["País", "Variable", "Estadístico", "Valor", "Muestra", "Filtro"]] + [list(m) for m in momentos]
     escribir_xlsx(os.path.join(TEMA, "Code", "datos_3A42.xlsx"),
-                  [("Léeme", leeme), ("Fuentes", fuentes), ("Series", filas), ("Cronologías", cron), ("Cifras_citadas", cif), ("Simulaciones", simul)])
+                  [("Léeme", leeme), ("Fuentes", fuentes), ("Series", filas), ("Cronologías", cron), ("Cifras_citadas", cif), ("Momentos", mom),
+                   ("Simulaciones", simul)])
     for c in cifras:
         print("%-75s %s %s" % (c[0], c[1], c[2]))
 
