@@ -730,7 +730,7 @@ def con_datos_a2(carpeta, filas_series, cifras, momentos):
     def linea(nombre, estilo, etiqueta):
         return "\\addplot[%s] coordinates {%s};\n\\addlegendentry{%s}" % (estilo, " ".join("(%d,%.3f)" % (k, t_us[nombre][2][k]) for k in ks), etiqueta)
 
-    def panel_c(nombre, titulo, lugar, lineas, pos_ley=("{(0.5,-0.36)}", "north")):
+    def panel_c(nombre, titulo, lugar, lineas, pos_ley=("{(0.5,-0.24)}", "north")):
         return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=6.2cm, height=4.6cm, scale only axis, %s,\n"
                 "    xmin=-4, xmax=4, xtick={-4,...,4}, ymin=-1, ymax=1, xlabel={$k$ (trimestres)}, ylabel={Correlación de $x_{t+k}$ con $y_t$},\n"
                 "    title={%s}, title style={font=\\footnotesize}, legend style={draw=none, fill=none, font=\\footnotesize, at={%s}, anchor=%s}, legend columns=3,\n"
@@ -744,7 +744,7 @@ def con_datos_a2(carpeta, filas_series, cifras, momentos):
     fig += panel_c("b", "(b) Variables nominales", "{($(a.north east)+(1.5cm,0)$)}", [linea("Nivel de precios", "black, thick, mark=*, mark size=1.2pt", "nivel de precios"),
                                                                                      linea("Inflación", "black!55, dashed, mark=square*, mark size=1.2pt", "inflación"),
                                                                                      linea("Tipo de interés a corto", "black!80, dotted, thick, mark=triangle*, mark size=1.5pt", "tipo de interés")],
-                   pos_ley=("{(0.5,-0.36)}", "north"))
+                   pos_ley=("{(0.5,-0.24)}", "north"))
     fig += "\\end{tikzpicture}"
     escribir("anx_adelantos", fig, "Correlaciones cruzadas del ciclo HP de cada variable con el del PIB de EE. UU., 1950-2019.")
 
