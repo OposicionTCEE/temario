@@ -68,6 +68,11 @@ def decimal(fecha):  # "1947-04-01" -> 1947.25 (trimestres y meses, al inicio de
     return int(a) + (int(m) - 1) / 12.0
 
 
+def mates(etiqueta):  # "2007T4" -> "$2007$T$4$": cifras modernas en las figuras (EB Garamond pone cifras antiguas)
+    a, t = etiqueta.split("T")
+    return "$%s$T$%s$" % (a, t)
+
+
 def trimestre(x):  # 1947.25 -> "1947T2"
     a = int(math.floor(x + 1e-9))
     return "%dT%d" % (a, int(round((x - a) * 4)) + 1)
@@ -169,7 +174,7 @@ def escribir(nombre, cuerpo, comentario):
 # ---------------------------------------------------------------- figuras sintéticas
 def sinteticas(filas_series):
     t = np.arange(0, 97)
-    amplitud = 3.75 + 1.25 * np.cos(2 * math.pi * t / 64.0)
+    amplitud = 3.75 - 1.25 * np.cos(2 * math.pi * (t - 48) / 64.0)  # ciclo central suave: baja la desviación, no el nivel
     ciclo = amplitud * np.sin(2 * math.pi * t / 32.0)
     tendencia = 0.75 * t
     y = tendencia + ciclo
@@ -280,7 +285,7 @@ def con_datos(carpeta, filas_series, cifras):
     rec_e = [(xt(p), xt(v)) for p, v, _ in AEE if xt(p) >= 1995]
     cuerpo = sombras(rec_e, 80) + "\n\\addplot[black, thick] coordinates {%s};" % coords(xe, ie)
     fig = ("\\begin{tikzpicture}\n\\begin{axis}[width=14.5cm, height=5.2cm, scale only axis, %s,\n"
-           "    ymin=50, ymax=112, xmin=1995, xmax=2026.75, xtick={1995,2000,...,2025}, ylabel={Índice, $2019=100$}]\n%s\n\\end{axis}\n\\end{tikzpicture}"
+           "    ymin=50, ymax=120, ytick={60,80,100,120}, xmin=1995, xmax=2026.75, xtick={1995,2000,...,2025}, ylabel={Índice, $2019=100$}]\n%s\n\\end{axis}\n\\end{tikzpicture}"
            % (ESTILO, cuerpo))
     escribir("anx_espana_aee", fig, "PIB real de España (FRED, CLVMNACSCAB1GQES) con las recesiones del comité de la AEE sombreadas.")
 
@@ -294,7 +299,7 @@ def con_datos(carpeta, filas_series, cifras):
     rec_m = tramos(xm, [mapa_m[x] for x in xm], 1 / 12.0)
     cuerpo = sombras(rec_m, 50) + "\n\\addplot[black, thick] coordinates {%s};" % coords(xp, vp, 2)
     fig = ("\\begin{tikzpicture}\n\\begin{axis}[width=14.5cm, height=4.8cm, scale only axis, %s,\n"
-           "    ymin=0, ymax=100, xmin=1967, xmax=2027, xtick={1970,1980,...,2020}, ylabel={Probabilidad de recesión (\\%%)}]\n%s\n\\end{axis}\n\\end{tikzpicture}"
+           "    ymin=0, ymax=105, ytick={0,20,...,100}, xmin=1967, xmax=2027, xtick={1970,1980,...,2020}, ylabel={Probabilidad de recesión (\\%%)}]\n%s\n\\end{axis}\n\\end{tikzpicture}"
            % (ESTILO, cuerpo))
     escribir("anx_probabilidad", fig, "Probabilidades suavizadas de recesión (FRED, RECPROUSM156N) con las recesiones del NBER (USREC) sombreadas.")
 
@@ -329,18 +334,18 @@ def con_datos(carpeta, filas_series, cifras):
     cuerpo = sombras([(2007.75, 2009.25)], 0)
     vent = (xs >= 2003) & (xs <= 2010.75)
     cuerpo += "\n\\addplot[black, very thick] coordinates {%s};\n\\addlegendentry{muestra completa (hasta %s)}" % (
-        coords(xs[vent], c_hp[vent]), trimestre(xs[-1]))
+        coords(xs[vent], c_hp[vent]), mates(trimestre(xs[-1])))
     revisiones = []
     for fin, estilo in zip(finales, estilos):
         k = int(np.where(np.isclose(xs, xt(fin)))[0][0]) + 1
         c_parcial, _ = hp(y[:k])
         v2 = (xs[:k] >= 2003)
-        cuerpo += "\n\\addplot[%s] coordinates {%s};\n\\addlegendentry{datos hasta %s}" % (estilo, coords(xs[:k][v2], c_parcial[v2]), fin)
+        cuerpo += "\n\\addplot[%s] coordinates {%s};\n\\addlegendentry{datos hasta %s}" % (estilo, coords(xs[:k][v2], c_parcial[v2]), mates(fin))
         revisiones.append((fin, c_parcial[-1], c_hp[k - 1]))
     cuerpo += "\n\\addplot[black!40, thin, forget plot] coordinates {(2003,0) (2010.75,0)};"
     fig = ("\\begin{tikzpicture}\n\\begin{axis}[width=14.5cm, height=5.4cm, scale only axis, %s,\n"
            "    xmin=2003, xmax=2010.75, xtick={2003,2004,...,2010}, ylabel={Ciclo HODRICK-PRESCOTT (\\%%)},\n"
-           "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.01,0.03)}, anchor=south west}, legend cell align=left]\n%s\n\\end{axis}\n\\end{tikzpicture}"
+           "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.01,0.99)}, anchor=north west}, legend cell align=left]\n%s\n\\end{axis}\n\\end{tikzpicture}"
            % (ESTILO, cuerpo))
     escribir("anx_extremos", fig, "El problema de los extremos: ciclo HP del PIB real de EE. UU. estimado con muestras que terminan en fechas distintas.")
     for fin, parcial, final in revisiones:
@@ -358,14 +363,14 @@ def con_datos(carpeta, filas_series, cifras):
         return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=6.6cm, height=4.4cm, scale only axis, %s,\n"
                 "    xmode=log, xmin=2, xmax=200, xtick={2,4,8,16,32,64,128}, xticklabels={$2$,$4$,$8$,$16$,$32$,$64$,$128$},\n"
                 "    ymin=0, ymax=%s, xlabel={Periodo del ciclo (trimestres)}, ylabel={Ganancia}, title={%s}, title style={font=\\footnotesize},\n"
-                "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.98,0.98)}, anchor=north east}, legend cell align=left]\n%s\n\\end{axis}\n"
+                "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.5,0.99)}, anchor=north}, legend columns=2, legend cell align=left]\n%s\n\\end{axis}\n"
                 % (nombre, lugar, ESTILO, ymax, titulo, cuerpo))
 
     fig = "\\begin{tikzpicture}\n"
     fig += panel_g("a", "(a) Filtros que dejan pasar el ciclo", "{(0,0)}",
-                   [("black, thick", "hp", "HODRICK-PRESCOTT"), ("black!55, dashed", "bk", "BAXTER-KING")], "1.2")
+                   [("black, thick", "hp", "HODRICK-PRESCOTT"), ("black!55, dashed", "bk", "BAXTER-KING")], "1.45")
     fig += panel_g("b", "(b) Diferencias", "{($(a.north east)+(1.4cm,0)$)}",
-                   [("black, thick", "d1", "primera diferencia"), ("black!55, dashed", "d8", "diferencia de $8$ trimestres")], "2.1")
+                   [("black, thick", "d1", "primera diferencia"), ("black!55, dashed", "d8", "diferencia de $8$ trimestres")], "2.55")
     fig += "\\end{tikzpicture}"
     escribir("anx_ganancia", fig, "Ganancia de cada filtro según el periodo del ciclo; banda sombreada: de 6 a 32 trimestres.")
     w50 = math.acos(1 - 1 / (2 * math.sqrt(1600.0)))
