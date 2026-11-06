@@ -416,12 +416,485 @@ def con_datos(carpeta, filas_series, cifras):
         filas_series.append(("RECPROUSM156N", "Estados Unidos", f, v, "porcentaje", "FRED (CHAUVET y PIGER)", "nivel", "anx_probabilidad"))
 
 
+# ================================================================ A2 (06/11/2026): producto potencial, hechos estilizados y ciclo financiero
+# Figuras: anx_potencial, anx_tiempo_real, anx_volatilidad, anx_adelantos, anx_desplome, anx_moderacion,
+# anx_ciclo_financiero y anx_brecha_credito. Fuentes adicionales: FRED (GDPPOT, potencial de la CBO; componentes del
+# gasto, horas, empleo, productividad, salario real, deflactor, tipo de las letras del Tesoro y paro), ALFRED (ediciones
+# del PIB real de EE. UU. de diciembre de 1991 a 2019, unos dos meses y medio después de cada trimestre), Eurostat
+# (namq_10_gdp y namq_10_a10_e: PIB, componentes, empleo y horas de España, desde 1995) y BPI (WS_TC, crédito al sector
+# privado no financiero en porcentaje del PIB; WS_CREDIT_GAP, brecha de crédito; WS_SPP, precios reales de la vivienda).
+SERIES_A2 = {
+    "GDPPOT": "PIB potencial real de la CBO", "PCECC96": "Consumo privado real", "DDURRA3Q086SBEA": "Consumo de bienes duraderos (índice de cantidad)",
+    "DNDGRA3Q086SBEA": "Consumo de bienes no duraderos (índice de cantidad)", "DSERRA3Q086SBEA": "Consumo de servicios (índice de cantidad)",
+    "GPDIC1": "Inversión privada real", "A008RA3Q086SBEA": "Inversión fija no residencial (índice de cantidad)",
+    "A011RA3Q086SBEA": "Inversión residencial (índice de cantidad)", "GCEC1": "Consumo e inversión públicos reales",
+    "EXPGSC1": "Exportaciones reales", "IMPGSC1": "Importaciones reales", "HOANBS": "Horas del sector empresarial no agrícola",
+    "PAYEMS": "Empleo asalariado no agrícola", "OPHNFB": "Producción por hora", "COMPRNFB": "Remuneración real por hora",
+    "GDPDEF": "Deflactor del PIB", "TB3MS": "Tipo de las letras del Tesoro a tres meses", "UNRATE": "Tasa de paro"}
+BIS_FICHEROS = ["WS_TC", "WS_CREDIT_GAP", "WS_SPP"]
+EUROSTAT = {"gdp_clv.json": "namq_10_gdp?geo=ES&geo=EA20&unit=CLV10_MEUR&s_adj=SCA&na_item=B1GQ&na_item=P31_S14&na_item=P51G&na_item=P3_S13&na_item=P6&na_item=P7",
+            "gdp_pd.json": "namq_10_gdp?geo=ES&unit=PD10_EUR&s_adj=SCA&na_item=B1GQ",
+            "emp.json": "namq_10_a10_e?geo=ES&geo=EA20&unit=THS_PER&unit=THS_HW&s_adj=SCA&na_item=EMP_DC&nace_r2=TOTAL"}
+CRISIS = {"ES": [1977.0, 2008.0], "US": [1988.0, 2007.75]}  # crisis bancarias sistémicas de LAEVEN y VALENCIA, sin comprobar en la base
+
+
+def descargar_a2(carpeta):
+    import datetime, zipfile, time
+    for s in SERIES_A2:
+        destino = os.path.join(carpeta, s + ".csv")
+        if not os.path.exists(destino):
+            urllib.request.urlretrieve(FRED + s, destino); time.sleep(0.3)
+    for b in BIS_FICHEROS:
+        sub = os.path.join(carpeta, "bis_" + b)
+        if not os.path.isdir(sub):
+            z = os.path.join(carpeta, b + ".zip")
+            urllib.request.urlretrieve("https://data.bis.org/static/bulk/%s_csv_flat.zip" % b, z)
+            zipfile.ZipFile(z).extractall(sub)
+    os.makedirs(os.path.join(carpeta, "eurostat"), exist_ok=True)
+    for nombre, consulta in EUROSTAT.items():
+        destino = os.path.join(carpeta, "eurostat", nombre)
+        if not os.path.exists(destino):
+            urllib.request.urlretrieve("https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/%s&format=JSON&lang=EN" % consulta, destino)
+    os.makedirs(os.path.join(carpeta, "alfred"), exist_ok=True)
+    for a in range(1991, 2020):
+        for q in range(4):
+            fin = (datetime.date(a, 3 * q + 3, 1) + datetime.timedelta(days=31)).replace(day=1) - datetime.timedelta(days=1)
+            v = fin + datetime.timedelta(days=75)
+            destino = os.path.join(carpeta, "alfred", "GDPC1_%s.csv" % v.isoformat())
+            if v < datetime.date(1991, 12, 1) or os.path.exists(destino):
+                continue
+            for desfase in (0, 10, 20):  # la edición del 14/12/2003 (revisión general) termina un trimestre antes: se toma la del 24/12
+                w = v + datetime.timedelta(days=desfase)
+                urllib.request.urlretrieve("https://alfred.stlouisfed.org/graph/alfredgraph.csv?id=GDPC1&vintage_date=%s" % w.isoformat(), destino)
+                filas = [r for r in list(csv.reader(open(destino)))[1:] if r[1] not in (".", "")]
+                if filas and filas[-1][0] == "%d-%02d-01" % (a, 3 * q + 1):
+                    break
+                time.sleep(0.4)
+
+
+def trimestral(filas):  # media de los meses de cada trimestre
+    acum = {}
+    for f, v in filas:
+        a, m, _ = f.split("-")
+        clave = "%s-%02d-01" % (a, 3 * ((int(m) - 1) // 3) + 1)
+        acum.setdefault(clave, []).append(v)
+    return [(k, sum(v) / len(v)) for k, v in sorted(acum.items()) if len(v) == 3]
+
+
+def leer_eurostat(ruta, **sel):
+    import json
+    d = json.load(open(ruta, encoding="utf-8"))
+    ids, tam = d["id"], d["size"]
+    pos = {k: d["dimension"][k]["category"]["index"] for k in ids}
+    salida = {}
+    for t, it in pos["time"].items():
+        indice = 0
+        for k, n in zip(ids, tam):
+            i = it if k == "time" else (pos[k][sel[k]] if k in sel else 0)
+            indice = indice * n + i
+        v = d["value"].get(str(indice))
+        if v is not None:
+            a, q = t.split("-Q")
+            salida["%s-%02d-01" % (a, 3 * int(q) - 2)] = float(v)
+    return sorted(salida.items())
+
+
+def leer_bis(carpeta, fichero, **sel):
+    ruta = os.path.join(carpeta, "bis_" + fichero, fichero + "_csv_flat.csv")
+    salida = []
+    with open(ruta, encoding="utf-8") as f:
+        lector = csv.reader(f)
+        cab = next(lector)
+        idx = {c.split(":")[0]: i for i, c in enumerate(cab)}
+        for fila in lector:
+            if all(fila[idx[k]].split(":")[0] == v for k, v in sel.items()) and fila[idx["OBS_VALUE"]] not in ("", "NaN"):
+                per = fila[idx["TIME_PERIOD"]]
+                if "-Q" in per:
+                    a, q = per.split("-Q")
+                    salida.append(("%s-%02d-01" % (a, 3 * int(q) - 2), float(fila[idx["OBS_VALUE"]])))
+    return sorted(salida)
+
+
+def cf(x, bajo, alto):
+    """Filtro de banda de CHRISTIANO y FITZGERALD (2003), asimétrico, con toda la muestra y supuesto de paseo aleatorio
+    con deriva (se resta la deriva antes de filtrar). Comprobado con una serie sintética: aísla la onda de la banda con
+    correlación 0,99."""
+    x = np.asarray(x, float)
+    n = len(x)
+    a, b = 2 * math.pi / alto, 2 * math.pi / bajo
+    x = x - np.arange(n) * (x[-1] - x[0]) / (n - 1.0)
+    j = np.arange(1, n + 1)
+    pesos = np.r_[(b - a) / math.pi, (np.sin(b * j) - np.sin(a * j)) / (math.pi * j)]
+    y = np.zeros(n)
+    for i in range(n):
+        bb = -0.5 * pesos[0] - np.sum(pesos[1:-i - 2])
+        aa = -pesos[0] - np.sum(pesos[1:-i - 2]) - np.sum(pesos[1:i]) - bb
+        y[i] = pesos[0] * x[i] + np.dot(pesos[1:-i - 2], x[i + 1:-1]) + bb * x[-1] + np.dot(pesos[1:i], x[1:i][::-1]) + aa * x[0]
+    return y
+
+
+def a_dict(filas):
+    return {f: v for f, v in filas}
+
+
+def alinear(dics, desde, hasta):
+    fechas = sorted(set.intersection(*[set(d) for d in dics]))
+    fechas = [f for f in fechas if desde <= f <= hasta]
+    return fechas, [np.array([d[f] for f in fechas]) for d in dics]
+
+
+def con_datos_a2(carpeta, filas_series, cifras, momentos):
+    import datetime
+    pib = a_dict(leer(carpeta, "GDPC1"))
+    recq = a_dict(leer(carpeta, "USRECQ"))
+
+    # ---- anx_potencial: brecha de la CBO frente al ciclo HP
+    pot = a_dict(leer(carpeta, "GDPPOT"))
+    fechas, (y, p) = alinear([pib, pot], "1949-01-01", "2026-07-01")
+    xs = np.array([decimal(f) for f in fechas])
+    brecha_cbo = 100 * (y / p - 1)
+    fechas_hp = sorted(f for f in pib if f >= "1947-01-01")
+    c_hp_todo, _ = hp(np.array([100 * math.log(pib[f]) for f in fechas_hp]))
+    hp_d = dict(zip(fechas_hp, c_hp_todo))
+    c_hp = np.array([hp_d[f] for f in fechas])
+    rec = tramos(list(xs), [recq.get(f, 0) for f in fechas], 0.25)
+    cuerpo = sombras([r for r in rec if r[1] >= 1950], 0)
+    sel = xs >= 1950
+    cuerpo += "\n\\addplot[black, thick] coordinates {%s};\n\\addlegendentry{brecha respecto al potencial de la CBO}" % coords(xs[sel], brecha_cbo[sel])
+    cuerpo += "\n\\addplot[black!50, dashed] coordinates {%s};\n\\addlegendentry{ciclo de HODRICK-PRESCOTT}" % coords(xs[sel], c_hp[sel])
+    cuerpo += "\n\\addplot[black!40, thin, forget plot] coordinates {(1950,0) (2027,0)};"
+    fig = ("\\begin{tikzpicture}\n\\begin{axis}[width=14.5cm, height=5.6cm, scale only axis, %s,\n"
+           "    xmin=1950, xmax=2027, xtick={1950,1960,...,2020}, ymin=-11, ymax=8, ylabel={Porcentaje del PIB potencial o de la tendencia},\n"
+           "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.01,0.02)}, anchor=south west}, legend cell align=left]\n%s\n\\end{axis}\n\\end{tikzpicture}"
+           % (ESTILO, cuerpo))
+    escribir("anx_potencial", fig, "Brecha de producción de EE. UU. con el potencial de la CBO (FRED, GDPPOT) frente al ciclo HP; recesiones del NBER.")
+    for f, v1, v2 in zip(fechas, brecha_cbo, c_hp):
+        filas_series.append(("GDPC1/GDPPOT", "Estados Unidos", f, round(float(v1), 3), "porcentaje del potencial", "FRED (BEA y CBO); cálculo propio", "brecha de la CBO", "anx_potencial"))
+    m = (xs >= 1950) & (xs <= 2019.75)
+    cifras.append(("Brecha media de la CBO, 1950T1-2019T4", round(float(np.mean(brecha_cbo[m])), 2), "%", "I.4"))
+    cifras.append(("Brecha media del ciclo HP, 1950T1-2019T4", round(float(np.mean(c_hp[m])), 2), "%", "I.4"))
+    cifras.append(("Correlación entre la brecha de la CBO y el ciclo HP, 1950T1-2019T4", round(float(np.corrcoef(brecha_cbo[m], c_hp[m])[0, 1]), 2), "", "I.4"))
+    for f in ("2009-04-01", "2011-04-01", "2014-01-01", "2016-01-01"):
+        k = fechas.index(f)
+        cifras.append(("Brecha de la CBO y ciclo HP en %s" % trimestre(decimal(f)), "%.1f y %.1f" % (brecha_cbo[k], c_hp[k]), "%", "I.4"))
+    cierre = next((trimestre(xs[k]) for k in range(len(xs)) if xs[k] > 2010 and brecha_cbo[k] >= 0), None)
+    cifras.append(("Primer trimestre tras 2009 con brecha de la CBO no negativa", cierre, "", "I.4"))
+    cierre_hp = next((trimestre(xs[k]) for k in range(len(xs)) if xs[k] > 2009.5 and c_hp[k] >= 0), None)
+    cifras.append(("Primer trimestre tras 2009T2 con ciclo HP no negativo", cierre_hp, "", "I.4"))
+
+    # ---- anx_tiempo_real: brecha HP en tiempo real (ALFRED), cuasi tiempo real y final (ORPHANIDES y VAN NORDEN, 2002)
+    final = np.array([100 * math.log(pib[f]) for f in fechas_hp if f >= "1959-01-01"])
+    f_final = [f for f in fechas_hp if f >= "1959-01-01"]
+    c_final, _ = hp(final)
+    d_final = dict(zip(f_final, c_final))
+    rt, qr, fi, xt_ = [], [], [], []
+    for nombre in sorted(os.listdir(os.path.join(carpeta, "alfred"))):
+        filas = [r for r in list(csv.reader(open(os.path.join(carpeta, "alfred", nombre))))[1:] if r[1] not in (".", "") and r[0] >= "1959-01-01"]
+        t = filas[-1][0]
+        if t > "2019-10-01":
+            continue
+        serie = np.array([100 * math.log(float(r[1])) for r in filas])
+        c_rt, _ = hp(serie)
+        k = f_final.index(t)
+        c_qr, _ = hp(final[:k + 1])
+        rt.append(c_rt[-1]); qr.append(c_qr[-1]); fi.append(d_final[t]); xt_.append(decimal(t))
+        filas_series.append(("GDPC1 (ALFRED %s)" % nombre[6:16], "Estados Unidos", t, round(float(c_rt[-1]), 3), "porcentaje", "ALFRED; cálculo propio", "brecha HP en tiempo real", "anx_tiempo_real"))
+    rt, qr, fi, xt_ = map(np.array, (rt, qr, fi, xt_))
+    cuerpo = sombras([r for r in rec if r[1] >= 1991.5 and r[0] <= 2019.75], 0)
+    for estilo, serie, etiqueta in (("black, very thick", fi, "final (datos de 2026)"), ("black!45", qr, "cuasi tiempo real (datos de 2026 cortados)"),
+                                    ("black!75, dashed", rt, "tiempo real (datos de cada momento)")):
+        cuerpo += "\n\\addplot[%s] coordinates {%s};\n\\addlegendentry{%s}" % (estilo, coords(xt_, serie), etiqueta)
+    cuerpo += "\n\\addplot[black!40, thin, forget plot] coordinates {(1991.5,0) (2020,0)};"
+    fig = ("\\begin{tikzpicture}\n\\begin{axis}[width=14.5cm, height=5.6cm, scale only axis, %s,\n"
+           "    xmin=1991.5, xmax=2020, xtick={1992,1996,...,2020}, ylabel={Ciclo HODRICK-PRESCOTT (\\%%)},\n"
+           "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.01,0.02)}, anchor=south west}, legend cell align=left]\n%s\n\\end{axis}\n\\end{tikzpicture}"
+           % (ESTILO, cuerpo))
+    escribir("anx_tiempo_real", fig, "Brecha HP de EE. UU. en tiempo real (ALFRED), en cuasi tiempo real y final, 1991T3-2019T4; recesiones del NBER.")
+    total, datos, filtro = fi - rt, qr - rt, fi - qr
+    cifras.append(("Trimestres de la muestra en tiempo real (1991T3-2019T4)", len(rt), "", "I.4"))
+    cifras.append(("Correlación entre la brecha HP en tiempo real y la final", round(float(np.corrcoef(rt, fi)[0, 1]), 2), "", "I.4"))
+    cifras.append(("Correlación entre la brecha HP en cuasi tiempo real y la final", round(float(np.corrcoef(qr, fi)[0, 1]), 2), "", "I.4"))
+    cifras.append(("Cociente ruido-señal: desv. típica de la revisión total / desv. típica de la brecha final", round(float(np.std(total) / np.std(fi)), 2), "", "I.4"))
+    cifras.append(("Desviación típica de la revisión por los datos", round(float(np.std(datos)), 2), "puntos", "I.4"))
+    cifras.append(("Desviación típica de la revisión por el filtro", round(float(np.std(filtro)), 2), "puntos", "I.4"))
+    cifras.append(("Desviación típica de la brecha final en la muestra", round(float(np.std(fi)), 2), "%", "I.4"))
+    cifras.append(("Porcentaje de trimestres en que la brecha en tiempo real y la final tienen signo distinto", round(100 * float(np.mean(np.sign(rt) != np.sign(fi))), 0), "%", "I.4"))
+    for f in (2000.75, 2007.75, 2008.75):
+        k = int(np.where(np.isclose(xt_, f))[0][0])
+        cifras.append(("Brecha HP en %s: tiempo real, cuasi tiempo real y final" % trimestre(f), "%.1f / %.1f / %.1f" % (rt[k], qr[k], fi[k]), "%", "I.4"))
+
+    # ---- momentos del ciclo: EE. UU. (1950T1-2019T4) y España (1995T1-2019T4), filtro HP sobre toda la muestra disponible
+    def ciclo_hp(filas, log=True, desde="1947-01-01"):
+        d = [(f, v) for f, v in filas if f >= desde]
+        serie = np.array([100 * math.log(v) if log else v for _, v in d])
+        c, _ = hp(serie)
+        return dict(zip([f for f, _ in d], c))
+
+    us = {"PIB": ciclo_hp(leer(carpeta, "GDPC1")),
+          "Consumo": ciclo_hp(leer(carpeta, "PCECC96")),
+          "Consumo de duraderos": ciclo_hp(leer(carpeta, "DDURRA3Q086SBEA")),
+          "Consumo de no duraderos": ciclo_hp(leer(carpeta, "DNDGRA3Q086SBEA")),
+          "Consumo de servicios": ciclo_hp(leer(carpeta, "DSERRA3Q086SBEA")),
+          "Inversión": ciclo_hp(leer(carpeta, "GPDIC1")),
+          "Inversión no residencial": ciclo_hp(leer(carpeta, "A008RA3Q086SBEA")),
+          "Inversión residencial": ciclo_hp(leer(carpeta, "A011RA3Q086SBEA")),
+          "Gasto público": ciclo_hp(leer(carpeta, "GCEC1")),
+          "Exportaciones": ciclo_hp(leer(carpeta, "EXPGSC1")),
+          "Importaciones": ciclo_hp(leer(carpeta, "IMPGSC1")),
+          "Horas": ciclo_hp(leer(carpeta, "HOANBS")),
+          "Empleo": ciclo_hp(trimestral(leer(carpeta, "PAYEMS"))),
+          "Productividad por hora": ciclo_hp(leer(carpeta, "OPHNFB")),
+          "Salario real por hora": ciclo_hp(leer(carpeta, "COMPRNFB")),
+          "Tasa de paro": ciclo_hp(trimestral(leer(carpeta, "UNRATE")), log=False),
+          "Nivel de precios": ciclo_hp(leer(carpeta, "GDPDEF")),
+          "Tipo de interés a corto": ciclo_hp(trimestral(leer(carpeta, "TB3MS")), log=False)}
+    defl = leer(carpeta, "GDPDEF")
+    infl = [(defl[i][0], 400 * math.log(defl[i][1] / defl[i - 1][1])) for i in range(1, len(defl))]
+    us["Inflación"] = ciclo_hp(infl, log=False)
+
+    def tabla(cic, desde, hasta, pais):
+        fy = [f for f in sorted(cic["PIB"]) if desde <= f <= hasta]
+        y_ = np.array([cic["PIB"][f] for f in fy])
+        sy = float(np.std(y_))
+        salida = {}
+        for nombre, d in cic.items():
+            ff = [f for f in fy if f in d]
+            x_ = np.array([d[f] for f in ff])
+            yy = np.array([cic["PIB"][f] for f in ff])
+            sx = float(np.std(x_))
+            cc = {}
+            for k in range(-4, 5):  # corr(x_{t+k}, y_t)
+                pares = [(d[ff[i + k]], yy[i]) for i in range(len(ff)) if 0 <= i + k < len(ff)]
+                a1, a2 = zip(*pares)
+                cc[k] = float(np.corrcoef(a1, a2)[0, 1])
+            rho = float(np.corrcoef(x_[1:], x_[:-1])[0, 1])
+            salida[nombre] = (sx, sx / sy, cc, rho)
+            for est, val in (("desviación típica (%)", sx), ("desviación relativa al PIB", sx / sy), ("correlación contemporánea con el PIB", cc[0]),
+                             ("autocorrelación de orden 1", rho), ("retardo k de la correlación máxima en valor absoluto", max(cc, key=lambda q: abs(cc[q])))):
+                momentos.append((pais, nombre, est, round(val, 3), "%s-%s" % (trimestre(decimal(desde)), trimestre(decimal(hasta))), "HP, lambda 1600"))
+        return salida
+
+    t_us = tabla(us, "1950-01-01", "2019-10-01", "Estados Unidos")
+    e_gdp = os.path.join(carpeta, "eurostat", "gdp_clv.json")
+    e_emp = os.path.join(carpeta, "eurostat", "emp.json")
+    pib_es = leer_eurostat(e_gdp, na_item="B1GQ", geo="ES")
+    horas_es = leer_eurostat(e_emp, unit="THS_HW", geo="ES")
+    prod_es = [(f, v / dict(horas_es)[f]) for f, v in pib_es if f in dict(horas_es)]
+    es = {"PIB": ciclo_hp(pib_es, desde="1995-01-01"),
+          "Consumo": ciclo_hp(leer_eurostat(e_gdp, na_item="P31_S14", geo="ES"), desde="1995-01-01"),
+          "Inversión": ciclo_hp(leer_eurostat(e_gdp, na_item="P51G", geo="ES"), desde="1995-01-01"),
+          "Gasto público": ciclo_hp(leer_eurostat(e_gdp, na_item="P3_S13", geo="ES"), desde="1995-01-01"),
+          "Exportaciones": ciclo_hp(leer_eurostat(e_gdp, na_item="P6", geo="ES"), desde="1995-01-01"),
+          "Importaciones": ciclo_hp(leer_eurostat(e_gdp, na_item="P7", geo="ES"), desde="1995-01-01"),
+          "Empleo": ciclo_hp(leer_eurostat(e_emp, unit="THS_PER", geo="ES"), desde="1995-01-01"),
+          "Horas": ciclo_hp(horas_es, desde="1995-01-01"),
+          "Productividad por hora": ciclo_hp(prod_es, desde="1995-01-01"),
+          "Nivel de precios": ciclo_hp(leer_eurostat(os.path.join(carpeta, "eurostat", "gdp_pd.json"), na_item="B1GQ", geo="ES"), desde="1995-01-01")}
+    t_es = tabla(es, "1995-01-01", "2019-10-01", "España")
+    print("\nMOMENTOS (desv. %, relativa, corr, retardo de la corr. máx., rho1)")
+    for pais, t_ in (("EE. UU.", t_us), ("España", t_es)):
+        for nombre, (sx, rel, cc, rho) in t_.items():
+            kmax = max(cc, key=lambda q: abs(cc[q]))
+            print("%-8s %-28s %6.2f %5.2f %6.2f %3d %5.2f" % (pais, nombre, sx, rel, cc[0], kmax, rho))
+    # productividad antes y después de 1984 (GALÍ y VAN RENS, 2021)
+    for desde, hasta in (("1950-01-01", "1983-10-01"), ("1984-01-01", "2019-10-01")):
+        ff = [f for f in sorted(us["PIB"]) if desde <= f <= hasta]
+        cpy = float(np.corrcoef([us["Productividad por hora"][f] for f in ff], [us["PIB"][f] for f in ff])[0, 1])
+        cph = float(np.corrcoef([us["Productividad por hora"][f] for f in ff], [us["Horas"][f] for f in ff])[0, 1])
+        shy = float(np.std([us["Horas"][f] for f in ff]) / np.std([us["PIB"][f] for f in ff]))
+        cifras.append(("EE. UU. %s-%s: corr(productividad, PIB), corr(productividad, horas), desv. horas/PIB" % (trimestre(decimal(desde)), trimestre(decimal(hasta))),
+                       "%.2f / %.2f / %.2f" % (cpy, cph, shy), "", "I.5"))
+
+    # ---- anx_volatilidad: desviación típica relativa al PIB
+    filas_v = [("Consumo", "Consumo"), ("Consumo de duraderos", None), ("Inversión", "Inversión"), ("Gasto público", "Gasto público"),
+               ("Exportaciones", "Exportaciones"), ("Importaciones", "Importaciones"), ("Empleo", "Empleo"), ("Horas", "Horas"),
+               ("Productividad por hora", "Productividad por hora")]
+    n = len(filas_v)
+    etiquetas = ",".join("{%s}" % a for a, _ in filas_v)
+    c_us = " ".join("(%.3f,%d)" % (t_us[a][1], n - i) for i, (a, _) in enumerate(filas_v))
+    c_es = " ".join("(%.3f,%d)" % (t_es[b][1], n - i) for i, (a, b) in enumerate(filas_v) if b)
+    fig = ("\\begin{tikzpicture}\n\\begin{axis}[width=10cm, height=7.2cm, scale only axis, %s,\n"
+           "    xbar, bar width=5pt, xmin=0, xmax=5.6, ymin=0.4, ymax=%d.6, ytick={%s}, yticklabels={%s},\n"
+           "    xlabel={Desviación típica del ciclo de la variable dividida por la del PIB}, y dir=normal,\n"
+           "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.98,0.02)}, anchor=south east}, legend cell align=left]\n"
+           "\\addplot[fill=black!75, draw=none, bar shift=3pt] coordinates {%s};\n\\addlegendentry{Estados Unidos, 1950-2019}\n"
+           "\\addplot[fill=black!30, draw=none, bar shift=-3pt] coordinates {%s};\n\\addlegendentry{España, 1995-2019}\n"
+           "\\addplot[black!60, dashed, forget plot] coordinates {(1,0.4) (1,%d.6)};\n\\end{axis}\n\\end{tikzpicture}"
+           % (ESTILO, n, ",".join(str(n - i) for i in range(n)), ",".join(a for a, _ in filas_v), c_us, c_es, n))
+    escribir("anx_volatilidad", fig, "Volatilidad relativa de los componentes del gasto y del mercado de trabajo (ciclo HP).")
+
+    # ---- anx_adelantos: correlación de x_{t+k} con el PIB_t (EE. UU.)
+    ks = list(range(-4, 5))
+
+    def linea(nombre, estilo, etiqueta):
+        return "\\addplot[%s] coordinates {%s};\n\\addlegendentry{%s}" % (estilo, " ".join("(%d,%.3f)" % (k, t_us[nombre][2][k]) for k in ks), etiqueta)
+
+    def panel_c(nombre, titulo, lugar, lineas):
+        return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=6.6cm, height=4.6cm, scale only axis, %s,\n"
+                "    xmin=-4, xmax=4, xtick={-4,...,4}, ymin=-1, ymax=1, xlabel={$k$ (trimestres)}, ylabel={Correlación de $x_{t+k}$ con $y_t$},\n"
+                "    title={%s}, title style={font=\\footnotesize}, legend style={draw=none, fill=none, font=\\footnotesize, at={(0.5,0.02)}, anchor=south},\n"
+                "    legend cell align=left]\n\\addplot[black!40, thin, forget plot] coordinates {(-4,0) (4,0)};\n\\addplot[black!40, thin, forget plot] coordinates {(0,-1) (0,1)};\n%s\n\\end{axis}\n"
+                % (nombre, lugar, ESTILO, titulo, "\n".join(lineas)))
+
+    fig = "\\begin{tikzpicture}\n"
+    fig += panel_c("a", "(a) Variables reales", "{(0,0)}", [linea("Horas", "black, thick, mark=*, mark size=1.2pt", "horas"),
+                                                              linea("Productividad por hora", "black!55, dashed, mark=square*, mark size=1.2pt", "productividad"),
+                                                              linea("Tasa de paro", "black!80, dotted, thick, mark=triangle*, mark size=1.5pt", "tasa de paro")])
+    fig += panel_c("b", "(b) Variables nominales", "{($(a.north east)+(1.6cm,0)$)}", [linea("Nivel de precios", "black, thick, mark=*, mark size=1.2pt", "nivel de precios"),
+                                                                                     linea("Inflación", "black!55, dashed, mark=square*, mark size=1.2pt", "inflación"),
+                                                                                     linea("Tipo de interés a corto", "black!80, dotted, thick, mark=triangle*, mark size=1.5pt", "tipo de interés")])
+    fig += "\\end{tikzpicture}"
+    escribir("anx_adelantos", fig, "Correlaciones cruzadas del ciclo HP de cada variable con el del PIB de EE. UU., 1950-2019.")
+
+    # ---- anx_desplome: modelo de los tirones de FRIEDMAN con las recesiones del NBER (trimestral)
+    fq = sorted(pib)
+    lq = np.array([100 * math.log(pib[f]) for f in fq])
+    ind = [recq.get(f, 0) for f in fq]
+    episodios = []
+    i = 1
+    while i < len(fq):
+        if ind[i] >= 0.5 and ind[i - 1] < 0.5:
+            pico = i - 1
+            j = i
+            while j + 1 < len(fq) and ind[j + 1] >= 0.5:
+                j += 1
+            valle = j
+            if pico >= 4 and valle + 4 < len(fq):
+                caida = lq[pico] - min(lq[pico:valle + 1])
+                despues = lq[valle + 4] - lq[valle]
+                antes = lq[pico] - lq[pico - 4]
+                episodios.append((fq[pico], fq[valle], caida, despues, antes))
+            i = j + 1
+        else:
+            i += 1
+    previo = [None] + [e[2] for e in episodios[:-1]]
+    pares_a = [(e[2], e[3]) for e in episodios]
+    pares_b = [(e[4], e[2]) for e in episodios]
+    ca = float(np.corrcoef(*zip(*pares_a))[0, 1])
+    cb = float(np.corrcoef(*zip(*pares_b))[0, 1])
+    sin20 = [e for e in episodios if not e[0].startswith("2019")]
+    ca2 = float(np.corrcoef([e[2] for e in sin20], [e[3] for e in sin20])[0, 1])
+    cb2 = float(np.corrcoef([e[4] for e in sin20], [e[2] for e in sin20])[0, 1])
+    cifras.append(("Recesiones del NBER en la muestra trimestral (1948-2020)", len(episodios), "", "I.5"))
+    cifras.append(("Correlación entre la caída de la recesión y el crecimiento de los cuatro trimestres siguientes al valle", round(ca, 2), "", "I.5"))
+    cifras.append(("Correlación entre el crecimiento de los cuatro trimestres anteriores al pico y la caída siguiente", round(cb, 2), "", "I.5"))
+    cifras.append(("Las mismas correlaciones sin la recesión de 2020", "%.2f y %.2f" % (ca2, cb2), "", "I.5"))
+    for e in episodios:
+        filas_series.append(("Recesión del NBER %s-%s" % (trimestre(decimal(e[0])), trimestre(decimal(e[1]))), "Estados Unidos", e[0], round(float(e[2]), 2),
+                             "puntos de 100 x ln PIB", "FRED; cálculo propio", "caída; crecimiento posterior %.2f; anterior %.2f" % (e[3], e[4]), "anx_desplome"))
+
+    def panel_d(nombre, titulo, lugar, pares, xlab, ylab, r):
+        puntos = " ".join("(%.2f,%.2f)" % p for p in pares)
+        return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=6.3cm, height=5.0cm, scale only axis, %s,\n"
+                "    xmin=0, ymin=-1, xlabel={%s}, ylabel={%s}, title={%s}, title style={font=\\footnotesize}]\n"
+                "\\addplot[only marks, mark=*, mark size=1.6pt, black] coordinates {%s};\n"
+                "\\node[font=\\footnotesize, anchor=north east] at (rel axis cs:0.98,0.98) {$r=%s$};\n\\end{axis}\n"
+                % (nombre, lugar, ESTILO, xlab, ylab, titulo, puntos, ("%.2f" % r).replace(".", "{,}")))
+
+    fig = "\\begin{tikzpicture}\n"
+    fig += panel_d("a", "(a) De la recesión a la recuperación", "{(0,0)}", pares_a, "Caída del PIB en la recesión (\\%)", "Crecimiento del año siguiente (\\%)", ca)
+    fig += panel_d("b", "(b) De la expansión a la recesión", "{($(a.north east)+(1.7cm,0)$)}", pares_b, "Crecimiento del año anterior al pico (\\%)", "Caída del PIB en la recesión (\\%)", cb)
+    fig += "\\end{tikzpicture}"
+    escribir("anx_desplome", fig, "Modelo de los tirones: recesiones del NBER, caída del PIB, crecimiento del año siguiente al valle y del año anterior al pico.")
+
+    # ---- anx_moderacion: volatilidad del crecimiento (desviación típica móvil de diez años)
+    g = 400 * np.diff(lq)
+    xg = np.array([decimal(f) for f in fq[1:]])
+    vol = [(xg[k], float(np.std(g[k - 39:k + 1]))) for k in range(39, len(g))]
+    for (a_, b_) in (("1947-04-01", "1983-10-01"), ("1984-01-01", "2007-10-01"), ("2008-01-01", "2019-10-01")):
+        m_ = np.array([a_ <= f <= b_ for f in fq[1:]])
+        cifras.append(("Desviación típica del crecimiento trimestral anualizado del PIB de EE. UU., %s-%s" % (trimestre(decimal(a_)), trimestre(decimal(b_))),
+                       round(float(np.std(g[m_])), 2), "puntos", "I.5"))
+    cuerpo = sombras([r for r in rec if r[1] >= 1957], 0)
+    cuerpo += "\n\\addplot[black, thick] coordinates {%s};" % " ".join("(%.4f,%.3f)" % v for v in vol)
+    cuerpo += "\n\\addplot[black!55, dashed] coordinates {(1984,0) (1984,9)};"
+    fig = ("\\begin{tikzpicture}\n\\begin{axis}[width=14.5cm, height=5.0cm, scale only axis, %s,\n"
+           "    xmin=1957, xmax=2027, xtick={1960,1970,...,2020}, ymin=0, ymax=9, ylabel={Desviación típica (puntos)}]\n%s\n\\end{axis}\n\\end{tikzpicture}"
+           % (ESTILO, cuerpo))
+    escribir("anx_moderacion", fig, "Desviación típica del crecimiento trimestral anualizado del PIB de EE. UU. en los diez años anteriores; línea discontinua: 1984.")
+
+    # ---- anx_ciclo_financiero: componente de medio plazo (8-30 años) del crédito/PIB y de los precios reales de la vivienda
+    def financiero(pais, desde, hasta):
+        cred = a_dict(leer_bis(carpeta, "WS_TC", BORROWERS_CTY=pais, TC_BORROWERS="P", TC_LENDERS="A", VALUATION="M", UNIT_TYPE="770", TC_ADJUST="A"))
+        viv = a_dict(leer_bis(carpeta, "WS_SPP", REF_AREA=pais, VALUE="R", UNIT_MEASURE="628"))
+        ff, (c_, v_) = alinear([cred, viv], desde, hasta)
+        cc_ = cf(100 * np.log(c_), 32, 120)
+        cv_ = cf(100 * np.log(v_), 32, 120)
+        return ff, cc_, cv_, (cc_ + cv_) / 2, c_, v_
+
+    paneles = []
+    for pais, titulo, rec_p in (("ES", "(a) España", [(xt(p), xt(v)) for p, v, _ in AEE]), ("US", "(b) Estados Unidos", rec)):
+        ff, cc_, cv_, comp, c_, v_ = financiero(pais, "1971-01-01" if pais == "ES" else "1970-01-01", "2025-10-01")
+        xf = np.array([decimal(f) for f in ff])
+        for f, a1, a2, a3 in zip(ff, cc_, cv_, comp):
+            filas_series.append(("BPI %s crédito/PIB y vivienda real" % pais, "España" if pais == "ES" else "Estados Unidos", f, round(float(a3), 3),
+                                 "porcentaje", "BPI; cálculo propio", "ciclo financiero CF 32-120 (media de crédito/PIB %.2f y vivienda %.2f)" % (a1, a2), "anx_ciclo_financiero"))
+        # picos del ciclo financiero: máximos locales en una ventana de +/- 20 trimestres
+        picos = [trimestre(xf[k]) for k in range(len(comp)) if comp[k] > 0 and comp[k] == max(comp[max(0, k - 20):k + 21])]
+        cifras.append(("Picos del ciclo financiero de %s (máximos locales a +/- 5 años)" % pais, ", ".join(picos), "", "I.6"))
+        cifras.append(("Desviación típica del ciclo financiero de %s y del ciclo CF 6-32 de su crédito/PIB" % pais,
+                       "%.1f y %.1f" % (np.std(comp), np.std(cf(100 * np.log(c_), 6, 32))), "%", "I.6"))
+        cuerpo = sombras([r for r in rec_p if r[1] >= xf[0]], 0)
+        cuerpo += "\n\\addplot[black, very thick] coordinates {%s};\n\\addlegendentry{ciclo financiero}" % coords(xf, comp)
+        cuerpo += "\n\\addplot[black!50] coordinates {%s};\n\\addlegendentry{crédito sobre el PIB}" % coords(xf, cc_)
+        cuerpo += "\n\\addplot[black!50, dashed] coordinates {%s};\n\\addlegendentry{precio real de la vivienda}" % coords(xf, cv_)
+        for k, c0 in enumerate(CRISIS[pais]):
+            cuerpo += "\n\\addplot[black, densely dotted, thick%s] coordinates {(%.2f,-45) (%.2f,45)};%s" % (
+                "" if k == 0 else ", forget plot", c0, c0, "\n\\addlegendentry{crisis bancaria}" if k == 0 else "")
+        cuerpo += "\n\\addplot[black!40, thin, forget plot] coordinates {(1970,0) (2026,0)};"
+        lugar = "{(0,0)}" if pais == "ES" else "{($(a.south west)+(0,-1.5cm)$)}"
+        paneles.append("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=14.5cm, height=4.6cm, scale only axis, %s,\n"
+                       "    xmin=1970, xmax=2026, xtick={1970,1975,...,2025}, ymin=-45, ymax=45, ylabel={Desviación (\\%%)}, title={%s}, title style={font=\\footnotesize},\n"
+                       "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.01,0.02)}, anchor=south west}, legend columns=2, legend cell align=left]\n%s\n\\end{axis}\n"
+                       % ("a" if pais == "ES" else "b", lugar, ESTILO, titulo, cuerpo))
+    fig = "\\begin{tikzpicture}\n" + "".join(paneles) + "\\end{tikzpicture}"
+    escribir("anx_ciclo_financiero", fig, "Ciclo financiero de España y EE. UU.: componente de 8 a 30 años (CHRISTIANO-FITZGERALD) del crédito/PIB y del precio real de la vivienda (BPI).")
+
+    # ---- anx_brecha_credito: España, ratio de crédito, tendencia HP unilateral (lambda 400.000) y brecha del BPI
+    r_ = a_dict(leer_bis(carpeta, "WS_CREDIT_GAP", BORROWERS_CTY="ES", CG_DTYPE="A"))
+    t_ = a_dict(leer_bis(carpeta, "WS_CREDIT_GAP", BORROWERS_CTY="ES", CG_DTYPE="B"))
+    b_ = a_dict(leer_bis(carpeta, "WS_CREDIT_GAP", BORROWERS_CTY="ES", CG_DTYPE="C"))
+    ff, (rr, tt, bb) = alinear([r_, t_, b_], "1980-01-01", "2026-10-01")
+    xb = np.array([decimal(f) for f in ff])
+    for f, a1, a2, a3 in zip(ff, rr, tt, bb):
+        filas_series.append(("BPI ES brecha de crédito", "España", f, a3, "puntos del PIB", "BPI (WS_CREDIT_GAP)", "ratio %.1f; tendencia %.1f" % (a1, a2), "anx_brecha_credito"))
+    kmax = int(np.argmax(bb)); kmin = int(np.argmin(bb))
+    cifras.append(("Brecha de crédito de España: máximo", "%.1f en %s" % (bb[kmax], trimestre(xb[kmax])), "puntos", "I.6"))
+    cifras.append(("Brecha de crédito de España: mínimo", "%.1f en %s" % (bb[kmin], trimestre(xb[kmin])), "puntos", "I.6"))
+    cifras.append(("Ratio de crédito de España: máximo", "%.1f en %s" % (max(rr), trimestre(xb[int(np.argmax(rr))])), "% del PIB", "I.6"))
+    cifras.append(("Brecha de crédito de España en el último dato", "%.1f en %s" % (bb[-1], trimestre(xb[-1])), "puntos", "I.6"))
+    primer_neg = next((trimestre(xb[k]) for k in range(len(bb)) if xb[k] > 2008 and bb[k] < 0), None)
+    ult_pos = next((trimestre(xb[k]) for k in range(len(bb) - 1, -1, -1) if bb[k] > 2), None)
+    cifras.append(("Brecha de España: primer trimestre negativo tras 2008 y último por encima de 2 puntos", "%s y %s" % (primer_neg, ult_pos), "", "I.6"))
+    supera2 = next((trimestre(xb[k]) for k in range(len(bb)) if xb[k] > 1995 and bb[k] > 2), None)
+    supera10 = next((trimestre(xb[k]) for k in range(len(bb)) if xb[k] > 1995 and bb[k] > 10), None)
+    cifras.append(("Brecha de España: primer trimestre tras 1995 por encima de 2 y de 10 puntos", "%s y %s" % (supera2, supera10), "", "I.6"))
+    cuerpo_a = sombras([(xt(p), xt(v)) for p, v, _ in AEE if xt(v) >= 1980], 50)
+    cuerpo_a += "\n\\addplot[black, thick] coordinates {%s};\n\\addlegendentry{crédito al sector privado no financiero}" % coords(xb, rr)
+    cuerpo_a += "\n\\addplot[black!50, dashed] coordinates {%s};\n\\addlegendentry{tendencia (HP unilateral, $\\lambda=400\\,000$)}" % coords(xb, tt)
+    cuerpo_b = sombras([(xt(p), xt(v)) for p, v, _ in AEE if xt(v) >= 1980], 0)
+    cuerpo_b += "\n\\addplot[black, thick] coordinates {%s};\n\\addlegendentry{brecha de crédito}" % coords(xb, bb)
+    cuerpo_b += "\n\\addplot[black!55, dashed] coordinates {(1980,2) (2027,2)};\n\\addlegendentry{umbrales de $2$ y $10$ puntos}"
+    cuerpo_b += "\n\\addplot[black!55, dashed, forget plot] coordinates {(1980,10) (2027,10)};\n\\addplot[black!40, thin, forget plot] coordinates {(1980,0) (2027,0)};"
+    fig = "\\begin{tikzpicture}\n"
+    fig += ("\\begin{axis}[name=a, at={(0,0)}, anchor=north west, width=14.5cm, height=4.4cm, scale only axis, %s,\n"
+            "    xmin=1980, xmax=2027, xtick={1980,1985,...,2025}, ylabel={Porcentaje del PIB}, title={(a) Ratio de crédito y su tendencia}, title style={font=\\footnotesize},\n"
+            "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.01,0.98)}, anchor=north west}, legend cell align=left]\n%s\n\\end{axis}\n" % (ESTILO, cuerpo_a))
+    fig += ("\\begin{axis}[name=b, at={($(a.south west)+(0,-1.5cm)$)}, anchor=north west, width=14.5cm, height=4.4cm, scale only axis, %s,\n"
+            "    xmin=1980, xmax=2027, xtick={1980,1985,...,2025}, ylabel={Puntos del PIB}, title={(b) Brecha de crédito}, title style={font=\\footnotesize},\n"
+            "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.01,0.02)}, anchor=south west}, legend cell align=left]\n%s\n\\end{axis}\n" % (ESTILO, cuerpo_b))
+    fig += "\\end{tikzpicture}"
+    escribir("anx_brecha_credito", fig, "España: crédito al sector privado no financiero (% del PIB), tendencia HP unilateral y brecha de crédito del BPI.")
+
+
 def main():
     carpeta = sys.argv[1] if len(sys.argv) > 1 else tempfile.mkdtemp()
     descargar(carpeta)
-    series, cifras, sint = [], [], []
+    descargar_a2(carpeta)
+    series, cifras, sint, momentos = [], [], [], []
     sinteticas(sint)
     con_datos(carpeta, series, cifras)
+    con_datos_a2(carpeta, series, cifras, momentos)
     leeme = [["Libro de datos del tema 3.A.42 (Teorías de los ciclos económicos)"],
              ["Generado por Code/libro_y_figuras.py el %s con los datos de FRED descargados ese día." % FECHA_DESCARGA],
              ["Hojas: Fuentes (series y su origen), Series (formato largo: serie, país, fecha, valor, unidad, fuente, tratamiento, figura),"],
