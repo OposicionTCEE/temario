@@ -368,10 +368,10 @@ def main():
     for s, serie in sorted(eu.items()):
         for f, v in serie:
             filas.append([s, "España", f, v, "índice, 2020 = 100", "Eurostat ert_eff_ic_q", "ninguno", "anx_competitividad_espana" if s != "REER_IC42_CPI" else ""])
-    icp = [["ISO3", "Economía", "PPA del PIB (moneda nacional por dólar internacional)", "Tipo de cambio oficial (moneda nacional por dólar)",
-            "Nivel de precios (EE. UU. = 100)", "PIB por habitante en PPA (dólares internacionales)"]]
+    icp = [["ISO3", "Economía", "Nivel de precios del PIB (mundo = 100, ICP 2021)", "Nivel de precios del PIB (EE. UU. = 100, reescalado)",
+            "PIB por habitante en PPA (dólares, ICP 2021)"]]
     for f in penn:
-        icp.append(list(f))
+        icp.append([f[0], f[1], f[2], f[4], f[5]])
     big = [["ISO3", "Economía", "Precio local", "Tipo de cambio (moneda local por dólar)", "Precio en dólares", "Valoración bruta frente al dólar", "PIB por habitante 2025 (dólares)"]]
     for f in bmf:
         big.append(list(f))
