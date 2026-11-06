@@ -5,8 +5,9 @@
 #   anx_penn (nivel de precios y PIB por habitante, ICP 2021) y anx_bigmac (índice Big Mac de julio de 2026).
 # Fuentes: Banco de Pagos Internacionales (WS_EER, índices efectivos mensuales, cesta amplia de 64 economías,
 # 2020 = 100); FRED (EXUSEU, dólares por euro, media mensual); Eurostat (ert_eff_ic_q, índices efectivos de España
-# frente a los socios de la zona del euro, composición de 2026, 2020 = 100); Banco Mundial (Indicadores del
-# Desarrollo Mundial: PA.NUS.PPP, PA.NUS.FCRF y NY.GDP.PCAP.PP.CD de 2021, del ICP 2021, y NY.GDP.PCAP.CD de 2025);
+# frente a los socios de la zona del euro, composición de 2026, 2020 = 100); Banco Mundial (base de datos del ICP 2021,
+# fuente 90: nivel de precios del PIB, mundo = 100, y PIB por habitante en PPA; Indicadores del Desarrollo Mundial:
+# NY.GDP.PCAP.CD de 2025, PIB por habitante en dólares corrientes);
 # The Economist (big-mac-data, output-data/big-mac-full-index.csv, edición de julio de 2026).
 # Uso, desde la carpeta del tema:  python3 -I Code/libro_y_figuras.py CARPETA
 #   CARPETA contiene las subcarpetas dl_bis, dl_fred, dl_eurostat, dl_wb y dl_bigmac con las descargas (ver DESCARGAS).
