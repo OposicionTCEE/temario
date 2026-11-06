@@ -387,9 +387,10 @@ def con_datos(carpeta, filas_series, cifras):
     cifras.append(("Caída del PIB real de EE. UU. entre 2019T4 y 2020T2", round(100 * (nivel[k20] / nivel[k20 - 2] - 1), 1), "%", "I.1"))
     k08, k09 = int(np.where(np.isclose(xs, 2007.75))[0][0]), int(np.where(np.isclose(xs, 2009.25))[0][0])
     cifras.append(("Caída del PIB real de EE. UU. entre 2007T4 y 2009T2", round(100 * (nivel[k09] / nivel[k08] - 1), 1), "%", "I.1"))
-    pico = max(nivel[:k08 + 1])
-    recupera = next(trimestre(xs[i]) for i in range(k08 + 1, len(nivel)) if nivel[i] > nivel[k08])
-    cifras.append(("Primer trimestre en que el PIB real de EE. UU. supera el de 2007T4", recupera, "", "I.1"))
+    maximo = int(np.argmax(nivel[:k09 + 1]))  # máximo previo al valle con los datos revisados (2008T2, no 2007T4)
+    recupera = next(trimestre(xs[i]) for i in range(k09 + 1, len(nivel)) if nivel[i] > nivel[maximo])
+    cifras.append(("Trimestre del máximo del PIB real de EE. UU. antes del valle de 2009T2 (datos revisados)", trimestre(xs[maximo]), "", "I.1"))
+    cifras.append(("Primer trimestre tras 2009T2 en que el PIB real de EE. UU. supera ese máximo", recupera, "", "I.1"))
     e = {f: v for f, v in esp}
     for p, v, _ in AEE:
         fp, fv = "%s-%02d-01" % (p[:4], 3 * int(p[-1]) - 2), "%s-%02d-01" % (v[:4], 3 * int(v[-1]) - 2)
