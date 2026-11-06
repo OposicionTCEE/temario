@@ -286,9 +286,8 @@ def main():
     fred = leer_fred(carpeta, "EXUSEU")
     eu = leer_eurostat(carpeta)
     nombres = paises_bm(carpeta)
-    ppp = leer_bm(carpeta, "PA.NUS.PPP.json")
-    xr = leer_bm(carpeta, "PA.NUS.FCRF.json")
-    pibppa = leer_bm(carpeta, "NY.GDP.PCAP.PP.CD.json")
+    pxwl = leer_icp(carpeta, "gdp_PX.WL.json")
+    pcpp = leer_icp(carpeta, "gdp_PCAP.PP.json")
     pib25 = leer_bm(carpeta, "NY.GDP.PCAP.CD_2025.json")
     bm = leer_bigmac(carpeta)
 
