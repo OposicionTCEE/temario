@@ -746,59 +746,62 @@ def con_datos_a2(carpeta, filas_series, cifras, momentos):
     fig += "\\end{tikzpicture}"
     escribir("anx_adelantos", fig, "Correlaciones cruzadas del ciclo HP de cada variable con el del PIB de EE. UU., 1950-2019.")
 
-    # ---- anx_desplome: modelo de los tirones de FRIEDMAN con las recesiones del NBER (trimestral)
+    # ---- anx_desplome: modelo de los tirones (FRIEDMAN, 1993; DUPRAZ, NAKAMURA y STEINSSON, 2019) con la tasa de paro y las
+    # recesiones mensuales del NBER: subida del paro en cada recesión (del mínimo previo al máximo posterior) frente a su
+    # bajada en la expansión siguiente, y bajada en una expansión frente a la subida de la recesión siguiente.
     fq = sorted(pib)
     lq = np.array([100 * math.log(pib[f]) for f in fq])
-    ind = [recq.get(f, 0) for f in fq]
-    episodios = []
-    i = 1
-    while i < len(fq):
+    paro = leer(carpeta, "UNRATE")
+    fm = [f for f, _ in paro]
+    um = np.array([v for _, v in paro])
+    recm = a_dict(leer(carpeta, "USREC"))
+    ind = [recm.get(f, 0) for f in fm]
+    picos_m, valles_m = [], []
+    for i in range(1, len(fm)):
         if ind[i] >= 0.5 and ind[i - 1] < 0.5:
-            pico = i - 1
-            j = i
-            while j + 1 < len(fq) and ind[j + 1] >= 0.5:
-                j += 1
-            valle = j
-            if pico >= 4 and valle + 4 < len(fq):
-                caida = lq[pico] - min(lq[pico:valle + 1])
-                despues = lq[valle + 4] - lq[valle]
-                antes = lq[pico] - lq[pico - 4]
-                episodios.append((fq[pico], fq[valle], caida, despues, antes))
-            i = j + 1
-        else:
-            i += 1
-    previo = [None] + [e[2] for e in episodios[:-1]]
-    pares_a = [(e[2], e[3]) for e in episodios]
-    pares_b = [(e[4], e[2]) for e in episodios]
+            picos_m.append(i - 1)
+        if ind[i] < 0.5 and ind[i - 1] >= 0.5:
+            valles_m.append(i - 1)
+    episodios = []
+    for k, (pk, vl) in enumerate(zip(picos_m, valles_m)):
+        bajo = int(np.argmin(um[max(0, pk - 12):pk + 7])) + max(0, pk - 12)  # mínimo del paro alrededor del pico
+        sig = picos_m[k + 1] if k + 1 < len(picos_m) else len(fm) - 1
+        alto = int(np.argmax(um[pk:min(len(fm), vl + 25)])) + pk  # máximo del paro tras el valle
+        sube = um[alto] - um[bajo]
+        bajo_sig = int(np.argmin(um[alto:sig + 7])) + alto if k + 1 < len(picos_m) else None
+        baja = um[alto] - um[bajo_sig] if bajo_sig is not None else None
+        episodios.append((fm[pk], fm[vl], sube, baja))
+    pares_a = [(e[2], e[3]) for e in episodios if e[3] is not None]
+    pares_b = [(episodios[i][3], episodios[i + 1][2]) for i in range(len(episodios) - 1) if episodios[i][3] is not None]
     ca = float(np.corrcoef(*zip(*pares_a))[0, 1])
     cb = float(np.corrcoef(*zip(*pares_b))[0, 1])
-    sin20 = [e for e in episodios if not e[0].startswith("2019")]
-    ca2 = float(np.corrcoef([e[2] for e in sin20], [e[3] for e in sin20])[0, 1])
-    cb2 = float(np.corrcoef([e[4] for e in sin20], [e[2] for e in sin20])[0, 1])
-    cifras.append(("Recesiones del NBER en la muestra trimestral (1948-2020)", len(episodios), "", "I.5"))
-    cifras.append(("Correlación entre la caída de la recesión y el crecimiento de los cuatro trimestres siguientes al valle", round(ca, 2), "", "I.5"))
-    cifras.append(("Correlación entre el crecimiento de los cuatro trimestres anteriores al pico y la caída siguiente", round(cb, 2), "", "I.5"))
+    sin20a = [(a1, a2) for (a1, a2), e in zip(pares_a, episodios) if not e[0].startswith("2020")]
+    sin20b = [pb for pb, e in zip(pares_b, episodios[1:]) if not e[0].startswith("2020")]
+    ca2 = float(np.corrcoef(*zip(*sin20a))[0, 1]); cb2 = float(np.corrcoef(*zip(*sin20b))[0, 1])
+    cifras.append(("Recesiones del NBER con tasa de paro mensual (desde 1948)", len(episodios), "", "I.5"))
+    cifras.append(("Correlación entre la subida del paro en la recesión y su bajada en la expansión siguiente", round(ca, 2), "", "I.5"))
+    cifras.append(("Correlación entre la bajada del paro en una expansión y su subida en la recesión siguiente", round(cb, 2), "", "I.5"))
     cifras.append(("Las mismas correlaciones sin la recesión de 2020", "%.2f y %.2f" % (ca2, cb2), "", "I.5"))
     for e in episodios:
-        filas_series.append(("Recesión del NBER %s-%s" % (trimestre(decimal(e[0])), trimestre(decimal(e[1]))), "Estados Unidos", e[0], round(float(e[2]), 2),
-                             "puntos de 100 x ln PIB", "FRED; cálculo propio", "caída; crecimiento posterior %.2f; anterior %.2f" % (e[3], e[4]), "anx_desplome"))
+        filas_series.append(("Recesión del NBER %s a %s" % (e[0][:7], e[1][:7]), "Estados Unidos", e[0], round(float(e[2]), 2), "puntos de la tasa de paro",
+                             "FRED (UNRATE, USREC); cálculo propio", "subida del paro; bajada posterior %s" % ("%.2f" % e[3] if e[3] is not None else "sin dato"), "anx_desplome"))
 
     def panel_d(nombre, titulo, lugar, pares, xlab, ylab, r):
         puntos = " ".join("(%.2f,%.2f)" % p for p in pares)
         return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=6.3cm, height=5.0cm, scale only axis, %s,\n"
-                "    xmin=0, ymin=-1, xlabel={%s}, ylabel={%s}, title={%s}, title style={font=\\footnotesize}]\n"
+                "    xmin=0, ymin=0, xlabel={%s}, ylabel={%s}, title={%s}, title style={font=\\footnotesize}]\n"
                 "\\addplot[only marks, mark=*, mark size=1.6pt, black] coordinates {%s};\n"
-                "\\node[font=\\footnotesize, anchor=north east] at (rel axis cs:0.98,0.98) {$r=%s$};\n\\end{axis}\n"
+                "\\node[font=\\footnotesize, anchor=north west] at (rel axis cs:0.03,0.97) {$r=%s$};\n\\end{axis}\n"
                 % (nombre, lugar, ESTILO, xlab, ylab, titulo, puntos, ("%.2f" % r).replace(".", "{,}")))
 
     fig = "\\begin{tikzpicture}\n"
-    fig += panel_d("a", "(a) De la recesión a la recuperación", "{(0,0)}", pares_a, "Caída del PIB en la recesión (\\%)", "Crecimiento del año siguiente (\\%)", ca)
-    fig += panel_d("b", "(b) De la expansión a la recesión", "{($(a.north east)+(1.7cm,0)$)}", pares_b, "Crecimiento del año anterior al pico (\\%)", "Caída del PIB en la recesión (\\%)", cb)
+    fig += panel_d("a", "(a) De la recesión a la expansión siguiente", "{(0,0)}", pares_a, "Subida del paro en la recesión (puntos)", "Bajada del paro en la expansión (puntos)", ca)
+    fig += panel_d("b", "(b) De la expansión a la recesión siguiente", "{($(a.north east)+(1.7cm,0)$)}", pares_b, "Bajada del paro en la expansión (puntos)", "Subida del paro en la recesión (puntos)", cb)
     fig += "\\end{tikzpicture}"
-    escribir("anx_desplome", fig, "Modelo de los tirones: recesiones del NBER, caída del PIB, crecimiento del año siguiente al valle y del año anterior al pico.")
+    escribir("anx_desplome", fig, "Modelo de los tirones con la tasa de paro de EE. UU. y las recesiones mensuales del NBER desde 1948.")
 
     # ---- anx_moderacion: volatilidad del crecimiento (desviación típica móvil de diez años)
-    g = 400 * np.diff(lq)
+    g = 4 * np.diff(lq)  # crecimiento trimestral anualizado, en puntos porcentuales
     xg = np.array([decimal(f) for f in fq[1:]])
     vol = [(xg[k], float(np.std(g[k - 39:k + 1]))) for k in range(39, len(g))]
     for (a_, b_) in (("1947-04-01", "1983-10-01"), ("1984-01-01", "2007-10-01"), ("2008-01-01", "2019-10-01")):
