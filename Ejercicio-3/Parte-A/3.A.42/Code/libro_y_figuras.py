@@ -187,23 +187,23 @@ def sinteticas(filas_series):
             tramos_.append((inicio, len(serie) - 1))
         return tramos_
 
-    def eje(nombre, titulo, extra, cuerpo, ancho="14.5cm", alto="3.4cm", ylab=""):
+    def eje(nombre, titulo, extra, cuerpo, ancho="14.5cm", alto="3.4cm", ylab="", xlab="", xmax=96):
         return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=%s, height=%s, scale only axis, %s,\n"
-                "    xmin=0, xmax=96, xtick=\\empty, ytick=\\empty, title={%s}, title style={font=\\footnotesize, yshift=-1ex},\n"
-                "    ylabel={%s}, xlabel={tiempo}, xlabel style={at={(1,0)}, anchor=north east}]\n%s\n\\end{axis}\n"
-                % (nombre, extra, ancho, alto, ESTILO, titulo, ylab, cuerpo))
+                "    xmin=0, xmax=%s, xtick=\\empty, ytick=\\empty, title={%s}, title style={font=\\footnotesize, yshift=-1ex},\n"
+                "    ylabel={%s}, xlabel={%s}, xlabel style={at={(1,0)}, anchor=north east},\n"
+                "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.01,0.99)}, anchor=north west}, legend cell align=left]\n%s\n\\end{axis}\n"
+                % (nombre, extra, ancho, alto, ESTILO, xmax, titulo, ylab, xlab, cuerpo))
 
     # anx_tres_ciclos: el mismo PIB visto en niveles, en desviaciones y en tasas
     b_nivel, b_desv, b_tasa = bajadas(y), bajadas(ciclo), bajadas(np.nan_to_num(tasa, nan=tasa[1]), 2)
-    p1 = sombras(b_nivel, 1) + "\n\\addplot[black, thick] coordinates {%s};\n\\addplot[black!55, dashed] coordinates {%s};" % (
+    p1 = sombras(b_nivel, 1) + "\n\\addplot[black, thick] coordinates {%s};\n\\addlegendentry{$y_t$}\n\\addplot[black!55, dashed] coordinates {%s};\n\\addlegendentry{$y^g_t$}" % (
         coords(t, y), coords(t, tendencia))
-    p1 += "\n\\node[font=\\footnotesize, anchor=west] at (axis cs:80,62) {$y^g_t$};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:84,70) {$y_t$};"
     p2 = sombras(b_desv, 0) + "\n\\addplot[black, thick] coordinates {%s};\n\\addplot[black!55, dashed] coordinates {(0,0) (96,0)};" % coords(t, ciclo)
     p3 = sombras(b_tasa, 0) + "\n\\addplot[black, thick] coordinates {%s};\n\\addplot[black!55, dashed] coordinates {(0,0) (96,0)};" % coords(t[1:], tasa[1:])
     fig = "\\begin{tikzpicture}\n"
     fig += eje("a", "(a) Nivel: ciclo clásico", "{(0,0)}", p1, ylab="$y_t$")
     fig += eje("b", "(b) Desviación respecto a la tendencia: ciclo de crecimiento", "{($(a.south west)+(0,-1.3cm)$)}", p2, ylab="$y^c_t$")
-    fig += eje("c", "(c) Tasa de crecimiento: ciclo de tasas", "{($(b.south west)+(0,-1.3cm)$)}", p3, ylab="$\\Delta y_t$")
+    fig += eje("c", "(c) Tasa de crecimiento: ciclo de tasas", "{($(b.south west)+(0,-1.3cm)$)}", p3, ylab="$\\Delta y_t$", xlab="tiempo")
     fig += "\\end{tikzpicture}"
     escribir("anx_tres_ciclos", fig, "El mismo PIB sintético, con las fases sombreadas según cada definición del ciclo.")
 
