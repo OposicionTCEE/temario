@@ -355,7 +355,8 @@ def main():
     fuentes = [["Serie o fichero", "Organismo", "Dirección de descarga", "Fecha de descarga"]]
     for fichero, url in DESCARGAS.items():
         org = {"dl_bis": "Banco de Pagos Internacionales", "dl_fred": "Banco de la Reserva Federal de San Luis (FRED)",
-               "dl_eurostat": "Eurostat", "dl_wb": "Banco Mundial", "dl_bigmac": "The Economist"}[fichero.split("/")[0]]
+               "dl_eurostat": "Eurostat", "dl_wb": "Banco Mundial", "dl_icp": "Banco Mundial (ICP 2021)",
+               "dl_bigmac": "The Economist"}[fichero.split("/")[0]]
         fuentes.append([fichero, org, url, FECHA_DESCARGA])
     filas = [["Serie", "Área", "Fecha", "Valor", "Unidad", "Fuente", "Tratamiento", "Figura"]]
     for f, v in fred:
