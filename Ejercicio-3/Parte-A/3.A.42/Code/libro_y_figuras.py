@@ -246,7 +246,7 @@ def sinteticas(filas_series):
     for nombre, titulo, lugar, cuerpo in (("a", "(a) Paseo aleatorio y tendencia lineal", "{(0,0)}", p1),
                                           ("b", "(b) Desviación respecto a la tendencia lineal", "{($(a.south west)+(0,-1.3cm)$)}", p2),
                                           ("c", "(c) Ciclo del filtro de HODRICK-PRESCOTT", "{($(b.south west)+(0,-1.3cm)$)}", p3)):
-        fig += eje(nombre, titulo, lugar, cuerpo.replace("xmax=96", "xmax=159")).replace("xmax=96", "xmax=159")
+        fig += eje(nombre, titulo, lugar, cuerpo, alto="2.8cm", xmax=159, xlab="tiempo" if nombre == "c" else "")
     fig += "\\end{tikzpicture}"
     escribir("anx_espurio", fig, "Un paseo aleatorio no tiene ciclo, pero la tendencia lineal y el filtro HP le fabrican uno (semilla 7).")
     filas_series.append(("Simulación", "Paseo aleatorio con deriva 0,5 y desviación típica 1 (semilla 7); 160 periodos", "anx_espurio"))
