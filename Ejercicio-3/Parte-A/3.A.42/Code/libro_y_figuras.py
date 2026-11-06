@@ -766,7 +766,7 @@ def con_datos_a2(carpeta, filas_series, cifras, momentos):
     for k, (pk, vl) in enumerate(zip(picos_m, valles_m)):
         bajo = int(np.argmin(um[max(0, pk - 12):pk + 7])) + max(0, pk - 12)  # mínimo del paro alrededor del pico
         sig = picos_m[k + 1] if k + 1 < len(picos_m) else len(fm) - 1
-        alto = int(np.argmax(um[pk:min(len(fm), vl + 25)])) + pk  # máximo del paro tras el valle
+        alto = int(np.argmax(um[pk:min(len(fm), vl + 25, sig + 1)])) + pk  # máximo del paro tras el valle, antes del pico siguiente
         sube = um[alto] - um[bajo]
         bajo_sig = int(np.argmin(um[alto:sig + 7])) + alto if k + 1 < len(picos_m) else None
         baja = um[alto] - um[bajo_sig] if bajo_sig is not None else None
