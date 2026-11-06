@@ -118,6 +118,16 @@ def leer_bm(carpeta, fichero):
     return {r["countryiso3code"]: r["value"] for r in d[1] if r["value"] is not None and r["countryiso3code"]}
 
 
+def leer_icp(carpeta, fichero):  # base de datos ICP 2021 del Banco Mundial (fuente 90): PIB, año 2021
+    d = json.load(open(os.path.join(carpeta, "dl_icp", fichero), encoding="utf-8"))
+    out = {}
+    for r in d["source"]["data"]:
+        v = {x["concept"]: x["id"] for x in r["variable"]}
+        if r["value"] is not None:
+            out[v["Country"]] = r["value"]
+    return out
+
+
 def paises_bm(carpeta):
     d = json.load(open(os.path.join(carpeta, "dl_wb", "paises.json"), encoding="utf-8"))
     return {r["id"]: r["name"] for r in d[1] if r["region"]["value"] != "Aggregates"}
