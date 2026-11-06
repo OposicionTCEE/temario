@@ -205,11 +205,12 @@ ETIQ_PENN = {"USA": "EE. UU.", "CHE": "Suiza", "ESP": "España", "DEU": "Alemani
              "IND": "India", "MEX": "México", "NOR": "Noruega", "EGY": "Egipto"}
 
 
-def fig_penn(ppp, xr, pibppa, nombres):
+def fig_penn(pxwl, pcpp, nombres):
     filas = []
+    us = pxwl["USA"]
     for iso in sorted(nombres):
-        if iso in ppp and iso in xr and iso in pibppa and xr[iso] > 0:
-            filas.append((iso, nombres[iso], ppp[iso], xr[iso], 100.0 * ppp[iso] / xr[iso], pibppa[iso]))
+        if iso in pxwl and iso in pcpp:
+            filas.append((iso, nombres[iso], pxwl[iso], None, 100.0 * pxwl[iso] / us, pcpp[iso]))
     xs = [math.log(f[5]) for f in filas]
     ys = [math.log(f[4]) for f in filas]
     a, b, r2 = ols(xs, ys)
