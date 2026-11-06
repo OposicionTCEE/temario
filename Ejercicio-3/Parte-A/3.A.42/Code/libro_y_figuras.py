@@ -704,6 +704,14 @@ def con_datos_a2(carpeta, filas_series, cifras, momentos):
         shy = float(np.std([us["Horas"][f] for f in ff]) / np.std([us["PIB"][f] for f in ff]))
         cifras.append(("EE. UU. %s-%s: corr(productividad, PIB), corr(productividad, horas), desv. horas/PIB" % (trimestre(decimal(desde)), trimestre(decimal(hasta))),
                        "%.2f / %.2f / %.2f" % (cpy, cph, shy), "", "I.5"))
+    # sincronización: ciclos HP del PIB de España, de la zona del euro (Eurostat, EA20) y de EE. UU., 1995T1-2019T4
+    ea = ciclo_hp(leer_eurostat(e_gdp, na_item="B1GQ", geo="EA20"), desde="1995-01-01")
+    ff = [f for f in sorted(es["PIB"]) if "1995-01-01" <= f <= "2019-10-01" and f in ea and f in us["PIB"]]
+    c_es_ea = float(np.corrcoef([es["PIB"][f] for f in ff], [ea[f] for f in ff])[0, 1])
+    c_es_us = float(np.corrcoef([es["PIB"][f] for f in ff], [us["PIB"][f] for f in ff])[0, 1])
+    c_ea_us = float(np.corrcoef([ea[f] for f in ff], [us["PIB"][f] for f in ff])[0, 1])
+    cifras.append(("Correlación de los ciclos HP del PIB, 1995T1-2019T4: España-zona del euro, España-EE. UU., zona del euro-EE. UU.",
+                   "%.2f / %.2f / %.2f" % (c_es_ea, c_es_us, c_ea_us), "", "I.5"))
 
     # ---- anx_volatilidad: desviación típica relativa al PIB
     filas_v = [("Consumo", "Consumo"), ("Consumo de duraderos", None), ("Inversión", "Inversión"), ("Gasto público", "Gasto público"),
