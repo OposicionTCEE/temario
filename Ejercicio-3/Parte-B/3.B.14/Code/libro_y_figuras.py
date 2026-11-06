@@ -218,7 +218,7 @@ def fig_penn(pxwl, pcpp, nombres):
     puntos = [(f[5], f[4]) for f in filas]
     x0, x1 = 900.0, 150000.0
     recta = [(x, math.exp(a + b * math.log(x))) for x in (x0, 2000.0, 5000.0, 10000.0, 20000.0, 50000.0, x1)]
-    tikz = "% Nivel de precios del PIB (EE. UU. = 100: PPA / tipo de cambio de mercado) y PIB por habitante en PPA, 2021\n"
+    tikz = "% Nivel de precios del PIB (ICP 2021: mundo = 100, reescalado a EE. UU. = 100) y PIB por habitante en PPA, 2021\n"
     tikz += "%% (Banco Mundial, ICP 2021; %d economías), con la recta de regresión en logaritmos.\n" % len(filas)
     tikz += "% Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_penn\n"
     tikz += "\\begin{tikzpicture}\n" + EJES
