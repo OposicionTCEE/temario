@@ -192,7 +192,7 @@ def sinteticas(filas_series):
             tramos_.append((inicio, len(serie) - 1))
         return tramos_
 
-    def eje(nombre, titulo, extra, cuerpo, ancho="14.5cm", alto="3.4cm", ylab="", xlab="", xmax=96):
+    def eje(nombre, titulo, extra, cuerpo, ancho="14.5cm", alto="2.6cm", ylab="", xlab="", xmax=96):
         return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=%s, height=%s, scale only axis, %s,\n"
                 "    xmin=0, xmax=%s, xtick=\\empty, ytick=\\empty, title={%s}, title style={font=\\footnotesize, yshift=-1ex},\n"
                 "    ylabel={%s}, xlabel={%s}, xlabel style={at={(1,0)}, anchor=north east},\n"
@@ -230,7 +230,7 @@ def sinteticas(filas_series):
         else:
             cuerpo += "\n\\addplot[black!55, dashed] coordinates {(0,0) (96,0)};"
         lugar = "{(0,0)}" if anterior is None else "{($(%s.south west)+(0,-1.1cm)$)}" % anterior
-        fig += eje(nombre, titulo, lugar, cuerpo, alto="2.0cm" if nombre != "a" else "3.0cm", ylab=etiqueta,
+        fig += eje(nombre, titulo, lugar, cuerpo, alto="1.5cm" if nombre != "a" else "2.4cm", ylab=etiqueta,
                    xlab="tiempo" if nombre == "d" else "")
         anterior = nombre
     fig += "\\end{tikzpicture}"
@@ -251,7 +251,7 @@ def sinteticas(filas_series):
     for nombre, titulo, lugar, cuerpo in (("a", "(a) Paseo aleatorio y tendencia lineal", "{(0,0)}", p1),
                                           ("b", "(b) Desviación respecto a la tendencia lineal", "{($(a.south west)+(0,-1.3cm)$)}", p2),
                                           ("c", "(c) Ciclo del filtro de HODRICK-PRESCOTT", "{($(b.south west)+(0,-1.3cm)$)}", p3)):
-        fig += eje(nombre, titulo, lugar, cuerpo, alto="2.8cm", xmax=159, xlab="tiempo" if nombre == "c" else "")
+        fig += eje(nombre, titulo, lugar, cuerpo, alto="2.2cm", xmax=159, xlab="tiempo" if nombre == "c" else "")
     fig += "\\end{tikzpicture}"
     escribir("anx_espurio", fig, "Un paseo aleatorio no tiene ciclo, pero la tendencia lineal y el filtro HP le fabrican uno (semilla 7).")
     filas_series.append(("Simulación", "Paseo aleatorio con deriva 0,5 y desviación típica 1 (semilla 7); 160 periodos", "anx_espurio"))
