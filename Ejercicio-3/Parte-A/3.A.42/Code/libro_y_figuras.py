@@ -221,12 +221,12 @@ def sinteticas(filas_series):
     for nombre, titulo, serie, extra_serie, etiqueta in filas:
         cuerpo = "\\addplot[black, thick] coordinates {%s};" % serie
         if extra_serie:
-            cuerpo += "\n\\addplot[black!55, dashed] coordinates {%s};" % extra_serie
-            cuerpo += "\n\\node[font=\\footnotesize, anchor=west] at (axis cs:86,58) {$y^g_t$};"
+            cuerpo += "\n\\addlegendentry{$y^{obs}_t$}\n\\addplot[black!55, dashed] coordinates {%s};\n\\addlegendentry{$y^g_t$}" % extra_serie
         else:
             cuerpo += "\n\\addplot[black!55, dashed] coordinates {(0,0) (96,0)};"
         lugar = "{(0,0)}" if anterior is None else "{($(%s.south west)+(0,-1.1cm)$)}" % anterior
-        fig += eje(nombre, titulo, lugar, cuerpo, alto="2.0cm" if nombre != "a" else "3.0cm", ylab=etiqueta)
+        fig += eje(nombre, titulo, lugar, cuerpo, alto="2.0cm" if nombre != "a" else "3.0cm", ylab=etiqueta,
+                   xlab="tiempo" if nombre == "d" else "")
         anterior = nombre
     fig += "\\end{tikzpicture}"
     escribir("anx_componentes", fig, "Descomposición de una serie sintética en tendencia, ciclo, componente estacional e irregular.")
