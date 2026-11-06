@@ -884,7 +884,7 @@ def con_datos_a2(carpeta, filas_series, cifras, momentos):
     cifras.append(("Brecha de España: primer trimestre tras 1995 por encima de 2 y de 10 puntos", "%s y %s" % (supera2, supera10), "", "I.6"))
     cuerpo_a = sombras([(xt(p), xt(v)) for p, v, _ in AEE if xt(v) >= 1980], 50)
     cuerpo_a += "\n\\addplot[black, thick] coordinates {%s};\n\\addlegendentry{crédito al sector privado no financiero}" % coords(xb, rr)
-    cuerpo_a += "\n\\addplot[black!50, dashed] coordinates {%s};\n\\addlegendentry{tendencia (HP unilateral, $\\lambda=400\\,000$)}" % coords(xb, tt)
+    cuerpo_a += "\n\\addplot[black!50, dashed] coordinates {%s};\n\\addlegendentry{tendencia (HP unilateral, $\\lambda=400.000$)}" % coords(xb, tt)
     cuerpo_b = sombras([(xt(p), xt(v)) for p, v, _ in AEE if xt(v) >= 1980], 0)
     cuerpo_b += "\n\\addplot[black, thick] coordinates {%s};\n\\addlegendentry{brecha de crédito}" % coords(xb, bb)
     cuerpo_b += "\n\\addplot[black!55, dashed] coordinates {(1980,2) (2027,2)};\n\\addlegendentry{umbrales de $2$ y $10$ puntos}"
