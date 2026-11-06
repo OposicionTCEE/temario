@@ -293,7 +293,7 @@ def main():
 
     bil, nom, rea = fig_efectivo_euro(bis, fred)
     enom, eipc, eclu = fig_competitividad_espana(eu)
-    penn, (pa, pb, pr2) = fig_penn(ppp, xr, pibppa, nombres)
+    penn, (pa, pb, pr2) = fig_penn(pxwl, pcpp, nombres)
     fecha_bm, bmf, (ba, bb, br2), pus = fig_bigmac(bm, pib25)
 
     # ---- cifras citadas en el texto
