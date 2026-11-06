@@ -601,11 +601,11 @@ def con_datos_a2(carpeta, filas_series, cifras, momentos):
         filas_series.append(("GDPC1 (ALFRED %s)" % nombre[6:16], "Estados Unidos", t, round(float(c_rt[-1]), 3), "porcentaje", "ALFRED; cálculo propio", "brecha HP en tiempo real", "anx_tiempo_real"))
     rt, qr, fi, xt_ = map(np.array, (rt, qr, fi, xt_))
     cuerpo = sombras([r for r in rec if r[1] >= 1991.5 and r[0] <= 2019.75], 0)
-    for estilo, serie, etiqueta in (("black, very thick", fi, "final (datos de 2026)"), ("black!45", qr, "cuasi tiempo real (datos de 2026 cortados)"),
+    for estilo, serie, etiqueta in (("black, very thick", fi, "final (datos de $2026$)"), ("black!45", qr, "cuasi tiempo real (datos de $2026$ cortados)"),
                                     ("black!75, dashed", rt, "tiempo real (datos de cada momento)")):
         cuerpo += "\n\\addplot[%s] coordinates {%s};\n\\addlegendentry{%s}" % (estilo, coords(xt_, serie), etiqueta)
     cuerpo += "\n\\addplot[black!40, thin, forget plot] coordinates {(1991.5,0) (2020,0)};"
-    fig = ("\\begin{tikzpicture}\n\\begin{axis}[width=14.5cm, height=5.6cm, scale only axis, %s,\n"
+    fig = ("\\begin{tikzpicture}\n\\begin{axis}[width=14.2cm, height=5.6cm, scale only axis, %s,\n"
            "    xmin=1991.5, xmax=2020, xtick={1992,1996,...,2020}, ylabel={Ciclo HODRICK-PRESCOTT (\\%%)},\n"
            "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.01,0.02)}, anchor=south west}, legend cell align=left]\n%s\n\\end{axis}\n\\end{tikzpicture}"
            % (ESTILO, cuerpo))
@@ -714,12 +714,13 @@ def con_datos_a2(carpeta, filas_series, cifras, momentos):
     c_us = " ".join("(%.3f,%d)" % (t_us[a][1], n - i) for i, (a, _) in enumerate(filas_v))
     c_es = " ".join("(%.3f,%d)" % (t_es[b][1], n - i) for i, (a, b) in enumerate(filas_v) if b)
     fig = ("\\begin{tikzpicture}\n\\begin{axis}[width=10cm, height=7.2cm, scale only axis, %s,\n"
-           "    xbar, bar width=5pt, xmin=0, xmax=5.6, ymin=0.4, ymax=%d.6, ytick={%s}, yticklabels={%s},\n"
+           "    xbar, bar width=5pt, xmin=0, xmax=5.6, ymin=0.4, ymax=%d.6, ytick={%s}, yticklabels={%s}, area legend,\n"
+           "    xticklabel style={/pgf/number format/use comma},\n"
            "    xlabel={Desviación típica del ciclo de la variable dividida por la del PIB}, y dir=normal,\n"
            "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.98,0.02)}, anchor=south east}, legend cell align=left]\n"
-           "\\addplot[fill=black!75, draw=none, bar shift=3pt] coordinates {%s};\n\\addlegendentry{Estados Unidos, 1950-2019}\n"
-           "\\addplot[fill=black!30, draw=none, bar shift=-3pt] coordinates {%s};\n\\addlegendentry{España, 1995-2019}\n"
-           "\\addplot[black!60, dashed, forget plot] coordinates {(1,0.4) (1,%d.6)};\n\\end{axis}\n\\end{tikzpicture}"
+           "\\addplot[fill=black!75, draw=none, bar shift=3pt] coordinates {%s};\n\\addlegendentry{Estados Unidos, $1950$-$2019$}\n"
+           "\\addplot[fill=black!30, draw=none, bar shift=-3pt] coordinates {%s};\n\\addlegendentry{España, $1995$-$2019$}\n"
+           "\\draw[black!60, dashed] (axis cs:1,0.4) -- (axis cs:1,%d.6);\n\\end{axis}\n\\end{tikzpicture}"
            % (ESTILO, n, ",".join(str(n - i) for i in range(n)), ",".join(a for a, _ in filas_v), c_us, c_es, n))
     escribir("anx_volatilidad", fig, "Volatilidad relativa de los componentes del gasto y del mercado de trabajo (ciclo HP).")
 
@@ -729,20 +730,21 @@ def con_datos_a2(carpeta, filas_series, cifras, momentos):
     def linea(nombre, estilo, etiqueta):
         return "\\addplot[%s] coordinates {%s};\n\\addlegendentry{%s}" % (estilo, " ".join("(%d,%.3f)" % (k, t_us[nombre][2][k]) for k in ks), etiqueta)
 
-    def panel_c(nombre, titulo, lugar, lineas):
-        return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=6.6cm, height=4.6cm, scale only axis, %s,\n"
+    def panel_c(nombre, titulo, lugar, lineas, pos_ley=("{(0.02,0.02)}", "south west")):
+        return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=6.2cm, height=4.6cm, scale only axis, %s,\n"
                 "    xmin=-4, xmax=4, xtick={-4,...,4}, ymin=-1, ymax=1, xlabel={$k$ (trimestres)}, ylabel={Correlación de $x_{t+k}$ con $y_t$},\n"
-                "    title={%s}, title style={font=\\footnotesize}, legend style={draw=none, fill=none, font=\\footnotesize, at={(0.5,0.02)}, anchor=south},\n"
+                "    title={%s}, title style={font=\\footnotesize}, legend style={draw=none, fill=none, font=\\footnotesize, at={%s}, anchor=%s},\n"
                 "    legend cell align=left]\n\\addplot[black!40, thin, forget plot] coordinates {(-4,0) (4,0)};\n\\addplot[black!40, thin, forget plot] coordinates {(0,-1) (0,1)};\n%s\n\\end{axis}\n"
-                % (nombre, lugar, ESTILO, titulo, "\n".join(lineas)))
+                % (nombre, lugar, ESTILO, titulo, pos_ley[0], pos_ley[1], "\n".join(lineas)))
 
     fig = "\\begin{tikzpicture}\n"
     fig += panel_c("a", "(a) Variables reales", "{(0,0)}", [linea("Horas", "black, thick, mark=*, mark size=1.2pt", "horas"),
                                                               linea("Productividad por hora", "black!55, dashed, mark=square*, mark size=1.2pt", "productividad"),
                                                               linea("Tasa de paro", "black!80, dotted, thick, mark=triangle*, mark size=1.5pt", "tasa de paro")])
-    fig += panel_c("b", "(b) Variables nominales", "{($(a.north east)+(1.6cm,0)$)}", [linea("Nivel de precios", "black, thick, mark=*, mark size=1.2pt", "nivel de precios"),
+    fig += panel_c("b", "(b) Variables nominales", "{($(a.north east)+(1.5cm,0)$)}", [linea("Nivel de precios", "black, thick, mark=*, mark size=1.2pt", "nivel de precios"),
                                                                                      linea("Inflación", "black!55, dashed, mark=square*, mark size=1.2pt", "inflación"),
-                                                                                     linea("Tipo de interés a corto", "black!80, dotted, thick, mark=triangle*, mark size=1.5pt", "tipo de interés")])
+                                                                                     linea("Tipo de interés a corto", "black!80, dotted, thick, mark=triangle*, mark size=1.5pt", "tipo de interés")],
+                   pos_ley=("{(0.98,0.02)}", "south east"))
     fig += "\\end{tikzpicture}"
     escribir("anx_adelantos", fig, "Correlaciones cruzadas del ciclo HP de cada variable con el del PIB de EE. UU., 1950-2019.")
 
@@ -846,7 +848,7 @@ def con_datos_a2(carpeta, filas_series, cifras, momentos):
                 "" if k == 0 else ", forget plot", c0, c0, "\n\\addlegendentry{crisis bancaria}" if k == 0 else "")
         cuerpo += "\n\\addplot[black!40, thin, forget plot] coordinates {(1970,0) (2026,0)};"
         lugar = "{(0,0)}" if pais == "ES" else "{($(a.south west)+(0,-1.5cm)$)}"
-        paneles.append("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=14.5cm, height=4.6cm, scale only axis, %s,\n"
+        paneles.append("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=14.2cm, height=4.6cm, scale only axis, %s,\n"
                        "    xmin=1970, xmax=2026, xtick={1970,1975,...,2025}, ymin=-45, ymax=45, ylabel={Desviación (\\%%)}, title={%s}, title style={font=\\footnotesize},\n"
                        "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.01,0.02)}, anchor=south west}, legend columns=2, legend cell align=left]\n%s\n\\end{axis}\n"
                        % ("a" if pais == "ES" else "b", lugar, ESTILO, titulo, cuerpo))
