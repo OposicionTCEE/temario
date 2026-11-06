@@ -161,7 +161,7 @@ def fig_efectivo_euro(bis, fred):
     tikz += "% (BPI, cesta amplia de 64 economías, 2020 = 100), mensual, 1999-2026. Subida = apreciación del euro.\n"
     tikz += "% Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_efectivo_euro\n"
     tikz += "\\begin{tikzpicture}\n" + EJES
-    tikz += r"""  xmin=1998.5, xmax=2027, xtick={2000,2005,2010,2015,2020,2025},
+    tikz += r"""  xmin=1998.5, xmax=2027, xtick={2000,2005,2010,2015,2020,2025}, ymin=65, ymax=145,
   ylabel={Índice, $2020=100$},
   legend to name=leyendaefectivo,
 ]
@@ -185,12 +185,13 @@ def fig_competitividad_espana(eu):
     tikz += "% 1994-2026, 2020 = 100 (Eurostat, ert_eff_ic_q): nominal, real con IPC y real con costes laborales unitarios.\n"
     tikz += "% Subida = apreciación. Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_competitividad_espana\n"
     tikz += "\\begin{tikzpicture}\n" + EJES
-    tikz += r"""  xmin=1993.5, xmax=2027, xtick={1995,2000,2005,2010,2015,2020,2025},
+    tikz += r"""  xmin=1993.5, xmax=2027, xtick={1995,2000,2005,2010,2015,2020,2025}, ymin=88, ymax=115,
   ylabel={Índice, $2020=100$},
   legend to name=leyendaespana,
 ]
 """
-    tikz += "\\draw[black!35, densely dotted] (axis cs:1999,\\pgfkeysvalueof{/pgfplots/ymin}) -- (axis cs:1999,\\pgfkeysvalueof{/pgfplots/ymax});\n"
+    tikz += "\\draw[black!35, densely dotted] (axis cs:1999,88) -- (axis cs:1999,115);\n"
+    tikz += "\\node[font=\\scriptsize, black!60, anchor=north west, inner sep=1.5pt] at (axis cs:1999,115) {Euro};\n"
     tikz += "\\addplot[black!45, line width=0.6pt] coordinates {%s};\n" % coordenadas(nom)
     tikz += "\\addlegendentry{Nominal}\n"
     tikz += "\\addplot[black, line width=1.1pt] coordinates {%s};\n" % coordenadas(ipc)
@@ -202,8 +203,9 @@ def fig_competitividad_espana(eu):
     return nom, ipc, clu
 
 
-ETIQ_PENN = {"USA": "EE. UU.", "CHE": "Suiza", "ESP": "España", "DEU": "Alemania", "JPN": "Japón", "CHN": "China",
-             "IND": "India", "MEX": "México", "NOR": "Noruega", "EGY": "Egipto"}
+ETIQ_PENN = {"USA": ("EE. UU.", "east"), "CHE": ("Suiza", "south east"), "ESP": ("España", "east"), "DEU": ("Alemania", "north west"),
+             "JPN": ("Japón", "east"), "CHN": ("China", "south east"), "IND": ("India", "south east"), "MEX": ("México", "north west"),
+             "NOR": ("Noruega", "west"), "EGY": ("Egipto", "north west")}
 
 
 def fig_penn(pxwl, pcpp, nombres):
@@ -232,15 +234,16 @@ def fig_penn(pxwl, pcpp, nombres):
     tikz += "\\addplot[black, line width=0.8pt, smooth] coordinates {%s};\n" % coordenadas(recta, 2)
     for f in filas:
         if f[0] in ETIQ_PENN:
-            tikz += "\\node[font=\\scriptsize, anchor=south east, inner sep=1.5pt] at (axis cs:%.2f,%.2f) {%s};\n" % (f[5], f[4], ETIQ_PENN[f[0]])
+            tikz += "\\node[font=\\scriptsize, anchor=%s, inner sep=1.8pt] at (axis cs:%.2f,%.2f) {%s};\n" % (ETIQ_PENN[f[0]][1], f[5], f[4], ETIQ_PENN[f[0]][0])
     tikz += "\\end{axis}\n\\end{tikzpicture}\n"
     open(os.path.join(IMG, "anx_penn.tikz"), "w", encoding="utf-8").write(tikz)
     return filas, (a, b, r2)
 
 
 ISO_BM = {"EUZ": "EMU"}
-ETIQ_BM = {"USA": "EE. UU.", "CHE": "Suiza", "EUZ": "Zona del euro", "JPN": "Japón", "CHN": "China", "IND": "India",
-           "NOR": "Noruega", "MEX": "México", "GBR": "Reino Unido", "ARG": "Argentina"}
+ETIQ_BM = {"USA": ("EE. UU.", "north west"), "CHE": ("Suiza", "south east"), "EUZ": ("Zona del euro", "north east"), "JPN": ("Japón", "east"),
+           "CHN": ("China", "south east"), "IND": ("India", "south east"), "NOR": ("Noruega", "south east"), "MEX": ("México", "south east"),
+           "GBR": ("Reino Unido", "south east")}
 
 
 def fig_bigmac(bm, pib25):
@@ -274,7 +277,7 @@ def fig_bigmac(bm, pib25):
     tikz += "\\addplot[black, line width=0.8pt, smooth] coordinates {%s};\n" % coordenadas(recta, 2)
     for f in filas:
         if f[0] in ETIQ_BM:
-            tikz += "\\node[font=\\scriptsize, anchor=south east, inner sep=1.5pt] at (axis cs:%.2f,%.2f) {%s};\n" % (f[6], f[4], ETIQ_BM[f[0]])
+            tikz += "\\node[font=\\scriptsize, anchor=%s, inner sep=1.8pt] at (axis cs:%.2f,%.2f) {%s};\n" % (ETIQ_BM[f[0]][1], f[6], f[4], ETIQ_BM[f[0]][0])
     tikz += "\\end{axis}\n\\end{tikzpicture}\n"
     open(os.path.join(IMG, "anx_bigmac.tikz"), "w", encoding="utf-8").write(tikz)
     return fecha, filas, (a, b, r2), pus
