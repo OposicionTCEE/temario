@@ -900,7 +900,7 @@ def con_datos_a2(carpeta, filas_series, cifras, momentos):
     escribir("anx_brecha_credito", fig, "España: crédito al sector privado no financiero (% del PIB), tendencia HP unilateral y brecha de crédito del BPI.")
 
 
-# ---------------------------------------------------------------- A3 (07/11/2026): identificación y predicción
+# ---------------------------------------------------------------- A3 (06-07/11/2026): identificación y predicción
 # Figuras: anx_var_monetario (VAR recursivo de EE. UU. a la manera de CHRISTIANO, EICHENBAUM y EVANS, 1999),
 # anx_proyeccion_local (proyección local del PIB, JORDÀ 2005, frente al VAR), anx_probit_recesion (probit de la
 # pendiente de la curva, ESTRELLA y MISHKIN 1998) y anx_regla_sahm (regla de SAHM con los datos de cada momento). Fuentes adicionales de
@@ -1217,7 +1217,7 @@ def main():
     fuentes.append(["ALFRED GDPC1", "Ediciones del PIB real de EE. UU., diciembre de 1991-2019", "Estados Unidos", "miles de millones de dólares encadenados de cada edición",
                     "trimestral", "ALFRED, Banco de la Reserva Federal de San Luis", "https://alfred.stlouisfed.org/series?seid=GDPC1", FECHA_DESCARGA])
     for s, nombre in SERIES_A3.items():
-        fuentes.append([s, nombre, "Estados Unidos", "ver FRED", "mensual (media trimestral en el VAR)", "FRED, Banco de la Reserva Federal de San Luis", FRED + s, "07/11/2026"])
+        fuentes.append([s, nombre, "Estados Unidos", "ver FRED", "mensual (media trimestral en el VAR)", "FRED, Banco de la Reserva Federal de San Luis", FRED + s, FECHA_DESCARGA])
     for nombre, consulta in EUROSTAT.items():
         fuentes.append(["Eurostat " + consulta.split("?")[0], nombre, "España y zona del euro", "CLV10_MEUR, PD10_EUR, THS_PER o THS_HW", "trimestral",
                         "Eurostat", "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/" + consulta, FECHA_DESCARGA])
