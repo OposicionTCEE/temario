@@ -1344,11 +1344,14 @@ def main():
     descargar(carpeta)
     descargar_a2(carpeta)
     descargar_a3(carpeta)
+    descargar_a4(carpeta)
     series, cifras, sint, momentos = [], [], [], []
     sinteticas(sint)
+    sinteticas_a4(sint)
     con_datos(carpeta, series, cifras)
     con_datos_a2(carpeta, series, cifras, momentos)
     con_datos_a3(carpeta, series, cifras)
+    con_datos_a4(carpeta, series, cifras)
     leeme = [["Libro de datos del tema 3.A.42 (Teorías de los ciclos económicos)"],
              ["Generado por Code/libro_y_figuras.py el %s con los datos de FRED descargados ese día." % FECHA_DESCARGA],
              ["Hojas: Fuentes (series y su origen), Series (formato largo: serie, país, fecha, valor, unidad, fuente, tratamiento, figura),"],
@@ -1357,7 +1360,9 @@ def main():
              ["todos los ciclos sobre 100 x logaritmo del PIB real (desviación en porcentaje)."],
              ["A3 (I.7 e I.8): VAR recursivo de EE. UU. (PIB, deflactor, materias primas, tipo de los fondos federales; 4 retardos; 1965T3-1995T3 y 1965T1-2007T4;"],
              ["bandas del 90% por remuestreo de los residuos, 1.000 réplicas), proyección local recursiva con errores de NEWEY y WEST, probit de la recesión"],
-             ["dentro de doce meses sobre la pendiente (bono a diez años menos letras a tres meses en rendimiento equivalente), estimado con 1959-2018, y regla de SAHM."]]
+             ["dentro de doce meses sobre la pendiente (bono a diez años menos letras a tres meses en rendimiento equivalente), estimado con 1959-2018, y regla de SAHM."],
+             ["A4 (II.1 y II.2): simulaciones de SLUTSKY y FRISCH (hoja Simulaciones) y réplica de LUCAS (1973) y BALL, MANKIW y ROMER (1988) con el PIB"],
+             ["nominal y real del Banco Mundial: por país, y_t = a + b t + tau Dx_t + c y_(t-1) con 100 x log, 1960-2019, países con al menos 41 años seguidos."]]
     fuentes = [["Código", "Serie", "País", "Unidad", "Frecuencia", "Institución", "Enlace", "Descarga"]]
     for s, (nombre, pais, unidad, frec) in SERIES.items():
         fuentes.append([s, nombre, pais, unidad, frec, "FRED, Banco de la Reserva Federal de San Luis", FRED + s, FECHA_DESCARGA])
@@ -1379,6 +1384,9 @@ def main():
         fuentes.append([s, nombre, "Estados Unidos", "ver FRED", "trimestral o mensual (media trimestral)", "FRED, Banco de la Reserva Federal de San Luis", FRED + s, FECHA_DESCARGA])
     fuentes.append(["ALFRED GDPC1", "Ediciones del PIB real de EE. UU., diciembre de 1991-2019", "Estados Unidos", "miles de millones de dólares encadenados de cada edición",
                     "trimestral", "ALFRED, Banco de la Reserva Federal de San Luis", "https://alfred.stlouisfed.org/series?seid=GDPC1", FECHA_DESCARGA])
+    for s, nombre in BANCO_MUNDIAL.items():
+        fuentes.append([s, nombre, "Todos los países (sin agregados regionales)", "moneda nacional", "anual", "Banco Mundial, Indicadores del Desarrollo Mundial",
+                        "https://api.worldbank.org/v2/country/all/indicator/%s?format=json" % s, FECHA_DESCARGA])
     for s, nombre in SERIES_A3.items():
         fuentes.append([s, nombre, "Estados Unidos", "ver FRED", "mensual (media trimestral en el VAR)", "FRED, Banco de la Reserva Federal de San Luis", FRED + s, FECHA_DESCARGA])
     for nombre, consulta in EUROSTAT.items():
