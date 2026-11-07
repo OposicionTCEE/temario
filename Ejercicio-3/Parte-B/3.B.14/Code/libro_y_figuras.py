@@ -674,8 +674,12 @@ def fig_paridades_largo(pol, xm, cm, t0="2006-01", t1="2025-06", tope=10.0):
     tikz += "\\addplot[black, line width=0.6pt] coordinates {%s};\n" % recta(est["fisher_sub"])
     tikz += "\\addplot[only marks, mark=*, mark size=1.2pt, black!60] coordinates {%s};\n" % coordenadas([(f[2], f[3]) for f in con_inf], 2)
     for f in con_inf:
-        if f[0] in ETIQ_PAR_A:
-            tikz += "\\node[font=\\scriptsize, anchor=%s, inner sep=1.6pt] at (axis cs:%.2f,%.2f) {%s};\n" % (ETIQ_PAR_A[f[0]], f[2], f[3], f[1])
+        e = ETIQ_PAR_A.get(f[0])
+        if isinstance(e, tuple):
+            tikz += "\\draw[black!50, line width=0.3pt] (axis cs:%.2f,%.2f) -- (axis cs:%.2f,%.2f);\n" % (f[2], f[3], e[1] + 1.4, e[2] - 0.35)
+            tikz += "\\node[font=\\scriptsize, anchor=%s, inner sep=1.6pt] at (axis cs:%.2f,%.2f) {%s};\n" % (e[0], e[1], e[2], f[1])
+        elif e:
+            tikz += "\\node[font=\\scriptsize, anchor=%s, inner sep=1.6pt] at (axis cs:%.2f,%.2f) {%s};\n" % (e, f[2], f[3], f[1])
     tikz += "\\end{axis}\n\\begin{axis}[at={(pa.east)}, anchor=west, xshift=1.3cm,\n" + eje
     tikz += "  ylabel={Depreciación frente al dólar (puntos al año)}, title={(b) Tipos de interés y depreciación},\n]\n"
     tikz += "\\addplot[black!40, dashed] coordinates {(-2.5,-2.5) (7,7)};\n"
