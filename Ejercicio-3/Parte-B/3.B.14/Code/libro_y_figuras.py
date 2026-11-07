@@ -37,6 +37,9 @@ DESCARGAS = {
     "dl_eurostat_ppp/pli.json": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/prc_ppp_ind?na_item=PLI_EU27_2020&ppp_cat=P0101&ppp_cat=P0201&ppp_cat=GDP&sinceTimePeriod=2022&format=JSON&lang=EN",
     "dl_eurostat_ppp/vol_aic.json": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/prc_ppp_ind?na_item=VI_PPS_EU27_2020_HAB&ppp_cat=A01&sinceTimePeriod=2022&format=JSON&lang=EN",
     "dl_wb_ca/ca_esp.json": "https://api.worldbank.org/v2/country/ESP;DEU;EMU/indicator/BN.CAB.XOKA.GD.ZS?date=1995:2025&format=json&per_page=200",
+    "dl_bis_pol/WS_CBPOL_csv_flat.csv": "https://data.bis.org/static/bulk/WS_CBPOL_csv_flat.zip (descomprimido; descargado el 07/11/2026)",
+    "dl_wb_us/ca_usa.json": "https://api.worldbank.org/v2/country/USA/indicator/BN.CAB.XOKA.GD.ZS?date=1980:2025&format=json&per_page=200",
+    "dl_wb_us/exp_wld.json": "https://api.worldbank.org/v2/country/WLD/indicator/NE.EXP.GNFS.CD?date=2015:2025&format=json&per_page=200",
 }
 
 
