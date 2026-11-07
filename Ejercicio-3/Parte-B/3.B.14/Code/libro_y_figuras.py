@@ -715,6 +715,11 @@ def main():
     bsf, (bsb, bsrb, bsdb), (bss, bsrs, bsds) = fig_bienes_servicios(pliE, aicE, geoE)
     ccor = leer_cuenta_corriente(carpeta)
     ccs = fig_cuenta_corriente(ccor)
+    pol = leer_cbpol(carpeta)
+    ccus = leer_wb_simple(carpeta, "dl_wb_us", "ca_usa.json")
+    expw = leer_wb_simple(carpeta, "dl_wb_us", "exp_wld.json")
+    dreer, dcc = fig_dolar_cuenta_corriente(bis, ccus)
+    parf, pars, pare = fig_paridades_largo(pol, xm, cm)
 
     # ---- cifras citadas en el texto
     cif = []
