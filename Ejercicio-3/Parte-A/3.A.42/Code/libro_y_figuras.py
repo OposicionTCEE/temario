@@ -1176,6 +1176,169 @@ def con_datos_a3(carpeta, filas_series, cifras):
     escribir("anx_regla_sahm", fig, "EE. UU.: regla de SAHM con los datos de cada momento (media de tres meses del paro menos su mínimo de los doce meses anteriores).")
 
 
+# ---------------------------------------------------------------- A4 (07/11/2026): impulso y propagación; prueba de LUCAS
+# Figuras sintéticas: anx_slutsky (suma móvil de diez cifras aleatorias, SLUTSKY 1927/1937) y anx_frisch (un proceso
+# autorregresivo de orden dos con raíces complejas, el esquema de YULE 1927 y FRISCH 1933: respuesta a un impulso y a una
+# sucesión de impulsos). Figura con datos: anx_lucas_pendiente (réplica de LUCAS 1973 y de BALL, MANKIW y ROMER 1988 con
+# el PIB nominal y real de los Indicadores del Desarrollo Mundial del Banco Mundial, NY.GDP.MKTP.CN y NY.GDP.MKTP.KN).
+BANCO_MUNDIAL = {"NY.GDP.MKTP.CN": "PIB a precios corrientes, moneda nacional", "NY.GDP.MKTP.KN": "PIB a precios constantes, moneda nacional"}
+
+
+def descargar_a4(carpeta):
+    for s in BANCO_MUNDIAL:
+        destino = os.path.join(carpeta, s + ".json")
+        if not os.path.exists(destino):
+            urllib.request.urlretrieve("https://api.worldbank.org/v2/country/all/indicator/%s?format=json&per_page=20000&date=1960:2024" % s, destino)
+    destino = os.path.join(carpeta, "paises.json")
+    if not os.path.exists(destino):
+        urllib.request.urlretrieve("https://api.worldbank.org/v2/country?format=json&per_page=400", destino)
+
+
+def sinteticas_a4(sim):
+    def eje(nombre, titulo, lugar, cuerpo, alto, ylab, xmax, xlab=""):
+        return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=14.2cm, height=%s, scale only axis, %s,\n"
+                "    xmin=0, xmax=%d, xtick=\\empty, ytick=\\empty, title={%s}, title style={font=\\footnotesize, yshift=-1ex},\n"
+                "    ylabel={%s}, xlabel={%s}, xlabel style={at={(1,0)}, anchor=north east}]\n%s\n\\end{axis}\n"
+                % (nombre, lugar, alto, ESTILO, xmax, titulo, ylab, xlab, cuerpo))
+
+    # anx_slutsky: cifras aleatorias de 0 a 9 y su suma móvil de diez términos
+    rng = np.random.default_rng(1927)
+    cifras_ = rng.integers(0, 10, 170)
+    suma = np.convolve(cifras_, np.ones(10), mode="valid")  # y_t = suma de la cifra de t y las nueve anteriores
+    tt = np.arange(9, 170)
+    p1 = "\\addplot[black, thin, mark=*, mark size=0.6pt] coordinates {%s};" % coords(np.arange(170), cifras_, 0)
+    p2 = ("\\addplot[black, thick] coordinates {%s};\n\\addplot[black!55, dashed] coordinates {(0,45) (169,45)};" % coords(tt, suma, 0))
+    fig = "\\begin{tikzpicture}\n"
+    fig += eje("a", "(a) Cifras aleatorias, independientes entre sí", "{(0,0)}", p1, "2.4cm", "$\\nu_t$", 169)
+    fig += eje("b", "(b) Suma móvil de diez términos de las mismas cifras", "{($(a.south west)+(0,-1.3cm)$)}", p2, "3.2cm", "$y_t$", 169, "tiempo")
+    fig += "\\end{tikzpicture}"
+    escribir("anx_slutsky", fig, "Efecto SLUTSKY: la suma móvil de diez cifras aleatorias (semilla 1927) ondula como un ciclo.")
+    sim.append(("Simulación", "170 cifras aleatorias uniformes de 0 a 9 (semilla 1927) y su suma móvil de diez términos", "anx_slutsky"))
+
+    # anx_frisch: y_t = a1 y_{t-1} + a2 y_{t-2} + nu_t con raíces complejas de módulo 0,93 y periodo 32
+    r, periodo = 0.93, 32.0
+    a1, a2 = 2 * r * math.cos(2 * math.pi / periodo), -r * r
+    n = 121
+    imp = np.zeros(n)
+    imp[0] = 1.0
+    for t_ in range(1, n):
+        imp[t_] = a1 * imp[t_ - 1] + (a2 * imp[t_ - 2] if t_ >= 2 else 0.0)
+    rng = np.random.default_rng(1933)
+    nu = rng.normal(0, 1, 300)
+    y = np.zeros(300)
+    for t_ in range(300):
+        y[t_] = nu[t_] + (a1 * y[t_ - 1] if t_ >= 1 else 0.0) + (a2 * y[t_ - 2] if t_ >= 2 else 0.0)
+    nu, y = nu[100:], y[100:]
+    t2 = np.arange(200)
+    p1 = "\\addplot[black, thick] coordinates {%s};\n\\addplot[black!55, dashed] coordinates {(0,0) (120,0)};" % coords(np.arange(n), imp)
+    p2 = "\\addplot[ycomb, black!60, thin] coordinates {%s};\n\\addplot[black!40, thin] coordinates {(0,0) (199,0)};" % coords(t2, nu)
+    p3 = "\\addplot[black, thick] coordinates {%s};\n\\addplot[black!55, dashed] coordinates {(0,0) (199,0)};" % coords(t2, y)
+    fig = "\\begin{tikzpicture}\n"
+    fig += eje("a", "(a) Respuesta a un único impulso", "{(0,0)}", p1, "2.4cm", "$\\Theta_j$", 120)
+    fig += eje("b", "(b) Una sucesión de impulsos aleatorios", "{($(a.south west)+(0,-1.3cm)$)}", p2, "2.0cm", "$\\nu_t$", 199)
+    fig += eje("c", "(c) Respuesta del mismo sistema a esos impulsos", "{($(b.south west)+(0,-1.3cm)$)}", p3, "2.6cm", "$y_t$", 199, "tiempo")
+    fig += "\\end{tikzpicture}"
+    escribir("anx_frisch", fig, "Esquema de FRISCH: AR(2) con a1 = %.3f y a2 = %.4f (módulo 0,93, periodo 32); impulsos normales (semilla 1933)." % (a1, a2))
+    sim.append(("Simulación", "AR(2) con a1 = %.3f y a2 = %.4f (raíces complejas de módulo 0,93 y periodo 32); respuesta a un impulso unitario y a 300 "
+                "impulsos normales (semilla 1933), sin los 100 primeros" % (a1, a2), "anx_frisch"))
+    return a1, a2
+
+
+def con_datos_a4(carpeta, filas_series, cifras):
+    import json
+    meta = json.load(open(os.path.join(carpeta, "paises.json"), encoding="utf-8"))[1]
+    reales = {m["id"] for m in meta if m["region"]["value"] != "Aggregates"}  # códigos ISO de dos letras
+    nombre = {m["id"]: m["name"] for m in meta}
+
+    def serie(indicador):
+        salida = {}
+        for r in json.load(open(os.path.join(carpeta, indicador + ".json"), encoding="utf-8"))[1]:
+            if r["country"]["id"] in reales and r["value"] is not None and r["value"] > 0:
+                salida.setdefault(r["countryiso3code"], {})[int(r["date"])] = float(r["value"])
+        return salida
+
+    nom, real = serie("NY.GDP.MKTP.CN"), serie("NY.GDP.MKTP.KN")
+    res = []
+    for c in sorted(set(nom) & set(real)):
+        anos = [a for a in range(1960, 2020) if a in nom[c] and a in real[c]]
+        mejor, act = [], []
+        for a in anos:  # tramo de años consecutivos más largo
+            act = act + [a] if act and a == act[-1] + 1 else [a]
+            if len(act) > len(mejor):
+                mejor = list(act)
+        if len(mejor) < 41:
+            continue
+        x = np.array([100 * math.log(nom[c][a]) for a in mejor])
+        yv = np.array([100 * math.log(real[c][a]) for a in mejor])
+        dx, dp = np.diff(x), np.diff(x - yv)
+        # LUCAS (1973): y_t = a + b t + tau Dx_t + c y_{t-1}; tau, parte de un cambio de la renta nominal que va a la producción real
+        X = np.c_[np.ones(len(dx)), np.arange(len(dx)), dx, yv[:-1]]
+        b = np.linalg.lstsq(X, yv[1:], rcond=None)[0]
+        res.append((c, mejor[0], mejor[-1], b[2], dx.std(ddof=1), dp.mean()))
+        filas_series.append(("Prueba de LUCAS: respuesta de la producción a la renta nominal", c, "%d-%d" % (mejor[0], mejor[-1]), round(b[2], 4), "proporción",
+                             "Banco Mundial (NY.GDP.MKTP.CN y NY.GDP.MKTP.KN)", "desv. típica del crecimiento nominal %.2f; inflación media %.2f" % (dx.std(ddof=1), dp.mean()),
+                             "anx_lucas_pendiente"))
+    tau = np.array([r[3] for r in res]); sig = np.array([r[4] for r in res]); inf = np.array([r[5] for r in res])
+
+    def mco(yy, xx):
+        X = np.c_[np.ones(len(yy)), xx]
+        b = np.linalg.lstsq(X, yy, rcond=None)[0]
+        u = yy - X @ b
+        Q = np.linalg.inv(X.T @ X)
+        V = Q @ ((X * u[:, None]).T @ (X * u[:, None])) @ Q * len(yy) / (len(yy) - X.shape[1])
+        return b, b / np.sqrt(np.diag(V)), 1 - (u @ u) / ((yy - yy.mean()) @ (yy - yy.mean()))
+
+    ls, li = np.log(sig), np.log(np.maximum(inf, 0.5))
+    cifras.append(("Prueba de LUCAS: países con al menos 41 años seguidos entre 1960 y 2019", "%d" % len(res), "países", "II.2"))
+    cifras.append(("Prueba de LUCAS: mediana de la respuesta, de la volatilidad nominal y de la inflación media", "%.2f; %.1f; %.1f" % (np.median(tau), np.median(sig), np.median(inf)), "proporción y %", "II.2"))
+    cifras.append(("Correlación de la respuesta con el log de la volatilidad nominal y con el log de la inflación media", "%.2f; %.2f" % (np.corrcoef(tau, ls)[0, 1], np.corrcoef(tau, li)[0, 1]), "", "II.2"))
+    cifras.append(("Correlación entre los logs de la volatilidad nominal y de la inflación media", "%.2f" % np.corrcoef(ls, li)[0, 1], "", "II.2"))
+    for etiqueta, xx in (("volatilidad", ls), ("inflación", li), ("ambas", np.c_[ls, li])):
+        b, tst, r2 = mco(tau, xx)
+        cifras.append(("Regresión de la respuesta sobre log(%s): coeficientes, t robustos y R2" % etiqueta,
+                       "; ".join("%.3f (t = %.2f)" % (bi, ti) for bi, ti in zip(b[1:], tst[1:])) + "; R2 = %.2f" % r2, "", "II.2"))
+    k = inf < 30
+    b, tst, r2 = mco(tau[k], np.c_[ls[k], li[k]])
+    cifras.append(("Lo mismo sin los países con inflación media de al menos el 30 %% (%d países)" % k.sum(),
+                   "; ".join("%.3f (t = %.2f)" % (bi, ti) for bi, ti in zip(b[1:], tst[1:])) + "; R2 = %.2f" % r2, "", "II.2"))
+    for c in ("ESP", "USA", "DEU", "ARG", "BRA"):
+        r = [r for r in res if r[0] == c][0]
+        cifras.append(("Prueba de LUCAS: %s" % c, "respuesta %.2f; volatilidad %.1f; inflación media %.1f" % (r[3], r[4], r[5]), "proporción y %", "II.2"))
+    cifras.append(("Prueba de LUCAS: respuesta mínima y máxima", "%.2f; %.2f" % (tau.min(), tau.max()), "proporción", "II.2"))
+
+    def panel(nombre, lugar, titulo, xs, xmin, xmax, xlab, leyenda):
+        b, _, _ = mco(tau, np.log(xs))
+        rejilla = np.exp(np.linspace(math.log(xmin), math.log(xmax), 30))
+        resto = [(x_, t_) for x_, t_, r in zip(xs, tau, res) if r[0] not in ("ESP", "USA")]
+        cuerpo = "\\addplot[only marks, mark=o, mark size=1.3pt, black!50] coordinates {%s};" % " ".join("(%.4f,%.4f)" % p for p in resto)
+        if leyenda:
+            cuerpo += "\n\\addlegendentry{otros países}"
+        for c, marca, etiqueta in (("ESP", "square*", "España"), ("USA", "triangle*", "Estados Unidos")):
+            r = [(x_, t_) for x_, t_, rr in zip(xs, tau, res) if rr[0] == c][0]
+            cuerpo += "\n\\addplot[only marks, mark=%s, mark size=2.2pt, black] coordinates {(%.4f,%.4f)};" % (marca, r[0], r[1])
+            if leyenda:
+                cuerpo += "\n\\addlegendentry{%s}" % etiqueta
+        cuerpo += "\n\\addplot[black, dashed, thick] coordinates {%s};" % " ".join("(%.4f,%.4f)" % (x_, b[0] + b[1] * math.log(x_)) for x_ in rejilla)
+        if leyenda:
+            cuerpo += "\n\\addlegendentry{ajuste lineal en logaritmos}"
+        cuerpo += "\n\\addplot[black!40, thin, forget plot] coordinates {(%s,0) (%s,0)};" % (xmin, xmax)
+        return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=6.2cm, height=5.2cm, scale only axis, %s,\n"
+                "    xmode=log, xmin=%s, xmax=%s, xtick={1,2,5,10,20,50,100}, xticklabels={$1$,$2$,$5$,$10$,$20$,$50$,$100$},\n"
+                "    ymin=-0.4, ymax=1.2, ytick={-0.4,0,0.4,0.8,1.2}, xlabel={%s}, ylabel={Respuesta de la producción real},\n"
+                "    title={%s}, title style={font=\\footnotesize},\n"
+                "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.5,-0.25)}, anchor=north}, legend columns=4, legend cell align=left]\n%s\n\\end{axis}\n"
+                % (nombre, lugar, ESTILO, xmin, xmax, xlab, titulo, cuerpo))
+
+    fig = "\\begin{tikzpicture}\n"
+    fig += panel("a", "{(0,0)}", "(a) Volatilidad de la demanda nominal", sig, 1, 150, "Desviación típica del crecimiento nominal (\\%, escala log.)", False)
+    fig += panel("b", "{($(a.north east)+(1.6cm,0)$)}", "(b) Inflación media", np.maximum(inf, 0.5), 0.5, 150, "Inflación media anual (\\%, escala log.)", False)
+    fig += ("\\node[anchor=north, font=\\footnotesize] at ($(a.south east)!0.5!(b.south west)+(0,-1.0cm)$) {\\tikz{\\draw[black!50] (0,0) circle (1.3pt);}~otros países\\quad "
+            "\\tikz{\\fill (0,0) rectangle (2.6pt,2.6pt);}~España\\quad \\tikz{\\fill (0,0) -- (3pt,0) -- (1.5pt,2.6pt) -- cycle;}~Estados Unidos\\quad "
+            "\\tikz{\\draw[black, dashed, thick] (0,0) -- (0.5cm,0);}~ajuste lineal en logaritmos};\n")
+    fig += "\\end{tikzpicture}"
+    escribir("anx_lucas_pendiente", fig, "Réplica de LUCAS (1973) y BALL, MANKIW y ROMER (1988): parte de un cambio de la renta nominal que va a la producción real en %d países, 1960-2019." % len(res))
+
+
 def main():
     carpeta = sys.argv[1] if len(sys.argv) > 1 else tempfile.mkdtemp()
     descargar(carpeta)
