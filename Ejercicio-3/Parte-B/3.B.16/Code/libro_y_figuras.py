@@ -323,7 +323,7 @@ def dispersion(carpeta, series, cifras):
                       ("Desviación típica entre estados de EE. UU., 2010", disp_us[anios.index(2010)]), ("Desviación típica entre estados de EE. UU., 2024", disp_us[-1]),
                       ("Persistencia anual del paro relativo, zona del euro", r_ea), ("Vida media del paro relativo, zona del euro (años)", v_ea),
                       ("Persistencia anual del paro relativo, EE. UU.", r_us), ("Vida media del paro relativo, EE. UU. (años)", v_us)):
-        cifras.append((nombre + ", 2003-2024", round(v, 2), "puntos, coeficiente o años", "II.2.2"))
+        cifras.append((nombre + ", 1991-2024", round(v, 2), "puntos, coeficiente o años", "II.2.2"))
     return anios, disp_ea, disp_us
 
 
