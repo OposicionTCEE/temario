@@ -1707,7 +1707,7 @@ def con_datos_a7(carpeta, filas_series, cifras, sim):
 
     fig = "\\begin{tikzpicture}\n"
     fig += panel("a", "{(0,0)}", "(a) Producción", "y", -0.1, 0.4, "0,0.1,0.2,0.3,0.4", False)
-    fig += panel("b", "{($(a.north east)+(1.6cm,0)$)}", "(b) Consumo", "c", -0.4, 0.1, "-0.4,-0.3,-0.2,-0.1,0,0.1", False)
+    fig += panel("b", "{($(a.north east)+(1.6cm,0)$)}", "(b) Consumo", "c", -0.6, 0.1, "-0.6,-0.4,-0.2,0", False)
     fig += panel("c", "{($(a.south west)+(0,-1.4cm)$)}", "(c) Horas", "h", -0.1, 0.6, "0,0.2,0.4,0.6", True)
     fig += panel("d", "{($(c.north east)+(1.6cm,0)$)}", "(d) Salario real", "w", -0.3, 0.1, "-0.3,-0.2,-0.1,0,0.1", True)
     fig += "\\end{tikzpicture}"
