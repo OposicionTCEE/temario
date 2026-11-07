@@ -478,9 +478,9 @@ def fig_bk(bk):
     c += "  \\node[below=12pt] at (3,0) {años};\n"
     for t in [-2, -1.5, -1, -0.5, 0]:
         c += "  \\draw (0.06,%.3f) -- (-0.06,%.3f) node[left] {%s};\n" % ((t - y0) * ey, (t - y0) * ey, num(t))
-    c += "  \\node[rotate=90, above=18pt] at (0,%.3f) {desviación, en porcentaje};\n" % ((0.2 - y0) * ey / 2)
+    c += "  \\node[rotate=90, above=26pt] at (0,%.3f) {desviación, en porcentaje};\n" % ((0.2 - y0) * ey / 2)
     # (b) tasas: paro y actividad
-    dx, ey2, yb = 8.6, 8.0, -0.4
+    dx, ey2, yb = 8.8, 6.25, -0.4
     c += "  \\begin{scope}[xshift=%.2fcm]\n" % dx
     c += "  \\node[anchor=base] at (3,%.3f) {(b) Tasas de paro y de actividad};\n" % ((0.4 - yb) * ey2 + 0.45)
     c += "  \\draw[black!30] (0,%.3f) -- (6.2,%.3f);\n" % ((0 - yb) * ey2, (0 - yb) * ey2)
