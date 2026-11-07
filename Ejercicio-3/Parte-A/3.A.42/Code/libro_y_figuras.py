@@ -902,8 +902,8 @@ def con_datos_a2(carpeta, filas_series, cifras, momentos):
 
 # ---------------------------------------------------------------- A3 (07/11/2026): identificación y predicción
 # Figuras: anx_var_monetario (VAR recursivo de EE. UU. a la manera de CHRISTIANO, EICHENBAUM y EVANS, 1999),
-# anx_proyeccion_local (proyección local del PIB, JORDÀ 2005, frente al VAR) y anx_senales_recesion (probit de la
-# pendiente de la curva, ESTRELLA y MISHKIN 1998, y regla de SAHM con los datos de cada momento). Fuentes adicionales de
+# anx_proyeccion_local (proyección local del PIB, JORDÀ 2005, frente al VAR), anx_probit_recesion (probit de la
+# pendiente de la curva, ESTRELLA y MISHKIN 1998) y anx_regla_sahm (regla de SAHM con los datos de cada momento). Fuentes adicionales de
 # FRED: FEDFUNDS (tipo efectivo de los fondos federales), PPIACO (índice de precios de producción de todas las materias
 # primas), GS10 (bono del Tesoro a diez años), SAHMREALTIME y SAHMCURRENT (indicador de SAHM).
 SERIES_A3 = {"FEDFUNDS": "Tipo de interés efectivo de los fondos federales",
@@ -1120,9 +1120,9 @@ def con_datos_a3(carpeta, filas_series, cifras):
     for f in meses:
         if f >= "1959-01-01":
             filas_series.append(("Probabilidad de recesión dentro de doce meses (probit de la pendiente)", "Estados Unidos", f, round(prob[f], 2), "%",
-                                 "elaboración propia con FRED (GS10, TB3MS, USREC)", "pendiente %.2f; probit estimado con 1959-2018 (recesiones hasta 2019)" % pend[f], "anx_probit_recesion" if "Probabilidad" in "Probabilidad" else ""))
+                                 "elaboración propia con FRED (GS10, TB3MS, USREC)", "pendiente %.2f; probit estimado con 1959-2018 (recesiones hasta 2019)" % pend[f], "anx_probit_recesion"))
     for f in sorted(sahm):
-        filas_series.append(("Indicador de SAHM con los datos de cada momento", "Estados Unidos", f, sahm[f], "puntos", "FRED (SAHMREALTIME)", "", "anx_probit_recesion" if "Probabilidad" in "Probabilidad" else ""))
+        filas_series.append(("Indicador de SAHM con los datos de cada momento", "Estados Unidos", f, sahm[f], "puntos", "FRED (SAHMREALTIME)", "", "anx_regla_sahm"))
     cifras.append(("Probit (estimado 1959-2018): constante y pendiente", "%.3f; %.3f" % (b0, b1), "", "I.8"))
     c0, c1 = estimaciones["2024-10-01"]
     cifras.append(("Probit con datos hasta 2025 (como el 3.B.24): probabilidad en mayo de 2023", "%.1f" % (100 * float(normal(c0 + c1 * pend["2023-05-01"]))), "%", "I.8"))
