@@ -1049,7 +1049,7 @@ def con_datos_a3(carpeta, filas_series, cifras):
     def banda(ys_lo, ys_hi):
         ida = " ".join("(%d,%.4f)" % (h, v) for h, v in enumerate(ys_lo))
         vuelta_ = " ".join("(%d,%.4f)" % (h, ys_hi[h]) for h in range(len(ys_hi) - 1, -1, -1))
-        return "\\addplot[fill=black!15, draw=none] coordinates {%s %s};" % (ida, vuelta_)
+        return "\\addplot[fill=black!15, draw=none, area legend] coordinates {%s %s};" % (ida, vuelta_)
 
     def linea_h(ys, estilo):
         return "\\addplot[%s] coordinates {%s};" % (estilo, " ".join("(%d,%.4f)" % (h, v) for h, v in enumerate(ys)))
@@ -1070,7 +1070,7 @@ def con_datos_a3(carpeta, filas_series, cifras):
     fig = "\\begin{tikzpicture}\n"
     fig += panel_irf("a", "(a) Tipo de los fondos federales", "{(0,0)}", 3, "Puntos", -0.6, 1.4, "-0.5,0,0.5,1", leyenda=True)
     fig += panel_irf("b", "(b) PIB real", "{($(a.north east)+(1.6cm,0)$)}", 0, "\\%", -1.4, 0.6, "-1.2,-0.8,-0.4,0,0.4")
-    fig += panel_irf("c", "(c) Deflactor del PIB", "{($(a.south west)+(0,-1.6cm)$)}", 1, "\\%", -1.6, 0.8, "-1.5,-1,-0.5,0,0.5")
+    fig += panel_irf("c", "(c) Deflactor del PIB", "{($(a.south west)+(0,-2.1cm)$)}", 1, "\\%", -1.6, 0.8, "-1.5,-1,-0.5,0,0.5")
     fig += panel_irf("d", "(d) Precios de las materias primas", "{($(c.north east)+(1.6cm,0)$)}", 2, "\\%", -3, 1.5, "-3,-2,-1,0,1")
     fig += "\\end{tikzpicture}"
     escribir("anx_var_monetario", fig, "Respuestas a una perturbación monetaria que sube un punto el tipo de los fondos federales: VAR recursivo de EE. UU. (PIB, deflactor, materias primas, tipo).")
@@ -1092,7 +1092,7 @@ def con_datos_a3(carpeta, filas_series, cifras):
               linea_h(lp_hi, "black!60, densely dotted, forget plot"),
               "\\addplot[black!40, thin, forget plot] coordinates {(0,0) (20,0)};"]
     fig = ("\\begin{tikzpicture}\n\\begin{axis}[width=14.2cm, height=4.6cm, scale only axis, %s,\n"
-           "    xmin=0, xmax=20, xtick={0,2,...,20}, ymin=-1.6, ymax=0.6, ytick={-1.5,-1,-0.5,0,0.5}, xlabel={Trimestres}, ylabel={\\%%},\n"
+           "    xmin=0, xmax=20, xtick={0,2,...,20}, ymin=-1.9, ymax=0.6, ytick={-1.5,-1,-0.5,0,0.5}, xlabel={Trimestres}, ylabel={\\%%},\n"
            "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.01,0.03)}, anchor=south west}, legend columns=2, legend cell align=left]\n%s\n\\end{axis}\n\\end{tikzpicture}"
            % (ESTILO, "\n".join(cuerpo)))
     escribir("anx_proyeccion_local", fig, "Respuesta del PIB de EE. UU. a una subida de un punto del tipo: proyección local (JORDÀ, 2005) frente al VAR recursivo, 1965T3-1995T3.")
