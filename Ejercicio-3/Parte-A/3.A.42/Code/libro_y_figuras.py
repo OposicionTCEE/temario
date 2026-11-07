@@ -1185,12 +1185,16 @@ def main():
     sinteticas(sint)
     con_datos(carpeta, series, cifras)
     con_datos_a2(carpeta, series, cifras, momentos)
+    con_datos_a3(carpeta, series, cifras)
     leeme = [["Libro de datos del tema 3.A.42 (Teorías de los ciclos económicos)"],
              ["Generado por Code/libro_y_figuras.py el %s con los datos de FRED descargados ese día." % FECHA_DESCARGA],
              ["Hojas: Fuentes (series y su origen), Series (formato largo: serie, país, fecha, valor, unidad, fuente, tratamiento, figura),"],
              ["Cronologías (picos y valles del NBER, de la AEE y del CEPR), Cifras_citadas (las que da el texto) y Simulaciones."],
              ["Tratamientos: nivel; ciclo HP con lambda 1600; ciclo HAMILTON con h 8 y p 4; ciclo BAXTER-KING con banda de 6 a 32 trimestres y K 12;"],
-             ["todos los ciclos sobre 100 x logaritmo del PIB real (desviación en porcentaje)."]]
+             ["todos los ciclos sobre 100 x logaritmo del PIB real (desviación en porcentaje)."],
+             ["A3 (I.7 e I.8): VAR recursivo de EE. UU. (PIB, deflactor, materias primas, tipo de los fondos federales; 4 retardos; 1965T3-1995T3 y 1965T1-2007T4;"],
+             ["bandas del 90% por remuestreo de los residuos, 1.000 réplicas), proyección local recursiva con errores de NEWEY y WEST, probit de la recesión"],
+             ["dentro de doce meses sobre la pendiente (bono a diez años menos letras a tres meses en rendimiento equivalente), estimado con 1959-2018, y regla de SAHM."]]
     fuentes = [["Código", "Serie", "País", "Unidad", "Frecuencia", "Institución", "Enlace", "Descarga"]]
     for s, (nombre, pais, unidad, frec) in SERIES.items():
         fuentes.append([s, nombre, pais, unidad, frec, "FRED, Banco de la Reserva Federal de San Luis", FRED + s, FECHA_DESCARGA])
@@ -1212,6 +1216,8 @@ def main():
         fuentes.append([s, nombre, "Estados Unidos", "ver FRED", "trimestral o mensual (media trimestral)", "FRED, Banco de la Reserva Federal de San Luis", FRED + s, FECHA_DESCARGA])
     fuentes.append(["ALFRED GDPC1", "Ediciones del PIB real de EE. UU., diciembre de 1991-2019", "Estados Unidos", "miles de millones de dólares encadenados de cada edición",
                     "trimestral", "ALFRED, Banco de la Reserva Federal de San Luis", "https://alfred.stlouisfed.org/series?seid=GDPC1", FECHA_DESCARGA])
+    for s, nombre in SERIES_A3.items():
+        fuentes.append([s, nombre, "Estados Unidos", "ver FRED", "mensual (media trimestral en el VAR)", "FRED, Banco de la Reserva Federal de San Luis", FRED + s, "07/11/2026"])
     for nombre, consulta in EUROSTAT.items():
         fuentes.append(["Eurostat " + consulta.split("?")[0], nombre, "España y zona del euro", "CLV10_MEUR, PD10_EUR, THS_PER o THS_HW", "trimestral",
                         "Eurostat", "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/" + consulta, FECHA_DESCARGA])
