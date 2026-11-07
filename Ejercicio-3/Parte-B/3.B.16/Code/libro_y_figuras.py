@@ -460,11 +460,12 @@ def linea(xs, ys, ex, ey, x0, y0, estilo):
 
 
 def fig_bk(bk):
-    empleo, paro, actividad, poblacion = bk
+    empleo, paro, actividad, poblacion = bk[:4]
+    actividad = actividad * bk[4] / 100  # de 100 x log de la tasa de actividad a puntos de la tasa, con la tasa media nacional
     h = list(range(HORIZONTE + 1))
     c = ""
     # (a) niveles: empleo y población en edad de trabajar
-    ex, ey, y0 = 0.6, 2.2, -2.2
+    ex, ey, y0 = 0.6, 1.85, -2.5
     c += "  \\node[anchor=base] at (3,%.3f) {(a) Empleo y población};\n" % ((0.2 - y0) * ey + 0.45)
     c += "  \\draw[black!30] (0,%.3f) -- (6.2,%.3f);\n" % ((0 - y0) * ey, (0 - y0) * ey)
     c += linea(h, empleo, ex, ey, 0, y0, "black!85, thick")
