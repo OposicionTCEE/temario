@@ -472,6 +472,12 @@ def main():
     enom, eipc, eclu = fig_competitividad_espana(eu)
     penn, (pa, pb, pr2) = fig_penn(pxwl, pcpp, nombres)
     fecha_bm, bmf, (ba, bb, br2), pus = fig_bigmac(bm, pib25)
+    xa, xm = leer_xru(carpeta)
+    ca, cm = leer_ipc(carpeta)
+    eer = leer_eer_estrecho_real(carpeta)
+    ppa, (pa1, pb1, pr21), (nsub, pa2, pb2, pr22) = fig_ppa_relativa(xa, ca)
+    mmeses, mnom, mrea, mbw, mfl = fig_mussa(xm, cm)
+    semis, smed = fig_semividas(eer)
 
     # ---- cifras citadas en el texto
     cif = []
