@@ -80,7 +80,7 @@ def leer_bis(carpeta):
             if not d["FREQ:Frequency"].startswith("M"):
                 continue
             area = d["REF_AREA:Reference area"][:2]
-            if area not in ("XM", "ES"):
+            if area not in ("XM", "ES", "US"):
                 continue
             tipo = d["EER_TYPE:Type"][:1]
             cesta = d["EER_BASKET:Basket"][:1]
