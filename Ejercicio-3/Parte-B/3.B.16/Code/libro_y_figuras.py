@@ -501,7 +501,7 @@ def fig_bk(bk):
     c += "  \\node[below=12pt] at (3,0) {años};\n"
     for t in [-0.4, -0.2, 0, 0.2, 0.4]:
         c += "  \\draw (0.06,%.3f) -- (-0.06,%.3f) node[left] {%s};\n" % ((t - yb) * ey2, (t - yb) * ey2, num(t))
-    c += "  \\node[rotate=90, above=26pt] at (0,%.3f) {desviación, en puntos};\n" % ((0.4 - yb) * ey2 / 2)
+    c += "  \\node[rotate=90] at (-1.15,%.3f) {desviación, en puntos};\n" % ((0.4 - yb) * ey2 / 2)
     c += "  \\end{scope}\n"
     escribir("anx2_bk", c, "respuesta de un estado de EE. UU. a una caída del 1 % de su empleo relativo, VAR agrupado de BLANCHARD y KATZ (1992), réplica propia con 51 estados, 1979-2019 (anexo II.2.1)")
 
