@@ -908,7 +908,7 @@ def fig_dolar_tipos_reales(bis, pol, cm, t0="1975-01", t1="1998-12"):
         ma, mb = sum(a) / len(a), sum(b) / len(b)
         return sum((x - ma) * (y - mb) for x, y in zip(a, b)) / math.sqrt(sum((x - ma) ** 2 for x in a) * sum((y - mb) ** 2 for y in b))
     cors = {k: corr([f[1] for f in filas[k:]], [f[4] for f in filas[:len(filas) - k]]) for k in (0, 6, 12, 24)}
-    eje = r"""  scale only axis, width=14.2cm, height=3.3cm, axis lines=left, tick align=outside, tick style={black!60},
+    eje = r"""  scale only axis, width=14.2cm, height=2.4cm, axis lines=left, tick align=outside, tick style={black!60},
   /pgf/number format/.cd, use comma, 1000 sep={}, /pgfplots/.cd,
   every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize}, title style={font=\footnotesize},
   xmin=1974.8, xmax=1999.2, xtick={1975,1980,1985,1990,1995}, clip=false,
