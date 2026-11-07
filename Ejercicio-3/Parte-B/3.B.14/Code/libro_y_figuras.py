@@ -40,6 +40,8 @@ DESCARGAS = {
     "dl_bis_pol/WS_CBPOL_csv_flat.csv": "https://data.bis.org/static/bulk/WS_CBPOL_csv_flat.zip (descomprimido; descargado el 07/11/2026)",
     "dl_wb_us/ca_usa.json": "https://api.worldbank.org/v2/country/USA/indicator/BN.CAB.XOKA.GD.ZS?date=1980:2025&format=json&per_page=200",
     "dl_wb_us/exp_wld.json": "https://api.worldbank.org/v2/country/WLD/indicator/NE.EXP.GNFS.CD?date=2015:2025&format=json&per_page=200",
+    "dl_wb_m/m2.json": "https://api.worldbank.org/v2/country/all/indicator/FM.LBL.BMNY.CN?date=1995:2025&format=json&per_page=20000",
+    "dl_wb_m/pib.json": "https://api.worldbank.org/v2/country/all/indicator/NY.GDP.MKTP.KN?date=1995:2025&format=json&per_page=20000",
 }
 
 
