@@ -653,7 +653,8 @@ def main():
         org = {"dl_bis": "Banco de Pagos Internacionales", "dl_fred": "Banco de la Reserva Federal de San Luis (FRED)",
                "dl_eurostat": "Eurostat", "dl_wb": "Banco Mundial", "dl_icp": "Banco Mundial (ICP 2021)",
                "dl_bigmac": "The Economist", "dl_bis_xru": "Banco de Pagos Internacionales",
-               "dl_bis_cpi": "Banco de Pagos Internacionales"}[fichero.split("/")[0]]
+               "dl_bis_cpi": "Banco de Pagos Internacionales", "dl_eurostat_ppp": "Eurostat (programa de paridades Eurostat-OCDE)",
+               "dl_wb_ca": "Banco Mundial"}[fichero.split("/")[0]]
         fuentes.append([fichero, org, url, FECHA_DESCARGA])
     filas = [["Serie", "Área", "Fecha", "Valor", "Unidad", "Fuente", "Tratamiento", "Figura"]]
     for f, v in fred:
