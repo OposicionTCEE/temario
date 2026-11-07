@@ -573,6 +573,121 @@ def fig_cuenta_corriente(ccor):
     return serie
 
 
+# ---------------------------------------------------------------- A4 (anexo II): flujos y paridades
+# BPI WS_CBPOL (tipos oficiales, mensuales, fin de periodo); Banco Mundial: cuenta corriente de EE. UU. y exportaciones
+# mundiales de bienes y servicios.
+def leer_cbpol(carpeta):
+    out = {}
+    with open(os.path.join(carpeta, "dl_bis_pol", "WS_CBPOL_csv_flat.csv"), encoding="utf-8") as f:
+        for d in csv.DictReader(f):
+            if not d["FREQ:Frequency"].startswith("M") or d["OBS_VALUE:Observation Value"] in ("", "NaN"):
+                continue
+            out.setdefault(d["REF_AREA:Reference area"][:2], {})[d["TIME_PERIOD:Time period or range"]] = float(d["OBS_VALUE:Observation Value"])
+    return out
+
+
+def leer_wb_simple(carpeta, sub, fichero):
+    d = json.load(open(os.path.join(carpeta, sub, fichero), encoding="utf-8"))
+    return {int(r["date"]): r["value"] for r in d[1] if r["value"] is not None}
+
+
+def meses_entre(t0, t1):
+    y, m, out = int(t0[:4]), int(t0[5:]), []
+    while (y, m) <= (int(t1[:4]), int(t1[5:])):
+        out.append("%04d-%02d" % (y, m))
+        m += 1
+        if m == 13:
+            y, m = y + 1, 1
+    return out
+
+
+def fig_dolar_cuenta_corriente(bis, ccus, a0=1980, a1=2025):
+    meses = {}
+    for f, v in bis[("US", "R", "N")]:
+        meses.setdefault(int(f[:4]), []).append(v)
+    reer = [(a, sum(meses[a]) / len(meses[a])) for a in range(a0, a1 + 1) if len(meses.get(a, [])) == 12]
+    cc = [(a, ccus[a]) for a in range(a0, a1 + 1) if a in ccus]
+    lo, hi = 10 * math.floor(min(v for _, v in reer) / 10), 10 * math.ceil(max(v for _, v in reer) / 10)
+    eje = r"""  scale only axis, width=14.6cm, height=3.4cm, axis lines=left, tick align=outside, tick style={black!60},
+  /pgf/number format/.cd, use comma, 1000 sep={}, /pgfplots/.cd,
+  every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize}, title style={font=\footnotesize},
+  xmin=1979.5, xmax=2025.5, xtick={1980,1985,1990,1995,2000,2005,2010,2015,2020,2025}, clip=false,
+"""
+    tikz = "% (a) Tipo de cambio efectivo real del dólar (BPI, cesta reducida, media anual, 2020 = 100; subida = apreciación) y\n"
+    tikz += "%% (b) saldo de la cuenta corriente de Estados Unidos en porcentaje del PIB (Banco Mundial, BN.CAB.XOKA.GD.ZS), %d-%d.\n" % (a0, a1)
+    tikz += "% Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_dolar_cuenta_corriente\n"
+    tikz += "\\begin{tikzpicture}\n\\footnotesize\n\\begin{axis}[name=pa,\n" + eje
+    tikz += "  ymin=%d, ymax=%d, ylabel={Índice, $2020=100$}, xticklabels={}, title={(a) Tipo de cambio efectivo real del dólar},\n]\n" % (lo, hi)
+    tikz += "\\addplot[black, line width=1.1pt] coordinates {%s};\n" % coordenadas(reer, 1)
+    tikz += "\\end{axis}\n\\begin{axis}[at={(pa.south)}, anchor=north, yshift=-1.0cm,\n" + eje
+    tikz += "  ymin=-7, ymax=1, ytick={-6,-4,-2,0}, ylabel={Porcentaje del PIB}, title={(b) Saldo de la cuenta corriente de Estados Unidos},\n]\n"
+    tikz += "\\draw[black!50] (axis cs:1979.5,0) -- (axis cs:2025.5,0);\n"
+    tikz += "\\addplot[black, line width=1.1pt, mark=*, mark size=0.8pt] coordinates {%s};\n" % coordenadas(cc, 2)
+    tikz += "\\end{axis}\n\\end{tikzpicture}\n"
+    open(os.path.join(IMG, "anx_dolar_cuenta_corriente.tikz"), "w", encoding="utf-8").write(tikz)
+    return dict(reer), dict(cc)
+
+
+NOMBRES_PAR = dict(NOMBRES_ES, BR="Brasil", RU="Rusia", CN="China", CZ="Chequia", HU="Hungría", ID="Indonesia", KW="Kuwait",
+                   MA="Marruecos", MK="Macedonia del Norte", PL="Polonia", RO="Rumanía", RS="Serbia", SA="Arabia Saudí",
+                   TH="Tailandia")
+ETIQ_PAR_A = {"BR": "north east", "RU": "south east", "CN": "north", "CH": "south west", "XM": "north west"}
+ETIQ_PAR_B = {"BR": "north east", "RU": "south east", "ZA": "south east", "CN": "north", "CH": "south west", "XM": "south east"}
+
+
+def fig_paridades_largo(pol, xm, cm, t0="2006-01", t1="2025-06", tope=10.0):
+    ms = meses_entre(t0, t1)
+    n = len(ms) / 12.0
+    filas = []
+    for a in sorted(pol):
+        if a == "US" or a not in xm or t0 not in xm[a] or t1 not in xm[a]:
+            continue
+        if not all(m in pol[a] and m in pol["US"] for m in ms):
+            continue
+        di = 100 * sum(math.log(1 + pol[a][m] / 100) - math.log(1 + pol["US"][m] / 100) for m in ms) / len(ms)
+        dep = 100 * math.log(xm[a][t1] / xm[a][t0]) / n
+        inf = None
+        if a in cm and t0 in cm[a] and t1 in cm[a]:
+            inf = 100 * (math.log(cm[a][t1] / cm[a][t0]) - math.log(cm["US"][t1] / cm["US"][t0])) / n
+        filas.append((a, NOMBRES_PAR.get(a, a), di, inf, dep))
+    sub = [f for f in filas if abs(f[2]) < tope]
+    con_inf = [f for f in sub if f[3] is not None]
+    est = {"uip_todas": ols([f[2] for f in filas], [f[4] for f in filas]),
+           "uip_sub": ols([f[2] for f in sub], [f[4] for f in sub]),
+           "fisher_sub": ols([f[2] for f in con_inf], [f[3] for f in con_inf]),
+           "ppa_sub": ols([f[3] for f in con_inf], [f[4] for f in con_inf])}
+    eje = r"""  scale only axis, width=6.1cm, height=5.0cm, axis lines=left, tick align=outside, tick style={black!60},
+  /pgf/number format/.cd, use comma, 1000 sep={}, /pgfplots/.cd,
+  every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize}, title style={font=\footnotesize},
+  xlabel={Tipo oficial menos el de EE.\,UU. (puntos al año)}, clip=false, xmin=-2.5, xmax=9, ymin=-3, ymax=7,
+"""
+    def recta(ab):
+        return coordenadas([(x, ab[0] + ab[1] * x) for x in (-2.5, 9)], 2)
+    tikz = "% Paridades a largo plazo, %s a %s: diferencia media del tipo oficial con el de EE. UU. frente a (a) la diferencia\n" % (t0, t1)
+    tikz += "%% media de inflación y (b) la depreciación media frente al dólar; %d economías con diferencia menor de %d puntos\n" % (len(sub), tope)
+    tikz += "% (BPI WS_CBPOL, WS_LONG_CPI y WS_XRU; tasas logarítmicas en puntos al año). Discontinua: 45 grados; continua: MCO.\n"
+    tikz += "% Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_paridades_largo\n"
+    tikz += "\\begin{tikzpicture}\n\\footnotesize\n\\begin{axis}[name=pa,\n" + eje
+    tikz += "  ylabel={Inflación menos la de EE.\\,UU. (puntos al año)}, title={(a) Tipos de interés e inflación},\n]\n"
+    tikz += "\\addplot[black!40, dashed] coordinates {(-2.5,-2.5) (7,7)};\n"
+    tikz += "\\addplot[black, line width=0.6pt] coordinates {%s};\n" % recta(est["fisher_sub"])
+    tikz += "\\addplot[only marks, mark=*, mark size=1.2pt, black!60] coordinates {%s};\n" % coordenadas([(f[2], f[3]) for f in con_inf], 2)
+    for f in con_inf:
+        if f[0] in ETIQ_PAR_A:
+            tikz += "\\node[font=\\scriptsize, anchor=%s, inner sep=1.6pt] at (axis cs:%.2f,%.2f) {%s};\n" % (ETIQ_PAR_A[f[0]], f[2], f[3], f[1])
+    tikz += "\\end{axis}\n\\begin{axis}[at={(pa.east)}, anchor=west, xshift=1.3cm,\n" + eje
+    tikz += "  ylabel={Depreciación frente al dólar (puntos al año)}, title={(b) Tipos de interés y depreciación},\n]\n"
+    tikz += "\\addplot[black!40, dashed] coordinates {(-2.5,-2.5) (7,7)};\n"
+    tikz += "\\addplot[black, line width=0.6pt] coordinates {%s};\n" % recta(est["uip_sub"])
+    tikz += "\\addplot[only marks, mark=*, mark size=1.2pt, black!60] coordinates {%s};\n" % coordenadas([(f[2], f[4]) for f in sub], 2)
+    for f in sub:
+        if f[0] in ETIQ_PAR_B:
+            tikz += "\\node[font=\\scriptsize, anchor=%s, inner sep=1.6pt] at (axis cs:%.2f,%.2f) {%s};\n" % (ETIQ_PAR_B[f[0]], f[2], f[4], f[1])
+    tikz += "\\end{axis}\n\\end{tikzpicture}\n"
+    open(os.path.join(IMG, "anx_paridades_largo.tikz"), "w", encoding="utf-8").write(tikz)
+    return filas, sub, est
+
+
 # ---------------------------------------------------------------- principal
 def main():
     carpeta = sys.argv[1]
