@@ -1745,6 +1745,7 @@ def main():
     con_datos_a4(carpeta, series, cifras)
     con_datos_a5(carpeta, series, cifras, momentos, sint)
     con_datos_a6(carpeta, series, cifras)
+    con_datos_a7(carpeta, series, cifras, sint)
     leeme = [["Libro de datos del tema 3.A.42 (Teorías de los ciclos económicos)"],
              ["Generado por Code/libro_y_figuras.py el %s con los datos de FRED descargados ese día." % FECHA_DESCARGA],
              ["Hojas: Fuentes (series y su origen), Series (formato largo: serie, país, fecha, valor, unidad, fuente, tratamiento, figura),"],
@@ -1783,6 +1784,8 @@ def main():
                         "https://api.worldbank.org/v2/country/all/indicator/%s?format=json" % s, "07/11/2026"])
     fuentes.append(["CNP16OV", "Población civil no institucional de 16 años o más", "Estados Unidos", "miles de personas", "mensual (media trimestral)",
                     "FRED, Banco de la Reserva Federal de San Luis (BLS)", FRED + "CNP16OV", "07/11/2026"])
+    fuentes.append(["B230RC0A052NBEA", "Población de EE. UU. (media anual)", "Estados Unidos", "miles de personas", "anual",
+                    "FRED, Banco de la Reserva Federal de San Luis (BEA)", FRED + "B230RC0A052NBEA", "07/11/2026"])
     for s, nombre in SERIES_A3.items():
         fuentes.append([s, nombre, "Estados Unidos", "ver FRED", "mensual (media trimestral en el VAR)", "FRED, Banco de la Reserva Federal de San Luis", FRED + s, FECHA_DESCARGA])
     for nombre, consulta in EUROSTAT.items():
