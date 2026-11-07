@@ -565,8 +565,6 @@ def fig_cuenta_corriente(ccor):
     tikz += "\\addlegendentry{España}\n"
     tikz += "\\addplot[black, dashed, line width=0.8pt] coordinates {%s};\n" % coordenadas(serie["DEU"], 1)
     tikz += "\\addlegendentry{Alemania}\n"
-    tikz += "\\addplot[black!45, line width=0.8pt] coordinates {%s};\n" % coordenadas(serie["EMU"], 1)
-    tikz += "\\addlegendentry{Zona del euro}\n"
     tikz += "\\end{axis}\n\\node[anchor=north] at (current bounding box.south) {\\pgfplotslegendfromname{leyendacc}};\n\\end{tikzpicture}\n"
     open(os.path.join(IMG, "anx_cuenta_corriente.tikz"), "w", encoding="utf-8").write(tikz)
     return serie
