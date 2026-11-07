@@ -877,6 +877,20 @@ def main():
     for pais, serie in sorted(ccor.items()):
         for a, v in sorted(serie.items()):
             filas.append(["Cuenta corriente", pais, a, v, "% del PIB", "Banco Mundial BN.CAB.XOKA.GD.ZS", "ninguno", "anx_cuenta_corriente"])
+    for a, v in sorted(ccus.items()):
+        filas.append(["Cuenta corriente", "USA", a, v, "% del PIB", "Banco Mundial BN.CAB.XOKA.GD.ZS", "ninguno", "anx_dolar_cuenta_corriente"])
+    for a, v in sorted(expw.items()):
+        filas.append(["Exportaciones de bienes y servicios", "Mundo", a, v, "dólares corrientes", "Banco Mundial NE.EXP.GNFS.CD", "ninguno", ""])
+    for f in parf:
+        for m in msp:
+            filas.append(["Tipo oficial (fin de mes)", f[1], m, pol[f[0]][m], "% anual", "BPI WS_CBPOL", "ln(1 + i/100) en la media", "anx_paridades_largo"])
+    for m in msp:
+        filas.append(["Tipo oficial (fin de mes)", "Estados Unidos", m, pol["US"][m], "% anual", "BPI WS_CBPOL", "ln(1 + i/100) en la media", "anx_paridades_largo"])
+    parh = [["Código BPI", "Economía", "Tipo oficial menos el de EE. UU., media de ln(1 + i) 2006-01 a 2025-06 (puntos al año)",
+             "Inflación menos la de EE. UU., IPC 2006-01 a 2025-06 (puntos al año)", "Depreciación frente al dólar, tipo medio mensual 2006-01 a 2025-06 (puntos al año)",
+             "Tipo de cambio 2006-01 (moneda por dólar)", "Tipo de cambio 2025-06 (moneda por dólar)", "En la figura (diferencia menor de 10 puntos)"]]
+    for f in parf:
+        parh.append([f[0], f[1], f[2], f[3] if f[3] is not None else "", f[4], xm[f[0]]["2006-01"], xm[f[0]]["2025-06"], "sí" if abs(f[2]) < 10 else "no"])
     cifras = [["Cifra", "Valor", "Fuente", "Dónde"]] + cif
     escribir_xlsx(os.path.join(TEMA, "Code", "datos_3B14.xlsx"),
                   [("Léeme", leeme), ("Fuentes", fuentes), ("Series", filas), ("ICP_2021", icp), ("Big_Mac", big),
