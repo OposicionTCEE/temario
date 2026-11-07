@@ -393,7 +393,7 @@ def dispersion_puntos(puntos, desp, esc_x, esc_y, x0, y0):
     return c
 
 
-DESP_BE1 = {"AUT": "above left", "ITA": "above right", "PRT": "below"}
+DESP_BE1 = {"AUT": "above left", "ITA": "above right", "PRT": "below", "NLD": "above"}
 DESP_BE2 = {"BEL": "above left", "SWE": "above", "ESP": "below right", "GBR": "left", "NLD": "above right"}
 
 
