@@ -329,6 +329,181 @@ def dispersion(carpeta, series, cifras):
     return anios, disp_ea, disp_us
 
 
+# ---------------------------------------------------------------- figuras (TikZ simple, escala de grises, \footnotesize)
+def num(x, dec=1):  # cifra con coma decimal en modo matemático
+    s = ("%." + str(dec) + "f") % x
+    return "$" + s.replace("-", "-").replace(".", "{,}") + "$"
+
+
+def escribir(nombre, cuerpo, comentario):
+    texto = ("% " + nombre + ": " + comentario + "\n% Generada por Code/libro_y_figuras.py; PDF con: bash Code/generar_figura.sh "
+             + nombre + "\n\\begin{tikzpicture}[font=\\footnotesize, >={Stealth[length=2mm]}]\n" + cuerpo + "\\end{tikzpicture}\n")
+    with open(os.path.join(IMG, nombre + ".tikz"), "w", encoding="utf-8") as f:
+        f.write(texto)
+
+
+def eje_x(x0, x1, ticks, esc, etiqueta, y=0.0, dec=1, desde=0.0):
+    c = "  \\draw[->] (%.3f,%.3f) -- (%.3f,%.3f);\n" % (x0, y, x1, y)
+    for t in ticks:
+        x = (t - desde) * esc
+        c += "  \\draw (%.3f,%.3f) -- (%.3f,%.3f) node[below] {%s};\n" % (x, y + 0.06, x, y - 0.06, num(t, dec) if dec >= 0 else "$%d$" % t)
+    c += "  \\node[below=12pt] at (%.3f,%.3f) {%s};\n" % ((x0 + x1) / 2, y, etiqueta)
+    return c
+
+
+def fig_correlaciones(res):
+    orden = sorted(EURO, key=lambda p: -res[p][1]) + sorted(FUERA, key=lambda p: -res[p][1])
+    esc, dy, c = 9.0, 0.42, ""
+    ys = {}
+    for i, p in enumerate(orden):
+        ys[p] = -(i * dy + (0.35 if p in FUERA else 0.0))
+    fondo = min(ys.values()) - 0.45
+    for t in [0, 0.2, 0.4, 0.6, 0.8, 1.0]:
+        c += "  \\draw[black!12] (%.3f,0.3) -- (%.3f,%.3f);\n" % (t * esc, t * esc, fondo)
+    for p in orden:
+        y = ys[p]; a, b = res[p][0] * esc, res[p][1] * esc
+        c += "  \\node[anchor=east] at (-0.15,%.3f) {%s};\n" % (y, NOMBRE[p])
+        c += "  \\draw[black!45, thick] (%.3f,%.3f) -- (%.3f,%.3f);\n" % (a, y, b, y)
+        c += "  \\draw[black!80, fill=white] (%.3f,%.3f) circle (2.1pt);\n" % (a, y)
+        c += "  \\fill[black!85] (%.3f,%.3f) circle (2.1pt);\n" % (b, y)
+    ye = ys[orden[len(EURO) - 1]]; yf = ys[orden[len(EURO)]]
+    c += "  \\draw[black!40, densely dashed] (-2.6,%.3f) -- (%.3f,%.3f);\n" % ((ye + yf) / 2, esc, (ye + yf) / 2)
+    c += "  \\node[anchor=west, black!60] at (%.3f,%.3f) {zona del euro};\n" % (esc + 0.1, ys[orden[0]])
+    c += "  \\node[anchor=west, black!60] at (%.3f,%.3f) {fuera de la zona};\n" % (esc + 0.1, yf)
+    c += eje_x(0, esc + 0.3, [0, 0.2, 0.4, 0.6, 0.8, 1.0], esc, "correlación del ciclo con el resto de la zona del euro", y=fondo)
+    c += "  \\draw[black!80, fill=white] (1.2,0.75) circle (2.1pt) node[right=3pt, black] {$1971$-$1998$};\n"
+    c += "  \\fill[black!85] (4.2,0.75) circle (2.1pt) node[right=3pt, black] {$1999$-$2019$};\n"
+    escribir("anx2_correlaciones", c, "correlación del ciclo (HP, lambda 6,25) de cada país con el resto de la zona del euro, 1971-1998 y 1999-2019 (anexo II.1.1)")
+
+
+def dispersion_puntos(puntos, desp, esc_x, esc_y, x0, y0):
+    c = ""
+    for p, (x, y) in puntos.items():
+        X, Y = (x - x0) * esc_x, (y - y0) * esc_y
+        c += "  \\fill[black!85] (%.3f,%.3f) circle (1.9pt);\n" % (X, Y)
+        pos = desp.get(p, "above right")
+        c += "  \\node[%s=1pt, font=\\scriptsize] at (%.3f,%.3f) {%s};\n" % (pos, X, Y, ISO2[p])
+    return c
+
+
+DESP_AMPLITUD = {}
+DESP_BE1, DESP_BE2 = {}, {}
+
+
+def fig_amplitud(res):
+    x0, x1, y0, y1 = 0.0, 1.0, 0.0, 3.2
+    ex, ey = 10.0, 1.9
+    c = "  \\draw[black!40, densely dashed] (0,%.3f) -- (%.3f,%.3f) node[right, black!60] {como la zona};\n" % ((1 - y0) * ey, (x1 - x0) * ex, (1 - y0) * ey)
+    c += dispersion_puntos({p: (res[p][1], res[p][2]) for p in EURO + FUERA}, DESP_AMPLITUD, ex, ey, x0, y0)
+    c += eje_x(0, (x1 - x0) * ex + 0.3, [0, 0.2, 0.4, 0.6, 0.8, 1.0], ex, "correlación del ciclo con el resto de la zona, $1999$-$2019$")
+    c += "  \\draw[->] (0,0) -- (0,%.3f) node[above] {amplitud relativa del ciclo};\n" % ((y1 - y0) * ey + 0.2)
+    for t in [0, 1, 2, 3]:
+        c += "  \\draw (0.06,%.3f) -- (-0.06,%.3f) node[left] {$%d$};\n" % ((t - y0) * ey, (t - y0) * ey, t)
+    escribir("anx2_amplitud", c, "correlación del ciclo con el resto de la zona y amplitud relativa (desviación típica del ciclo del país entre la de la zona), 1999-2019 (anexo II.1.2)")
+
+
+def fig_bayoumi(corr_be):
+    x0, x1, y0, y1 = -0.2, 0.9, -0.1, 0.7
+    ex, ey = 6.0, 6.0
+    c = ""
+    for k, (titulo, desp, dx) in enumerate(((r"(a) $1973$-$1998$", DESP_BE1, 0.0), (r"(b) $1999$-$2019$", DESP_BE2, 7.8))):
+        c += "  \\begin{scope}[xshift=%.2fcm]\n" % dx
+        c += "  \\node[anchor=base] at (%.3f,%.3f) {%s};\n" % ((x1 - x0) * ex / 2, (y1 - y0) * ey + 0.55, titulo)
+        c += "  \\draw[black!25] (%.3f,0) -- (%.3f,%.3f);\n" % ((0 - x0) * ex, (0 - x0) * ex, (y1 - y0) * ey)
+        c += "  \\draw[black!25] (0,%.3f) -- (%.3f,%.3f);\n" % ((0 - y0) * ey, (x1 - x0) * ex, (0 - y0) * ey)
+        pts = {p: (v[0], v[1]) if k == 0 else (v[2], v[3]) for p, v in corr_be.items()}
+        c += dispersion_puntos(pts, desp, ex, ey, x0, y0)
+        c += "  \\draw[->] (0,0) -- (%.3f,0);\n" % ((x1 - x0) * ex + 0.2)
+        for t in [-0.2, 0, 0.2, 0.4, 0.6, 0.8]:
+            c += "  \\draw (%.3f,0.06) -- (%.3f,-0.06) node[below] {%s};\n" % ((t - x0) * ex, (t - x0) * ex, num(t))
+        c += "  \\node[below=12pt] at (%.3f,0) {perturbaciones de oferta};\n" % ((x1 - x0) * ex / 2)
+        c += "  \\draw[->] (0,0) -- (0,%.3f);\n" % ((y1 - y0) * ey + 0.2)
+        for t in [0, 0.2, 0.4, 0.6]:
+            c += "  \\draw (0.06,%.3f) -- (-0.06,%.3f) node[left] {%s};\n" % ((t - y0) * ey, (t - y0) * ey, num(t))
+        c += "  \\node[rotate=90, above=16pt] at (0,%.3f) {perturbaciones de demanda};\n" % ((y1 - y0) * ey / 2)
+        c += "  \\end{scope}\n"
+    escribir("anx2_bayoumi", c, "correlación con Alemania de las perturbaciones de oferta y de demanda identificadas a la manera de BAYOUMI y EICHENGREEN (1993), 1973-1998 y 1999-2019 (anexo II.1.3)")
+
+
+def fig_krugman(krug):
+    orden = sorted(EURO, key=lambda p: -krug[p][2023])
+    esc, dy, c = 13.0, 0.42, ""
+    ys = {p: -i * dy for i, p in enumerate(orden)}
+    fondo = min(ys.values()) - 0.45
+    for t in [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]:
+        c += "  \\draw[black!12] (%.3f,0.3) -- (%.3f,%.3f);\n" % (t * esc, t * esc, fondo)
+    for p in orden:
+        y = ys[p]; a, b = krug[p][1995] * esc, krug[p][2023] * esc
+        c += "  \\node[anchor=east] at (-0.15,%.3f) {%s};\n" % (y, NOMBRE[p])
+        c += "  \\draw[black!45, thick] (%.3f,%.3f) -- (%.3f,%.3f);\n" % (a, y, b, y)
+        c += "  \\draw[black!80, fill=white] (%.3f,%.3f) circle (2.1pt);\n" % (a, y)
+        c += "  \\fill[black!85] (%.3f,%.3f) circle (2.1pt);\n" % (b, y)
+    c += eje_x(0, 0.6 * esc + 0.3, [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6], esc, "índice de especialización de KRUGMAN frente al resto de la zona", y=fondo)
+    c += "  \\draw[black!80, fill=white] (1.2,0.75) circle (2.1pt) node[right=3pt, black] {$1995$};\n"
+    c += "  \\fill[black!85] (3.4,0.75) circle (2.1pt) node[right=3pt, black] {$2023$};\n"
+    escribir("anx2_krugman", c, "índice de especialización de KRUGMAN (suma de las diferencias absolutas de cuotas de valor añadido en once ramas) de cada país frente al resto de la zona, 1995 y 2023 (anexo II.1.4)")
+
+
+def linea(xs, ys, ex, ey, x0, y0, estilo):
+    return "  \\draw[%s] %s;\n" % (estilo, " -- ".join("(%.3f,%.3f)" % ((x - x0) * ex, (y - y0) * ey) for x, y in zip(xs, ys)))
+
+
+def fig_bk(bk):
+    empleo, paro, actividad, poblacion = bk
+    h = list(range(HORIZONTE + 1))
+    c = ""
+    # (a) niveles: empleo y población en edad de trabajar
+    ex, ey, y0 = 0.6, 2.2, -2.2
+    c += "  \\node[anchor=base] at (3,%.3f) {(a) Empleo y población};\n" % ((0.2 - y0) * ey + 0.45)
+    c += "  \\draw[black!30] (0,%.3f) -- (6.2,%.3f);\n" % ((0 - y0) * ey, (0 - y0) * ey)
+    c += linea(h, empleo, ex, ey, 0, y0, "black!85, thick")
+    c += linea(h, poblacion, ex, ey, 0, y0, "black!55, thick, dashed")
+    c += "  \\node[anchor=west, font=\\scriptsize] at (%.3f,%.3f) {empleo};\n" % (10 * ex + 0.1, (empleo[-1] - y0) * ey - 0.12)
+    c += "  \\node[anchor=west, font=\\scriptsize, black!70] at (%.3f,%.3f) {población};\n" % (10 * ex + 0.1, (poblacion[-1] - y0) * ey + 0.12)
+    c += "  \\draw[->] (0,0) -- (6.3,0);\n  \\draw[->] (0,0) -- (0,%.3f);\n" % ((0.2 - y0) * ey + 0.2)
+    for t in [0, 2, 4, 6, 8, 10]:
+        c += "  \\draw (%.3f,0.06) -- (%.3f,-0.06) node[below] {$%d$};\n" % (t * ex, t * ex, t)
+    c += "  \\node[below=12pt] at (3,0) {años};\n"
+    for t in [-2, -1.5, -1, -0.5, 0]:
+        c += "  \\draw (0.06,%.3f) -- (-0.06,%.3f) node[left] {%s};\n" % ((t - y0) * ey, (t - y0) * ey, num(t))
+    c += "  \\node[rotate=90, above=18pt] at (0,%.3f) {desviación, en porcentaje};\n" % ((0.2 - y0) * ey / 2)
+    # (b) tasas: paro y actividad
+    dx, ey2, yb = 8.6, 8.0, -0.4
+    c += "  \\begin{scope}[xshift=%.2fcm]\n" % dx
+    c += "  \\node[anchor=base] at (3,%.3f) {(b) Tasas de paro y de actividad};\n" % ((0.4 - yb) * ey2 + 0.45)
+    c += "  \\draw[black!30] (0,%.3f) -- (6.2,%.3f);\n" % ((0 - yb) * ey2, (0 - yb) * ey2)
+    c += linea(h, paro, ex, ey2, 0, yb, "black!85, thick")
+    c += linea(h, actividad, ex, ey2, 0, yb, "black!55, thick, dashed")
+    c += "  \\node[anchor=south west, font=\\scriptsize] at (%.3f,%.3f) {tasa de paro};\n" % (1 * ex + 0.05, (paro[1] - yb) * ey2 + 0.02)
+    c += "  \\node[anchor=north west, font=\\scriptsize, black!70] at (%.3f,%.3f) {tasa de actividad};\n" % (4 * ex, (actividad[4] - yb) * ey2 - 0.05)
+    c += "  \\draw[->] (0,0) -- (6.3,0);\n  \\draw[->] (0,0) -- (0,%.3f);\n" % ((0.4 - yb) * ey2 + 0.2)
+    for t in [0, 2, 4, 6, 8, 10]:
+        c += "  \\draw (%.3f,0.06) -- (%.3f,-0.06) node[below] {$%d$};\n" % (t * ex, t * ex, t)
+    c += "  \\node[below=12pt] at (3,0) {años};\n"
+    for t in [-0.4, -0.2, 0, 0.2, 0.4]:
+        c += "  \\draw (0.06,%.3f) -- (-0.06,%.3f) node[left] {%s};\n" % ((t - yb) * ey2, (t - yb) * ey2, num(t))
+    c += "  \\node[rotate=90, above=18pt] at (0,%.3f) {desviación, en puntos};\n" % ((0.4 - yb) * ey2 / 2)
+    c += "  \\end{scope}\n"
+    escribir("anx2_bk", c, "respuesta de un estado de EE. UU. a una caída del 1 % de su empleo relativo, VAR agrupado de BLANCHARD y KATZ (1992), réplica propia con 51 estados, 1979-2019 (anexo II.2.1)")
+
+
+def fig_dispersion(disp):
+    anios, ea, us = disp
+    ex, ey, x0 = 0.33, 0.62, 1991
+    c = linea(anios, ea, ex, ey, x0, 0, "black!85, thick")
+    c += linea(anios, us, ex, ey, x0, 0, "black!55, thick, dashed")
+    i13 = anios.index(2013)
+    c += "  \\node[anchor=south, font=\\scriptsize] at (%.3f,%.3f) {zona del euro (once países)};\n" % ((2013 - x0) * ex, ea[i13] * ey + 0.05)
+    i10 = anios.index(2010)
+    c += "  \\node[anchor=south, font=\\scriptsize, black!70] at (%.3f,%.3f) {EE. UU. ($51$ estados)};\n" % ((2003 - x0) * ex, us[anios.index(2003)] * ey + 0.35)
+    c += "  \\draw[->] (0,0) -- (%.3f,0);\n  \\draw[->] (0,0) -- (0,%.3f) node[above] {desviación típica de la tasa de paro, en puntos};\n" % ((2024 - x0) * ex + 0.4, 8 * ey + 0.3)
+    for t in [1991, 1995, 2000, 2005, 2010, 2015, 2020, 2024]:
+        c += "  \\draw (%.3f,0.06) -- (%.3f,-0.06) node[below] {$%d$};\n" % ((t - x0) * ex, (t - x0) * ex, t)
+    for t in [0, 2, 4, 6, 8]:
+        c += "  \\draw (0.06,%.3f) -- (-0.06,%.3f) node[left] {$%d$};\n" % (t * ey, t * ey, t)
+    escribir("anx2_dispersion", c, "desviación típica sin ponderar de la tasa de paro entre los once países de la zona del euro y entre los 51 estados de EE. UU., 1991-2024 (anexo II.2.2)")
+
+
 def main():
     carpeta = sys.argv[1] if len(sys.argv) > 1 else tempfile.mkdtemp()
     descargar(carpeta)
@@ -337,6 +512,42 @@ def main():
     krug = estructuras(carpeta, series, cifras)
     bk = blanchard_katz(carpeta, series, cifras)
     disp = dispersion(carpeta, series, cifras)
+    fig_correlaciones(res)
+    fig_amplitud(res)
+    fig_bayoumi(corr_be)
+    fig_krugman(krug)
+    fig_bk(bk)
+    fig_dispersion(disp)
+    leeme = [["Libro de datos del tema 3.B.16 (Teoría de la integración monetaria)"],
+             ["Generado por Code/libro_y_figuras.py el %s con los datos descargados ese día del Banco Mundial, de Eurostat y de FRED." % FECHA_DESCARGA],
+             ["Hojas: Fuentes (series y su origen), Series (formato largo: serie, país o estado, año u horizonte, valor, unidad, fuente, tratamiento, figura)"],
+             ["y Cifras_citadas (las que da el texto del anexo de evidencia, con su apartado)."],
+             ["II.1.1-II.1.2: ciclo = componente cíclico del filtro de HODRICK y PRESCOTT con lambda 6,25 (RAVN y UHLIG, 2002) sobre 100 x log del PIB real, 1970-2019;"],
+             ["el agregado de la zona suma el PIB en dólares de 2015 de once países (sin Luxemburgo); para cada miembro, el resto de la zona excluye al propio país."],
+             ["II.1.3: VAR(2) por país en crecimiento del PIB real e inflación del deflactor (100 x diferencias logarítmicas), con constante y tendencia lineal, 1973-2019;"],
+             ["identificación de BLANCHARD y QUAH: la perturbación de demanda no afecta a la producción a largo plazo; correlaciones con las de Alemania."],
+             ["II.1.4: índice de KRUGMAN = suma de las diferencias absolutas entre las cuotas del país y del resto de la zona en once ramas (NACE A, BDE, C, F, G-I, J, K, L, M_N, O-Q, R-U)."],
+             ["II.2.1: VAR agrupado con efectos fijos por estado, 2 retardos, 1979-2019, en el crecimiento del empleo relativo, el log de la tasa de empleo relativa y el log"],
+             ["de la tasa de actividad relativa (estado menos nación), como BLANCHARD y KATZ (1992); el empleo entra el primero y afecta en el mismo año a las otras dos."],
+             ["II.2.2: desviación típica sin ponderar de las tasas de paro; persistencia = coeficiente de un AR(1) agrupado de la desviación respecto a la media"],
+             ["sin ponderar de cada año, con efectos fijos, 1991-2024; vida media = log 0,5 / log del coeficiente."]]
+    fuentes = [["Código", "Serie", "Ámbito", "Unidad", "Frecuencia", "Institución", "Enlace", "Descarga"]]
+    for s, nombre in list(WB_SERIES.items()) + [(WB_PARO, "Tasa de paro, estimación armonizada de la OIT")]:
+        fuentes.append([s, nombre, ", ".join(NOMBRE[p] for p in EURO + FUERA), "ver serie", "anual", "Banco Mundial, Indicadores del Desarrollo Mundial",
+                        WB % (";".join(EURO + FUERA), s), FECHA_DESCARGA])
+    for nombre, consulta in EUROSTAT.items():
+        fuentes.append(["Eurostat nama_10_a10", "Valor añadido bruto por ramas", ", ".join(NOMBRE[p] for p in EURO), "millones de euros corrientes", "anual",
+                        "Eurostat", EST + consulta, FECHA_DESCARGA])
+    for st, fips in ESTADOS.items():
+        for s, nombre, unidad in ((st + "NAN", "Empleo asalariado no agrario, sin desestacionalizar", "miles de personas"),
+                                  (st + "UR", "Tasa de paro, desestacionalizada", "porcentaje"),
+                                  ("LBSSA" + fips, "Tasa de actividad, desestacionalizada", "porcentaje")):
+            fuentes.append([s, nombre, st, unidad, "mensual (media anual)", "FRED, Banco de la Reserva Federal de San Luis (BLS)", FRED + s, FECHA_DESCARGA])
+    for s, nombre in (("UNRATE", "Tasa de paro de EE. UU."), ("CIVPART", "Tasa de actividad de EE. UU.")):
+        fuentes.append([s, nombre, "Estados Unidos", "porcentaje", "mensual (media anual)", "FRED, Banco de la Reserva Federal de San Luis (BLS)", FRED + s, FECHA_DESCARGA])
+    filas = [["Serie", "Ámbito", "Año u horizonte", "Valor", "Unidad", "Fuente", "Tratamiento", "Figura"]] + [list(f) for f in series]
+    cif = [["Cifra", "Valor", "Unidad", "Apartado"]] + [list(c) for c in cifras]
+    escribir_xlsx(os.path.join(TEMA, "Code", "datos_3B16.xlsx"), [("Léeme", leeme), ("Fuentes", fuentes), ("Series", filas), ("Cifras_citadas", cif)])
     for c in cifras:
         print("%-100s %s %s" % (c[0], c[1], c[2]))
 
