@@ -1494,6 +1494,120 @@ def con_datos_a5(carpeta, filas_series, cifras, momentos, sim):
     escribir("anx_rbc_propagacion", fig, "La producción sigue a la productividad: respuesta a una mejora del 1 % de la PTF persistente (rho 0,95) y de un trimestre (rho 0), trabajo divisible.")
 
 
+# ---------------------------------------------------------------- A6 (07/11/2026): contrastación del ciclo real
+# anx_gali_horas: VAR bivariante de la productividad del trabajo (OPHNFB) y las horas (HOANBS por habitante de 16 años o
+# más, CNP16OV) con la restricción de largo plazo de GALÍ (1999): solo la perturbación tecnológica altera la productividad
+# a largo plazo; horas en diferencias (GALÍ) o en niveles (CHRISTIANO, EICHENBAUM y VIGFUSSON); 1948-2007, 4 retardos.
+# anx_rbc_autocorrelacion: autocorrelaciones del crecimiento del PIB en los datos y en el modelo básico (COGLEY y NASON, 1995b).
+def svar_largo_plazo(X, p=RETARDOS, H=HORIZONTE):
+    Y = X[p:]
+    Z = np.hstack([np.ones((len(Y), 1))] + [X[p - j:len(X) - j] for j in range(1, p + 1)])
+    B = np.linalg.lstsq(Z, Y, rcond=None)[0]
+    E = Y - Z @ B
+    S = E.T @ E / (len(Y) - Z.shape[1])
+    Phi = [B[1 + 2 * (j - 1):1 + 2 * j].T for j in range(1, p + 1)]
+    C1 = np.linalg.inv(np.eye(2) - sum(Phi))  # efecto acumulado a largo plazo de los errores
+    G = np.linalg.inv(C1) @ np.linalg.cholesky(C1 @ S @ C1.T)  # efecto a largo plazo triangular: la tecnológica, primera
+    if (C1 @ G)[0, 0] < 0:
+        G[:, 0] = -G[:, 0]
+    Psi = [np.eye(2)]
+    for h in range(1, H + 1):
+        Psi.append(sum(Phi[j] @ Psi[h - 1 - j] for j in range(min(p, h))))
+    R = np.array([P @ G[:, 0] for P in Psi])
+    return R, B, E
+
+
+def con_datos_a6(carpeta, filas_series, cifras):
+    prod, horas = a_dict(leer(carpeta, "OPHNFB")), a_dict(leer(carpeta, "HOANBS"))
+    pob = a_dict(trimestral(leer(carpeta, "CNP16OV")))
+    fs = sorted(f for f in prod if f in horas and f in pob and "1948-01-01" <= f <= "2007-10-01")
+    lp = np.array([100 * math.log(prod[f]) for f in fs])
+    lh = np.array([100 * math.log(horas[f] / pob[f]) for f in fs])
+    resultados = {}
+    for niveles in (False, True):
+        X = np.c_[np.diff(lp), lh[1:] if niveles else np.diff(lh)]
+        R, B, E = svar_largo_plazo(X)
+
+        def a_niveles(R):
+            return np.cumsum(R[:, 0]), (R[:, 1] if niveles else np.cumsum(R[:, 1]))
+
+        pn, hn = a_niveles(R)
+        rng = np.random.default_rng(1999)
+        boot = []
+        for _ in range(1000):
+            e = E[rng.integers(0, len(E), len(E))]
+            Xb = np.array(X, float)
+            for t in range(RETARDOS, len(X)):
+                Xb[t] = np.r_[1.0, np.concatenate([Xb[t - j] for j in range(1, RETARDOS + 1)])] @ B + e[t - RETARDOS]
+            boot.append(a_niveles(svar_largo_plazo(Xb)[0])[1])
+        lo, hi = np.percentile(boot, 16, axis=0), np.percentile(boot, 84, axis=0)
+        resultados[niveles] = (pn, hn, lo, hi)
+        et = "niveles" if niveles else "diferencias"
+        for h_ in range(HORIZONTE + 1):
+            filas_series.append(("VAR de largo plazo (horas en %s): respuesta de las horas a la perturbación tecnológica" % et, "Estados Unidos", "h = %d trimestres" % h_,
+                                 round(float(hn[h_]), 4), "%", "elaboración propia con FRED (OPHNFB, HOANBS, CNP16OV)",
+                                 "1948-2007, 4 retardos; banda del 68 %% [%.3f, %.3f]; productividad %.3f" % (lo[h_], hi[h_], pn[h_]), "anx_gali_horas"))
+        cifras.append(("GALÍ (horas en %s), 1948-2007: horas en h = 0, 4 y 12 (banda del 68 %% en h = 0 y 4); productividad en h = 0 y 20" % et,
+                       "%.2f [%.2f; %.2f]; %.2f [%.2f; %.2f]; %.2f; productividad %.2f y %.2f" % (hn[0], lo[0], hi[0], hn[4], lo[4], hi[4], hn[12], pn[0], pn[20]), "%", "II.4"))
+
+    def panel(nombre, lugar, titulo, niveles, leyenda):
+        pn, hn, lo, hi = resultados[niveles]
+        cuerpo = "\\addplot[fill=black!15, draw=none, area legend] coordinates {%s %s};\n" % (
+            " ".join("(%d,%.4f)" % (h_, lo[h_]) for h_ in range(HORIZONTE + 1)), " ".join("(%d,%.4f)" % (h_, hi[h_]) for h_ in range(HORIZONTE, -1, -1)))
+        if leyenda:
+            cuerpo += "\\addlegendentry{banda del $68\\%$}\n"
+        cuerpo += "\\addplot[black, thick] coordinates {%s};\n" % " ".join("(%d,%.4f)" % (h_, hn[h_]) for h_ in range(HORIZONTE + 1))
+        if leyenda:
+            cuerpo += "\\addlegendentry{horas}\n"
+        cuerpo += "\\addplot[black!40, thin, forget plot] coordinates {(0,0) (20,0)};"
+        return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=6.2cm, height=3.6cm, scale only axis, %s,\n"
+                "    xmin=0, xmax=20, xtick={0,4,...,20}, ymin=-0.6, ymax=1.2, ytick={-0.5,0,0.5,1}, xlabel={Trimestres}, ylabel={\\%%},\n"
+                "    title={%s}, title style={font=\\footnotesize}, legend style={draw=none, fill=none, font=\\footnotesize, at={(0.98,0.98)}, anchor=north east}, legend cell align=left]\n%s\n\\end{axis}\n"
+                % (nombre, lugar, ESTILO, titulo, cuerpo))
+
+    fig = "\\begin{tikzpicture}\n"
+    fig += panel("a", "{(0,0)}", "(a) Horas en diferencias", False, True)
+    fig += panel("b", "{($(a.north east)+(1.6cm,0)$)}", "(b) Horas por habitante en niveles", True, False)
+    fig += "\\end{tikzpicture}"
+    escribir("anx_gali_horas", fig, "Respuesta de las horas a una perturbación tecnológica identificada a largo plazo (GALÍ, 1999), EE. UU. 1948-2007, con las horas en diferencias y en niveles.")
+
+    # ---- autocorrelaciones del crecimiento: datos (PIB real, 1950-2019) y modelo básico (500 simulaciones)
+    pib = a_dict(leer(carpeta, "GDPC1"))
+    fp = sorted(f for f in pib if "1949-10-01" <= f <= "2019-10-01")
+    g = np.diff([100 * math.log(pib[f]) for f in fp])
+    g = g - g.mean()
+
+    def acf(x, k):
+        return float(np.sum(x[k:] * x[:-k]) / np.sum(x * x))
+
+    datos = [acf(g, k) for k in range(1, 9)]
+    sol = rbc_resolver(RBC["rho"], False)
+    rng = np.random.default_rng(1995)
+    mod = np.zeros(8)
+    for _ in range(500):
+        nu = rng.normal(0, RBC["sigma"], 300)
+        z = np.zeros(300)
+        for t in range(300):
+            z[t] = (RBC["rho"] * z[t - 1] if t else 0.0) + nu[t]
+        gy = np.diff(rbc_trayectoria(sol, z)["y"][100:])
+        gy = gy - gy.mean()
+        mod += np.array([acf(gy, k) for k in range(1, 9)]) / 500
+    for k in range(8):
+        filas_series.append(("Autocorrelación del crecimiento del PIB", "Estados Unidos y modelo", "retardo %d" % (k + 1), round(datos[k], 3), "",
+                             "FRED (GDPC1) y simulación propia", "modelo: %.3f (500 simulaciones de 200 trimestres)" % mod[k], "anx_rbc_autocorrelacion"))
+    cifras.append(("Autocorrelación del crecimiento del PIB, datos 1950-2019, retardos 1 a 4", "; ".join("%.2f" % x for x in datos[:4]), "", "II.4"))
+    cifras.append(("Autocorrelación del crecimiento en el modelo básico, retardos 1 a 4", "; ".join("%.2f" % x for x in mod[:4]), "", "II.4"))
+    cuerpo = ("\\addplot[ybar, bar width=7pt, bar shift=-4pt, fill=black!70, draw=none] coordinates {%s};\n\\addlegendentry{datos de Estados Unidos, $1950$-$2019$}\n"
+              "\\addplot[ybar, bar width=7pt, bar shift=4pt, fill=black!25, draw=none] coordinates {%s};\n\\addlegendentry{modelo básico del ciclo real}\n"
+              "\\draw[black!40, thin] (axis cs:0.4,0) -- (axis cs:8.6,0);"
+              % (" ".join("(%d,%.4f)" % (k + 1, datos[k]) for k in range(8)), " ".join("(%d,%.4f)" % (k + 1, mod[k]) for k in range(8))))
+    fig = ("\\begin{tikzpicture}\n\\begin{axis}[width=14.2cm, height=4.2cm, scale only axis, %s,\n"
+           "    xmin=0.4, xmax=8.6, xtick={1,...,8}, ymin=-0.15, ymax=0.4, ytick={-0.1,0,0.1,0.2,0.3,0.4}, xlabel={Retardo (trimestres)},\n"
+           "    ylabel={Autocorrelación}, legend style={draw=none, fill=none, font=\\footnotesize, at={(0.98,0.98)}, anchor=north east}, legend cell align=left, area legend]\n%s\n\\end{axis}\n\\end{tikzpicture}"
+           % (ESTILO, cuerpo))
+    escribir("anx_rbc_autocorrelacion", fig, "Autocorrelaciones del crecimiento trimestral del PIB: datos de EE. UU. (1950-2019) y modelo básico del ciclo real (COGLEY y NASON, 1995b).")
+
+
 def main():
     carpeta = sys.argv[1] if len(sys.argv) > 1 else tempfile.mkdtemp()
     descargar(carpeta)
