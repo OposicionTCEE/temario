@@ -991,6 +991,18 @@ def main():
             filas.append(["Tipo oficial (fin de mes)", f[1], m, pol[f[0]][m], "% anual", "BPI WS_CBPOL", "ln(1 + i/100) en la media", "anx_paridades_largo"])
     for m in msp:
         filas.append(["Tipo oficial (fin de mes)", "Estados Unidos", m, pol["US"][m], "% anual", "BPI WS_CBPOL", "ln(1 + i/100) en la media", "anx_paridades_largo"])
+    for c in [f[0] for f in monf] + ["US"]:
+        for a in range(2000, 2025):
+            if a in m2w.get(c, {}):
+                filas.append(["Dinero en sentido amplio", NOMBRES_MON.get(c, nombres_m2.get(c, c)), a, m2w[c][a], "moneda nacional corriente", "Banco Mundial FM.LBL.BMNY.CN", "logaritmo en la tasa media", "anx_monetario_largo"])
+            if a in pibw.get(c, {}):
+                filas.append(["PIB real", NOMBRES_MON.get(c, nombres_m2.get(c, c)), a, pibw[c][a], "moneda nacional constante", "Banco Mundial NY.GDP.MKTP.KN", "logaritmo en la tasa media", "anx_monetario_largo"])
+    monh = [["Código", "Economía", "Dinero amplio: crecimiento medio anual menos el de EE. UU., 2000-2024 (puntos)", "PIB real: crecimiento medio anual menos el de EE. UU. (puntos)",
+             "Dinero menos producción (puntos)", "Depreciación media anual frente al dólar (puntos)", "En el panel (b) (diferencia menor de 10 puntos)"]]
+    for f in monf:
+        monh.append(list(f) + ["sí" if abs(f[4]) < 10 else "no"])
+    for c, nombre in monfijas:
+        monh.append([c, nombre, "", "", "", "", "excluida: tipo fijo"])
     parh = [["Código BPI", "Economía", "Tipo oficial menos el de EE. UU., media de ln(1 + i) 2006-01 a 2025-06 (puntos al año)",
              "Inflación menos la de EE. UU., IPC 2006-01 a 2025-06 (puntos al año)", "Depreciación frente al dólar, tipo medio mensual 2006-01 a 2025-06 (puntos al año)",
              "Tipo de cambio 2006-01 (moneda por dólar)", "Tipo de cambio 2025-06 (moneda por dólar)", "En la figura (diferencia menor de 10 puntos)"]]
