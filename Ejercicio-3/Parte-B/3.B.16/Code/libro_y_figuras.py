@@ -286,13 +286,20 @@ def blanchard_katz(carpeta, series, cifras):
                            "100 x log o puntos", "estimación propia", "VAR agrupado de BLANCHARD y KATZ, 2 retardos, 1979-2019", "anx2_bk"))
     pico = int(np.argmax(paro))
     vida = next((h for h in range(pico, H + 1) if paro[h] <= paro[pico] / 2), None)
-    for nombre, v in (("Empleo relativo a largo plazo (10 años)", empleo[H]), ("Tasa de paro en el impacto", paro[0]), ("Tasa de paro máxima", paro[pico]),
+    p_media = float(np.mean([p_us[a] for a in anios]))
+    act_pp = actividad * p_media / 100
+    minimo = int(np.argmin(act_pp))
+    for nombre, v in (("Empleo relativo, mínimo (porcentaje)", float(np.min(empleo))), ("Año del mínimo del empleo", int(np.argmin(empleo))),
+                      ("Empleo relativo a los 10 años (porcentaje)", empleo[H]), ("Tasa de paro en el impacto (puntos)", paro[0]), ("Tasa de paro máxima (puntos)", paro[pico]),
                       ("Año del máximo de la tasa de paro", pico), ("Años hasta que el paro cae a la mitad de su máximo", vida),
-                      ("Tasa de paro a los 5 años", paro[5]), ("Tasa de actividad en el impacto", actividad[0]), ("Tasa de actividad a los 5 años", actividad[5]),
-                      ("Población en edad de trabajar a los 5 años", poblacion[5]), ("Población en edad de trabajar a los 10 años", poblacion[H]),
-                      ("Parte del ajuste del empleo hecha por migración a los 10 años", poblacion[H] / empleo[H])):
-        cifras.append(("BLANCHARD y KATZ, réplica propia: " + nombre, None if v is None else round(float(v), 3), "puntos o 100 x log", "II.2.1"))
-    return empleo, paro, actividad, poblacion
+                      ("Tasa de paro a los 5 años (puntos)", paro[5]), ("Tasa de paro a los 10 años (puntos)", paro[H]),
+                      ("Tasa de actividad en el impacto (puntos)", act_pp[0]), ("Tasa de actividad, mínimo (puntos)", act_pp[minimo]), ("Año del mínimo de la tasa de actividad", minimo),
+                      ("Tasa de actividad a los 10 años (puntos)", act_pp[H]),
+                      ("Población en edad de trabajar en el impacto (porcentaje)", poblacion[0]), ("Población en edad de trabajar a los 5 años (porcentaje)", poblacion[5]),
+                      ("Población en edad de trabajar a los 10 años (porcentaje)", poblacion[H]),
+                      ("Parte del ajuste del empleo hecha por migración a los 10 años", poblacion[H] / empleo[H]), ("Tasa de actividad media de EE. UU., 1976-2019", p_media)):
+        cifras.append(("BLANCHARD y KATZ, réplica propia: " + nombre, None if v is None else round(float(v), 3), "puntos, porcentaje o años", "II.2.1"))
+    return empleo, paro, actividad, poblacion, p_media
 
 
 def dispersion(carpeta, series, cifras):
