@@ -58,7 +58,7 @@ def bajar(url, destino, pausa=0.25):
 
 
 def descargar(carpeta):
-    for s in WB_SERIES:
+    for s in list(WB_SERIES) + [WB_PARO]:
         bajar(WB % (";".join(EURO + FUERA), s), os.path.join(carpeta, "wb_" + s + ".json"))
     for st, fips in ESTADOS.items():
         for s in (st + "NAN", st + "UR", "LBSSA" + fips):
