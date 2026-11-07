@@ -900,10 +900,287 @@ def con_datos_a2(carpeta, filas_series, cifras, momentos):
     escribir("anx_brecha_credito", fig, "España: crédito al sector privado no financiero (% del PIB), tendencia HP unilateral y brecha de crédito del BPI.")
 
 
+# ---------------------------------------------------------------- A3 (07/11/2026): identificación y predicción
+# Figuras: anx_var_monetario (VAR recursivo de EE. UU. a la manera de CHRISTIANO, EICHENBAUM y EVANS, 1999),
+# anx_proyeccion_local (proyección local del PIB, JORDÀ 2005, frente al VAR) y anx_senales_recesion (probit de la
+# pendiente de la curva, ESTRELLA y MISHKIN 1998, y regla de SAHM con los datos de cada momento). Fuentes adicionales de
+# FRED: FEDFUNDS (tipo efectivo de los fondos federales), PPIACO (índice de precios de producción de todas las materias
+# primas), GS10 (bono del Tesoro a diez años), SAHMREALTIME y SAHMCURRENT (indicador de SAHM).
+SERIES_A3 = {"FEDFUNDS": "Tipo de interés efectivo de los fondos federales",
+             "PPIACO": "Índice de precios de producción de todas las materias primas",
+             "GS10": "Rendimiento del bono del Tesoro a diez años (vencimiento constante)",
+             "SAHMREALTIME": "Indicador de recesión de SAHM con los datos de cada momento",
+             "SAHMCURRENT": "Indicador de recesión de SAHM con los datos actuales"}
+MUESTRA_CEE = ("1965-07-01", "1995-07-01")  # la de CHRISTIANO, EICHENBAUM y EVANS (1999), 1965T3-1995T3
+MUESTRA_LARGA = ("1965-01-01", "2007-10-01")
+RETARDOS, HORIZONTE = 4, 20
+
+
+def descargar_a3(carpeta):
+    import time
+    for s in SERIES_A3:
+        destino = os.path.join(carpeta, s + ".csv")
+        if not os.path.exists(destino):
+            urllib.request.urlretrieve(FRED + s, destino); time.sleep(0.3)
+
+
+def var_mco(X, p=RETARDOS):  # VAR con constante estimado por mínimos cuadrados, ecuación a ecuación
+    Y = X[p:]
+    Z = np.hstack([np.ones((X.shape[0] - p, 1))] + [X[p - j:X.shape[0] - j] for j in range(1, p + 1)])
+    B = np.linalg.lstsq(Z, Y, rcond=None)[0]
+    E = Y - Z @ B
+    return B, E, E.T @ E / (Y.shape[0] - Z.shape[1])
+
+
+def var_respuestas(B, S, p=RETARDOS, H=HORIZONTE):
+    """Respuestas con identificación recursiva (CHOLESKY): matriz [h, variable, perturbación] para h = 0..H."""
+    N = S.shape[0]
+    Phi = [B[1 + N * (j - 1):1 + N * j].T for j in range(1, p + 1)]
+    Psi = [np.eye(N)]
+    for h in range(1, H + 1):
+        Psi.append(sum(Phi[j] @ Psi[h - 1 - j] for j in range(min(p, h))))
+    G = np.linalg.cholesky(S)
+    return np.array([P @ G for P in Psi])
+
+
+def var_bootstrap(X, B, E, reps=1000, semilla=1, p=RETARDOS):
+    """Bandas por remuestreo de los residuos, con las condiciones iniciales fijas; respuestas a una subida de un punto."""
+    rng = np.random.default_rng(semilla)
+    T, salida = E.shape[0], []
+    for _ in range(reps):
+        e = E[rng.integers(0, T, T)]
+        Xb = np.array(X, float)
+        for t in range(p, X.shape[0]):
+            Xb[t] = np.r_[1.0, np.concatenate([Xb[t - j] for j in range(1, p + 1)])] @ B + e[t - p]
+        Bb, _, Sb = var_mco(Xb)
+        R = var_respuestas(Bb, Sb)
+        salida.append(R[:, :, 3] / R[0, 3, 3])
+    return np.array(salida)
+
+
+def proyeccion_local(X, H=HORIZONTE, p=RETARDOS):
+    """PIB en t+h (respecto a t-1) sobre el tipo de t, con las variables lentas de t y p retardos de todas como controles:
+    la versión recursiva, que en población estima la misma respuesta que el VAR (PLAGBORG-MØLLER y WOLF, 2021).
+    Errores típicos de NEWEY y WEST con h + 1 retardos."""
+    salida = []
+    for h in range(H + 1):
+        A, y = [], []
+        for t in range(p, X.shape[0] - h):
+            A.append(np.r_[X[t, 3], 1.0, X[t, :3], np.concatenate([X[t - j] for j in range(1, p + 1)])])
+            y.append(X[t + h, 0] - X[t - 1, 0])
+        A, y = np.array(A), np.array(y)
+        b = np.linalg.lstsq(A, y, rcond=None)[0]
+        Au = A * (y - A @ b)[:, None]
+        Q, Sg = np.linalg.inv(A.T @ A), Au.T @ Au
+        for l in range(1, h + 2):
+            G = Au[l:].T @ Au[:-l]
+            Sg = Sg + (1 - l / (h + 2.0)) * (G + G.T)
+        salida.append((b[0], math.sqrt((Q @ Sg @ Q)[0, 0])))
+    return salida
+
+
+def normal(z):
+    return 0.5 * (1 + np.vectorize(math.erf)(np.asarray(z, float) / math.sqrt(2)))
+
+
+def probit(x, y, iteraciones=60):  # máxima verosimilitud por NEWTON-RAPHSON
+    X = np.c_[np.ones(len(x)), x]
+    b = np.zeros(2)
+    for _ in range(iteraciones):
+        z = X @ b
+        pr = np.clip(normal(z), 1e-10, 1 - 1e-10)
+        f = np.exp(-z ** 2 / 2) / math.sqrt(2 * math.pi)
+        b = b + np.linalg.solve(X.T @ (X * (f ** 2 / (pr * (1 - pr)))[:, None]), X.T @ ((y - pr) * f / (pr * (1 - pr))))
+    return b
+
+
+def con_datos_a3(carpeta, filas_series, cifras):
+    gdp, dfl = a_dict(leer(carpeta, "GDPC1")), a_dict(leer(carpeta, "GDPDEF"))
+    pc, ff = a_dict(trimestral(leer(carpeta, "PPIACO"))), a_dict(trimestral(leer(carpeta, "FEDFUNDS")))
+    fechas = sorted(set(gdp) & set(dfl) & set(pc) & set(ff))
+    nombres = ["PIB real", "Deflactor del PIB", "Precios de las materias primas", "Tipo de los fondos federales"]
+
+    def datos(desde, hasta):
+        i0, i1 = fechas.index(desde), fechas.index(hasta)
+        fs = fechas[i0 - RETARDOS:i1 + 1]
+        return fs, np.array([[100 * math.log(gdp[f]), 100 * math.log(dfl[f]), 100 * math.log(pc[f]), ff[f]] for f in fs])
+
+    # ---- VAR recursivo (orden: PIB, deflactor, materias primas, tipo): muestra de CEE y muestra larga
+    fs, X = datos(*MUESTRA_CEE)
+    B, E, S = var_mco(X)
+    R = var_respuestas(B, S)
+    r = R[:, :, 3] / R[0, 3, 3]
+    boot = var_bootstrap(X, B, E)
+    lo, hi = np.percentile(boot, 5, axis=0), np.percentile(boot, 95, axis=0)
+    fl, XL = datos(*MUESTRA_LARGA)
+    BL, EL, SL = var_mco(XL)
+    RL = var_respuestas(BL, SL)
+    rl = RL[:, :, 3] / RL[0, 3, 3]
+    for f, fila in zip(fl, XL):
+        for k in range(4):
+            filas_series.append(("VAR " + nombres[k], "Estados Unidos", f, round(float(fila[k]), 4), "punto porcentual" if k == 3 else "100 x logaritmo",
+                                 "FRED (GDPC1, GDPDEF, PPIACO, FEDFUNDS)", "media trimestral de los datos mensuales" if k >= 2 else "trimestral", "anx_var_monetario"))
+    for h in range(HORIZONTE + 1):
+        for k in range(4):
+            filas_series.append(("Respuesta a una subida de un punto del tipo: " + nombres[k], "Estados Unidos", "h = %d trimestres" % h, round(float(r[h, k]), 4),
+                                 "puntos" if k == 3 else "%", "elaboración propia con FRED",
+                                 "VAR recursivo %s-%s, 4 retardos; banda del 90%% [%.3f, %.3f]; muestra 1965T1-2007T4: %.3f"
+                                 % (trimestre(decimal(MUESTRA_CEE[0])), trimestre(decimal(MUESTRA_CEE[1])), lo[h, k], hi[h, k], rl[h, k]), "anx_var_monetario"))
+    kmin = int(np.argmin(r[:, 0]))
+    cifras.append(("VAR: desviación típica de la perturbación monetaria (1965T3-1995T3)", "%.2f" % R[0, 3, 3], "puntos", "I.7"))
+    cifras.append(("VAR: caída máxima del PIB tras una subida de un punto (trimestre, banda del 90%)", "%.2f en h = %d [%.2f, %.2f]" % (r[kmin, 0], kmin, lo[kmin, 0], hi[kmin, 0]), "%", "I.7"))
+    cifras.append(("VAR: PIB en h = 20", "%.2f [%.2f, %.2f]" % (r[20, 0], lo[20, 0], hi[20, 0]), "%", "I.7"))
+    cifras.append(("VAR: deflactor, máximo de los dos primeros años y valores en h = 12, 16 y 20", "%.2f (h = %d); %.2f; %.2f; %.2f [%.2f, %.2f]"
+                   % (max(r[:9, 1]), int(np.argmax(r[:9, 1])), r[12, 1], r[16, 1], r[20, 1], lo[20, 1], hi[20, 1]), "%", "I.7"))
+    cifras.append(("VAR: materias primas en h = 4, 8 y 20", "%.2f; %.2f; %.2f" % (r[4, 2], r[8, 2], r[20, 2]), "%", "I.7"))
+    vuelta = next(h for h in range(1, HORIZONTE + 1) if r[h, 3] < 0.05)
+    cifras.append(("VAR: tipo en h = 4 y primer trimestre por debajo de 0,05", "%.2f; h = %d" % (r[4, 3], vuelta), "puntos", "I.7"))
+    kml = int(np.argmin(rl[:, 0]))
+    cifras.append(("VAR 1965T1-2007T4: deflactor máximo (h) y PIB mínimo (h) y en h = 20", "%.2f (h = %d); %.2f (h = %d); %.2f"
+                   % (max(rl[:, 1]), int(np.argmax(rl[:, 1])), rl[kml, 0], kml, rl[20, 0]), "%", "I.7"))
+    for etiqueta, RR in (("1965T3-1995T3", R), ("1965T1-2007T4", RL)):
+        cuotas = []
+        for h in (4, 8, 12, 20):
+            num = sum(RR[s, 0, 3] ** 2 for s in range(h))
+            den = sum(RR[s, 0, j] ** 2 for s in range(h) for j in range(4))
+            cuotas.append("%d: %.1f" % (h, 100 * num / den))
+        cifras.append(("VAR %s: parte de la varianza del error de previsión del PIB debida a la perturbación monetaria (h: %%)" % etiqueta, "; ".join(cuotas), "%", "I.7"))
+
+    def banda(ys_lo, ys_hi):
+        ida = " ".join("(%d,%.4f)" % (h, v) for h, v in enumerate(ys_lo))
+        vuelta_ = " ".join("(%d,%.4f)" % (h, ys_hi[h]) for h in range(len(ys_hi) - 1, -1, -1))
+        return "\\addplot[fill=black!15, draw=none] coordinates {%s %s};" % (ida, vuelta_)
+
+    def linea_h(ys, estilo):
+        return "\\addplot[%s] coordinates {%s};" % (estilo, " ".join("(%d,%.4f)" % (h, v) for h, v in enumerate(ys)))
+
+    def panel_irf(nombre, titulo, lugar, k, ylab, ymin, ymax, ytick, leyenda=False):
+        cuerpo = [banda(lo[:, k], hi[:, k]), linea_h(r[:, k], "black, thick"), linea_h(rl[:, k], "black!60, dashed, thick"),
+                  "\\addplot[black!40, thin] coordinates {(0,0) (20,0)};"]
+        if leyenda:
+            cuerpo = [banda(lo[:, k], hi[:, k]) + "\n\\addlegendentry{banda del $90\\%$}",
+                      linea_h(r[:, k], "black, thick") + "\n\\addlegendentry{muestra $1965$-$1995$}",
+                      linea_h(rl[:, k], "black!60, dashed, thick") + "\n\\addlegendentry{muestra $1965$-$2007$}",
+                      "\\addplot[black!40, thin, forget plot] coordinates {(0,0) (20,0)};"]
+        return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=6.2cm, height=3.3cm, scale only axis, %s,\n"
+                "    xmin=0, xmax=20, xtick={0,4,...,20}, ymin=%s, ymax=%s, ytick={%s}, xlabel={Trimestres}, ylabel={%s},\n"
+                "    title={%s}, title style={font=\\footnotesize}, legend style={draw=none, fill=none, font=\\footnotesize, at={(0.98,0.98)}, anchor=north east},\n"
+                "    legend cell align=left]\n%s\n\\end{axis}\n" % (nombre, lugar, ESTILO, ymin, ymax, ytick, ylab, titulo, "\n".join(cuerpo)))
+
+    fig = "\\begin{tikzpicture}\n"
+    fig += panel_irf("a", "(a) Tipo de los fondos federales", "{(0,0)}", 3, "Puntos", -0.6, 1.4, "-0.5,0,0.5,1", leyenda=True)
+    fig += panel_irf("b", "(b) PIB real", "{($(a.north east)+(1.6cm,0)$)}", 0, "\\%", -1.4, 0.6, "-1.2,-0.8,-0.4,0,0.4")
+    fig += panel_irf("c", "(c) Deflactor del PIB", "{($(a.south west)+(0,-1.6cm)$)}", 1, "\\%", -1.6, 0.8, "-1.5,-1,-0.5,0,0.5")
+    fig += panel_irf("d", "(d) Precios de las materias primas", "{($(c.north east)+(1.6cm,0)$)}", 2, "\\%", -3, 1.5, "-3,-2,-1,0,1")
+    fig += "\\end{tikzpicture}"
+    escribir("anx_var_monetario", fig, "Respuestas a una perturbación monetaria que sube un punto el tipo de los fondos federales: VAR recursivo de EE. UU. (PIB, deflactor, materias primas, tipo).")
+
+    # ---- proyección local del PIB frente al VAR (muestra de CEE)
+    lp = proyeccion_local(X)
+    for h, (b_, s_) in enumerate(lp):
+        filas_series.append(("Proyección local del PIB", "Estados Unidos", "h = %d trimestres" % h, round(b_, 4), "%", "elaboración propia con FRED",
+                             "error típico de NEWEY y WEST %.4f; banda del 90%% [%.3f, %.3f]" % (s_, b_ - 1.645 * s_, b_ + 1.645 * s_), "anx_proyeccion_local"))
+    klp = int(np.argmin([b_ for b_, _ in lp]))
+    cifras.append(("Proyección local: caída máxima del PIB (h) y banda del 90%", "%.2f (h = %d) [%.2f, %.2f]" % (lp[klp][0], klp, lp[klp][0] - 1.645 * lp[klp][1], lp[klp][0] + 1.645 * lp[klp][1]), "%", "I.7"))
+    cifras.append(("Proyección local frente al VAR en h = 4, 8, 12, 16 y 20", "; ".join("%d: %.2f ± %.2f frente a %.2f ± %.2f" % (h, lp[h][0], 1.645 * lp[h][1], r[h, 0], (hi[h, 0] - lo[h, 0]) / 2)
+                                                                            for h in (4, 8, 12, 16, 20)), "%", "I.7"))
+    lp_b, lp_lo, lp_hi = [b_ for b_, _ in lp], [b_ - 1.645 * s_ for b_, s_ in lp], [b_ + 1.645 * s_ for b_, s_ in lp]
+    cuerpo = [banda(lo[:, 0], hi[:, 0]) + "\n\\addlegendentry{VAR: banda del $90\\%$}",
+              linea_h(r[:, 0], "black, thick") + "\n\\addlegendentry{VAR}",
+              linea_h(lp_b, "black!70, dashed, thick, mark=*, mark size=1pt") + "\n\\addlegendentry{proyección local}",
+              linea_h(lp_lo, "black!60, densely dotted") + "\n\\addlegendentry{proyección local: banda del $90\\%$}",
+              linea_h(lp_hi, "black!60, densely dotted, forget plot"),
+              "\\addplot[black!40, thin, forget plot] coordinates {(0,0) (20,0)};"]
+    fig = ("\\begin{tikzpicture}\n\\begin{axis}[width=14.2cm, height=4.6cm, scale only axis, %s,\n"
+           "    xmin=0, xmax=20, xtick={0,2,...,20}, ymin=-1.6, ymax=0.6, ytick={-1.5,-1,-0.5,0,0.5}, xlabel={Trimestres}, ylabel={\\%%},\n"
+           "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.01,0.03)}, anchor=south west}, legend columns=2, legend cell align=left]\n%s\n\\end{axis}\n\\end{tikzpicture}"
+           % (ESTILO, "\n".join(cuerpo)))
+    escribir("anx_proyeccion_local", fig, "Respuesta del PIB de EE. UU. a una subida de un punto del tipo: proyección local (JORDÀ, 2005) frente al VAR recursivo, 1965T3-1995T3.")
+
+    # ---- señales de recesión: probit de la pendiente (10 años menos 3 meses) y regla de SAHM en tiempo real
+    gs10, tb3, rec = a_dict(leer(carpeta, "GS10")), a_dict(leer(carpeta, "TB3MS")), a_dict(leer(carpeta, "USREC"))
+    sahm = a_dict(leer(carpeta, "SAHMREALTIME"))
+
+    def equivalente(d):  # letras a tres meses: del tipo de descuento al rendimiento equivalente al de un bono
+        d = d / 100.0
+        return 100 * 365 * d / (360 - 91 * d)
+
+    def mas_meses(f, n):
+        a, m = int(f[:4]), int(f[5:7]) - 1 + n
+        return "%d-%02d-01" % (a + m // 12, m % 12 + 1)
+
+    meses = sorted(f for f in gs10 if f in tb3)
+    pend = {f: gs10[f] - equivalente(tb3[f]) for f in meses}
+    estimaciones = {}
+    for fin in ("2018-12-01", "2024-10-01"):
+        ts = [f for f in meses if "1959-01-01" <= f <= fin and mas_meses(f, 12) in rec]
+        estimaciones[fin] = probit(np.array([pend[f] for f in ts]), np.array([rec[mas_meses(f, 12)] for f in ts]))
+    b0, b1 = estimaciones["2018-12-01"]
+    prob = {f: 100 * float(normal(b0 + b1 * pend[f])) for f in meses if f >= "1959-01-01"}
+    for f in meses:
+        if f >= "1959-01-01":
+            filas_series.append(("Probabilidad de recesión dentro de doce meses (probit de la pendiente)", "Estados Unidos", f, round(prob[f], 2), "%",
+                                 "elaboración propia con FRED (GS10, TB3MS, USREC)", "pendiente %.2f; probit estimado con 1959-2018 (recesiones hasta 2019)" % pend[f], "anx_senales_recesion"))
+    for f in sorted(sahm):
+        filas_series.append(("Indicador de SAHM con los datos de cada momento", "Estados Unidos", f, sahm[f], "puntos", "FRED (SAHMREALTIME)", "", "anx_senales_recesion"))
+    cifras.append(("Probit (estimado 1959-2018): constante y pendiente", "%.3f; %.3f" % (b0, b1), "", "I.8"))
+    c0, c1 = estimaciones["2024-10-01"]
+    cifras.append(("Probit con datos hasta 2025 (como el 3.B.24): probabilidad en mayo de 2023", "%.1f" % (100 * float(normal(c0 + c1 * pend["2023-05-01"]))), "%", "I.8"))
+    m23 = max((v, f) for f, v in prob.items() if f >= "2019-01-01")
+    cifras.append(("Probit (1959-2018): máximo desde 2019 (fecha) y pendiente de ese mes", "%.1f en %s; %.2f" % (m23[0], m23[1][:7], pend[m23[1]]), "% y puntos", "I.8"))
+    m81 = max((v, f) for f, v in prob.items() if "1982-01-01" <= f < "2022-01-01")
+    cifras.append(("Probit (1959-2018): máximo entre 1982 y 2021", "%.1f en %s" % m81, "%", "I.8"))
+    fr = sorted(rec)
+    picos = [fr[i - 1] for i in range(1, len(fr)) if rec[fr[i]] == 1 and rec[fr[i - 1]] == 0 and fr[i] >= "1960-01-01"]
+    previas = []
+    for p_ in picos:
+        ventana = [f for f in prob if mas_meses(p_, -18) <= f <= p_]
+        previas.append("%s: %.0f" % (p_[:7], max(prob[f] for f in ventana)))
+    cifras.append(("Probit: probabilidad máxima en los 18 meses anteriores a cada pico del NBER", "; ".join(previas), "%", "I.8"))
+    episodios, dentro = [], False
+    for f in sorted(prob):
+        if prob[f] >= 40 and not dentro:
+            episodios.append(f); dentro = True
+        elif prob[f] < 40:
+            dentro = False
+    falsas = [f[:7] for f in episodios if not any(rec.get(mas_meses(f, k), 0) == 1 for k in range(0, 25))]
+    cifras.append(("Probit: episodios con probabilidad de al menos 40% (inicio) y los no seguidos de recesión en 24 meses", "%s | falsas: %s" % (", ".join(f[:7] for f in episodios), ", ".join(falsas)), "", "I.8"))
+    fs_ = sorted(sahm)
+    cruces = [f for i, f in enumerate(fs_) if sahm[f] >= 0.5 and (i == 0 or sahm[fs_[i - 1]] < 0.5)]
+    cifras.append(("SAHM (datos de cada momento): meses en que cruza 0,5", ", ".join(f[:7] for f in cruces), "", "I.8"))
+    desfases = []
+    for p_ in picos:
+        c_ = next((f for f in cruces if mas_meses(p_, -3) <= f <= mas_meses(p_, 12)), None)
+        if c_:
+            a1, m1, a2, m2 = int(p_[:4]), int(p_[5:7]), int(c_[:4]), int(c_[5:7])
+            desfases.append("%s: %+d" % (p_[:7], (a2 - a1) * 12 + m2 - m1))
+    cifras.append(("SAHM: meses entre cada pico del NBER y el cruce de 0,5", "; ".join(desfases), "meses", "I.8"))
+    cifras.append(("SAHM en 2024: julio, agosto y septiembre", "%.2f; %.2f; %.2f" % (sahm["2024-07-01"], sahm["2024-08-01"], sahm["2024-09-01"]), "puntos", "I.8"))
+    m20 = max((v, f) for f, v in sahm.items() if "2020-01-01" <= f <= "2021-12-01")
+    cifras.append(("SAHM: máximo de 2020", "%.2f en %s" % (m20[0], m20[1][:7]), "puntos", "I.8"))
+    xm = [decimal(f) for f in sorted(prob)]
+    sombra = tramos([decimal(f) for f in fr if f >= "1959-01-01"], [rec[f] for f in fr if f >= "1959-01-01"], 1 / 12.0)
+    cuerpo_a = sombras(sombra, 50) + "\n\\addplot[black, thick] coordinates {%s};" % coords(xm, [prob[f] for f in sorted(prob)], 2)
+    cuerpo_a += "\n\\addplot[black!55, dashed] coordinates {(1959,50) (2027,50)};"
+    xs_ = [decimal(f) for f in fs_]
+    cuerpo_b = sombras(sombra, 0) + "\n\\addplot[black, thick] coordinates {%s};" % coords(xs_, [sahm[f] for f in fs_], 2)
+    cuerpo_b += "\n\\addplot[black!55, dashed] coordinates {(1959,0.5) (2027,0.5)};\n\\addplot[black!40, thin] coordinates {(1959,0) (2027,0)};"
+    fig = "\\begin{tikzpicture}\n"
+    fig += ("\\begin{axis}[name=a, at={(0,0)}, anchor=north west, width=14.2cm, height=3.6cm, scale only axis, %s,\n"
+            "    xmin=1959, xmax=2027, xtick={1960,1965,...,2025}, ymin=0, ymax=100, ytick={0,25,50,75,100}, ylabel={Porcentaje},\n"
+            "    title={(a) Probabilidad de recesión dentro de doce meses según la pendiente de la curva}, title style={font=\\footnotesize}]\n%s\n\\end{axis}\n" % (ESTILO, cuerpo_a))
+    fig += ("\\begin{axis}[name=b, at={($(a.south west)+(0,-1.5cm)$)}, anchor=north west, width=14.2cm, height=3.6cm, scale only axis, %s,\n"
+            "    xmin=1959, xmax=2027, xtick={1960,1965,...,2025}, ymin=-0.5, ymax=3, ytick={0,0.5,1,2,3}, ylabel={Puntos},\n"
+            "    title={(b) Regla de SAHM con los datos de cada momento}, title style={font=\\footnotesize}]\n%s\n\\end{axis}\n" % (ESTILO, cuerpo_b))
+    fig += "\\end{tikzpicture}"
+    escribir("anx_senales_recesion", fig, "EE. UU.: probabilidad de recesión a doce meses de un probit sobre la pendiente (10 años menos 3 meses), estimado con 1959-2018, y regla de SAHM en tiempo real.")
+
+
 def main():
     carpeta = sys.argv[1] if len(sys.argv) > 1 else tempfile.mkdtemp()
     descargar(carpeta)
     descargar_a2(carpeta)
+    descargar_a3(carpeta)
     series, cifras, sint, momentos = [], [], [], []
     sinteticas(sint)
     con_datos(carpeta, series, cifras)
