@@ -812,6 +812,9 @@ def main():
     expw = leer_wb_simple(carpeta, "dl_wb_us", "exp_wld.json")
     dreer, dcc = fig_dolar_cuenta_corriente(bis, ccus)
     parf, pars, pare = fig_paridades_largo(pol, xm, cm)
+    m2w, nombres_m2 = leer_wb_panel(carpeta, "dl_wb_m", "m2.json")
+    pibw, _ = leer_wb_panel(carpeta, "dl_wb_m", "pib.json")
+    monf, mons, mone, monfijas, monus = fig_monetario_largo(m2w, pibw, nombres_m2, xa)
 
     # ---- cifras citadas en el texto
     cif = []
