@@ -714,8 +714,8 @@ def leer_wb_panel(carpeta, sub, fichero):
 
 
 NOMBRES_MON = dict(NOMBRES_PAR, AO="Angola", GH="Ghana", UA="Ucrania", NG="Nigeria", EG="Egipto", CD="R. D. del Congo")
-ETIQ_MON_A = {"AR": "north west", "TR": "south east", "GH": "north west", "UA": "north west", "NG": "south east", "AO": "south east"}
-ETIQ_MON_B = {"JP": "south east", "CN": "north", "BR": "north west", "MX": "south east", "GB": "north west", "EG": "south east"}
+ETIQ_MON_A = {"AR": "north west", "TR": "south east", "GH": "north west", "UA": "north west", "NG": "south east"}
+ETIQ_MON_B = {"JP": "south east", "CN": "north", "BR": "north west", "EG": "south east"}
 
 
 def fig_monetario_largo(m2, pib, nombres_wb, xa_txt, t0=2000, t1=2024, tope=10.0):
