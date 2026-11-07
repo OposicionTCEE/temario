@@ -118,15 +118,17 @@ def corr(a, b):
 
 
 def svar_bq(X, p=RETARDOS_BE):
-    """VAR(p) con constante en (crecimiento, inflación) e identificación de BLANCHARD y QUAH: la segunda perturbación
-    (demanda) no afecta a la producción a largo plazo. Devuelve las perturbaciones estructurales normalizadas (T-p x 2),
-    las respuestas acumuladas [h, variable, perturbación] y la matriz de impacto G."""
+    """VAR(p) con constante y tendencia lineal en (crecimiento, inflación) e identificación de BLANCHARD y QUAH: la segunda
+    perturbación (demanda) no afecta a la producción a largo plazo. La tendencia recoge la desinflación de 1970-2019: sin
+    ella, la perturbación de oferta sube los precios a largo plazo en 12 de los 14 países y la de demanda baja la producción
+    en el impacto en 9, contra lo que predice el modelo de oferta y demanda agregadas. Devuelve las perturbaciones
+    estructurales normalizadas (T-p x 2), las respuestas acumuladas [h, variable, perturbación] y la matriz de impacto G."""
     Y = X[p:]
-    Z = np.hstack([np.ones((len(Y), 1))] + [X[p - j:len(X) - j] for j in range(1, p + 1)])
+    Z = np.hstack([np.ones((len(Y), 1)), np.arange(len(Y)).reshape(-1, 1) / 10.0] + [X[p - j:len(X) - j] for j in range(1, p + 1)])
     B = np.linalg.lstsq(Z, Y, rcond=None)[0]
     E = Y - Z @ B
     S = E.T @ E / (len(Y) - Z.shape[1])
-    Phi = [B[1 + 2 * (j - 1):1 + 2 * j].T for j in range(1, p + 1)]
+    Phi = [B[2 + 2 * (j - 1):2 + 2 * j].T for j in range(1, p + 1)]
     C1 = np.linalg.inv(np.eye(2) - sum(Phi))
     G = np.linalg.inv(C1) @ np.linalg.cholesky(C1 @ S @ C1.T)  # efecto a largo plazo triangular inferior con diagonal positiva
     eps = E @ np.linalg.inv(G).T
