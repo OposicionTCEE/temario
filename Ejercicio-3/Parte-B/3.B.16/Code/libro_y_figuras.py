@@ -431,7 +431,7 @@ def fig_bayoumi(corr_be):
         c += "  \\draw[->] (0,0) -- (0,%.3f);\n" % ((y1 - y0) * ey + 0.2)
         for t in [0, 0.2, 0.4, 0.6]:
             c += "  \\draw (0.06,%.3f) -- (-0.06,%.3f) node[left] {%s};\n" % ((t - y0) * ey, (t - y0) * ey, num(t))
-        c += "  \\node[rotate=90, above=16pt] at (0,%.3f) {perturbaciones de demanda};\n" % ((y1 - y0) * ey / 2)
+        c += "  \\node[rotate=90, above=24pt] at (0,%.3f) {perturbaciones de demanda};\n" % ((y1 - y0) * ey / 2)
         c += "  \\end{scope}\n"
     escribir("anx2_bayoumi", c, "correlación con Alemania de las perturbaciones de oferta y de demanda identificadas a la manera de BAYOUMI y EICHENGREEN (1993), 1973-1998 y 1999-2019 (anexo II.1.3)")
 
