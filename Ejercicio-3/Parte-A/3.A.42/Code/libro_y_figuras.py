@@ -1307,7 +1307,7 @@ def con_datos_a4(carpeta, filas_series, cifras):
 
     def panel(nombre, lugar, titulo, xs, xmin, xmax, xlab, leyenda):
         b, _, _ = mco(tau, np.log(xs))
-        rejilla = np.exp(np.linspace(math.log(xmin), math.log(xmax), 30))
+        rejilla = np.exp(np.linspace(math.log(min(xs)), math.log(max(xs)), 30))  # el ajuste solo en el recorrido de los datos
         resto = [(x_, t_) for x_, t_, r in zip(xs, tau, res) if r[0] not in ("ESP", "USA")]
         cuerpo = "\\addplot[only marks, mark=o, mark size=1.3pt, black!50] coordinates {%s};" % " ".join("(%.4f,%.4f)" % p for p in resto)
         if leyenda:
