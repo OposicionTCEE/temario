@@ -282,6 +282,180 @@ def fig_bigmac(bm, pib25):
     return fecha, filas, (a, b, r2), pus
 
 
+# ---------------------------------------------------------------- A2 (I.3): paridad relativa, hecho de MUSSA y semividas
+# Fuentes: BPI WS_XRU (tipos frente al dólar, medias anuales y mensuales; los de los países del euro, en euros también antes
+# de 1999), BPI WS_LONG_CPI (índices de precios de consumo, anuales y mensuales) y BPI WS_EER (efectivos reales, cesta
+# reducida de 27 economías, mensual desde 1964).
+NOMBRES_ES = {"AR": "Argentina", "PE": "Perú", "TR": "Turquía", "CL": "Chile", "IL": "Israel", "MX": "México", "IS": "Islandia",
+              "CO": "Colombia", "ZA": "Sudáfrica", "IN": "India", "KR": "Corea", "ES": "España", "GB": "Reino Unido", "DE": "Alemania",
+              "JP": "Japón", "CH": "Suiza", "XM": "Zona del euro", "DK": "Dinamarca", "IT": "Italia", "GR": "Grecia", "NO": "Noruega",
+              "NZ": "Nueva Zelanda", "NL": "Países Bajos", "IE": "Irlanda", "AU": "Australia", "TW": "Taiwán", "CA": "Canadá",
+              "HK": "Hong Kong", "BE": "Bélgica", "US": "Estados Unidos", "SG": "Singapur", "FR": "Francia", "FI": "Finlandia",
+              "PT": "Portugal", "SE": "Suecia", "AT": "Austria", "MY": "Malasia", "LU": "Luxemburgo", "PH": "Filipinas"}
+
+
+def leer_xru(carpeta):
+    xa, xm = {}, {}
+    with open(os.path.join(carpeta, "dl_bis_xru", "WS_XRU_csv_flat.csv"), encoding="utf-8") as f:
+        for d in csv.DictReader(f):
+            if d["COLLECTION:Collection"][:1] != "A" or d["OBS_VALUE:Observation Value"] in ("", "NaN"):
+                continue
+            fr = d["FREQ:Frequency"][:1]
+            if fr not in ("A", "M"):
+                continue
+            a = d["REF_AREA:Reference area"][:2]
+            (xa if fr == "A" else xm).setdefault(a, {})[d["TIME_PERIOD:Time period or range"]] = float(d["OBS_VALUE:Observation Value"])
+    return xa, xm
+
+
+def leer_ipc(carpeta):
+    ca, cm = {}, {}
+    with open(os.path.join(carpeta, "dl_bis_cpi", "WS_LONG_CPI_csv_flat.csv"), encoding="utf-8") as f:
+        for d in csv.DictReader(f):
+            if d["UNIT_MEASURE:Unit of measure"][:3] != "628" or d["OBS_VALUE:Observation Value"] in ("", "NaN"):
+                continue
+            a = d["REF_AREA:Reference area"][:2]
+            (ca if d["FREQ:Frequency"][:1] == "A" else cm).setdefault(a, {})[d["TIME_PERIOD:Time period or range"]] = float(d["OBS_VALUE:Observation Value"])
+    return ca, cm
+
+
+def leer_eer_estrecho_real(carpeta):
+    out = {}
+    with open(os.path.join(carpeta, "dl_bis", "WS_EER_csv_flat.csv"), encoding="utf-8") as f:
+        for d in csv.DictReader(f):
+            if (d["FREQ:Frequency"][:1] == "M" and d["EER_TYPE:Type"][:1] == "R" and d["EER_BASKET:Basket"][:1] == "N"
+                    and d["OBS_VALUE:Observation Value"] not in ("", "NaN")):
+                out.setdefault(d["REF_AREA:Reference area"][:2], {})[d["TIME_PERIOD:Time period or range"]] = float(d["OBS_VALUE:Observation Value"])
+    return out
+
+
+ETIQ_PPA_A = {"AR": "north west", "PE": "north west", "TR": "north west", "CL": "south east", "IL": "north west", "MX": "south east"}
+ETIQ_PPA_B = {"CH": "south east", "JP": "north west", "ES": "north west", "GB": "south east", "IN": "south east", "KR": "south east",
+              "ZA": "south east", "CO": "north west", "IS": "south east"}
+
+
+def fig_ppa_relativa(xa, ca, t0="1970", t1="2025"):
+    n = int(t1) - int(t0)
+    us = math.log(ca["US"][t1] / ca["US"][t0]) / n
+    pts = []
+    for a in sorted(ca):
+        if a == "US" or a not in xa:
+            continue
+        if t0 in ca[a] and t1 in ca[a] and t0 in xa[a] and t1 in xa[a]:
+            pts.append((a, NOMBRES_ES.get(a, a), 100 * (math.log(ca[a][t1] / ca[a][t0]) / n - us), 100 * math.log(xa[a][t1] / xa[a][t0]) / n))
+    a1, b1, r21 = ols([p[2] for p in pts], [p[3] for p in pts])
+    sub = [p for p in pts if p[2] < 10]
+    a2, b2, r22 = ols([p[2] for p in sub], [p[3] for p in sub])
+    eje = r"""  scale only axis, width=6.1cm, height=5.0cm, axis lines=left, tick align=outside, tick style={black!60},
+  /pgf/number format/.cd, use comma, 1000 sep={}, /pgfplots/.cd,
+  every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize}, title style={font=\footnotesize},
+  xlabel={Inflación menos la de EE.\,UU. (puntos al año)}, clip=false,
+"""
+    tikz = "% Paridad del poder adquisitivo relativa a largo plazo: depreciación media anual frente al dólar y diferencia\n"
+    tikz += "%% media anual de inflación con EE. UU., %s-%s, %d economías (BPI WS_XRU y WS_LONG_CPI; tasas logarítmicas en puntos).\n" % (t0, t1, len(pts))
+    tikz += "% Panel (b): las que tienen una diferencia menor de 10 puntos. Línea discontinua: 45 grados.\n"
+    tikz += "% Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_ppa_relativa\n"
+    tikz += "\\begin{tikzpicture}\n\\footnotesize\n\\begin{axis}[name=pa,\n" + eje
+    tikz += "  xmin=-5, xmax=60, ymin=-5, ymax=60, ylabel={Depreciación frente al dólar (puntos al año)},\n  title={(a) Las $%d$ economías},\n]\n" % len(pts)
+    tikz += "\\addplot[black!40, dashed] coordinates {(-5,-5) (60,60)};\n"
+    tikz += "\\addplot[only marks, mark=*, mark size=1.2pt, black!60] coordinates {%s};\n" % coordenadas([(p[2], p[3]) for p in pts], 2)
+    for p in pts:
+        if p[0] in ETIQ_PPA_A:
+            tikz += "\\node[font=\\scriptsize, anchor=%s, inner sep=1.6pt] at (axis cs:%.2f,%.2f) {%s};\n" % (ETIQ_PPA_A[p[0]], p[2], p[3], p[1])
+    tikz += "\\end{axis}\n\\begin{axis}[at={(pa.east)}, anchor=west, xshift=1.3cm,\n" + eje
+    tikz += "  xmin=-3, xmax=10.5, ymin=-4, ymax=11,\n  title={(b) Diferencia de inflación menor de $10$ puntos},\n]\n"
+    tikz += "\\addplot[black!40, dashed] coordinates {(-3,-3) (10.5,10.5)};\n"
+    tikz += "\\addplot[only marks, mark=*, mark size=1.2pt, black!60] coordinates {%s};\n" % coordenadas([(p[2], p[3]) for p in sub], 2)
+    for p in sub:
+        if p[0] in ETIQ_PPA_B:
+            tikz += "\\node[font=\\scriptsize, anchor=%s, inner sep=1.6pt] at (axis cs:%.2f,%.2f) {%s};\n" % (ETIQ_PPA_B[p[0]], p[2], p[3], p[1])
+    tikz += "\\end{axis}\n\\end{tikzpicture}\n"
+    open(os.path.join(IMG, "anx_ppa_relativa.tikz"), "w", encoding="utf-8").write(tikz)
+    return pts, (a1, b1, r21), (len(sub), a2, b2, r22)
+
+
+def estad_mussa(meses, s, q, m0, m1):
+    idx = [i for i, m in enumerate(meses) if m0 <= m <= m1]
+    ds = [s[i] - s[i - 1] for i in idx[1:]]
+    dq = [q[i] - q[i - 1] for i in idx[1:]]
+    def dt(v):
+        m = sum(v) / len(v)
+        return math.sqrt(sum((x - m) ** 2 for x in v) / (len(v) - 1))
+    mds, mdq = sum(ds) / len(ds), sum(dq) / len(dq)
+    cor = sum((a - mds) * (b - mdq) for a, b in zip(ds, dq)) / ((len(ds) - 1) * dt(ds) * dt(dq))
+    return 100 * dt(ds), 100 * dt(dq), cor, len(ds)
+
+
+def fig_mussa(xm, cm):
+    gb, pu, pg = xm["GB"], cm["US"], cm["GB"]
+    meses = sorted(m for m in gb if m >= "1950-01" and m in pu and m in pg)
+    s = [math.log(gb[m]) for m in meses]
+    q = [math.log(gb[m]) + math.log(pu[m]) - math.log(pg[m]) for m in meses]
+    b20 = [i for i, m in enumerate(meses) if m.startswith("2020")]
+    s0 = sum(s[i] for i in b20) / len(b20)
+    q0 = sum(q[i] for i in b20) / len(b20)
+    nom = [(decimal_mes(m), 100 * math.exp(s[i] - s0)) for i, m in enumerate(meses)]
+    rea = [(decimal_mes(m), 100 * math.exp(q[i] - q0)) for i, m in enumerate(meses)]
+    bw = estad_mussa(meses, s, q, "1950-01", "1971-07")
+    fl = estad_mussa(meses, s, q, "1973-03", meses[-1])
+    tikz = "% El hecho de MUSSA (1986): tipos de cambio nominal y real de la libra frente al dólar (libras por dólar; sube =\n"
+    tikz += "%% depreciación de la libra), mensual, %s a %s, índices 2020 = 100 (BPI WS_XRU y WS_LONG_CPI).\n" % (meses[0], meses[-1])
+    tikz += "% Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_mussa\n"
+    tikz += "\\begin{tikzpicture}\n" + EJES
+    tikz += r"""  xmin=1949, xmax=2027.5, xtick={1950,1960,1970,1980,1990,2000,2010,2020}, ymin=30, ymax=200, clip=false,
+  ylabel={Índice, $2020=100$},
+  legend to name=leyendamussa,
+]
+"""
+    tikz += "\\fill[black!8] (axis cs:1971.6,30) rectangle (axis cs:1973.2,200);\n"
+    tikz += "\\node[font=\\scriptsize, black!65, anchor=north] at (axis cs:1960.5,200) {Bretton Woods};\n"
+    tikz += "\\node[font=\\scriptsize, black!65, anchor=north] at (axis cs:2000,200) {Flotación};\n"
+    tikz += "\\addplot[black!45, line width=0.6pt] coordinates {%s};\n" % coordenadas(nom)
+    tikz += "\\addlegendentry{Tipo nominal}\n"
+    tikz += "\\addplot[black, line width=0.9pt] coordinates {%s};\n" % coordenadas(rea)
+    tikz += "\\addlegendentry{Tipo real}\n"
+    tikz += "\\end{axis}\n\\node[anchor=north] at (current bounding box.south) {\\pgfplotslegendfromname{leyendamussa}};\n\\end{tikzpicture}\n"
+    open(os.path.join(IMG, "anx_mussa.tikz"), "w", encoding="utf-8").write(tikz)
+    return meses, nom, rea, bw, fl
+
+
+def fig_semividas(eer, desde="1975-01"):
+    res = []
+    for a, ser in eer.items():
+        ms = sorted(m for m in ser if m >= desde)
+        if len(ms) < 600 or a not in NOMBRES_ES:
+            continue
+        y = [math.log(ser[m]) for m in ms]
+        c, rho, _ = ols(y[:-1], y[1:])
+        semivida = math.log(0.5) / math.log(rho) / 12.0 if rho < 1 else float("inf")
+        res.append((a, NOMBRES_ES[a], ms[0], ms[-1], len(ms), rho, semivida))
+    res.sort(key=lambda r: r[6], reverse=True)
+    med = sorted(r[6] for r in res)[len(res) // 2]
+    tope = 20.0
+    tikz = "% Semividas del tipo de cambio efectivo real (BPI, cesta reducida, mensual) estimadas con un AR(1) por mínimos\n"
+    tikz += "%% cuadrados sobre el logaritmo, %s a %s, %d economías; semivida = ln(0,5)/ln(rho)/12 años. Banda: 3 a 5 años.\n" % (res[0][2], res[0][3], len(res))
+    tikz += "% Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_semividas\n"
+    tikz += "\\begin{tikzpicture}\n\\footnotesize\n\\begin{axis}[\n"
+    tikz += r"""  scale only axis, width=11.5cm, height=%.2fcm, axis lines=left, tick align=outside, tick style={black!60},
+  /pgf/number format/.cd, use comma, 1000 sep={}, /pgfplots/.cd,
+  every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize},
+  xmin=0, xmax=%.0f, ymin=0.3, ymax=%.1f, clip=false, xtick={0,2,...,20},
+  ytick={%s}, yticklabels={%s},
+  xlabel={Semivida estimada (años)},
+]
+""" % (0.34 * len(res), tope, len(res) + 0.7, ",".join(str(i + 1) for i in range(len(res))), ",".join(r[1] for r in res))
+    tikz += "\\fill[black!8] (axis cs:3,0.3) rectangle (axis cs:5,%.1f);\n" % (len(res) + 0.7)
+    barras = [(min(r[6], tope), i + 1) for i, r in enumerate(res)]
+    tikz += "\\addplot[xbar, bar width=5.5pt, fill=black!50, draw=none] coordinates {%s};\n" % coordenadas(barras, 2)
+    tikz += "\\draw[black, densely dashed] (axis cs:%.2f,0.3) -- (axis cs:%.2f,%.1f);\n" % (med, med, len(res) + 0.7)
+    for i, r in enumerate(res):
+        if r[6] > tope:
+            tikz += "\\node[font=\\scriptsize, anchor=west, inner sep=2pt] at (axis cs:%.1f,%d) {$%s$};\n" % (tope, i + 1, coma(r[6], 0))
+    tikz += "\\end{axis}\n\\end{tikzpicture}\n"
+    open(os.path.join(IMG, "anx_semividas.tikz"), "w", encoding="utf-8").write(tikz)
+    return res, med
+
+
 # ---------------------------------------------------------------- principal
 def main():
     carpeta = sys.argv[1]
