@@ -685,10 +685,17 @@ def main():
              "Rho corregido (KENDALL, 1954)", "Semivida corregida (años; inf = raíz unitaria o explosiva)"]]
     for r in semis:
         semh.append(list(r))
+    bsh = [["Código Eurostat", "Economía", "Consumo individual efectivo por habitante en EPA (UE27 = 100), 2024",
+            "Nivel de precios de los bienes de consumo (UE27 = 100), 2024", "Nivel de precios de los servicios de consumo (UE27 = 100), 2024"]]
+    for f in bsf:
+        bsh.append(list(f))
+    for pais, serie in sorted(ccor.items()):
+        for a, v in sorted(serie.items()):
+            filas.append(["Cuenta corriente", pais, a, v, "% del PIB", "Banco Mundial BN.CAB.XOKA.GD.ZS", "ninguno", ""])
     cifras = [["Cifra", "Valor", "Fuente", "Dónde"]] + cif
     escribir_xlsx(os.path.join(TEMA, "Code", "datos_3B14.xlsx"),
                   [("Léeme", leeme), ("Fuentes", fuentes), ("Series", filas), ("ICP_2021", icp), ("Big_Mac", big),
-                   ("PPA_1970_2025", ppah), ("Semividas", semh), ("Cifras_citadas", cifras)])
+                   ("PPA_1970_2025", ppah), ("Semividas", semh), ("Bienes_servicios_2024", bsh), ("Cifras_citadas", cifras)])
     print("Libro escrito:", os.path.join(TEMA, "Code", "datos_3B14.xlsx"))
 
 
