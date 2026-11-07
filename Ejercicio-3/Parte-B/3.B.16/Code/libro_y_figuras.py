@@ -43,8 +43,8 @@ ESTADOS = {"AL": "01", "AK": "02", "AZ": "04", "AR": "05", "CA": "06", "CO": "08
            "NE": "31", "NV": "32", "NH": "33", "NJ": "34", "NM": "35", "NY": "36", "NC": "37", "ND": "38", "OH": "39",
            "OK": "40", "OR": "41", "PA": "42", "RI": "44", "SC": "45", "SD": "46", "TN": "47", "TX": "48", "UT": "49",
            "VT": "50", "VA": "51", "WA": "53", "WV": "54", "WI": "55", "WY": "56"}
-EUROSTAT = {"a10.json": "nama_10_a10?unit=CP_MEUR&na_item=B1G&" + "&".join("geo=" + ISO2[p] for p in EURO),
-            "une.json": "une_rt_a?age=Y15-74&sex=T&unit=PC_ACT&" + "&".join("geo=" + ISO2[p] for p in EURO)}
+WB_PARO = "SL.UEM.TOTL.ZS"  # tasa de paro, estimación armonizada de la OIT, desde 1991
+EUROSTAT = {"a10.json": "nama_10_a10?unit=CP_MEUR&na_item=B1G&" + "&".join("geo=" + ISO2[p] for p in EURO)}
 SECTORES = ["A", "BDE", "C", "F", "G-I", "J", "K", "L", "M_N", "O-Q", "R-U"]
 LAMBDA_ANUAL = 6.25  # RAVN y UHLIG (2002)
 RETARDOS_BE, RETARDOS_BK, HORIZONTE = 2, 2, 10
