@@ -869,7 +869,7 @@ def tikz_dornbusch(sendas, nombre, titulos, t1=None, comentario=""):
     tikz += linea([(f[0], f[3]) for f in sendas], "black!55, densely dashed, line width=0.9pt", 5.2, ys, 0.2, "$p$", "north west")
     # (c) tipo de interés, en diferencia con el extranjero
     tikz += "\\node[left] at (10.4,1.7) {$i^*$};\n"
-    tikz += linea([(f[0], f[4]) for f in sendas], "black, line width=1pt", 10.4, yi, 1.7, "$i$")
+    tikz += linea([(f[0], f[4]) for f in sendas], "black, line width=1pt", 10.4, yi, 1.7, "$i$", "south west")
     tikz += "\\end{tikzpicture}\n"
     open(os.path.join(IMG, nombre + ".tikz"), "w", encoding="utf-8").write(tikz)
 
