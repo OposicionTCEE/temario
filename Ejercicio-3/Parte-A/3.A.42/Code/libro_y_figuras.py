@@ -1507,6 +1507,7 @@ def main():
     con_datos_a2(carpeta, series, cifras, momentos)
     con_datos_a3(carpeta, series, cifras)
     con_datos_a4(carpeta, series, cifras)
+    con_datos_a5(carpeta, series, cifras, momentos, sint)
     leeme = [["Libro de datos del tema 3.A.42 (Teorías de los ciclos económicos)"],
              ["Generado por Code/libro_y_figuras.py el %s con los datos de FRED descargados ese día." % FECHA_DESCARGA],
              ["Hojas: Fuentes (series y su origen), Series (formato largo: serie, país, fecha, valor, unidad, fuente, tratamiento, figura),"],
@@ -1517,7 +1518,8 @@ def main():
              ["bandas del 90% por remuestreo de los residuos, 1.000 réplicas), proyección local recursiva con errores de NEWEY y WEST, probit de la recesión"],
              ["dentro de doce meses sobre la pendiente (bono a diez años menos letras a tres meses en rendimiento equivalente), estimado con 1959-2018, y regla de SAHM."],
              ["A4 (II.1 y II.2): simulaciones de SLUTSKY y FRISCH (hoja Simulaciones) y réplica de LUCAS (1973) y BALL, MANKIW y ROMER (1988) con el PIB"],
-             ["nominal y real del Banco Mundial: por país, y_t = a + b t + tau Dx_t + c y_(t-1) con 100 x log, 1960-2019, países con al menos 41 años seguidos."]]
+             ["nominal y real del Banco Mundial: por país, y_t = a + b t + tau Dx_t + c y_(t-1) con 100 x log, 1960-2019, países con al menos 41 años seguidos."],
+             ["A5 (II.3): modelo básico del ciclo real log-linealizado (trabajo divisible e indivisible), respuestas a la PTF y momentos de 500 simulaciones con HP."]]
     fuentes = [["Código", "Serie", "País", "Unidad", "Frecuencia", "Institución", "Enlace", "Descarga"]]
     for s, (nombre, pais, unidad, frec) in SERIES.items():
         fuentes.append([s, nombre, pais, unidad, frec, "FRED, Banco de la Reserva Federal de San Luis", FRED + s, FECHA_DESCARGA])
