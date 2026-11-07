@@ -562,6 +562,10 @@ def main():
     ppa, (pa1, pb1, pr21), (nsub, pa2, pb2, pr22) = fig_ppa_relativa(xa, ca)
     mmeses, mnom, mrea, mbw, mfl = fig_mussa(xm, cm)
     semis, smed, smedk, snk = fig_semividas(eer)
+    pliE, geoE = leer_eurostat_ppp(carpeta, "pli.json")
+    aicE, _ = leer_eurostat_ppp(carpeta, "vol_aic.json")
+    bsf, (bsb, bsrb, bsdb), (bss, bsrs, bsds) = fig_bienes_servicios(pliE, aicE, geoE)
+    ccor = leer_cuenta_corriente(carpeta)
 
     # ---- cifras citadas en el texto
     cif = []
