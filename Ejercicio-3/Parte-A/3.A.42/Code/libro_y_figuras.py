@@ -1386,7 +1386,7 @@ def main():
                     "trimestral", "ALFRED, Banco de la Reserva Federal de San Luis", "https://alfred.stlouisfed.org/series?seid=GDPC1", FECHA_DESCARGA])
     for s, nombre in BANCO_MUNDIAL.items():
         fuentes.append([s, nombre, "Todos los países (sin agregados regionales)", "moneda nacional", "anual", "Banco Mundial, Indicadores del Desarrollo Mundial",
-                        "https://api.worldbank.org/v2/country/all/indicator/%s?format=json" % s, FECHA_DESCARGA])
+                        "https://api.worldbank.org/v2/country/all/indicator/%s?format=json" % s, "07/11/2026"])
     for s, nombre in SERIES_A3.items():
         fuentes.append([s, nombre, "Estados Unidos", "ver FRED", "mensual (media trimestral en el VAR)", "FRED, Banco de la Reserva Federal de San Luis", FRED + s, FECHA_DESCARGA])
     for nombre, consulta in EUROSTAT.items():
