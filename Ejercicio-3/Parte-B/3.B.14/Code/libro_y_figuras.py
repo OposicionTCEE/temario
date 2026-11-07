@@ -465,6 +465,81 @@ def fig_semividas(eer, desde="1975-01"):
     return res, med, medk, nk
 
 
+# ---------------------------------------------------------------- A3 (I.5 y I.6): precios de bienes y servicios, cuenta corriente
+# Fuentes: Eurostat prc_ppp_ind (programa de paridades de Eurostat y la OCDE): índices de nivel de precios (UE27 = 100) de
+# los bienes de consumo (P0101) y de los servicios de consumo (P0201), y volumen del consumo individual efectivo por
+# habitante en estándares de poder adquisitivo (A01, UE27 = 100), 2024; Banco Mundial BN.CAB.XOKA.GD.ZS (cuenta corriente,
+# % del PIB).
+NOMBRES_EU = {"CH": "Suiza", "IS": "Islandia", "NO": "Noruega", "DK": "Dinamarca", "DE": "Alemania", "ES": "España",
+              "PL": "Polonia", "BG": "Bulgaria", "TR": "Turquía", "AL": "Albania", "PT": "Portugal", "LU": "Luxemburgo",
+              "IE": "Irlanda", "MK": "Macedonia del Norte", "FR": "Francia", "IT": "Italia", "RO": "Rumanía"}
+ETIQ_BS = {"CH": "south east", "IS": "north east", "NO": "south east", "DE": "south east", "ES": "north west",
+           "PL": "north west", "BG": "north west", "TR": "north east", "AL": "south west"}
+
+
+def leer_eurostat_ppp(carpeta, fichero):
+    d = json.load(open(os.path.join(carpeta, "dl_eurostat_ppp", fichero), encoding="utf-8"))
+    ids, tam = d["id"], d["size"]
+    inv = {dim: {pos: cod for cod, pos in d["dimension"][dim]["category"]["index"].items()} for dim in ids}
+    out = {}
+    for plano, valor in d["value"].items():
+        resto, c = int(plano), {}
+        for dim, n in reversed(list(zip(ids, tam))):
+            c[dim] = inv[dim][resto % n]
+            resto //= n
+        out[(c["ppp_cat"], c["geo"], c["time"])] = float(valor)
+    return out, d["dimension"]["geo"]["category"]["label"]
+
+
+def fig_bienes_servicios(pli, aic, geo, anio="2024"):
+    filas = []
+    for g in sorted(geo):
+        if g.startswith(("EA", "EU", "CPC")):
+            continue
+        if ("P0101", g, anio) in pli and ("P0201", g, anio) in pli and ("A01", g, anio) in aic:
+            filas.append((g, NOMBRES_EU.get(g, geo[g]), aic[("A01", g, anio)], pli[("P0101", g, anio)], pli[("P0201", g, anio)]))
+    lx = [math.log(f[2]) for f in filas]
+    ab, bb, rb = ols(lx, [math.log(f[3]) for f in filas])
+    as_, bs, rs = ols(lx, [math.log(f[4]) for f in filas])
+    def dt(v):
+        m = sum(v) / len(v)
+        return math.sqrt(sum((x - m) ** 2 for x in v) / (len(v) - 1))
+    db, ds = dt([math.log(f[3]) for f in filas]), dt([math.log(f[4]) for f in filas])
+    xs = [35, 50, 70, 90, 110, 130, 150]
+    tikz = "% Niveles de precios de los bienes y de los servicios de consumo (UE27 = 100) y consumo individual efectivo por\n"
+    tikz += "%% habitante en estándares de poder adquisitivo (UE27 = 100), %s, %d economías europeas (Eurostat, prc_ppp_ind).\n" % (anio, len(filas))
+    tikz += "% Curvas: regresiones en logaritmos de cada serie. Generado por Code/libro_y_figuras.py;\n"
+    tikz += "% compilar con: bash Code/generar_figura.sh anx_bienes_servicios\n"
+    tikz += "\\begin{tikzpicture}\n" + EJES
+    tikz += r"""  xmin=30, xmax=155, ymin=20, ymax=215, clip=false,
+  xlabel={Consumo individual por habitante en poder adquisitivo (UE${}=100$)},
+  ylabel={Nivel de precios (UE${}=100$)},
+  legend to name=leyendabs,
+]
+"""
+    tikz += "\\addplot[only marks, mark=o, mark size=1.5pt, black!60] coordinates {%s};\n" % coordenadas([(f[2], f[3]) for f in filas], 1)
+    tikz += "\\addlegendentry{Bienes de consumo}\n"
+    tikz += "\\addplot[only marks, mark=*, mark size=1.5pt, black] coordinates {%s};\n" % coordenadas([(f[2], f[4]) for f in filas], 1)
+    tikz += "\\addlegendentry{Servicios de consumo}\n"
+    tikz += "\\addplot[black!60, line width=0.7pt, dashed, smooth] coordinates {%s};\n" % coordenadas([(x, math.exp(ab + bb * math.log(x))) for x in xs], 2)
+    tikz += "\\addplot[black, line width=0.8pt, smooth] coordinates {%s};\n" % coordenadas([(x, math.exp(as_ + bs * math.log(x))) for x in xs], 2)
+    for f in filas:
+        if f[0] in ETIQ_BS:
+            tikz += "\\node[font=\\scriptsize, anchor=%s, inner sep=1.8pt] at (axis cs:%.1f,%.1f) {%s};\n" % (ETIQ_BS[f[0]], f[2], f[4], f[1])
+    tikz += "\\end{axis}\n\\node[anchor=north] at (current bounding box.south) {\\pgfplotslegendfromname{leyendabs}};\n\\end{tikzpicture}\n"
+    open(os.path.join(IMG, "anx_bienes_servicios.tikz"), "w", encoding="utf-8").write(tikz)
+    return filas, (bb, rb, db), (bs, rs, ds)
+
+
+def leer_cuenta_corriente(carpeta):
+    d = json.load(open(os.path.join(carpeta, "dl_wb_ca", "ca_esp.json"), encoding="utf-8"))
+    out = {}
+    for r in d[1]:
+        if r["value"] is not None:
+            out.setdefault(r["countryiso3code"], {})[r["date"]] = r["value"]
+    return out
+
+
 # ---------------------------------------------------------------- principal
 def main():
     carpeta = sys.argv[1]
