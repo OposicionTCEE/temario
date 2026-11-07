@@ -697,6 +697,89 @@ def fig_paridades_largo(pol, xm, cm, t0="2006-01", t1="2025-06", tope=10.0):
     return filas, sub, est
 
 
+# ---------------------------------------------------------------- A5 (anexo II): modelo monetario a largo plazo
+# Banco Mundial: dinero en sentido amplio (FM.LBL.BMNY.CN, moneda nacional) y PIB real (NY.GDP.MKTP.KN); BPI: tipos de cambio
+# medios anuales frente al dólar. Se excluyen las monedas con tipo fijo: desviación típica de la variación anual frente al
+# dólar menor de un punto (ancladas al dólar) o correlación mayor de 0,95 con la del euro (ancladas al euro).
+def leer_wb_panel(carpeta, sub, fichero):
+    d = json.load(open(os.path.join(carpeta, sub, fichero), encoding="utf-8"))
+    out, nombres = {}, {}
+    for r in d[1]:
+        if r["value"] is not None:
+            out.setdefault(r["country"]["id"], {})[int(r["date"])] = r["value"]
+            nombres[r["country"]["id"]] = r["country"]["value"]
+    return out, nombres
+
+
+NOMBRES_MON = dict(NOMBRES_PAR, AO="Angola", GH="Ghana", UA="Ucrania", NG="Nigeria", EG="Egipto", CD="R. D. del Congo")
+ETIQ_MON_A = {"AR": "north west", "TR": "south east", "GH": "north west", "UA": "north west", "NG": "south east", "AO": "south east"}
+ETIQ_MON_B = {"JP": "south east", "CN": "north", "BR": "north west", "MX": "south east", "GB": "north west", "EG": "south east"}
+
+
+def fig_monetario_largo(m2, pib, nombres_wb, xa, t0=2000, t1=2024, tope=10.0):
+    n = t1 - t0
+    us_m = math.log(m2["US"][t1] / m2["US"][t0]) / n
+    us_y = math.log(pib["US"][t1] / pib["US"][t0]) / n
+    def cambios(c):
+        return [math.log(xa[c][t + 1] / xa[c][t]) for t in range(t0, t1) if t in xa[c] and t + 1 in xa[c]]
+    ce = cambios("XM")
+    def corr(a, b):
+        ma, mb = sum(a) / len(a), sum(b) / len(b)
+        den = math.sqrt(sum((x - ma) ** 2 for x in a) * sum((y - mb) ** 2 for y in b))
+        return sum((x - ma) * (y - mb) for x, y in zip(a, b)) / den if den > 0 else 0.0
+    filas, fijas = [], []
+    for c in sorted(m2):
+        if c == "US" or c not in pib or c not in xa:
+            continue
+        if not all(t in m2[c] and t in pib[c] and t in xa[c] for t in (t0, t1)):
+            continue
+        d = cambios(c)
+        if len(d) != len(ce):
+            continue
+        sd = 100 * math.sqrt(sum((x - sum(d) / len(d)) ** 2 for x in d) / (len(d) - 1))
+        nombre = NOMBRES_MON.get(c, nombres_wb.get(c, c))
+        if sd < 1.0 or corr(d, ce) > 0.95:
+            fijas.append((c, nombre))
+            continue
+        dm = 100 * (math.log(m2[c][t1] / m2[c][t0]) / n - us_m)
+        dy = 100 * (math.log(pib[c][t1] / pib[c][t0]) / n - us_y)
+        ds = 100 * math.log(xa[c][t1] / xa[c][t0]) / n
+        filas.append((c, nombre, dm, dy, dm - dy, ds))
+    sub = [f for f in filas if abs(f[4]) < tope]
+    est = {"todas": ols([f[4] for f in filas], [f[5] for f in filas]), "todas_dinero": ols([f[2] for f in filas], [f[5] for f in filas]),
+           "sub": ols([f[4] for f in sub], [f[5] for f in sub])}
+    eje = r"""  scale only axis, width=6.1cm, height=5.0cm, axis lines=left, tick align=outside, tick style={black!60},
+  /pgf/number format/.cd, use comma, 1000 sep={}, /pgfplots/.cd,
+  every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize}, title style={font=\footnotesize},
+  xlabel={Dinero menos producción, frente a EE.\,UU. (puntos al año)}, clip=false,
+"""
+    def recta(ab, x0, x1):
+        return coordenadas([(x, ab[0] + ab[1] * x) for x in (x0, x1)], 2)
+    tikz = "%% Modelo monetario a largo plazo, %d-%d: depreciación media anual frente al dólar y crecimiento medio anual del dinero\n" % (t0, t1)
+    tikz += "%% en sentido amplio menos el del PIB real, en diferencia con EE. UU.; %d economías sin tipo fijo (Banco Mundial y BPI).\n" % len(filas)
+    tikz += "%% Panel (b): las de diferencia menor de %d puntos. Discontinua: 45 grados; continua: MCO.\n" % tope
+    tikz += "% Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_monetario_largo\n"
+    tikz += "\\begin{tikzpicture}\n\\footnotesize\n\\begin{axis}[name=pa,\n" + eje
+    tikz += "  xmin=-5, xmax=28, ymin=-5, ymax=30, ylabel={Depreciación frente al dólar (puntos al año)},\n  title={(a) Las $%d$ economías},\n]\n" % len(filas)
+    tikz += "\\addplot[black!40, dashed] coordinates {(-5,-5) (28,28)};\n"
+    tikz += "\\addplot[black, line width=0.6pt] coordinates {%s};\n" % recta(est["todas"], -5, 28)
+    tikz += "\\addplot[only marks, mark=*, mark size=1.2pt, black!60] coordinates {%s};\n" % coordenadas([(f[4], f[5]) for f in filas], 2)
+    for f in filas:
+        if f[0] in ETIQ_MON_A:
+            tikz += "\\node[font=\\scriptsize, anchor=%s, inner sep=1.6pt] at (axis cs:%.2f,%.2f) {%s};\n" % (ETIQ_MON_A[f[0]], f[4], f[5], f[1])
+    tikz += "\\end{axis}\n\\begin{axis}[at={(pa.east)}, anchor=west, xshift=1.3cm,\n" + eje
+    tikz += "  xmin=-5, xmax=10.5, ymin=-4, ymax=12,\n  title={(b) Diferencia menor de $%d$ puntos},\n]\n" % tope
+    tikz += "\\addplot[black!40, dashed] coordinates {(-4,-4) (10.5,10.5)};\n"
+    tikz += "\\addplot[black, line width=0.6pt] coordinates {%s};\n" % recta(est["sub"], -5, 10.5)
+    tikz += "\\addplot[only marks, mark=*, mark size=1.2pt, black!60] coordinates {%s};\n" % coordenadas([(f[4], f[5]) for f in sub], 2)
+    for f in sub:
+        if f[0] in ETIQ_MON_B:
+            tikz += "\\node[font=\\scriptsize, anchor=%s, inner sep=1.6pt] at (axis cs:%.2f,%.2f) {%s};\n" % (ETIQ_MON_B[f[0]], f[4], f[5], f[1])
+    tikz += "\\end{axis}\n\\end{tikzpicture}\n"
+    open(os.path.join(IMG, "anx_monetario_largo.tikz"), "w", encoding="utf-8").write(tikz)
+    return filas, sub, est, fijas, (100 * us_m, 100 * us_y)
+
+
 # ---------------------------------------------------------------- principal
 def main():
     carpeta = sys.argv[1]
