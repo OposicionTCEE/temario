@@ -682,8 +682,12 @@ def fig_paridades_largo(pol, xm, cm, t0="2006-01", t1="2025-06", tope=10.0):
     tikz += "\\addplot[black, line width=0.6pt] coordinates {%s};\n" % recta(est["uip_sub"])
     tikz += "\\addplot[only marks, mark=*, mark size=1.2pt, black!60] coordinates {%s};\n" % coordenadas([(f[2], f[4]) for f in sub], 2)
     for f in sub:
-        if f[0] in ETIQ_PAR_B:
-            tikz += "\\node[font=\\scriptsize, anchor=%s, inner sep=1.6pt] at (axis cs:%.2f,%.2f) {%s};\n" % (ETIQ_PAR_B[f[0]], f[2], f[4], f[1])
+        e = ETIQ_PAR_B.get(f[0])
+        if isinstance(e, tuple):
+            tikz += "\\draw[black!50, line width=0.3pt] (axis cs:%.2f,%.2f) -- (axis cs:%.2f,%.2f);\n" % (f[2], f[4], e[1] + 1.6, e[2] - 0.15)
+            tikz += "\\node[font=\\scriptsize, anchor=%s, inner sep=1.6pt] at (axis cs:%.2f,%.2f) {%s};\n" % (e[0], e[1], e[2], f[1])
+        elif e:
+            tikz += "\\node[font=\\scriptsize, anchor=%s, inner sep=1.6pt] at (axis cs:%.2f,%.2f) {%s};\n" % (e, f[2], f[4], f[1])
     tikz += "\\end{axis}\n\\end{tikzpicture}\n"
     open(os.path.join(IMG, "anx_paridades_largo.tikz"), "w", encoding="utf-8").write(tikz)
     return filas, sub, est
