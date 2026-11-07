@@ -546,6 +546,31 @@ def leer_cuenta_corriente(carpeta):
     return out
 
 
+def fig_cuenta_corriente(ccor):
+    serie = {p: sorted((int(a), v) for a, v in ccor[p].items()) for p in ("ESP", "DEU", "EMU")}
+    tikz = "% Saldo de la cuenta corriente en porcentaje del PIB de España, Alemania y la zona del euro, anual, 1995-2025\n"
+    tikz += "% (Banco Mundial, Indicadores del Desarrollo Mundial, BN.CAB.XOKA.GD.ZS).\n"
+    tikz += "% Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_cuenta_corriente\n"
+    tikz += "\\begin{tikzpicture}\n" + EJES
+    tikz += r"""  xmin=1994.5, xmax=2025.5, xtick={1995,2000,2005,2010,2015,2020,2025}, ymin=-11, ymax=10, ytick={-10,-5,0,5,10},
+  ylabel={Porcentaje del PIB},
+  legend to name=leyendacc,
+]
+"""
+    tikz += "\\draw[black!50] (axis cs:1994.5,0) -- (axis cs:2025.5,0);\n"
+    tikz += "\\draw[black!35, densely dotted] (axis cs:1999,-11) -- (axis cs:1999,10);\n"
+    tikz += "\\node[font=\\scriptsize, black!60, anchor=north west, inner sep=1.5pt] at (axis cs:1999,10) {Euro};\n"
+    tikz += "\\addplot[black, line width=1.1pt, mark=*, mark size=0.9pt] coordinates {%s};\n" % coordenadas(serie["ESP"], 1)
+    tikz += "\\addlegendentry{España}\n"
+    tikz += "\\addplot[black, dashed, line width=0.8pt] coordinates {%s};\n" % coordenadas(serie["DEU"], 1)
+    tikz += "\\addlegendentry{Alemania}\n"
+    tikz += "\\addplot[black!45, line width=0.8pt] coordinates {%s};\n" % coordenadas(serie["EMU"], 1)
+    tikz += "\\addlegendentry{Zona del euro}\n"
+    tikz += "\\end{axis}\n\\node[anchor=north] at (current bounding box.south) {\\pgfplotslegendfromname{leyendacc}};\n\\end{tikzpicture}\n"
+    open(os.path.join(IMG, "anx_cuenta_corriente.tikz"), "w", encoding="utf-8").write(tikz)
+    return serie
+
+
 # ---------------------------------------------------------------- principal
 def main():
     carpeta = sys.argv[1]
