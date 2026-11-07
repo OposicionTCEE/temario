@@ -663,7 +663,7 @@ def fig_paridades_largo(pol, xm, cm, t0="2006-01", t1="2025-06", tope=10.0):
 """
     def recta(ab):
         return coordenadas([(x, ab[0] + ab[1] * x) for x in (-2.5, 9)], 2)
-    tikz = "% Paridades a largo plazo, %s a %s: diferencia media del tipo oficial con el de EE. UU. frente a (a) la diferencia\n" % (t0, t1)
+    tikz = "%% Paridades a largo plazo, %s a %s: diferencia media del tipo oficial con el de EE. UU. frente a (a) la diferencia\n" % (t0, t1)
     tikz += "%% media de inflación y (b) la depreciación media frente al dólar; %d economías con diferencia menor de %d puntos\n" % (len(sub), tope)
     tikz += "% (BPI WS_CBPOL, WS_LONG_CPI y WS_XRU; tasas logarítmicas en puntos al año). Discontinua: 45 grados; continua: MCO.\n"
     tikz += "% Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_paridades_largo\n"
