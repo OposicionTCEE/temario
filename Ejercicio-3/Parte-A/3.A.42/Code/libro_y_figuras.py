@@ -1338,6 +1338,162 @@ def con_datos_a4(carpeta, filas_series, cifras):
     escribir("anx_lucas_pendiente", fig, "Réplica de LUCAS (1973) y BALL, MANKIW y ROMER (1988): parte de un cambio de la renta nominal que va a la producción real en %d países, 1960-2019." % len(res))
 
 
+# ---------------------------------------------------------------- A5 (07/11/2026): el modelo básico del ciclo real
+# Modelo de crecimiento estocástico con trabajo elástico (KYDLAND y PRESCOTT, 1982; KING, PLOSSER y REBELO, 1988):
+# u = ln C + chi ln(1 - h) (trabajo divisible, elasticidad de FRISCH (1 - h)/h = 2) o u = ln C - B h (trabajo
+# indivisible de HANSEN, 1985); Y = Z k^eta h^(1-eta); k' = (1 - d) k + I; z' = rho z + nu. Log-linealizado y resuelto por
+# coeficientes indeterminados (la regla del consumo es lineal en el capital y la productividad; se elige la raíz estable).
+# Calibración trimestral: delta 0,99 (tipo real del 4 % anual), eta 0,36, d 0,025, h 1/3, rho 0,95, sigma 0,7 %.
+RBC = dict(eta=0.36, delta=0.99, d=0.025, hbar=1 / 3.0, rho=0.95, sigma=0.7)
+
+
+def rbc_resolver(rho, indivisible, eta=RBC["eta"], delta=RBC["delta"], d=RBC["d"], hbar=RBC["hbar"]):
+    rbar = 1 / delta - 1
+    yk = (rbar + d) / eta
+    s_i = d / yk
+    s_c = 1 - s_i
+    fh = 1.0 if indivisible else 1 / (1 - hbar)  # condición intratemporal: c = y - fh h
+    den = fh - (1 - eta)
+    a = delta * (rbar + d)
+
+    def mapas(ck, cz, k, z):  # variables en desviación logarítmica (en %) dadas la regla del consumo, el capital y z
+        c = ck * k + cz * z
+        h = (z + eta * k - c) / den
+        y = z + eta * k + (1 - eta) * h
+        i = (y - s_c * c) / s_i
+        return c, h, y, i, (1 - d) * k + d * i
+
+    def resid(ck, cz, k, z):  # ecuación de EULER: E c' - c = delta (r + d) E[y' - k']
+        c, h, y, i, kp = mapas(ck, cz, k, z)
+        ez = rho * z
+        ec = ck * kp + cz * ez
+        ey = ez + eta * kp + (1 - eta) * (ez + eta * kp - ec) / den
+        return (ec - c) - a * (ey - kp)
+
+    xs = np.array([0.0, 0.5, 1.0])
+    raices = np.roots(np.polyfit(xs, [resid(x, 0.0, 1.0, 0.0) for x in xs], 2)).real
+    ck = [x for x in raices if x > 0 and abs(mapas(x, 0.0, 1.0, 0.0)[4]) < 1][0]
+    f0, f1 = resid(ck, 0.0, 0.0, 1.0), resid(ck, 1.0, 0.0, 1.0)
+    return dict(ck=ck, cz=-f0 / (f1 - f0), mapas=mapas, rbar=rbar, d=d, s_i=s_i, yk=yk)
+
+
+def rbc_trayectoria(sol, z):
+    salida = {v: np.zeros(len(z)) for v in ("y", "c", "h", "i", "w", "r", "k", "z")}
+    k = 0.0
+    for t, zt in enumerate(z):
+        c, h, y, i, kp = sol["mapas"](sol["ck"], sol["cz"], k, zt)
+        for v, x in (("y", y), ("c", c), ("h", h), ("i", i), ("w", y - h), ("k", k), ("z", zt)):
+            salida[v][t] = x
+        salida["r"][t] = 4 * (sol["rbar"] + sol["d"]) * (y - k)  # tipo de interés real, puntos porcentuales anualizados
+        k = kp
+    return salida
+
+
+def con_datos_a5(carpeta, filas_series, cifras, momentos, sim):
+    H = 40
+    soluciones = {(rho, ind): rbc_resolver(rho, ind) for rho in (RBC["rho"], 0.0) for ind in (False, True)}
+    persistente = RBC["rho"] ** np.arange(H + 1)
+    unico = np.zeros(H + 1)
+    unico[0] = 1.0
+    irf = {ind: rbc_trayectoria(soluciones[(RBC["rho"], ind)], persistente) for ind in (False, True)}
+    irf0 = rbc_trayectoria(soluciones[(0.0, False)], unico)
+    nombres = {"y": "Producción", "c": "Consumo", "i": "Inversión", "h": "Horas", "w": "Salario real", "r": "Tipo de interés real", "k": "Capital", "z": "Productividad total de los factores"}
+    for ind, et in ((False, "trabajo divisible"), (True, "trabajo indivisible")):
+        for v in ("y", "c", "i", "h", "w", "r", "k"):
+            for h_ in range(H + 1):
+                filas_series.append(("Ciclo real: respuesta de %s (%s)" % (nombres[v].lower(), et), "Modelo", "h = %d trimestres" % h_, round(float(irf[ind][v][h_]), 4),
+                                     "puntos" if v == "r" else "%", "simulación propia", "mejora del 1 % de la PTF con rho = 0,95", "anx_rbc_respuestas"))
+        s = soluciones[(RBC["rho"], ind)]
+        cifras.append(("Ciclo real (%s): impacto en producción, consumo, inversión, horas, salario y tipo" % et,
+                       "; ".join("%.2f" % irf[ind][v][0] for v in ("y", "c", "i", "h", "w", "r")), "% (tipo en puntos anuales)", "II.3"))
+        cifras.append(("Ciclo real (%s): consumo en h = 12 y capital en h = 12" % et, "%.2f; %.2f" % (irf[ind]["c"][12], irf[ind]["k"][12]), "%", "II.3"))
+    s = soluciones[(RBC["rho"], False)]
+    cifras.append(("Ciclo real: capital/producción trimestral, inversión/producción y tipo real anual de estado estacionario",
+                   "%.2f; %.3f; %.2f" % (1 / s["yk"], s["s_i"], 400 * s["rbar"]), "", "II.3"))
+    cifras.append(("Ciclo real con rho = 0: producción en h = 0, 1 y 4", "%.2f; %.2f; %.2f" % (irf0["y"][0], irf0["y"][1], irf0["y"][4]), "%", "II.3"))
+    sim.append(("Simulación", "Modelo básico del ciclo real log-linealizado (delta 0,99; eta 0,36; d 0,025; h 1/3; rho 0,95 y 0; sigma 0,7 %%), trabajo divisible "
+                "(elasticidad de FRISCH 2) e indivisible; respuestas a una mejora del 1 %% de la PTF", "anx_rbc_respuestas y anx_rbc_propagacion"))
+
+    # ---- momentos simulados: 500 muestras de 200 trimestres (tras 100 de arranque), filtro HP
+    rng = np.random.default_rng(1982)
+    for ind, et in ((False, "divisible"), (True, "indivisible")):
+        acum = {}
+        for _ in range(500):
+            nu = rng.normal(0, RBC["sigma"], 300)
+            z = np.zeros(300)
+            for t in range(300):
+                z[t] = (RBC["rho"] * z[t - 1] if t else 0.0) + nu[t]
+            o = rbc_trayectoria(soluciones[(RBC["rho"], ind)], z)
+            cic = {v: hp(o[v][100:])[0] for v in ("y", "c", "i", "h", "w")}
+            sy = cic["y"].std()
+            vals = {"sy": sy, "ry": np.corrcoef(cic["y"][1:], cic["y"][:-1])[0, 1], "chw": np.corrcoef(cic["h"], cic["w"])[0, 1]}
+            for v in ("c", "i", "h", "w"):
+                vals["s" + v] = cic[v].std() / sy
+                vals["c" + v] = np.corrcoef(cic[v], cic["y"])[0, 1]
+            for k_, x in vals.items():
+                acum.setdefault(k_, []).append(x)
+        m = {k_: float(np.mean(x)) for k_, x in acum.items()}
+        for v, etiqueta in (("c", "Consumo"), ("i", "Inversión"), ("h", "Horas"), ("w", "Productividad por hora")):
+            momentos.append(("Modelo (%s)" % et, etiqueta, "sigma_x/sigma_y", round(m["s" + v], 2), "500 simulaciones de 200 trimestres", "HP 1600"))
+            momentos.append(("Modelo (%s)" % et, etiqueta, "corr(x, y)", round(m["c" + v], 2), "500 simulaciones de 200 trimestres", "HP 1600"))
+        momentos.append(("Modelo (%s)" % et, "PIB", "sigma (%)", round(m["sy"], 2), "500 simulaciones de 200 trimestres", "HP 1600"))
+        momentos.append(("Modelo (%s)" % et, "PIB", "rho(1)", round(m["ry"], 2), "500 simulaciones de 200 trimestres", "HP 1600"))
+        momentos.append(("Modelo (%s)" % et, "Horas y productividad", "corr", round(m["chw"], 2), "500 simulaciones de 200 trimestres", "HP 1600"))
+        cifras.append(("Momentos del ciclo real (%s): sigma_y; rel. c, i, h, w; corr c, i, h, w; rho(1); corr(h, w)" % et,
+                       "%.2f; %.2f, %.2f, %.2f, %.2f; %.2f, %.2f, %.2f, %.2f; %.2f; %.2f" % (m["sy"], m["sc"], m["si"], m["sh"], m["sw"], m["cc"], m["ci"], m["ch"], m["cw"], m["ry"], m["chw"]),
+                       "", "II.3"))
+    # ---- dato que falta en el cuadro del I.5: correlación entre las horas y la productividad, EE. UU. 1950-2019
+    horas, prod = a_dict(leer(carpeta, "HOANBS")), a_dict(leer(carpeta, "OPHNFB"))
+    fs, (hh, pp) = alinear([horas, prod], "1947-01-01", "2026-12-31")
+    ch, _ = hp(np.array([100 * math.log(v) for v in hh]))
+    cp, _ = hp(np.array([100 * math.log(v) for v in pp]))
+    k = [i for i, f in enumerate(fs) if "1950-01-01" <= f <= "2019-10-01"]
+    cifras.append(("Datos de EE. UU. 1950-2019: correlación de los ciclos HP de las horas y de la productividad por hora", "%.2f" % np.corrcoef(ch[k], cp[k])[0, 1], "", "II.3"))
+
+    # ---- anx_rbc_respuestas: seis paneles, trabajo divisible (continua) e indivisible (discontinua)
+    def panel(nombre, lugar, titulo, v, ylab, ymin, ymax, ytick, xlab=False, leyenda=False):
+        cuerpo = ["\\addplot[black, thick] coordinates {%s};" % " ".join("(%d,%.4f)" % (h_, irf[False][v][h_]) for h_ in range(H + 1)),
+                  "\\addplot[black!60, dashed, thick] coordinates {%s};" % " ".join("(%d,%.4f)" % (h_, irf[True][v][h_]) for h_ in range(H + 1))]
+        if leyenda:
+            cuerpo[0] += "\n\\addlegendentry{trabajo divisible}"
+            cuerpo[1] += "\n\\addlegendentry{trabajo indivisible}"
+        cuerpo.append("\\addplot[black!40, thin, forget plot] coordinates {(0,0) (40,0)};")
+        return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=6.2cm, height=2.6cm, scale only axis, %s,\n"
+                "    xmin=0, xmax=40, xtick={0,8,...,40}, ymin=%s, ymax=%s, ytick={%s}, %sylabel={%s},\n"
+                "    title={%s}, title style={font=\\footnotesize}, legend style={draw=none, fill=none, font=\\footnotesize, at={(0.98,0.98)}, anchor=north east}, legend cell align=left]\n%s\n\\end{axis}\n"
+                % (nombre, lugar, ESTILO, ymin, ymax, ytick, "xlabel={Trimestres}, " if xlab else "", ylab, titulo, "\n".join(cuerpo)))
+
+    fig = "\\begin{tikzpicture}\n"
+    fig += panel("a", "{(0,0)}", "(a) Producción", "y", "\\%", 0, 2.2, "0,0.5,1,1.5,2", leyenda=True)
+    fig += panel("b", "{($(a.north east)+(1.6cm,0)$)}", "(b) Consumo", "c", "\\%", 0, 1, "0,0.25,0.5,0.75,1")
+    fig += panel("c", "{($(a.south west)+(0,-1.4cm)$)}", "(c) Inversión", "i", "\\%", -1, 7, "0,2,4,6")
+    fig += panel("d", "{($(c.north east)+(1.6cm,0)$)}", "(d) Horas", "h", "\\%", -0.4, 1.6, "0,0.5,1,1.5")
+    fig += panel("e", "{($(c.south west)+(0,-1.4cm)$)}", "(e) Salario real", "w", "\\%", 0, 1, "0,0.25,0.5,0.75,1", xlab=True)
+    fig += panel("f", "{($(e.north east)+(1.6cm,0)$)}", "(f) Tipo de interés real", "r", "Puntos", -0.1, 0.3, "-0.1,0,0.1,0.2,0.3", xlab=True)
+    fig += "\\end{tikzpicture}"
+    escribir("anx_rbc_respuestas", fig, "Respuestas del modelo básico del ciclo real a una mejora del 1 % de la PTF con rho = 0,95: trabajo divisible e indivisible.")
+
+    # ---- anx_rbc_propagacion: la producción sigue a la productividad (trabajo divisible)
+    def panel_p(nombre, lugar, titulo, tray, leyenda):
+        cuerpo = "\\addplot[black!55, dashed, thick] coordinates {%s};\n" % " ".join("(%d,%.4f)" % (h_, tray["z"][h_]) for h_ in range(H + 1))
+        if leyenda:
+            cuerpo += "\\addlegendentry{productividad total de los factores}\n"
+        cuerpo += "\\addplot[black, thick] coordinates {%s};\n" % " ".join("(%d,%.4f)" % (h_, tray["y"][h_]) for h_ in range(H + 1))
+        if leyenda:
+            cuerpo += "\\addlegendentry{producción}\n"
+        cuerpo += "\\addplot[black!40, thin, forget plot] coordinates {(0,0) (40,0)};"
+        return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=6.2cm, height=3.4cm, scale only axis, %s,\n"
+                "    xmin=0, xmax=40, xtick={0,8,...,40}, ymin=-0.2, ymax=1.8, ytick={0,0.5,1,1.5}, xlabel={Trimestres}, ylabel={\\%%},\n"
+                "    title={%s}, title style={font=\\footnotesize}, legend style={draw=none, fill=none, font=\\footnotesize, at={(0.98,0.98)}, anchor=north east}, legend cell align=left]\n%s\n\\end{axis}\n"
+                % (nombre, lugar, ESTILO, titulo, cuerpo))
+
+    fig = "\\begin{tikzpicture}\n"
+    fig += panel_p("a", "{(0,0)}", "(a) Mejora persistente ($\\rho_z=0{,}95$)", irf[False], True)
+    fig += panel_p("b", "{($(a.north east)+(1.6cm,0)$)}", "(b) Mejora de un solo trimestre ($\\rho_z=0$)", irf0, False)
+    fig += "\\end{tikzpicture}"
+    escribir("anx_rbc_propagacion", fig, "La producción sigue a la productividad: respuesta a una mejora del 1 % de la PTF persistente (rho 0,95) y de un trimestre (rho 0), trabajo divisible.")
+
+
 def main():
     carpeta = sys.argv[1] if len(sys.argv) > 1 else tempfile.mkdtemp()
     descargar(carpeta)
