@@ -674,10 +674,7 @@ def main():
         c = ccor.get(pais, {})
         poner("Cuenta corriente (%% del PIB) de %s: 1999, 2004, 2007, 2008, 2012, 2013, 2024, 2025" % pais,
               ", ".join("%s %.1f" % (a, c[a]) for a in ("1999", "2004", "2007", "2008", "2012", "2013", "2024", "2025") if a in c), "Banco Mundial BN.CAB.XOKA.GD.ZS", "I.6.6")
-    c = ccor.get("EMU", {})
-    poner("Cuenta corriente (% del PIB) de la zona del euro: 1999, 2007, 2008, 2012, 2017, 2024, 2025",
-          ", ".join("%s %.1f" % (a, c[a]) for a in ("1999", "2007", "2008", "2012", "2017", "2024", "2025") if a in c), "Banco Mundial BN.CAB.XOKA.GD.ZS", "I.6.6")
-    for pais in ("ESP", "DEU", "EMU"):
+    for pais in ("ESP", "DEU"):
         s = ccs[pais]
         poner("Cuenta corriente de %s: mínimo y máximo 1995-2025 (%% del PIB)" % pais,
               "%.1f en %d; %.1f en %d" % (min((v, a) for a, v in s)[0], min((v, a) for a, v in s)[1], max((v, a) for a, v in s)[0], max((v, a) for a, v in s)[1]), "Banco Mundial", "I.6.6")
