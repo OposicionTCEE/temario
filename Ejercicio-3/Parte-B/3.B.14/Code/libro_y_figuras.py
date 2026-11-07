@@ -862,10 +862,10 @@ def tikz_dornbusch(sendas, nombre, titulos, t1=None, comentario=""):
         return out
     # (a) dinero
     tikz += linea([(f[0], f[1]) for f in sendas], "black!55, densely dashed, line width=0.9pt", 0.0, ys, 0.5, "$m$")
-    # (b) tipo de cambio y precios, con el nuevo nivel de largo plazo
-    tikz += "\\draw[black!40, densely dotted] (%.3f,%.3f) -- (%.3f,%.3f) node[right, black!60] {$\\bar s_1$};\n" % (5.2 + X(0), 0.5 + ys, 5.2 + X(8.0), 0.5 + ys)
+    # (b) tipo de cambio y precios (estos, desplazados hacia abajo para distinguirlos); punteada: nuevo nivel de s
+    tikz += "\\draw[black!40, densely dotted] (%.3f,%.3f) -- (%.3f,%.3f);\n" % (5.2 + X(0), 0.5 + ys, 5.2 + X(8.0), 0.5 + ys)
     tikz += linea([(f[0], f[2]) for f in sendas], "black, line width=1pt", 5.2, ys, 0.5, "$s$", "south west")
-    tikz += linea([(f[0], f[3]) for f in sendas], "black!55, densely dashed, line width=0.9pt", 5.2, ys, 0.5, "$p$", "north west")
+    tikz += linea([(f[0], f[3]) for f in sendas], "black!55, densely dashed, line width=0.9pt", 5.2, ys, 0.2, "$p$", "north west")
     # (c) tipo de interés, en diferencia con el extranjero
     tikz += "\\node[left] at (10.4,1.7) {$i^*$};\n"
     tikz += linea([(f[0], f[4]) for f in sendas], "black, line width=1pt", 10.4, yi, 1.7, "$i$")
