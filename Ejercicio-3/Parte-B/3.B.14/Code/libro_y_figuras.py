@@ -804,6 +804,28 @@ def main():
     esp = dict(ccs["ESP"])
     poner("España: primer año con superávit corriente tras 1999 y años seguidos con superávit hasta 2025",
           "%s; %d" % (min(a for a, v in esp.items() if a > 1999 and v > 0), sum(1 for a, v in esp.items() if a >= 2013 and v > 0)), "Banco Mundial", "I.6.6")
+    # ---- A4
+    for a in (1980, 1981, 1985, 1987, 1991, 1995, 2001, 2002, 2006, 2008, 2011, 2014, 2022, 2024, 2025):
+        poner("Dólar: tipo efectivo real (media anual, 2020 = 100) y cuenta corriente de EE. UU. (%% del PIB) en %d" % a,
+              "%s; %s" % ("%.1f" % dreer[a] if a in dreer else "-", "%.2f" % dcc[a] if a in dcc else "-"), "BPI WS_EER; Banco Mundial", "II.1.2")
+    for x0, x1 in ((1980, 1985), (1985, 1987), (1985, 1995), (1995, 2001), (2001, 2011), (2011, 2022), (2022, 2025)):
+        poner("Dólar: variación del tipo efectivo real, medias anuales %d-%d (%%)" % (x0, x1), "%.1f" % (100 * (dreer[x1] / dreer[x0] - 1)), "BPI WS_EER", "II.1.2")
+    poner("Cuenta corriente de EE. UU. 1980-2025: mínimo y máximo (% del PIB)", "%.2f en %d; %.2f en %d" % (min((v, a) for a, v in dcc.items()) + max((v, a) for a, v in dcc.items())), "Banco Mundial", "II.1.2")
+    poner("Exportaciones mundiales de bienes y servicios 2024 y 2025 (billones de dólares)", "%.1f y %.1f" % (expw[2024] / 1e12, expw[2025] / 1e12), "Banco Mundial NE.EXP.GNFS.CD", "II.1.2")
+    poner("Exportaciones mundiales 2025 por día hábil (250 días, billones de dólares) y veces que las supera un volumen de 9 billones diarios",
+          "%.3f; %.0f" % (expw[2025] / 250 / 1e12, 9e12 / (expw[2025] / 250)), "Banco Mundial; BPI (2025)", "II.1.2")
+    msp = meses_entre("2006-01", "2025-06")
+    poner("Paridades 2006-01 a 2025-06: economías con datos completos; con diferencia de tipos menor de 10 puntos", "%d; %d" % (len(parf), len(pars)), "BPI WS_CBPOL, WS_XRU, WS_LONG_CPI", "II.2.5")
+    poner("  tipo oficial medio de EE. UU. en el periodo (%)", "%.2f" % (sum(pol["US"][m] for m in msp) / len(msp)), "BPI WS_CBPOL", "II.2.5")
+    for k, txt in (("uip_todas", "depreciación sobre diferencia de tipos, todas"), ("uip_sub", "depreciación sobre diferencia de tipos, < 10 puntos"),
+                   ("fisher_sub", "inflación sobre diferencia de tipos, < 10 puntos"), ("ppa_sub", "depreciación sobre inflación, < 10 puntos")):
+        poner("  MCO %s: constante, pendiente, R2" % txt, "%.2f, %.2f, %.2f" % pare[k], "BPI", "II.2.5")
+    poner("  depreciación menos diferencia de tipos, media de las < 10 puntos (puntos al año)", "%.2f" % (sum(f[4] - f[2] for f in pars) / len(pars)), "BPI", "II.2.5")
+    for f in parf:
+        if f[0] in ("AR", "TR", "BR", "RU", "ZA", "IN", "MX", "CN", "CH", "XM", "GB", "CA", "AU", "HK", "SA"):
+            poner("  %s: diferencia de tipos, de inflación y depreciación (puntos al año)" % f[1], "%.2f; %s; %.2f" % (f[2], "%.2f" % f[3] if f[3] is not None else "-", f[4]), "BPI", "II.2.5")
+    sin = sorted(a for a in pol if a != "US" and a in xm and not all(m in pol[a] and m in pol["US"] for m in msp) and max(pol[a]) >= "2025-06")
+    poner("  economías con tipo oficial pero sin la serie completa del periodo (excluidas)", ", ".join(sin), "BPI WS_CBPOL", "II.2.5")
 
     # ---- libro de datos
     leeme = [["Libro de datos del Tema 3.B.14 (Teorías de la determinación del tipo de cambio)"],
