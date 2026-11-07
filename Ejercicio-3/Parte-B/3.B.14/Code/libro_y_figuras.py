@@ -733,7 +733,7 @@ def main():
         bsh.append(list(f))
     for pais, serie in sorted(ccor.items()):
         for a, v in sorted(serie.items()):
-            filas.append(["Cuenta corriente", pais, a, v, "% del PIB", "Banco Mundial BN.CAB.XOKA.GD.ZS", "ninguno", ""])
+            filas.append(["Cuenta corriente", pais, a, v, "% del PIB", "Banco Mundial BN.CAB.XOKA.GD.ZS", "ninguno", "anx_cuenta_corriente"])
     cifras = [["Cifra", "Valor", "Fuente", "Dónde"]] + cif
     escribir_xlsx(os.path.join(TEMA, "Code", "datos_3B14.xlsx"),
                   [("Léeme", leeme), ("Fuentes", fuentes), ("Series", filas), ("ICP_2021", icp), ("Big_Mac", big),
