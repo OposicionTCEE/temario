@@ -631,8 +631,9 @@ def fig_dolar_cuenta_corriente(bis, ccus, a0=1980, a1=2025):
 NOMBRES_PAR = dict(NOMBRES_ES, BR="Brasil", RU="Rusia", CN="China", CZ="Chequia", HU="Hungría", ID="Indonesia", KW="Kuwait",
                    MA="Marruecos", MK="Macedonia del Norte", PL="Polonia", RO="Rumanía", RS="Serbia", SA="Arabia Saudí",
                    TH="Tailandia")
-ETIQ_PAR_A = {"BR": "north east", "RU": "south east", "CN": "north", "CH": "south west", "XM": "north west"}
-ETIQ_PAR_B = {"BR": "north east", "RU": "south east", "ZA": "south east", "CN": "north", "CH": "south west", "XM": "south east"}
+ETIQ_PAR_A = {"BR": "north east", "RU": "south east", "CN": "north", "CH": "south west", "XM": "south east"}
+# En (b) la zona del euro está rodeada de puntos: etiqueta apartada con una línea fina, como España en anx_bienes_servicios.
+ETIQ_PAR_B = {"BR": "north east", "RU": "south east", "ZA": "south east", "CN": "north", "CH": "south west", "XM": ("west", -2.4, 1.7)}
 
 
 def fig_paridades_largo(pol, xm, cm, t0="2006-01", t1="2025-06", tope=10.0):
