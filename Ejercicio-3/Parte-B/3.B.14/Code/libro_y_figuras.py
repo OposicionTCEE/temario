@@ -684,7 +684,7 @@ def fig_paridades_largo(pol, xm, cm, t0="2006-01", t1="2025-06", tope=10.0):
     for f in sub:
         e = ETIQ_PAR_B.get(f[0])
         if isinstance(e, tuple):
-            tikz += "\\draw[black!50, line width=0.3pt] (axis cs:%.2f,%.2f) -- (axis cs:%.2f,%.2f);\n" % (f[2], f[4], e[1] + 1.6, e[2] - 0.15)
+            tikz += "\\draw[black!50, line width=0.3pt] (axis cs:%.2f,%.2f) -- (axis cs:%.2f,%.2f);\n" % (f[2], f[4], e[1] + 1.4, e[2] - 0.35)
             tikz += "\\node[font=\\scriptsize, anchor=%s, inner sep=1.6pt] at (axis cs:%.2f,%.2f) {%s};\n" % (e[0], e[1], e[2], f[1])
         elif e:
             tikz += "\\node[font=\\scriptsize, anchor=%s, inner sep=1.6pt] at (axis cs:%.2f,%.2f) {%s};\n" % (e, f[2], f[4], f[1])
