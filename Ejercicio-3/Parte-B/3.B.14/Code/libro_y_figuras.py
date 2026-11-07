@@ -474,7 +474,7 @@ NOMBRES_EU = {"CH": "Suiza", "IS": "Islandia", "NO": "Noruega", "DK": "Dinamarca
               "PL": "Polonia", "BG": "Bulgaria", "TR": "Turquía", "AL": "Albania", "PT": "Portugal", "LU": "Luxemburgo",
               "IE": "Irlanda", "MK": "Macedonia del Norte", "FR": "Francia", "IT": "Italia", "RO": "Rumanía"}
 ETIQ_BS = {"CH": "south east", "IS": "north east", "NO": "south east", "DE": "south east", "ES": "north west",
-           "PL": "north west", "BG": "north west", "TR": "north east", "AL": "south west"}
+           "PL": "north west", "BG": "south east", "TR": "north west", "AL": "south west"}
 
 
 def leer_eurostat_ppp(carpeta, fichero):
