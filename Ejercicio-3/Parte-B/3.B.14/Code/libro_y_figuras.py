@@ -718,7 +718,8 @@ ETIQ_MON_A = {"AR": "north west", "TR": "south east", "GH": "north west", "UA": 
 ETIQ_MON_B = {"JP": "south east", "CN": "north", "BR": "north west", "MX": "south east", "GB": "north west", "EG": "south east"}
 
 
-def fig_monetario_largo(m2, pib, nombres_wb, xa, t0=2000, t1=2024, tope=10.0):
+def fig_monetario_largo(m2, pib, nombres_wb, xa_txt, t0=2000, t1=2024, tope=10.0):
+    xa = {c: {int(k): v for k, v in serie.items()} for c, serie in xa_txt.items()}  # años como enteros
     n = t1 - t0
     us_m = math.log(m2["US"][t1] / m2["US"][t0]) / n
     us_y = math.log(pib["US"][t1] / pib["US"][t0]) / n
