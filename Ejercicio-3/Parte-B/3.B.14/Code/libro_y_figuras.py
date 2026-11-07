@@ -404,14 +404,14 @@ def fig_mussa(xm, cm):
     tikz += "%% depreciación de la libra), mensual, %s a %s, índices 2020 = 100 (BPI WS_XRU y WS_LONG_CPI).\n" % (meses[0], meses[-1])
     tikz += "% Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_mussa\n"
     tikz += "\\begin{tikzpicture}\n" + EJES
-    tikz += r"""  xmin=1949, xmax=2027.5, xtick={1950,1960,1970,1980,1990,2000,2010,2020}, ymin=30, ymax=200, clip=false,
+    tikz += r"""  xmin=1949, xmax=2027.5, xtick={1950,1960,1970,1980,1990,2000,2010,2020}, ymin=35, ymax=135, clip=false,
   ylabel={Índice, $2020=100$},
   legend to name=leyendamussa,
 ]
 """
-    tikz += "\\fill[black!8] (axis cs:1971.6,30) rectangle (axis cs:1973.2,200);\n"
-    tikz += "\\node[font=\\scriptsize, black!65, anchor=north] at (axis cs:1960.5,200) {Bretton Woods};\n"
-    tikz += "\\node[font=\\scriptsize, black!65, anchor=north] at (axis cs:2000,200) {Flotación};\n"
+    tikz += "\\fill[black!8] (axis cs:1971.6,35) rectangle (axis cs:1973.2,135);\n"
+    tikz += "\\node[font=\\scriptsize, black!65, anchor=north] at (axis cs:1960.5,135) {Bretton Woods};\n"
+    tikz += "\\node[font=\\scriptsize, black!65, anchor=north] at (axis cs:2000,135) {Flotación};\n"
     tikz += "\\addplot[black!45, line width=0.6pt] coordinates {%s};\n" % coordenadas(nom)
     tikz += "\\addlegendentry{Tipo nominal}\n"
     tikz += "\\addplot[black, line width=0.9pt] coordinates {%s};\n" % coordenadas(rea)
