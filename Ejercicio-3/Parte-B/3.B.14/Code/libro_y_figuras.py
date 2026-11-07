@@ -571,9 +571,19 @@ def main():
     big = [["ISO3", "Economía", "Precio local", "Tipo de cambio (moneda local por dólar)", "Precio en dólares", "Valoración bruta frente al dólar", "PIB por habitante 2025 (dólares)"]]
     for f in bmf:
         big.append(list(f))
+    for (m, vn), (_, vr) in zip(zip(mmeses, [v for _, v in mnom]), zip(mmeses, [v for _, v in mrea])):
+        filas.append(["Libra frente al dólar, nominal", "Reino Unido", m, vn, "índice, 2020 = 100 (libras por dólar)", "BPI WS_XRU", "índice", "anx_mussa"])
+        filas.append(["Libra frente al dólar, real (IPC)", "Reino Unido", m, vr, "índice, 2020 = 100", "BPI WS_XRU y WS_LONG_CPI", "s + p_EEUU - p_RU", "anx_mussa"])
+    ppah = [["Código BPI", "Economía", "Inflación menos la de EE. UU., media anual 1970-2025 (puntos)", "Depreciación media anual frente al dólar 1970-2025 (puntos)"]]
+    for p in ppa:
+        ppah.append(list(p))
+    semh = [["Código BPI", "Economía", "Desde", "Hasta", "Meses", "Rho mensual (AR(1), MCO)", "Semivida (años)"]]
+    for r in semis:
+        semh.append(list(r))
     cifras = [["Cifra", "Valor", "Fuente", "Dónde"]] + cif
     escribir_xlsx(os.path.join(TEMA, "Code", "datos_3B14.xlsx"),
-                  [("Léeme", leeme), ("Fuentes", fuentes), ("Series", filas), ("ICP_2021", icp), ("Big_Mac", big), ("Cifras_citadas", cifras)])
+                  [("Léeme", leeme), ("Fuentes", fuentes), ("Series", filas), ("ICP_2021", icp), ("Big_Mac", big),
+                   ("PPA_1970_2025", ppah), ("Semividas", semh), ("Cifras_citadas", cifras)])
     print("Libro escrito:", os.path.join(TEMA, "Code", "datos_3B14.xlsx"))
 
 
