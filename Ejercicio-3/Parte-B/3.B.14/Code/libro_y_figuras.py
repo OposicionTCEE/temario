@@ -783,6 +783,151 @@ def fig_monetario_largo(m2, pib, nombres_wb, xa_txt, t0=2000, t1=2024, tope=10.0
     return filas, sub, est, fijas, (100 * us_m, 100 * us_y)
 
 
+# ---------------------------------------------------------------- A6 (anexo II): DORNBUSCH (1976)
+# Simulación del modelo en tiempo continuo, en desviaciones respecto del equilibrio inicial (p* = 0, renta fija):
+#   s' = (p - p_barra)/h (demanda de dinero m - p = k y - h i y paridad no cubierta i = i* + s'),
+#   p' = kappa (s - p - q_barra) (los precios suben si el tipo real está por encima de su nivel de equilibrio).
+# El aumento del dinero es delta; nu es la velocidad de convergencia de la senda de silla.
+def dornbusch_sendas(h=2.0, kappa=0.6, delta=1.0, t1=2.0, tmin=-1.5, tmax=8.0, paso=0.05):
+    raiz = math.sqrt(kappa ** 2 + 4 * kappa / h)
+    nu = (kappa + raiz) / 2
+    r1, r2 = (-kappa + raiz) / 2, -nu
+    ts = [tmin + k * paso for k in range(int(round((tmax - tmin) / paso)) + 1)]
+    sorpresa, anuncio = [], []
+    for t in ts:
+        if t < 0:
+            sorpresa.append((t, 0.0, 0.0, 0.0, 0.0))
+        else:
+            e = math.exp(-nu * t)
+            sorpresa.append((t, delta, delta + delta / (h * nu) * e, delta - delta * e, -delta / h * e))
+    # anunciado en 0 para t1: con el dinero viejo, x = a e^{r1 t} + b e^{r2 t}, z = h (r1 a e^{r1 t} + r2 b e^{r2 t}),
+    # z(0) = 0 obliga a b = -r1 a / r2; en t1 el punto tiene que estar en la nueva senda de silla.
+    E1, E2 = math.exp(r1 * t1), math.exp(r2 * t1)
+    a = delta * (1 + 1 / (h * nu)) / (E1 - (r1 / r2) * E2 + (r1 / nu) * (E1 - E2))
+    b = -r1 * a / r2
+    x1 = a * E1 + b * E2
+    z1 = h * (r1 * a * E1 + r2 * b * E2)
+    for t in ts:
+        if t < 0:
+            anuncio.append((t, 0.0, 0.0, 0.0, 0.0))
+        elif t < t1:
+            x = a * math.exp(r1 * t) + b * math.exp(r2 * t)
+            z = h * (r1 * a * math.exp(r1 * t) + r2 * b * math.exp(r2 * t))
+            anuncio.append((t, 0.0, x, z, z / h))
+        else:
+            e = math.exp(-nu * (t - t1))
+            x = delta + (x1 - delta) * e
+            z = delta + (z1 - delta) * e
+            anuncio.append((t, delta, x, z, (z - delta) / h))
+    datos = {"nu": nu, "salto_sorpresa": delta + delta / (h * nu), "salto_anuncio": a + b, "s_t1": x1, "p_t1": z1,
+             "i_antes_t1": z1 / h, "i_despues_t1": (z1 - delta) / h, "h": h, "kappa": kappa, "t1": t1}
+    return sorpresa, anuncio, datos
+
+
+def tikz_dornbusch(sendas, nombre, titulos, t1=None, comentario=""):
+    # tres paneles: (a) dinero, (b) tipo de cambio y precios, (c) tipo de interés; escalas fijas para comparar las dos figuras
+    xs, ys, yi = 0.47, 1.5, 2.6
+    def X(t):
+        return (t + 1.5) * xs
+    tikz = comentario
+    tikz += "\\begin{tikzpicture}[font=\\footnotesize, x=1cm, y=1cm]\n"
+    for k, (dx, tit) in enumerate(zip((0, 5.2, 10.4), titulos)):
+        alto = 3.1
+        base = 0.0 if k < 2 else 1.7
+        tikz += "\\begin{scope}[xshift=%.2fcm]\n" % dx
+        tikz += "  \\draw[-{Stealth[length=1.8mm]}] (0,%.2f) -- (4.6,%.2f) node[below left] {$t$};\n" % (base, base)
+        tikz += "  \\draw[-{Stealth[length=1.8mm]}] (0,0) -- (0,%.2f);\n" % alto
+        tikz += "  \\draw[black!35, densely dotted] (%.3f,0) -- (%.3f,%.2f);\n" % (X(0), X(0), alto - 0.2)
+        tikz += "  \\node[below] at (%.3f,0) {$t_0$};\n" % X(0)
+        if t1 is not None:
+            tikz += "  \\draw[black!35, densely dotted] (%.3f,0) -- (%.3f,%.2f);\n" % (X(t1), X(t1), alto - 0.2)
+            tikz += "  \\node[below] at (%.3f,0) {$t_1$};\n" % X(t1)
+        tikz += "  \\node[anchor=south] at (2.3,%.2f) {%s};\n" % (alto + 0.1, tit)
+        tikz += "\\end{scope}\n"
+    def linea(pts, estilo, dx, fy, y0, etiqueta=None, ancla="west"):
+        trozos, actual, previo = [], [], None
+        for (t, v) in pts:
+            if previo is not None and abs(v - previo) > 0.2:
+                actual.append((t, previo))
+                trozos.append(actual)
+                actual = [(t, previo)]
+            actual.append((t, v))
+            previo = v
+        trozos.append(actual)
+        out = ""
+        coords = [(X(t) + dx, y0 + fy * v) for tr in trozos for (t, v) in tr]
+        out += "\\draw[%s] %s;\n" % (estilo, " -- ".join("(%.3f,%.3f)" % c for c in coords))
+        if etiqueta:
+            out += "\\node[anchor=%s, inner sep=2pt] at (%.3f,%.3f) {%s};\n" % (ancla, coords[-1][0], coords[-1][1], etiqueta)
+        return out
+    # (a) dinero
+    tikz += linea([(f[0], f[1]) for f in sendas], "black!55, densely dashed, line width=0.9pt", 0.0, ys, 0.5, "$m$")
+    # (b) tipo de cambio y precios, con el nuevo nivel de largo plazo
+    tikz += "\\draw[black!40, densely dotted] (%.3f,%.3f) -- (%.3f,%.3f) node[right, black!60] {$\\bar s_1$};\n" % (5.2 + X(0), 0.5 + ys, 5.2 + X(8.0), 0.5 + ys)
+    tikz += linea([(f[0], f[2]) for f in sendas], "black, line width=1pt", 5.2, ys, 0.5, "$s$", "south west")
+    tikz += linea([(f[0], f[3]) for f in sendas], "black!55, densely dashed, line width=0.9pt", 5.2, ys, 0.5, "$p$", "north west")
+    # (c) tipo de interés, en diferencia con el extranjero
+    tikz += "\\node[left] at (10.4,1.7) {$i^*$};\n"
+    tikz += linea([(f[0], f[4]) for f in sendas], "black, line width=1pt", 10.4, yi, 1.7, "$i$")
+    tikz += "\\end{tikzpicture}\n"
+    open(os.path.join(IMG, nombre + ".tikz"), "w", encoding="utf-8").write(tikz)
+
+
+def fig_dornbusch():
+    sorpresa, anuncio, datos = dornbusch_sendas()
+    c = "%% DORNBUSCH (1976), simulación con h = %.1f y kappa = %.1f (Code/libro_y_figuras.py, dornbusch_sendas): aumento\n" % (datos["h"], datos["kappa"])
+    tikz_dornbusch(sorpresa, "anx_dornbusch_sorpresa", ("(a) Dinero", "(b) Tipo de cambio y precios", "(c) Tipo de interés"),
+                   comentario=c + "% permanente y no anticipado del dinero en t_0. Compilar con: bash Code/generar_figura.sh anx_dornbusch_sorpresa\n")
+    tikz_dornbusch(anuncio, "anx_dornbusch_anuncio", ("(a) Dinero", "(b) Tipo de cambio y precios", "(c) Tipo de interés"), t1=datos["t1"],
+                   comentario=c + "% del dinero anunciado en t_0 para t_1. Compilar con: bash Code/generar_figura.sh anx_dornbusch_anuncio\n")
+    return datos
+
+
+# Dólar y diferencia de tipos de interés reales, 1975-1998: tipo efectivo real del dólar (BPI, cesta reducida, mensual) y
+# tipo oficial real de EE. UU. (tipo oficial menos la inflación interanual) menos la media de los de Alemania, Japón y el
+# Reino Unido.
+def fig_dolar_tipos_reales(bis, pol, cm, t0="1975-01", t1="1998-12"):
+    reer = dict(bis[("US", "R", "N")])
+    def anterior(m, k):
+        y, mm = int(m[:4]), int(m[5:]) - k
+        while mm <= 0:
+            y, mm = y - 1, mm + 12
+        return "%04d-%02d" % (y, mm)
+    def real(a, m):
+        if m in pol.get(a, {}) and m in cm.get(a, {}) and anterior(m, 12) in cm[a]:
+            return pol[a][m] - 100 * (cm[a][m] / cm[a][anterior(m, 12)] - 1)
+        return None
+    filas = []
+    for m in sorted(x for x in reer if t0 <= x <= t1):
+        ru, otros = real("US", m), [real(a, m) for a in ("DE", "JP", "GB")]
+        if ru is None or any(r is None for r in otros):
+            continue
+        filas.append((m, reer[m], ru, sum(otros) / 3, ru - sum(otros) / 3))
+    def corr(a, b):
+        ma, mb = sum(a) / len(a), sum(b) / len(b)
+        return sum((x - ma) * (y - mb) for x, y in zip(a, b)) / math.sqrt(sum((x - ma) ** 2 for x in a) * sum((y - mb) ** 2 for y in b))
+    cors = {k: corr([f[1] for f in filas[k:]], [f[4] for f in filas[:len(filas) - k]]) for k in (0, 6, 12, 24)}
+    eje = r"""  scale only axis, width=14.2cm, height=3.3cm, axis lines=left, tick align=outside, tick style={black!60},
+  /pgf/number format/.cd, use comma, 1000 sep={}, /pgfplots/.cd,
+  every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize}, title style={font=\footnotesize},
+  xmin=1974.8, xmax=1999.2, xtick={1975,1980,1985,1990,1995}, clip=false,
+"""
+    tikz = "%% (a) Tipo de cambio efectivo real del dólar (BPI, cesta reducida, mensual, 2020 = 100; subida = apreciación) y (b) tipo\n"
+    tikz += "%% oficial real de EE. UU. menos la media de los de Alemania, Japón y el Reino Unido (tipo oficial menos inflación\n"
+    tikz += "%% interanual; BPI WS_CBPOL y WS_LONG_CPI), %s a %s. Generado por Code/libro_y_figuras.py;\n" % (t0, t1)
+    tikz += "% compilar con: bash Code/generar_figura.sh anx_dolar_tipos_reales\n"
+    tikz += "\\begin{tikzpicture}\n\\footnotesize\n\\begin{axis}[name=pa,\n" + eje
+    tikz += "  ymin=70, ymax=120, ylabel={Índice, $2020=100$}, xticklabels={}, title={(a) Tipo de cambio efectivo real del dólar},\n]\n"
+    tikz += "\\addplot[black, line width=1pt] coordinates {%s};\n" % coordenadas([(decimal_mes(f[0]), f[1]) for f in filas], 2)
+    tikz += "\\end{axis}\n\\begin{axis}[at={(pa.south)}, anchor=north, yshift=-1.0cm,\n" + eje
+    tikz += "  ymin=-6, ymax=9, ytick={-4,0,4,8}, ylabel={Puntos porcentuales}, title={(b) Diferencia de tipos de interés reales a corto plazo},\n]\n"
+    tikz += "\\draw[black!50] (axis cs:1974.8,0) -- (axis cs:1999.2,0);\n"
+    tikz += "\\addplot[black, line width=0.8pt] coordinates {%s};\n" % coordenadas([(decimal_mes(f[0]), f[4]) for f in filas], 2)
+    tikz += "\\end{axis}\n\\end{tikzpicture}\n"
+    open(os.path.join(IMG, "anx_dolar_tipos_reales.tikz"), "w", encoding="utf-8").write(tikz)
+    return filas, cors
+
+
 # ---------------------------------------------------------------- principal
 def main():
     carpeta = sys.argv[1]
