@@ -473,8 +473,10 @@ def fig_semividas(eer, desde="1975-01"):
 NOMBRES_EU = {"CH": "Suiza", "IS": "Islandia", "NO": "Noruega", "DK": "Dinamarca", "DE": "Alemania", "ES": "España",
               "PL": "Polonia", "BG": "Bulgaria", "TR": "Turquía", "AL": "Albania", "PT": "Portugal", "LU": "Luxemburgo",
               "IE": "Irlanda", "MK": "Macedonia del Norte", "FR": "Francia", "IT": "Italia", "RO": "Rumanía"}
-ETIQ_BS = {"CH": "south east", "IS": "north east", "NO": "south east", "DE": "south east", "ES": "north west",
-           "PL": "north west", "BG": "south east", "TR": "north west", "AL": "south west"}
+# Ancla de cada etiqueta (la etiqueta queda al lado opuesto del ancla); una terna (ancla, x, y) la aparta a (x, y)
+# con una línea fina hasta el punto, para España, rodeada de otros puntos.
+ETIQ_BS = {"CH": "south east", "IS": "north east", "NO": "south east", "DE": "south", "ES": ("west", 101, 74),
+           "PL": "north west", "BG": "north east", "TR": "north west", "AL": "south west"}
 
 
 def leer_eurostat_ppp(carpeta, fichero):
