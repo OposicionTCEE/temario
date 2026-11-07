@@ -1165,15 +1165,15 @@ def con_datos_a3(carpeta, filas_series, cifras):
     xs_ = [decimal(f) for f in fs_]
     cuerpo_b = sombras(sombra, 0) + "\n\\addplot[black, thick] coordinates {%s};" % coords(xs_, [sahm[f] for f in fs_], 2)
     cuerpo_b += "\n\\addplot[black!55, dashed] coordinates {(1959,0.5) (2027,0.5)};\n\\addplot[black!40, thin] coordinates {(1959,0) (2027,0)};"
-    fig = "\\begin{tikzpicture}\n"
-    fig += ("\\begin{axis}[name=a, at={(0,0)}, anchor=north west, width=14.2cm, height=3.6cm, scale only axis, %s,\n"
-            "    xmin=1959, xmax=2027, xtick={1960,1965,...,2025}, ymin=0, ymax=100, ytick={0,25,50,75,100}, ylabel={Porcentaje},\n"
-            "    title={(a) Probabilidad de recesión dentro de doce meses según la pendiente de la curva}, title style={font=\\footnotesize}]\n%s\n\\end{axis}\n" % (ESTILO, cuerpo_a))
-    fig += ("\\begin{axis}[name=b, at={($(a.south west)+(0,-1.5cm)$)}, anchor=north west, width=14.2cm, height=3.6cm, scale only axis, %s,\n"
-            "    xmin=1959, xmax=2027, xtick={1960,1965,...,2025}, ymin=-0.5, ymax=3, ytick={0,0.5,1,2,3}, ylabel={Puntos},\n"
-            "    title={(b) Regla de SAHM con los datos de cada momento}, title style={font=\\footnotesize}]\n%s\n\\end{axis}\n" % (ESTILO, cuerpo_b))
-    fig += "\\end{tikzpicture}"
-    escribir("anx_senales_recesion", fig, "EE. UU.: probabilidad de recesión a doce meses de un probit sobre la pendiente (10 años menos 3 meses), estimado con 1959-2018, y regla de SAHM en tiempo real.")
+    # dos figuras separadas, porque cada una se comenta en su párrafo
+    fig = ("\\begin{tikzpicture}\n\\begin{axis}[width=14.2cm, height=4.2cm, scale only axis, %s,\n"
+           "    xmin=1959, xmax=2027, xtick={1960,1965,...,2025}, ymin=0, ymax=100, ytick={0,25,50,75,100}, ylabel={Porcentaje}]\n%s\n\\end{axis}\n\\end{tikzpicture}"
+           % (ESTILO, cuerpo_a))
+    escribir("anx_probit_recesion", fig, "EE. UU.: probabilidad de estar en recesión doce meses después según un probit sobre la pendiente (10 años menos 3 meses), estimado con 1959-2018.")
+    fig = ("\\begin{tikzpicture}\n\\begin{axis}[width=14.2cm, height=4.2cm, scale only axis, %s,\n"
+           "    xmin=1959, xmax=2027, xtick={1960,1965,...,2025}, ymin=-0.5, ymax=3, ytick={0,0.5,1,2,3}, ylabel={Puntos}]\n%s\n\\end{axis}\n\\end{tikzpicture}"
+           % (ESTILO, cuerpo_b))
+    escribir("anx_regla_sahm", fig, "EE. UU.: regla de SAHM con los datos de cada momento (media de tres meses del paro menos su mínimo de los doce meses anteriores).")
 
 
 def main():
