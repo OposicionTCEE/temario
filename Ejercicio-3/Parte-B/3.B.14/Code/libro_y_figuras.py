@@ -701,8 +701,10 @@ def main():
         if cesta != "B":
             continue
         for f, v in serie:
-            filas.append(["BPI efectivo %s, cesta amplia" % ("nominal" if tipo == "N" else "real"), {"XM": "Zona del euro", "ES": "España"}[area],
+            filas.append(["BPI efectivo %s, cesta amplia" % ("nominal" if tipo == "N" else "real"), {"XM": "Zona del euro", "ES": "España", "US": "Estados Unidos"}[area],
                           f, v, "índice, 2020 = 100", "BPI WS_EER", "ninguno", "anx_efectivo_euro" if area == "XM" else ""])
+    for f, v in bis.get(("US", "R", "N"), []):
+        filas.append(["BPI efectivo real, cesta reducida", "Estados Unidos", f, v, "índice, 2020 = 100", "BPI WS_EER", "media anual en la figura", "anx_dolar_cuenta_corriente"])
     for s, serie in sorted(eu.items()):
         for f, v in serie:
             filas.append([s, "España", f, v, "índice, 2020 = 100", "Eurostat ert_eff_ic_q", "ninguno", "anx_competitividad_espana" if s != "REER_IC42_CPI" else ""])
