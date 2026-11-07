@@ -921,6 +921,16 @@ def main():
             poner("  %s: diferencia de tipos, de inflación y depreciación (puntos al año)" % f[1], "%.2f; %s; %.2f" % (f[2], "%.2f" % f[3] if f[3] is not None else "-", f[4]), "BPI", "II.2.5")
     sin = sorted(a for a in pol if a != "US" and a in xm and not all(m in pol[a] and m in pol["US"] for m in msp) and max(pol[a]) >= "2025-06")
     poner("  economías con tipo oficial pero sin la serie completa del periodo (excluidas)", ", ".join(sin), "BPI WS_CBPOL", "II.2.5")
+    # ---- A5
+    poner("Monetario 2000-2024: economías sin tipo fijo; con diferencia < 10 puntos; con tipo fijo (excluidas)", "%d; %d; %d" % (len(monf), len(mons), len(monfijas)), "Banco Mundial; BPI WS_XRU", "II.3.4")
+    poner("  excluidas por tipo fijo", ", ".join("%s %s" % f for f in monfijas), "Banco Mundial; BPI", "II.3.4")
+    poner("  EE. UU.: crecimiento medio anual del dinero amplio y del PIB real (%)", "%.2f y %.2f" % monus, "Banco Mundial", "II.3.4")
+    for k, txt in (("todas", "depreciación sobre dinero menos producción, todas"), ("todas_dinero", "depreciación sobre dinero, todas"),
+                   ("sub", "depreciación sobre dinero menos producción, < 10 puntos")):
+        poner("  MCO %s: constante, pendiente, R2" % txt, "%.2f, %.2f, %.2f" % mone[k], "Banco Mundial; BPI", "II.3.4")
+    for f in monf:
+        if f[0] in ("AR", "TR", "GH", "UA", "NG", "AO", "EG", "BR", "MX", "ZA", "JP", "CN", "GB", "KR", "IN", "CA", "AU", "NO", "SE", "PL", "CL", "CO", "RU"):
+            poner("  %s: dinero, producción, dinero menos producción y depreciación (puntos al año)" % f[1], "%.1f; %.1f; %.1f; %.1f" % f[2:], "Banco Mundial; BPI", "II.3.4")
 
     # ---- libro de datos
     leeme = [["Libro de datos del Tema 3.B.14 (Teorías de la determinación del tipo de cambio)"],
