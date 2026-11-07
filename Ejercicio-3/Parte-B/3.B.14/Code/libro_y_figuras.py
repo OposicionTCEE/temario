@@ -963,6 +963,8 @@ def main():
     m2w, nombres_m2 = leer_wb_panel(carpeta, "dl_wb_m", "m2.json")
     pibw, _ = leer_wb_panel(carpeta, "dl_wb_m", "pib.json")
     monf, mons, mone, monfijas, monus = fig_monetario_largo(m2w, pibw, nombres_m2, xa)
+    dorn = fig_dornbusch()
+    dtr, dtrc = fig_dolar_tipos_reales(bis, pol, cm)
 
     # ---- cifras citadas en el texto
     cif = []
