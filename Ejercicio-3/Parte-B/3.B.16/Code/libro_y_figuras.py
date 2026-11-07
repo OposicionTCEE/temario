@@ -422,9 +422,9 @@ def fig_amplitud(res):
 
 def fig_bayoumi(corr_be):
     x0, x1, y0, y1 = -0.2, 0.9, -0.1, 0.7
-    ex, ey = 6.0, 6.0
+    ex, ey = 5.6, 5.6
     c = ""
-    for k, (titulo, desp, dx) in enumerate(((r"(a) $1973$-$1998$", DESP_BE1, 0.0), (r"(b) $1999$-$2019$", DESP_BE2, 7.8))):
+    for k, (titulo, desp, dx) in enumerate(((r"(a) $1973$-$1998$", DESP_BE1, 0.0), (r"(b) $1999$-$2019$", DESP_BE2, 7.9))):
         c += "  \\begin{scope}[xshift=%.2fcm]\n" % dx
         c += "  \\node[anchor=base] at (%.3f,%.3f) {%s};\n" % ((x1 - x0) * ex / 2, (y1 - y0) * ey + 0.55, titulo)
         c += "  \\draw[black!25] (%.3f,0) -- (%.3f,%.3f);\n" % ((0 - x0) * ex, (0 - x0) * ex, (y1 - y0) * ey)
