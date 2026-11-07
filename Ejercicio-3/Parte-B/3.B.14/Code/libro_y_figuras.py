@@ -547,8 +547,9 @@ def leer_cuenta_corriente(carpeta):
 
 
 def fig_cuenta_corriente(ccor):
-    serie = {p: sorted((int(a), v) for a, v in ccor[p].items()) for p in ("ESP", "DEU", "EMU")}
-    tikz = "% Saldo de la cuenta corriente en porcentaje del PIB de España, Alemania y la zona del euro, anual, 1995-2025\n"
+    # El Banco Mundial no da el agregado de la zona del euro (EMU sin valores): solo España y Alemania.
+    serie = {p: sorted((int(a), v) for a, v in ccor[p].items()) for p in ("ESP", "DEU")}
+    tikz = "% Saldo de la cuenta corriente en porcentaje del PIB de España y Alemania, anual, 1995-2025\n"
     tikz += "% (Banco Mundial, Indicadores del Desarrollo Mundial, BN.CAB.XOKA.GD.ZS).\n"
     tikz += "% Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_cuenta_corriente\n"
     tikz += "\\begin{tikzpicture}\n" + EJES
