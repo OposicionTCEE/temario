@@ -1081,6 +1081,20 @@ def main():
     for f in monf:
         if f[0] in ("AR", "TR", "GH", "UA", "NG", "AO", "EG", "BR", "MX", "ZA", "JP", "CN", "GB", "KR", "IN", "CA", "AU", "NO", "SE", "PL", "CL", "CO", "RU"):
             poner("  %s: dinero, producción, dinero menos producción y depreciación (puntos al año)" % f[1], "%.1f; %.1f; %.1f; %.1f" % f[2:], "Banco Mundial; BPI", "II.3.4")
+    # ---- A6
+    poner("DORNBUSCH simulado (h, kappa, t1): velocidad nu; salto por sorpresa; salto con anuncio; s y p en t1; i - i* antes y después de t1",
+          "h %.1f, kappa %.1f, t1 %.1f: nu %.3f; %.3f; %.3f; %.3f y %.3f; %.3f y %.3f" % (dorn["h"], dorn["kappa"], dorn["t1"], dorn["nu"], dorn["salto_sorpresa"],
+          dorn["salto_anuncio"], dorn["s_t1"], dorn["p_t1"], dorn["i_antes_t1"], dorn["i_despues_t1"]), "simulación propia", "II.4.2-II.4.3")
+    poner("Dólar y diferencia de tipos reales 1975-1998: meses; correlación del tipo real con la diferencia de 0, 6, 12 y 24 meses antes",
+          "%d; %.2f, %.2f, %.2f, %.2f" % (len(dtr), dtrc[0], dtrc[6], dtrc[12], dtrc[24]), "BPI WS_EER, WS_CBPOL, WS_LONG_CPI", "II.4.4")
+    for a in range(1975, 1999):
+        sel = [f for f in dtr if f[0].startswith(str(a))]
+        if sel:
+            poner("  %d: tipo real del dólar, tipo real de EE. UU., media de Alemania, Japón y Reino Unido, diferencia" % a,
+                  "%.1f; %.2f; %.2f; %.2f" % tuple(sum(f[k] for f in sel) / len(sel) for k in (1, 2, 3, 4)), "BPI", "II.4.4")
+    mx = max(dtr, key=lambda f: f[1])
+    md = max(dtr, key=lambda f: f[4])
+    poner("  máximo del tipo real del dólar y máximo de la diferencia", "%.1f en %s; %.2f en %s" % (mx[1], mx[0], md[4], md[0]), "BPI", "II.4.4")
 
     # ---- libro de datos
     leeme = [["Libro de datos del Tema 3.B.14 (Teorías de la determinación del tipo de cambio)"],
