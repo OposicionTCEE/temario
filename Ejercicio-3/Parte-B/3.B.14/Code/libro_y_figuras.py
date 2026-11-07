@@ -1161,6 +1161,9 @@ def main():
                 filas.append(["Dinero en sentido amplio", NOMBRES_MON.get(c, nombres_m2.get(c, c)), a, m2w[c][a], "moneda nacional corriente", "Banco Mundial FM.LBL.BMNY.CN", "logaritmo en la tasa media", "anx_monetario_largo"])
             if a in pibw.get(c, {}):
                 filas.append(["PIB real", NOMBRES_MON.get(c, nombres_m2.get(c, c)), a, pibw[c][a], "moneda nacional constante", "Banco Mundial NY.GDP.MKTP.KN", "logaritmo en la tasa media", "anx_monetario_largo"])
+    for f in dtr:
+        filas.append(["Tipo oficial real de EE. UU. menos la media de Alemania, Japón y Reino Unido", "Estados Unidos", f[0], f[4], "puntos porcentuales",
+                      "BPI WS_CBPOL y WS_LONG_CPI", "tipo oficial menos inflación interanual; media simple de los tres", "anx_dolar_tipos_reales"])
     monh = [["Código", "Economía", "Dinero amplio: crecimiento medio anual menos el de EE. UU., 2000-2024 (puntos)", "PIB real: crecimiento medio anual menos el de EE. UU. (puntos)",
              "Dinero menos producción (puntos)", "Depreciación media anual frente al dólar (puntos)", "En el panel (b) (diferencia menor de 10 puntos)"]]
     for f in monf:
