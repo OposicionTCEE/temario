@@ -507,7 +507,7 @@ def fig_dispersion(disp):
     i13 = anios.index(2013)
     c += "  \\node[anchor=south, font=\\scriptsize] at (%.3f,%.3f) {zona del euro (once países)};\n" % ((2013 - x0) * ex, ea[i13] * ey + 0.05)
     i10 = anios.index(2010)
-    c += "  \\node[anchor=south, font=\\scriptsize, black!70] at (%.3f,%.3f) {EE. UU. ($51$ estados)};\n" % ((2003 - x0) * ex, us[anios.index(2003)] * ey + 0.35)
+    c += "  \\node[anchor=north, font=\\scriptsize, black!70] at (%.3f,%.3f) {EE. UU. ($51$ estados)};\n" % ((1997 - x0) * ex, us[anios.index(1997)] * ey - 0.12)
     c += "  \\draw[->] (0,0) -- (%.3f,0);\n  \\draw[->] (0,0) -- (0,%.3f) node[above] {desviación típica de la tasa de paro, en puntos};\n" % ((2024 - x0) * ex + 0.4, 8 * ey + 0.3)
     for t in [1991, 1995, 2000, 2005, 2010, 2015, 2020, 2024]:
         c += "  \\draw (%.3f,0.06) -- (%.3f,-0.06) node[below] {$%d$};\n" % ((t - x0) * ex, (t - x0) * ex, t)
