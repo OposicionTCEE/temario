@@ -833,9 +833,10 @@ def tikz_dornbusch(sendas, nombre, titulos, t1=None, comentario=""):
     tikz += "\\begin{tikzpicture}[font=\\footnotesize, x=1cm, y=1cm]\n"
     for k, (dx, tit) in enumerate(zip((0, 5.2, 10.4), titulos)):
         alto = 3.1
-        base = 0.0 if k < 2 else 1.7
         tikz += "\\begin{scope}[xshift=%.2fcm]\n" % dx
-        tikz += "  \\draw[-{Stealth[length=1.8mm]}] (0,%.2f) -- (4.6,%.2f) node[below left] {$t$};\n" % (base, base)
+        tikz += "  \\draw[-{Stealth[length=1.8mm]}] (0,0) -- (4.6,0) node[below left] {$t$};\n"
+        if k == 2:
+            tikz += "  \\draw[black!45] (0,1.7) -- (4.5,1.7);\n"
         tikz += "  \\draw[-{Stealth[length=1.8mm]}] (0,0) -- (0,%.2f);\n" % alto
         tikz += "  \\draw[black!35, densely dotted] (%.3f,0) -- (%.3f,%.2f);\n" % (X(0), X(0), alto - 0.2)
         tikz += "  \\node[below] at (%.3f,0) {$t_0$};\n" % X(0)
