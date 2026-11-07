@@ -32,6 +32,8 @@ DESCARGAS = {
     "dl_wb/NY.GDP.PCAP.CD_2025.json": "https://api.worldbank.org/v2/country/all/indicator/NY.GDP.PCAP.CD?date=2025&format=json&per_page=400",
     "dl_wb/paises.json": "https://api.worldbank.org/v2/country?format=json&per_page=400",
     "dl_bigmac/big-mac-full-index.csv": "https://raw.githubusercontent.com/TheEconomist/big-mac-data/master/output-data/big-mac-full-index.csv",
+    "dl_bis_xru/WS_XRU_csv_flat.csv": "https://data.bis.org/static/bulk/WS_XRU_csv_flat.zip (descomprimido; descargado el 07/11/2026)",
+    "dl_bis_cpi/WS_LONG_CPI_csv_flat.csv": "https://data.bis.org/static/bulk/WS_LONG_CPI_csv_flat.zip (descomprimido; descargado el 07/11/2026)",
 }
 
 
