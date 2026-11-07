@@ -529,6 +529,18 @@ def main():
                   "%.2f; %.4f; %.2f; %.1f %%" % (f[2], f[3], f[4], 100 * f[5]), "The Economist", "I.2.2")
     extremos = sorted(bmf, key=lambda f: f[5])
     poner("Big Mac: más infravalorada y más sobrevalorada", "%s %.1f %%; %s %.1f %%" % (extremos[0][1], 100 * extremos[0][5], extremos[-1][1], 100 * extremos[-1][5]), "The Economist", "I.2.2")
+    # ---- A2
+    poner("PPA relativa 1970-2025: economías; pendiente y constante (todas)", "%d; %.3f y %.3f" % (len(ppa), pb1, pa1), "BPI WS_XRU, WS_LONG_CPI", "I.3.2")
+    poner("PPA relativa 1970-2025: diferencia < 10 puntos: economías, pendiente, correlación", "%d; %.3f; %.3f" % (nsub, pb2, math.sqrt(pr22)), "BPI", "I.3.2")
+    for p in ppa:
+        if p[0] in ("AR", "TR", "MX", "ES", "CH", "JP", "IN", "KR", "GB", "DE"):
+            poner("PPA relativa 1970-2025 %s: inflación menos la de EE. UU. y depreciación (puntos al año)" % p[1], "%.1f y %.1f" % (p[2], p[3]), "BPI", "I.3.2")
+    poner("MUSSA, libra-dólar: periodo", "%s a %s" % (mmeses[0], mmeses[-1]), "BPI", "I.3.3")
+    poner("MUSSA, Bretton Woods 1950-01 a 1971-07: desv. típica mensual nominal, real (%); correlación", "%.2f, %.2f; %.3f (n=%d)" % mbw, "BPI", "I.3.3")
+    poner("MUSSA, flotación 1973-03 en adelante: desv. típica mensual nominal, real (%); correlación", "%.2f, %.2f; %.3f (n=%d)" % mfl, "BPI", "I.3.3")
+    poner("Semividas del tipo efectivo real (MCO, mensual): economías y mediana (años)", "%d; %.1f" % (len(semis), smed), "BPI WS_EER", "I.3.4")
+    for r in semis:
+        poner("  semivida %s (años), rho mensual" % r[1], "%.1f; %.4f" % (r[6], r[5]), "BPI WS_EER", "I.3.4")
 
     # ---- libro de datos
     leeme = [["Libro de datos del Tema 3.B.14 (Teorías de la determinación del tipo de cambio)"],
