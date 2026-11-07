@@ -526,8 +526,12 @@ def fig_bienes_servicios(pli, aic, geo, anio="2024"):
     tikz += "\\addplot[black!60, line width=0.7pt, dashed, smooth] coordinates {%s};\n" % coordenadas([(x, math.exp(ab + bb * math.log(x))) for x in xs], 2)
     tikz += "\\addplot[black, line width=0.8pt, smooth] coordinates {%s};\n" % coordenadas([(x, math.exp(as_ + bs * math.log(x))) for x in xs], 2)
     for f in filas:
-        if f[0] in ETIQ_BS:
-            tikz += "\\node[font=\\scriptsize, anchor=%s, inner sep=1.8pt] at (axis cs:%.1f,%.1f) {%s};\n" % (ETIQ_BS[f[0]], f[2], f[4], f[1])
+        e = ETIQ_BS.get(f[0])
+        if isinstance(e, tuple):
+            tikz += "\\draw[black!50, line width=0.3pt] (axis cs:%.1f,%.1f) -- (axis cs:%.1f,%.1f);\n" % (f[2], f[4], e[1], e[2])
+            tikz += "\\node[font=\\scriptsize, anchor=%s, inner sep=1.8pt] at (axis cs:%.1f,%.1f) {%s};\n" % (e[0], e[1], e[2], f[1])
+        elif e:
+            tikz += "\\node[font=\\scriptsize, anchor=%s, inner sep=1.8pt] at (axis cs:%.1f,%.1f) {%s};\n" % (e, f[2], f[4], f[1])
     tikz += "\\end{axis}\n\\node[anchor=north] at (current bounding box.south) {\\pgfplotslegendfromname{leyendabs}};\n\\end{tikzpicture}\n"
     open(os.path.join(IMG, "anx_bienes_servicios.tikz"), "w", encoding="utf-8").write(tikz)
     return filas, (bb, rb, db), (bs, rs, ds)
