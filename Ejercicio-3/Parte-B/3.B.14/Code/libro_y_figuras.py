@@ -631,6 +631,18 @@ def main():
     poner("Semividas MCO: economías entre 3 y 5 años, por encima de 5, por debajo de 3", "%d, %d, %d" % (sum(1 for r in semis if 3 <= r[6] <= 5), sum(1 for r in semis if r[6] > 5), sum(1 for r in semis if r[6] < 3)), "BPI WS_EER", "I.3.4")
     for r in semis:
         poner("  semivida %s (años), rho mensual" % r[1], "%.1f; %.4f" % (r[6], r[5]), "BPI WS_EER", "I.3.4")
+    # ---- A3
+    poner("Bienes y servicios 2024: economías", "%d" % len(bsf), "Eurostat prc_ppp_ind", "I.5.2")
+    poner("Bienes: elasticidad al consumo por habitante, R2, desv. típica del log", "%.3f, %.3f, %.3f" % (bsb, bsrb, bsdb), "Eurostat", "I.5.2")
+    poner("Servicios: elasticidad al consumo por habitante, R2, desv. típica del log", "%.3f, %.3f, %.3f" % (bss, bsrs, bsds), "Eurostat", "I.5.2")
+    poner("Bienes y servicios: rangos de los niveles de precios", "bienes %.1f a %.1f; servicios %.1f a %.1f" % (min(f[3] for f in bsf), max(f[3] for f in bsf), min(f[4] for f in bsf), max(f[4] for f in bsf)), "Eurostat", "I.5.2")
+    for f in bsf:
+        if f[0] in ("CH", "BG", "ES", "DE", "NO", "TR", "PL", "PT", "IS", "DK", "AL"):
+            poner("Bienes y servicios 2024 %s: consumo por habitante, bienes, servicios" % f[1], "%.0f; %.1f; %.1f" % (f[2], f[3], f[4]), "Eurostat", "I.5.2")
+    for pais in ("ESP", "DEU"):
+        c = ccor.get(pais, {})
+        poner("Cuenta corriente (%% del PIB) de %s: 1999, 2004, 2007, 2008, 2012, 2013, 2024, 2025" % pais,
+              ", ".join("%s %.1f" % (a, c[a]) for a in ("1999", "2004", "2007", "2008", "2012", "2013", "2024", "2025") if a in c), "Banco Mundial BN.CAB.XOKA.GD.ZS", "I.6.6")
 
     # ---- libro de datos
     leeme = [["Libro de datos del Tema 3.B.14 (Teorías de la determinación del tipo de cambio)"],
