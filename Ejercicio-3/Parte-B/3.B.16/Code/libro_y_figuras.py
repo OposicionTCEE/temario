@@ -386,15 +386,26 @@ def dispersion_puntos(puntos, desp, esc_x, esc_y, x0, y0):
     return c
 
 
-DESP_AMPLITUD = {}
-DESP_BE1, DESP_BE2 = {}, {}
+DESP_BE1 = {"AUT": "above left", "ITA": "above right", "PRT": "below"}
+DESP_BE2 = {"BEL": "above left", "SWE": "above", "ESP": "below right", "GBR": "left", "NLD": "above right"}
 
 
 def fig_amplitud(res):
     x0, x1, y0, y1 = 0.0, 1.0, 0.0, 3.2
     ex, ey = 10.0, 1.9
-    c = "  \\draw[black!40, densely dashed] (0,%.3f) -- (%.3f,%.3f) node[right, black!60] {como la zona};\n" % ((1 - y0) * ey, (x1 - x0) * ex, (1 - y0) * ey)
-    c += dispersion_puntos({p: (res[p][1], res[p][2]) for p in EURO + FUERA}, DESP_AMPLITUD, ex, ey, x0, y0)
+    c = "  \\draw[black!40, densely dashed] (0,%.3f) -- (%.3f,%.3f);\n" % ((1 - y0) * ey, (x1 - x0) * ex, (1 - y0) * ey)
+    c += "  \\node[above right, black!60, font=\\scriptsize] at (0.05,%.3f) {amplitud igual a la de la zona};\n" % ((1 - y0) * ey)
+    fuera = {p: (res[p][1], res[p][2]) for p in EURO + FUERA if res[p][1] < 0.85}
+    c += dispersion_puntos(fuera, {}, ex, ey, x0, y0)
+    # los países con correlación alta forman un grupo apretado: sus etiquetas van en una columna a la derecha, con guías
+    grupo = sorted([p for p in EURO + FUERA if res[p][1] >= 0.85], key=lambda p: -res[p][2])
+    centro = np.mean([res[p][2] * ey for p in grupo]); paso = 0.36
+    for i, p in enumerate(grupo):
+        X, Y = res[p][1] * ex, res[p][2] * ey
+        yl = centro + paso * (len(grupo) - 1) / 2 - i * paso
+        c += "  \\draw[black!35] (%.3f,%.3f) -- (%.3f,%.3f);\n" % (X, Y, 10.45, yl)
+        c += "  \\fill[black!85] (%.3f,%.3f) circle (1.9pt);\n" % (X, Y)
+        c += "  \\node[anchor=west, font=\\scriptsize] at (%.3f,%.3f) {%s};\n" % (10.45, yl, ISO2[p])
     c += eje_x(0, (x1 - x0) * ex + 0.3, [0, 0.2, 0.4, 0.6, 0.8, 1.0], ex, "correlación del ciclo con el resto de la zona, $1999$-$2019$")
     c += "  \\draw[->] (0,0) -- (0,%.3f) node[above] {amplitud relativa del ciclo};\n" % ((y1 - y0) * ey + 0.2)
     for t in [0, 1, 2, 3]:
