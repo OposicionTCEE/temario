@@ -829,7 +829,7 @@ def main():
 
     # ---- libro de datos
     leeme = [["Libro de datos del Tema 3.B.14 (Teorías de la determinación del tipo de cambio)"],
-             ["Generado por Code/libro_y_figuras.py el %s. Hojas: Fuentes, Series (formato largo), ICP_2021, Big_Mac, Cifras_citadas." % FECHA_DESCARGA],
+             ["Generado por Code/libro_y_figuras.py el %s. Hojas: Fuentes, Series (formato largo), ICP_2021, Big_Mac, PPA_1970_2025, Semividas, Bienes_servicios_2024, Paridades_2006_2025, Cifras_citadas." % FECHA_DESCARGA],
              ["Convención del tema: S son euros por dólar (sube = depreciación del euro). Los índices efectivos siguen la de sus fuentes (sube = apreciación)."]]
     fuentes = [["Serie o fichero", "Organismo", "Dirección de descarga", "Fecha de descarga"]]
     for fichero, url in DESCARGAS.items():
