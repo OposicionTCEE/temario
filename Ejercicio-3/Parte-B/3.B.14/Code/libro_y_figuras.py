@@ -430,9 +430,13 @@ def fig_semividas(eer, desde="1975-01"):
         y = [math.log(ser[m]) for m in ms]
         c, rho, _ = ols(y[:-1], y[1:])
         semivida = math.log(0.5) / math.log(rho) / 12.0 if rho < 1 else float("inf")
-        res.append((a, NOMBRES_ES[a], ms[0], ms[-1], len(ms), rho, semivida))
+        rk = rho + (1 + 3 * rho) / (len(ms) - 1)  # corrección del sesgo de KENDALL (1954)
+        semik = math.log(0.5) / math.log(rk) / 12.0 if rk < 1 else float("inf")
+        res.append((a, NOMBRES_ES[a], ms[0], ms[-1], len(ms), rho, semivida, rk, semik))
     res.sort(key=lambda r: r[6], reverse=True)
     med = sorted(r[6] for r in res)[len(res) // 2]
+    medk = sorted(r[8] for r in res)[len(res) // 2]
+    nk = sum(1 for r in res if r[7] >= 1)
     tope = 20.0
     tikz = "% Semividas del tipo de cambio efectivo real (BPI, cesta reducida, mensual) estimadas con un AR(1) por mínimos\n"
     tikz += "%% cuadrados sobre el logaritmo, %s a %s, %d economías; semivida = ln(0,5)/ln(rho)/12 años. Banda: 3 a 5 años.\n" % (res[0][2], res[0][3], len(res))
@@ -455,7 +459,7 @@ def fig_semividas(eer, desde="1975-01"):
             tikz += "\\node[font=\\scriptsize, anchor=west, inner sep=2pt] at (axis cs:%.1f,%d) {$%s$};\n" % (tope, i + 1, coma(r[6], 0))
     tikz += "\\end{axis}\n\\end{tikzpicture}\n"
     open(os.path.join(IMG, "anx_semividas.tikz"), "w", encoding="utf-8").write(tikz)
-    return res, med
+    return res, med, medk, nk
 
 
 # ---------------------------------------------------------------- principal
@@ -479,7 +483,7 @@ def main():
     eer = leer_eer_estrecho_real(carpeta)
     ppa, (pa1, pb1, pr21), (nsub, pa2, pb2, pr22) = fig_ppa_relativa(xa, ca)
     mmeses, mnom, mrea, mbw, mfl = fig_mussa(xm, cm)
-    semis, smed = fig_semividas(eer)
+    semis, smed, smedk, snk = fig_semividas(eer)
 
     # ---- cifras citadas en el texto
     cif = []
@@ -541,6 +545,8 @@ def main():
     poner("MUSSA, Bretton Woods 1950-01 a 1971-07: desv. típica mensual nominal, real (%); correlación", "%.2f, %.2f; %.3f (n=%d)" % mbw, "BPI", "I.3.3")
     poner("MUSSA, flotación 1973-03 en adelante: desv. típica mensual nominal, real (%); correlación", "%.2f, %.2f; %.3f (n=%d)" % mfl, "BPI", "I.3.3")
     poner("Semividas del tipo efectivo real (MCO, mensual): economías y mediana (años)", "%d; %.1f" % (len(semis), smed), "BPI WS_EER", "I.3.4")
+    poner("Semividas corregidas (KENDALL): mediana (años) y economías con rho corregido >= 1", "%.1f; %d" % (smedk, snk), "BPI WS_EER", "I.3.4")
+    poner("Semividas MCO: economías entre 3 y 5 años, por encima de 5, por debajo de 3", "%d, %d, %d" % (sum(1 for r in semis if 3 <= r[6] <= 5), sum(1 for r in semis if r[6] > 5), sum(1 for r in semis if r[6] < 3)), "BPI WS_EER", "I.3.4")
     for r in semis:
         poner("  semivida %s (años), rho mensual" % r[1], "%.1f; %.4f" % (r[6], r[5]), "BPI WS_EER", "I.3.4")
 
@@ -580,7 +586,8 @@ def main():
     ppah = [["Código BPI", "Economía", "Inflación menos la de EE. UU., media anual 1970-2025 (puntos)", "Depreciación media anual frente al dólar 1970-2025 (puntos)"]]
     for p in ppa:
         ppah.append(list(p))
-    semh = [["Código BPI", "Economía", "Desde", "Hasta", "Meses", "Rho mensual (AR(1), MCO)", "Semivida (años)"]]
+    semh = [["Código BPI", "Economía", "Desde", "Hasta", "Meses", "Rho mensual (AR(1), MCO)", "Semivida (años)",
+             "Rho corregido (KENDALL, 1954)", "Semivida corregida (años; inf = raíz unitaria o explosiva)"]]
     for r in semis:
         semh.append(list(r))
     cifras = [["Cifra", "Valor", "Fuente", "Dónde"]] + cif
