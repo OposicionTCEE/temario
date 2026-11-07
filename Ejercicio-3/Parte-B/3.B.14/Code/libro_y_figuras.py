@@ -608,7 +608,7 @@ def fig_dolar_cuenta_corriente(bis, ccus, a0=1980, a1=2025):
     reer = [(a, sum(meses[a]) / len(meses[a])) for a in range(a0, a1 + 1) if len(meses.get(a, [])) == 12]
     cc = [(a, ccus[a]) for a in range(a0, a1 + 1) if a in ccus]
     lo, hi = 10 * math.floor(min(v for _, v in reer) / 10), 10 * math.ceil(max(v for _, v in reer) / 10)
-    eje = r"""  scale only axis, width=14.6cm, height=3.4cm, axis lines=left, tick align=outside, tick style={black!60},
+    eje = r"""  scale only axis, width=14.2cm, height=3.4cm, axis lines=left, tick align=outside, tick style={black!60},
   /pgf/number format/.cd, use comma, 1000 sep={}, /pgfplots/.cd,
   every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize}, title style={font=\footnotesize},
   xmin=1979.5, xmax=2025.5, xtick={1980,1985,1990,1995,2000,2005,2010,2015,2020,2025}, clip=false,
