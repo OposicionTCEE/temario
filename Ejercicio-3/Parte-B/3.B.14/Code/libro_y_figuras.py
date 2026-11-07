@@ -597,6 +597,7 @@ def main():
     aicE, _ = leer_eurostat_ppp(carpeta, "vol_aic.json")
     bsf, (bsb, bsrb, bsdb), (bss, bsrs, bsds) = fig_bienes_servicios(pliE, aicE, geoE)
     ccor = leer_cuenta_corriente(carpeta)
+    ccs = fig_cuenta_corriente(ccor)
 
     # ---- cifras citadas en el texto
     cif = []
