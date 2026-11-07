@@ -1247,8 +1247,7 @@ def sinteticas_a4(sim):
 def con_datos_a4(carpeta, filas_series, cifras):
     import json
     meta = json.load(open(os.path.join(carpeta, "paises.json"), encoding="utf-8"))[1]
-    reales = {m["id"] for m in meta if m["region"]["value"] != "Aggregates"}  # códigos ISO de dos letras
-    nombre = {m["id"]: m["name"] for m in meta}
+    reales = {m["iso2Code"] for m in meta if m["region"]["value"] != "Aggregates"}  # los datos identifican el país con el código de dos letras
 
     def serie(indicador):
         salida = {}
