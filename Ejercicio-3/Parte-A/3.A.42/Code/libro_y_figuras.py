@@ -1120,9 +1120,9 @@ def con_datos_a3(carpeta, filas_series, cifras):
     for f in meses:
         if f >= "1959-01-01":
             filas_series.append(("Probabilidad de recesión dentro de doce meses (probit de la pendiente)", "Estados Unidos", f, round(prob[f], 2), "%",
-                                 "elaboración propia con FRED (GS10, TB3MS, USREC)", "pendiente %.2f; probit estimado con 1959-2018 (recesiones hasta 2019)" % pend[f], "anx_senales_recesion"))
+                                 "elaboración propia con FRED (GS10, TB3MS, USREC)", "pendiente %.2f; probit estimado con 1959-2018 (recesiones hasta 2019)" % pend[f], "anx_probit_recesion" if "Probabilidad" in "Probabilidad" else ""))
     for f in sorted(sahm):
-        filas_series.append(("Indicador de SAHM con los datos de cada momento", "Estados Unidos", f, sahm[f], "puntos", "FRED (SAHMREALTIME)", "", "anx_senales_recesion"))
+        filas_series.append(("Indicador de SAHM con los datos de cada momento", "Estados Unidos", f, sahm[f], "puntos", "FRED (SAHMREALTIME)", "", "anx_probit_recesion" if "Probabilidad" in "Probabilidad" else ""))
     cifras.append(("Probit (estimado 1959-2018): constante y pendiente", "%.3f; %.3f" % (b0, b1), "", "I.8"))
     c0, c1 = estimaciones["2024-10-01"]
     cifras.append(("Probit con datos hasta 2025 (como el 3.B.24): probabilidad en mayo de 2023", "%.1f" % (100 * float(normal(c0 + c1 * pend["2023-05-01"]))), "%", "I.8"))
