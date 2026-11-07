@@ -241,9 +241,8 @@ def fig_penn(pxwl, pcpp, nombres):
 
 
 ISO_BM = {"EUZ": "EMU"}
-ETIQ_BM = {"USA": ("EE. UU.", "north west"), "CHE": ("Suiza", "south east"), "EUZ": ("Zona del euro", "north east"), "JPN": ("Japón", "east"),
-           "CHN": ("China", "south east"), "IND": ("India", "south east"), "NOR": ("Noruega", "south east"), "MEX": ("México", "south east"),
-           "GBR": ("Reino Unido", "south east")}
+ETIQ_BM = {"USA": ("EE. UU.", "south east"), "CHE": ("Suiza", "south east"), "EUZ": ("Zona del euro", "south east"), "JPN": ("Japón", "east"),
+           "CHN": ("China", "south east"), "IND": ("India", "south east"), "NOR": ("Noruega", "south east"), "MEX": ("México", "south east")}
 
 
 def fig_bigmac(bm, pib25):
