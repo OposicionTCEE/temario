@@ -1608,6 +1608,128 @@ def con_datos_a6(carpeta, filas_series, cifras):
     escribir("anx_rbc_autocorrelacion", fig, "Autocorrelaciones del crecimiento trimestral del PIB: datos de EE. UU. (1950-2019) y modelo básico del ciclo real (COGLEY y NASON, 1995b).")
 
 
+# ---------------------------------------------------------------- A7 (07/11/2026): extensiones y coste de bienestar
+# anx_rbc_gasto: el modelo del ciclo real con un segundo impulso, el gasto público (C + I + G = Y; G/Y = 0,2; g sigue un
+# AR(1) con rho_g = 0,93 y sigma_g = 1,5 %, estimados con GCEC1 sobre una tendencia cuadrática, 1950-2019), como en
+# CHRISTIANO y EICHENBAUM (1992). Coste de bienestar de LUCAS (1987, 2003): lambda = theta sigma^2 / 2 con el consumo real
+# por habitante anual (PCECC96 / B230RC0A052NBEA) respecto a una tendencia lineal o de HODRICK-PRESCOTT con lambda 400.
+GASTO = dict(s_g=0.20, rho_g=0.93, sigma_g=1.5)
+
+
+def rbc_gasto_resolver(rho_z=RBC["rho"], rho_g=GASTO["rho_g"], s_g=GASTO["s_g"], eta=RBC["eta"], delta=RBC["delta"], d=RBC["d"], hbar=RBC["hbar"]):
+    rbar = 1 / delta - 1
+    s_i = d * eta / (rbar + d)
+    s_c = 1 - s_i - s_g
+    den = 1 / (1 - hbar) - (1 - eta)
+    a = delta * (rbar + d)
+
+    def mapas(ck, cz, cg, k, z, g):
+        c = ck * k + cz * z + cg * g
+        h = (z + eta * k - c) / den
+        y = z + eta * k + (1 - eta) * h
+        i = (y - s_c * c - s_g * g) / s_i
+        return c, h, y, i, (1 - d) * k + d * i
+
+    def resid(ck, cz, cg, k, z, g):
+        c, h, y, i, kp = mapas(ck, cz, cg, k, z, g)
+        ez, eg = rho_z * z, rho_g * g
+        ec = ck * kp + cz * ez + cg * eg
+        ey = ez + eta * kp + (1 - eta) * (ez + eta * kp - ec) / den
+        return (ec - c) - a * (ey - kp)
+
+    xs = np.array([0.0, 0.5, 1.0])
+    raices = np.roots(np.polyfit(xs, [resid(x, 0, 0, 1, 0, 0) for x in xs], 2)).real
+    ck = [x for x in raices if x > 0 and abs(mapas(x, 0, 0, 1, 0, 0)[4]) < 1][0]
+    f0, f1 = resid(ck, 0, 0, 0, 1, 0), resid(ck, 1, 0, 0, 1, 0)
+    cz = -f0 / (f1 - f0)
+    f0, f1 = resid(ck, cz, 0, 0, 0, 1), resid(ck, cz, 1, 0, 0, 1)
+    cg = -f0 / (f1 - f0)
+    return dict(ck=ck, cz=cz, cg=cg, mapas=mapas, s_g=s_g, rbar=rbar, d=d)
+
+
+def rbc_gasto_trayectoria(sol, z, g):
+    salida = {v: np.zeros(len(z)) for v in ("y", "c", "h", "i", "w", "r")}
+    k = 0.0
+    for t in range(len(z)):
+        c, h, y, i, kp = sol["mapas"](sol["ck"], sol["cz"], sol["cg"], k, z[t], g[t])
+        for v, x in (("y", y), ("c", c), ("h", h), ("i", i), ("w", y - h)):
+            salida[v][t] = x
+        salida["r"][t] = 4 * (sol["rbar"] + sol["d"]) * (y - k)
+        k = kp
+    return salida
+
+
+def con_datos_a7(carpeta, filas_series, cifras, sim):
+    # ---- respuesta a un aumento del gasto público del 1 % del PIB (g = 1 / s_g en %), que se desvanece al ritmo rho_g
+    sol = rbc_gasto_resolver()
+    H = 40
+    g = (100 * 0.01 / GASTO["s_g"]) * GASTO["rho_g"] ** np.arange(H + 1)
+    irf = rbc_gasto_trayectoria(sol, np.zeros(H + 1), g)
+    mult = irf["y"][0] / (GASTO["s_g"] * g[0])
+    cifras.append(("Ciclo real con gasto: impacto de +1 % del PIB de gasto en producción, consumo, inversión, horas y salario",
+                   "; ".join("%.2f" % irf[v][0] for v in ("y", "c", "i", "h", "w")) + "; multiplicador en el impacto %.2f" % mult, "%", "II.5"))
+    for v, nom in (("y", "producción"), ("c", "consumo"), ("h", "horas"), ("w", "salario real")):
+        for h_ in range(H + 1):
+            filas_series.append(("Ciclo real: respuesta de %s a +1 %% del PIB de gasto público" % nom, "Modelo", "h = %d trimestres" % h_, round(float(irf[v][h_]), 4), "%",
+                                 "simulación propia", "G/Y 0,2; rho_g 0,93", "anx_rbc_gasto"))
+    # ---- momentos con las dos perturbaciones
+    rng = np.random.default_rng(1992)
+    acum = {}
+    for _ in range(500):
+        nz, ng = rng.normal(0, RBC["sigma"], 300), rng.normal(0, GASTO["sigma_g"], 300)
+        z, gg = np.zeros(300), np.zeros(300)
+        for t in range(300):
+            z[t] = (RBC["rho"] * z[t - 1] if t else 0.0) + nz[t]
+            gg[t] = (GASTO["rho_g"] * gg[t - 1] if t else 0.0) + ng[t]
+        o = rbc_gasto_trayectoria(sol, z, gg)
+        cic = {v: hp(o[v][100:])[0] for v in ("y", "h", "w", "c")}
+        for k_, x in (("sy", cic["y"].std()), ("sh", cic["h"].std() / cic["y"].std()), ("chw", np.corrcoef(cic["h"], cic["w"])[0, 1]),
+                      ("cw", np.corrcoef(cic["w"], cic["y"])[0, 1])):
+            acum.setdefault(k_, []).append(x)
+    m = {k_: float(np.mean(x)) for k_, x in acum.items()}
+    cifras.append(("Ciclo real con tecnología y gasto: sigma_y; sigma_h/sigma_y; corr(h, w); corr(w, y)", "%.2f; %.2f; %.2f; %.2f" % (m["sy"], m["sh"], m["chw"], m["cw"]), "", "II.5"))
+    sim.append(("Simulación", "Modelo del ciclo real con perturbaciones tecnológicas y del gasto público (G/Y 0,2; rho_g 0,93; sigma_g 1,5 %); 500 x 200 trimestres", "anx_rbc_gasto"))
+    # proceso del gasto estimado con los datos (comprobación de la calibración)
+    gd, yd = a_dict(leer(carpeta, "GCEC1")), a_dict(leer(carpeta, "GDPC1"))
+    fs = sorted(f for f in gd if f in yd and "1950-01-01" <= f <= "2019-10-01")
+    lg = np.array([math.log(gd[f]) for f in fs])
+    tt = np.arange(len(lg))
+    cgc = lg - np.polyval(np.polyfit(tt, lg, 2), tt)
+    rho = float(np.dot(cgc[1:], cgc[:-1]) / np.dot(cgc[:-1], cgc[:-1]))
+    cifras.append(("Gasto público real (GCEC1) 1950-2019 sobre tendencia cuadrática: rho y sigma de las innovaciones", "%.3f; %.2f" % (rho, 100 * float((cgc[1:] - rho * cgc[:-1]).std())), "%", "II.5"))
+
+    def panel(nombre, lugar, titulo, v, ymin, ymax, ytick, xlab):
+        cuerpo = ("\\addplot[black, thick] coordinates {%s};\n\\addplot[black!40, thin] coordinates {(0,0) (40,0)};"
+                  % " ".join("(%d,%.4f)" % (h_, irf[v][h_]) for h_ in range(H + 1)))
+        return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=6.2cm, height=2.6cm, scale only axis, %s,\n"
+                "    xmin=0, xmax=40, xtick={0,8,...,40}, ymin=%s, ymax=%s, ytick={%s}, %sylabel={\\%%}, title={%s}, title style={font=\\footnotesize}]\n%s\n\\end{axis}\n"
+                % (nombre, lugar, ESTILO, ymin, ymax, ytick, "xlabel={Trimestres}, " if xlab else "", titulo, cuerpo))
+
+    fig = "\\begin{tikzpicture}\n"
+    fig += panel("a", "{(0,0)}", "(a) Producción", "y", -0.1, 0.4, "0,0.1,0.2,0.3,0.4", False)
+    fig += panel("b", "{($(a.north east)+(1.6cm,0)$)}", "(b) Consumo", "c", -0.4, 0.1, "-0.4,-0.3,-0.2,-0.1,0,0.1", False)
+    fig += panel("c", "{($(a.south west)+(0,-1.4cm)$)}", "(c) Horas", "h", -0.1, 0.6, "0,0.2,0.4,0.6", True)
+    fig += panel("d", "{($(c.north east)+(1.6cm,0)$)}", "(d) Salario real", "w", -0.3, 0.1, "-0.3,-0.2,-0.1,0,0.1", True)
+    fig += "\\end{tikzpicture}"
+    escribir("anx_rbc_gasto", fig, "Modelo del ciclo real: respuestas a un aumento del gasto público del 1 % del PIB (G/Y 0,2; rho_g 0,93), trabajo divisible.")
+
+    # ---- coste de bienestar de LUCAS con el consumo real por habitante anual
+    pce, pob = a_dict(leer(carpeta, "PCECC96")), a_dict(leer(carpeta, "B230RC0A052NBEA"))
+    anual = {}
+    for f, v in pce.items():
+        anual.setdefault(int(f[:4]), []).append(v)
+    anual = {a: sum(v) / len(v) for a, v in anual.items() if len(v) == 4}
+    for a0, a1 in ((1947, 2001), (1950, 2019)):
+        anos = [a for a in range(a0, a1 + 1) if a in anual and "%d-01-01" % a in pob]
+        c = np.array([math.log(anual[a] / pob["%d-01-01" % a]) for a in anos])
+        t = np.arange(len(c))
+        s_lin = float((c - np.polyval(np.polyfit(t, c, 1), t)).std())
+        s_hp = float(hp(c, 400.0)[0].std())
+        cifras.append(("Coste de LUCAS %d-%d: sigma del consumo por habitante (tendencia lineal; HP 400)" % (a0, a1), "%.4f; %.4f" % (s_lin, s_hp), "", "II.6"))
+        cifras.append(("Coste de LUCAS %d-%d: lambda (%% del consumo) con theta 1, 4 y 10 (lineal | HP 400)" % (a0, a1),
+                       "%s | %s" % (", ".join("%.3f" % (50 * th * s_lin ** 2) for th in (1, 4, 10)), ", ".join("%.3f" % (50 * th * s_hp ** 2) for th in (1, 4, 10))), "%", "II.6"))
+
+
 def main():
     carpeta = sys.argv[1] if len(sys.argv) > 1 else tempfile.mkdtemp()
     descargar(carpeta)
