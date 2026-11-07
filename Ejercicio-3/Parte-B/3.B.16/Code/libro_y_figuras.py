@@ -472,33 +472,34 @@ def fig_bk(bk):
     h = list(range(HORIZONTE + 1))
     c = ""
     # (a) niveles: empleo y población en edad de trabajar
-    ex, ey, y0 = 0.6, 1.85, -2.5
-    c += "  \\node[anchor=base] at (3,%.3f) {(a) Empleo y población};\n" % ((0.2 - y0) * ey + 0.45)
-    c += "  \\draw[black!30] (0,%.3f) -- (6.2,%.3f);\n" % ((0 - y0) * ey, (0 - y0) * ey)
+    ex, ey, y0 = 0.56, 1.85, -2.5
+    fin = 10 * ex
+    c += "  \\node[anchor=base] at (%.3f,%.3f) {(a) Empleo y población};\n" % (fin / 2, (0.2 - y0) * ey + 0.45)
+    c += "  \\draw[black!30] (0,%.3f) -- (%.3f,%.3f);\n" % ((0 - y0) * ey, fin, (0 - y0) * ey)
     c += linea(h, empleo, ex, ey, 0, y0, "black!85, thick")
     c += linea(h, poblacion, ex, ey, 0, y0, "black!55, thick, dashed")
-    c += "  \\node[anchor=west, font=\\scriptsize] at (%.3f,%.3f) {empleo};\n" % (10 * ex + 0.1, (empleo[-1] - y0) * ey - 0.12)
-    c += "  \\node[anchor=west, font=\\scriptsize, black!70] at (%.3f,%.3f) {población};\n" % (10 * ex + 0.1, (poblacion[-1] - y0) * ey + 0.12)
-    c += "  \\draw[->] (0,0) -- (6.3,0);\n  \\draw[->] (0,0) -- (0,%.3f);\n" % ((0.2 - y0) * ey + 0.2)
+    c += "  \\node[anchor=west, font=\\scriptsize] at (%.3f,%.3f) {empleo};\n" % (fin + 0.1, (empleo[-1] - y0) * ey - 0.12)
+    c += "  \\node[anchor=west, font=\\scriptsize, black!70] at (%.3f,%.3f) {población};\n" % (fin + 0.1, (poblacion[-1] - y0) * ey + 0.12)
+    c += "  \\draw[->] (0,0) -- (%.3f,0);\n  \\draw[->] (0,0) -- (0,%.3f);\n" % (fin + 0.3, (0.2 - y0) * ey + 0.2)
     for t in [0, 2, 4, 6, 8, 10]:
         c += "  \\draw (%.3f,0.06) -- (%.3f,-0.06) node[below] {$%d$};\n" % (t * ex, t * ex, t)
-    c += "  \\node[below=12pt] at (3,0) {años};\n"
+    c += "  \\node[below=12pt] at (%.3f,0) {años};\n" % (fin / 2)
     for t in [-2, -1.5, -1, -0.5, 0]:
         c += "  \\draw (0.06,%.3f) -- (-0.06,%.3f) node[left] {%s};\n" % ((t - y0) * ey, (t - y0) * ey, num(t))
     c += "  \\node[rotate=90] at (-1.15,%.3f) {desviación, en porcentaje};\n" % ((0.2 - y0) * ey / 2)
     # (b) tasas: paro y actividad
-    dx, ey2, yb = 8.8, 6.25, -0.4
+    dx, ey2, yb = 8.3, 6.25, -0.4
     c += "  \\begin{scope}[xshift=%.2fcm]\n" % dx
-    c += "  \\node[anchor=base] at (3,%.3f) {(b) Tasas de paro y de actividad};\n" % ((0.4 - yb) * ey2 + 0.45)
-    c += "  \\draw[black!30] (0,%.3f) -- (6.2,%.3f);\n" % ((0 - yb) * ey2, (0 - yb) * ey2)
+    c += "  \\node[anchor=base] at (%.3f,%.3f) {(b) Tasas de paro y de actividad};\n" % (fin / 2, (0.4 - yb) * ey2 + 0.45)
+    c += "  \\draw[black!30] (0,%.3f) -- (%.3f,%.3f);\n" % ((0 - yb) * ey2, fin, (0 - yb) * ey2)
     c += linea(h, paro, ex, ey2, 0, yb, "black!85, thick")
     c += linea(h, actividad, ex, ey2, 0, yb, "black!55, thick, dashed")
     c += "  \\node[anchor=south west, font=\\scriptsize] at (%.3f,%.3f) {tasa de paro};\n" % (1 * ex + 0.05, (paro[1] - yb) * ey2 + 0.02)
     c += "  \\node[anchor=north west, font=\\scriptsize, black!70] at (%.3f,%.3f) {tasa de actividad};\n" % (4 * ex, (actividad[4] - yb) * ey2 - 0.05)
-    c += "  \\draw[->] (0,0) -- (6.3,0);\n  \\draw[->] (0,0) -- (0,%.3f);\n" % ((0.4 - yb) * ey2 + 0.2)
+    c += "  \\draw[->] (0,0) -- (%.3f,0);\n  \\draw[->] (0,0) -- (0,%.3f);\n" % (fin + 0.3, (0.4 - yb) * ey2 + 0.2)
     for t in [0, 2, 4, 6, 8, 10]:
         c += "  \\draw (%.3f,0.06) -- (%.3f,-0.06) node[below] {$%d$};\n" % (t * ex, t * ex, t)
-    c += "  \\node[below=12pt] at (3,0) {años};\n"
+    c += "  \\node[below=12pt] at (%.3f,0) {años};\n" % (fin / 2)
     for t in [-0.4, -0.2, 0, 0.2, 0.4]:
         c += "  \\draw (0.06,%.3f) -- (-0.06,%.3f) node[left] {%s};\n" % ((t - yb) * ey2, (t - yb) * ey2, num(t))
     c += "  \\node[rotate=90] at (-1.15,%.3f) {desviación, en puntos};\n" % ((0.4 - yb) * ey2 / 2)
