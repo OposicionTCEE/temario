@@ -294,17 +294,18 @@ def blanchard_katz(carpeta, series, cifras):
 
 
 def dispersion(carpeta, series, cifras):
-    desde, hasta = 2003, 2024
-    ue = {p: leer_eurostat_anual(os.path.join(carpeta, "une.json"), geo=ISO2[p], age="Y15-74", sex="T", unit="PC_ACT", freq="A") for p in EURO}
+    desde, hasta = 1991, 2024
+    wb = leer_wb(carpeta, WB_PARO)
+    ue = {p: wb[p] for p in EURO}
     us = {st: leer_fred_anual(carpeta, st + "UR", desde, hasta) for st in ESTADOS}
     anios = list(range(desde, hasta + 1))
     for p in EURO:
         for a in anios:
-            series.append(("Tasa de paro, 15-74 años", NOMBRE[p], a, ue[p][a], "porcentaje de la población activa", "Eurostat une_rt_a", "nivel", "anx2_dispersion"))
+            series.append(("Tasa de paro (estimación armonizada de la OIT)", NOMBRE[p], a, ue[p][a], "porcentaje de la población activa", "Banco Mundial " + WB_PARO, "nivel", "anx2_dispersion"))
     disp_ea = [float(np.std([ue[p][a] for p in EURO])) for a in anios]
     disp_us = [float(np.std([us[st][a] for st in ESTADOS])) for a in anios]
     for a, x, y in zip(anios, disp_ea, disp_us):
-        series.append(("Desviación típica de la tasa de paro entre países", "Zona del euro (11)", a, x, "puntos", "Eurostat une_rt_a", "desviación típica sin ponderar", "anx2_dispersion"))
+        series.append(("Desviación típica de la tasa de paro entre países", "Zona del euro (11)", a, x, "puntos", "Banco Mundial " + WB_PARO, "desviación típica sin ponderar", "anx2_dispersion"))
         series.append(("Desviación típica de la tasa de paro entre estados", "EE. UU. (51)", a, y, "puntos", "FRED {ST}UR", "desviación típica sin ponderar", "anx2_dispersion"))
     def persistencia(datos, unidades):
         X, Y = [], []
