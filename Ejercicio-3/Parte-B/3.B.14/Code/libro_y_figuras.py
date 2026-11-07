@@ -34,6 +34,9 @@ DESCARGAS = {
     "dl_bigmac/big-mac-full-index.csv": "https://raw.githubusercontent.com/TheEconomist/big-mac-data/master/output-data/big-mac-full-index.csv",
     "dl_bis_xru/WS_XRU_csv_flat.csv": "https://data.bis.org/static/bulk/WS_XRU_csv_flat.zip (descomprimido; descargado el 07/11/2026)",
     "dl_bis_cpi/WS_LONG_CPI_csv_flat.csv": "https://data.bis.org/static/bulk/WS_LONG_CPI_csv_flat.zip (descomprimido; descargado el 07/11/2026)",
+    "dl_eurostat_ppp/pli.json": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/prc_ppp_ind?na_item=PLI_EU27_2020&ppp_cat=P0101&ppp_cat=P0201&ppp_cat=GDP&sinceTimePeriod=2022&format=JSON&lang=EN",
+    "dl_eurostat_ppp/vol_aic.json": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/prc_ppp_ind?na_item=VI_PPS_EU27_2020_HAB&ppp_cat=A01&sinceTimePeriod=2022&format=JSON&lang=EN",
+    "dl_wb_ca/ca_esp.json": "https://api.worldbank.org/v2/country/ESP;DEU;EMU/indicator/BN.CAB.XOKA.GD.ZS?date=1995:2025&format=json&per_page=200",
 }
 
 
