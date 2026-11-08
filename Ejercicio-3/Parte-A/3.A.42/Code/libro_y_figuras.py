@@ -2293,11 +2293,13 @@ def sinteticas_a12(filas_series, cifras, sim):
     ga = ("\\begin{axis}[name=a, at={(0,0)}, anchor=north west, width=6.2cm, height=4.4cm, scale only axis, %s,\n"
           "    xtick=\\empty, ytick=\\empty, xlabel={Participación de los salarios}, ylabel={Tasa de empleo}, title={(a) Diagrama de fases}, title style={font=\\footnotesize}]\n"
           "\\addplot[black, thick] coordinates {%s};\n\\addplot[only marks, mark=*, mark size=1.4pt] coordinates {(%.4f,%.4f)};\n"
-          "\\draw[->, thick] (axis cs:%.4f,%.4f) -- (axis cs:%.4f,%.4f);\n\\end{axis}\n"
-          % (ESTILO, " ".join("(%.4f,%.4f)" % (u, e) for _, u, e in sel), u_eq, e_eq, sel[10][1], sel[10][2], sel[14][1], sel[14][2]))
+          "%s\n\\end{axis}\n"
+          % (ESTILO, " ".join("(%.4f,%.4f)" % (u, e) for _, u, e in sel), u_eq, e_eq,
+             "\n".join("\\draw[-{Stealth[length=2.6mm, width=2mm]}, very thick] (axis cs:%.4f,%.4f) -- (axis cs:%.4f,%.4f);"
+                       % (sel[i][1], sel[i][2], sel[i + 6][1], sel[i + 6][2]) for i in (4, 92))))
     gb = ("\\begin{axis}[name=b, at={($(a.north east)+(1.6cm,0)$)}, anchor=north west, width=6.2cm, height=4.4cm, scale only axis, %s,\n"
-          "    xmin=0, xmax=80, xtick=\\empty, ytick=\\empty, xlabel={Tiempo}, title={(b) Las dos variables en el tiempo}, title style={font=\\footnotesize},\n"
-          "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.5,1.0)}, anchor=south, yshift=4pt}, legend columns=2, legend cell align=left]\n"
+          "    xmin=0, xmax=80, ymin=-0.2, ymax=0.32, xtick=\\empty, ytick=\\empty, xlabel={Tiempo}, title={(b) Las dos variables en el tiempo}, title style={font=\\footnotesize},\n"
+          "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.5,0.98)}, anchor=north}, legend columns=2, legend cell align=left]\n"
           "\\addplot[black, thick] coordinates {%s};\n\\addlegendentry{participación de los salarios}\n"
           "\\addplot[black!55, thick, dashed] coordinates {%s};\n\\addlegendentry{tasa de empleo}\n\\end{axis}\n"
           % (ESTILO, " ".join("(%.2f,%.4f)" % (tt, (u - u_eq) / u_eq) for tt, u, _ in sel), " ".join("(%.2f,%.4f)" % (tt, (e - e_eq) / e_eq) for tt, _, e in sel)))
