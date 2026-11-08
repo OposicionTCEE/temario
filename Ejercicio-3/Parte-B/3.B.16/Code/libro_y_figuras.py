@@ -1318,7 +1318,7 @@ def main():
                     "años de referencia, 1871-2009", "IUZZOLINO, PELLEGRINI y VIESTI (2011), Banca d'Italia, Quaderni di Storia Economica n.º 22", MEZZOGIORNO_URL, "08/11/2026"])
     filas = [["Serie", "Ámbito", "Año u horizonte", "Valor", "Unidad", "Fuente", "Tratamiento", "Figura"]] + [list(f) for f in series]
     cif = [["Cifra", "Valor", "Unidad", "Apartado"]] + [list(c) for c in cifras]
-    escribir_xlsx(os.path.join(TEMA, "Code", "datos_3B16.xlsx"), [("Léeme", leeme), ("Fuentes", fuentes), ("Series", filas), ("Cifras_citadas", cif)])
+    escribir_xlsx(os.path.join(SALIDA or os.path.join(TEMA, "Code"), "datos_3B16.xlsx"), [("Léeme", leeme), ("Fuentes", fuentes), ("Series", filas), ("Cifras_citadas", cif)])
     for c in cifras:
         print("%-100s %s %s" % (c[0], c[1], c[2]))
 
