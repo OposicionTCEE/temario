@@ -117,6 +117,8 @@ def descargar(carpeta):
         bajar(EST + consulta + "&format=JSON&lang=EN", os.path.join(carpeta, nombre))
     for s in FRED_A10:
         bajar(FRED + s, os.path.join(carpeta, s + ".csv"))
+    for s in WB_A11:
+        bajar(WB % (";".join(sum(CFA.values(), [])), s), os.path.join(carpeta, "wb_cfa_" + s + ".json"))
     if not os.path.exists(os.path.join(carpeta, os.path.basename(VGRDL))):  # el servidor pide un agente de navegador
         peticion = urllib.request.Request(VGRDL, headers={"User-Agent": "Mozilla/5.0"})
         with urllib.request.urlopen(peticion) as r, open(os.path.join(carpeta, os.path.basename(VGRDL)), "wb") as f:
