@@ -884,7 +884,8 @@ def main():
     descripcion = {"a10.json": ("Eurostat nama_10_a10", "Valor añadido bruto por ramas", "millones de euros corrientes"),
                    "cuentas.json": ("Eurostat nasa_10_nf_tr", "PIB, renta nacional bruta, renta nacional disponible bruta y consumo final del total de la economía", "millones de euros corrientes"),
                    "deflactor.json": ("Eurostat nama_10_gdp", "Deflactor del PIB", "índice 2015 = 100"),
-                   "precios.json": ("Eurostat prc_ppp_ind", "Niveles de precios del consumo individual efectivo", "índice, UE-27 = 100")}
+                   "precios.json": ("Eurostat prc_ppp_ind", "Niveles de precios del consumo individual efectivo", "índice, UE-27 = 100"),
+                   "clu.json": ("Eurostat nama_10_lp_ulc", "Coste laboral unitario nominal por persona ocupada", "índice 2015 = 100")}
     for nombre, consulta in EUROSTAT.items():
         codigo, serie, unidad = descripcion[nombre]
         fuentes.append([codigo, serie, ", ".join(NOMBRE[p] for p in EURO), unidad, "anual", "Eurostat", EST + consulta, FECHA_DESCARGA])
