@@ -101,6 +101,31 @@ def descargar(carpeta):
         bajar(FRED + s, os.path.join(carpeta, s + ".csv"))
     for nombre, consulta in EUROSTAT.items():
         bajar(EST + consulta + "&format=JSON&lang=EN", os.path.join(carpeta, nombre))
+    for s in FRED_A10:
+        bajar(FRED + s, os.path.join(carpeta, s + ".csv"))
+    if not os.path.exists(os.path.join(carpeta, os.path.basename(VGRDL))):  # el servidor pide un agente de navegador
+        peticion = urllib.request.Request(VGRDL, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(peticion) as r, open(os.path.join(carpeta, os.path.basename(VGRDL)), "wb") as f:
+            f.write(r.read())
+
+
+def leer_xlsx(ruta, hoja):  # filas de una hoja como diccionarios {columna: valor}, sin openpyxl
+    import re, zipfile
+    import xml.etree.ElementTree as ET
+    m, r_id = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}", "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id"
+    z = zipfile.ZipFile(ruta)
+    rels = {r.get("Id"): r.get("Target") for r in ET.fromstring(z.read("xl/_rels/workbook.xml.rels"))}
+    hojas = {s.get("name"): "xl/" + rels[s.get(r_id)].lstrip("/").replace("xl/", "") for s in ET.fromstring(z.read("xl/workbook.xml")).find(m + "sheets")}
+    ss = ["".join(t.text or "" for t in si.iter(m + "t")) for si in ET.fromstring(z.read("xl/sharedStrings.xml")).findall(m + "si")]
+    filas = []
+    for row in ET.fromstring(z.read(hojas[hoja])).iter(m + "row"):
+        celdas = {}
+        for c in row.findall(m + "c"):
+            v = c.find(m + "v")
+            if v is not None:
+                celdas[re.match(r"[A-Z]+", c.get("r")).group(0)] = ss[int(v.text)] if c.get("t") == "s" else v.text
+        filas.append(celdas)
+    return filas
 
 
 def leer_wb(carpeta, serie):
