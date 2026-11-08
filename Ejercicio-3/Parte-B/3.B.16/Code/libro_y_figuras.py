@@ -49,7 +49,20 @@ GEO = "&".join("geo=" + ISO2[p] for p in EURO)
 EUROSTAT = {"a10.json": "nama_10_a10?unit=CP_MEUR&na_item=B1G&" + GEO,
             "cuentas.json": "nasa_10_nf_tr?unit=CP_MEUR&sector=S1&direct=PAID&na_item=B1GQ&na_item=B5G&na_item=B6G&na_item=P3&" + GEO,
             "deflactor.json": "nama_10_gdp?unit=PD15_EUR&na_item=B1GQ&" + GEO,
-            "precios.json": "prc_ppp_ind?na_item=PLI_EU27_2020&ppp_cat=A01&" + GEO}
+            "precios.json": "prc_ppp_ind?na_item=PLI_EU27_2020&ppp_cat=A01&" + GEO,
+            "clu.json": "nama_10_lp_ulc?unit=I15&na_item=NULC_PER&" + GEO}
+# A9: tipos de la deuda pública a diez años (OCDE, en FRED), euríbor a tres meses, HICP de España y de la zona del euro (FRED),
+# inflación de cinco países con tipos de cambio rígidos y balanza por cuenta corriente (Banco Mundial), saldos TARGET (BCE).
+TIPOS_10 = {p: "IRLTLT01%sM156N" % ("GR" if p == "GRC" else ISO2[p]) for p in EURO}
+FRED_A9 = dict({TIPOS_10[p]: "Tipo de interés de la deuda pública a diez años, " + NOMBRE[p] for p in EURO},
+               IR3TIB01EZM156N="Tipo de interés interbancario a tres meses de la zona del euro",
+               CP0000ESM086NEST="Índice armonizado de precios de consumo de España",
+               CP0000EZCCM086NEST="Índice armonizado de precios de consumo de la zona del euro (composición cambiante)")
+RIGIDOS = {"BGR": ("Bulgaria", "caja de conversión", 1997), "EST": ("Estonia", "caja de conversión", 1992),
+           "LTU": ("Lituania", "caja de conversión", 1994), "ECU": ("Ecuador", "dolarización", 2000), "SLV": ("El Salvador", "dolarización", 2001)}
+WB_A9 = {"FP.CPI.TOTL.ZG": "Inflación de los precios de consumo", "BN.CAB.XOKA.GD.ZS": "Saldo de la balanza por cuenta corriente, porcentaje del PIB"}
+TARGET = ["DE", "NL", "LU", "FI", "FR", "IT", "ES", "GR", "PT", "IE"]
+ECB = "https://data-api.ecb.europa.eu/service/data/TGB/M.%s.N.A094T.U2.EUR.E?format=csvdata"
 SECTORES = ["A", "BDE", "C", "F", "G-I", "J", "K", "L", "M_N", "O-Q", "R-U"]
 LAMBDA_ANUAL = 6.25  # RAVN y UHLIG (2002)
 RETARDOS_BE, RETARDOS_BK, HORIZONTE = 2, 2, 10
