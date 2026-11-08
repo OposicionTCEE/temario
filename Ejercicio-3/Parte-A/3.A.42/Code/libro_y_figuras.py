@@ -1855,6 +1855,113 @@ def con_datos_a8(cifras, sim):
                 "anx_nek_monetaria, anx_nek_tecnologia y anx_orientacion_futura"))
 
 
+# ---------------------------------------------------------------- A9 (III.1-III.4): garantías y apalancamiento
+# Modelo básico de KIYOTAKI y MOORE (1997) linealizado: agricultores productivos con la restricción (1 + r) b_t <= q_{t+1} k_t
+# y recolectores sin restricción cuya demanda de tierra fija el coste de uso u_t = q_t - q_{t+1}/(1 + r) = u(k_t),
+# con elasticidad e de la oferta residual de tierra al coste de uso (u^ = k^/e). Una caída imprevista y transitoria de la
+# productividad de los agricultores, D, en t: k^_t + u^_t = -D + ((1 + r)/r) q^_t (la pérdida de valor de la tierra que ya
+# tienen reduce su patrimonio); después k^_{t+s} = (e/(1 + e)) k^_{t+s-1}; q^_t = c k^_t con c = r (1 + e)/(e ((1 + e)(1 + r) - e)).
+# Resultado: q^_t = -D/e y k^_t = -(1 + 1/(r (1 + e))) D; sin la revalorización de las garantías, k^_t = -(e/(1 + e)) D.
+KM = dict(r=0.05, e=2.0, D=1.0)
+
+SERIES_A9 = {"BOGZ1FL664090005Q": "Intermediarios del mercado de valores (security brokers and dealers): activos financieros totales",
+             "BOGZ1FL664190005Q": "Intermediarios del mercado de valores (security brokers and dealers): pasivos totales",
+             "BOGZ1FL764090005Q": "Instituciones de depósito con licencia de EE. UU.: activos financieros totales",
+             "BOGZ1FL764190005Q": "Instituciones de depósito con licencia de EE. UU.: pasivos totales"}
+
+
+def descargar_a9(carpeta):
+    import time
+    for s in SERIES_A9:
+        destino = os.path.join(carpeta, s + ".csv")
+        if not os.path.exists(destino):
+            urllib.request.urlretrieve(FRED + s, destino); time.sleep(0.3)
+
+
+def km_lineal(H, revaloriza=True, p=KM):
+    r, e, D = p["r"], p["e"], p["D"]
+    c = r * (1 + e) / (e * ((1 + e) * (1 + r) - e))
+    k0 = -(1 + 1 / (r * (1 + e))) * D if revaloriza else -(e / (1 + e)) * D
+    k = k0 * (e / (1 + e)) ** np.arange(H + 1)
+    return dict(k=k, q=c * k)
+
+
+def con_datos_a9(carpeta, filas_series, cifras, sim):
+    # ---- anx_garantias: tierra de los agricultores y precio de la tierra, con y sin la revalorización de las garantías
+    H = 10
+    con, sin = km_lineal(H, True), km_lineal(H, False)
+    cifras.append(("KIYOTAKI-MOORE lineal (r 5 %, elasticidad 2, caída del 1 % de la productividad de los agricultores): tierra y precio en t, con | sin revalorización; persistencia",
+                   "%.2f; %.3f | %.2f; %.3f; %.3f" % (con["k"][0], con["q"][0], sin["k"][0], sin["q"][0], KM["e"] / (1 + KM["e"])), "%", "III.3"))
+    for et, d in (("con revalorización de las garantías", con), ("sin revalorización", sin)):
+        for v, nom in (("k", "tierra de los agricultores"), ("q", "precio de la tierra")):
+            for h_ in range(H + 1):
+                filas_series.append(("KIYOTAKI-MOORE: %s (%s)" % (nom, et), "Modelo", "año %d" % h_, round(float(d[v][h_]), 4), "%",
+                                     "simulación propia", "r 5 %; elasticidad 2; caída del 1 % en el año 0", "anx_garantias"))
+
+    def eje(nombre, lugar, titulo, series, ylab, ymin, ymax, ytick, xlab="", leyenda=None):
+        cuerpo = []
+        for estilo, ys, et in series:
+            cuerpo.append("\\addplot[%s] coordinates {%s};" % (estilo, " ".join("(%d,%.4f)" % (h_, v) for h_, v in enumerate(ys))))
+            if et:
+                cuerpo.append("\\addlegendentry{%s}" % et)
+        cuerpo.append("\\addplot[black!40, thin, forget plot] coordinates {(0,0) (%d,0)};" % H)
+        ley = ("legend style={draw=none, fill=none, font=\\footnotesize, at={%s}, anchor=%s}, legend cell align=left, " % leyenda) if leyenda else ""
+        return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=6.2cm, height=3.2cm, scale only axis, %s,\n"
+                "    yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=2},\n"
+                "    xmin=0, xmax=%d, xtick={0,2,...,10}, ymin=%s, ymax=%s, ytick={%s}, %sylabel={%s},\n"
+                "    %stitle={%s}, title style={font=\\footnotesize}]\n%s\n\\end{axis}\n"
+                % (nombre, lugar, ESTILO, H, ymin, ymax, ytick, ("xlabel={%s}, " % xlab) if xlab else "", ylab, ley, titulo, "\n".join(cuerpo)))
+
+    fig = "\\begin{tikzpicture}\n"
+    fig += eje("a", "{(0,0)}", "(a) Tierra de los agricultores",
+               [("black, thick", con["k"], "con la pérdida de valor de las garantías"), ("black!60, dashed, thick", sin["k"], "sin ella")],
+               "\\%", -8.5, 0.5, "-8,-6,-4,-2,0", "Años", leyenda=("(0.98,0.03)", "south east"))
+    fig += eje("b", "{($(a.north east)+(1.6cm,0)$)}", "(b) Precio de la tierra",
+               [("black, thick", con["q"], None), ("black!60, dashed, thick", sin["q"], None)], "\\%", -0.55, 0.05, "-0.5,-0.4,-0.3,-0.2,-0.1,0", "Años")
+    fig += "\\end{tikzpicture}"
+    escribir("anx_garantias", fig, "Versión lineal del modelo básico de KIYOTAKI y MOORE (1997): caída transitoria del 1 % de la productividad de los agricultores, r 5 % anual, elasticidad 2.")
+    sim.append(("Simulación", "Versión lineal del modelo básico de KIYOTAKI y MOORE (1997), solución analítica (r 5 %; elasticidad de la oferta residual de tierra al coste de uso 2); "
+                "con y sin la revalorización de las garantías en el patrimonio de los agricultores", "anx_garantias"))
+
+    # ---- anx_apalancamiento: crecimiento trimestral de los activos y del apalancamiento (activos / (activos - pasivos)), 1963-2026
+    paneles, xy = [], {}
+    for clave, (a, l, nombre) in (("b", ("BOGZ1FL664090005Q", "BOGZ1FL664190005Q", "intermediarios del mercado de valores")),
+                                  ("c", ("BOGZ1FL764090005Q", "BOGZ1FL764190005Q", "instituciones de depósito"))):
+        A, L = a_dict(leer(carpeta, a)), a_dict(leer(carpeta, l))
+        fs = sorted(f for f in A if f in L and f >= "1963-01-01")
+        act = np.array([A[f] for f in fs])
+        pat = act - np.array([L[f] for f in fs])
+        apal = act / pat
+        ga, gl = 100 * np.diff(np.log(act)), 100 * np.diff(np.log(apal))
+        pend, cte = np.polyfit(ga, gl, 1)
+        xy[clave] = (ga, gl, pend, cte)
+        cifras.append(("Apalancamiento de %s (Cuentas Financieras de la Reserva Federal, %s-%s): correlación y pendiente crecimiento activos-apalancamiento; apalancamiento medio, mínimo y máximo"
+                       % (nombre, fs[1][:4], fs[-1][:4]), "%.2f; %.2f; %.1f; %.1f; %.1f" % (np.corrcoef(ga, gl)[0, 1], pend, apal.mean(), apal.min(), apal.max()), "", "III.4"))
+        for i, f in enumerate(fs[1:]):
+            filas_series.append(("Crecimiento trimestral de los activos de %s" % nombre, "Estados Unidos", f, round(float(ga[i]), 3), "% (log)",
+                                 "Reserva Federal, Cuentas Financieras (FRED %s)" % a, "100 x diferencia del logaritmo", "anx_apalancamiento"))
+            filas_series.append(("Crecimiento trimestral del apalancamiento de %s" % nombre, "Estados Unidos", f, round(float(gl[i]), 3), "% (log)",
+                                 "Reserva Federal, Cuentas Financieras (FRED %s y %s)" % (a, l), "apalancamiento = activos / (activos - pasivos); 100 x diferencia del logaritmo",
+                                 "anx_apalancamiento"))
+
+    def nube(nombre, lugar, titulo, ga, gl, pend, cte, xmin, xmax, xtick, ymin, ymax, ytick, ylab):
+        puntos = " ".join("(%.2f,%.2f)" % (x, y) for x, y in zip(ga, gl))
+        return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=6.2cm, height=5.2cm, scale only axis, %s,\n"
+                "    xmin=%s, xmax=%s, xtick={%s}, ymin=%s, ymax=%s, ytick={%s}, xlabel={Crecimiento de los activos (\\%%)}, ylabel={%s},\n"
+                "    title={%s}, title style={font=\\footnotesize}]\n"
+                "\\addplot[only marks, mark=*, mark size=0.7pt, black!65] coordinates {%s};\n"
+                "\\addplot[black, thick, domain=%s:%s] {%.4f*x+%.4f};\n"
+                "\\addplot[black!35, thin] coordinates {(%s,0) (%s,0)};\n\\addplot[black!35, thin] coordinates {(0,%s) (0,%s)};\n\\end{axis}\n"
+                % (nombre, lugar, ESTILO, xmin, xmax, xtick, ymin, ymax, ytick, ylab, titulo, puntos, xmin, xmax, pend, cte, xmin, xmax, ymin, ymax))
+
+    fig = "\\begin{tikzpicture}\n"
+    fig += nube("b", "{(0,0)}", "(a) Intermediarios del mercado de valores", *xy["b"], -40, 30, "-40,-30,...,30", -40, 30, "-40,-30,...,30",
+                "Crecimiento del apalancamiento (\\%)")
+    fig += nube("c", "{($(b.north east)+(1.6cm,0)$)}", "(b) Instituciones de depósito", *xy["c"], -4, 10, "-4,-2,...,10", -25, 35, "-20,-10,...,30", "")
+    fig += "\\end{tikzpicture}"
+    escribir("anx_apalancamiento", fig, "Crecimiento trimestral de los activos y del apalancamiento de los intermediarios del mercado de valores y de las instituciones de depósito de EE. UU., 1963-2026.")
+
+
 def main():
     carpeta = sys.argv[1] if len(sys.argv) > 1 else tempfile.mkdtemp()
     descargar(carpeta)
