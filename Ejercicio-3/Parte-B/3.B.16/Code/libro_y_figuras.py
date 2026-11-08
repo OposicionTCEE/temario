@@ -979,7 +979,8 @@ def fig_inflacion_espana(difi):
     c += marca_vertical(1999, (y1 - y0) * ey + 0.1, "euro", ex, x0)
     c += marca_vertical(2008 + 8 / 12, (y1 - y0) * ey + 0.1, "crisis", ex, x0)
     c += "  \\draw[->] (0,0) -- (%.3f,0);\n" % ((x1 - x0) * ex + 0.3)
-    c += "  \\draw[->] (0,0) -- (0,%.3f) node[above] {inflación de España menos la de la zona del euro, en puntos};\n" % ((y1 - y0) * ey + 0.25)
+    c += "  \\draw[->] (0,0) -- (0,%.3f);\n" % ((y1 - y0) * ey + 0.25)
+    c += "  \\node[anchor=south west] at (-1.0,%.3f) {inflación de España menos la de la zona del euro, en puntos};\n" % ((y1 - y0) * ey + 0.6)
     for t in (2000, 2005, 2010, 2015, 2020, 2025):
         c += "  \\draw (%.3f,0.06) -- (%.3f,-0.06) node[below] {$%d$};\n" % ((t - x0) * ex, (t - x0) * ex, t)
     for t in (-4, -3, -2, -1, 0, 1, 2, 3):
