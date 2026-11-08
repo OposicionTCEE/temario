@@ -971,7 +971,7 @@ def fig_target(tgb):
 
 
 def fig_inflacion_espana(difi):
-    x0, x1, ex, y0, y1, ey = 1997, 2026.75, 0.42, -2.5, 3, 0.9
+    x0, x1, ex, y0, y1, ey = 1997, 2026.75, 0.42, -4, 3, 0.75
     ks = sorted(difi)
     c = "  \\draw[black!45] (0,%.3f) -- (%.3f,%.3f);\n" % ((0 - y0) * ey, (x1 - x0) * ex, (0 - y0) * ey)
     c += "  \\draw[black!85, thick] %s;\n" % " -- ".join("(%.3f,%.3f)" % (mensual_x(k, x0) * ex, (difi[k][2] - y0) * ey) for k in ks)
