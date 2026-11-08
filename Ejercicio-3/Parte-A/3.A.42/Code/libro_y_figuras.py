@@ -1730,6 +1730,130 @@ def con_datos_a7(carpeta, filas_series, cifras, sim):
                        "%s | %s" % (", ".join("%.3f" % (50 * th * s_lin ** 2) for th in (1, 4, 10)), ", ".join("%.3f" % (50 * th * s_hp ** 2) for th in (1, 4, 10))), "%", "II.6"))
 
 
+# ---------------------------------------------------------------- A8 (II.7-II.10): modelo neokeynesiano de tres ecuaciones
+# IS dinámica, curva de PHILLIPS de CALVO y regla de TAYLOR, sin capital (Y = Z h); perturbaciones AR(1) resueltas por
+# coeficientes indeterminados: con persistencia rho, brecha = (1 - delta rho) L x, inflación = kappa L x para un
+# desplazamiento x del tipo natural (x = r^n - rbar) o x = -nu^i para la perturbación monetaria,
+# con L = 1 / [(1 - delta rho)(theta (1 - rho) + phi_y) + kappa (phi_pi - rho)]. Unidades: % y puntos trimestrales (x 4 en anual).
+NEK = dict(delta=0.99, theta=1.0, eF=2.0, xi=0.75, phi_pi=1.5, phi_y=0.125, rho_i=0.5, rho_z=0.9, M=0.8)
+
+
+def nek_kappa(xi, p=NEK):
+    return (1 - xi) * (1 - p["delta"] * xi) / xi * (p["theta"] + 1 / p["eF"])
+
+
+def nek_L(rho, xi, p=NEK):
+    k = nek_kappa(xi, p)
+    return k, 1.0 / ((1 - p["delta"] * rho) * (p["theta"] * (1 - rho) + p["phi_y"]) + k * (p["phi_pi"] - rho))
+
+
+def nek_monetaria(xi, H, tam=0.25, p=NEK):
+    rho = p["rho_i"]
+    k, L = nek_L(rho, xi, p)
+    nu = tam * rho ** np.arange(H + 1)
+    yt = -(1 - p["delta"] * rho) * L * nu
+    pi = -k * L * nu
+    i = p["phi_pi"] * pi + p["phi_y"] * yt + nu
+    r = i - rho * pi                     # E_t pi_{t+1} = rho pi_t
+    return dict(brecha=yt, inflacion=4 * pi, nominal=4 * i, real=4 * r)
+
+
+def nek_tecnologia(H, tam=1.0, p=NEK):
+    rho = p["rho_z"]
+    k, L = nek_L(rho, p["xi"], p)
+    z = tam * rho ** np.arange(H + 1)
+    psi = (1 + 1 / p["eF"]) / (p["theta"] + 1 / p["eF"])   # producción natural = psi z (1 con utilidad logarítmica)
+    yn = psi * z
+    rn = p["theta"] * psi * (rho - 1) * z                   # tipo natural menos rbar: theta E_t(y^n_{t+1} - y^n_t)
+    yt = (1 - p["delta"] * rho) * L * rn
+    pi = k * L * rn
+    y = yn + yt
+    i = p["phi_pi"] * pi + p["phi_y"] * yt
+    r = i - rho * pi
+    return dict(y=y, yn=yn, h=y - z, hn=yn - z, brecha=yt, inflacion=4 * pi, real=4 * r, natural=4 * rn)
+
+
+def nek_orientacion(K, M, tam=0.25, p=NEK):
+    # efecto hoy de bajar el tipo real tam puntos (trimestrales) solo en el trimestre k, anunciado hoy; M descuenta las
+    # expectativas en la IS y en la curva de PHILLIPS (M = 1: modelo básico)
+    kap = nek_kappa(p["xi"], p)
+    brecha, infl = [], []
+    for k in range(K + 1):
+        ys = [tam / p["theta"] * M ** (k - j) for j in range(k + 1)]   # brecha en t + j
+        brecha.append(ys[0])
+        infl.append(4 * sum((p["delta"] * M) ** j * kap * ys[j] for j in range(k + 1)))
+    return np.array(brecha), np.array(infl)
+
+
+def con_datos_a8(cifras, sim):
+    def eje(nombre, lugar, titulo, series, ylab, ymin, ymax, ytick, xmax, xtick, xlab="", leyenda=None):
+        cuerpo = []
+        for estilo, ys, et in series:
+            cuerpo.append("\\addplot[%s] coordinates {%s};" % (estilo, " ".join("(%d,%.4f)" % (h_, v) for h_, v in enumerate(ys))))
+            if et:
+                cuerpo.append("\\addlegendentry{%s}" % et)
+        cuerpo.append("\\addplot[black!40, thin, forget plot] coordinates {(0,0) (%d,0)};" % xmax)
+        ley = ("legend style={draw=none, fill=none, font=\\footnotesize, at={%s}, anchor=%s}, legend cell align=left, " % leyenda) if leyenda else ""
+        return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=6.2cm, height=2.6cm, scale only axis, %s,\n"
+                "    xmin=0, xmax=%d, xtick={%s}, ymin=%s, ymax=%s, ytick={%s}, %sylabel={%s},\n"
+                "    %stitle={%s}, title style={font=\\footnotesize}]\n%s\n\\end{axis}\n"
+                % (nombre, lugar, ESTILO, xmax, xtick, ymin, ymax, ytick, ("xlabel={%s}, " % xlab) if xlab else "", ylab, ley, titulo, "\n".join(cuerpo)))
+
+    abajo_a = "{($(a.south west)+(0,-1.4cm)$)}"
+    # ---- perturbación monetaria contractiva: 25 puntos básicos trimestrales (1 punto anual), persistencia 0,5
+    H = 12
+    m75, m50 = nek_monetaria(0.75, H), nek_monetaria(0.5, H)
+    for et, m in (("xi 0,75", m75), ("xi 0,5", m50)):
+        cifras.append(("Modelo neokeynesiano, perturbación monetaria de 1 punto anual (rho 0,5), %s: impacto en brecha, inflación, tipo nominal y tipo real" % et,
+                       "%.3f; %.2f; %.2f; %.2f" % (m["brecha"][0], m["inflacion"][0], m["nominal"][0], m["real"][0]), "% y puntos anuales", "II.7"))
+    cifras.append(("Modelo neokeynesiano: kappa con xi 0,75 y 0,5", "%.4f; %.4f" % (nek_kappa(0.75), nek_kappa(0.5)), "", "II.7"))
+    fig = "\\begin{tikzpicture}\n"
+    s = lambda v: [("black, thick", m75[v], None), ("black!60, dashed, thick", m50[v], None)]
+    s_ley = [("black, thick", m75["brecha"], "precios fijos un año de media"), ("black!60, dashed, thick", m50["brecha"], "medio año de media")]
+    fig += eje("a", "{(0,0)}", "(a) Brecha de producción", s_ley, "\\%", -0.35, 0.05, "-0.3,-0.2,-0.1,0", H, "0,2,...,12", leyenda=("(0.98,0.03)", "south east"))
+    fig += eje("b", "{($(a.north east)+(1.6cm,0)$)}", "(b) Inflación anual", s("inflacion"), "Puntos", -0.8, 0.1, "-0.8,-0.6,-0.4,-0.2,0", H, "0,2,...,12")
+    fig += eje("c", abajo_a, "(c) Tipo de interés nominal anual", s("nominal"), "Puntos", -0.2, 0.5, "-0.2,0,0.2,0.4", H, "0,2,...,12", "Trimestres")
+    fig += eje("d", "{($(c.north east)+(1.6cm,0)$)}", "(d) Tipo de interés real anual", s("real"), "Puntos", -0.05, 0.6, "0,0.2,0.4,0.6", H, "0,2,...,12", "Trimestres")
+    fig += "\\end{tikzpicture}"
+    escribir("anx_nek_monetaria", fig, "Modelo neokeynesiano de tres ecuaciones: respuestas a una perturbación monetaria contractiva de 1 punto anual (rho 0,5) con xi 0,75 y 0,5.")
+
+    # ---- mejora tecnológica del 1 % con persistencia 0,9
+    H = 16
+    t = nek_tecnologia(H)
+    cifras.append(("Modelo neokeynesiano, mejora tecnológica del 1 % (rho 0,9): impacto en producción, natural, brecha, horas, inflación, tipo real y natural",
+                   "%.3f; %.3f; %.3f; %.3f; %.2f; %.2f; %.2f" % (t["y"][0], t["yn"][0], t["brecha"][0], t["h"][0], t["inflacion"][0], t["real"][0], t["natural"][0]),
+                   "% y puntos anuales", "II.7"))
+    fig = "\\begin{tikzpicture}\n"
+    fig += eje("a", "{(0,0)}", "(a) Producción", [("black, thick", t["y"], "con precios rígidos"), ("black!60, dashed, thick", t["yn"], "natural (precios flexibles)")],
+               "\\%", 0, 1.1, "0,0.25,0.5,0.75,1", H, "0,4,...,16", leyenda=("(0.98,0.97)", "north east"))
+    fig += eje("b", "{($(a.north east)+(1.6cm,0)$)}", "(b) Horas", [("black, thick", t["h"], None), ("black!60, dashed, thick", t["hn"], None)],
+               "\\%", -0.12, 0.02, "-0.1,-0.05,0", H, "0,4,...,16")
+    fig += eje("c", abajo_a, "(c) Inflación anual", [("black, thick", t["inflacion"], None)], "Puntos", -0.6, 0.05, "-0.6,-0.4,-0.2,0", H, "0,4,...,16", "Trimestres")
+    fig += eje("d", "{($(c.north east)+(1.6cm,0)$)}", "(d) Tipos de interés real y natural anuales",
+               [("black, thick", t["real"], "real"), ("black!60, dashed, thick", t["natural"], "natural")],
+               "Puntos", -0.45, 0.05, "-0.4,-0.3,-0.2,-0.1,0", H, "0,4,...,16", "Trimestres", leyenda=("(0.98,0.03)", "south east"))
+    fig += "\\end{tikzpicture}"
+    escribir("anx_nek_tecnologia", fig, "Modelo neokeynesiano de tres ecuaciones: respuestas a una mejora tecnológica del 1 % (rho 0,9), regla de TAYLOR con phi_pi 1,5 y phi_y 0,125.")
+
+    # ---- enigma de la orientación futura: recorte de 1 punto anual del tipo real durante un trimestre, anunciado para el trimestre k
+    K = 20
+    b1, p1 = nek_orientacion(K, 1.0)
+    bM, pM = nek_orientacion(K, NEK["M"])
+    cifras.append(("Orientación futura (recorte de 1 punto anual del tipo real en el trimestre k): brecha e inflación anual hoy con k = 0, 4, 8 y 20, modelo básico | descuento M 0,8",
+                   "; ".join("%.3f/%.2f" % (b1[k], p1[k]) for k in (0, 4, 8, 20)) + " | " + "; ".join("%.3f/%.2f" % (bM[k], pM[k]) for k in (0, 4, 8, 20)),
+                   "% y puntos anuales", "II.10"))
+    fig = "\\begin{tikzpicture}\n"
+    fig += eje("a", "{(0,0)}", "(a) Brecha de producción hoy", [("black, thick", b1, "modelo básico"), ("black!60, dashed, thick", bM, "expectativas descontadas ($M=0{,}8$)")],
+               "\\%", 0, 0.4, "0,0.1,0.2,0.3,0.4", K, "0,4,...,20", "Trimestre del recorte anunciado", leyenda=("(0.98,0.97)", "north east"))
+    fig += eje("b", "{($(a.north east)+(1.6cm,0)$)}", "(b) Inflación anual hoy", [("black, thick", p1, None), ("black!60, dashed, thick", pM, None)],
+               "Puntos", 0, 2.6, "0,0.5,1,1.5,2,2.5", K, "0,4,...,20", "Trimestre del recorte anunciado")
+    fig += "\\end{tikzpicture}"
+    escribir("anx_orientacion_futura", fig, "Enigma de la orientación futura: efecto hoy de un recorte de 1 punto anual del tipo real durante un trimestre, anunciado para dentro de k trimestres.")
+    sim.append(("Simulación", "Modelo neokeynesiano de tres ecuaciones sin capital (delta 0,99; theta 1; elasticidad de FRISCH 2; xi 0,75 y 0,5; phi_pi 1,5; phi_y 0,125): "
+                "perturbación monetaria (rho 0,5), mejora tecnológica (rho 0,9) y orientación futura con y sin descuento de las expectativas (M 0,8); soluciones analíticas",
+                "anx_nek_monetaria, anx_nek_tecnologia y anx_orientacion_futura"))
+
+
 def main():
     carpeta = sys.argv[1] if len(sys.argv) > 1 else tempfile.mkdtemp()
     descargar(carpeta)
