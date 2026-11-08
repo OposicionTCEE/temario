@@ -1238,6 +1238,16 @@ def main():
     mx = max(dtr, key=lambda f: f[1])
     md = max(dtr, key=lambda f: f[4])
     poner("  máximo del tipo real del dólar y máximo de la diferencia", "%.1f en %s; %.2f en %s" % (mx[1], mx[0], md[4], md[0]), "BPI", "II.4.4")
+    # ---- A7
+    poner("Euro y diferencia de tipos a dos años: periodo; correlaciones (logaritmo del tipo y diferencia)",
+          "%s a %s; " % (e2f[0][0], e2f[-1][0]) + "; ".join("%s %.2f" % (k, v) for k, v in e2c.items()), "FRED EXUSEU y GS2; BCE YC", "II.5.1")
+    e2d = {f[0]: f for f in e2f}
+    for m in ("2004-09", "2008-07", "2014-04", "2017-01", "2018-11", "2021-12", "2022-09", e2f[-1][0]):
+        if m in e2d:
+            poner("  %s: dólares por euro; tipo a dos años de la zona del euro, de EE. UU. y diferencia" % m, "%.4f; %.2f; %.2f; %.2f" % e2d[m][1:], "FRED; BCE", "II.5.1")
+    for h in HORIZONTES:
+        poner("Predicción a %d meses: mediana del cociente con el paseo aleatorio, paridad no cubierta y PPA" % h, "%.3f y %.3f" % predm[h], "BPI", "II.6.3")
+        poner("  por moneda (no cubierta / PPA)", "; ".join("%s %.3f/%.3f" % (a, predc[a][h][0], predc[a][h][1]) for a, _ in MONEDAS_PRED), "BPI", "II.6.3")
 
     # ---- libro de datos
     leeme = [["Libro de datos del Tema 3.B.14 (Teorías de la determinación del tipo de cambio)"],
