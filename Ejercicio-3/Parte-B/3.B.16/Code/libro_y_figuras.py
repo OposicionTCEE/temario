@@ -742,9 +742,16 @@ def main():
     for s, nombre in list(WB_SERIES.items()) + [(WB_PARO, "Tasa de paro, estimación armonizada de la OIT")]:
         fuentes.append([s, nombre, ", ".join(NOMBRE[p] for p in EURO + FUERA), "ver serie", "anual", "Banco Mundial, Indicadores del Desarrollo Mundial",
                         WB % (";".join(EURO + FUERA), s), FECHA_DESCARGA])
+    for s, nombre in WB_A8.items():
+        fuentes.append([s, nombre, ", ".join(NOMBRE[p] for p in EURO + FUERA) + ", Estados Unidos", "ver serie", "anual", "Banco Mundial, Indicadores del Desarrollo Mundial",
+                        WB % (";".join(EURO + FUERA + ["USA"]), s), FECHA_DESCARGA])
+    descripcion = {"a10.json": ("Eurostat nama_10_a10", "Valor añadido bruto por ramas", "millones de euros corrientes"),
+                   "cuentas.json": ("Eurostat nasa_10_nf_tr", "PIB, renta nacional bruta, renta nacional disponible bruta y consumo final del total de la economía", "millones de euros corrientes"),
+                   "deflactor.json": ("Eurostat nama_10_gdp", "Deflactor del PIB", "índice 2015 = 100"),
+                   "precios.json": ("Eurostat prc_ppp_ind", "Niveles de precios del consumo individual efectivo", "índice, UE-27 = 100")}
     for nombre, consulta in EUROSTAT.items():
-        fuentes.append(["Eurostat nama_10_a10", "Valor añadido bruto por ramas", ", ".join(NOMBRE[p] for p in EURO), "millones de euros corrientes", "anual",
-                        "Eurostat", EST + consulta, FECHA_DESCARGA])
+        codigo, serie, unidad = descripcion[nombre]
+        fuentes.append([codigo, serie, ", ".join(NOMBRE[p] for p in EURO), unidad, "anual", "Eurostat", EST + consulta, FECHA_DESCARGA])
     for st, fips in ESTADOS.items():
         for s, nombre, unidad in ((st + "NAN", "Empleo asalariado no agrario, sin desestacionalizar", "miles de personas"),
                                   (st + "UR", "Tasa de paro, desestacionalizada", "porcentaje"),
