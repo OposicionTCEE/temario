@@ -47,6 +47,7 @@ DESCARGAS = {
     "dl_fred_a9/IIPUSNETIA.csv": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=IIPUSNETIA (descargado el 08/11/2026)",
     "dl_fred_a9/GDPA.csv": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=GDPA (descargado el 08/11/2026)",
     "dl_wb_a9/ca_usa_cd.json": "https://api.worldbank.org/v2/country/USA/indicator/BN.CAB.XOKA.CD?date=1970:2025&format=json&per_page=200 (descargado el 08/11/2026)",
+    "dl_wb_a11/consumo_pc.json": "https://api.worldbank.org/v2/country/USA;DEU;FRA;ITA;JPN;GBR;CAN;AUT;BEL;DNK;FIN;IRL;NLD;NOR;PRT;ESP;SWE;CHE;AUS;NZL;KOR;GRC;ISL;ISR;MEX;EMU/indicator/NE.CON.PRVT.PC.KD?date=1970:2025&format=json&per_page=3000 (descargado el 08/11/2026)",
 }
 
 
