@@ -1305,6 +1305,9 @@ def main():
     for hoja, nombre in VGRDL_HOJAS.items():
         fuentes.append(["tabla " + hoja, nombre, "Länder alemanes y agregados del este y del oeste", "euros" if hoja.startswith("3") else "miles de personas", "anual",
                         "Arbeitskreis «Volkswirtschaftliche Gesamtrechnungen der Länder» (serie 1, tomo 1, revisión de 2024)", VGRDL, "08/11/2026"])
+    for s, nombre in WB_A11.items():
+        fuentes.append([s, nombre, ", ".join(NOMBRE_CFA[p] for p in sum(CFA.values(), [])), "porcentaje", "anual", "Banco Mundial, Indicadores del Desarrollo Mundial",
+                        WB % (";".join(sum(CFA.values(), [])), s), "08/11/2026"])
     fuentes.append(["cuadro 11 y nota 4", "PIB por habitante del Sur en porcentaje del Centro-Norte (cifras publicadas, no descargadas)", "Italia", "porcentaje",
                     "años de referencia, 1871-2009", "IUZZOLINO, PELLEGRINI y VIESTI (2011), Banca d'Italia, Quaderni di Storia Economica n.º 22", MEZZOGIORNO_URL, "08/11/2026"])
     filas = [["Serie", "Ámbito", "Año u horizonte", "Valor", "Unidad", "Fuente", "Tratamiento", "Figura"]] + [list(f) for f in series]
