@@ -2307,6 +2307,61 @@ def sinteticas_a12(filas_series, cifras, sim):
              "Ciclo de GOODWIN (1967) con parámetros ilustrativos: órbita cerrada de la participación de los salarios y la tasa de empleo, y su evolución en el tiempo.")
     sim.append(("Sintética", "Modelo de GOODWIN (1967) de depredador y presa con parámetros ilustrativos, integrado con RUNGE-KUTTA de orden 4", "anx_goodwin"))
 
+    # ---- anx_kaldor: inversión en forma de S y ahorro lineal (KALDOR, 1940); parámetros ilustrativos
+    ka, kb, kk, ks, kc, desplaza = 1.067, 3.0, 1.2, 0.4734, 0.2, 0.45
+
+    def inv(y, d=0.0):
+        return ka - d + kb / (1 + math.exp(-kk * (y - 5)))
+
+    def aho(y):
+        return ks * y + kc
+
+    def raices(d):  # cortes de la inversión y el ahorro en [0, 10] por bisección
+        malla = np.linspace(0.01, 10, 2000)
+        f = [inv(y, d) - aho(y) for y in malla]
+        sal = []
+        for i in range(1, len(malla)):
+            if f[i - 1] * f[i] < 0:
+                lo, hi = malla[i - 1], malla[i]
+                for _ in range(60):
+                    me = (lo + hi) / 2
+                    if (inv(lo, d) - aho(lo)) * (inv(me, d) - aho(me)) <= 0:
+                        hi = me
+                    else:
+                        lo = me
+                sal.append((lo + hi) / 2)
+        return sal
+    e0, e1 = raices(0.0), raices(desplaza)
+    assert len(e0) == 3 and len(e1) == 1, (e0, e1)
+    cifras.append(("KALDOR (ilustrativo): equilibrios antes y después de desplazar la inversión", "antes %s; después %s" % (
+        ", ".join("%.2f" % y for y in e0), ", ".join("%.2f" % y for y in e1)), "renta", "IV.2"))
+    f_inv = "%.3f+%.3f/(1+exp(-%.2f*(x-5)))" % (ka, kb, kk)
+    f_inv2 = "%.3f+%.3f/(1+exp(-%.2f*(x-5)))" % (ka - desplaza, kb, kk)
+    f_aho = "%.4f*x+%.2f" % (ks, kc)
+    comun = ("width=6.2cm, height=4.4cm, scale only axis, %s, xmin=0, xmax=10, ymin=0, ymax=5.4, xtick=\\empty, ytick=\\empty,\n"
+             "    xlabel={Renta}, ylabel={Inversión y ahorro}, title style={font=\\footnotesize}, clip=false" % ESTILO)
+    ka_ = ("\\begin{axis}[name=a, at={(0,0)}, anchor=north west, %s, title={(a) Tres equilibrios}]\n"
+           "\\addplot[black, thick, domain=0:10, samples=150] {%s};\n\\addplot[black!55, thick, dashed, domain=0:10, samples=2] {%s};\n"
+           "\\node[font=\\footnotesize, anchor=west] at (axis cs:10,%.3f) {inversión};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:10,%.3f) {ahorro};\n"
+           % (comun, f_inv, f_aho, inv(10), aho(10)))
+    for y, nom, lado in zip(e0, ("bajo", "inestable", "alto"), ("south east", "north west", "south east")):
+        ka_ += "\\addplot[only marks, mark=*, mark size=1.5pt] coordinates {(%.3f,%.3f)};\n\\node[font=\\footnotesize, anchor=%s] at (axis cs:%.3f,%.3f) {%s};\n" % (
+            y, aho(y), lado, y, aho(y), nom)
+    flechas = [(0.3, e0[0] - 0.25), (e0[1] - 0.3, e0[0] + 0.3), (e0[1] + 0.3, e0[2] - 0.3), (9.8, e0[2] + 0.3)]
+    ka_ += "".join("\\draw[-{Stealth[length=1.8mm]}, thick] (axis cs:%.3f,0.25) -- (axis cs:%.3f,0.25);\n" % (x0, x1) for x0, x1 in flechas)
+    ka_ += "\\end{axis}\n"
+    kb_ = ("\\begin{axis}[name=b, at={($(a.north east)+(2.4cm,0)$)}, anchor=north west, %s, title={(b) Tras acumular capital en el auge}]\n"
+           "\\addplot[black!35, thick, domain=0:10, samples=150] {%s};\n\\addplot[black, thick, domain=0:10, samples=150] {%s};\n"
+           "\\addplot[black!55, thick, dashed, domain=0:10, samples=2] {%s};\n"
+           "\\node[font=\\footnotesize, anchor=west] at (axis cs:10,%.3f) {inversión};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:10,%.3f) {ahorro};\n"
+           "\\addplot[only marks, mark=o, mark size=1.5pt] coordinates {(%.3f,%.3f)};\n\\addplot[only marks, mark=*, mark size=1.5pt] coordinates {(%.3f,%.3f)};\n"
+           "\\draw[-{Stealth[length=2.2mm]}, very thick] (axis cs:%.3f,0.25) -- (axis cs:%.3f,0.25);\n"
+           "\\node[font=\\footnotesize, anchor=south] at (axis cs:%.3f,0.3) {caída de la renta};\n\\end{axis}\n"
+           % (comun, f_inv, f_inv2, f_aho, inv(10, desplaza), aho(10), e0[2], aho(e0[2]), e1[0], aho(e1[0]), e0[2], e1[0] + 0.15, (e0[2] + e1[0]) / 2))
+    escribir("anx_kaldor", "\\begin{tikzpicture}\n" + ka_ + kb_ + "\\end{tikzpicture}",
+             "Modelo de KALDOR (1940) con parámetros ilustrativos: inversión en forma de S y ahorro lineal; tres equilibrios y salto al equilibrio bajo cuando la acumulación de capital desplaza la inversión.")
+    sim.append(("Sintética", "KALDOR (1940): inversión logística y ahorro lineal con parámetros ilustrativos; la inversión baja 0,45 al acumular capital", "anx_kaldor"))
+
 
 def main():
     carpeta = sys.argv[1] if len(sys.argv) > 1 else tempfile.mkdtemp()
