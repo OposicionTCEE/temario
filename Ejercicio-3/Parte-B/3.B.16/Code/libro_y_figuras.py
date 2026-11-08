@@ -1069,6 +1069,34 @@ def fig_inflacion_espana(difi):
     escribir("anx2_inflacion_espana", c, "diferencia entre la inflación armonizada interanual de España y la de la zona del euro, mensual, 1997-2026 (anexo II.6.4)")
 
 
+def fig_federal(fed):
+    g, t = fed["FYONGDA188S"], fed["FYFRGDA188S"]
+    x0, x1, ex, y0, y1, ey = 1929, max(g), 0.135, 0, 45, 0.1
+    anios = sorted(a for a in g if a >= x0)
+    c = "  \\draw[black!60, densely dotted] (0,%.3f) -- (%.3f,%.3f);\n" % ((1 - y0) * ey, (x1 - x0) * ex, (1 - y0) * ey)
+    c += "  \\node[anchor=south east, font=\\scriptsize, black!60] at (%.3f,%.3f) {presupuesto de la UE, en torno al $1\\%%$ del PIB};\n" % ((x1 - x0) * ex, (1 - y0) * ey)
+    c += linea(anios, [t[a] for a in anios], ex, ey, x0, y0, "black!45, thick, dashed")
+    c += linea(anios, [g[a] for a in anios], ex, ey, x0, y0, "black!85, thick")
+    c += marca_vertical(1933, (y1 - y0) * ey + 0.1, "New Deal", ex, x0, fuera=True)
+    c += "  \\node[anchor=west, font=\\scriptsize, black!60] at (%.3f,%.3f) {Segunda Guerra Mundial};\n" % ((1945.6 - x0) * ex, (g[1944] - y0) * ey)
+    c += leyenda([("black!85, thick", "gasto federal"), ("black!45, thick, dashed", "ingresos federales")], (1975 - x0) * ex, 42 * ey)
+    c += ejes_tiempo(x0, x1, ex, [1930, 1940, 1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020], y0, y1, ey, [0, 10, 20, 30, 40], "porcentaje del PIB")
+    escribir("anx3_federal", c, "gasto neto e ingresos del Gobierno federal de EE. UU. en porcentaje del PIB, años fiscales 1929-%d, y referencia del presupuesto de la UE (anexo III.2.1)" % x1)
+
+
+def fig_alemania(ost):
+    anios, hab, ocu = ost
+    x0, x1, ex, y0, y1, ey = anios[0], anios[-1], 0.33, 30, 100, 0.06
+    c = "  \\draw[black!30] (0,%.3f) -- (%.3f,%.3f);\n" % ((100 - y0) * ey, (x1 - x0) * ex, (100 - y0) * ey)
+    c += "  \\node[anchor=south west, font=\\scriptsize, black!60] at (0.1,%.3f) {oeste $=100$};\n" % ((100 - y0) * ey)
+    c += linea(anios, [hab[a] for a in anios], ex, ey, x0, y0, "black!50, thick, dashed")
+    c += linea(anios, [ocu[a] for a in anios], ex, ey, x0, y0, "black!85, thick")
+    c += etiquetas_finales([(ocu[x1], "PIB por persona ocupada", "black"), (hab[x1], "PIB por habitante", "black")], (x1 - x0) * ex + 0.1, ey, y0)
+    c += ejes_tiempo(x0, x1, ex, [1991, 1995, 2000, 2005, 2010, 2015, 2020, 2025], y0, y1, ey, [30, 40, 50, 60, 70, 80, 90, 100],
+                     "este en porcentaje del oeste, ambos sin Berlín")
+    escribir("anx3_alemania", c, "PIB por habitante y por persona ocupada de los Länder del este en porcentaje de los del oeste, ambos sin Berlín, %d-%d (anexo III.2.4)" % (x0, x1))
+
+
 def main():
     carpeta = sys.argv[1] if len(sys.argv) > 1 else tempfile.mkdtemp()
     descargar(carpeta)
