@@ -48,6 +48,8 @@ DESCARGAS = {
     "dl_fred_a9/GDPA.csv": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=GDPA (descargado el 08/11/2026)",
     "dl_wb_a9/ca_usa_cd.json": "https://api.worldbank.org/v2/country/USA/indicator/BN.CAB.XOKA.CD?date=1970:2025&format=json&per_page=200 (descargado el 08/11/2026)",
     "dl_wb_a11/consumo_pc.json": "https://api.worldbank.org/v2/country/USA;DEU;FRA;ITA;JPN;GBR;CAN;AUT;BEL;DNK;FIN;IRL;NLD;NOR;PRT;ESP;SWE;CHE;AUS;NZL;KOR;GRC;ISL;ISR;MEX;EMU/indicator/NE.CON.PRVT.PC.KD?date=1970:2025&format=json&per_page=3000 (descargado el 08/11/2026)",
+    "dl_fred_a12/USUKFXUKM.csv": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=USUKFXUKM (Banco de Inglaterra, A millennium of macroeconomic data, versión 3.1; descargado el 08/11/2026)",
+    "dl_fred_a12/EXUSUK.csv": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=EXUSUK (Reserva Federal, H.10; descargado el 08/11/2026)",
 }
 
 
@@ -1537,6 +1539,123 @@ def fig_identidad_varianza(engr, clave="larga"):
     return {a: (engr[(clave, a)]["senda"], engr[(clave, a)]["cuna"]) for a, _ in filas}
 
 
+# ---------------------------------------------------------------- A12 (IV): el dólar y la libra desde 1791 por régimen monetario
+# Fuentes: FRED USUKFXUKM (dólares por libra, mensual, 1791-2016; Banco de Inglaterra, A millennium of macroeconomic data,
+# versión 3.1, de THOMAS y DIMSDALE) y EXUSUK (dólares por libra, media mensual, desde 1971; Reserva Federal, H.10),
+# empalmadas en enero de 2017. Se omite octubre de 1857 (8,92 dólares por libra entre 4,88 y 4,84: error de la serie).
+REGIMENES_DL = [  # (nombre, desde, hasta, alguna de las dos monedas inconvertible o en flotación)
+    ("Patrones metálicos antes de la Restricción", "1791-01", "1797-02", False),
+    ("Restricción: libra inconvertible", "1797-03", "1821-04", True),
+    ("Oro en la libra y bimetalismo en el dólar", "1821-05", "1861-12", False),
+    ("Billetes verdes: dólar inconvertible", "1862-01", "1878-12", True),
+    ("Patrón oro clásico", "1879-01", "1914-07", False),
+    ("Guerra y flotación", "1914-08", "1925-04", True),
+    ("Vuelta al oro", "1925-05", "1931-08", False),
+    ("Flotación de los años treinta", "1931-09", "1939-08", True),
+    ("Paridad de guerra", "1939-09", "1949-08", False),
+    ("Bretton Woods", "1949-09", "1972-06", False),
+    ("Flotación", "1972-07", "2026-12", True),
+]
+OMITIDOS_DL = {"1857-10"}
+ROTULOS_DL = {  # rótulos del panel superior: (año, y, texto, girado)
+    "Restricción: libra inconvertible": (1809.3, 13.2, "Restricción", True),
+    "Billetes verdes: dólar inconvertible": (1875.0, 13.2, "Billetes\\\\verdes", True),
+    "Guerra y flotación": (1920.0, 13.2, "Guerra y\\\\flotación", True),
+    "Flotación de los años treinta": (1935.7, 13.2, "Años\\\\treinta", True),
+    "Flotación": (2000.0, 11.0, "Flotación", False),
+    "Patrón oro clásico": (1896.5, 1.3, "Patrón oro clásico", False),
+    "Bretton Woods": (1958.0, 1.3, "Bretton Woods", False),
+}
+
+
+def mes_siguiente(m):
+    a, b = int(m[:4]), int(m[5:7])
+    return "%04d-%02d" % (a + (b == 12), b % 12 + 1)
+
+
+def leer_dolar_libra(carpeta):
+    def fred(fich, col):
+        s = {}
+        with open(os.path.join(carpeta, "dl_fred_a12", fich), encoding="utf-8") as f:
+            for r in csv.DictReader(f):
+                if r[col] not in (".", ""):
+                    s[r["observation_date"][:7]] = float(r[col])
+        return s
+    largo, h10 = fred("USUKFXUKM.csv", "USUKFXUKM"), fred("EXUSUK.csv", "EXUSUK")
+    serie = {m: (v, "USUKFXUKM") for m, v in largo.items() if m <= "2016-12" and m not in OMITIDOS_DL}
+    for m, v in h10.items():
+        if m >= "2017-01":
+            serie[m] = (v, "EXUSUK")
+    comunes = sorted(set(largo) & set(h10))
+    dif = sum(abs(math.log(largo[m] / h10[m])) for m in comunes) / len(comunes)
+    return serie, dif, comunes[0], comunes[-1]
+
+
+def fig_dolar_libra(carpeta):
+    serie, dif, s0, s1 = leer_dolar_libra(carpeta)
+    meses = sorted(serie)
+
+    def de(xs):
+        mu = sum(xs) / len(xs)
+        return math.sqrt(sum((x - mu) ** 2 for x in xs) / len(xs))
+
+    res = []
+    for nombre, d0, d1, flota in REGIMENES_DL:
+        d1 = min(d1, meses[-1])
+        ms = [m for m in meses if d0 <= m <= d1]
+        ds = [100 * math.log(serie[mes_siguiente(m)][0] / serie[m][0]) for m in ms if mes_siguiente(m) in serie and mes_siguiente(m) <= d1]
+        normales = [x for x in ds if abs(x) <= 5]
+        res.append(dict(nombre=nombre, d0=d0, d1=d1, flota=flota, n=len(ds), sd=de(ds), sd_sin=de(normales), saltos=len(ds) - len(normales),
+                        maxabs=max(abs(x) for x in ds), nmin=min(serie[m][0] for m in ms), nmax=max(serie[m][0] for m in ms)))
+    x0 = lambda m: decimal_mes(m)
+    x1 = lambda m: decimal_mes(m) + 1 / 12.0
+    tikz = "% El dólar y la libra desde 1791: dólares por libra (medias mensuales, escala logarítmica) y desviación típica de la\n"
+    tikz += "% variación mensual del logaritmo en cada régimen monetario (en %). Sombreado: alguna de las dos monedas inconvertible o en\n"
+    tikz += "%% flotación. FRED USUKFXUKM (Banco de Inglaterra, %s a 2016) y EXUSUK (Reserva Federal, 2017 a %s); se omite 1857-10.\n" % (meses[0], meses[-1])
+    tikz += "% Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_dolar_libra_historia\n"
+    tikz += "\\begin{tikzpicture}\n\\footnotesize\n\\begin{axis}[name=pa,\n"
+    tikz += r"""  scale only axis, width=13.4cm, height=4.6cm, axis lines=left, tick align=outside, tick style={black!60},
+  /pgf/number format/.cd, use comma, 1000 sep={}, /pgfplots/.cd,
+  every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize},
+  ymode=log, xmin=1790, xmax=2027, ymin=1, ymax=14, xtick={1800,1850,1900,1950,2000}, xticklabels={},
+  ytick={1,2,3,5,8,12}, yticklabels={$1$,$2$,$3$,$5$,$8$,$12$}, clip=false,
+  ylabel={Dólares por libra (escala log.)},
+]
+"""
+    for r in res:
+        if r["flota"]:
+            tikz += "\\fill[black!10] (axis cs:%.3f,1) rectangle (axis cs:%.3f,14);\n" % (x0(r["d0"]), x1(r["d1"]))
+    tikz += "\\addplot[black, line width=0.5pt] coordinates {%s};\n" % " ".join("(%.3f,%.3f)" % (x0(m) + 1 / 24.0, serie[m][0]) for m in meses)
+    for r in res:
+        if r["nombre"] in ROTULOS_DL:
+            xa, ya, texto, girado = ROTULOS_DL[r["nombre"]]
+            if girado:
+                tikz += "\\node[font=\\scriptsize, rotate=90, anchor=east, align=center, inner sep=1pt] at (axis cs:%.1f,%.1f) {%s};\n" % (xa, ya, texto)
+            else:
+                tikz += "\\node[font=\\scriptsize, inner sep=1pt] at (axis cs:%.1f,%.1f) {%s};\n" % (xa, ya, texto)
+    tikz += "\\end{axis}\n\\begin{axis}[at={(pa.south west)}, anchor=north west, yshift=-0.3cm,\n"
+    tikz += r"""  scale only axis, width=13.4cm, height=2.6cm, axis lines=left, tick align=outside, tick style={black!60},
+  /pgf/number format/.cd, use comma, 1000 sep={}, /pgfplots/.cd,
+  every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize},
+  xmin=1790, xmax=2027, ymin=0, ymax=4.6, xtick={1800,1850,1900,1950,2000}, ytick={0,1,2,3,4}, clip=false,
+  ylabel={Volatilidad (\%)},
+]
+"""
+    for r in res:
+        if r["flota"]:
+            tikz += "\\fill[black!10] (axis cs:%.3f,0) rectangle (axis cs:%.3f,4.6);\n" % (x0(r["d0"]), x1(r["d1"]))
+    for r in res:
+        tikz += "\\fill[black!70] (axis cs:%.3f,0) rectangle (axis cs:%.3f,%.3f);\n" % (x0(r["d0"]), x1(r["d1"]), r["sd"])
+        tikz += "\\node[font=\\scriptsize, anchor=south, inner sep=1.5pt] at (axis cs:%.2f,%.3f) {$%s$};\n" % ((x0(r["d0"]) + x1(r["d1"])) / 2, r["sd"], coma(r["sd"], 1))
+    tikz += "\\end{axis}\n\\end{tikzpicture}\n"
+    open(os.path.join(IMG, "anx_dolar_libra_historia.tikz"), "w", encoding="utf-8").write(tikz)
+    filas = [["Fecha", "Dólares por libra", "Serie", "Régimen"]]
+    for m in meses:
+        reg = next(r["nombre"] for r in res if r["d0"] <= m <= r["d1"])
+        filas.append([m, serie[m][0], serie[m][1], reg])
+    return res, dif, s0, s1, len(meses), filas
+
+
 # ---------------------------------------------------------------- principal
 def main():
     carpeta = sys.argv[1]
@@ -1585,6 +1704,7 @@ def main():
     burb = fig_burbuja()
     bsr, bsmed = fig_backus_smith(carpeta, xa, ca)
     idv = fig_identidad_varianza(engr)
+    dlr, dldif, dls0, dls1, dln, dlh = fig_dolar_libra(carpeta)
 
     # ---- cifras citadas en el texto
     cif = []
@@ -1772,9 +1892,16 @@ def main():
               "; ".join("%s %.2f/%.2f" % (a, engr[(clave, a)]["senda"], engr[(clave, a)]["cuna"]) for a in ["G6"] + [m for m, _ in MONEDAS_ENGEL]),
               "BPI; VAR propio", "III.8.4")
 
+    # ---- A12
+    poner("Dólar-libra 1791-2026: meses; diferencia media en logaritmos entre USUKFXUKM y EXUSUK en el solape",
+          "%d; %.4f (%s a %s)" % (dln, dldif, dls0, dls1), "FRED USUKFXUKM y EXUSUK", "IV")
+    for r in dlr:
+        poner("  %s, %s a %s: desviación típica de la variación mensual (%%); sin variaciones de más del 5 %%; mayor variación; nivel mínimo y máximo" % (r["nombre"], r["d0"], r["d1"]),
+              "%.2f; %.2f (%d fuera); %.1f; %.2f y %.2f" % (r["sd"], r["sd_sin"], r["saltos"], r["maxabs"], r["nmin"], r["nmax"]), "FRED USUKFXUKM y EXUSUK", "IV")
+
     # ---- libro de datos
     leeme = [["Libro de datos del Tema 3.B.14 (Teorías de la determinación del tipo de cambio)"],
-             ["Generado por Code/libro_y_figuras.py el %s. Hojas: Fuentes, Series (formato largo), ICP_2021, Big_Mac, PPA_1970_2025, Semividas, Bienes_servicios_2024, Paridades_2006_2025, Monetario_2000_2024, Prediccion_1990_2026, Engel_VAR, Factor_dolar, Backus_Smith, Cifras_citadas." % FECHA_DESCARGA],
+             ["Generado por Code/libro_y_figuras.py el %s. Hojas: Fuentes, Series (formato largo), ICP_2021, Big_Mac, PPA_1970_2025, Semividas, Bienes_servicios_2024, Paridades_2006_2025, Monetario_2000_2024, Prediccion_1990_2026, Engel_VAR, Factor_dolar, Backus_Smith, Dolar_libra_1791_2026, Cifras_citadas." % FECHA_DESCARGA],
              ["Convención del tema: S son euros por dólar (sube = depreciación del euro). Los índices efectivos siguen la de sus fuentes (sube = apreciación)."]]
     fuentes = [["Serie o fichero", "Organismo", "Dirección de descarga", "Fecha de descarga"]]
     for fichero, url in DESCARGAS.items():
@@ -1785,7 +1912,8 @@ def main():
                "dl_wb_ca": "Banco Mundial", "dl_bis_pol": "Banco de Pagos Internacionales", "dl_wb_us": "Banco Mundial", "dl_wb_m": "Banco Mundial",
                "dl_ecb_yc": "Banco Central Europeo", "dl_fred_gs2": "Banco de la Reserva Federal de San Luis (FRED)",
                "dl_fred_a9": "Banco de la Reserva Federal de San Luis (FRED; datos de la BEA)", "dl_wb_a9": "Banco Mundial",
-               "dl_wb_a11": "Banco Mundial"}[fichero.split("/")[0]]
+               "dl_wb_a11": "Banco Mundial",
+               "dl_fred_a12": "Banco de la Reserva Federal de San Luis (FRED; datos del Banco de Inglaterra y de la Reserva Federal)"}[fichero.split("/")[0]]
         fuentes.append([fichero, org, url, FECHA_DESCARGA])
     filas = [["Serie", "Área", "Fecha", "Valor", "Unidad", "Fuente", "Tratamiento", "Figura"]]
     for f, v in fred:
@@ -1905,7 +2033,7 @@ def main():
     escribir_xlsx(os.path.join(TEMA, "Code", "datos_3B14.xlsx"),
                   [("Léeme", leeme), ("Fuentes", fuentes), ("Series", filas), ("ICP_2021", icp), ("Big_Mac", big),
                    ("PPA_1970_2025", ppah), ("Semividas", semh), ("Bienes_servicios_2024", bsh), ("Paridades_2006_2025", parh),
-                   ("Monetario_2000_2024", monh), ("Prediccion_1990_2026", predh), ("Engel_VAR", engh), ("Factor_dolar", fdh), ("Backus_Smith", bksh), ("Cifras_citadas", cifras)])
+                   ("Monetario_2000_2024", monh), ("Prediccion_1990_2026", predh), ("Engel_VAR", engh), ("Factor_dolar", fdh), ("Backus_Smith", bksh), ("Dolar_libra_1791_2026", dlh), ("Cifras_citadas", cifras)])
     print("Libro escrito:", os.path.join(TEMA, "Code", "datos_3B14.xlsx"))
 
 
