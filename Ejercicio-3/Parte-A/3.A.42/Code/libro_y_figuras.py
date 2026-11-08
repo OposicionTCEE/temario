@@ -1795,6 +1795,7 @@ def con_datos_a8(cifras, sim):
         cuerpo.append("\\addplot[black!40, thin, forget plot] coordinates {(0,0) (%d,0)};" % xmax)
         ley = ("legend style={draw=none, fill=none, font=\\footnotesize, at={%s}, anchor=%s}, legend cell align=left, " % leyenda) if leyenda else ""
         return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=6.2cm, height=2.6cm, scale only axis, %s,\n"
+                "    yticklabel style={/pgf/number format/fixed, /pgf/number format/precision=2},\n"
                 "    xmin=0, xmax=%d, xtick={%s}, ymin=%s, ymax=%s, ytick={%s}, %sylabel={%s},\n"
                 "    %stitle={%s}, title style={font=\\footnotesize}]\n%s\n\\end{axis}\n"
                 % (nombre, lugar, ESTILO, xmax, xtick, ymin, ymax, ytick, ("xlabel={%s}, " % xlab) if xlab else "", ylab, ley, titulo, "\n".join(cuerpo)))
