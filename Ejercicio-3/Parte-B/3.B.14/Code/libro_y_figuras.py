@@ -1105,6 +1105,9 @@ def main():
     monf, mons, mone, monfijas, monus = fig_monetario_largo(m2w, pibw, nombres_m2, xa)
     dorn = fig_dornbusch()
     dtr, dtrc = fig_dolar_tipos_reales(bis, pol, cm)
+    ea2, us2 = leer_ecb_2a(carpeta), leer_fred_gs2(carpeta)
+    e2f, e2c = fig_euro_dos_anos(fred, ea2, us2)
+    predc, predm = fig_prediccion(xm, pol, cm)
 
     # ---- cifras citadas en el texto
     cif = []
