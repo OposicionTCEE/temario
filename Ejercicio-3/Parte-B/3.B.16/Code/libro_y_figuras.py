@@ -1176,6 +1176,21 @@ def main():
             fuentes.append([s, nombre, st, unidad, "mensual (media anual)", "FRED, Banco de la Reserva Federal de San Luis (BLS)", FRED + s, FECHA_DESCARGA])
     for s, nombre in (("UNRATE", "Tasa de paro de EE. UU."), ("CIVPART", "Tasa de actividad de EE. UU.")):
         fuentes.append([s, nombre, "Estados Unidos", "porcentaje", "mensual (media anual)", "FRED, Banco de la Reserva Federal de San Luis (BLS)", FRED + s, FECHA_DESCARGA])
+    # A9 y A10, descargadas el 08/11/2026
+    for s, nombre in FRED_A9.items():
+        fuentes.append([s, nombre, "zona del euro" if s == "IR3TIB01EZM156N" else "ver serie", "porcentaje" if "CP00" not in s else "índice", "mensual",
+                        "FRED, Banco de la Reserva Federal de San Luis (OCDE y Eurostat)", FRED + s, "08/11/2026"])
+    for s, nombre in WB_A9.items():
+        fuentes.append([s, nombre, ", ".join(NOMBRE.get(p, RIGIDOS.get(p, (p,))[0]) for p in EURO + list(RIGIDOS)), "ver serie", "anual",
+                        "Banco Mundial, Indicadores del Desarrollo Mundial", (WB % (";".join(EURO + list(RIGIDOS)), s)).replace("1960:2024", "1985:2024"), "08/11/2026"])
+    for c in TARGET:
+        fuentes.append(["TGB.M.%s.N.A094T.U2.EUR.E" % c, "Saldo TARGET del banco central nacional frente al Eurosistema", c, "millones de euros", "mensual (fin de mes)",
+                        "Banco Central Europeo", ECB % c, "08/11/2026"])
+    for s, nombre in FRED_A10.items():
+        fuentes.append([s, nombre, "Estados Unidos", "porcentaje del PIB", "anual (año fiscal)", "FRED, Banco de la Reserva Federal de San Luis (Oficina de Gestión y Presupuesto)", FRED + s, "08/11/2026"])
+    for hoja, nombre in VGRDL_HOJAS.items():
+        fuentes.append(["tabla " + hoja, nombre, "Länder alemanes y agregados del este y del oeste", "euros" if hoja.startswith("3") else "miles de personas", "anual",
+                        "Arbeitskreis «Volkswirtschaftliche Gesamtrechnungen der Länder» (serie 1, tomo 1, revisión de 2024)", VGRDL, "08/11/2026"])
     filas = [["Serie", "Ámbito", "Año u horizonte", "Valor", "Unidad", "Fuente", "Tratamiento", "Figura"]] + [list(f) for f in series]
     cif = [["Cifra", "Valor", "Unidad", "Apartado"]] + [list(c) for c in cifras]
     escribir_xlsx(os.path.join(TEMA, "Code", "datos_3B16.xlsx"), [("Léeme", leeme), ("Fuentes", fuentes), ("Series", filas), ("Cifras_citadas", cif)])
