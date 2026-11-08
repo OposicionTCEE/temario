@@ -1126,6 +1126,8 @@ def main():
     fig_cuenta_corriente(deseq[2])
     fig_target(deseq[3])
     fig_inflacion_espana(deseq[4])
+    fig_federal(fed)
+    fig_alemania(ost)
     leeme = [["Libro de datos del tema 3.B.16 (Teoría de la integración monetaria)"],
              ["Generado por Code/libro_y_figuras.py el %s con los datos descargados ese día del Banco Mundial, de Eurostat y de FRED." % FECHA_DESCARGA],
              ["Hojas: Fuentes (series y su origen), Series (formato largo: serie, país o estado, año u horizonte, valor, unidad, fuente, tratamiento, figura)"],
