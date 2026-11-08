@@ -2343,7 +2343,8 @@ def main():
              ["A8 (II.7-II.10): modelo neokeynesiano de tres ecuaciones con soluciones analíticas (perturbación monetaria, mejora tecnológica, orientación futura)."],
              ["A9 (III.1-III.4): versión lineal de KIYOTAKI y MOORE (1997) y apalancamiento de los intermediarios con las Cuentas Financieras de la Reserva Federal."],
              ["A10 (III.5-III.7): base JST R6 (crisis tras auges y recesiones financieras), prima de GILCHRIST y ZAKRAJŠEK y regresiones por cuantiles con el NFCI."],
-             ["A11 (III.10): oleadas de crisis bancarias sistémicas en las 18 economías de la base JST, 1870-2020."]]
+             ["A11 (III.10): oleadas de crisis bancarias sistémicas en las 18 economías de la base JST, 1870-2020."],
+             ["A12 (IV.1 y IV.2): figuras sintéticas (tres ciclos de SCHUMPETER, multiplicador-acelerador de SAMUELSON y ciclo de GOODWIN con parámetros ilustrativos)."]]
     fuentes = [["Código", "Serie", "País", "Unidad", "Frecuencia", "Institución", "Enlace", "Descarga"]]
     for s, (nombre, pais, unidad, frec) in SERIES.items():
         fuentes.append([s, nombre, pais, unidad, frec, "FRED, Banco de la Reserva Federal de San Luis", FRED + s, FECHA_DESCARGA])
