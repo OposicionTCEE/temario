@@ -1154,9 +1154,12 @@ def fig_cfa_inflacion(medianas):
     estilos = {"UEMOA": "black!90, thick", "CEMAC": "black!55, thick, dashed", "vecinos": "black!40, thick, densely dotted"}
     nombres = {"UEMOA": "UEMOA (franco CFA de África occidental)", "CEMAC": "CEMAC (franco CFA de África central)", "vecinos": "vecinos con moneda propia"}
     c = "  \\draw[black!45] (0,%.3f) -- (%.3f,%.3f);\n" % ((0 - y0) * ey, (x1 - x0) * ex, (0 - y0) * ey)
-    for g in ("vecinos", "CEMAC", "UEMOA"):
+    for g in ("vecinos", "CEMAC", "UEMOA"):  # cortadas en y1; el máximo que se sale se rotula
         a = sorted(m[g])
-        c += linea(a, [m[g][x] for x in a], ex, ey, x0, y0, estilos[g])
+        c += linea(a, [min(m[g][x], y1) for x in a], ex, ey, x0, y0, estilos[g])
+    amax = max(m["vecinos"], key=lambda a: m["vecinos"][a])
+    if m["vecinos"][amax] > y1:
+        c += "  \\node[anchor=west, font=\\scriptsize, black!60] at (%.3f,%.3f) {vecinos: %s en $%d$};\n" % ((amax - x0) * ex + 0.15, (y1 - y0) * ey - 0.05, num(m["vecinos"][amax]).replace("$", "$", 1)[:-1] + "\\%$", amax)
     c += marca_vertical(1994, (y1 - y0) * ey + 0.1, "devaluación", ex, x0, fuera=True)
     c += leyenda([(estilos[g], nombres[g]) for g in ("UEMOA", "CEMAC", "vecinos")], (2000 - x0) * ex, (39 - y0) * ey)
     c += ejes_tiempo(x0, x1, ex, [1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020], y0, y1, ey, [0, 10, 20, 30, 40],
