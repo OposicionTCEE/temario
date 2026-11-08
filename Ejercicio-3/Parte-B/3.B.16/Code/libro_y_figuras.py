@@ -63,6 +63,14 @@ RIGIDOS = {"BGR": ("Bulgaria", "caja de conversión", 1997), "EST": ("Estonia", 
 WB_A9 = {"FP.CPI.TOTL.ZG": "Inflación de los precios de consumo", "BN.CAB.XOKA.GD.ZS": "Saldo de la balanza por cuenta corriente, porcentaje del PIB"}
 TARGET = ["DE", "NL", "LU", "FI", "FR", "IT", "ES", "GR", "PT", "IE"]
 ECB = "https://data-api.ecb.europa.eu/service/data/TGB/M.%s.N.A094T.U2.EUR.E?format=csvdata"
+# A10 (anexo III, historia): gasto e ingresos del Gobierno federal de EE. UU. en porcentaje del PIB desde 1929 (Oficina de
+# Gestión y Presupuesto, en FRED) y cuentas regionales de Alemania desde 1991 (Arbeitskreis «Volkswirtschaftliche
+# Gesamtrechnungen der Länder», tablas de la serie 1, tomo 1, publicadas en marzo de 2026).
+FRED_A10 = {"FYONGDA188S": "Gasto neto del Gobierno federal de EE. UU. en porcentaje del PIB (año fiscal)",
+            "FYFRGDA188S": "Ingresos del Gobierno federal de EE. UU. en porcentaje del PIB (año fiscal)"}
+VGRDL = "https://www.statistikportal.de/sites/default/files/2026-03/vgrdl_r1b1_bs2025.xlsx"
+VGRDL_HOJAS = {"3.3": "PIB a precios corrientes por habitante", "3.1": "PIB a precios corrientes por persona ocupada",
+               "13.": "Población", "11.1": "Personas ocupadas"}
 SECTORES = ["A", "BDE", "C", "F", "G-I", "J", "K", "L", "M_N", "O-Q", "R-U"]
 LAMBDA_ANUAL = 6.25  # RAVN y UHLIG (2002)
 RETARDOS_BE, RETARDOS_BK, HORIZONTE = 2, 2, 10
