@@ -2354,10 +2354,11 @@ def sinteticas_a12(filas_series, cifras, sim):
            "\\addplot[black!35, thick, domain=0:10, samples=150] {%s};\n\\addplot[black, thick, domain=0:10, samples=150] {%s};\n"
            "\\addplot[black!55, thick, dashed, domain=0:10, samples=2] {%s};\n"
            "\\node[font=\\footnotesize, anchor=west] at (axis cs:10,%.3f) {inversión};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:10,%.3f) {ahorro};\n"
+           "\\node[font=\\footnotesize, anchor=west, text=black!45] at (axis cs:10,%.3f) {inversión inicial};\n"
            "\\addplot[only marks, mark=o, mark size=1.5pt] coordinates {(%.3f,%.3f)};\n\\addplot[only marks, mark=*, mark size=1.5pt] coordinates {(%.3f,%.3f)};\n"
            "\\draw[-{Stealth[length=2.2mm]}, very thick] (axis cs:%.3f,0.25) -- (axis cs:%.3f,0.25);\n"
            "\\node[font=\\footnotesize, anchor=south] at (axis cs:%.3f,0.3) {caída de la renta};\n\\end{axis}\n"
-           % (comun, f_inv, f_inv2, f_aho, inv(10, desplaza), aho(10), e0[2], aho(e0[2]), e1[0], aho(e1[0]), e0[2], e1[0] + 0.15, (e0[2] + e1[0]) / 2))
+           % (comun, f_inv, f_inv2, f_aho, inv(10, desplaza), aho(10), inv(10), e0[2], aho(e0[2]), e1[0], aho(e1[0]), e0[2], e1[0] + 0.15, (e0[2] + e1[0]) / 2))
     escribir("anx_kaldor", "\\begin{tikzpicture}\n" + ka_ + kb_ + "\\end{tikzpicture}",
              "Modelo de KALDOR (1940) con parámetros ilustrativos: inversión en forma de S y ahorro lineal; tres equilibrios y salto al equilibrio bajo cuando la acumulación de capital desplaza la inversión.")
     sim.append(("Sintética", "KALDOR (1940): inversión logística y ahorro lineal con parámetros ilustrativos; la inversión baja 0,45 al acumular capital", "anx_kaldor"))
