@@ -982,7 +982,7 @@ def fig_inflacion_espana(difi):
     c += "  \\draw[->] (0,0) -- (0,%.3f) node[above] {inflación de España menos la de la zona del euro, en puntos};\n" % ((y1 - y0) * ey + 0.25)
     for t in (2000, 2005, 2010, 2015, 2020, 2025):
         c += "  \\draw (%.3f,0.06) -- (%.3f,-0.06) node[below] {$%d$};\n" % ((t - x0) * ex, (t - x0) * ex, t)
-    for t in (-2, -1, 0, 1, 2, 3):
+    for t in (-4, -3, -2, -1, 0, 1, 2, 3):
         c += "  \\draw (0.06,%.3f) -- (-0.06,%.3f) node[left] {$%d$};\n" % ((t - y0) * ey, (t - y0) * ey, t)
     escribir("anx2_inflacion_espana", c, "diferencia entre la inflación armonizada interanual de España y la de la zona del euro, mensual, 1997-2026 (anexo II.6.4)")
 
