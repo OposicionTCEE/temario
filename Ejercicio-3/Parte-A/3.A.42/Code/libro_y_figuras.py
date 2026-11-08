@@ -2175,10 +2175,10 @@ def con_datos_a10(carpeta, filas_series, cifras, sim):
     for tau, estilo, et in ((0.05, "black, very thick", "cuantil del $5$\\,\\%%"), (0.5, "black!60, thick, dashed", "mediana"), (0.95, "black!60, thick, dotted", "cuantil del $95$\\,\\%%")):
         lineas += "\\addplot[%s, domain=-1.2:5] {%.4f+%.4f*x};\n\\addlegendentry{%s}\n" % (estilo, coef[tau][0], coef[tau][1], et.replace("%%", "%"))
     fig = ("\\begin{tikzpicture}\n\\begin{axis}[width=11cm, height=6cm, scale only axis, %s,\n"
-           "    xmin=-1.2, xmax=5, xtick={-1,0,...,5}, ymin=-10, ymax=14, ytick={-10,-5,...,10},\n"
+           "    xmin=-1.2, xmax=5, xtick={-1,0,...,5}, ymin=-10, ymax=17, ytick={-10,-5,...,15},\n"
            "    xlabel={Índice de condiciones financieras de la Reserva Federal de Chicago (trimestre $t$)},\n"
            "    ylabel={Crecimiento del PIB de $t$ a $t+4$ (\\%%)},\n"
-           "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.98,0.98)}, anchor=north east}, legend cell align=left]\n"
+           "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.02,0.98)}, anchor=north west}, legend cell align=left]\n"
            "\\addplot[only marks, mark=*, mark size=0.8pt, black!45, forget plot] coordinates {%s};\n%s"
            "\\addplot[black!40, thin, forget plot] coordinates {(-1.2,0) (5,0)};\n\\end{axis}\n\\end{tikzpicture}"
            % (ESTILO, " ".join("(%.3f,%.2f)" % (x, y) for x, y in zip(X, Y)), lineas))
