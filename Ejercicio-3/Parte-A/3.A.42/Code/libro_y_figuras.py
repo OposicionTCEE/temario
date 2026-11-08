@@ -2648,6 +2648,69 @@ def cuerpo_b2_nmc(sim):
                 "b2_impulsos, b2_lucas, b2_rbc, b2_trabajo"))
 
 
+# ---------------------------------------------------------------- T16 (cuerpo, B2, nueva economía keynesiana): figuras abstractas
+def cuerpo_b2_nek(sim):
+    def xy(xs, ys):
+        return " ".join("(%.2f,%.4f)" % (a, b) for a, b in zip(xs, ys))
+    a, b = 0.6, 1.2          # pendientes de la curva de PHILLIPS y de la demanda agregada en el aspa (ilustrativas)
+
+    # ---- b2_aspa: (a) relajación monetaria, (b) mejora de la productividad (baja el tipo natural)
+    def aspa(nombre, lugar, titulo, desp, ylab, etiqueta):
+        x1 = desp / (a + b)
+        y1 = a * x1
+        lo, hi = max(-1.9, (desp - 1.95) / b), min(1.9, (desp + 1.95) / b)
+        return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=6cm, height=5cm, scale only axis, %s, xmin=-2, xmax=2, ymin=-2, ymax=2, xtick={0}, xticklabels={$0$}, ytick={0}, yticklabels={$0$},\n"
+                "    xlabel={Brecha de producción, $\\tilde y_t$}, %s title={%s}, title style={font=\\footnotesize}, clip=false]\n"
+                "\\addplot[black!30, thin] coordinates {(-2,0) (2,0)};\\addplot[black!30, thin] coordinates {(0,-2) (0,2)};\n"
+                "\\addplot[black!60, thick, domain=-1.9:1.9, samples=2] {%.3f*x};\n"
+                "\\addplot[black, thick, domain=-1.3:1.3, samples=2] {-%.3f*x};\n\\addplot[black, thick, dashed, domain=%.3f:%.3f, samples=2] {-%.3f*x%+.3f};\n"
+                "\\addplot[only marks, mark=*, mark size=1.6pt] coordinates {(0,0) (%.3f,%.3f)};\n"
+                "\\node[font=\\footnotesize, anchor=%s] at (axis cs:-0.03,-0.05) {$E_0$};\n\\node[font=\\footnotesize, anchor=%s] at (axis cs:%.3f,%.3f) {$%s$};\n"
+                "\\node[font=\\footnotesize, anchor=west] at (axis cs:1.9,%.3f) {$CP$};\n\\node[font=\\footnotesize, anchor=north] at (axis cs:1.3,%.3f) {$DA_0$};\n\\node[font=\\footnotesize, anchor=%s] at (axis cs:%.3f,%.3f) {$DA_1$};\n"
+                "\\end{axis}\n"
+                % (nombre, lugar, ESTILO, ylab, titulo, a, b, lo, hi, b, desp,
+                   x1, y1, "north east" if desp > 0 else "south west", "south west" if desp > 0 else "north east", x1 + (0.05 if desp > 0 else -0.05), y1, etiqueta,
+                   a * 1.9, -b * 1.3, "west" if desp > 0 else "north", hi, -b * hi + desp))
+    escribir("b2_aspa", "\\begin{tikzpicture}\n" + aspa("a", "{(0,0)}", "(a) Relajación monetaria", 1.4, "ylabel={Inflación, $\\pi_t$},", "E_1")
+             + aspa("b", "{($(a.north east)+(1.8cm,0)$)}", "(b) Mejora de la productividad", -1.4, "", "E_2") + "\\end{tikzpicture}",
+             "Cuerpo B2: aspa del modelo neokeynesiano (curva de PHILLIPS y demanda agregada) ante una relajación monetaria y una mejora de la productividad que baja el tipo natural.")
+    # ---- b2_nek: respuestas dinámicas (funciones de la A8, calibración NEK)
+    H = 16
+    t = np.arange(H + 1)
+    m = nek_monetaria(NEK["xi"], H, tam=-0.25)
+    z = nek_tecnologia(H)
+    pa = ("\\begin{axis}[name=a, at={(0,0)}, anchor=north west, width=6.2cm, height=4.2cm, scale only axis, %s, xmin=0, xmax=16, xtick=\\empty, ytick=\\empty, ymin=-0.75, ymax=0.55,\n"
+          "    xlabel={Trimestres}, ylabel={Desviación}, title={(a) Relajación monetaria}, title style={font=\\footnotesize},\n"
+          "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.98,0.98)}, anchor=north east}, legend cell align=left]\n"
+          "\\addplot[black!40, thin, forget plot] coordinates {(0,0) (16,0)};\n"
+          "\\addplot[black, thick] coordinates {%s};\\addlegendentry{brecha}\n\\addplot[black!45, very thick, dashed] coordinates {%s};\\addlegendentry{tipo de interés real}\n\\end{axis}\n"
+          % (ESTILO, xy(t, m["brecha"]), xy(t, m["real"])))
+    pb = ("\\begin{axis}[name=b, at={($(a.north east)+(1.6cm,0)$)}, anchor=north west, width=6.2cm, height=4.2cm, scale only axis, %s, xmin=0, xmax=16, xtick=\\empty, ytick=\\empty, ymin=-0.35, ymax=1.25,\n"
+          "    xlabel={Trimestres}, title={(b) Mejora de la productividad}, title style={font=\\footnotesize},\n"
+          "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.98,0.98)}, anchor=north east}, legend cell align=left]\n"
+          "\\addplot[black!40, thin, forget plot] coordinates {(0,0) (16,0)};\n"
+          "\\addplot[black!50, thick, dotted] coordinates {%s};\\addlegendentry{producción natural}\n\\addplot[black, thick] coordinates {%s};\\addlegendentry{producción}\n"
+          "\\addplot[black!45, very thick] coordinates {%s};\\addlegendentry{horas}\n\\end{axis}\n"
+          % (ESTILO, xy(t, z["yn"]), xy(t, z["y"]), xy(t, z["h"])))
+    escribir("b2_nek", "\\begin{tikzpicture}\n" + pa + pb + "\\end{tikzpicture}",
+             "Cuerpo B2: respuestas del modelo neokeynesiano de tres ecuaciones (calibración de la A8) a una relajación monetaria y a una mejora de la productividad.")
+    # ---- b2_costes: perturbación de costes en el aspa
+    c = 1.2
+    x3, y3 = -c / (a + b), a * (-c / (a + b)) + c
+    f = ("\\begin{tikzpicture}\n\\begin{axis}[width=7cm, height=5.4cm, scale only axis, %s, xmin=-2, xmax=2, ymin=-2, ymax=2.6, xtick={0}, xticklabels={$0$}, ytick={0}, yticklabels={$0$},\n"
+         "    xlabel={Brecha de producción, $\\tilde y_t$}, ylabel={Inflación, $\\pi_t$}, clip=false]\n"
+         "\\addplot[black!30, thin] coordinates {(-2,0) (2,0)};\\addplot[black!30, thin] coordinates {(0,-2) (0,2.6)};\n"
+         "\\addplot[black!60, thick, domain=-1.9:1.9, samples=2] {%.3f*x};\n\\addplot[black!60, thick, dashed, domain=-1.9:1.0, samples=2] {%.3f*x%+.3f};\n"
+         "\\addplot[black, thick, domain=-1.5:1.5, samples=2] {-%.3f*x};\n"
+         "\\addplot[only marks, mark=*, mark size=1.6pt] coordinates {(0,0) (%.3f,%.3f)};\n"
+         "\\node[font=\\footnotesize, anchor=north east] at (axis cs:-0.03,-0.05) {$E_0$};\n\\node[font=\\footnotesize, anchor=south east] at (axis cs:%.3f,%.3f) {$E_3$};\n"
+         "\\node[font=\\footnotesize, anchor=west] at (axis cs:1.9,%.3f) {$CP_0$};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:1.0,%.3f) {$CP_1$};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:1.5,%.3f) {$DA$};\n"
+         "\\end{axis}\n\\end{tikzpicture}" % (ESTILO, a, a, c, b, x3, y3, x3 - 0.05, y3 + 0.05, a * 1.9, a * 1.0 + c, -b * 1.5))
+    escribir("b2_costes", f, "Cuerpo B2: una perturbación de costes desplaza la curva de PHILLIPS hacia arriba: más inflación y menos producción.")
+    sim.append(("Sintética", "Cuerpo B2 (NEK): aspa con pendientes 0,6 (CP) y -1,2 (DA) y desplazamientos de 1,4; respuestas del modelo de tres ecuaciones con la calibración de la A8 (relajación de un punto anual con persistencia 0,5; mejora del 1 %% con persistencia 0,9); perturbación de costes de 1,2",
+                "b2_aspa, b2_nek, b2_costes"))
+
+
 def con_datos_a13(carpeta, filas_series, cifras):
     # ---- colas gruesas: asimetría y curtosis del crecimiento trimestral del PIB real de EE. UU.
     pib = {f: v for f, v in leer(carpeta, "GDPC1")}
