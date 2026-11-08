@@ -1382,8 +1382,8 @@ def fig_chartistas(p=PARAM_CHART):
   /pgf/number format/.cd, use comma, 1000 sep={}, /pgfplots/.cd,
   every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize}, title style={font=\footnotesize},
   xmin=0, xmax=%d, ymin=%d, ymax=%d, xticklabels={}, clip=false,
-  ylabel={Logaritmo $\times 100$}, title={(a) Tipo de cambio y valor fundamental},
-  legend style={draw=none, fill=none, font=\footnotesize, at={(0.02,0.97)}, anchor=north west, legend columns=-1,
+  ylabel={Logaritmo $\times 100$},
+  legend style={draw=none, fill=none, font=\footnotesize, at={(0.5,1.03)}, anchor=south, legend columns=-1,
     /tikz/every even column/.append style={column sep=0.5cm}},
 ]
 """ % (p["ventana"], ymin, ymax)
