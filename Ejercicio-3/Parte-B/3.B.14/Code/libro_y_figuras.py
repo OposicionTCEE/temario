@@ -1313,7 +1313,7 @@ def fig_valoracion_eeuu(carpeta):
     tikz += "%% acumulada (Banco Mundial BN.CAB.XOKA.CD), en %% del PIB (FRED GDPA), %d-%d. La distancia son los efectos de valoración\n" % (a0, a1)
     tikz += "% y otros ajustes. Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_valoracion_eeuu\n"
     tikz += "\\begin{tikzpicture}\n" + EJES
-    ymin = 10 * math.floor(min(min(f[3], f[4]) for f in filas) / 10) - 5
+    ymin = 10 * math.floor(min(min(f[3], f[4]) for f in filas) / 10) - 10
     ymax = 10 * math.ceil(max(max(f[3], f[4]) for f in filas) / 10) + 5
     tikz += "  xmin=%d, xmax=%d, ymin=%d, ymax=%d, xtick={1980,1985,...,2025}, ylabel={\\%% del PIB}, height=6.0cm,\n" % (a0, a1, ymin, ymax)
     tikz += "  legend style={at={(0.02,0.04)}, anchor=south west, legend columns=1}, clip=false,\n]\n"
