@@ -1041,8 +1041,8 @@ def fig_prediccion(xm, pol, cm, origen="1990-01", fin="2026-09"):
     eje = r"""  scale only axis, width=6.1cm, height=4.6cm, axis lines=left, tick align=outside, tick style={black!60},
   /pgf/number format/.cd, use comma, 1000 sep={}, /pgfplots/.cd,
   every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize}, title style={font=\footnotesize},
-  xmin=0.7, xmax=6.3, xtick={1,2,3,4,5,6}, xticklabels={1,3,12,24,36,60}, xlabel={Horizonte (meses)}, clip=false,
-  y tick label style={/pgf/number format/.cd, fixed, fixed zerofill, precision=1, use comma},
+  xmin=0.7, xmax=6.3, xtick={1,2,3,4,5,6}, xticklabels={$1$,$3$,$12$,$24$,$36$,$60$}, xlabel={Horizonte (meses)}, clip=false,
+  ytick={0.9,1,1.1,1.2,1.3}, y tick label style={/pgf/number format/.cd, fixed, fixed zerofill, precision=1, use comma},
 """
     etiquetas = {0: {}, 1: {"JP": "Yen", "CH": "Franco suizo", "DE": "Marco y euro"}}
     tikz = "%% Predicción fuera de la muestra, previsiones mensuales de %s a %s: error cuadrático medio de cada modelo dividido por el\n" % (origen, fin)
