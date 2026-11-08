@@ -1882,7 +1882,9 @@ def main():
              ["dentro de doce meses sobre la pendiente (bono a diez años menos letras a tres meses en rendimiento equivalente), estimado con 1959-2018, y regla de SAHM."],
              ["A4 (II.1 y II.2): simulaciones de SLUTSKY y FRISCH (hoja Simulaciones) y réplica de LUCAS (1973) y BALL, MANKIW y ROMER (1988) con el PIB"],
              ["nominal y real del Banco Mundial: por país, y_t = a + b t + tau Dx_t + c y_(t-1) con 100 x log, 1960-2019, países con al menos 41 años seguidos."],
-             ["A5 (II.3): modelo básico del ciclo real log-linealizado (trabajo divisible e indivisible), respuestas a la PTF y momentos de 500 simulaciones con HP."]]
+             ["A5 (II.3): modelo básico del ciclo real log-linealizado (trabajo divisible e indivisible), respuestas a la PTF y momentos de 500 simulaciones con HP."],
+             ["A6 (II.4): VAR de largo plazo de GALÍ (1999) y autocorrelaciones del crecimiento del PIB. A7 (II.5 y II.6): ciclo real con gasto público y coste de LUCAS."],
+             ["A8 (II.7-II.10): modelo neokeynesiano de tres ecuaciones con soluciones analíticas (perturbación monetaria, mejora tecnológica, orientación futura)."]]
     fuentes = [["Código", "Serie", "País", "Unidad", "Frecuencia", "Institución", "Enlace", "Descarga"]]
     for s, (nombre, pais, unidad, frec) in SERIES.items():
         fuentes.append([s, nombre, pais, unidad, frec, "FRED, Banco de la Reserva Federal de San Luis", FRED + s, FECHA_DESCARGA])
