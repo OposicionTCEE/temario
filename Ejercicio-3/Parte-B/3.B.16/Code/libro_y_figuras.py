@@ -649,6 +649,11 @@ def historia(carpeta, series, cifras):
     minimo = min(anios, key=lambda a: ocup[a][1])
     cifras.append(("Personas ocupadas en el este sin Berlín: 1991, 1992, mínimo (%d) y %d" % (minimo, anios[-1]), "%.0f; %.0f; %.0f; %.0f" % (ocup[1991][1], ocup[1992][1], ocup[minimo][1], ocup[anios[-1]][1]), "miles de personas", "III.2.4"))
     cifras.append(("Personas ocupadas en el oeste sin Berlín, 1991 y %d" % anios[-1], "%.0f; %.0f" % (ocup[1991][0], ocup[anios[-1]][0]), "miles de personas", "III.2.4"))
+    # Italia: cifras publicadas (no descargadas), ver MEZZOGIORNO
+    for a, v in sorted(MEZZOGIORNO.items()):
+        series.append(("PIB por habitante del Sur en porcentaje del Centro-Norte", "Italia", a, v, "porcentaje", "IUZZOLINO, PELLEGRINI y VIESTI (2011), cuadro 11 y nota 4",
+                       "cifra publicada (precios de 1911, fronteras actuales)", "anx3_mezzogiorno"))
+    cifras.append(("PIB por habitante del Sur en porcentaje del Centro-Norte: 1871, 1881, 1951, 1971, 2009", "; ".join("%.1f" % MEZZOGIORNO[a] for a in (1871, 1881, 1951, 1971, 2009)), "porcentaje", "III.2.2"))
     return fed, (anios, hab, ocu)
 
 
