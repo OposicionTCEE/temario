@@ -1143,8 +1143,13 @@ def var_engel(X, p=3, J=120):
     dq = X[p + 1:, 0] - X[p:-1, 0]
     fama = float(np.polyfit(rr[:len(dq)], dq, 1)[0])
     cambio = next((j for j, v in enumerate(perfil) if v < 0), None)
+    # A11: descomposición de la varianza del tipo real con la identidad, q = -suma E(r - r*) + suma E(lambda):
+    # cov(q, -suma)/var(q) (senda) + cov(q, suma lambda)/var(q) (cuña) = 1
+    vq = float(eq @ V @ eq)
+    senda = -float((d @ inv) @ V @ eq) / vq
+    cuna = float(((d - eq @ (F - I)) @ inv) @ V @ eq) / vq
     return dict(perfil=perfil, b_q=b_q, b_sr=b_sr, b_sl=b_sl, fama=fama, cambio=cambio, T=T,
-                raiz=float(max(abs(np.linalg.eigvals(F)))), sd=12 * math.sqrt(vd))
+                raiz=float(max(abs(np.linalg.eigvals(F)))), sd=12 * math.sqrt(vd), senda=senda, cuna=cuna, sd_q=math.sqrt(vq))
 
 
 def fig_engel(pol, xm, cm, p=3, J=60):
