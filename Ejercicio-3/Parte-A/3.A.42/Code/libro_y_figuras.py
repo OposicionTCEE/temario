@@ -2248,12 +2248,12 @@ def sinteticas_a12(filas_series, cifras, sim):
     cifras.append(("Multiplicador-acelerador (alfa 0,8): nuevo equilibrio y desviación en t = 5, 10 y 20 con v = 0,25, 1 y 1,5",
                    "equilibrio %.1f; " % (1 / (1 - a)) + "; ".join("v %.2f: %.2f, %.2f, %.2f" % (v, tray[v][5], tray[v][10], tray[v][20]) for v in (0.25, 1.0, 1.5)), "", "IV.2"))
     pa = ("\\addplot[black, thick] coordinates {%s};\n\\addplot[black, thick, dashed] coordinates {%s};\n"
-          "\\node[font=\\footnotesize, align=center] at (axis cs:0.45,0.93) {convergencia\\\\monótona};\n"
-          "\\node[font=\\footnotesize, align=center] at (axis cs:0.75,0.35) {oscilaciones\\\\amortiguadas};\n"
-          "\\node[font=\\footnotesize, align=center] at (axis cs:2.6,0.62) {oscilaciones\\\\explosivas};\n"
-          "\\node[font=\\footnotesize, align=center] at (axis cs:3.3,0.95) {crecimiento\\\\explosivo};\n"
-          "\\node[font=\\footnotesize, anchor=west] at (axis cs:2.75,0.27) {$\\alpha v=1$};\n"
-          "\\node[font=\\footnotesize, anchor=south west] at (axis cs:3.2,0.66) {$\\alpha(1+v)^2=4v$};\n"
+          "\\node[font=\\footnotesize] at (axis cs:0.12,0.93) {A};\n"
+          "\\node[font=\\footnotesize] at (axis cs:1.0,0.3) {B};\n"
+          "\\node[font=\\footnotesize] at (axis cs:2.3,0.65) {C};\n"
+          "\\node[font=\\footnotesize] at (axis cs:3.3,0.9) {D};\n"
+          "\\node[font=\\footnotesize, anchor=south west] at (axis cs:3.3,0.31) {$\\alpha v=1$};\n"
+          "\\node[font=\\footnotesize, anchor=north east] at (axis cs:3.98,0.62) {$\\alpha(1+v)^2=4v$};\n"
           "\\addplot[only marks, mark=*, mark size=1.6pt] coordinates {(0.25,0.8) (1,0.8) (1.5,0.8)};"
           % (coords(v_, osc), " ".join("(%.4f,%.4f)" % p for p in est)))
     ejes_a = ("\\begin{axis}[name=a, at={(0,0)}, anchor=north west, width=6.2cm, height=4.4cm, scale only axis, %s,\n"
