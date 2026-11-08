@@ -859,10 +859,13 @@ def leyenda(entradas, x, y, columnas=1, ancho_col=3.0, paso=0.38):
     return c
 
 
-def ejes_tiempo(x0, x1, ex, ticks_x, y0, y1, ey, ticks_y, titulo_y, fmt_y="$%d$"):
+def ejes_tiempo(x0, x1, ex, ticks_x, y0, y1, ey, ticks_y, titulo_y, fmt_y="$%d$", girado=False):
     c = "  \\draw[->] (0,%.3f) -- (%.3f,%.3f);\n" % ((0 - y0) * ey if y0 < 0 else 0, (x1 - x0) * ex + 0.3, (0 - y0) * ey if y0 < 0 else 0)
     c += "  \\draw[->] (0,0) -- (0,%.3f);\n" % ((y1 - y0) * ey + 0.25)
-    c += "  \\node[anchor=south west] at (-1.0,%.3f) {%s};\n" % ((y1 - y0) * ey + 0.6, titulo_y)
+    if girado:
+        c += "  \\node[rotate=90, align=center] at (-1.05,%.3f) {%s};\n" % ((y1 - y0) * ey / 2, titulo_y)
+    else:
+        c += "  \\node[anchor=south west] at (-1.0,%.3f) {%s};\n" % ((y1 - y0) * ey + 0.6, titulo_y)
     base = 0.0
     for t in ticks_x:
         c += "  \\draw (%.3f,%.3f) -- (%.3f,%.3f);\n  \\node[below] at (%.3f,0) {$%d$};\n" % ((t - x0) * ex, base + 0.06, (t - x0) * ex, base - 0.06, (t - x0) * ex, t)
