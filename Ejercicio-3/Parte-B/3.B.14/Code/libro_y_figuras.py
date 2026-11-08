@@ -1887,10 +1887,10 @@ def main():
             engh.append([mu, nombre, "Mes en que la prima esperada cambia de signo", "", r["cambio"] if r["cambio"] is not None else ""])
             engh.append([mu, nombre, "Parte de la varianza del tipo real explicada por la senda, cov(q, -suma E(r - r*))/var(q)", "", r["senda"]])
             engh.append([mu, nombre, "Parte de la varianza del tipo real explicada por la cuña, cov(q, suma E(lambda))/var(q)", "", r["cuna"]])
-    bsh = [["ISO3", "Economía", "Desde", "Hasta", "Años", "Correlación de las variaciones del tipo real y del consumo relativo",
-            "Desviación típica de la variación del tipo real (%)", "Desviación típica de la variación del consumo relativo (%)"]]
+    bksh = [["ISO3", "Economía", "Desde", "Hasta", "Años", "Correlación de las variaciones del tipo real y del consumo relativo",
+             "Desviación típica de la variación del tipo real (%)", "Desviación típica de la variación del consumo relativo (%)"]]
     for r in bsr:
-        bsh.append(list(r))
+        bksh.append(list(r))
     cifras = [["Cifra", "Valor", "Fuente", "Dónde"]] + cif
     escribir_xlsx(os.path.join(TEMA, "Code", "datos_3B14.xlsx"),
                   [("Léeme", leeme), ("Fuentes", fuentes), ("Series", filas), ("ICP_2021", icp), ("Big_Mac", big),
