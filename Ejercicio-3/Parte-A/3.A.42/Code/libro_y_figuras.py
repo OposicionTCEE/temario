@@ -2364,6 +2364,132 @@ def sinteticas_a12(filas_series, cifras, sim):
     sim.append(("Sintética", "KALDOR (1940): inversión logística y ahorro lineal con parámetros ilustrativos; la inversión baja 0,45 al acumular capital", "anx_kaldor"))
 
 
+# ---------------------------------------------------------------- A13 (IV.3-IV.5): caos, modelo de KEEN y cifras con datos
+def sinteticas_a13(filas_series, cifras, sim):
+    from scipy.integrate import solve_ivp
+    # ---- anx_caos: ecuación logística de MAY (1976), x_(t+1) = theta x_t (1 - x_t)
+    def tray(th, x0, n):
+        xs = [x0]
+        for _ in range(n):
+            xs.append(th * xs[-1] * (1 - xs[-1]))
+        return xs
+    a1, a2 = tray(4.0, 0.3, 40), tray(4.0, 0.3001, 40)
+    sep = next(t for t in range(41) if abs(a1[t] - a2[t]) > 0.1)
+    cifras.append(("Ecuación logística con parámetro 4: primer periodo en que dos trayectorias que empiezan en 0,3 y 0,3001 difieren en más de 0,1",
+                   "%d" % sep, "periodos", "IV.3"))
+    puntos = set()
+    for th in np.linspace(2.8, 4.0, 301):
+        x = 0.5
+        for _ in range(600):
+            x = th * x * (1 - x)
+        for _ in range(60):
+            x = th * x * (1 - x)
+            puntos.add((round(th, 3), round(x, 3)))
+    pa = ("\\addplot[black, thick, mark=*, mark size=0.9pt] coordinates {%s};\n\\addlegendentry{$x_0=0{,}3$}\n"
+          "\\addplot[black!50, thick, dashed, mark=o, mark size=0.9pt] coordinates {%s};\n\\addlegendentry{$x_0=0{,}3001$}"
+          % (" ".join("(%d,%.4f)" % (t, v) for t, v in enumerate(a1)), " ".join("(%d,%.4f)" % (t, v) for t, v in enumerate(a2))))
+    ca = ("\\begin{axis}[name=a, at={(0,0)}, anchor=north west, width=6.2cm, height=4.4cm, scale only axis, %s,\n"
+          "    xmin=0, xmax=40, xtick={0,10,...,40}, ymin=0, ymax=1.25, ytick={0,0.5,1}, yticklabels={$0$,$0{,}5$,$1$},\n"
+          "    xlabel={Periodos}, ylabel={$x_t$}, title={(a) Dos trayectorias con $\\vartheta=4$}, title style={font=\\footnotesize},\n"
+          "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.5,0.99)}, anchor=north}, legend columns=2, legend cell align=left]\n%s\n\\end{axis}\n"
+          % (ESTILO, pa))
+    cb = ("\\begin{axis}[name=b, at={($(a.north east)+(1.6cm,0)$)}, anchor=north west, width=6.2cm, height=4.4cm, scale only axis, %s,\n"
+          "    xmin=2.8, xmax=4, xtick={2.8,3,3.5699,4}, xticklabels={$2{,}8$,$3$,$3{,}57$,$4$}, ymin=0, ymax=1, ytick={0,0.5,1}, yticklabels={$0$,$0{,}5$,$1$},\n"
+          "    xlabel={$\\vartheta$}, ylabel={Valores de $x_t$ a largo plazo}, title={(b) Diagrama de bifurcación}, title style={font=\\footnotesize}]\n"
+          "\\addplot[only marks, mark=*, mark size=0.12pt, black] coordinates {%s};\n"
+          "\\draw[black!40, dotted] (axis cs:3,0) -- (axis cs:3,1);\n\\draw[black!40, dotted] (axis cs:3.5699,0) -- (axis cs:3.5699,1);\n\\end{axis}\n"
+          % (ESTILO, " ".join("(%.3f,%.3f)" % p for p in sorted(puntos))))
+    escribir("anx_caos", "\\begin{tikzpicture}\n" + ca + cb + "\\end{tikzpicture}",
+             "Ecuación logística de MAY (1976): sensibilidad a las condiciones iniciales con parámetro 4 y diagrama de bifurcación entre 2,8 y 4.")
+    sim.append(("Sintética", "Ecuación logística x_(t+1) = theta x_t (1 - x_t): trayectorias con theta 4 desde 0,3 y 0,3001; bifurcación con 301 valores de theta entre 2,8 y 4 (600 iteraciones previas y 60 registradas)", "anx_caos"))
+
+    # ---- anx_keen: modelo de KEEN (1995), GOODWIN con deuda, con parámetros ilustrativos
+    al, be, de, nu, r = 0.025, 0.02, 0.01, 3.0, 0.03      # productividad, población activa, depreciación, capital/producto, tipo de interés
+    f0, f1 = 0.04 / (1 - 0.04 ** 2), 0.04 ** 3 / (1 - 0.04 ** 2)   # curva de PHILLIPS: f1/(1 - empleo)^2 - f0
+    k0, k1, k2 = -0.0065, math.exp(-5), 20.0              # inversión sobre la producción: k0 + k1 exp(k2 beneficio)
+
+    def keen(t, x):
+        w, l, d = x
+        p = 1 - w - r * d
+        k = k0 + k1 * math.exp(min(k2 * p, 50))
+        return [w * (f1 / (1 - l) ** 2 - f0 - al), l * (k / nu - al - be - de), k - p - d * (k / nu - de)]
+
+    def tope(t, x):
+        return x[2] - 1000
+    tope.terminal = True
+    p1 = math.log((nu * (al + be + de) - k0) / k1) / k2
+    l1 = 1 - math.sqrt(f1 / (al + f0))
+    d1 = (k0 + k1 * math.exp(k2 * p1) - p1) / (al + be)
+    casos = {}
+    for d0 in (0.5, 2.0):
+        s = solve_ivp(keen, (0, 180), [0.75, 0.75, d0], method="LSODA", rtol=1e-10, atol=1e-12, max_step=0.05, events=tope, dense_output=True)
+        tt = np.arange(0, s.t[-1], 0.25)
+        casos[d0] = (tt, s.sol(tt), s.t[-1])
+    t_alta, Y_alta, fin_alta = casos[2.0]
+    picos = sum(1 for i in range(1, len(tt := t_alta) - 1) if Y_alta[1][i] > Y_alta[1][i - 1] and Y_alta[1][i] >= Y_alta[1][i + 1])
+    t_baja, Y_baja, fin_baja = casos[0.5]
+    cifras.append(("Modelo de KEEN (ilustrativo): equilibrio bueno (participación salarial, empleo, deuda/producción); deuda inicial 0,5: estado en el año 180; deuda inicial 2: año en que la deuda llega a 1.000 veces la producción y ciclos del empleo antes",
+                   "equilibrio %.3f, %.3f, %.3f; baja: %.3f, %.3f, %.3f; alta: año %.1f, %d máximos del empleo" % (1 - p1 - r * d1, l1, d1, Y_baja[0][-1], Y_baja[1][-1], Y_baja[2][-1], fin_alta, picos), "", "IV.4"))
+    paso = 2
+    ka = ("\\begin{axis}[name=a, at={(0,0)}, anchor=north west, width=6.2cm, height=4.4cm, scale only axis, %s,\n"
+          "    xmin=0, xmax=180, xtick={0,30,...,180}, ymin=0, ymax=1.2, ytick={0,0.5,1}, yticklabels={$0$,$0{,}5$,$1$},\n"
+          "    xlabel={Años}, ylabel={Tasa de empleo}, title={(a) Empleo}, title style={font=\\footnotesize},\n"
+          "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.5,0.99)}, anchor=north}, legend columns=2, legend cell align=left]\n"
+          "\\addplot[black, thick] coordinates {%s};\n\\addlegendentry{deuda inicial baja}\n"
+          "\\addplot[black!55, thick, dashed] coordinates {%s};\n\\addlegendentry{deuda inicial alta}\n\\end{axis}\n"
+          % (ESTILO, " ".join("(%.2f,%.4f)" % (t, v) for t, v in zip(t_baja[::paso], Y_baja[1][::paso])),
+             " ".join("(%.2f,%.4f)" % (t, v) for t, v in zip(t_alta[::paso], Y_alta[1][::paso]))))
+    kb = ("\\begin{axis}[name=b, at={($(a.north east)+(1.6cm,0)$)}, anchor=north west, width=6.2cm, height=4.4cm, scale only axis, %s,\n"
+          "    ymode=log, xmin=0, xmax=180, xtick={0,30,...,180}, ymin=0.05, ymax=1000, ytick={0.1,1,10,100,1000}, yticklabels={$0{,}1$,$1$,$10$,$100$,$1.000$},\n"
+          "    xlabel={Años}, ylabel={Deuda sobre producción (escala logarítmica)}, title={(b) Deuda de las empresas}, title style={font=\\footnotesize}]\n"
+          "\\addplot[black, thick] coordinates {%s};\n\\addplot[black!55, thick, dashed] coordinates {%s};\n\\end{axis}\n"
+          % (ESTILO, " ".join("(%.2f,%.5f)" % (t, max(v, 1e-3)) for t, v in zip(t_baja[::paso], Y_baja[2][::paso])),
+             " ".join("(%.2f,%.5f)" % (t, max(v, 1e-3)) for t, v in zip(t_alta[::paso], Y_alta[2][::paso]))))
+    escribir("anx_keen", "\\begin{tikzpicture}\n" + ka + kb + "\\end{tikzpicture}",
+             "Modelo de KEEN (1995) con parámetros ilustrativos: tasa de empleo y deuda de las empresas sobre la producción con una deuda inicial de 0,5 y de 2 veces la producción.")
+    sim.append(("Sintética", "Modelo de KEEN (1995): participación salarial, empleo y deuda con curva de PHILLIPS f1/(1-l)^2 - f0, inversión -0,0065 + exp(-5) exp(20 beneficio), capital/producto 3, tipo 3 %%, productividad 2,5 %%, población 2 %%, depreciación 1 %%; LSODA; deuda inicial 0,5 y 2", "anx_keen"))
+
+
+def con_datos_a13(carpeta, filas_series, cifras):
+    # ---- colas gruesas: asimetría y curtosis del crecimiento trimestral del PIB real de EE. UU.
+    pib = {f: v for f, v in leer(carpeta, "GDPC1")}
+    fechas = sorted(pib)
+    crec = [(fechas[i], 100 * (math.log(pib[fechas[i]]) - math.log(pib[fechas[i - 1]]))) for i in range(1, len(fechas))]
+    for desde, hasta in (("1947-04-01", "2019-10-01"), ("1985-01-01", "2019-10-01")):
+        s = np.array([v for f, v in crec if desde <= f <= hasta])
+        z = (s - s.mean()) / s.std()
+        cifras.append(("Crecimiento trimestral del PIB real de EE. UU. (100 x diferencia del logaritmo), %s a %s: observaciones, asimetría y curtosis" % (desde[:7], hasta[:7]),
+                       "%d; %.2f; %.2f" % (len(s), float(np.mean(z ** 3)), float(np.mean(z ** 4))), "", "IV.5"))
+    # ---- pico espectral: espectro autorregresivo de orden 12 de las horas por habitante y del paro, 1948T1-2019T4
+    horas = {f: v for f, v in leer(carpeta, "HOANBS")}
+    pob = dict(trimestral(leer(carpeta, "CNP16OV")))
+    paro = dict(trimestral(leer(carpeta, "UNRATE")))
+    claves = ["%d-%02d-01" % (a, m) for a in range(1948, 2020) for m in (1, 4, 7, 10)]
+    series_esp = {"horas por habitante": np.array([100 * math.log(horas[k] / pob[k]) for k in claves]),
+                  "paro": np.array([paro[k] for k in claves])}
+
+    def paso_alto(x, corte):
+        x = x - x.mean()
+        F = np.fft.rfft(x)
+        fr = np.fft.rfftfreq(len(x))
+        F[0] = 0
+        F[(fr > 0) & (fr < 1.0 / corte)] = 0
+        return np.fft.irfft(F, len(x))
+
+    def maximo_ar(x, p=12):
+        x = x - x.mean()
+        X = np.column_stack([x[p - j - 1:len(x) - j - 1] for j in range(p)])
+        b = np.linalg.lstsq(X, x[p:], rcond=None)[0]
+        per = np.arange(6, 121, 1.0)
+        dens = [1 / abs(1 - sum(b[j] * np.exp(-1j * 2 * math.pi / q * (j + 1)) for j in range(p))) ** 2 for q in per]
+        return per[int(np.argmax(dens))]
+    textos = []
+    for nombre, x in series_esp.items():
+        textos.append("%s: en niveles %.0f; sin oscilaciones de más de 100 trimestres %.0f" % (nombre, maximo_ar(x), maximo_ar(paso_alto(x, 100))))
+    cifras.append(("Periodo (trimestres, entre 6 y 120) de máxima densidad del espectro autorregresivo de orden 12, EE. UU. 1948T1-2019T4 (120 = sigue creciendo hacia las frecuencias bajas)",
+                   "; ".join(textos), "trimestres", "IV.3"))
+
+
 def main():
     carpeta = sys.argv[1] if len(sys.argv) > 1 else tempfile.mkdtemp()
     descargar(carpeta)
