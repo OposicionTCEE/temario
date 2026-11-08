@@ -929,6 +929,145 @@ def fig_dolar_tipos_reales(bis, pol, cm, t0="1975-01", t1="1998-12"):
     return filas, cors
 
 
+# ---------------------------------------------------------------- A7 (anexo II): reglas de tipos de interés y predicción
+# BCE: tipo al contado a dos años de la curva de la deuda AAA de la zona del euro (YC, diario; media mensual); FRED: GS2,
+# rendimiento del bono del Tesoro de EE. UU. a dos años (media mensual).
+def leer_ecb_2a(carpeta):
+    out = {}
+    with open(os.path.join(carpeta, "dl_ecb_yc", "yc_2y.csv"), encoding="utf-8") as f:
+        for d in csv.DictReader(f):
+            if d["OBS_VALUE"]:
+                out.setdefault(d["TIME_PERIOD"][:7], []).append(float(d["OBS_VALUE"]))
+    return {m: sum(v) / len(v) for m, v in out.items()}
+
+
+def leer_fred_gs2(carpeta):
+    out = {}
+    with open(os.path.join(carpeta, "dl_fred_gs2", "GS2.csv"), encoding="utf-8") as f:
+        for d in csv.DictReader(f):
+            if d["GS2"] not in ("", "."):
+                out[d["observation_date"][:7]] = float(d["GS2"])
+    return out
+
+
+def fig_euro_dos_anos(fred, ea, us):
+    fx = dict(fred)
+    meses = sorted(set(ea) & set(us) & set(fx))
+    filas = [(m, fx[m], ea[m], us[m], ea[m] - us[m]) for m in meses]
+    def corr(a, b):
+        ma, mb = sum(a) / len(a), sum(b) / len(b)
+        return sum((x - ma) * (y - mb) for x, y in zip(a, b)) / math.sqrt(sum((x - ma) ** 2 for x in a) * sum((y - mb) ** 2 for y in b))
+    lx, dif = [math.log(f[1]) for f in filas], [f[4] for f in filas]
+    cors = {"niveles": corr(lx, dif),
+            "variaciones": corr([lx[k] - lx[k - 1] for k in range(1, len(lx))], [dif[k] - dif[k - 1] for k in range(1, len(dif))])}
+    for a0, a1 in (("2004-09", "2013-12"), ("2014-01", meses[-1])):
+        sel = [k for k, f in enumerate(filas) if a0 <= f[0] <= a1]
+        cors["niveles %s a %s" % (a0, a1)] = corr([lx[k] for k in sel], [dif[k] for k in sel])
+    eje = r"""  scale only axis, width=14.2cm, height=2.4cm, axis lines=left, tick align=outside, tick style={black!60},
+  /pgf/number format/.cd, use comma, 1000 sep={}, /pgfplots/.cd,
+  every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize}, title style={font=\footnotesize},
+  xmin=2004.5, xmax=2027, xtick={2005,2010,2015,2020,2025}, clip=false,
+"""
+    tikz = "%% (a) Dólares por euro (FRED EXUSEU, media mensual) y (b) tipo al contado a dos años de la deuda AAA de la zona del euro\n"
+    tikz += "%% (BCE) menos el rendimiento del bono de EE. UU. a dos años (FRED GS2), %s a %s.\n" % (meses[0], meses[-1])
+    tikz += "% Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_euro_dos_anos\n"
+    tikz += "\\begin{tikzpicture}\n\\footnotesize\n\\begin{axis}[name=pa,\n" + eje
+    tikz += "  ymin=0.9, ymax=1.65, ytick={1,1.2,1.4,1.6}, ylabel={Dólares por euro}, xticklabels={}, title={(a) El euro frente al dólar},\n"
+    tikz += "  y tick label style={/pgf/number format/.cd, fixed, fixed zerofill, precision=1, use comma},\n]\n"
+    tikz += "\\addplot[black, line width=1pt] coordinates {%s};\n" % coordenadas([(decimal_mes(f[0]), f[1]) for f in filas], 3)
+    tikz += "\\end{axis}\n\\begin{axis}[at={(pa.south)}, anchor=north, yshift=-0.9cm,\n" + eje
+    tikz += "  ymin=-4, ymax=2.5, ytick={-4,-2,0,2}, ylabel={Puntos porcentuales}, title={(b) Tipo a dos años de la zona del euro menos el de EE.\\,UU.},\n]\n"
+    tikz += "\\draw[black!50] (axis cs:2004.5,0) -- (axis cs:2027,0);\n"
+    tikz += "\\addplot[black, line width=0.8pt] coordinates {%s};\n" % coordenadas([(decimal_mes(f[0]), f[4]) for f in filas], 2)
+    tikz += "\\end{axis}\n\\end{tikzpicture}\n"
+    open(os.path.join(IMG, "anx_euro_dos_anos.tikz"), "w", encoding="utf-8").write(tikz)
+    return filas, cors
+
+
+# Predicción fuera de la muestra al estilo de MEESE y ROGOFF (1983): ocho monedas frente al dólar, previsiones hechas cada mes
+# de 1990-01 en adelante a 1, 3, 12, 24, 36 y 60 meses, comparadas con el paseo aleatorio por el cociente de sus errores
+# cuadráticos medios. Paridad no cubierta: s_t + (h/12)[ln(1 + i/100) - ln(1 + i*/100)] con los tipos oficiales. Paridad del poder
+# adquisitivo: el tipo real vuelve a su media según un AR(1) mensual estimado con los datos desde 1975 hasta el mes de la
+# previsión, más la diferencia de inflación de los doce meses anteriores. Marco hasta 1998 y euro después (serie DE del BPI).
+MONEDAS_PRED = [("DE", "Marco y euro"), ("JP", "Yen"), ("GB", "Libra"), ("CH", "Franco suizo"), ("CA", "Dólar canadiense"),
+                ("SE", "Corona sueca"), ("NO", "Corona noruega"), ("AU", "Dólar australiano")]
+HORIZONTES = [1, 3, 12, 24, 36, 60]
+
+
+def fig_prediccion(xm, pol, cm, origen="1990-01", fin="2026-09"):
+    def mas(m, k):
+        y, mm = int(m[:4]), int(m[5:]) + k
+        while mm > 12:
+            y, mm = y + 1, mm - 12
+        while mm <= 0:
+            y, mm = y - 1, mm + 12
+        return "%04d-%02d" % (y, mm)
+    tasa = {a: dict(pol.get(a, {})) for a, _ in MONEDAS_PRED}
+    tasa["DE"].update({m: v for m, v in pol["XM"].items() if m >= "1999-01"})
+    cocientes = {}
+    for a, nombre in MONEDAS_PRED:
+        s = {m: math.log(v) for m, v in xm[a].items()}
+        q = {m: s[m] + math.log(cm["US"][m]) - math.log(cm[a][m]) for m in s if m in cm["US"] and m in cm[a]}
+        err = {h: {"RW": [], "UIP": [], "RW_UIP": [], "PPA": []} for h in HORIZONTES}
+        for t in meses_entre(origen, fin):
+            if t not in s or t not in q:
+                continue
+            hist = [m for m in meses_entre("1975-01", t) if m in q]
+            xs, ys = [q[hist[k]] for k in range(len(hist) - 1)], [q[hist[k + 1]] for k in range(len(hist) - 1)]
+            mx, my = sum(xs) / len(xs), sum(ys) / len(ys)
+            rho = sum((u - mx) * (v - my) for u, v in zip(xs, ys)) / sum((u - mx) ** 2 for u in xs)
+            c = my - rho * mx
+            rho = min(rho, 0.9999)
+            qbar = c / (1 - rho)
+            t12 = mas(t, -12)
+            dinfl = math.log(cm[a][t] / cm[a][t12]) - math.log(cm["US"][t] / cm["US"][t12]) if t12 in cm[a] and t12 in cm["US"] else 0.0
+            for h in HORIZONTES:
+                th = mas(t, h)
+                if th > fin or th not in s:
+                    continue
+                err[h]["RW"].append(s[th] - s[t])
+                if t in tasa[a] and t in pol["US"]:
+                    err[h]["UIP"].append(s[th] - (s[t] + h / 12 * (math.log(1 + tasa[a][t] / 100) - math.log(1 + pol["US"][t] / 100))))
+                    err[h]["RW_UIP"].append(s[th] - s[t])
+                err[h]["PPA"].append(s[th] - (s[t] + (qbar + rho ** h * (q[t] - qbar) - q[t]) + h / 12 * dinfl))
+        def rmse(v):
+            return math.sqrt(sum(e * e for e in v) / len(v))
+        cocientes[a] = {h: (rmse(err[h]["UIP"]) / rmse(err[h]["RW_UIP"]), rmse(err[h]["PPA"]) / rmse(err[h]["RW"]), len(err[h]["RW"])) for h in HORIZONTES}
+    medianas = {h: (sorted(cocientes[a][h][0] for a, _ in MONEDAS_PRED)[len(MONEDAS_PRED) // 2 - 1:len(MONEDAS_PRED) // 2 + 1],
+                    sorted(cocientes[a][h][1] for a, _ in MONEDAS_PRED)[len(MONEDAS_PRED) // 2 - 1:len(MONEDAS_PRED) // 2 + 1]) for h in HORIZONTES}
+    medianas = {h: (sum(v[0]) / 2, sum(v[1]) / 2) for h, v in medianas.items()}
+    eje = r"""  scale only axis, width=6.1cm, height=4.6cm, axis lines=left, tick align=outside, tick style={black!60},
+  /pgf/number format/.cd, use comma, 1000 sep={}, /pgfplots/.cd,
+  every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize}, title style={font=\footnotesize},
+  xmin=0.7, xmax=6.3, xtick={1,2,3,4,5,6}, xticklabels={1,3,12,24,36,60}, xlabel={Horizonte (meses)}, clip=false,
+  y tick label style={/pgf/number format/.cd, fixed, fixed zerofill, precision=1, use comma},
+"""
+    etiquetas = {0: {"JP": "Yen"}, 1: {"JP": "Yen", "CH": "Franco suizo", "DE": "Marco y euro"}}
+    tikz = "%% Predicción fuera de la muestra, previsiones mensuales de %s a %s: error cuadrático medio de cada modelo dividido por el\n" % (origen, fin)
+    tikz += "% del paseo aleatorio, ocho monedas frente al dólar (líneas finas) y su mediana (gruesa). (a) Paridad no cubierta con los\n"
+    tikz += "% tipos oficiales; (b) vuelta del tipo real a su media (PPA). BPI WS_XRU, WS_CBPOL y WS_LONG_CPI.\n"
+    tikz += "% Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_prediccion\n"
+    tikz += "\\begin{tikzpicture}\n\\footnotesize\n"
+    for k, (tit, ymin, ymax) in enumerate((("(a) Paridad no cubierta", 0.9, 1.3), ("(b) Paridad del poder adquisitivo", 0.85, 1.35))):
+        if k == 0:
+            tikz += "\\begin{axis}[name=pa,\n" + eje
+            tikz += "  ylabel={Error relativo al paseo aleatorio},\n"
+        else:
+            tikz += "\\begin{axis}[at={(pa.east)}, anchor=west, xshift=1.3cm,\n" + eje
+        tikz += "  ymin=%.2f, ymax=%.2f, title={%s},\n]\n" % (ymin, ymax, tit)
+        tikz += "\\draw[black!55, densely dashed] (axis cs:0.7,1) -- (axis cs:6.3,1);\n"
+        for a, nombre in MONEDAS_PRED:
+            pts = [(j + 1, cocientes[a][h][k]) for j, h in enumerate(HORIZONTES)]
+            tikz += "\\addplot[black!35, line width=0.5pt] coordinates {%s};\n" % coordenadas(pts, 3)
+            if a in etiquetas[k]:
+                tikz += "\\node[font=\\scriptsize, black!70, anchor=west, inner sep=1.5pt] at (axis cs:6.05,%.3f) {%s};\n" % (pts[-1][1], etiquetas[k][a])
+        tikz += "\\addplot[black, line width=1.2pt, mark=*, mark size=1.3pt] coordinates {%s};\n" % coordenadas([(j + 1, medianas[h][k]) for j, h in enumerate(HORIZONTES)], 3)
+        tikz += "\\end{axis}\n"
+    tikz += "\\end{tikzpicture}\n"
+    open(os.path.join(IMG, "anx_prediccion.tikz"), "w", encoding="utf-8").write(tikz)
+    return cocientes, medianas
+
+
 # ---------------------------------------------------------------- principal
 def main():
     carpeta = sys.argv[1]
