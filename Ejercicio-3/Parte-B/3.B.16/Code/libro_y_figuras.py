@@ -1129,7 +1129,7 @@ def main():
     fig_federal(fed)
     fig_alemania(ost)
     leeme = [["Libro de datos del tema 3.B.16 (Teoría de la integración monetaria)"],
-             ["Generado por Code/libro_y_figuras.py el %s con los datos descargados ese día del Banco Mundial, de Eurostat y de FRED." % FECHA_DESCARGA],
+             ["Generado por Code/libro_y_figuras.py con los datos del Banco Mundial, Eurostat, FRED, el BCE y el Arbeitskreis VGR der Länder (descargas del %s y del 08/11/2026)." % FECHA_DESCARGA],
              ["Hojas: Fuentes (series y su origen), Series (formato largo: serie, país o estado, año u horizonte, valor, unidad, fuente, tratamiento, figura)"],
              ["y Cifras_citadas (las que da el texto del anexo de evidencia, con su apartado)."],
              ["II.1.1-II.1.2: ciclo = componente cíclico del filtro de HODRICK y PRESCOTT con lambda 6,25 (RAVN y UHLIG, 2002) sobre 100 x log del PIB real, 1970-2019;"],
