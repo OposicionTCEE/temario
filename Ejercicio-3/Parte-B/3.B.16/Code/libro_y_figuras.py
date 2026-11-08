@@ -1152,6 +1152,7 @@ def main():
     fig_target(deseq[3])
     fig_inflacion_espana(deseq[4])
     fig_federal(fed)
+    fig_mezzogiorno()
     fig_alemania(ost)
     leeme = [["Libro de datos del tema 3.B.16 (Teoría de la integración monetaria)"],
              ["Generado por Code/libro_y_figuras.py con los datos del Banco Mundial, Eurostat, FRED, el BCE y el Arbeitskreis VGR der Länder (descargas del %s y del 08/11/2026)." % FECHA_DESCARGA],
