@@ -2547,8 +2547,10 @@ def cuerpo_b1(sim):
           "\\addplot[black!60, thick, dashed] coordinates {%s};\\addlegendentry{inversión residencial}\n"
           "\\addplot[black!40, very thick] coordinates {%s};\\addlegendentry{tasa de paro}\n\\end{axis}\n"
           % (ESTILO, xy(T[::2], c[::2]), xy(T[::2], ciclo(T + 4)[::2]), xy(T[::2], -0.6 * ciclo(T - 2)[::2])))
-    escribir("b1_hechos", "\\begin{tikzpicture}\n" + ha + hb + "\\end{tikzpicture}",
-             "Cuerpo B1: hechos estilizados en versión abstracta (volatilidad relativa, comovimiento, adelantos y retrasos) sobre el ciclo de la serie base.")
+    escribir("b1_volatilidad", "\\begin{tikzpicture}\n" + ha + "\\end{tikzpicture}",
+             "Cuerpo B1: volatilidad relativa y comovimiento en versión abstracta (producción, inversión y consumo) sobre el ciclo de la serie base.")
+    escribir("b1_desfases", "\\begin{tikzpicture}\n" + hb + "\\end{tikzpicture}",
+             "Cuerpo B1: adelantos y retrasos en versión abstracta (producción, inversión residencial y tasa de paro) sobre el primer ciclo de la serie base.")
     sim.append(("Sintética", "Serie base del cuerpo (B1): tendencia con crecimiento 0,3 que baja a 0,05 hacia t = 86 y ciclo asimétrico de 40 periodos con amplitudes 6, 1 y 5,5; recesiones clásicas en %s y fases descendentes del ciclo de crecimiento en %s"
                 % (", ".join("%.1f-%.1f" % r for r in rec), ", ".join("%.1f-%.1f" % r for r in desc)), "b1_fases, b1_crecimiento, b1_tendencias, b1_hechos"))
 
