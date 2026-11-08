@@ -77,6 +77,14 @@ VGRDL_HOJAS = {"3.3": "PIB a precios corrientes por habitante", "3.1": "PIB a pr
 MEZZOGIORNO = {1871: 98.9, 1881: 98.5, 1901: 88.0, 1911: 81.4, 1921: 73.6, 1931: 64.5, 1951: 47.3, 1961: 55.8, 1971: 67.0,
                1981: 62.2, 1991: 59.6, 2001: 58.0, 2009: 61.6}
 MEZZOGIORNO_URL = "https://www.bancaditalia.it/pubblicazioni/quaderni-storia/2011-0022/Quaderno_storia_economica_n_22.pdf"
+# A11 (anexo III.4): zona del franco CFA frente a sus vecinos de África occidental con moneda propia (Banco Mundial).
+CFA = {"UEMOA": ["BEN", "BFA", "CIV", "GNB", "MLI", "NER", "SEN", "TGO"], "CEMAC": ["CMR", "CAF", "TCD", "COG", "GNQ", "GAB"],
+       "vecinos": ["GHA", "NGA", "GIN", "SLE", "GMB"]}
+NOMBRE_CFA = {"BEN": "Benín", "BFA": "Burkina Faso", "CIV": "Costa de Marfil", "GNB": "Guinea-Bisáu", "MLI": "Malí", "NER": "Níger",
+              "SEN": "Senegal", "TGO": "Togo", "CMR": "Camerún", "CAF": "República Centroafricana", "TCD": "Chad", "COG": "República del Congo",
+              "GNQ": "Guinea Ecuatorial", "GAB": "Gabón", "GHA": "Ghana", "NGA": "Nigeria", "GIN": "Guinea", "SLE": "Sierra Leona", "GMB": "Gambia"}
+WB_A11 = {"FP.CPI.TOTL.ZG": "Inflación de los precios de consumo", "NY.GDP.PCAP.KD.ZG": "Crecimiento del PIB real por habitante"}
+PERIODOS_CFA = [(1980, 1993), (1995, 2013), (2014, 2024)]
 SECTORES = ["A", "BDE", "C", "F", "G-I", "J", "K", "L", "M_N", "O-Q", "R-U"]
 LAMBDA_ANUAL = 6.25  # RAVN y UHLIG (2002)
 RETARDOS_BE, RETARDOS_BK, HORIZONTE = 2, 2, 10
