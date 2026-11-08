@@ -42,6 +42,8 @@ DESCARGAS = {
     "dl_wb_us/exp_wld.json": "https://api.worldbank.org/v2/country/WLD/indicator/NE.EXP.GNFS.CD?date=2015:2025&format=json&per_page=200",
     "dl_wb_m/m2.json": "https://api.worldbank.org/v2/country/all/indicator/FM.LBL.BMNY.CN?date=1995:2025&format=json&per_page=20000",
     "dl_wb_m/pib.json": "https://api.worldbank.org/v2/country/all/indicator/NY.GDP.MKTP.KN?date=1995:2025&format=json&per_page=20000",
+    "dl_ecb_yc/yc_2y.csv": "https://data-api.ecb.europa.eu/service/data/YC/B.U2.EUR.4F.G_N_A.SV_C_YM.SR_2Y?format=csvdata (descargado el 08/11/2026)",
+    "dl_fred_gs2/GS2.csv": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=GS2 (descargado el 08/11/2026)",
 }
 
 
