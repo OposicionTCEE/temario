@@ -1390,12 +1390,12 @@ def fig_chartistas(p=PARAM_CHART):
     tikz += "\\addplot[black, line width=0.9pt] coordinates {%s};\n\\addlegendentry{Tipo de cambio, $s_t$}\n" % coordenadas(ps, 2)
     tikz += "\\addplot[black!45, line width=0.9pt, densely dashed] coordinates {%s};\n\\addlegendentry{Valor fundamental, $\\bar s_t$}\n" % coordenadas(pf, 2)
     tikz += "\\end{axis}\n"
-    tikz += r"""\begin{axis}[at={(pa.south west)}, anchor=north west, yshift=-0.5cm,
+    tikz += r"""\begin{axis}[at={(pa.south west)}, anchor=north west, yshift=-0.35cm,
   scale only axis, width=13.4cm, height=2.2cm, axis lines=left, tick align=outside, tick style={black!60},
   /pgf/number format/.cd, use comma, 1000 sep={}, /pgfplots/.cd,
-  every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize}, title style={font=\footnotesize},
+  every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize},
   xmin=0, xmax=%d, ymin=0, ymax=1, ytick={0,0.5,1}, yticklabels={$0$,$0{,}5$,$1$}, clip=false,
-  xlabel={Periodos}, ylabel={Proporción}, title={(b) Proporción de chartistas, $\omega_t$},
+  xlabel={Periodos}, ylabel={Chartistas, $\omega_t$},
 ]
 """ % p["ventana"]
     tikz += "\\addplot[black, line width=0.8pt] coordinates {%s};\n" % coordenadas(pw, 3)
