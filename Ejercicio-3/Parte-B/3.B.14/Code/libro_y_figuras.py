@@ -1323,11 +1323,11 @@ def fig_valoracion_eeuu(carpeta):
     tikz += "\\addplot[black!55, line width=1.1pt, densely dashed] coordinates {%s};\n" % coordenadas([(f[0], f[4]) for f in filas], 2)
     tikz += "\\addlegendentry{La de %d más la cuenta corriente acumulada}\n" % a0
     df = {f[0]: f for f in filas}
-    for a, ancla in ((2007, "west"), (2024, "east")):
+    for a, ancla, dx in ((2007, "north", 0.0), (2024, "north east", 0.4)):  # rótulos debajo de la flecha, en la zona libre
         f = df[a]
         tikz += "\\draw[black!60, {Stealth[length=1.4mm]}-{Stealth[length=1.4mm]}] (axis cs:%d,%.2f) -- (axis cs:%d,%.2f);\n" % (a, f[4], a, f[3])
-        tikz += "\\node[font=\\scriptsize, anchor=%s, inner sep=2pt, align=%s] at (axis cs:%d,%.2f) {%d: $%s$ puntos};\n" % (
-            ancla, "left" if ancla == "west" else "right", a, (f[3] + f[4]) / 2, a, ("+" if f[3] > f[4] else "") + coma(f[3] - f[4], 1))
+        tikz += "\\node[font=\\scriptsize, anchor=%s, inner sep=2pt] at (axis cs:%.1f,%.2f) {%d: $%s$ puntos};\n" % (
+            ancla, a + dx, min(f[3], f[4]) - (10 if a == 2007 else 1.5), a, ("+" if f[3] > f[4] else "") + coma(f[3] - f[4], 1))
     tikz += "\\end{axis}\n\\end{tikzpicture}\n"
     open(os.path.join(IMG, "anx_valoracion_eeuu.tikz"), "w", encoding="utf-8").write(tikz)
     return filas
