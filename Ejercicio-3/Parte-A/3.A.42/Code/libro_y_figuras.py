@@ -2637,7 +2637,8 @@ def main():
              ["A10 (III.5-III.7): base JST R6 (crisis tras auges y recesiones financieras), prima de GILCHRIST y ZAKRAJŠEK y regresiones por cuantiles con el NFCI."],
              ["A11 (III.10): oleadas de crisis bancarias sistémicas en las 18 economías de la base JST, 1870-2020."],
              ["A12 (IV.1 y IV.2): figuras sintéticas (tres ciclos de SCHUMPETER, multiplicador-acelerador de SAMUELSON, ciclo de GOODWIN y equilibrios de KALDOR con parámetros ilustrativos)."],
-             ["A13 (IV.3-IV.5): ecuación logística (caos y bifurcación), modelo de KEEN con parámetros ilustrativos, curtosis del crecimiento del PIB y espectro de las horas y del paro."]]
+             ["A13 (IV.3-IV.5): ecuación logística (caos y bifurcación), modelo de KEEN con parámetros ilustrativos, curtosis del crecimiento del PIB y espectro de las horas y del paro."],
+             ["T14 (cuerpo, bloque 1): figuras abstractas b1_fases, b1_crecimiento, b1_tendencias y b1_hechos sobre una misma serie base sintética (hoja Simulaciones)."]]
     fuentes = [["Código", "Serie", "País", "Unidad", "Frecuencia", "Institución", "Enlace", "Descarga"]]
     for s, (nombre, pais, unidad, frec) in SERIES.items():
         fuentes.append([s, nombre, pais, unidad, frec, "FRED, Banco de la Reserva Federal de San Luis", FRED + s, FECHA_DESCARGA])
