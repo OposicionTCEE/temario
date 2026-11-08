@@ -1968,6 +1968,7 @@ def main():
     descargar_a2(carpeta)
     descargar_a3(carpeta)
     descargar_a4(carpeta)
+    descargar_a9(carpeta)
     series, cifras, sint, momentos = [], [], [], []
     sinteticas(sint)
     sinteticas_a4(sint)
