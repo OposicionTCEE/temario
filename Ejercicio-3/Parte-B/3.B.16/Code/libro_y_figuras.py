@@ -622,6 +622,83 @@ def fig_dispersion(disp):
     escribir("anx2_dispersion", c, "desviación típica sin ponderar de la tasa de paro entre los once países de la zona del euro y entre los 51 estados de EE. UU., 1991-2024 (anexo II.2.2)")
 
 
+def fig_reparto(rr):
+    """Barras apiladas: canales del reparto del riesgo en los estados de EE. UU. (ASDRUBALI et al., 1996) y en la zona del euro."""
+    filas = [("Estados de EE. UU., 1963-1990", {"K": 0.39, "F": 0.13, "C": 0.23, "U": 0.25}),
+             ("Zona del euro, 1999-2008", rr["1999-2008, sin Irlanda"]),
+             ("Zona del euro, 2009-2019", rr["2009-2019, sin Irlanda"])]
+    ancho, alto, dy = 10.0, 0.55, 0.95
+    estilos = {"K": "fill=black!70", "F": "fill=black!45", "C": "fill=black!20", "U": "fill=white"}
+    texto = {"K": "white", "F": "white", "C": "black", "U": "black"}
+    c = ""
+    for i, (nombre, r) in enumerate(filas):
+        y = -i * dy
+        c += "  \\node[anchor=east] at (-0.15,%.3f) {%s};\n" % (y, nombre)
+        x = 0.0
+        for k in ("K", "F", "C", "U"):
+            v = max(r[k], 0.0)
+            if v <= 0.0005:
+                continue
+            w = v * ancho
+            c += "  \\draw[black!70, %s] (%.3f,%.3f) rectangle (%.3f,%.3f);\n" % (estilos[k], x, y - alto / 2, x + w, y + alto / 2)
+            if w > 0.75:
+                c += "  \\node[%s, font=\\scriptsize] at (%.3f,%.3f) {%s};\n" % (texto[k], x + w / 2, y, "$%d\\%%$" % round(100 * r[k]))
+            x += w
+    fondo = -(len(filas) - 1) * dy - alto / 2 - 0.15
+    c += "  \\draw (0,%.3f) -- (%.3f,%.3f);\n" % (fondo, ancho, fondo)
+    for t in (0, 25, 50, 75, 100):
+        c += "  \\draw (%.3f,%.3f) -- (%.3f,%.3f) node[below] {$%d$};\n" % (t / 100 * ancho, fondo + 0.06, t / 100 * ancho, fondo - 0.06, t)
+    c += "  \\node[below=12pt] at (%.3f,%.3f) {porcentaje de una perturbación del producto};\n" % (ancho / 2, fondo)
+    ley = [("K", "mercados de capitales"), ("F", "presupuesto federal o transferencias"), ("C", "crédito y ahorro"), ("U", "sin alisar")]
+    xs = [0.0, 2.75, 7.0, 9.3]
+    for (k, nombre), x in zip(ley, xs):
+        c += "  \\draw[black!70, %s] (%.3f,0.62) rectangle (%.3f,0.88);\n" % (estilos[k], x, x + 0.35)
+        c += "  \\node[anchor=west, font=\\scriptsize] at (%.3f,0.75) {%s};\n" % (x + 0.42, nombre)
+    escribir("anx2_reparto", c, "canales del reparto del riesgo: estados de EE. UU. (ASDRUBALI, SØRENSEN y YOSHA, 1996) y zona del euro sin Irlanda (cálculo propio) (anexo II.3.2)")
+
+
+def fig_precios(pr):
+    anios, cv, cv_sin = pr
+    ex, ey, x0 = 0.36, 0.25, 1995
+    c = "  \\draw[black!40, densely dotted] (%.3f,0) -- (%.3f,%.3f);\n" % ((1999 - x0) * ex, (1999 - x0) * ex, 20 * ey)
+    c += "  \\node[anchor=south, font=\\scriptsize, black!60] at (%.3f,%.3f) {euro};\n" % ((1999 - x0) * ex, 20 * ey)
+    c += linea(anios, cv, ex, ey, x0, 0, "black!85, thick")
+    c += linea(anios, cv_sin, ex, ey, x0, 0, "black!55, thick, dashed")
+    c += "  \\node[anchor=west, font=\\scriptsize] at (%.3f,%.3f) {once países};\n" % ((2024 - x0) * ex + 0.1, cv[-1] * ey + 0.12)
+    c += "  \\node[anchor=west, font=\\scriptsize, black!70] at (%.3f,%.3f) {sin Irlanda};\n" % ((2024 - x0) * ex + 0.1, cv_sin[-1] * ey - 0.12)
+    c += "  \\draw[->] (0,0) -- (%.3f,0);\n  \\draw[->] (0,0) -- (0,%.3f) node[above] {coeficiente de variación de los niveles de precios, en porcentaje};\n" % ((2024 - x0) * ex + 0.4, 20 * ey + 0.3)
+    for t in (1995, 2000, 2005, 2010, 2015, 2020, 2024):
+        c += "  \\draw (%.3f,0.06) -- (%.3f,-0.06) node[below] {$%d$};\n" % ((t - x0) * ex, (t - x0) * ex, t)
+    for t in (0, 5, 10, 15, 20):
+        c += "  \\draw (0.06,%.3f) -- (-0.06,%.3f) node[left] {$%d$};\n" % (t * ey, t * ey, t)
+    escribir("anx2_precios", c, "dispersión de los niveles de precios del consumo individual efectivo entre los miembros de la zona del euro, 1995-2024 (anexo II.4.2)")
+
+
+def fig_crecimiento(cr):
+    anios, indices = cr
+    ex, ey, x0, y0 = 0.36, 0.085, 1995, 85
+    estilos = {"Zona del euro (once países)": "black!85, thick", "Estados Unidos": "black!55, thick, dashed",
+               "Reino Unido, Suecia y Dinamarca": "black!45, thick, densely dotted"}
+    c = "  \\draw[black!30] (%.3f,%.3f) -- (%.3f,%.3f);\n" % (0, (100 - y0) * ey, (2024 - x0) * ex, (100 - y0) * ey)
+    for nombre, v in indices.items():
+        c += linea(anios, v, ex, ey, x0, y0, estilos[nombre])
+    etiquetas = {"Zona del euro (once países)": "zona del euro", "Estados Unidos": "EE. UU.", "Reino Unido, Suecia y Dinamarca": "Reino Unido, Suecia y Dinamarca"}
+    finales = sorted(((v[-1], n) for n, v in indices.items()), reverse=True)
+    ultimo = None
+    for valor, n in finales:
+        y = (valor - y0) * ey
+        if ultimo is not None and ultimo - y < 0.33:
+            y = ultimo - 0.33
+        c += "  \\node[anchor=west, font=\\scriptsize] at (%.3f,%.3f) {%s};\n" % ((2024 - x0) * ex + 0.1, y, etiquetas[n])
+        ultimo = y
+    c += "  \\draw[->] (0,0) -- (%.3f,0);\n  \\draw[->] (0,0) -- (0,%.3f) node[above] {PIB real por habitante, $1999=100$};\n" % ((2024 - x0) * ex + 0.4, (145 - y0) * ey + 0.3)
+    for t in (1995, 2000, 2005, 2010, 2015, 2020, 2024):
+        c += "  \\draw (%.3f,0.06) -- (%.3f,-0.06) node[below] {$%d$};\n" % ((t - x0) * ex, (t - x0) * ex, t)
+    for t in (90, 100, 110, 120, 130, 140):
+        c += "  \\draw (0.06,%.3f) -- (-0.06,%.3f) node[left] {$%d$};\n" % ((t - y0) * ey, (t - y0) * ey, t)
+    escribir("anx2_crecimiento", c, "PIB real por habitante de la zona del euro (once países), EE. UU. y Reino Unido, Suecia y Dinamarca, 1995-2024, 1999 = 100 (anexo II.4.3)")
+
+
 def main():
     carpeta = sys.argv[1] if len(sys.argv) > 1 else tempfile.mkdtemp()
     descargar(carpeta)
