@@ -1218,6 +1218,7 @@ def main():
     cred = credibilidad(carpeta, series, cifras)
     deseq = desequilibrios(carpeta, series, cifras)
     fed, ost = historia(carpeta, series, cifras)
+    med_cfa = cfa(carpeta, series, cifras)
     fig_correlaciones(res)
     fig_amplitud(res)
     fig_bayoumi(corr_be)
