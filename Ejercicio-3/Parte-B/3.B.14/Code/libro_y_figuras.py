@@ -1220,6 +1220,116 @@ def fig_engel(pol, xm, cm, p=3, J=60):
     return res, series, rellenos
 
 
+# ---------------------------------------------------------------- A9 (III.3 y III.4): valoración de EE. UU. y factor dólar
+# Valoración: posición de inversión internacional neta de EE. UU. (BEA en FRED, IIPUSNETIA, millones de dólares, fin de
+# año) frente a la de 1976 más la cuenta corriente acumulada desde 1977 (Banco Mundial BN.CAB.XOKA.CD, dólares
+# corrientes), ambas en % del PIB (FRED GDPA, miles de millones). La diferencia son los efectos de valoración y otros
+# ajustes (variaciones de precios y tipos de cambio, otras variaciones de volumen, cuenta de capital y errores).
+# Factor dólar (VERDELHAN, 2018): variación logarítmica mensual de cada moneda frente al dólar con tipos de fin de mes del
+# BPI (WS_XRU, colección E); el factor de cada moneda es la media de las variaciones de las otras 25; R2 de la regresión
+# de cada moneda sobre su factor en 1999-2007 y en 2008 en adelante.
+MONEDAS_FD = [("AU", "Dólar australiano"), ("SG", "Dólar de Singapur"), ("SE", "Corona sueca"), ("PL", "Esloti polaco"),
+              ("NZ", "Dólar neozelandés"), ("HU", "Forinto húngaro"), ("XM", "Euro"), ("NO", "Corona noruega"),
+              ("CZ", "Corona checa"), ("CA", "Dólar canadiense"), ("KR", "Won surcoreano"), ("ZA", "Rand sudafricano"),
+              ("CH", "Franco suizo"), ("GB", "Libra esterlina"), ("CO", "Peso colombiano"), ("CL", "Peso chileno"),
+              ("TH", "Bat tailandés"), ("MX", "Peso mexicano"), ("IN", "Rupia india"), ("BR", "Real brasileño"),
+              ("IL", "Séquel israelí"), ("PH", "Peso filipino"), ("ID", "Rupia indonesia"), ("TR", "Lira turca"),
+              ("RU", "Rublo ruso"), ("JP", "Yen")]
+VENTANAS_FD = [("antes", "1999-01", "2007-12"), ("despues", "2008-01", "2026-09"), ("todo", "1999-01", "2026-09")]
+
+
+def leer_xru_fin(carpeta):
+    out = {}
+    with open(os.path.join(carpeta, "dl_bis_xru", "WS_XRU_csv_flat.csv"), encoding="utf-8") as f:
+        for d in csv.DictReader(f):
+            if (d["FREQ:Frequency"][:1] == "M" and d["COLLECTION:Collection"][:1] == "E"
+                    and d["OBS_VALUE:Observation Value"] not in ("", "NaN")):
+                out.setdefault(d["REF_AREA:Reference area"][:2], {})[d["TIME_PERIOD:Time period or range"]] = float(d["OBS_VALUE:Observation Value"])
+    return out
+
+
+def fig_factor_dolar(xfin):
+    res = {}
+    for clave, t0, t1 in VENTANAS_FD:
+        ms = meses_entre(t0, t1)
+        cam = {a: [100 * math.log(xfin[a][m2] / xfin[a][m1]) for m1, m2 in zip(ms, ms[1:])] for a, _ in MONEDAS_FD}
+        T = len(ms) - 1
+        for a, _ in MONEDAS_FD:
+            otras = [b for b, _ in MONEDAS_FD if b != a]
+            fac = [sum(cam[b][t] for b in otras) / len(otras) for t in range(T)]
+            c, beta, r2 = ols(fac, cam[a])
+            res[(clave, a)] = (r2, beta, math.sqrt(12 * sum((v - sum(cam[a]) / T) ** 2 for v in cam[a]) / T))
+    med = {}
+    for clave, _, _ in VENTANAS_FD:
+        v = sorted(res[(clave, a)][0] for a, _ in MONEDAS_FD)
+        med[clave] = (v[len(v) // 2 - 1] + v[len(v) // 2]) / 2
+    orden = sorted(MONEDAS_FD, key=lambda x: res[("despues", x[0])][0])
+    n = len(orden)
+    tikz = "% Factor dólar (VERDELHAN, 2018): proporción de la varianza de la variación mensual de cada moneda frente al dólar\n"
+    tikz += "% (tipos de fin de mes del BPI, WS_XRU) que explica la media de las variaciones de las otras 25 monedas (R2), en\n"
+    tikz += "%% 1999-01 a 2007-12 (círculo gris) y 2008-01 a %s (círculo negro); líneas discontinuas: medianas.\n" % VENTANAS_FD[1][2]
+    tikz += "% Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_factor_dolar\n"
+    tikz += "\\begin{tikzpicture}\n\\footnotesize\n\\begin{axis}[\n"
+    tikz += r"""  scale only axis, width=10.6cm, height=%.2fcm, axis lines=left, tick align=outside, tick style={black!60},
+  /pgf/number format/.cd, use comma, 1000 sep={}, /pgfplots/.cd,
+  every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize},
+  xmin=0, xmax=90, ymin=0.3, ymax=%.1f, clip=false, xtick={0,10,...,90},
+  ytick={%s}, yticklabels={%s},
+  xlabel={Parte de la variación mensual frente al dólar que explica el factor dólar (\%%)},
+  legend style={draw=none, fill=none, font=\footnotesize, at={(0.5,1.02)}, anchor=south, legend columns=-1,
+    /tikz/every even column/.append style={column sep=0.5cm}},
+]
+""" % (0.33 * n, n + 0.7, ",".join(str(i + 1) for i in range(n)), ",".join(nombre for _, nombre in orden))
+    tikz += "\\addlegendimage{only marks, mark=*, mark size=2pt, black!35}\\addlegendentry{1999-2007}\n"
+    tikz += "\\addlegendimage{only marks, mark=*, mark size=2pt, black}\\addlegendentry{2008-%s}\n" % VENTANAS_FD[1][2][:4]
+    for i, (a, _) in enumerate(orden):
+        x0, x1 = 100 * res[("antes", a)][0], 100 * res[("despues", a)][0]
+        tikz += "\\draw[black!45, line width=0.6pt] (axis cs:%.2f,%d) -- (axis cs:%.2f,%d);\n" % (x0, i + 1, x1, i + 1)
+        tikz += "\\fill[black!35] (axis cs:%.2f,%d) circle (2pt);\n\\fill[black] (axis cs:%.2f,%d) circle (2pt);\n" % (x0, i + 1, x1, i + 1)
+    for clave, color, ypos in (("antes", "black!45", n + 0.7), ("despues", "black", n + 0.7)):
+        tikz += "\\draw[%s, densely dashed] (axis cs:%.2f,0.3) -- (axis cs:%.2f,%.1f);\n" % (color, 100 * med[clave], 100 * med[clave], ypos)
+    tikz += "\\end{axis}\n\\end{tikzpicture}\n"
+    open(os.path.join(IMG, "anx_factor_dolar.tikz"), "w", encoding="utf-8").write(tikz)
+    return res, med
+
+
+def fig_valoracion_eeuu(carpeta):
+    def fred(fich, col):
+        with open(os.path.join(carpeta, "dl_fred_a9", fich), encoding="utf-8") as f:
+            return {int(r["observation_date"][:4]): float(r[col]) for r in csv.DictReader(f) if r[col] not in ("", ".")}
+    niip, pib = fred("IIPUSNETIA.csv", "IIPUSNETIA"), fred("GDPA.csv", "GDPA")
+    d = json.load(open(os.path.join(carpeta, "dl_wb_a9", "ca_usa_cd.json"), encoding="utf-8"))
+    cc = {int(r["date"]): r["value"] / 1e6 for r in d[1] if r["value"] is not None}
+    a0, a1 = min(niip), max(a for a in niip if a in pib and a in cc)
+    filas, acum = [], niip[a0]
+    for a in range(a0, a1 + 1):
+        if a > a0:
+            acum += cc[a]
+        filas.append((a, niip[a], acum, 100 * niip[a] / (1000 * pib[a]), 100 * acum / (1000 * pib[a]), cc[a], pib[a]))
+    tikz = "%% Posición de inversión internacional neta de EE. UU. (BEA, en FRED IIPUSNETIA) y la de %d más la cuenta corriente\n" % a0
+    tikz += "%% acumulada (Banco Mundial BN.CAB.XOKA.CD), en %% del PIB (FRED GDPA), %d-%d. La distancia son los efectos de valoración\n" % (a0, a1)
+    tikz += "% y otros ajustes. Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_valoracion_eeuu\n"
+    tikz += "\\begin{tikzpicture}\n" + EJES
+    ymin = 10 * math.floor(min(min(f[3], f[4]) for f in filas) / 10) - 5
+    ymax = 10 * math.ceil(max(max(f[3], f[4]) for f in filas) / 10) + 5
+    tikz += "  xmin=%d, xmax=%d, ymin=%d, ymax=%d, xtick={1980,1985,...,2025}, ylabel={\\%% del PIB}, height=6.0cm,\n" % (a0, a1, ymin, ymax)
+    tikz += "  legend style={at={(0.02,0.04)}, anchor=south west, legend columns=1}, clip=false,\n]\n"
+    tikz += "\\draw[black!45] (axis cs:%d,0) -- (axis cs:%d,0);\n" % (a0, a1)
+    tikz += "\\addplot[black, line width=1.2pt] coordinates {%s};\n" % coordenadas([(f[0], f[3]) for f in filas], 2)
+    tikz += "\\addlegendentry{Posición de inversión internacional neta}\n"
+    tikz += "\\addplot[black!55, line width=1.1pt, densely dashed] coordinates {%s};\n" % coordenadas([(f[0], f[4]) for f in filas], 2)
+    tikz += "\\addlegendentry{La de %d más la cuenta corriente acumulada}\n" % a0
+    df = {f[0]: f for f in filas}
+    for a, ancla in ((2007, "west"), (2024, "east")):
+        f = df[a]
+        tikz += "\\draw[black!60, {Stealth[length=1.4mm]}-{Stealth[length=1.4mm]}] (axis cs:%d,%.2f) -- (axis cs:%d,%.2f);\n" % (a, f[4], a, f[3])
+        tikz += "\\node[font=\\scriptsize, anchor=%s, inner sep=2pt, align=%s] at (axis cs:%d,%.2f) {%d: $%s$ puntos};\n" % (
+            ancla, "left" if ancla == "west" else "right", a, (f[3] + f[4]) / 2, a, ("+" if f[3] > f[4] else "") + coma(f[3] - f[4], 1))
+    tikz += "\\end{axis}\n\\end{tikzpicture}\n"
+    open(os.path.join(IMG, "anx_valoracion_eeuu.tikz"), "w", encoding="utf-8").write(tikz)
+    return filas
+
+
 # ---------------------------------------------------------------- principal
 def main():
     carpeta = sys.argv[1]
