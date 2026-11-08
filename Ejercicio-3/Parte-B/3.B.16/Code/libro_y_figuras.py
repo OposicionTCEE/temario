@@ -942,11 +942,8 @@ def fig_cuenta_corriente(cc):
     for p in ("NLD", "ITA", "PRT", "ESP", "GRC", "DEU"):
         a = [x for x in range(1995, 2025) if x in cc[p]]
         c += linea(a, [cc[p][x] for x in a], ex, ey, x0, y0, estilos[p])
-    rotulos = {"GRC": (2008, -0.35, "Grecia"), "PRT": (2008.2, 0.35, "Portugal"), "ESP": (2006.4, -0.35, "España")}
-    for p, (a, dy, texto) in rotulos.items():
-        c += "  \\node[anchor=%s, font=\\scriptsize] at (%.3f,%.3f) {%s};\n" % ("north" if dy < 0 else "south", (a - x0) * ex, (cc[p][int(a)] - y0) * ey + dy, texto)
-    c += etiquetas_finales([(cc["NLD"][2024], "Países Bajos", "black!60"), (cc["DEU"][2024], "Alemania", "black"), (cc["ITA"][2024], "Italia", "black!60")], (x1 - x0) * ex + 0.1, ey, y0)
-    c += marca_vertical(1999, (y1 - y0) * ey + 0.1, "euro", ex, x0)
+    c += leyenda([(estilos[p], NOMBRE[p]) for p in ("DEU", "NLD", "ITA", "ESP", "PRT", "GRC")], 0.3, -1.05, columnas=3, ancho_col=3.4, paso=0.4)
+    c += marca_vertical(1999, (y1 - y0) * ey + 0.1, "euro", ex, x0, fuera=True)
     c += ejes_tiempo(x0, x1, ex, [1995, 2000, 2005, 2010, 2015, 2020, 2024], y0, y1, ey, [-15, -10, -5, 0, 5, 10],
                      "saldo por cuenta corriente, en porcentaje del PIB")
     escribir("anx2_cuenta_corriente", c, "saldo de la balanza por cuenta corriente en porcentaje del PIB, 1995-2024 (anexo II.6.2)")
