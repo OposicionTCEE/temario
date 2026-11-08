@@ -1810,7 +1810,7 @@ def con_datos_a8(cifras, sim):
     cifras.append(("Modelo neokeynesiano: kappa con xi 0,75 y 0,5", "%.4f; %.4f" % (nek_kappa(0.75), nek_kappa(0.5)), "", "II.7"))
     fig = "\\begin{tikzpicture}\n"
     s = lambda v: [("black, thick", m75[v], None), ("black!60, dashed, thick", m50[v], None)]
-    s_ley = [("black, thick", m75["brecha"], "precios fijos un año de media"), ("black!60, dashed, thick", m50["brecha"], "medio año de media")]
+    s_ley = [("black, thick", m75["brecha"], "precios que duran un año de media"), ("black!60, dashed, thick", m50["brecha"], "precios que duran medio año")]
     fig += eje("a", "{(0,0)}", "(a) Brecha de producción", s_ley, "\\%", -0.35, 0.05, "-0.3,-0.2,-0.1,0", H, "0,2,...,12", leyenda=("(0.98,0.03)", "south east"))
     fig += eje("b", "{($(a.north east)+(1.6cm,0)$)}", "(b) Inflación anual", s("inflacion"), "Puntos", -0.8, 0.1, "-0.8,-0.6,-0.4,-0.2,0", H, "0,2,...,12")
     fig += eje("c", abajo_a, "(c) Tipo de interés nominal anual", s("nominal"), "Puntos", -0.2, 0.5, "-0.2,0,0.2,0.4", H, "0,2,...,12", "Trimestres")
