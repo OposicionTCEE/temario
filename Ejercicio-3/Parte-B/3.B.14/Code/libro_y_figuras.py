@@ -1371,6 +1371,9 @@ def main():
     e2f, e2c = fig_euro_dos_anos(fred, ea2, us2)
     predc, predm = fig_prediccion(xm, pol, cm)
     engr, engs, engrel = fig_engel(pol, xm, cm)
+    xfin = leer_xru_fin(carpeta)
+    fdr, fdmed = fig_factor_dolar(xfin)
+    valf = fig_valoracion_eeuu(carpeta)
 
     # ---- cifras citadas en el texto
     cif = []
