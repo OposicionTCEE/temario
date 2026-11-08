@@ -2447,7 +2447,7 @@ def sinteticas_a13(filas_series, cifras, sim):
              " ".join("(%.2f,%.5f)" % (t, max(v, 1e-3)) for t, v in zip(t_alta[::paso], Y_alta[2][::paso]))))
     escribir("anx_keen", "\\begin{tikzpicture}\n" + ka + kb + "\\end{tikzpicture}",
              "Modelo de KEEN (1995) con parámetros ilustrativos: tasa de empleo y deuda de las empresas sobre la producción con una deuda inicial de 0,5 y de 2 veces la producción.")
-    sim.append(("Sintética", "Modelo de KEEN (1995): participación salarial, empleo y deuda con curva de PHILLIPS f1/(1-l)^2 - f0, inversión -0,0065 + exp(-5) exp(20 beneficio), capital/producto 3, tipo 3 %%, productividad 2,5 %%, población 2 %%, depreciación 1 %%; LSODA; deuda inicial 0,5 y 2", "anx_keen"))
+    sim.append(("Sintética", "Modelo de KEEN (1995): participación salarial, empleo y deuda con curva de PHILLIPS f1/(1-l)^2 - f0, inversión -0,0065 + exp(-5) exp(20 beneficio), capital/producto 3, tipo 3 %, productividad 2,5 %, población 2 %, depreciación 1 %; LSODA; deuda inicial 0,5 y 2", "anx_keen"))
 
 
 def con_datos_a13(carpeta, filas_series, cifras):
