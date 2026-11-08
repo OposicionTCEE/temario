@@ -2026,6 +2026,9 @@ def main():
                     "FRED, Banco de la Reserva Federal de San Luis (BEA)", FRED + "B230RC0A052NBEA", "07/11/2026"])
     for s, nombre in SERIES_A3.items():
         fuentes.append([s, nombre, "Estados Unidos", "ver FRED", "mensual (media trimestral en el VAR)", "FRED, Banco de la Reserva Federal de San Luis", FRED + s, FECHA_DESCARGA])
+    for s, nombre in SERIES_A9.items():
+        fuentes.append([s, nombre, "Estados Unidos", "millones de dólares", "trimestral (saldo a fin de trimestre)",
+                        "Reserva Federal, Cuentas Financieras (Z.1), en FRED", FRED + s, "08/11/2026"])
     for nombre, consulta in EUROSTAT.items():
         fuentes.append(["Eurostat " + consulta.split("?")[0], nombre, "España y zona del euro", "CLV10_MEUR, PD10_EUR, THS_PER o THS_HW", "trimestral",
                         "Eurostat", "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/" + consulta, FECHA_DESCARGA])
