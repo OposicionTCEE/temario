@@ -1636,6 +1636,20 @@ def main():
             filas.append(["Tipo real frente al dólar", nombre, m, q, "100 × logaritmo", "BPI WS_XRU y WS_LONG_CPI", "s + p_EEUU - p", "anx_engel_nivel, anx_engel_horizontes"])
             filas.append(["Tipo oficial menos el de EE. UU.", nombre, m, di, "% al mes", "BPI WS_CBPOL", "100 [ln(1 + i/100) - ln(1 + i*/100)]/12; euro desde 1999; Japón: último publicado en los meses sin dato", "anx_engel_nivel, anx_engel_horizontes"])
             filas.append(["Inflación menos la de EE. UU.", nombre, m, dp, "% al mes", "BPI WS_LONG_CPI", "variación mensual del IPC; sin la media de cada mes del calendario", "anx_engel_nivel, anx_engel_horizontes"])
+    for f in valf:
+        filas.append(["Posición de inversión internacional neta (fin de año)", "Estados Unidos", f[0], f[1], "millones de dólares", "BEA en FRED IIPUSNETIA", "en % del PIB en la figura", "anx_valoracion_eeuu"])
+        filas.append(["Posición de 1976 más la cuenta corriente acumulada", "Estados Unidos", f[0], f[2], "millones de dólares", "FRED IIPUSNETIA; Banco Mundial BN.CAB.XOKA.CD", "suma de la cuenta corriente desde 1977", "anx_valoracion_eeuu"])
+        filas.append(["Cuenta corriente", "Estados Unidos", f[0], f[5], "millones de dólares", "Banco Mundial BN.CAB.XOKA.CD", "ninguno", "anx_valoracion_eeuu"])
+        filas.append(["PIB nominal", "Estados Unidos", f[0], f[6], "miles de millones de dólares", "FRED GDPA", "denominador", "anx_valoracion_eeuu"])
+    for a, nombre in MONEDAS_FD:
+        for m in meses_entre("1998-12", VENTANAS_FD[1][2]):
+            filas.append(["Tipo de cambio de fin de mes frente al dólar", nombre, m, xfin[a][m], "moneda por dólar", "BPI WS_XRU (colección E)", "variación logarítmica mensual", "anx_factor_dolar"])
+    fdh = [["Moneda", "Periodo", "R2 con el factor dólar (media de las otras 25)", "Beta", "Volatilidad anual de la variación frente al dólar (%)"]]
+    for a, nombre in MONEDAS_FD:
+        for clave, t0, t1 in VENTANAS_FD:
+            fdh.append([nombre, "%s a %s" % (t0, t1)] + list(fdr[(clave, a)]))
+    for clave, t0, t1 in VENTANAS_FD:
+        fdh.append(["Mediana de las 26", "%s a %s" % (t0, t1), fdmed[clave], "", ""])
     engh = [["Muestra", "Moneda", "Medida", "Horizonte (meses)", "Valor"]]
     for clave, t0, t1 in MUESTRAS_ENGEL:
         for a, nombre in [("G6", "Media de las seis")] + MONEDAS_ENGEL:
