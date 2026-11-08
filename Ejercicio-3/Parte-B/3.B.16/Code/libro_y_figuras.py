@@ -1148,6 +1148,49 @@ def fig_mezzogiorno():
     escribir("anx3_mezzogiorno", c, "PIB por habitante del Sur de Italia en porcentaje del Centro-Norte, 1871-2009, cifras de IUZZOLINO, PELLEGRINI y VIESTI (2011) (anexo III.2.2)")
 
 
+def fig_cfa_inflacion(medianas):
+    m = medianas["FP.CPI.TOTL.ZG"]
+    x0, x1, ex, y0, y1, ey = 1980, 2024, 0.3, -5, 40, 0.11
+    estilos = {"UEMOA": "black!90, thick", "CEMAC": "black!55, thick, dashed", "vecinos": "black!40, thick, densely dotted"}
+    nombres = {"UEMOA": "UEMOA (franco CFA de África occidental)", "CEMAC": "CEMAC (franco CFA de África central)", "vecinos": "vecinos con moneda propia"}
+    c = "  \\draw[black!45] (0,%.3f) -- (%.3f,%.3f);\n" % ((0 - y0) * ey, (x1 - x0) * ex, (0 - y0) * ey)
+    for g in ("vecinos", "CEMAC", "UEMOA"):
+        a = sorted(m[g])
+        c += linea(a, [m[g][x] for x in a], ex, ey, x0, y0, estilos[g])
+    c += marca_vertical(1994, (y1 - y0) * ey + 0.1, "devaluación", ex, x0, fuera=True)
+    c += leyenda([(estilos[g], nombres[g]) for g in ("UEMOA", "CEMAC", "vecinos")], (2000 - x0) * ex, (39 - y0) * ey)
+    c += ejes_tiempo(x0, x1, ex, [1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020], y0, y1, ey, [0, 10, 20, 30, 40],
+                     "inflación de los precios de consumo, mediana de cada grupo, en porcentaje")
+    escribir("anx3_cfa_inflacion", c, "inflación mediana de la UEMOA, la CEMAC y los vecinos de África occidental con moneda propia, 1980-2024 (anexo III.4.1)")
+
+
+def fig_cfa_crecimiento(medianas):
+    m = medianas["NY.GDP.PCAP.KD.ZG"]
+    ey, y0, y1, paso, ancho = 0.9, -2.0, 3.5, 4.4, 0.95
+    tonos = {"UEMOA": "black!80", "CEMAC": "black!45", "vecinos": "black!12"}
+    nombres = {"UEMOA": "UEMOA", "CEMAC": "CEMAC", "vecinos": "vecinos con moneda propia"}
+    c = ""
+    for k, (a0, a1) in enumerate(PERIODOS_CFA):
+        base = k * paso
+        for j, g in enumerate(CFA):
+            v = float(np.mean([m[g][a] for a in range(a0, a1 + 1) if a in m[g]]))
+            x = base + j * (ancho + 0.2)
+            c += "  \\filldraw[fill=%s, draw=black!60] (%.3f,0) rectangle (%.3f,%.3f);\n" % (tonos[g], x, x + ancho, v * ey)
+            c += "  \\node[%s, font=\\scriptsize] at (%.3f,%.3f) {%s};\n" % ("above" if v >= 0 else "below", x + ancho / 2, v * ey, num(v))
+        c += "  \\node[font=\\scriptsize] at (%.3f,%.3f) {$%d$-$%d$};\n" % (base + 1.5 * ancho + 0.2, y0 * ey - 0.3, a0, a1)
+    derecha = (len(PERIODOS_CFA) - 1) * paso + 3 * ancho + 0.4 + 0.3
+    c += "  \\draw[black!60] (-0.3,0) -- (%.3f,0);\n" % derecha
+    c += "  \\draw[->] (-0.3,%.3f) -- (-0.3,%.3f);\n" % (y0 * ey, y1 * ey + 0.25)
+    for t in (-2, -1, 0, 1, 2, 3):
+        c += "  \\draw (-0.24,%.3f) -- (-0.36,%.3f) node[left] {$%d$};\n" % (t * ey, t * ey, t)
+    c += "  \\node[anchor=south west] at (-1.0,%.3f) {crecimiento anual del PIB real por habitante, media de las medianas de cada grupo, en porcentaje};\n" % (y1 * ey + 0.5)
+    for j, g in enumerate(CFA):
+        X = j * 3.2
+        c += "  \\filldraw[fill=%s, draw=black!60] (%.3f,%.3f) rectangle (%.3f,%.3f);\n" % (tonos[g], X, y0 * ey - 0.95, X + 0.4, y0 * ey - 0.75)
+        c += "  \\node[anchor=west, font=\\scriptsize] at (%.3f,%.3f) {%s};\n" % (X + 0.5, y0 * ey - 0.85, nombres[g])
+    escribir("anx3_cfa_crecimiento", c, "crecimiento del PIB real por habitante (media de las medianas anuales) de la UEMOA, la CEMAC y los vecinos con moneda propia, por periodos (anexo III.4.1)")
+
+
 def fig_alemania(ost):
     anios, hab, ocu = ost
     x0, x1, ex, y0, y1, ey = anios[0], anios[-1], 0.33, 30, 100, 0.06
