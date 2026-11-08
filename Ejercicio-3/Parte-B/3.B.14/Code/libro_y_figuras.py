@@ -1581,6 +1581,9 @@ def main():
     fdr, fdmed = fig_factor_dolar(xfin)
     valf = fig_valoracion_eeuu(carpeta)
     chart = fig_chartistas()
+    burb = fig_burbuja()
+    bsr, bsmed = fig_backus_smith(carpeta, xa, ca)
+    idv = fig_identidad_varianza(engr)
 
     # ---- cifras citadas en el texto
     cif = []
