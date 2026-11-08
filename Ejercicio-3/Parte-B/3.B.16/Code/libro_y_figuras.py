@@ -731,7 +731,13 @@ def main():
              ["II.2.1: VAR agrupado con efectos fijos por estado, 2 retardos, 1979-2019, en el crecimiento del empleo relativo, el log de la tasa de empleo relativa y el log"],
              ["de la tasa de actividad relativa (estado menos nación), como BLANCHARD y KATZ (1992); el empleo entra el primero y afecta en el mismo año a las otras dos."],
              ["II.2.2: desviación típica sin ponderar de las tasas de paro; persistencia = coeficiente de un AR(1) agrupado de la desviación respecto a la media"],
-             ["sin ponderar de cada año, con efectos fijos, 1991-2024; vida media = log 0,5 / log del coeficiente."]]
+             ["sin ponderar de cada año, con efectos fijos, 1991-2024; vida media = log 0,5 / log del coeficiente."],
+             ["II.3.2: descomposición de ASDRUBALI, SØRENSEN y YOSHA (1996): PIB (B1GQ) -> renta nacional bruta (B5G) -> renta nacional disponible bruta (B6G)"],
+             ["-> consumo final (P3) del total de la economía (S1), en euros de 2015 por habitante (deflactor del PIB de nama_10_gdp y población del Banco Mundial);"],
+             ["coeficientes de MCO agrupados con efectos fijos de año (suman uno); sin Irlanda en la versión principal, porque los beneficios de sus multinacionales"],
+             ["separan el PIB de la renta nacional y dominan la estimación."],
+             ["II.4.2: coeficiente de variación (desviación típica / media, sin ponderar) de los niveles de precios del consumo individual efectivo (UE-27 = 100)."],
+             ["II.4.3: PIB real por habitante de los agregados = suma del PIB en dólares de 2015 / suma de la población; EE. UU., serie NY.GDP.PCAP.KD."]]
     fuentes = [["Código", "Serie", "Ámbito", "Unidad", "Frecuencia", "Institución", "Enlace", "Descarga"]]
     for s, nombre in list(WB_SERIES.items()) + [(WB_PARO, "Tasa de paro, estimación armonizada de la OIT")]:
         fuentes.append([s, nombre, ", ".join(NOMBRE[p] for p in EURO + FUERA), "ver serie", "anual", "Banco Mundial, Indicadores del Desarrollo Mundial",
