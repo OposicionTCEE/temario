@@ -44,7 +44,12 @@ ESTADOS = {"AL": "01", "AK": "02", "AZ": "04", "AR": "05", "CA": "06", "CO": "08
            "OK": "40", "OR": "41", "PA": "42", "RI": "44", "SC": "45", "SD": "46", "TN": "47", "TX": "48", "UT": "49",
            "VT": "50", "VA": "51", "WA": "53", "WV": "54", "WI": "55", "WY": "56"}
 WB_PARO = "SL.UEM.TOTL.ZS"  # tasa de paro, estimación armonizada de la OIT, desde 1991
-EUROSTAT = {"a10.json": "nama_10_a10?unit=CP_MEUR&na_item=B1G&" + "&".join("geo=" + ISO2[p] for p in EURO)}
+WB_A8 = {"SP.POP.TOTL": "Población total", "NY.GDP.PCAP.KD": "PIB por habitante a precios constantes, dólares de 2015"}
+GEO = "&".join("geo=" + ISO2[p] for p in EURO)
+EUROSTAT = {"a10.json": "nama_10_a10?unit=CP_MEUR&na_item=B1G&" + GEO,
+            "cuentas.json": "nasa_10_nf_tr?unit=CP_MEUR&sector=S1&direct=PAID&na_item=B1GQ&na_item=B5G&na_item=B6G&na_item=P3&" + GEO,
+            "deflactor.json": "nama_10_gdp?unit=PD15_EUR&na_item=B1GQ&" + GEO,
+            "precios.json": "prc_ppp_ind?na_item=PLI_EU27_2020&ppp_cat=A01&" + GEO}
 SECTORES = ["A", "BDE", "C", "F", "G-I", "J", "K", "L", "M_N", "O-Q", "R-U"]
 LAMBDA_ANUAL = 6.25  # RAVN y UHLIG (2002)
 RETARDOS_BE, RETARDOS_BK, HORIZONTE = 2, 2, 10
