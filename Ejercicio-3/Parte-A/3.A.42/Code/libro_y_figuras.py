@@ -2426,7 +2426,7 @@ def sinteticas_a13(filas_series, cifras, sim):
         tt = np.arange(0, s.t[-1], 0.25)
         casos[d0] = (tt, s.sol(tt), s.t[-1])
     t_alta, Y_alta, fin_alta = casos[2.0]
-    picos = sum(1 for i in range(1, len(tt := t_alta) - 1) if Y_alta[1][i] > Y_alta[1][i - 1] and Y_alta[1][i] >= Y_alta[1][i + 1])
+    picos = sum(1 for i in range(1, len(t_alta) - 1) if Y_alta[1][i] > Y_alta[1][i - 1] and Y_alta[1][i] >= Y_alta[1][i + 1])
     t_baja, Y_baja, fin_baja = casos[0.5]
     cifras.append(("Modelo de KEEN (ilustrativo): equilibrio bueno (participación salarial, empleo, deuda/producción); deuda inicial 0,5: estado en el año 180; deuda inicial 2: año en que la deuda llega a 1.000 veces la producción y ciclos del empleo antes",
                    "equilibrio %.3f, %.3f, %.3f; baja: %.3f, %.3f, %.3f; alta: año %.1f, %d máximos del empleo" % (1 - p1 - r * d1, l1, d1, Y_baja[0][-1], Y_baja[1][-1], Y_baja[2][-1], fin_alta, picos), "", "IV.4"))
