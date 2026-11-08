@@ -2222,7 +2222,8 @@ def main():
              ["A5 (II.3): modelo básico del ciclo real log-linealizado (trabajo divisible e indivisible), respuestas a la PTF y momentos de 500 simulaciones con HP."],
              ["A6 (II.4): VAR de largo plazo de GALÍ (1999) y autocorrelaciones del crecimiento del PIB. A7 (II.5 y II.6): ciclo real con gasto público y coste de LUCAS."],
              ["A8 (II.7-II.10): modelo neokeynesiano de tres ecuaciones con soluciones analíticas (perturbación monetaria, mejora tecnológica, orientación futura)."],
-             ["A9 (III.1-III.4): versión lineal de KIYOTAKI y MOORE (1997) y apalancamiento de los intermediarios con las Cuentas Financieras de la Reserva Federal."]]
+             ["A9 (III.1-III.4): versión lineal de KIYOTAKI y MOORE (1997) y apalancamiento de los intermediarios con las Cuentas Financieras de la Reserva Federal."],
+             ["A10 (III.5-III.7): base JST R6 (crisis tras auges y recesiones financieras), prima de GILCHRIST y ZAKRAJŠEK y regresiones por cuantiles con el NFCI."]]
     fuentes = [["Código", "Serie", "País", "Unidad", "Frecuencia", "Institución", "Enlace", "Descarga"]]
     for s, (nombre, pais, unidad, frec) in SERIES.items():
         fuentes.append([s, nombre, pais, unidad, frec, "FRED, Banco de la Reserva Federal de San Luis", FRED + s, FECHA_DESCARGA])
