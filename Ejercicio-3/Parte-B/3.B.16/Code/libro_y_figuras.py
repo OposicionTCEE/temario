@@ -1237,6 +1237,8 @@ def main():
     fig_federal(fed)
     fig_mezzogiorno()
     fig_alemania(ost)
+    fig_cfa_inflacion(med_cfa)
+    fig_cfa_crecimiento(med_cfa)
     leeme = [["Libro de datos del tema 3.B.16 (Teoría de la integración monetaria)"],
              ["Generado por Code/libro_y_figuras.py con los datos del Banco Mundial, Eurostat, FRED, el BCE y el Arbeitskreis VGR der Länder (descargas del %s y del 08/11/2026)." % FECHA_DESCARGA],
              ["Hojas: Fuentes (series y su origen), Series (formato largo: serie, país o estado, año u horizonte, valor, unidad, fuente, tratamiento, figura)"],
