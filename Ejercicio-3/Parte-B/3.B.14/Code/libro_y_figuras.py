@@ -1409,6 +1409,133 @@ def fig_chartistas(p=PARAM_CHART):
     return est
 
 
+# ---------------------------------------------------------------- A11 (III.7 y III.8): burbuja, BACKUS-SMITH e identidad
+# Burbuja racional de BLANCHARD (1979) en el modelo monetario (simulación propia, ilustrativa): s_t = v_t + b_t, con v_t
+# paseo aleatorio y b_{t+1} = (1 + h)/(h pi) b_t + ruido con probabilidad pi, o solo ruido (estalla) con 1 - pi, de modo
+# que E_t b_{t+1} = ((1 + h)/h) b_t, como exige el modelo monetario con valor presente (anexo II).
+PARAM_BURBUJA = dict(h=20.0, pi=0.95, sd_v=0.01, sd_b=0.004, T=200, semilla=5)
+# BACKUS y SMITH (1993): correlación de las variaciones anuales del tipo de cambio real de cada economía frente al dólar
+# (BPI WS_XRU anual, IPC WS_LONG_CPI) con las del consumo privado por habitante relativo al de EE. UU. (Banco Mundial
+# NE.CON.PRVT.PC.KD, dólares constantes de 2015), 1971-2024. Con mercados completos y utilidad de aversión constante, +1.
+NOMBRES_BS = {"MEX": ("MX", "México"), "KOR": ("KR", "Corea"), "FIN": ("FI", "Finlandia"), "ISR": ("IL", "Israel"),
+              "NZL": ("NZ", "Nueva Zelanda"), "PRT": ("PT", "Portugal"), "ESP": ("ES", "España"), "DNK": ("DK", "Dinamarca"),
+              "GRC": ("GR", "Grecia"), "CAN": ("CA", "Canadá"), "GBR": ("GB", "Reino Unido"), "AUS": ("AU", "Australia"),
+              "SWE": ("SE", "Suecia"), "ITA": ("IT", "Italia"), "BEL": ("BE", "Bélgica"), "DEU": ("DE", "Alemania"),
+              "AUT": ("AT", "Austria"), "FRA": ("FR", "Francia"), "NLD": ("NL", "Países Bajos"), "JPN": ("JP", "Japón"),
+              "NOR": ("NO", "Noruega"), "IRL": ("IE", "Irlanda"), "CHE": ("CH", "Suiza")}
+
+
+def fig_burbuja(p=PARAM_BURBUJA):
+    import numpy as np
+    rng = np.random.default_rng(p["semilla"])
+    T = p["T"]
+    crec = (1 + p["h"]) / (p["h"] * p["pi"])
+    v = np.cumsum(p["sd_v"] * rng.standard_normal(T))
+    b = np.zeros(T)
+    est = []
+    for t in range(1, T):
+        if rng.random() < p["pi"]:
+            b[t] = crec * b[t - 1] + p["sd_b"] * rng.standard_normal()
+        else:
+            b[t] = p["sd_b"] * rng.standard_normal()
+            est.append(t)
+    s = v + b
+    ps = [(t, 100 * s[t]) for t in range(T)]
+    pv = [(t, 100 * v[t]) for t in range(T)]
+    ymin = 10 * math.floor(min(min(y for _, y in ps), min(y for _, y in pv)) / 10)
+    ymax = 10 * math.ceil(max(max(y for _, y in ps), max(y for _, y in pv)) / 10)
+    tikz = "% Burbuja racional de BLANCHARD (1979) en el modelo monetario, simulación propia ilustrativa: tipo de cambio s = v + b y\n"
+    tikz += "%% fundamentos v (logaritmos x 100). Parámetros: %s. Crece un %.1f %% por periodo mientras dura y estalla con probabilidad %.2f.\n" % (
+        ", ".join("%s=%s" % kv for kv in sorted(p.items())), 100 * (crec - 1), 1 - p["pi"])
+    tikz += "% Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_burbuja\n"
+    tikz += "\\begin{tikzpicture}\n\\footnotesize\n\\begin{axis}[\n"
+    tikz += r"""  scale only axis, width=13.4cm, height=4.8cm, axis lines=left, tick align=outside, tick style={black!60},
+  /pgf/number format/.cd, use comma, 1000 sep={}, /pgfplots/.cd,
+  every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize},
+  xmin=0, xmax=%d, ymin=%d, ymax=%d, clip=false, xlabel={Periodos}, ylabel={Logaritmo $\times 100$},
+  legend style={draw=none, fill=none, font=\footnotesize, at={(0.5,1.03)}, anchor=south, legend columns=-1,
+    /tikz/every even column/.append style={column sep=0.5cm}},
+]
+""" % (T, ymin, ymax)
+    tikz += "\\addplot[black, line width=0.9pt] coordinates {%s};\n\\addlegendentry{Tipo de cambio, $s_t=v_t+b_t$}\n" % coordenadas(ps, 2)
+    tikz += "\\addplot[black!45, line width=0.9pt, densely dashed] coordinates {%s};\n\\addlegendentry{Fundamentos, $v_t$}\n" % coordenadas(pv, 2)
+    tikz += "\\end{axis}\n\\end{tikzpicture}\n"
+    open(os.path.join(IMG, "anx_burbuja.tikz"), "w", encoding="utf-8").write(tikz)
+    return dict(crecimiento=100 * (crec - 1), estallidos=est, max_burbuja=float(100 * b.max()), min_burbuja=float(100 * b.min()))
+
+
+def fig_backus_smith(carpeta, xa, ca):
+    import numpy as np
+    d = json.load(open(os.path.join(carpeta, "dl_wb_a11", "consumo_pc.json"), encoding="utf-8"))
+    cons = {}
+    for r in d[1]:
+        if r["value"] is not None:
+            cons.setdefault(r["countryiso3code"], {})[int(r["date"])] = r["value"]
+    res = []
+    for i3, (i2, nombre) in NOMBRES_BS.items():
+        anios = [a for a in range(1971, 2025) if all(k in cons.get(i3, {}) for k in (a, a - 1)) and all(k in cons["USA"] for k in (a, a - 1))
+                 and all(str(k) in xa.get(i2, {}) for k in (a, a - 1)) and all(str(k) in ca.get(i2, {}) for k in (a, a - 1))
+                 and all(str(k) in ca["US"] for k in (a, a - 1))]
+        dq = [math.log(xa[i2][str(a)] / xa[i2][str(a - 1)]) + math.log(ca["US"][str(a)] / ca["US"][str(a - 1)])
+              - math.log(ca[i2][str(a)] / ca[i2][str(a - 1)]) for a in anios]
+        dc = [math.log(cons[i3][a] / cons[i3][a - 1]) - math.log(cons["USA"][a] / cons["USA"][a - 1]) for a in anios]
+        res.append((i3, nombre, anios[0], anios[-1], len(anios), float(np.corrcoef(dq, dc)[0, 1]), 100 * float(np.std(dq)), 100 * float(np.std(dc))))
+    res.sort(key=lambda r: r[5], reverse=True)
+    n = len(res)
+    corrs = sorted(r[5] for r in res)
+    med = corrs[n // 2] if n % 2 else (corrs[n // 2 - 1] + corrs[n // 2]) / 2
+    tikz = "% BACKUS y SMITH (1993): correlación de las variaciones anuales del tipo de cambio real frente al dólar con las del consumo\n"
+    tikz += "%% privado por habitante relativo al de EE. UU., %d-%d; la teoría con mercados completos predice +1. Línea discontinua: mediana.\n" % (res[0][2], res[0][3])
+    tikz += "% BPI WS_XRU y WS_LONG_CPI; Banco Mundial NE.CON.PRVT.PC.KD. Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_backus_smith\n"
+    tikz += "\\begin{tikzpicture}\n\\footnotesize\n\\begin{axis}[\n"
+    tikz += r"""  scale only axis, width=10.4cm, height=%.2fcm, axis lines=left, tick align=outside, tick style={black!60},
+  /pgf/number format/.cd, use comma, 1000 sep={}, /pgfplots/.cd,
+  every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize},
+  xmin=-1, xmax=1.1, ymin=0.3, ymax=%.1f, clip=false, xtick={-1,-0.5,0,0.5,1}, xticklabels={$-1$,$-0{,}5$,$0$,$0{,}5$,$1$},
+  ytick={%s}, yticklabels={%s},
+  xlabel={Correlación entre la variación del tipo de cambio real y la del consumo relativo},
+]
+""" % (0.3 * n, n + 0.7, ",".join(str(i + 1) for i in range(n)), ",".join(r[1] for r in res))
+    tikz += "\\draw[black!50] (axis cs:0,0.3) -- (axis cs:0,%.1f);\n" % (n + 0.7)
+    barras = [(r[5], n - i) for i, r in enumerate(res)]
+    tikz += "\\addplot[xbar, bar width=5.5pt, fill=black!55, draw=none] coordinates {%s};\n" % coordenadas(barras, 3)
+    tikz += "\\draw[black, densely dashed] (axis cs:%.3f,0.3) -- (axis cs:%.3f,%.1f);\n" % (med, med, n + 0.7)
+    tikz += "\\draw[black, line width=1pt] (axis cs:1,0.3) -- (axis cs:1,%.1f);\n" % (n + 0.7)
+    tikz += "\\node[font=\\scriptsize, anchor=south, align=center] at (axis cs:1,%.1f) {Mercados\\\\completos};\n" % (n + 0.7)
+    tikz += "\\end{axis}\n\\end{tikzpicture}\n"
+    open(os.path.join(IMG, "anx_backus_smith.tikz"), "w", encoding="utf-8").write(tikz)
+    return res, med
+
+
+def fig_identidad_varianza(engr, clave="larga"):
+    filas = [("G6", "Media de las seis")] + MONEDAS_ENGEL[::-1]
+    tikz = "% Descomposición de la varianza del tipo de cambio real frente al dólar con la identidad q = -suma E(r - r*) + suma E(lambda)\n"
+    tikz += "% y el VAR(3) de la réplica de ENGEL (2016), junio de 1979 a septiembre de 2025: parte de la senda, cov(q, -suma)/var(q)\n"
+    tikz += "% (gris), y de la cuña, cov(q, suma lambda)/var(q) (negro); suman uno. BPI WS_XRU, WS_CBPOL y WS_LONG_CPI.\n"
+    tikz += "% Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_identidad_varianza\n"
+    tikz += "\\begin{tikzpicture}[font=\\footnotesize, x=0.105cm, y=0.62cm]\n"
+    n = len(filas)
+    for i, (a, nombre) in enumerate(filas):
+        r = engr[(clave, a)]
+        y = i + 1
+        sx, cx = 100 * r["senda"], 100 * r["cuna"]
+        tikz += "\\fill[black!30] (0,%.2f) rectangle (%.2f,%.2f);\n" % (y - 0.3, sx, y + 0.3)
+        tikz += "\\fill[black] (%.2f,%.2f) rectangle (100,%.2f);\n" % (sx, y - 0.3, y + 0.3)
+        tikz += "\\node[anchor=east, inner sep=3pt] at (0,%d) {%s};\n" % (y, nombre)
+        if sx >= 8:
+            tikz += "\\node[font=\\scriptsize] at (%.2f,%d) {$%s\\%%$};\n" % (sx / 2, y, coma(sx, 0))
+        tikz += "\\node[font=\\scriptsize, text=white] at (%.2f,%d) {$%s\\%%$};\n" % ((sx + 100) / 2, y, coma(cx, 0))
+    tikz += "\\draw[-{Stealth[length=1.8mm]}] (0,0.4) -- (104,0.4);\n"
+    for x in range(0, 101, 20):
+        tikz += "\\draw[black!60] (%d,0.4) -- (%d,0.25) node[below] {$%d$};\n" % (x, x, x)
+    tikz += "\\node[below, inner sep=10pt] at (50,0.1) {Parte de la varianza del tipo de cambio real (\\%)};\n"
+    tikz += "\\fill[black!30] (2,%.2f) rectangle (6,%.2f); \\node[anchor=west] at (6.5,%.2f) {Senda: diferencias de tipos reales esperadas};\n" % (n + 0.9, n + 1.3, n + 1.1)
+    tikz += "\\fill[black] (60,%.2f) rectangle (64,%.2f); \\node[anchor=west] at (64.5,%.2f) {Cuña: primas esperadas};\n" % (n + 0.9, n + 1.3, n + 1.1)
+    tikz += "\\end{tikzpicture}\n"
+    open(os.path.join(IMG, "anx_identidad_varianza.tikz"), "w", encoding="utf-8").write(tikz)
+    return {a: (engr[(clave, a)]["senda"], engr[(clave, a)]["cuna"]) for a, _ in filas}
+
+
 # ---------------------------------------------------------------- principal
 def main():
     carpeta = sys.argv[1]
