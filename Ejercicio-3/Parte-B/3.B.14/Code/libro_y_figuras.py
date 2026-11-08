@@ -1496,7 +1496,7 @@ def fig_backus_smith(carpeta, xa, ca):
   ytick={%s}, yticklabels={%s},
   xlabel={Correlación entre la variación del tipo de cambio real y la del consumo relativo},
 ]
-""" % (0.3 * n, n + 0.7, ",".join(str(i + 1) for i in range(n)), ",".join(r[1] for r in res))
+""" % (0.3 * n, n + 0.7, ",".join(str(i + 1) for i in range(n)), ",".join(r[1] for r in res[::-1]))
     tikz += "\\draw[black!50] (axis cs:0,0.3) -- (axis cs:0,%.1f);\n" % (n + 0.7)
     barras = [(r[5], n - i) for i, r in enumerate(res)]
     tikz += "\\addplot[xbar, bar width=5.5pt, fill=black!55, draw=none] coordinates {%s};\n" % coordenadas(barras, 3)
@@ -1528,7 +1528,7 @@ def fig_identidad_varianza(engr, clave="larga"):
         tikz += "\\node[font=\\scriptsize, text=white] at (%.2f,%d) {$%s\\%%$};\n" % ((sx + 100) / 2, y, coma(cx, 0))
     tikz += "\\draw[-{Stealth[length=1.8mm]}] (0,0.4) -- (104,0.4);\n"
     for x in range(0, 101, 20):
-        tikz += "\\draw[black!60] (%d,0.4) -- (%d,0.25) node[below] {$%d$};\n" % (x, x, x)
+        tikz += "\\draw[black!60] (%d,0.4) -- (%d,0.25) node[below, text=black] {$%d$};\n" % (x, x, x)
     tikz += "\\node[below, inner sep=10pt] at (50,0.1) {Parte de la varianza del tipo de cambio real (\\%)};\n"
     tikz += "\\fill[black!30] (2,%.2f) rectangle (6,%.2f); \\node[anchor=west] at (6.5,%.2f) {Senda: diferencias de tipos reales esperadas};\n" % (n + 0.9, n + 1.3, n + 1.1)
     tikz += "\\fill[black] (60,%.2f) rectangle (64,%.2f); \\node[anchor=west] at (64.5,%.2f) {Cuña: primas esperadas};\n" % (n + 0.9, n + 1.3, n + 1.1)
