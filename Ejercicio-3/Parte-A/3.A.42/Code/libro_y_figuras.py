@@ -2450,6 +2450,109 @@ def sinteticas_a13(filas_series, cifras, sim):
     sim.append(("Sintética", "Modelo de KEEN (1995): participación salarial, empleo y deuda con curva de PHILLIPS f1/(1-l)^2 - f0, inversión -0,0065 + exp(-5) exp(20 beneficio), capital/producto 3, tipo 3 %, productividad 2,5 %, población 2 %, depreciación 1 %; LSODA; deuda inicial 0,5 y 2", "anx_keen"))
 
 
+# ---------------------------------------------------------------- T14 (cuerpo, B1): figuras abstractas sobre una misma serie base
+def cuerpo_b1(sim):
+    T = np.arange(0, 121, 0.5)
+
+    def tendencia(t):  # crecimiento de 0,3 por periodo que baja a 0,05 hacia t = 86 (transición suave)
+        s = 1 / (1 + np.exp(-(t - 86) / 3.0))
+        g = 0.3 * (1 - s) + 0.05 * s
+        return np.cumsum(np.r_[0, (g[1:] + g[:-1]) / 2 * np.diff(t)])
+
+    def amplitud(t):  # dos ciclos amplios y, entre ellos, una desaceleración sin caída
+        return 6.0 - 5.0 / (1 + np.exp(-(t - 40) / 2.5)) + 4.5 / (1 + np.exp(-(t - 80) / 2.5))
+
+    def ciclo(t):  # oscilación de 40 periodos, asimétrica: cae más deprisa de lo que sube
+        th = 2 * math.pi * (t - 6) / 40.0
+        return amplitud(t) * np.sin(th - 0.55 * np.sin(th))
+    yg, c = tendencia(T), ciclo(T)
+    y = yg + c
+    dy, dc = np.gradient(y, T), np.gradient(c, T)
+
+    def tramos(ind):
+        out, ini = [], None
+        for t, v in zip(T, ind):
+            if v and ini is None:
+                ini = t
+            if not v and ini is not None:
+                out.append((ini, t))
+                ini = None
+        return out
+    rec, desc = tramos(dy < 0), tramos(dc < 0)
+
+    def fondo(intervalos, color):
+        return "\n".join("\\fill[%s] ({rel axis cs:0,0} -| {axis cs:%.2f,0}) rectangle ({rel axis cs:0,1} -| {axis cs:%.2f,0});" % (color, a, b) for a, b in intervalos)
+
+    def xy(xs, ys):
+        return " ".join("(%.2f,%.3f)" % (a, b) for a, b in zip(xs, ys))
+    # ---- b1_fases: el ciclo clásico sobre el nivel
+    iP, iV = int(np.argmin(abs(T - rec[0][0]))), int(np.argmin(abs(T - rec[0][1])))
+    xr = (rec[1][0] + rec[1][1]) / 2
+    f1 = ("\\begin{tikzpicture}\n\\begin{axis}[width=13cm, height=5.2cm, scale only axis, %s, xmin=0, xmax=120, xtick=\\empty, ytick=\\empty,\n"
+          "    xlabel={Tiempo}, ylabel={Logaritmo de la producción}, clip=false]\n"
+          "\\begin{pgfonlayer}{axis background}\n%s\n\\end{pgfonlayer}\n"
+          "\\addplot[black!45, dashed] coordinates {%s};\n\\addplot[black, thick] coordinates {%s};\n"
+          "\\node[font=\\footnotesize, anchor=south] at (axis cs:%.2f,%.3f) {pico};\n\\node[font=\\footnotesize, anchor=north east] at (axis cs:%.2f,%.3f) {valle};\n"
+          "\\draw[<->, thick] (axis cs:%.2f,%.3f) -- (axis cs:%.2f,%.3f) node[midway, right=2pt, font=\\footnotesize] {$A$};\n"
+          "\\draw[black!50, dotted] (axis cs:%.2f,%.3f) -- (axis cs:%.2f,%.3f);\n"
+          "\\draw[<->, thick] (axis cs:%.2f,%.3f) -- (axis cs:%.2f,%.3f) node[midway, below, font=\\footnotesize] {$D$};\n"
+          "\\node[font=\\footnotesize] at (axis cs:62,%.3f) {expansión};\n\\node[font=\\footnotesize, anchor=south] at (axis cs:%.2f,%.3f) {recesión};\n"
+          "\\node[font=\\footnotesize, anchor=west, text=black!55] at (axis cs:120,%.3f) {tendencia};\n\\end{axis}\n\\end{tikzpicture}"
+          % (ESTILO, fondo(rec, "black!12"), xy(T[::2], yg[::2]), xy(T[::2], y[::2]),
+             T[iP], y[iP] + 0.6, T[iV] - 0.5, y[iV] - 0.3,
+             T[iV] + 4, y[iP], T[iV] + 4, y[iV], T[iP], y[iP], T[iV] + 4, y[iP],
+             T[iP], y[iV] - 5.0, T[iV], y[iV] - 5.0,
+             float(np.interp(62, T, y)) + 5.0, xr, float(np.interp(xr, T, y)) + 4.0, yg[-1]))
+    escribir("b1_fases", f1, "Cuerpo B1: fases del ciclo clásico sobre la serie base (pico, valle, amplitud A, duración D; recesiones sombreadas).")
+    # ---- b1_crecimiento: la misma serie como desviación respecto a la tendencia
+    f2 = ("\\begin{tikzpicture}\n\\begin{axis}[width=13cm, height=4.6cm, scale only axis, %s, xmin=0, xmax=120, xtick=\\empty, ytick=\\empty,\n"
+          "    xlabel={Tiempo}, ylabel={Desviación respecto a la tendencia}, legend style={draw=none, fill=none, font=\\footnotesize, at={(0.5,1.02)}, anchor=south}, legend columns=2]\n"
+          "\\begin{pgfonlayer}{axis background}\n%s\n%s\n\\end{pgfonlayer}\n"
+          "\\addlegendimage{area legend, fill=black!10, draw=none}\\addlegendentry{fase descendente del ciclo de crecimiento}\n"
+          "\\addlegendimage{area legend, fill=black!30, draw=none}\\addlegendentry{recesión clásica}\n"
+          "\\addplot[black!40, thin, forget plot] coordinates {(0,0) (120,0)};\n\\addplot[black, thick, forget plot] coordinates {%s};\n"
+          "\\end{axis}\n\\end{tikzpicture}" % (ESTILO, fondo(desc, "black!10"), fondo(rec, "black!30"), xy(T[::2], c[::2])))
+    escribir("b1_crecimiento", f2, "Cuerpo B1: la serie base como desviación respecto a su tendencia; fases descendentes del ciclo de crecimiento y recesiones clásicas.")
+    # ---- b1_tendencias: la tendencia elegida decide el ciclo
+    lin = np.polyval(np.polyfit(T, y, 1), T)
+    ta = ("\\begin{axis}[name=a, at={(0,0)}, anchor=north west, width=6.2cm, height=4.4cm, scale only axis, %s, xmin=0, xmax=120, xtick=\\empty, ytick=\\empty,\n"
+          "    xlabel={Tiempo}, ylabel={Logaritmo de la producción}, title={(a) Dos tendencias}, title style={font=\\footnotesize},\n"
+          "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.02,0.98)}, anchor=north west}, legend cell align=left]\n"
+          "\\addplot[black, thick, forget plot] coordinates {%s};\n\\addplot[black!60, dashed, thick] coordinates {%s};\\addlegendentry{tendencia lineal}\n"
+          "\\addplot[black!45, very thick] coordinates {%s};\\addlegendentry{tendencia flexible}\n\\end{axis}\n"
+          % (ESTILO, xy(T[::2], y[::2]), xy(T[::2], lin[::2]), xy(T[::2], yg[::2])))
+    tb = ("\\begin{axis}[name=b, at={($(a.north east)+(1.6cm,0)$)}, anchor=north west, width=6.2cm, height=4.4cm, scale only axis, %s, xmin=0, xmax=120, xtick=\\empty, ytick=\\empty,\n"
+          "    xlabel={Tiempo}, ylabel={Ciclo}, title={(b) Dos ciclos}, title style={font=\\footnotesize},\n"
+          "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.5,0.99)}, anchor=north}, legend cell align=left]\n"
+          "\\addplot[black!40, thin, forget plot] coordinates {(0,0) (120,0)};\n"
+          "\\addplot[black!60, dashed, thick] coordinates {%s};\\addlegendentry{con la tendencia lineal}\n"
+          "\\addplot[black!45, very thick] coordinates {%s};\\addlegendentry{con la tendencia flexible}\n\\end{axis}\n"
+          % (ESTILO, xy(T[::2], (y - lin)[::2]), xy(T[::2], c[::2])))
+    escribir("b1_tendencias", "\\begin{tikzpicture}\n" + ta + tb + "\\end{tikzpicture}",
+             "Cuerpo B1: la serie base con una tendencia lineal y otra flexible, y los dos ciclos que resultan.")
+    # ---- b1_hechos: hechos estilizados en versión abstracta
+    ha = ("\\begin{axis}[name=a, at={(0,0)}, anchor=north west, width=6.2cm, height=4.4cm, scale only axis, %s, xmin=0, xmax=120, xtick=\\empty, ytick=\\empty,\n"
+          "    xlabel={Tiempo}, ylabel={Desviación respecto a la tendencia}, title={(a) Volatilidad y comovimiento}, title style={font=\\footnotesize},\n"
+          "    ymin=-20, ymax=30, legend style={draw=none, fill=none, font=\\footnotesize, at={(0.5,0.99)}, anchor=north}, legend columns=3, legend cell align=left]\n"
+          "\\addplot[black!40, thin, forget plot] coordinates {(0,0) (120,0)};\n"
+          "\\addplot[black, thick] coordinates {%s};\\addlegendentry{producción}\n"
+          "\\addplot[black!60, thick, dashed] coordinates {%s};\\addlegendentry{inversión}\n"
+          "\\addplot[black!40, very thick] coordinates {%s};\\addlegendentry{consumo}\n\\end{axis}\n"
+          % (ESTILO, xy(T[::2], c[::2]), xy(T[::2], 3 * c[::2]), xy(T[::2], 0.5 * c[::2])))
+    hb = ("\\begin{axis}[name=b, at={($(a.north east)+(1.6cm,0)$)}, anchor=north west, width=6.2cm, height=4.4cm, scale only axis, %s, xmin=0, xmax=50, xtick=\\empty, ytick=\\empty, ymin=-7, ymax=12,\n"
+          "    xlabel={Tiempo}, title={(b) Adelantos y retrasos}, title style={font=\\footnotesize},\n"
+          "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.5,0.99)}, anchor=north}, legend columns=2, legend cell align=left]\n"
+          "\\addplot[black!40, thin, forget plot] coordinates {(0,0) (50,0)};\n"
+          "\\addplot[black, thick] coordinates {%s};\\addlegendentry{producción}\n"
+          "\\addplot[black!60, thick, dashed] coordinates {%s};\\addlegendentry{inversión residencial}\n"
+          "\\addplot[black!40, very thick] coordinates {%s};\\addlegendentry{tasa de paro}\n\\end{axis}\n"
+          % (ESTILO, xy(T[::2], c[::2]), xy(T[::2], ciclo(T + 4)[::2]), xy(T[::2], -0.6 * ciclo(T - 2)[::2])))
+    escribir("b1_hechos", "\\begin{tikzpicture}\n" + ha + hb + "\\end{tikzpicture}",
+             "Cuerpo B1: hechos estilizados en versión abstracta (volatilidad relativa, comovimiento, adelantos y retrasos) sobre el ciclo de la serie base.")
+    sim.append(("Sintética", "Serie base del cuerpo (B1): tendencia con crecimiento 0,3 que baja a 0,05 hacia t = 86 y ciclo asimétrico de 40 periodos con amplitudes 6, 1 y 5,5; recesiones clásicas en %s y fases descendentes del ciclo de crecimiento en %s"
+                % (", ".join("%.1f-%.1f" % r for r in rec), ", ".join("%.1f-%.1f" % r for r in desc)), "b1_fases, b1_crecimiento, b1_tendencias, b1_hechos"))
+
+
 def con_datos_a13(carpeta, filas_series, cifras):
     # ---- colas gruesas: asimetría y curtosis del crecimiento trimestral del PIB real de EE. UU.
     pib = {f: v for f, v in leer(carpeta, "GDPC1")}
