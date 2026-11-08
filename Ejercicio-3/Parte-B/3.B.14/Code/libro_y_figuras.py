@@ -1751,6 +1751,16 @@ def main():
     poner("Chartistas (simulación propia): parámetros", ", ".join("%s=%s" % kv for kv in sorted(PARAM_CHART.items())), "simulación propia", "III.5.2")
     for k, v in chart.items():
         poner("  %s" % k, v if isinstance(v, tuple) else "%.3f" % v, "simulación propia", "III.5.2")
+    # ---- A11
+    poner("Burbuja de BLANCHARD (simulación propia): parámetros", ", ".join("%s=%s" % kv for kv in sorted(PARAM_BURBUJA.items())), "simulación propia", "III.7.1")
+    poner("  crecimiento por periodo mientras dura (%); periodos de estallido; máximo y mínimo de la burbuja (log x 100)",
+          "%.1f; %s; %.1f y %.1f" % (burb["crecimiento"], ", ".join(str(e) for e in burb["estallidos"]), burb["max_burbuja"], burb["min_burbuja"]), "simulación propia", "III.7.1")
+    poner("BACKUS-SMITH: economías; mediana de la correlación", "%d; %.3f" % (len(bsr), bsmed), "BPI; Banco Mundial NE.CON.PRVT.PC.KD", "III.8.2")
+    poner("  correlación por economía (periodo, años)", "; ".join("%s %.2f" % (r[1], r[5]) for r in bsr), "BPI; Banco Mundial", "III.8.2")
+    for clave, t0, t1 in MUESTRAS_ENGEL:
+        poner("Identidad %s a %s: parte de la varianza del tipo real de la senda y de la cuña (media de las seis y por moneda)" % (t0, t1),
+              "; ".join("%s %.2f/%.2f" % (a, engr[(clave, a)]["senda"], engr[(clave, a)]["cuna"]) for a in ["G6"] + [m for m, _ in MONEDAS_ENGEL]),
+              "BPI; VAR propio", "III.8.4")
 
     # ---- libro de datos
     leeme = [["Libro de datos del Tema 3.B.14 (Teorías de la determinación del tipo de cambio)"],
