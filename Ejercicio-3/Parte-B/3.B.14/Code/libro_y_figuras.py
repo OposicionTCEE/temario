@@ -1531,6 +1531,14 @@ def main():
         poner("ENGEL 1979-06 a 2009-10, media de las seis, VAR(%d): cambio de signo (mes); apreciación observada, justificada, suma de primas" % pp,
               "%s; %.2f; %.2f; %.2f" % (r["cambio"], -r["b_q"], r["b_sr"], r["b_sl"]), "BPI", "III.1.2-III.1.3")
     poner("ENGEL: meses de Japón sin tipo oficial en el BPI (se mantiene el último)", "%d: %s a %s" % (len(engrel["JP"]), engrel["JP"][0], engrel["JP"][-1]) if engrel["JP"] else "0", "BPI WS_CBPOL", "III.1.2")
+    # ---- A9
+    for clave, t0, t1 in VENTANAS_FD:
+        poner("Factor dólar %s a %s: mediana del R2 de las 26 monedas" % (t0, t1), "%.3f" % fdmed[clave], "BPI WS_XRU (fin de mes)", "III.4.3")
+        poner("  R2; beta; volatilidad anual (%) por moneda", "; ".join("%s %.2f/%.2f/%.1f" % (a, fdr[(clave, a)][0], fdr[(clave, a)][1], fdr[(clave, a)][2]) for a, _ in MONEDAS_FD), "BPI", "III.4.3")
+    for f in valf:
+        if f[0] in (1976, 1980, 1985, 1990, 1995, 2000, 2002, 2005, 2007, 2008, 2010, 2014, 2019, 2021, 2022, 2024, 2025):
+            poner("EE. UU. %d: posición de inversión internacional neta y la de 1976 más la cuenta corriente acumulada (%% del PIB); diferencia" % f[0],
+                  "%.1f; %.1f; %.1f" % (f[3], f[4], f[3] - f[4]), "FRED IIPUSNETIA y GDPA; Banco Mundial BN.CAB.XOKA.CD", "III.3.5")
 
     # ---- libro de datos
     leeme = [["Libro de datos del Tema 3.B.14 (Teorías de la determinación del tipo de cambio)"],
