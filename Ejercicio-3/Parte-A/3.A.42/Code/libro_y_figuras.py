@@ -2552,7 +2552,7 @@ def cuerpo_b1(sim):
     escribir("b1_desfases", "\\begin{tikzpicture}\n" + hb + "\\end{tikzpicture}",
              "Cuerpo B1: adelantos y retrasos en versión abstracta (producción, inversión residencial y tasa de paro) sobre el primer ciclo de la serie base.")
     sim.append(("Sintética", "Serie base del cuerpo (B1): tendencia con crecimiento 0,3 que baja a 0,05 hacia t = 86 y ciclo asimétrico de 40 periodos con amplitudes 6, 1 y 5,5; recesiones clásicas en %s y fases descendentes del ciclo de crecimiento en %s"
-                % (", ".join("%.1f-%.1f" % r for r in rec), ", ".join("%.1f-%.1f" % r for r in desc)), "b1_fases, b1_crecimiento, b1_tendencias, b1_hechos"))
+                % (", ".join("%.1f-%.1f" % r for r in rec), ", ".join("%.1f-%.1f" % r for r in desc)), "b1_fases, b1_crecimiento, b1_tendencias, b1_volatilidad, b1_desfases"))
 
 
 def con_datos_a13(carpeta, filas_series, cifras):
