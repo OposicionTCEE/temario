@@ -1179,7 +1179,7 @@ def fig_cfa_crecimiento(medianas):
             v = float(np.mean([m[g][a] for a in range(a0, a1 + 1) if a in m[g]]))
             x = base + j * (ancho + 0.2)
             c += "  \\filldraw[fill=%s, draw=black!60] (%.3f,0) rectangle (%.3f,%.3f);\n" % (tonos[g], x, x + ancho, v * ey)
-            c += "  \\node[%s, font=\\scriptsize] at (%.3f,%.3f) {%s};\n" % ("above" if v >= 0 else "below", x + ancho / 2, v * ey, num(v))
+            c += "  \\node[%s, font=\\scriptsize] at (%.3f,%.3f) {%s};\n" % ("above" if v >= 0 else "below", x + ancho / 2, v * ey, num(0.0 if abs(v) < 0.05 else v))
         c += "  \\node[font=\\scriptsize] at (%.3f,%.3f) {$%d$-$%d$};\n" % (base + 1.5 * ancho + 0.2, y0 * ey - 0.3, a0, a1)
     derecha = (len(PERIODOS_CFA) - 1) * paso + 3 * ancho + 0.4 + 0.3
     c += "  \\draw[black!60] (-0.3,0) -- (%.3f,0);\n" % derecha
