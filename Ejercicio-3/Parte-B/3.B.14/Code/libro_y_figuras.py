@@ -1448,6 +1448,7 @@ def main():
     xfin = leer_xru_fin(carpeta)
     fdr, fdmed = fig_factor_dolar(xfin)
     valf = fig_valoracion_eeuu(carpeta)
+    chart = fig_chartistas()
 
     # ---- cifras citadas en el texto
     cif = []
