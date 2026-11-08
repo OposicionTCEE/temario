@@ -2707,7 +2707,7 @@ def cuerpo_b2_nek(sim):
          "\\node[font=\\footnotesize, anchor=west] at (axis cs:1.9,%.3f) {$CP_0$};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:1.0,%.3f) {$CP_1$};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:1.5,%.3f) {$DA$};\n"
          "\\end{axis}\n\\end{tikzpicture}" % (ESTILO, a, a, c, b, x3, y3, x3 - 0.05, y3 + 0.05, a * 1.9, a * 1.0 + c, -b * 1.5))
     escribir("b2_costes", f, "Cuerpo B2: una perturbación de costes desplaza la curva de PHILLIPS hacia arriba: más inflación y menos producción.")
-    sim.append(("Sintética", "Cuerpo B2 (NEK): aspa con pendientes 0,6 (CP) y -1,2 (DA) y desplazamientos de 1,4; respuestas del modelo de tres ecuaciones con la calibración de la A8 (relajación de un punto anual con persistencia 0,5; mejora del 1 %% con persistencia 0,9); perturbación de costes de 1,2",
+    sim.append(("Sintética", "Cuerpo B2 (NEK): aspa con pendientes 0,6 (CP) y -1,2 (DA) y desplazamientos de 1,4; respuestas del modelo de tres ecuaciones con la calibración de la A8 (relajación de un punto anual con persistencia 0,5; mejora del 1 % con persistencia 0,9); perturbación de costes de 1,2",
                 "b2_aspa, b2_nek, b2_costes"))
 
 
