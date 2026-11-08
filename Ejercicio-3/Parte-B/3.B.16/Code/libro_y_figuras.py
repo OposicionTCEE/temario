@@ -844,6 +844,8 @@ def main():
     rr = reparto(carpeta, series, cifras)
     pr = precios(carpeta, series, cifras)
     cr = crecimiento(carpeta, series, cifras)
+    cred = credibilidad(carpeta, series, cifras)
+    deseq = desequilibrios(carpeta, series, cifras)
     fig_correlaciones(res)
     fig_amplitud(res)
     fig_bayoumi(corr_be)
