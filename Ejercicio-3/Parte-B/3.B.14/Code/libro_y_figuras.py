@@ -1764,7 +1764,8 @@ def main():
                "dl_bis_cpi": "Banco de Pagos Internacionales", "dl_eurostat_ppp": "Eurostat (programa de paridades Eurostat-OCDE)",
                "dl_wb_ca": "Banco Mundial", "dl_bis_pol": "Banco de Pagos Internacionales", "dl_wb_us": "Banco Mundial", "dl_wb_m": "Banco Mundial",
                "dl_ecb_yc": "Banco Central Europeo", "dl_fred_gs2": "Banco de la Reserva Federal de San Luis (FRED)",
-               "dl_fred_a9": "Banco de la Reserva Federal de San Luis (FRED; datos de la BEA)", "dl_wb_a9": "Banco Mundial"}[fichero.split("/")[0]]
+               "dl_fred_a9": "Banco de la Reserva Federal de San Luis (FRED; datos de la BEA)", "dl_wb_a9": "Banco Mundial",
+               "dl_wb_a11": "Banco Mundial"}[fichero.split("/")[0]]
         fuentes.append([fichero, org, url, FECHA_DESCARGA])
     filas = [["Serie", "Área", "Fecha", "Valor", "Unidad", "Fuente", "Tratamiento", "Figura"]]
     for f, v in fred:
