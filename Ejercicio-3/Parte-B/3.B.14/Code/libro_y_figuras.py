@@ -1611,6 +1611,10 @@ def main():
         if f[0] in (1976, 1980, 1985, 1990, 1995, 2000, 2002, 2005, 2007, 2008, 2010, 2014, 2019, 2021, 2022, 2024, 2025):
             poner("EE. UU. %d: posición de inversión internacional neta y la de 1976 más la cuenta corriente acumulada (%% del PIB); diferencia" % f[0],
                   "%.1f; %.1f; %.1f" % (f[3], f[4], f[3] - f[4]), "FRED IIPUSNETIA y GDPA; Banco Mundial BN.CAB.XOKA.CD", "III.3.5")
+    # ---- A10
+    poner("Chartistas (simulación propia): parámetros", ", ".join("%s=%s" % kv for kv in sorted(PARAM_CHART.items())), "simulación propia", "III.5.2")
+    for k, v in chart.items():
+        poner("  %s" % k, v if isinstance(v, tuple) else "%.3f" % v, "simulación propia", "III.5.2")
 
     # ---- libro de datos
     leeme = [["Libro de datos del Tema 3.B.14 (Teorías de la determinación del tipo de cambio)"],
