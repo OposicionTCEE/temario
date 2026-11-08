@@ -453,6 +453,121 @@ def crecimiento(carpeta, series, cifras):
     return anios, indices
 
 
+# ---------------------------------------------------------------- II.5 credibilidad y tipos (A9)
+def leer_fred_mensual(carpeta, serie):  # {(año, mes): valor}
+    salida = {}
+    with open(os.path.join(carpeta, serie + ".csv"), encoding="utf-8") as f:
+        lector = csv.reader(f)
+        next(lector)
+        for fecha, valor in lector:
+            if valor not in (".", ""):
+                salida[(int(fecha[:4]), int(fecha[5:7]))] = float(valor)
+    return salida
+
+
+def meses(desde, hasta):
+    a, m = desde
+    while (a, m) <= hasta:
+        yield (a, m)
+        a, m = (a + 1, 1) if m == 12 else (a, m + 1)
+
+
+def credibilidad(carpeta, series, cifras):
+    tipos = {p: leer_fred_mensual(carpeta, TIPOS_10[p]) for p in EURO}
+    dif = {p: {k: v - tipos["DEU"][k] for k, v in tipos[p].items() if k in tipos["DEU"]} for p in EURO if p != "DEU"}
+    for p in dif:
+        for (a, m), v in sorted(dif[p].items()):
+            if a >= 1993:
+                series.append(("Diferencial de la deuda a diez años frente a Alemania", NOMBRE[p], "%d-%02d" % (a, m), v, "puntos porcentuales", "FRED " + TIPOS_10[p] + " menos " + TIPOS_10["DEU"] + " (OCDE)", "diferencia de tipos mensuales", "anx2_diferenciales"))
+    def media(p, a):
+        v = [dif[p][(a, m)] for m in range(1, 13) if (a, m) in dif[p]]
+        return sum(v) / len(v) if len(v) == 12 else None
+    for p in dif:
+        for a in (1995, 1998, 2007):
+            x = media(p, a)
+            if x is not None:
+                cifras.append(("Diferencial medio frente a Alemania, %d, %s" % (a, NOMBRE[p]), round(x, 2), "puntos", "II.5.1"))
+        crisis = {k: v for k, v in dif[p].items() if 2009 <= k[0] <= 2013}
+        k = max(crisis, key=crisis.get)
+        cifras.append(("Diferencial máximo frente a Alemania, 2009-2013, %s (%d-%02d)" % (NOMBRE[p], k[0], k[1]), round(crisis[k], 2), "puntos", "II.5.1"))
+        for k in ((2012, 7), (2012, 12), (2013, 12), (2019, 12), (2026, 8)):
+            if k in dif[p]:
+                cifras.append(("Diferencial frente a Alemania, %d-%02d, %s" % (k[0], k[1], NOMBRE[p]), round(dif[p][k], 2), "puntos", "II.5.1"))
+    infl = leer_wb(carpeta, "FP.CPI.TOTL.ZG")
+    tabla = {}
+    for c, (nombre, regimen, a0) in RIGIDOS.items():
+        fila = [infl[c].get(a) for a in (a0 - 1, a0, a0 + 2, a0 + 5)]
+        tabla[c] = fila
+        cifras.append(("Inflación con %s (%d), %s: año anterior, año de adopción, dos y cinco años después" % (regimen, a0, nombre),
+                       ", ".join("n. d." if x is None else "%.1f" % x for x in fila), "porcentaje", "II.5.2"))
+        for a in range(a0 - 3, a0 + 6):
+            if a in infl[c]:
+                series.append(("Inflación de los precios de consumo", nombre, a, infl[c][a], "porcentaje", "Banco Mundial FP.CPI.TOTL.ZG", "tasa anual", "cuadro de II.5.2"))
+    return dif, tabla
+
+
+# ---------------------------------------------------------------- II.6 desequilibrios y fragilidad (A9)
+def desequilibrios(carpeta, series, cifras):
+    # tipos reales: euríbor a tres meses (media anual) menos la inflación de cada país, 1999-2007
+    eur = leer_fred_mensual(carpeta, "IR3TIB01EZM156N")
+    infl = leer_wb(carpeta, "FP.CPI.TOTL.ZG")
+    euribor = {a: sum(eur[(a, m)] for m in range(1, 13)) / 12 for a in range(1999, 2008)}
+    reales = {p: float(np.mean([euribor[a] - infl[p][a] for a in range(1999, 2008)])) for p in EURO}
+    for p in EURO:
+        cifras.append(("Tipo de interés real a corto plazo medio, 1999-2007, " + NOMBRE[p], round(reales[p], 2), "porcentaje", "II.6.1"))
+        for a in range(1999, 2008):
+            series.append(("Tipo real a corto plazo (euríbor a tres meses menos inflación)", NOMBRE[p], a, euribor[a] - infl[p][a], "porcentaje", "FRED IR3TIB01EZM156N y Banco Mundial FP.CPI.TOTL.ZG", "media anual del tipo menos inflación anual", "anx2_tipos_reales"))
+    # costes laborales unitarios nominales relativos a la media geométrica de los once, 1999 = 100
+    clu = {p: leer_eurostat_anual(os.path.join(carpeta, "clu.json"), geo=ISO2[p], unit="I15", na_item="NULC_PER", freq="A") for p in EURO}
+    anios = list(range(1995, 2025))
+    media = {a: math.exp(np.mean([math.log(clu[p][a]) for p in EURO])) for a in anios}
+    rel = {p: [100 * (clu[p][a] / media[a]) / (clu[p][1999] / media[1999]) for a in anios] for p in EURO}
+    for p in EURO:
+        for a, x in zip(anios, rel[p]):
+            series.append(("Coste laboral unitario nominal relativo a la media de la zona", NOMBRE[p], a, x, "índice, 1999 = 100", "Eurostat nama_10_lp_ulc (NULC_PER, I15)", "cociente con la media geométrica de los once", "anx2_clu_real"))
+        maximo = max(range(len(anios)), key=lambda i: rel[p][i]) if p != "DEU" else min(range(len(anios)), key=lambda i: rel[p][i])
+        cifras.append(("CLU relativo, 2008, extremo 1999-2024 y 2024 (1999 = 100), %s" % NOMBRE[p], "%.1f; %.1f en %d; %.1f" % (rel[p][anios.index(2008)], rel[p][maximo], anios[maximo], rel[p][-1]), "índice", "II.6.2"))
+    # cuenta corriente
+    cc = leer_wb(carpeta, "BN.CAB.XOKA.GD.ZS")
+    for p in EURO:
+        for a in range(1995, 2025):
+            if a in cc[p]:
+                series.append(("Saldo por cuenta corriente", NOMBRE[p], a, cc[p][a], "porcentaje del PIB", "Banco Mundial BN.CAB.XOKA.GD.ZS", "nivel", "anx2_cuenta_corriente"))
+        for a in (1999, 2007, 2008, 2013, 2019, 2024):
+            if a in cc[p]:
+                cifras.append(("Saldo por cuenta corriente, %d, %s" % (a, NOMBRE[p]), round(cc[p][a], 1), "porcentaje del PIB", "II.6.2"))
+    # saldos TARGET (fin de mes, millones de euros)
+    tgb = {}
+    for c in TARGET:
+        with open(os.path.join(carpeta, "tgb_" + c + ".csv"), encoding="utf-8") as f:
+            lector = csv.DictReader(f)
+            tgb[c] = {(int(r["TIME_PERIOD"][:4]), int(r["TIME_PERIOD"][5:7])): float(r["OBS_VALUE"]) / 1000 for r in lector if r["OBS_VALUE"]}
+        for (a, m), v in sorted(tgb[c].items()):
+            series.append(("Saldo TARGET a fin de mes", c, "%d-%02d" % (a, m), v, "miles de millones de euros", "BCE, TGB.M." + c + ".N.A094T.U2.EUR.E", "nivel", "anx2_target"))
+        for k in ((2008, 6), (2012, 8), (2014, 12), (2022, 8)):
+            if k in tgb[c]:
+                cifras.append(("Saldo TARGET, %d-%02d, %s" % (k[0], k[1], c), round(tgb[c][k], 0), "miles de millones de euros", "II.6.3"))
+        ultimo = max(tgb[c])
+        cifras.append(("Saldo TARGET, último dato (%d-%02d), %s" % (ultimo[0], ultimo[1], c), round(tgb[c][ultimo], 0), "miles de millones de euros", "II.6.3"))
+    # inflación armonizada de España y de la zona, tasa interanual mensual, y su diferencia
+    es, ea = leer_fred_mensual(carpeta, "CP0000ESM086NEST"), leer_fred_mensual(carpeta, "CP0000EZCCM086NEST")
+    difi = {}
+    for k in sorted(es):
+        k0 = (k[0] - 1, k[1])
+        if k0 in es and k in ea and k0 in ea:
+            pe, pa = 100 * (es[k] / es[k0] - 1), 100 * (ea[k] / ea[k0] - 1)
+            difi[k] = (pe, pa, pe - pa)
+            series.append(("Inflación armonizada interanual y diferencial", "España - zona del euro", "%d-%02d" % k, pe - pa, "puntos", "FRED CP0000ESM086NEST y CP0000EZCCM086NEST (Eurostat)", "tasa interanual de España menos la de la zona", "anx2_inflacion_espana"))
+    def media_dif(a0, a1):
+        v = [d[2] for k, d in difi.items() if a0 <= k[0] <= a1]
+        return sum(v) / len(v)
+    for a0, a1 in ((1999, 2007), (2009, 2016), (2017, 2019), (2021, 2024)):
+        cifras.append(("Diferencial de inflación de España con la zona, media %d-%d" % (a0, a1), round(media_dif(a0, a1), 2), "puntos", "II.6.4"))
+    for k in ((2026, 4), max(difi)):
+        cifras.append(("Inflación de España y de la zona y diferencial, %d-%02d" % k, "%.1f; %.1f; %.1f" % difi[k], "porcentaje y puntos", "II.6.4"))
+    return reales, (anios, rel), cc, tgb, difi
+
+
 # ---------------------------------------------------------------- figuras (TikZ simple, escala de grises, \footnotesize)
 def num(x, dec=1):  # cifra con coma decimal en modo matemático
     s = ("%." + str(dec) + "f") % x
