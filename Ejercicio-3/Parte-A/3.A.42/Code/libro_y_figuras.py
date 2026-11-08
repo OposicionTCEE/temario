@@ -2338,7 +2338,7 @@ def sinteticas_a12(filas_series, cifras, sim):
     f_inv = "%.3f+%.3f/(1+exp(-%.2f*(x-5)))" % (ka, kb, kk)
     f_inv2 = "%.3f+%.3f/(1+exp(-%.2f*(x-5)))" % (ka - desplaza, kb, kk)
     f_aho = "%.4f*x+%.2f" % (ks, kc)
-    comun = ("width=6.2cm, height=4.4cm, scale only axis, %s, xmin=0, xmax=10, ymin=0, ymax=5.4, xtick=\\empty, ytick=\\empty,\n"
+    comun = ("width=5.4cm, height=4.4cm, scale only axis, %s, xmin=0, xmax=10, ymin=0, ymax=5.4, xtick=\\empty, ytick=\\empty,\n"
              "    xlabel={Renta}, ylabel={Inversión y ahorro}, title style={font=\\footnotesize}, clip=false" % ESTILO)
     ka_ = ("\\begin{axis}[name=a, at={(0,0)}, anchor=north west, %s, title={(a) Tres equilibrios}]\n"
            "\\addplot[black, thick, domain=0:10, samples=150] {%s};\n\\addplot[black!55, thick, dashed, domain=0:10, samples=2] {%s};\n"
