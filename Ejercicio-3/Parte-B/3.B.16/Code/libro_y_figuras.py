@@ -624,9 +624,9 @@ def fig_dispersion(disp):
 
 def fig_reparto(rr):
     """Barras apiladas: canales del reparto del riesgo en los estados de EE. UU. (ASDRUBALI et al., 1996) y en la zona del euro."""
-    filas = [("Estados de EE. UU., 1963-1990", {"K": 0.39, "F": 0.13, "C": 0.23, "U": 0.25}),
-             ("Zona del euro, 1999-2008", rr["1999-2008, sin Irlanda"]),
-             ("Zona del euro, 2009-2019", rr["2009-2019, sin Irlanda"])]
+    filas = [("Estados de EE. UU., $1963$-$1990$", {"K": 0.39, "F": 0.13, "C": 0.23, "U": 0.25}),
+             ("Zona del euro, $1999$-$2008$", rr["1999-2008, sin Irlanda"]),
+             ("Zona del euro, $2009$-$2019$", rr["2009-2019, sin Irlanda"])]
     ancho, alto, dy = 10.0, 0.55, 0.95
     estilos = {"K": "fill=black!70", "F": "fill=black!45", "C": "fill=black!20", "U": "fill=white"}
     texto = {"K": "white", "F": "white", "C": "black", "U": "black"}
