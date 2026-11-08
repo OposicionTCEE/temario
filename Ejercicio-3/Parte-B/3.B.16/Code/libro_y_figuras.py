@@ -1095,6 +1095,20 @@ def fig_federal(fed):
     escribir("anx3_federal", c, "gasto neto e ingresos del Gobierno federal de EE. UU. en porcentaje del PIB, años fiscales 1929-%d, y referencia del presupuesto de la UE (anexo III.2.1)" % x1)
 
 
+def fig_mezzogiorno():
+    x0, x1, ex, y0, y1, ey = 1861, 2011, 0.085, 40, 100, 0.065
+    anios = sorted(MEZZOGIORNO)
+    c = "  \\draw[black!30] (0,%.3f) -- (%.3f,%.3f);\n" % ((100 - y0) * ey, (x1 - x0) * ex, (100 - y0) * ey)
+    c += "  \\node[anchor=south east, font=\\scriptsize, black!60] at (%.3f,%.3f) {Centro-Norte $=100$};\n" % ((x1 - x0) * ex, (100 - y0) * ey)
+    c += linea(anios, [MEZZOGIORNO[a] for a in anios], ex, ey, x0, y0, "black!85, thick")
+    for a in anios:
+        c += "  \\fill (%.3f,%.3f) circle (1.4pt);\n" % ((a - x0) * ex, (MEZZOGIORNO[a] - y0) * ey)
+    c += marca_vertical(1950, (y1 - y0) * ey + 0.1, "Cassa per il Mezzogiorno", ex, x0, fuera=True)
+    c += ejes_tiempo(x0, x1, ex, [1870, 1890, 1910, 1930, 1950, 1970, 1990, 2010], y0, y1, ey, [40, 50, 60, 70, 80, 90, 100],
+                     "PIB por habitante del Sur en porcentaje del Centro-Norte")
+    escribir("anx3_mezzogiorno", c, "PIB por habitante del Sur de Italia en porcentaje del Centro-Norte, 1871-2009, cifras de IUZZOLINO, PELLEGRINI y VIESTI (2011) (anexo III.2.2)")
+
+
 def fig_alemania(ost):
     anios, hab, ocu = ost
     x0, x1, ex, y0, y1, ey = anios[0], anios[-1], 0.33, 30, 100, 0.06
