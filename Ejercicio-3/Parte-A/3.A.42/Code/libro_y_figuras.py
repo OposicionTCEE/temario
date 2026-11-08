@@ -2187,6 +2187,30 @@ def con_datos_a10(carpeta, filas_series, cifras, sim):
                 "anx_crisis_prediccion, anx_recesiones_financieras, anx_ebp y anx_crecimiento_riesgo"))
 
 
+# ---------------------------------------------------------------- A11 (III.8-III.10): oleadas de crisis bancarias (JST)
+def con_datos_a11(carpeta, filas_series, cifras, sim):
+    _, jst = leer_xlsx_simple(os.path.join(carpeta, "JSTdatasetR6.xlsx"))
+    cuenta = {a: 0 for a in range(1870, 2021)}
+    for d in jst:
+        if d.get("crisisJST") == 1.0:
+            cuenta[int(d["year"])] += 1
+    for a in sorted(cuenta):
+        filas_series.append(("Número de economías que empiezan una crisis bancaria sistémica", "18 economías avanzadas", str(a), cuenta[a], "economías",
+                             "JORDÀ, SCHULARICK y TAYLOR, base R6 (crisisJST)", "suma por año", "anx_olas_crisis"))
+    olas = (("1890-1893", 1890, 1893), ("1907-1908", 1907, 1908), ("1920-1922", 1920, 1922), ("1929-1931", 1929, 1931), ("1990-1992", 1990, 1992), ("2007-2008", 2007, 2008))
+    cifras.append(("JST: crisis bancarias sistémicas 1870-2020 (total, años con crisis, máximo anual) y por oleadas; crisis entre 1940 y 1969",
+                   "%d; %d años; máximo %d (%d); " % (sum(cuenta.values()), sum(1 for v in cuenta.values() if v), max(cuenta.values()), max(cuenta, key=cuenta.get))
+                   + "; ".join("%s: %d" % (n, sum(cuenta[a] for a in range(i, f + 1))) for n, i, f in olas)
+                   + "; 1940-1969: %d" % sum(cuenta[a] for a in range(1940, 1970)), "crisis", "III.10"))
+    marcas = "\n".join("\\node[font=\\footnotesize, anchor=south] at (axis cs:%d,%d) {$%d$};" % (a, cuenta[a] + 0.2, a) for a in (1890, 1907, 1921, 1931, 1991, 2008))
+    fig = ("\\begin{tikzpicture}\n\\begin{axis}[width=14.5cm, height=4.6cm, scale only axis, %s,\n"
+           "    xmin=1868, xmax=2022, xtick={1870,1890,...,2010}, ymin=0, ymax=13, ytick={0,2,...,12}, ylabel={Economías que entran en crisis}]\n"
+           "\\addplot[ycomb, black, line width=1.6pt] coordinates {%s};\n%s\n\\end{axis}\n\\end{tikzpicture}"
+           % (ESTILO, " ".join("(%d,%d)" % (a, v) for a, v in sorted(cuenta.items()) if v), marcas))
+    escribir("anx_olas_crisis", fig, "Número de las 18 economías de la base JST que empiezan una crisis bancaria sistémica cada año, 1870-2020.")
+    sim.append(("Cálculo", "JST R6: número de economías que empiezan una crisis bancaria cada año", "anx_olas_crisis"))
+
+
 def main():
     carpeta = sys.argv[1] if len(sys.argv) > 1 else tempfile.mkdtemp()
     descargar(carpeta)
