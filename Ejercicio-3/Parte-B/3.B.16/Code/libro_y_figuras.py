@@ -1164,7 +1164,7 @@ def fig_cfa_inflacion(medianas):
     if m["vecinos"][amax] > y1:
         c += "  \\node[anchor=west, font=\\scriptsize, black!60] at (%.3f,%.3f) {vecinos: %s en $%d$};\n" % ((amax - x0) * ex + 0.15, (y1 - y0) * ey - 0.05, num(m["vecinos"][amax]).replace("$", "$", 1)[:-1] + "\\%$", amax)
     c += marca_vertical(1994, (y1 - y0) * ey + 0.1, "devaluación", ex, x0, fuera=True)
-    c += leyenda([(estilos[g], nombres[g]) for g in ("UEMOA", "CEMAC", "vecinos")], (2000 - x0) * ex, (39 - y0) * ey)
+    c += leyenda([(estilos[g], nombres[g]) for g in ("UEMOA", "CEMAC", "vecinos")], (2000 - x0) * ex, (32 - y0) * ey)
     c += ejes_tiempo(x0, x1, ex, [1980, 1985, 1990, 1995, 2000, 2005, 2010, 2015, 2020], y0, y1, ey, [0, 10, 20, 30, 40],
                      "inflación de los precios de consumo, mediana de cada grupo, en porcentaje")
     escribir("anx3_cfa_inflacion", c, "inflación mediana de la UEMOA, la CEMAC y los vecinos de África occidental con moneda propia, 1980-2024 (anexo III.4.1)")
