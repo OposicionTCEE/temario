@@ -667,6 +667,35 @@ def historia(carpeta, series, cifras):
     return fed, (anios, hab, ocu)
 
 
+def cfa(carpeta, series, cifras):
+    # medianas anuales de cada grupo (UEMOA, CEMAC y vecinos de África occidental con moneda propia), con los países que tienen dato
+    medianas = {}
+    for s in WB_A11:
+        v = leer_wb(carpeta, "cfa_" + s)
+        medianas[s] = {}
+        for g, paises in CFA.items():
+            for p in paises:
+                for a, x in sorted(v.get(p, {}).items()):
+                    if 1980 <= a <= 2024:
+                        series.append((WB_A11[s], "%s (%s)" % (NOMBRE_CFA[p], g), a, x, "porcentaje", "Banco Mundial " + s, "tasa anual", ""))
+            med = {}
+            for a in range(1980, 2025):
+                vals = sorted(v[p][a] for p in paises if p in v and a in v[p])
+                if vals:
+                    med[a] = float(np.median(vals))
+                    series.append(("Mediana del grupo: " + WB_A11[s].lower(), g, a, med[a], "porcentaje", "Banco Mundial " + s,
+                                   "mediana de los países del grupo con dato (%d)" % len(vals), "anx3_cfa_inflacion" if s.startswith("FP") else "anx3_cfa_crecimiento"))
+            medianas[s][g] = med
+        for a0, a1 in PERIODOS_CFA + [(1995, 2024)]:
+            cifras.append(("%s, media de las medianas anuales %d-%d: UEMOA; CEMAC; vecinos" % (WB_A11[s], a0, a1),
+                           "; ".join("%.1f" % np.mean([medianas[s][g][a] for a in range(a0, a1 + 1) if a in medianas[s][g]]) for g in CFA), "porcentaje", "III.4.1"))
+    infl = medianas["FP.CPI.TOTL.ZG"]
+    cifras.append(("Inflación mediana en 1994, año de la devaluación: UEMOA; CEMAC; vecinos", "; ".join("%.1f" % infl[g][1994] for g in CFA), "porcentaje", "III.4.1"))
+    cre = medianas["NY.GDP.PCAP.KD.ZG"]
+    cifras.append(("Crecimiento mediano del PIB por habitante en 2016: UEMOA; CEMAC; vecinos", "; ".join("%.1f" % cre[g][2016] for g in CFA), "porcentaje", "III.4.1"))
+    return medianas
+
+
 # ---------------------------------------------------------------- figuras (TikZ simple, escala de grises, \footnotesize)
 def num(x, dec=1):  # cifra con coma decimal en modo matemático
     s = ("%." + str(dec) + "f") % x
