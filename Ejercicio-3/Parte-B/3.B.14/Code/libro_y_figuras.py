@@ -1341,7 +1341,7 @@ def main():
     escribir_xlsx(os.path.join(TEMA, "Code", "datos_3B14.xlsx"),
                   [("Léeme", leeme), ("Fuentes", fuentes), ("Series", filas), ("ICP_2021", icp), ("Big_Mac", big),
                    ("PPA_1970_2025", ppah), ("Semividas", semh), ("Bienes_servicios_2024", bsh), ("Paridades_2006_2025", parh),
-                   ("Monetario_2000_2024", monh), ("Cifras_citadas", cifras)])
+                   ("Monetario_2000_2024", monh), ("Prediccion_1990_2026", predh), ("Cifras_citadas", cifras)])
     print("Libro escrito:", os.path.join(TEMA, "Code", "datos_3B14.xlsx"))
 
 
