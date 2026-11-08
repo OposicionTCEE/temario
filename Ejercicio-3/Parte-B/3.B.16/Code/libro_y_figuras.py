@@ -81,7 +81,7 @@ def descargar(carpeta):
     for s in WB_A8:
         bajar(WB % (";".join(EURO + FUERA + ["USA"]), s), os.path.join(carpeta, "wb_" + s + ".json"))
     for s in WB_A9:
-        bajar(WB % (";".join(EURO + list(RIGIDOS)), s).replace("1960:2024", "1985:2024"), os.path.join(carpeta, "wb_" + s + ".json"))
+        bajar((WB % (";".join(EURO + list(RIGIDOS)), s)).replace("1960:2024", "1985:2024"), os.path.join(carpeta, "wb_" + s + ".json"))
     for s in FRED_A9:
         bajar(FRED + s, os.path.join(carpeta, s + ".csv"))
     for c in TARGET:
