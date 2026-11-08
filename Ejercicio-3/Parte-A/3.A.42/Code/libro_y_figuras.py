@@ -2711,6 +2711,94 @@ def cuerpo_b2_nek(sim):
                 "b2_aspa, b2_nek, b2_costes"))
 
 
+def cuerpo_b3(sim):
+    def xy(xs, ys):
+        return " ".join("(%.2f,%.4f)" % (a, b) for a, b in zip(xs, ys))
+    flecha = "-{Stealth[length=2.4mm]}, thick"
+
+    # ---- b3_ciclos: ciclo financiero (largo y amplio) y ciclo económico (corto), con las crisis en los picos financieros
+    T = np.linspace(0, 60, 601)
+    fin = 3.0 * np.sin(2 * math.pi * (T - 8.5) / 18.0)
+    dfin = np.gradient(fin, T)
+    eco = np.sin(2 * math.pi * T / 7.0) - 0.9 * np.clip(-dfin, 0, None) / np.abs(dfin).max() * 1.6   # recesiones más hondas en la contracción financiera
+    picos = [T[i] for i in range(1, 600) if fin[i] > fin[i - 1] and fin[i] >= fin[i + 1]]
+    f = ("\\begin{tikzpicture}\n\\begin{axis}[width=13cm, height=4.8cm, scale only axis, %s, xmin=0, xmax=60, ymin=-4.6, ymax=4.6, xtick=\\empty, ytick=\\empty,\n"
+         "    xlabel={Tiempo}, ylabel={Desviación respecto a la tendencia},\n"
+         "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.5,1.02)}, anchor=south}, legend columns=3]\n"
+         "\\addplot[black!40, thin, forget plot] coordinates {(0,0) (60,0)};\n"
+         "\\addplot[black, very thick] coordinates {%s};\\addlegendentry{ciclo financiero}\n"
+         "\\addplot[black!50, thick] coordinates {%s};\\addlegendentry{ciclo económico}\n"
+         "\\addplot[only marks, mark=triangle*, mark size=3pt, black] coordinates {%s};\\addlegendentry{crisis bancaria}\n"
+         "\\end{axis}\n\\end{tikzpicture}" % (ESTILO, xy(T[::3], fin[::3]), xy(T[::3], eco[::3]), " ".join("(%.2f,3.550)" % p for p in picos)))
+    escribir("b3_ciclos", f, "Cuerpo B3: ciclo financiero (periodo 18, amplitud 3) y ciclo económico (periodo 7, amplitud 1, con recesiones más hondas en la contracción financiera); crisis en los picos financieros.")
+
+    # ---- b3_espiral: bucle de amplificación financiera
+    cajas = [("pre", "Caen los precios\\\\de los activos", "(0,1.9)"),
+             ("pat", "Caen el patrimonio de los\\\\prestatarios y el valor\\\\de sus garantías", "(4.2,0)"),
+             ("cre", "Se encarece y se\\\\restringe el crédito", "(0,-1.9)"), ("gas", "Caen la inversión\\\\y el gasto", "(-4.2,0)")]
+    f = "\\begin{tikzpicture}[font=\\footnotesize, caja/.style={draw, rounded corners=2pt, align=center, inner sep=4pt, minimum width=3.2cm, minimum height=1.1cm}]\n"
+    for n, txt, pos in cajas:
+        f += "\\node[caja] (%s) at %s {%s};\n" % (n, pos, txt)
+    f += ("\\node[caja, fill=black!8] (per) at (0,3.75) {Una perturbación: cae la\\\\productividad o sube el tipo de interés};\n"
+          "\\node[caja, fill=black!8] (int) at (4.2,-3.4) {Los intermediarios pierden\\\\capital y prestan menos};\n"
+          "\\draw[%s] (per) -- (pre);\n\\draw[%s] (pre.east) to[out=0, in=90] (pat.north);\n\\draw[%s] (pat.south) to[out=270, in=0] (cre.east);\n"
+          "\\draw[%s] (cre.west) to[out=180, in=270] (gas.south);\n\\draw[%s] (gas.north) to[out=90, in=180] (pre.west);\n"
+          "\\draw[%s, dashed] (pat.south east) to[out=300, in=90] (int.north);\n\\draw[%s, dashed] (int.west) to[out=180, in=300] (cre.south);\n"
+          "\\end{tikzpicture}" % ((flecha,) * 7))
+    escribir("b3_espiral", f, "Cuerpo B3: espiral de amplificación financiera (precios de los activos, patrimonio y garantías, crédito, gasto) y capital de los intermediarios.")
+
+    # ---- b3_recesiones: sendas estilizadas tras el pico, con y sin crisis financiera (medias de la A10, 1870-2015, anexo III.7)
+    x = np.array([0, 1, 2, 3, 4, 5.0])
+    normal = np.array([0, -2.04, -0.33, 1.52, 3.12, 4.61])
+    finan = np.array([0, -2.73, -2.45, -1.31, 0.18, 1.52])
+    xs = np.linspace(0, 5, 101)
+    f = ("\\begin{tikzpicture}\n\\begin{axis}[width=10cm, height=5cm, scale only axis, %s, xmin=0, xmax=5, ymin=-3.4, ymax=5.4, xtick={0}, xticklabels={pico}, ytick={0}, yticklabels={$0$},\n"
+         "    xlabel={Años desde el pico}, ylabel={Producción respecto al pico},\n"
+         "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.02,0.98)}, anchor=north west}, legend cell align=left]\n"
+         "\\addplot[black!40, thin, forget plot] coordinates {(0,0) (5,0)};\n"
+         "\\addplot[black, thick] coordinates {%s};\\addlegendentry{recesión sin crisis financiera}\n"
+         "\\addplot[black, very thick, dashed] coordinates {%s};\\addlegendentry{recesión con crisis financiera}\n"
+         "\\end{axis}\n\\end{tikzpicture}" % (ESTILO, xy(xs, np.polyval(np.polyfit(x, normal, 4), xs)), xy(xs, np.polyval(np.polyfit(x, finan, 4), xs))))
+    escribir("b3_recesiones", f, "Cuerpo B3: sendas estilizadas (polinomio de grado 4) de la producción por habitante tras el pico de las recesiones normales y financieras (medias de la A10).")
+
+    # ---- b3_riesgo: distribución del crecimiento futuro con condiciones financieras holgadas y tensas (normales asimétricas ilustrativas)
+    erf = np.vectorize(math.erf)
+    g = np.linspace(-11, 9, 801)
+
+    def asim(loc, esc, a):
+        z = (g - loc) / esc
+        return 2 / esc * np.exp(-z ** 2 / 2) / math.sqrt(2 * math.pi) * 0.5 * (1 + erf(a * z / math.sqrt(2)))
+
+    def cuantil(d, q):
+        return g[np.searchsorted(np.cumsum(d) * (g[1] - g[0]), q)]
+    d1, d2 = asim(2.6, 1.6, 0.0), asim(4.4, 4.0, -2.5)
+    q1, q2 = cuantil(d1, 0.05), cuantil(d2, 0.05)
+    f = ("\\begin{tikzpicture}\n\\begin{axis}[width=10cm, height=5cm, scale only axis, %s, xmin=-11, xmax=9, ymin=0, ymax=0.3, xtick={0}, xticklabels={$0$}, ytick=\\empty,\n"
+         "    xlabel={Crecimiento de la producción en el año siguiente}, ylabel={Densidad},\n"
+         "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.02,0.98)}, anchor=north west}, legend cell align=left]\n"
+         "\\addplot[black!45, very thick] coordinates {%s};\\addlegendentry{condiciones financieras holgadas}\n"
+         "\\addplot[black, thick, dashed] coordinates {%s};\\addlegendentry{condiciones financieras tensas}\n"
+         "\\draw[black!45, thin] (axis cs:%.2f,0) -- (axis cs:%.2f,0.13);\\draw[black, thin] (axis cs:%.2f,0) -- (axis cs:%.2f,0.05);\n"
+         "\\node[font=\\footnotesize, anchor=south east, align=center, inner sep=1pt] at (axis cs:%.2f,0.13) {cuantil del\\\\$5\\%%$};\n"
+         "\\node[font=\\footnotesize, anchor=south, align=center] at (axis cs:%.2f,0.05) {cuantil del\\\\$5\\%%$};\n"
+         "\\end{axis}\n\\end{tikzpicture}" % (ESTILO, xy(g[::4], d1[::4]), xy(g[::4], d2[::4]), q1, q1, q2, q2, q1, q2))
+    escribir("b3_riesgo", f, "Cuerpo B3: crecimiento en riesgo; con condiciones tensas el cuantil del 5 %% baja mucho (de %.2f a %.2f), la mediana poco (de %.2f a %.2f) y el del 95 %% no baja (de %.2f a %.2f)."
+             % (q1, q2, cuantil(d1, 0.5), cuantil(d2, 0.5), cuantil(d1, 0.95), cuantil(d2, 0.95)))
+
+    # ---- b3_global: transmisión del ciclo financiero global
+    f = ("\\begin{tikzpicture}[font=\\footnotesize, caja/.style={draw, rounded corners=2pt, align=center, inner sep=4pt, text width=3.1cm, minimum height=1.4cm}]\n"
+         "\\node[caja, fill=black!8] (a) at (0,0) {Política monetaria\\\\de Estados Unidos};\n"
+         "\\node[caja] (b) at (4.1,0) {Apetito global por el\\\\riesgo y valor del dólar};\n"
+         "\\node[caja] (c) at (8.2,0) {Flujos de capital, crédito\\\\y precios de los activos\\\\en el resto del mundo};\n"
+         "\\node[caja] (d) at (12.3,0) {Ciclos financieros\\\\nacionales sincronizados};\n"
+         "\\draw[%s] (a) -- (b);\\draw[%s] (b) -- (c);\\draw[%s] (c) -- (d);\n"
+         "\\end{tikzpicture}" % ((flecha,) * 3))
+    escribir("b3_global", f, "Cuerpo B3: transmisión del ciclo financiero global desde la política monetaria de Estados Unidos.")
+    sim.append(("Sintética", "Cuerpo B3 (ciclo financiero): ciclos sinusoidales de periodo 18 (financiero, amplitud 3) y 7 (económico, amplitud 1, más hondo en la contracción financiera); "
+                "sendas tras el pico ajustadas con un polinomio de grado 4 a las medias de la A10 (1870-2015); normales asimétricas (2,6; 1,6; 0) y (4,4; 4,0; -2,5) para las condiciones holgadas y tensas; esquemas",
+                "b3_ciclos, b3_espiral, b3_recesiones, b3_riesgo, b3_global"))
+
+
 def con_datos_a13(carpeta, filas_series, cifras):
     # ---- colas gruesas: asimetría y curtosis del crecimiento trimestral del PIB real de EE. UU.
     pib = {f: v for f, v in leer(carpeta, "GDPC1")}
