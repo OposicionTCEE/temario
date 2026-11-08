@@ -2555,6 +2555,99 @@ def cuerpo_b1(sim):
                 % (", ".join("%.1f-%.1f" % r for r in rec), ", ".join("%.1f-%.1f" % r for r in desc)), "b1_fases, b1_crecimiento, b1_tendencias, b1_volatilidad, b1_desfases"))
 
 
+# ---------------------------------------------------------------- T15 (cuerpo, B2, nueva macroeconomía clásica): figuras abstractas
+def cuerpo_b2_nmc(sim):
+    def xy(xs, ys):
+        return " ".join("(%.2f,%.4f)" % (a, b) for a, b in zip(xs, ys))
+    # ---- b2_impulsos: un impulso y muchos impulsos propagados por el mismo mecanismo (proceso autorregresivo de orden dos)
+    a1, a2 = 1.824, -0.865
+
+    def propaga(nu):
+        y = np.zeros(len(nu))
+        for t in range(len(nu)):
+            y[t] = nu[t] + (a1 * y[t - 1] if t >= 1 else 0) + (a2 * y[t - 2] if t >= 2 else 0)
+        return y
+    T = np.arange(0, 80)
+    uno = np.zeros(80)
+    uno[2] = 1.0
+    r1 = propaga(uno)
+    nu = np.random.default_rng(7).normal(0, 1, 80)
+    r2 = propaga(nu)
+    pa = ("\\begin{axis}[name=a, at={(0,0)}, anchor=north west, width=6.2cm, height=4.2cm, scale only axis, %s, xmin=0, xmax=79, ymin=%.2f, ymax=%.2f, xtick=\\empty, ytick=\\empty,\n"
+          "    xlabel={Tiempo}, ylabel={Ciclo}, title={(a) Un solo impulso}, title style={font=\\footnotesize}]\n"
+          "\\addplot[black!40, thin] coordinates {(0,0) (79,0)};\n\\addplot[ycomb, black!50, very thick] coordinates {(2,1.000)};\n"
+          "\\addplot[black, thick] coordinates {%s};\n\\end{axis}\n" % (ESTILO, 1.25 * r1.min(), 1.15 * r1.max(), xy(T, r1)))
+    pb = ("\\begin{axis}[name=b, at={($(a.north east)+(1.6cm,0)$)}, anchor=north west, width=6.2cm, height=4.2cm, scale only axis, %s, xmin=0, xmax=79, xtick=\\empty, ytick=\\empty,\n"
+          "    xlabel={Tiempo}, title={(b) Impulsos continuos}, title style={font=\\footnotesize},\n"
+          "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.02,0.98)}, anchor=north west}, legend cell align=left]\n"
+          "\\addplot[black!40, thin, forget plot] coordinates {(0,0) (79,0)};\n\\addplot[ycomb, black!45, forget plot] coordinates {%s};\n"
+          "\\addlegendimage{legend image code/.code={\\draw[black!45, thick] (0.3cm,-0.12cm) -- (0.3cm,0.12cm);}}\\addlegendentry{impulsos}\n"
+          "\\addplot[black, thick] coordinates {%s};\\addlegendentry{ciclo}\n\\end{axis}\n" % (ESTILO, xy(T, 2.5 * nu), xy(T, r2)))
+    escribir("b2_impulsos", "\\begin{tikzpicture}\n" + pa + pb + "\\end{tikzpicture}",
+             "Cuerpo B2: esquema de impulso y propagación con un proceso autorregresivo de orden dos (1,824 y -0,865): un solo impulso y una sucesión de impulsos aleatorios.")
+    # ---- b2_lucas: oferta de LUCAS y demanda agregada en el plano de la producción y los precios
+    psi, yg, Ep0, m0, dm = 1.0, 5.0, 5.0, 10.0, 2.0
+
+    def oa(Ep, y):
+        return Ep + (y - yg) / psi
+
+    def da(m, y):
+        return m - y
+    y1 = (m0 + dm - Ep0 + yg / psi) / (1 + 1 / psi)
+    E0, E1, E2 = (yg, Ep0), (y1, da(m0 + dm, y1)), (yg, Ep0 + dm)
+    f = ("\\begin{tikzpicture}\n\\begin{axis}[width=10cm, height=6cm, scale only axis, %s, xmin=2.4, xmax=8.6, ymin=2.2, ymax=9.6, xtick={%.2f}, xticklabels={$y^g_t$}, ytick=\\empty,\n"
+         "    xlabel={Producción, $y_t$}, ylabel={Nivel de precios, $p_t$}, clip=false]\n"
+         "\\addplot[black!40, dashed] coordinates {(%.2f,2.2) (%.2f,9.6)};\n"
+         "\\addplot[black, thick, domain=2.4:7.4, samples=2] {%.3f-x};\n\\addplot[black, thick, dashed, domain=2.4:7.4, samples=2] {%.3f-x};\n"
+         "\\addplot[black!60, thick, domain=2.4:7.4, samples=2] {%.3f+(x-%.2f)/%.2f};\n\\addplot[black!60, thick, dotted, domain=2.4:5.6, samples=2] {%.3f+(x-%.2f)/%.2f};\n"
+         "\\addplot[only marks, mark=*, mark size=1.6pt] coordinates {(%.3f,%.3f) (%.3f,%.3f) (%.3f,%.3f)};\n"
+         "\\node[font=\\footnotesize, anchor=north east] at (axis cs:%.3f,%.3f) {$E_0$};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:%.3f,%.3f) {$E_1$};\n\\node[font=\\footnotesize, anchor=east] at (axis cs:%.3f,%.3f) {$E_2$};\n"
+         "\\node[font=\\footnotesize, anchor=west] at (axis cs:7.4,%.3f) {$DA_0$};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:7.4,%.3f) {$DA_1$};\n"
+         "\\node[font=\\footnotesize, anchor=west] at (axis cs:7.4,%.3f) {$OA_0$};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:5.6,%.3f) {$OA_1$};\n"
+         "\\node[font=\\footnotesize, anchor=south, text=black!55] at (axis cs:%.2f,9.6) {tendencia};\n\\end{axis}\n\\end{tikzpicture}"
+         % (ESTILO, yg, yg, yg, m0, m0 + dm, Ep0, yg, psi, Ep0 + dm, yg, psi,
+            E0[0], E0[1], E1[0], E1[1], E2[0], E2[1], E0[0] - 0.05, E0[1] - 0.05, E1[0] + 0.12, E1[1], E2[0] - 0.12, E2[1],
+            da(m0, 7.4), da(m0 + dm, 7.4), oa(Ep0, 7.4), oa(Ep0 + dm, 5.6), yg))
+    escribir("b2_lucas", f, "Cuerpo B2: oferta agregada de LUCAS y demanda agregada; relajación monetaria imprevista (E1) y prevista (E2).")
+    # ---- b2_rbc: respuestas del ciclo real a una mejora persistente y a una de un solo trimestre
+    t = np.arange(40)
+    p = rbc_trayectoria(rbc_resolver(RBC["rho"], False), RBC["rho"] ** t)
+    q = rbc_trayectoria(rbc_resolver(0.0, False), (t == 0).astype(float))
+
+    def panel(nombre, lugar, titulo, d, leyenda, ylab):
+        ley = (", legend style={draw=none, fill=none, font=\\footnotesize, at={(0.98,0.98)}, anchor=north east}, legend cell align=left" if leyenda else "")
+        return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=6.2cm, height=4.2cm, scale only axis, %s, xmin=0, xmax=39, ymin=-0.3, ymax=2.1, xtick=\\empty, ytick=\\empty,\n"
+                "    xlabel={Trimestres}, %s title={%s}, title style={font=\\footnotesize}%s]\n"
+                "\\addplot[black!40, thin, forget plot] coordinates {(0,0) (39,0)};\n"
+                "\\addplot[black!50, thick, dotted] coordinates {%s};%s\n\\addplot[black, thick] coordinates {%s};%s\n\\addplot[black!45, very thick] coordinates {%s};%s\n\\end{axis}\n"
+                % (nombre, lugar, ESTILO, ylab, titulo, ley, xy(t, d["z"]), "\\addlegendentry{productividad}" if leyenda else "",
+                   xy(t, d["y"]), "\\addlegendentry{producción}" if leyenda else "", xy(t, d["h"]), "\\addlegendentry{horas}" if leyenda else ""))
+    escribir("b2_rbc", "\\begin{tikzpicture}\n" + panel("a", "{(0,0)}", "(a) Mejora persistente", p, True, "ylabel={Desviación respecto al estado estacionario},")
+             + panel("b", "{($(a.north east)+(1.6cm,0)$)}", "(b) Mejora de un solo trimestre", q, False, "") + "\\end{tikzpicture}",
+             "Cuerpo B2: respuestas del modelo del ciclo real (trabajo divisible) a una mejora de la productividad persistente (0,95) y de un solo trimestre.")
+    # ---- b2_trabajo: la mejora tecnológica desplaza la demanda de trabajo; dos ofertas de distinta elasticidad
+    w0, h0, s = 5.0, 5.0, 1.6
+    h_el = h0 + s / (0.9 + 0.25)
+    w_el = w0 + 0.25 * (h_el - h0)
+    h_ri = h0 + s / (0.9 + 3.0)
+    w_ri = w0 + 3.0 * (h_ri - h0)
+    f = ("\\begin{tikzpicture}\n\\begin{axis}[width=10cm, height=6cm, scale only axis, %s, xmin=2, xmax=9.2, ymin=1.5, ymax=9.8, xtick=\\empty, ytick=\\empty,\n"
+         "    xlabel={Horas, $h_t$}, ylabel={Salario real, $w_t$}, clip=false]\n"
+         "\\addplot[black, thick, domain=2.2:8.4, samples=2] {%.3f-0.9*(x-%.2f)};\n\\addplot[black, thick, dashed, domain=2.2:8.4, samples=2] {%.3f-0.9*(x-%.2f)};\n"
+         "\\addplot[black!60, thick, domain=2.4:8.6, samples=2] {%.3f+0.25*(x-%.2f)};\n\\addplot[black!45, very thick, domain=3.6:6.4, samples=2] {%.3f+3*(x-%.2f)};\n"
+         "\\addplot[only marks, mark=*, mark size=1.6pt] coordinates {(%.3f,%.3f) (%.3f,%.3f) (%.3f,%.3f)};\n"
+         "\\node[font=\\footnotesize, anchor=north east] at (axis cs:%.3f,%.3f) {$E_0$};\n\\node[font=\\footnotesize, anchor=north west] at (axis cs:%.3f,%.3f) {$E_1$};\n\\node[font=\\footnotesize, anchor=south east] at (axis cs:%.3f,%.3f) {$E_2$};\n"
+         "\\node[font=\\footnotesize, anchor=west] at (axis cs:8.4,%.3f) {demanda};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:8.4,%.3f) {demanda tras la mejora};\n"
+         "\\node[font=\\footnotesize, anchor=west] at (axis cs:8.6,%.3f) {oferta muy elástica};\n\\node[font=\\footnotesize, anchor=south] at (axis cs:6.4,%.3f) {oferta poco elástica};\n"
+         "\\end{axis}\n\\end{tikzpicture}"
+         % (ESTILO, w0, h0, w0 + s, h0, w0, h0, w0, h0, h0, w0, h_el, w_el, h_ri, w_ri,
+            h0 - 0.05, w0 - 0.05, h_el + 0.05, w_el - 0.05, h_ri - 0.08, w_ri + 0.05,
+            w0 - 0.9 * (8.4 - h0), w0 + s - 0.9 * (8.4 - h0), w0 + 0.25 * (8.6 - h0), w0 + 3 * (6.4 - h0)))
+    escribir("b2_trabajo", f, "Cuerpo B2: una mejora tecnológica desplaza la demanda de trabajo; con una oferta muy elástica suben sobre todo las horas (E1) y con una poco elástica, el salario (E2).")
+    sim.append(("Sintética", "Cuerpo B2 (NMC): impulsos con un AR(2) de 1,824 y -0,865 (semilla 7); oferta de LUCAS con pendiente 1 y demanda y = m - p; respuestas del ciclo real con trabajo divisible (rho 0,95 y 0); mercado de trabajo con demanda de pendiente -0,9 y ofertas de pendiente 0,25 y 3",
+                "b2_impulsos, b2_lucas, b2_rbc, b2_trabajo"))
+
+
 def con_datos_a13(carpeta, filas_series, cifras):
     # ---- colas gruesas: asimetría y curtosis del crecimiento trimestral del PIB real de EE. UU.
     pib = {f: v for f, v in leer(carpeta, "GDPC1")}
