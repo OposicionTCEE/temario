@@ -20,7 +20,10 @@ sys.path.insert(0, "/Users/marceloortega/TCEE/main/herramientas")
 from xlsx_simple import escribir_xlsx
 
 TEMA = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-IMG = os.path.join(TEMA, "Img")
+# Con la variable SALIDA_3B16, las figuras y el libro se escriben en esa carpeta y se copian después al tema de una vez,
+# para que ningún guardado automático de git los recoja a medio generar (pasó en la A11 con un ayudante trabajando a la vez).
+SALIDA = os.environ.get("SALIDA_3B16")
+IMG = SALIDA or os.path.join(TEMA, "Img")
 FRED = "https://fred.stlouisfed.org/graph/fredgraph.csv?id="
 WB = "https://api.worldbank.org/v2/country/%s/indicator/%s?format=json&per_page=20000&date=1960:2024"
 EST = "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/"
