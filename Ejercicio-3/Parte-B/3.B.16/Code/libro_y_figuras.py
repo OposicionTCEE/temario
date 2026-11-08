@@ -397,16 +397,19 @@ def precios(carpeta, series, cifras):
     for p in EURO:
         for a in anios:
             series.append(("Nivel de precios del consumo individual efectivo", NOMBRE[p], a, pli[p][a], "índice, UE-27 = 100", "Eurostat prc_ppp_ind (A01)", "nivel", "anx2_precios"))
-    cv = []
+    cv, cv_sin = [], []
     for a in anios:
         v = np.array([pli[p][a] for p in EURO])
-        cv.append(float(100 * v.std() / v.mean()))
+        w = np.array([pli[p][a] for p in EURO if p != "IRL"])
+        cv.append(float(100 * v.std() / v.mean())); cv_sin.append(float(100 * w.std() / w.mean()))
         series.append(("Coeficiente de variación de los niveles de precios", "Zona del euro (11)", a, cv[-1], "porcentaje", "Eurostat prc_ppp_ind (A01)", "desviación típica / media, sin ponderar", "anx2_precios"))
+        series.append(("Coeficiente de variación de los niveles de precios", "Zona del euro sin Irlanda (10)", a, cv_sin[-1], "porcentaje", "Eurostat prc_ppp_ind (A01)", "desviación típica / media, sin ponderar", "anx2_precios"))
     for a in (1995, 1999, 2008, 2013, 2024):
         cifras.append(("Coeficiente de variación de los niveles de precios del consumo, zona del euro, %d" % a, round(cv[anios.index(a)], 1), "porcentaje", "II.4.2"))
-    for p in ("PRT", "GRC", "ESP", "IRL", "DEU"):
-        cifras.append(("Nivel de precios del consumo, 1995 y 2024 (UE-27 = 100), " + NOMBRE[p], "%.0f y %.0f" % (pli[p][1995], pli[p][2024]), "índice", "II.4.2"))
-    return anios, cv, pli
+        cifras.append(("Coeficiente de variación de los niveles de precios del consumo, sin Irlanda, %d" % a, round(cv_sin[anios.index(a)], 1), "porcentaje", "II.4.2"))
+    for p in ("PRT", "GRC", "ESP", "IRL", "DEU", "FRA", "ITA", "NLD", "BEL", "AUT", "FIN"):
+        cifras.append(("Nivel de precios del consumo, 1995, 1999 y 2024 (UE-27 = 100), " + NOMBRE[p], "%.0f, %.0f y %.0f" % (pli[p][1995], pli[p][1999], pli[p][2024]), "índice", "II.4.2"))
+    return anios, cv, cv_sin
 
 
 def crecimiento(carpeta, series, cifras):
