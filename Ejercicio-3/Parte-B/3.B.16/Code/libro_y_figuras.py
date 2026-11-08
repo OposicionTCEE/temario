@@ -71,6 +71,12 @@ FRED_A10 = {"FYONGDA188S": "Gasto neto del Gobierno federal de EE. UU. en porcen
 VGRDL = "https://www.statistikportal.de/sites/default/files/2026-03/vgrdl_r1b1_bs2025.xlsx"
 VGRDL_HOJAS = {"3.3": "PIB a precios corrientes por habitante", "3.1": "PIB a precios corrientes por persona ocupada",
                "13.": "Población", "11.1": "Personas ocupadas"}
+# Italia: PIB por habitante del Sur en porcentaje del Centro-Norte, a precios de 1911 y fronteras actuales. No se descarga:
+# son las cifras publicadas en IUZZOLINO, PELLEGRINI y VIESTI (2011), cuadro 11 (1881-2009), y su nota 4 (1871), elaboradas
+# con DANIELE y MALANIMA (2007) y SVIMEZ (2011).
+MEZZOGIORNO = {1871: 98.9, 1881: 98.5, 1901: 88.0, 1911: 81.4, 1921: 73.6, 1931: 64.5, 1951: 47.3, 1961: 55.8, 1971: 67.0,
+               1981: 62.2, 1991: 59.6, 2001: 58.0, 2009: 61.6}
+MEZZOGIORNO_URL = "https://www.bancaditalia.it/pubblicazioni/quaderni-storia/2011-0022/Quaderno_storia_economica_n_22.pdf"
 SECTORES = ["A", "BDE", "C", "F", "G-I", "J", "K", "L", "M_N", "O-Q", "R-U"]
 LAMBDA_ANUAL = 6.25  # RAVN y UHLIG (2002)
 RETARDOS_BE, RETARDOS_BK, HORIZONTE = 2, 2, 10
