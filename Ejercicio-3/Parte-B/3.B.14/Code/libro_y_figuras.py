@@ -1044,7 +1044,7 @@ def fig_prediccion(xm, pol, cm, origen="1990-01", fin="2026-09"):
   xmin=0.7, xmax=6.3, xtick={1,2,3,4,5,6}, xticklabels={1,3,12,24,36,60}, xlabel={Horizonte (meses)}, clip=false,
   y tick label style={/pgf/number format/.cd, fixed, fixed zerofill, precision=1, use comma},
 """
-    etiquetas = {0: {"JP": "Yen"}, 1: {"JP": "Yen", "CH": "Franco suizo", "DE": "Marco y euro"}}
+    etiquetas = {0: {}, 1: {"JP": "Yen", "CH": "Franco suizo", "DE": "Marco y euro"}}
     tikz = "%% Predicción fuera de la muestra, previsiones mensuales de %s a %s: error cuadrático medio de cada modelo dividido por el\n" % (origen, fin)
     tikz += "% del paseo aleatorio, ocho monedas frente al dólar (líneas finas) y su mediana (gruesa). (a) Paridad no cubierta con los\n"
     tikz += "% tipos oficiales; (b) vuelta del tipo real a su media (PPA). BPI WS_XRU, WS_CBPOL y WS_LONG_CPI.\n"
