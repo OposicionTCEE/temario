@@ -2530,9 +2530,9 @@ def cuerpo_b1(sim):
           % (ESTILO, xy(T[::2], (y - lin)[::2]), xy(T[::2], c[::2])))
     escribir("b1_tendencias", "\\begin{tikzpicture}\n" + ta + tb + "\\end{tikzpicture}",
              "Cuerpo B1: la serie base con una tendencia lineal y otra flexible, y los dos ciclos que resultan.")
-    # ---- b1_hechos: hechos estilizados en versión abstracta
-    ha = ("\\begin{axis}[name=a, at={(0,0)}, anchor=north west, width=6.2cm, height=4.4cm, scale only axis, %s, xmin=0, xmax=120, xtick=\\empty, ytick=\\empty,\n"
-          "    xlabel={Tiempo}, ylabel={Desviación respecto a la tendencia}, title={(a) Volatilidad y comovimiento}, title style={font=\\footnotesize},\n"
+    # ---- b1_volatilidad y b1_desfases: hechos estilizados en versión abstracta, una figura tras cada párrafo
+    ha = ("\\begin{axis}[width=11cm, height=4.2cm, scale only axis, %s, xmin=0, xmax=120, xtick=\\empty, ytick=\\empty,\n"
+          "    xlabel={Tiempo}, ylabel={Desviación respecto a la tendencia},\n"
           "    ymin=-20, ymax=30, legend style={draw=none, fill=none, font=\\footnotesize, at={(0.5,0.99)}, anchor=north}, legend columns=3, legend cell align=left]\n"
           "\\addplot[black!40, thin, forget plot] coordinates {(0,0) (120,0)};\n"
           "\\addplot[black, thick] coordinates {%s};\\addlegendentry{producción}\n"
