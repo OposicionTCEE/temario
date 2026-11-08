@@ -1070,6 +1070,156 @@ def fig_prediccion(xm, pol, cm, origen="1990-01", fin="2026-09"):
     return cocientes, medianas
 
 
+# ---------------------------------------------------------------- A8 (III.1): réplica de ENGEL (2016)
+# VAR mensual, para cada economía frente a EE. UU., de q (tipo real, 100 ln, sube = depreciación real de la moneda
+# nacional), i - i* (tipos oficiales del BPI, % al mes) e infl - infl* (inflación relativa mensual del IPC, % al mes, sin
+# la media de cada mes del calendario). Con las expectativas del VAR: r - r* = (i - i*) - E_t(infl - infl*)_{t+1};
+# E_t lambda_{t+j} = E_t(r - r*)_{t+j} - E_t dq_{t+j+1}; cada coeficiente es cov(., r - r*)/var(r - r*) con los estados de
+# la muestra. Nivel: q = -suma E(r - r*) + suma E(lambda) (identidad de CAMPBELL y CLARIDA), de modo que
+# b_q = -b_sr + b_sl. Euro desde 1999 para Alemania, Francia e Italia (tipo oficial del BCE, IPC nacional). Japón: el BPI
+# no da tipo oficial cuando el Banco de Japón fijaba la base monetaria (1999-2000, 2001-2006, 2013-2016): se mantiene el
+# último publicado. El IPC de EE. UU. no tiene dato de octubre de 2025 (cierre de la Administración): la muestra larga
+# termina en septiembre de 2025.
+MONEDAS_ENGEL = [("DE", "Marco y euro"), ("FR", "Franco y euro"), ("IT", "Lira y euro"), ("JP", "Yen"), ("GB", "Libra"),
+                 ("CA", "Dólar canadiense")]
+MUESTRAS_ENGEL = [("engel", "1979-06", "2009-10"), ("larga", "1979-06", "2025-09"), ("despues", "2009-11", "2025-09")]
+
+
+def datos_engel(pol, xm, cm, a, t0, t1):
+    tasa, tus = dict(pol[a]), pol["US"]
+    if a in ("DE", "FR", "IT"):
+        tasa.update({m: v for m, v in pol["XM"].items() if m >= "1999-01"})
+    meses = meses_entre(t0, t1)
+    previo = meses_entre("1900-01", t0)[-2]
+    filas, rellenos, ultimo = [], [], None
+    for m0, m in zip([previo] + meses[:-1], meses):
+        if m not in tasa:
+            tasa[m] = ultimo
+            rellenos.append(m)
+        ultimo = tasa[m]
+        q = 100 * (math.log(xm[a][m]) + math.log(cm["US"][m]) - math.log(cm[a][m]))
+        di = 100 * (math.log(1 + tasa[m] / 100) - math.log(1 + tus[m] / 100)) / 12
+        dp = 100 * (math.log(cm[a][m] / cm[a][m0]) - math.log(cm["US"][m] / cm["US"][m0]))
+        filas.append([q, di, dp])
+    media = sum(f[2] for f in filas) / len(filas)
+    for k in range(1, 13):  # desestacionalizar la inflación relativa: quitar la media de cada mes del calendario
+        sel = [f for f, m in zip(filas, meses) if int(m[5:]) == k]
+        mk = sum(f[2] for f in sel) / len(sel)
+        for f in sel:
+            f[2] -= mk - media
+    return meses, filas, rellenos
+
+
+def var_engel(X, p=3, J=120):
+    import numpy as np
+    X = np.array(X, dtype=float)
+    T, n = X.shape
+    Z = np.hstack([np.ones((T - p, 1))] + [X[p - l:T - l] for l in range(1, p + 1)])
+    B = np.linalg.lstsq(Z, X[p:], rcond=None)[0]
+    A = [B[1 + n * (l - 1):1 + n * l].T for l in range(1, p + 1)]
+    N = n * p
+    F = np.zeros((N, N))
+    F[:n] = np.hstack(A)
+    if p > 1:
+        F[n:, :-n] = np.eye(n * (p - 1))
+    mu = np.linalg.solve(np.eye(n) - sum(A), B[0])
+    S = np.hstack([X[p - l:T - l] - mu for l in range(p)])
+    I = np.eye(N)
+    eq, ei, ep = I[0], I[1], I[2]
+    d = ei - ep @ F
+    V = np.cov(S.T)
+    vd = float(d @ V @ d)
+    coef = lambda c: float(c @ V @ d) / vd
+    perfil, Fj = [], I.copy()
+    for j in range(J + 1):
+        perfil.append(coef(d @ Fj - eq @ (F @ Fj - Fj)))
+        Fj = F @ Fj
+    inv = np.linalg.inv(I - F)
+    b_q, b_sr, b_sl = coef(eq) / 12, coef(d @ inv) / 12, coef((d - eq @ (F - I)) @ inv) / 12
+    rr = S @ d
+    dq = X[p + 1:, 0] - X[p:-1, 0]
+    fama = float(np.polyfit(rr[:len(dq)], dq, 1)[0])
+    cambio = next((j for j, v in enumerate(perfil) if v < 0), None)
+    return dict(perfil=perfil, b_q=b_q, b_sr=b_sr, b_sl=b_sl, fama=fama, cambio=cambio, T=T,
+                raiz=float(max(abs(np.linalg.eigvals(F)))), sd=12 * math.sqrt(vd))
+
+
+def fig_engel(pol, xm, cm, p=3, J=60):
+    res, series, rellenos = {}, {}, {}
+    for clave, t0, t1 in MUESTRAS_ENGEL:
+        todas = []
+        for a, _ in MONEDAS_ENGEL:
+            meses, X, rel = datos_engel(pol, xm, cm, a, t0, t1)
+            res[(clave, a)] = var_engel(X, p)
+            todas.append(X)
+            if clave == "larga":
+                series[a], rellenos[a] = (meses, X), rel
+        media = [[sum(t[i][k] for t in todas) / len(todas) for k in range(3)] for i in range(len(todas[0]))]
+        res[(clave, "G6")] = var_engel(media, p)
+        if clave == "engel":
+            for pp in (1, 2, 3, 4):
+                res[("retardos", pp)] = var_engel(media, pp)
+    filas = [("G6", "Media de las seis")] + MONEDAS_ENGEL[::-1]
+    # ---- nivel (muestra de ENGEL)
+    tikz = "% Réplica de ENGEL (2016), junio de 1979 a octubre de 2009: apreciación real de cada moneda frente al dólar por cada\n"
+    tikz += "% punto de diferencia de tipos reales (coeficiente de q sobre r - r*, cambiado de signo, % por punto anual) y la parte\n"
+    tikz += "%% que justifica la suma de las diferencias de tipos reales esperadas (VAR(%d) mensual de q, i - i* e inflación relativa).\n" % p
+    tikz += "% BPI WS_XRU, WS_CBPOL y WS_LONG_CPI. Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_engel_nivel\n"
+    tikz += "\\begin{tikzpicture}\n\\footnotesize\n\\begin{axis}[\n"
+    xmax = math.ceil(max(max(-res[("engel", a)]["b_q"], res[("engel", a)]["b_sr"]) for a, _ in filas) + 0.6)
+    tikz += r"""  scale only axis, width=10.4cm, height=6.2cm, axis lines=left, tick align=outside, tick style={black!60},
+  /pgf/number format/.cd, use comma, 1000 sep={}, /pgfplots/.cd,
+  every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize},
+  xmin=0, xmax=%d, ymin=0.45, ymax=7.55, xtick={0,1,...,%d}, ytick={1,...,7}, yticklabels={%s},
+  xlabel={Apreciación real por cada punto de diferencia de tipos reales (\%%)}, clip=false,
+  legend style={draw=none, fill=none, font=\footnotesize, at={(0.5,1.03)}, anchor=south, legend columns=-1,
+    /tikz/every even column/.append style={column sep=0.5cm}},
+]
+""" % (xmax, xmax, ",".join(nombre for _, nombre in filas))
+    just = [(res[("engel", a)]["b_sr"], i + 1) for i, (a, _) in enumerate(filas)]
+    obs = [(-res[("engel", a)]["b_q"], i + 1) for i, (a, _) in enumerate(filas)]
+    tikz += "\\addplot[xbar, bar width=6.5pt, bar shift=3.6pt, fill=black!25, draw=none] coordinates {%s};\n" % coordenadas(just, 3)
+    tikz += "\\addplot[xbar, bar width=6.5pt, bar shift=-3.6pt, fill=black, draw=none] coordinates {%s};\n" % coordenadas(obs, 3)
+    tikz += "\\legend{Lo que justifican las diferencias de tipos esperadas, Lo que se aprecia el tipo real}\n"
+    for (x, y), sh in [(v, "3.6pt") for v in just] + [(v, "-3.6pt") for v in obs]:
+        tikz += "\\node[font=\\scriptsize, anchor=west, inner sep=1.5pt, yshift=%s] at (axis cs:%.3f,%d) {$%s$};\n" % (sh, max(x, 0), y, coma(x, 1))
+    tikz += "\\end{axis}\n\\end{tikzpicture}\n"
+    open(os.path.join(IMG, "anx_engel_nivel.tikz"), "w", encoding="utf-8").write(tikz)
+    # ---- horizontes
+    pe, pl = res[("engel", "G6")]["perfil"][:J + 1], res[("larga", "G6")]["perfil"][:J + 1]
+    finas = [res[("engel", a)]["perfil"][:J + 1] for a, _ in MONEDAS_ENGEL]
+    ymin = math.floor(min(min(v) for v in finas + [pl]) * 2) / 2 - 0.5
+    ymax = math.ceil(max(max(v) for v in finas + [pl]))
+    c = res[("engel", "G6")]["cambio"]
+    tikz = "% Réplica de ENGEL (2016): respuesta de la prima esperada de cada moneda frente al dólar a j meses, E_t lambda_{t+j}\n"
+    tikz += "% (rentabilidad en exceso anualizada), a un punto más de diferencia de tipos reales en t. Finas: las seis monedas,\n"
+    tikz += "%% 1979-06 a 2009-10; gruesa: su media; discontinua: la media de 1979-06 a 2025-09. VAR(%d) mensual.\n" % p
+    tikz += "% BPI WS_XRU, WS_CBPOL y WS_LONG_CPI. Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_engel_horizontes\n"
+    tikz += "\\begin{tikzpicture}\n\\footnotesize\n\\begin{axis}[\n"
+    tikz += r"""  scale only axis, width=12.4cm, height=5.4cm, axis lines=left, tick align=outside, tick style={black!60},
+  /pgf/number format/.cd, use comma, 1000 sep={}, /pgfplots/.cd,
+  every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize},
+  xmin=0, xmax=%d, ymin=%.1f, ymax=%.1f, xtick={0,6,...,%d}, ytick={%d,...,%d}, clip=false,
+  xlabel={Horizonte (meses)}, ylabel={Respuesta de la prima esperada (puntos)},
+  legend style={draw=none, fill=none, font=\footnotesize, at={(0.98,0.97)}, anchor=north east, legend cell align=left},
+]
+""" % (J, ymin, ymax, J, math.ceil(ymin), ymax)
+    tikz += "\\draw[black!55, densely dashed] (axis cs:0,0) -- (axis cs:%d,0);\n" % J
+    tikz += "\\addlegendimage{black!30, line width=0.5pt}\\addlegendentry{Cada una de las seis monedas, 1979-2009}\n"
+    tikz += "\\addlegendimage{black, line width=1.3pt}\\addlegendentry{Media de las seis, 1979-2009}\n"
+    tikz += "\\addlegendimage{black!60, line width=1.1pt, dashed}\\addlegendentry{Media de las seis, 1979-2025}\n"
+    for v in finas:
+        tikz += "\\addplot[black!30, line width=0.5pt, forget plot] coordinates {%s};\n" % coordenadas(list(enumerate(v)), 3)
+    tikz += "\\addplot[black!60, line width=1.1pt, dashed, forget plot] coordinates {%s};\n" % coordenadas(list(enumerate(pl)), 3)
+    tikz += "\\addplot[black, line width=1.3pt, forget plot] coordinates {%s};\n" % coordenadas(list(enumerate(pe)), 3)
+    if c is not None:
+        tikz += "\\draw[black!60, densely dotted] (axis cs:%d,0) -- (axis cs:%d,%.1f);\n" % (c, c, ymin)
+        tikz += "\\node[font=\\scriptsize, anchor=south west, inner sep=2pt] at (axis cs:%d,%.1f) {$%d$ meses};\n" % (c, ymin, c)
+    tikz += "\\end{axis}\n\\end{tikzpicture}\n"
+    open(os.path.join(IMG, "anx_engel_horizontes.tikz"), "w", encoding="utf-8").write(tikz)
+    return res, series, rellenos
+
+
 # ---------------------------------------------------------------- principal
 def main():
     carpeta = sys.argv[1]
