@@ -1980,6 +1980,7 @@ def main():
     con_datos_a6(carpeta, series, cifras)
     con_datos_a7(carpeta, series, cifras, sint)
     con_datos_a8(cifras, sint)
+    con_datos_a9(carpeta, series, cifras, sint)
     leeme = [["Libro de datos del tema 3.A.42 (Teorías de los ciclos económicos)"],
              ["Generado por Code/libro_y_figuras.py el %s con los datos de FRED descargados ese día." % FECHA_DESCARGA],
              ["Hojas: Fuentes (series y su origen), Series (formato largo: serie, país, fecha, valor, unidad, fuente, tratamiento, figura),"],
