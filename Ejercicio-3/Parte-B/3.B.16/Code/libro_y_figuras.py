@@ -676,7 +676,7 @@ def fig_precios(pr):
 
 def fig_crecimiento(cr):
     anios, indices = cr
-    ex, ey, x0, y0 = 0.36, 0.085, 1995, 85
+    ex, ey, x0, y0 = 0.34, 0.085, 1995, 85
     estilos = {"Zona del euro (once países)": "black!85, thick", "Estados Unidos": "black!55, thick, dashed",
                "Reino Unido, Suecia y Dinamarca": "black!45, thick, densely dotted"}
     c = "  \\draw[black!30] (%.3f,%.3f) -- (%.3f,%.3f);\n" % (0, (100 - y0) * ey, (2024 - x0) * ex, (100 - y0) * ey)
