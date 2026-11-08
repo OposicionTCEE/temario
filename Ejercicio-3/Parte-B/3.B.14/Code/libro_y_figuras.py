@@ -1281,14 +1281,14 @@ def fig_factor_dolar(xfin):
     tikz += "\\begin{tikzpicture}\n\\footnotesize\n\\begin{axis}[\n"
     tikz += r"""  scale only axis, width=10.6cm, height=%.2fcm, axis lines=left, tick align=outside, tick style={black!60},
   /pgf/number format/.cd, use comma, 1000 sep={}, /pgfplots/.cd,
-  every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize},
+  every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize}, yticklabel style={font=\scriptsize},
   xmin=0, xmax=90, ymin=0.3, ymax=%.1f, clip=false, xtick={0,10,...,90},
   ytick={%s}, yticklabels={%s},
   xlabel={Parte de la variación mensual frente al dólar que explica el factor dólar (\%%)},
   legend style={draw=none, fill=none, font=\footnotesize, at={(0.5,1.02)}, anchor=south, legend columns=-1,
     /tikz/every even column/.append style={column sep=0.5cm}},
 ]
-""" % (0.33 * n, n + 0.7, ",".join(str(i + 1) for i in range(n)), ",".join(nombre for _, nombre in orden))
+""" % (0.28 * n, n + 0.7, ",".join(str(i + 1) for i in range(n)), ",".join(nombre for _, nombre in orden))
     tikz += "\\addlegendimage{only marks, mark=*, mark size=2pt, black!35}\\addlegendentry{1999-2007}\n"
     tikz += "\\addlegendimage{only marks, mark=*, mark size=2pt, black}\\addlegendentry{2008-%s}\n" % VENTANAS_FD[1][2][:4]
     for i, (a, _) in enumerate(orden):
