@@ -1146,7 +1146,14 @@ def main():
              ["coeficientes de MCO agrupados con efectos fijos de año (suman uno); sin Irlanda en la versión principal, porque los beneficios de sus multinacionales"],
              ["separan el PIB de la renta nacional y dominan la estimación."],
              ["II.4.2: coeficiente de variación (desviación típica / media, sin ponderar) de los niveles de precios del consumo individual efectivo (UE-27 = 100)."],
-             ["II.4.3: PIB real por habitante de los agregados = suma del PIB en dólares de 2015 / suma de la población; EE. UU., serie NY.GDP.PCAP.KD."]]
+             ["II.4.3: PIB real por habitante de los agregados = suma del PIB en dólares de 2015 / suma de la población; EE. UU., serie NY.GDP.PCAP.KD."],
+             ["II.5.1: diferencial = tipo de la deuda pública a diez años de cada país menos el de Alemania (series mensuales de la OCDE en FRED), desde 1993."],
+             ["II.5.2: inflación media de los cinco años anteriores y posteriores a la caja de conversión o a la dolarización (Banco Mundial)."],
+             ["II.6.1: tipo real = media anual del euríbor a tres meses menos la inflación anual de cada país, 1999-2007. II.6.2: CLU nominal relativo a la media"],
+             ["geométrica de los once, 1999 = 100; cuenta corriente del Banco Mundial. II.6.3: saldos TARGET a fin de mes del BCE. II.6.4: tasas interanuales del HICP."],
+             ["III.2.1: gasto neto e ingresos del Gobierno federal de EE. UU. en porcentaje del PIB, años fiscales (Oficina de Gestión y Presupuesto, en FRED)."],
+             ["III.2.4: Länder del este (Brandeburgo, Mecklemburgo-Pomerania Occidental, Sajonia, Sajonia-Anhalt y Turingia) frente a los del oeste, ambos sin Berlín,"],
+             ["con los agregados del Arbeitskreis VGR der Länder (PIB a precios corrientes por habitante y por persona ocupada, población y personas ocupadas)."]]
     fuentes = [["Código", "Serie", "Ámbito", "Unidad", "Frecuencia", "Institución", "Enlace", "Descarga"]]
     for s, nombre in list(WB_SERIES.items()) + [(WB_PARO, "Tasa de paro, estimación armonizada de la OIT")]:
         fuentes.append([s, nombre, ", ".join(NOMBRE[p] for p in EURO + FUERA), "ver serie", "anual", "Banco Mundial, Indicadores del Desarrollo Mundial",
