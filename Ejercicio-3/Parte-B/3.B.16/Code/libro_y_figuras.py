@@ -343,6 +343,94 @@ def dispersion(carpeta, series, cifras):
     return anios, disp_ea, disp_us
 
 
+# ---------------------------------------------------------------- II.3 reparto del riesgo (A8)
+def reparto(carpeta, series, cifras):
+    """Descomposición de ASDRUBALI, SØRENSEN y YOSHA (1996) para los once miembros: PIB -> renta nacional bruta (B5G)
+    -> renta nacional disponible bruta (B6G) -> consumo final (P3), en términos reales por habitante (deflactor del PIB
+    y población del Banco Mundial). Coeficientes de MCO agrupados con efectos fijos de año; suman uno."""
+    ruta = os.path.join(carpeta, "cuentas.json")
+    defl = {p: leer_eurostat_anual(os.path.join(carpeta, "deflactor.json"), geo=ISO2[p], unit="PD15_EUR", na_item="B1GQ", freq="A") for p in EURO}
+    pob = leer_wb(carpeta, "SP.POP.TOTL")
+    datos = {}
+    for p in EURO:
+        for n in ("B1GQ", "B5G", "B6G", "P3"):
+            datos[(p, n)] = leer_eurostat_anual(ruta, geo=ISO2[p], na_item=n, unit="CP_MEUR", sector="S1", direct="PAID", freq="A")
+    anios = list(range(1995, 2020))
+    nombres = {"B1GQ": "PIB", "B5G": "Renta nacional bruta", "B6G": "Renta nacional disponible bruta", "P3": "Consumo final"}
+    reales = {}
+    for p in EURO:
+        for n in ("B1GQ", "B5G", "B6G", "P3"):
+            v = [datos[(p, n)][a] / (defl[p][a] / 100) / pob[p][a] * 1e6 for a in anios]
+            reales[(p, n)] = np.array(v)
+            for a, x in zip(anios, v):
+                series.append((nombres[n] + " real por habitante", NOMBRE[p], a, x, "euros de 2015 por habitante", "Eurostat nasa_10_nf_tr y nama_10_gdp; Banco Mundial SP.POP.TOTL",
+                               "precios corrientes / deflactor del PIB / población", "anx2_reparto"))
+    def coeficientes(paises, a0, a1):
+        i0, i1 = anios.index(a0), anios.index(a1)  # diferencias de a0 a a1 (a0 es el primer año con diferencia)
+        d = {}
+        for p in paises:
+            for n in ("B1GQ", "B5G", "B6G", "P3"):
+                d[(p, n)] = 100 * np.diff(np.log(reales[(p, n)]))[i0 - 1:i1]
+        comp = {"K": lambda p: d[(p, "B1GQ")] - d[(p, "B5G")], "F": lambda p: d[(p, "B5G")] - d[(p, "B6G")],
+                "C": lambda p: d[(p, "B6G")] - d[(p, "P3")], "U": lambda p: d[(p, "P3")]}
+        X = np.array([d[(p, "B1GQ")] for p in paises]); X = X - X.mean(axis=0)  # efectos fijos de año
+        res = {}
+        for k, f in comp.items():
+            Y = np.array([f(p) for p in paises]); Y = Y - Y.mean(axis=0)
+            res[k] = float((X * Y).sum() / (X * X).sum())
+        return res
+    resultados = {}
+    sin_irlanda = [p for p in EURO if p != "IRL"]
+    for etiqueta, paises, a0, a1 in (("1996-2019, once países", EURO, 1996, 2019), ("1996-2019, sin Irlanda", sin_irlanda, 1996, 2019),
+                                     ("1999-2008, sin Irlanda", sin_irlanda, 1999, 2008), ("2009-2019, sin Irlanda", sin_irlanda, 2009, 2019)):
+        r = coeficientes(paises, a0, a1)
+        resultados[etiqueta] = r
+        for k, nom in (("K", "mercados de capitales"), ("F", "transferencias internacionales"), ("C", "crédito y ahorro"), ("U", "sin alisar")):
+            cifras.append(("Reparto del riesgo, %s: %s" % (etiqueta, nom), round(100 * r[k], 1), "porcentaje de la perturbación del PIB", "II.3.2"))
+    return resultados
+
+
+# ---------------------------------------------------------------- II.4 precios y crecimiento (A8)
+def precios(carpeta, series, cifras):
+    pli = {p: leer_eurostat_anual(os.path.join(carpeta, "precios.json"), geo=ISO2[p], na_item="PLI_EU27_2020", ppp_cat="A01", freq="A") for p in EURO}
+    anios = list(range(1995, 2025))
+    for p in EURO:
+        for a in anios:
+            series.append(("Nivel de precios del consumo individual efectivo", NOMBRE[p], a, pli[p][a], "índice, UE-27 = 100", "Eurostat prc_ppp_ind (A01)", "nivel", "anx2_precios"))
+    cv = []
+    for a in anios:
+        v = np.array([pli[p][a] for p in EURO])
+        cv.append(float(100 * v.std() / v.mean()))
+        series.append(("Coeficiente de variación de los niveles de precios", "Zona del euro (11)", a, cv[-1], "porcentaje", "Eurostat prc_ppp_ind (A01)", "desviación típica / media, sin ponderar", "anx2_precios"))
+    for a in (1995, 1999, 2008, 2013, 2024):
+        cifras.append(("Coeficiente de variación de los niveles de precios del consumo, zona del euro, %d" % a, round(cv[anios.index(a)], 1), "porcentaje", "II.4.2"))
+    for p in ("PRT", "GRC", "ESP", "IRL", "DEU"):
+        cifras.append(("Nivel de precios del consumo, 1995 y 2024 (UE-27 = 100), " + NOMBRE[p], "%.0f y %.0f" % (pli[p][1995], pli[p][2024]), "índice", "II.4.2"))
+    return anios, cv, pli
+
+
+def crecimiento(carpeta, series, cifras):
+    kd = leer_wb(carpeta, "NY.GDP.MKTP.KD")
+    pob = leer_wb(carpeta, "SP.POP.TOTL")
+    pc = leer_wb(carpeta, "NY.GDP.PCAP.KD")
+    anios = list(range(1995, 2025))
+    def agregado(grupo):
+        return [sum(kd[p][a] for p in grupo) / sum(pob[p][a] for p in grupo) for a in anios]
+    curvas = {"Zona del euro (once países)": agregado(EURO), "Estados Unidos": [pc["USA"][a] for a in anios],
+              "Reino Unido, Suecia y Dinamarca": agregado(FUERA)}
+    base = anios.index(1999)
+    indices = {k: [100 * x / v[base] for x in v] for k, v in curvas.items()}
+    for k, v in indices.items():
+        for a, x in zip(anios, v):
+            series.append(("PIB real por habitante, índice 1999 = 100", k, a, x, "índice", "Banco Mundial NY.GDP.MKTP.KD, SP.POP.TOTL y NY.GDP.PCAP.KD", "agregado = suma del PIB / suma de la población", "anx2_crecimiento"))
+        for a in (2008, 2019, 2024):
+            cifras.append(("PIB real por habitante, %d (1999 = 100), %s" % (a, k), round(v[anios.index(a)], 1), "índice", "II.4.3"))
+    for p in EURO + FUERA:
+        g = 100 * (kd[p][2019] / pob[p][2019]) / (kd[p][1999] / pob[p][1999]) - 100
+        cifras.append(("Crecimiento acumulado del PIB real por habitante, 1999-2019, " + NOMBRE[p], round(g, 1), "porcentaje", "II.4.3"))
+    return anios, indices
+
+
 # ---------------------------------------------------------------- figuras (TikZ simple, escala de grises, \footnotesize)
 def num(x, dec=1):  # cifra con coma decimal en modo matemático
     s = ("%." + str(dec) + "f") % x
