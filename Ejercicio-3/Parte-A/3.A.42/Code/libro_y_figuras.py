@@ -2211,6 +2211,99 @@ def con_datos_a11(carpeta, filas_series, cifras, sim):
     sim.append(("Cálculo", "JST R6: número de economías que empiezan una crisis bancaria cada año", "anx_olas_crisis"))
 
 
+# ---------------------------------------------------------------- A12 (IV.1-IV.2): figuras sintéticas de los ciclos endógenos
+def sinteticas_a12(filas_series, cifras, sim):
+    # ---- anx_schumpeter: esquema de los tres ciclos (Kitchin 40 meses, Juglar 10 años, Kondratieff 60 años; amplitudes ilustrativas)
+    t = np.linspace(0, 60, 1201)
+    comp = {"Kitchin": 0.5 * np.sin(2 * math.pi * t / (40 / 12.0)), "Juglar": 1.0 * np.sin(2 * math.pi * t / 10.0), "Kondratieff": 2.0 * np.sin(2 * math.pi * t / 60.0)}
+    suma = comp["Kitchin"] + comp["Juglar"] + comp["Kondratieff"]
+
+    def eje(nombre, lugar, titulo, cuerpo, xlab=""):
+        return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=14.5cm, height=2.6cm, scale only axis, %s,\n"
+                "    xmin=0, xmax=60, ymin=-3.8, ymax=3.8, xtick=\\empty, ytick=\\empty, title={%s}, title style={font=\\footnotesize},\n"
+                "    xlabel={%s}, xlabel style={at={(1,0)}, anchor=north east},\n"
+                "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.99,0.99)}, anchor=north east}, legend columns=3, legend cell align=left]\n%s\n\\end{axis}\n"
+                % (nombre, lugar, ESTILO, titulo, xlab, cuerpo))
+    c1 = ("\\addplot[black!45, thin] coordinates {%s};\n\\addlegendentry{Kitchin ($40$ meses)}\n"
+          "\\addplot[black!70, thick, dashed] coordinates {%s};\n\\addlegendentry{Juglar ($10$ años)}\n"
+          "\\addplot[black, very thick] coordinates {%s};\n\\addlegendentry{Kondratieff ($60$ años)}\n"
+          "\\addplot[black!30, thin, forget plot] coordinates {(0,0) (60,0)};"
+          % (coords(t[::4], comp["Kitchin"][::4]), coords(t[::4], comp["Juglar"][::4]), coords(t[::4], comp["Kondratieff"][::4])))
+    c2 = ("\\addplot[black, thick] coordinates {%s};\n\\addplot[black!30, thin, forget plot] coordinates {(0,0) (60,0)};" % coords(t[::4], suma[::4]))
+    fig = "\\begin{tikzpicture}\n" + eje("a", "{(0,0)}", "(a) Los tres ciclos", c1) + eje("b", "{($(a.south west)+(0,-1.2cm)$)}", "(b) Su suma", c2, "Tiempo") + "\\end{tikzpicture}"
+    escribir("anx_schumpeter", fig, "Esquema de los tres ciclos de SCHUMPETER (1939): tres Kitchin en un Juglar y seis Juglar en un Kondratieff; amplitudes ilustrativas.")
+    sim.append(("Sintética", "Suma de tres sinusoides de 40 meses, 10 años y 60 años con amplitudes 0,5, 1 y 2", "anx_schumpeter"))
+
+    # ---- anx_multiplicador_acelerador: regiones de SAMUELSON (1939) en el plano (v, alfa) y tres trayectorias con alfa = 0,8
+    v_ = np.linspace(0.02, 4, 300)
+    osc = 4 * v_ / (1 + v_) ** 2
+    est = [(v, 1 / v) for v in v_ if 1 / v <= 1.0]
+    a = 0.8
+    tray = {}
+    for v in (0.25, 1.0, 1.5):
+        y = [0.0, 0.0]                         # desviaciones respecto al equilibrio inicial; el gasto sube 1 desde t = 1
+        for k in range(2, 26):
+            y.append(a * (1 + v) * y[-1] - a * v * y[-2] + 1.0)
+        tray[v] = y[1:]
+    cifras.append(("Multiplicador-acelerador (alfa 0,8): nuevo equilibrio y desviación en t = 5, 10 y 20 con v = 0,25, 1 y 1,5",
+                   "equilibrio %.1f; " % (1 / (1 - a)) + "; ".join("v %.2f: %.2f, %.2f, %.2f" % (v, tray[v][5], tray[v][10], tray[v][20]) for v in (0.25, 1.0, 1.5)), "", "IV.2"))
+    pa = ("\\addplot[black, thick] coordinates {%s};\n\\addplot[black, thick, dashed] coordinates {%s};\n"
+          "\\node[font=\\footnotesize, align=center] at (axis cs:0.45,0.93) {convergencia\\\\monótona};\n"
+          "\\node[font=\\footnotesize, align=center] at (axis cs:0.75,0.35) {oscilaciones\\\\amortiguadas};\n"
+          "\\node[font=\\footnotesize, align=center] at (axis cs:2.6,0.62) {oscilaciones\\\\explosivas};\n"
+          "\\node[font=\\footnotesize, align=center] at (axis cs:3.3,0.95) {crecimiento\\\\explosivo};\n"
+          "\\node[font=\\footnotesize, anchor=west] at (axis cs:2.75,0.27) {$\\alpha v=1$};\n"
+          "\\node[font=\\footnotesize, anchor=south west] at (axis cs:3.2,0.66) {$\\alpha(1+v)^2=4v$};\n"
+          "\\addplot[only marks, mark=*, mark size=1.6pt] coordinates {(0.25,0.8) (1,0.8) (1.5,0.8)};"
+          % (coords(v_, osc), " ".join("(%.4f,%.4f)" % p for p in est)))
+    ejes_a = ("\\begin{axis}[name=a, at={(0,0)}, anchor=north west, width=6.2cm, height=4.4cm, scale only axis, %s,\n"
+              "    yticklabel style={/pgf/number format/fixed}, xmin=0, xmax=4, xtick={0,1,...,4}, ymin=0, ymax=1.02, ytick={0,0.25,0.5,0.75,1},\n"
+              "    xlabel={Acelerador, $v$}, ylabel={Propensión a consumir, $\\alpha$}, title={(a) Regiones}, title style={font=\\footnotesize}]\n%s\n\\end{axis}\n" % (ESTILO, pa))
+    pb = []
+    for v, estilo, et in ((0.25, "black!45, thick", "$v=0{,}25$"), (1.0, "black, thick", "$v=1$"), (1.5, "black, thick, dashed", "$v=1{,}5$")):
+        pb.append("\\addplot[%s, mark=*, mark size=0.9pt] coordinates {%s};\n\\addlegendentry{%s}" % (estilo, " ".join("(%d,%.3f)" % (k, y) for k, y in enumerate(tray[v]) if k <= 20), et))
+    pb.append("\\addplot[black!40, thin, dotted, forget plot] coordinates {(0,5) (20,5)};")
+    ejes_b = ("\\begin{axis}[name=b, at={($(a.north east)+(1.6cm,0)$)}, anchor=north west, width=6.2cm, height=4.4cm, scale only axis, %s,\n"
+              "    xmin=0, xmax=20, xtick={0,5,...,20}, ymin=-6, ymax=16, ytick={-5,0,5,10,15}, restrict y to domain=-30:40, unbounded coords=jump,\n"
+              "    xlabel={Periodos}, ylabel={Desviación de la renta}, title={(b) Trayectorias con $\\alpha=0{,}8$}, title style={font=\\footnotesize},\n"
+              "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.02,0.98)}, anchor=north west}, legend cell align=left, clip=true]\n%s\n\\end{axis}\n"
+              % (ESTILO, "\n".join(pb)))
+    escribir("anx_multiplicador_acelerador", "\\begin{tikzpicture}\n" + ejes_a + ejes_b + "\\end{tikzpicture}",
+             "Multiplicador-acelerador de SAMUELSON (1939): regiones de la dinámica según la propensión a consumir y el acelerador, y trayectorias tras un aumento permanente del gasto.")
+    sim.append(("Sintética", "Y_t = alfa(1+v)Y_(t-1) - alfa v Y_(t-2) + G con alfa 0,8 y v 0,25, 1 y 1,5", "anx_multiplicador_acelerador"))
+
+    # ---- anx_goodwin: ciclo de GOODWIN (1967) con parámetros ilustrativos (participación de los salarios u, tasa de empleo e)
+    gq, n, sig, gam, rho = 0.02, 0.01, 10.0, 0.43, 0.5   # productividad, población activa, capital/producto, curva de PHILLIPS lineal
+
+    def deriv(x):
+        u, e = x
+        return np.array([u * (-gam - gq + rho * e), e * ((1 - u) / sig - (gq + n))])
+    x, dt, caminos = np.array([0.70, 0.84]), 0.05, []
+    for k in range(int(80 / dt) + 1):
+        caminos.append((k * dt, x[0], x[1]))
+        k1 = deriv(x); k2 = deriv(x + dt / 2 * k1); k3 = deriv(x + dt / 2 * k2); k4 = deriv(x + dt * k3)
+        x = x + dt / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
+    C = np.array(caminos)
+    u_eq, e_eq = 1 - sig * (gq + n), (gam + gq) / rho
+    cifras.append(("Ciclo de GOODWIN (parámetros ilustrativos): equilibrio de la participación salarial y del empleo; rangos de la órbita",
+                   "u* %.2f, e* %.2f; u entre %.3f y %.3f; e entre %.3f y %.3f" % (u_eq, e_eq, C[:, 1].min(), C[:, 1].max(), C[:, 2].min(), C[:, 2].max()), "", "IV.2"))
+    sel = C[::4]
+    ga = ("\\begin{axis}[name=a, at={(0,0)}, anchor=north west, width=6.2cm, height=4.4cm, scale only axis, %s,\n"
+          "    xtick=\\empty, ytick=\\empty, xlabel={Participación de los salarios}, ylabel={Tasa de empleo}, title={(a) Diagrama de fases}, title style={font=\\footnotesize}]\n"
+          "\\addplot[black, thick] coordinates {%s};\n\\addplot[only marks, mark=*, mark size=1.4pt] coordinates {(%.4f,%.4f)};\n"
+          "\\draw[->, thick] (axis cs:%.4f,%.4f) -- (axis cs:%.4f,%.4f);\n\\end{axis}\n"
+          % (ESTILO, " ".join("(%.4f,%.4f)" % (u, e) for _, u, e in sel), u_eq, e_eq, sel[10][1], sel[10][2], sel[14][1], sel[14][2]))
+    gb = ("\\begin{axis}[name=b, at={($(a.north east)+(1.6cm,0)$)}, anchor=north west, width=6.2cm, height=4.4cm, scale only axis, %s,\n"
+          "    xmin=0, xmax=80, xtick=\\empty, ytick=\\empty, xlabel={Tiempo}, title={(b) Las dos variables en el tiempo}, title style={font=\\footnotesize},\n"
+          "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.5,1.0)}, anchor=south, yshift=4pt}, legend columns=2, legend cell align=left]\n"
+          "\\addplot[black, thick] coordinates {%s};\n\\addlegendentry{participación de los salarios}\n"
+          "\\addplot[black!55, thick, dashed] coordinates {%s};\n\\addlegendentry{tasa de empleo}\n\\end{axis}\n"
+          % (ESTILO, " ".join("(%.2f,%.4f)" % (tt, (u - u_eq) / u_eq) for tt, u, _ in sel), " ".join("(%.2f,%.4f)" % (tt, (e - e_eq) / e_eq) for tt, _, e in sel)))
+    escribir("anx_goodwin", "\\begin{tikzpicture}\n" + ga + gb + "\\end{tikzpicture}",
+             "Ciclo de GOODWIN (1967) con parámetros ilustrativos: órbita cerrada de la participación de los salarios y la tasa de empleo, y su evolución en el tiempo.")
+    sim.append(("Sintética", "Modelo de GOODWIN (1967) de depredador y presa con parámetros ilustrativos, integrado con RUNGE-KUTTA de orden 4", "anx_goodwin"))
+
+
 def main():
     carpeta = sys.argv[1] if len(sys.argv) > 1 else tempfile.mkdtemp()
     descargar(carpeta)
