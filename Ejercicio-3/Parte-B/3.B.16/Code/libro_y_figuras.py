@@ -999,6 +999,12 @@ def main():
     fig_reparto(rr)
     fig_precios(pr)
     fig_crecimiento(cr)
+    fig_diferenciales(cred[0])
+    fig_tipos_reales(deseq[0])
+    fig_clu_real(deseq[1])
+    fig_cuenta_corriente(deseq[2])
+    fig_target(deseq[3])
+    fig_inflacion_espana(deseq[4])
     leeme = [["Libro de datos del tema 3.B.16 (Teoría de la integración monetaria)"],
              ["Generado por Code/libro_y_figuras.py el %s con los datos descargados ese día del Banco Mundial, de Eurostat y de FRED." % FECHA_DESCARGA],
              ["Hojas: Fuentes (series y su origen), Series (formato largo: serie, país o estado, año u horizonte, valor, unidad, fuente, tratamiento, figura)"],
