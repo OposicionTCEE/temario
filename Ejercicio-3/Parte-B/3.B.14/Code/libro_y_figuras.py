@@ -1333,6 +1333,77 @@ def fig_valoracion_eeuu(carpeta):
     return filas
 
 
+# ---------------------------------------------------------------- A10 (III.5): chartistas y fundamentalistas
+# Simulación propia, ilustrativa (no calibrada): el valor fundamental (logaritmo) sigue un paseo aleatorio; el tipo de
+# cambio es la media de las expectativas de chartistas y fundamentalistas, ponderadas por sus proporciones (mercado con
+# inversores de media y varianza y oferta neta nula, como en DE GRAUWE y GRIMALDI, 2006, y DELLI GATTI et al., 2025), más
+# un ruido; expectativas con datos de t - 1: fundamentalistas s + chi_f (sb - s), chartistas s + chi_c (s - s_{-1});
+# proporción de chartistas 1/(1 + chi_w (sb - s)^2), como en DELLI GATTI et al. (2025); chi_f = 0,5 y chi_c = 1 como allí.
+PARAM_CHART = dict(chi_c=1.0, chi_f=0.5, chi_w=150.0, sd_f=0.008, sd_n=0.008, T=6000, semilla=11, ventana=400)
+
+
+def fig_chartistas(p=PARAM_CHART):
+    import numpy as np
+    rng = np.random.default_rng(p["semilla"])
+    T = p["T"]
+    sb = np.cumsum(p["sd_f"] * rng.standard_normal(T))
+    ruido = p["sd_n"] * rng.standard_normal(T)
+    s, w = np.zeros(T), np.full(T, 1.0)
+    for t in range(3, T):
+        ec = s[t - 1] + p["chi_c"] * (s[t - 1] - s[t - 2])
+        ef = s[t - 1] + p["chi_f"] * (sb[t - 1] - s[t - 1])
+        w[t] = 1.0 / (1.0 + p["chi_w"] * (sb[t - 1] - s[t - 1]) ** 2)
+        s[t] = w[t] * ec + (1 - w[t]) * ef + ruido[t]
+    ini = 500
+    mis = s - sb
+    tmax = ini + 250 + int(np.argmax(np.abs(mis[ini + 250:T - 150])))
+    a0 = tmax - 250
+    a1 = a0 + p["ventana"]
+    d, dsb = np.diff(s[ini:]), np.diff(sb[ini:])
+    acf = lambda x, l: float(((x - x.mean())[:-l] * (x - x.mean())[l:]).mean() / x.var())
+    X = np.column_stack([mis[ini + 1:-1], d[:-1]])
+    ecm = np.linalg.lstsq(X, d[1:], rcond=None)[0]
+    est = dict(w_media=float(w[ini:].mean()), sd_desal=float(100 * mis[ini:].std()), max_desal=float(100 * np.abs(mis[ini:]).max()),
+               corr_cambios=float(np.corrcoef(d, dsb)[0, 1]), ecm_desal=float(ecm[0]), ecm_inercia=float(ecm[1]),
+               acf_rend=acf(d, 1), curtosis=float(((d - d.mean()) ** 4).mean() / d.var() ** 2),
+               ventana=(a0, a1), desal_max_ventana=float(100 * mis[tmax]), w_min_ventana=float(w[a0:a1].min()))
+    base = s[a0]
+    ps = [(t - a0, 100 * (s[t] - base)) for t in range(a0, a1)]
+    pf = [(t - a0, 100 * (sb[t] - base)) for t in range(a0, a1)]
+    pw = [(t - a0, w[t]) for t in range(a0, a1)]
+    ymin = 5 * math.floor(min(min(v for _, v in ps), min(v for _, v in pf)) / 5)
+    ymax = 5 * math.ceil(max(max(v for _, v in ps), max(v for _, v in pf)) / 5)
+    tikz = "% Simulación propia de chartistas y fundamentalistas (ilustrativa): tipo de cambio y valor fundamental (100 ln, respecto\n"
+    tikz += "%% del inicio de la ventana) y proporción de chartistas, periodos %d a %d de una simulación de %d. Parámetros: %s.\n" % (a0, a1, T, ", ".join("%s=%s" % kv for kv in sorted(p.items())))
+    tikz += "% Generado por Code/libro_y_figuras.py; compilar con: bash Code/generar_figura.sh anx_chartistas\n"
+    tikz += "\\begin{tikzpicture}\n\\footnotesize\n"
+    tikz += r"""\begin{axis}[name=pa,
+  scale only axis, width=13.4cm, height=4.0cm, axis lines=left, tick align=outside, tick style={black!60},
+  /pgf/number format/.cd, use comma, 1000 sep={}, /pgfplots/.cd,
+  every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize}, title style={font=\footnotesize},
+  xmin=0, xmax=%d, ymin=%d, ymax=%d, xticklabels={}, clip=false,
+  ylabel={Logaritmo $\times 100$}, title={(a) Tipo de cambio y valor fundamental},
+  legend style={draw=none, fill=none, font=\footnotesize, at={(0.02,0.97)}, anchor=north west, legend columns=-1,
+    /tikz/every even column/.append style={column sep=0.5cm}},
+]
+""" % (p["ventana"], ymin, ymax)
+    tikz += "\\addplot[black, line width=0.9pt] coordinates {%s};\n\\addlegendentry{Tipo de cambio, $s_t$}\n" % coordenadas(ps, 2)
+    tikz += "\\addplot[black!45, line width=0.9pt, densely dashed] coordinates {%s};\n\\addlegendentry{Valor fundamental, $\\bar s_t$}\n" % coordenadas(pf, 2)
+    tikz += "\\end{axis}\n"
+    tikz += r"""\begin{axis}[at={(pa.south west)}, anchor=north west, yshift=-0.5cm,
+  scale only axis, width=13.4cm, height=2.2cm, axis lines=left, tick align=outside, tick style={black!60},
+  /pgf/number format/.cd, use comma, 1000 sep={}, /pgfplots/.cd,
+  every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize}, title style={font=\footnotesize},
+  xmin=0, xmax=%d, ymin=0, ymax=1, ytick={0,0.5,1}, yticklabels={$0$,$0{,}5$,$1$}, clip=false,
+  xlabel={Periodos}, ylabel={Proporción}, title={(b) Proporción de chartistas, $\omega_t$},
+]
+""" % p["ventana"]
+    tikz += "\\addplot[black, line width=0.8pt] coordinates {%s};\n" % coordenadas(pw, 3)
+    tikz += "\\end{axis}\n\\end{tikzpicture}\n"
+    open(os.path.join(IMG, "anx_chartistas.tikz"), "w", encoding="utf-8").write(tikz)
+    return est
+
+
 # ---------------------------------------------------------------- principal
 def main():
     carpeta = sys.argv[1]
