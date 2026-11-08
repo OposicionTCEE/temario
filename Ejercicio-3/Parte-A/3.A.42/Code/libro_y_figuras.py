@@ -2539,9 +2539,9 @@ def cuerpo_b1(sim):
           "\\addplot[black!60, thick, dashed] coordinates {%s};\\addlegendentry{inversión}\n"
           "\\addplot[black!40, very thick] coordinates {%s};\\addlegendentry{consumo}\n\\end{axis}\n"
           % (ESTILO, xy(T[::2], c[::2]), xy(T[::2], 3 * c[::2]), xy(T[::2], 0.5 * c[::2])))
-    hb = ("\\begin{axis}[name=b, at={($(a.north east)+(1.6cm,0)$)}, anchor=north west, width=6.2cm, height=4.4cm, scale only axis, %s, xmin=0, xmax=50, xtick=\\empty, ytick=\\empty, ymin=-7, ymax=12,\n"
-          "    xlabel={Tiempo}, title={(b) Adelantos y retrasos}, title style={font=\\footnotesize},\n"
-          "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.5,0.99)}, anchor=north}, legend columns=2, legend cell align=left]\n"
+    hb = ("\\begin{axis}[width=11cm, height=4.2cm, scale only axis, %s, xmin=0, xmax=50, xtick=\\empty, ytick=\\empty, ymin=-7, ymax=10,\n"
+          "    xlabel={Tiempo}, ylabel={Desviación respecto a la tendencia},\n"
+          "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.5,0.99)}, anchor=north}, legend columns=3, legend cell align=left]\n"
           "\\addplot[black!40, thin, forget plot] coordinates {(0,0) (50,0)};\n"
           "\\addplot[black, thick] coordinates {%s};\\addlegendentry{producción}\n"
           "\\addplot[black!60, thick, dashed] coordinates {%s};\\addlegendentry{inversión residencial}\n"
