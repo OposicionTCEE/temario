@@ -837,11 +837,26 @@ def mensual_x(k, x0):  # (año, mes) -> años decimales desde x0
     return k[0] + (k[1] - 1) / 12.0 - x0
 
 
-def marca_vertical(x, alto, texto, ex, x0, lado="right"):
+def marca_vertical(x, alto, texto, ex, x0, lado="right", fuera=False):
     X = (x - x0) * ex
+    if fuera:  # rótulo encima del marco, centrado sobre la línea
+        return ("  \\draw[black!35, densely dotted] (%.3f,0) -- (%.3f,%.3f);\n" % (X, X, alto)
+                + "  \\node[anchor=south, font=\\scriptsize, black!60] at (%.3f,%.3f) {%s};\n" % (X, alto, texto))
     return ("  \\draw[black!35, densely dotted] (%.3f,0) -- (%.3f,%.3f);\n" % (X, X, alto)
             + "  \\node[anchor=north %s, font=\\scriptsize, black!60, align=%s] at (%.3f,%.3f) {%s};\n"
             % ("west" if lado == "right" else "east", "left" if lado == "right" else "right", X + (0.05 if lado == "right" else -0.05), alto, texto))
+
+
+def leyenda(entradas, x, y, columnas=1, ancho_col=3.0, paso=0.38):
+    """entradas: lista de (estilo, texto); muestra de línea de 0,6 cm y texto; en filas y columnas desde (x, y) hacia abajo."""
+    c = ""
+    filas = math.ceil(len(entradas) / columnas)
+    for i, (estilo, texto) in enumerate(entradas):
+        col, fila = i // filas, i % filas
+        X, Y = x + col * ancho_col, y - fila * paso
+        c += "  \\draw[%s] (%.3f,%.3f) -- (%.3f,%.3f);\n" % (estilo, X, Y, X + 0.6, Y)
+        c += "  \\node[anchor=west, font=\\scriptsize] at (%.3f,%.3f) {%s};\n" % (X + 0.7, Y, texto)
+    return c
 
 
 def ejes_tiempo(x0, x1, ex, ticks_x, y0, y1, ey, ticks_y, titulo_y, fmt_y="$%d$"):
