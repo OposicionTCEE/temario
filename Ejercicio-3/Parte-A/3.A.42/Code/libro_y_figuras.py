@@ -2065,11 +2065,11 @@ def con_datos_a10(carpeta, filas_series, cifras, sim):
            "    ybar, bar width=1.5cm, xmin=0.4, xmax=4.6, xtick={1,2,3,4}, ymin=0, ymax=45, ytick={0,10,...,40},\n"
            "    xticklabels={{Sin auge}, {Auge del crédito}, {Auge del precio\\\\ de la vivienda}, {Auge de los dos}},\n"
            "    xticklabel style={align=center, text width=2.6cm}, ylabel={Probabilidad de crisis (\\%%)},\n"
-           "    nodes near coords, nodes near coords style={font=\\footnotesize, /pgf/number format/fixed, /pgf/number format/precision=1, /pgf/number format/use comma}]\n"
+           "    nodes near coords, nodes near coords style={font=\\footnotesize, /pgf/number format/fixed, /pgf/number format/fixed zerofill, /pgf/number format/precision=1, /pgf/number format/use comma}]\n"
            "\\addplot[fill=black!30, draw=black] coordinates {%s};\n"
-           "\\draw[dashed, black!70] (axis cs:0.4,%.2f) -- (axis cs:4.6,%.2f);\n"
-           "\\node[font=\\footnotesize, anchor=south west] at (axis cs:0.45,%.2f) {todas las observaciones};\n\\end{axis}\n\\end{tikzpicture}"
-           % (ESTILO, " ".join("(%d,%.1f)" % (x, r[g][0]) for g, x in barras), r["todas"], r["todas"], r["todas"]))
+           "\\begin{pgfonlayer}{axis background}\\draw[dashed, black!70] (axis cs:0.4,%.2f) -- (axis cs:4.6,%.2f);\\end{pgfonlayer}\n"
+           "\\node[font=\\footnotesize, anchor=north west, align=left] at (rel axis cs:0.01,0.98) {Línea discontinua: todas las observaciones ($%s$\\,\\%%)};\n\\end{axis}\n\\end{tikzpicture}"
+           % (ESTILO, " ".join("(%d,%.1f)" % (x, r[g][0]) for g, x in barras), r["todas"], r["todas"], ("%.1f" % r["todas"]).replace(".", "{,}")))
     escribir("anx_crisis_prediccion", fig, "Probabilidad de una crisis bancaria en los tres años siguientes según el auge previo del crédito y del precio de la vivienda, JST 1950-2016.")
 
     # ---- anx_recesiones_financieras: PIB real por habitante tras los picos de las recesiones normales y financieras
