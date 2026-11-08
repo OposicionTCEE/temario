@@ -1339,7 +1339,7 @@ def fig_valoracion_eeuu(carpeta):
 # inversores de media y varianza y oferta neta nula, como en DE GRAUWE y GRIMALDI, 2006, y DELLI GATTI et al., 2025), más
 # un ruido; expectativas con datos de t - 1: fundamentalistas s + chi_f (sb - s), chartistas s + chi_c (s - s_{-1});
 # proporción de chartistas 1/(1 + chi_w (sb - s)^2), como en DELLI GATTI et al. (2025); chi_f = 0,5 y chi_c = 1 como allí.
-PARAM_CHART = dict(chi_c=1.0, chi_f=0.5, chi_w=150.0, sd_f=0.008, sd_n=0.008, T=6000, semilla=11, ventana=400)
+PARAM_CHART = dict(chi_c=1.0, chi_f=0.5, chi_w=150.0, sd_f=0.008, sd_n=0.008, T=6000, semilla=11, ventana=200)
 
 
 def fig_chartistas(p=PARAM_CHART):
