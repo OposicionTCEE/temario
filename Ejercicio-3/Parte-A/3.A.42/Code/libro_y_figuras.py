@@ -2264,11 +2264,13 @@ def sinteticas_a12(filas_series, cifras, sim):
         pb.append("\\addplot[%s, mark=*, mark size=0.9pt] coordinates {%s};\n\\addlegendentry{%s}" % (estilo, " ".join("(%d,%.3f)" % (k, y) for k, y in enumerate(tray[v]) if k <= 20), et))
     pb.append("\\addplot[black!40, thin, dotted, forget plot] coordinates {(0,5) (20,5)};")
     ejes_b = ("\\begin{axis}[name=b, at={($(a.north east)+(1.6cm,0)$)}, anchor=north west, width=6.2cm, height=4.4cm, scale only axis, %s,\n"
-              "    xmin=0, xmax=20, xtick={0,5,...,20}, ymin=-6, ymax=16, ytick={-5,0,5,10,15}, restrict y to domain=-30:40, unbounded coords=jump,\n"
+              "    xmin=0, xmax=20, xtick={0,5,...,20}, ymin=-16, ymax=22, ytick={-15,-10,...,20},\n"
               "    xlabel={Periodos}, ylabel={Desviación de la renta}, title={(b) Trayectorias con $\\alpha=0{,}8$}, title style={font=\\footnotesize},\n"
-              "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.02,0.98)}, anchor=north west}, legend cell align=left, clip=true]\n%s\n\\end{axis}\n"
+              "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.02,0.02)}, anchor=south west}, legend cell align=left, clip=true]\n%s\n\\end{axis}\n"
               % (ESTILO, "\n".join(pb)))
-    escribir("anx_multiplicador_acelerador", "\\begin{tikzpicture}\n" + ejes_a + ejes_b + "\\end{tikzpicture}",
+    clave = ("\\node[font=\\scriptsize, anchor=north] at ([yshift=-4pt]current bounding box.south) {A: convergencia monótona\\quad "
+             "B: oscilaciones amortiguadas\\quad C: oscilaciones explosivas\\quad D: crecimiento explosivo};\n")
+    escribir("anx_multiplicador_acelerador", "\\begin{tikzpicture}\n" + ejes_a + ejes_b + clave + "\\end{tikzpicture}",
              "Multiplicador-acelerador de SAMUELSON (1939): regiones de la dinámica según la propensión a consumir y el acelerador, y trayectorias tras un aumento permanente del gasto.")
     sim.append(("Sintética", "Y_t = alfa(1+v)Y_(t-1) - alfa v Y_(t-2) + G con alfa 0,8 y v 0,25, 1 y 1,5", "anx_multiplicador_acelerador"))
 
