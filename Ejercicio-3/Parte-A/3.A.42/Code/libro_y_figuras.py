@@ -1962,6 +1962,231 @@ def con_datos_a9(carpeta, filas_series, cifras, sim):
     escribir("anx_apalancamiento", fig, "Crecimiento trimestral de los activos y del apalancamiento de los intermediarios del mercado de valores y de las instituciones de depósito de EE. UU., 1963-2026.")
 
 
+# ---------------------------------------------------------------- A10 (III.5-III.7): crisis predecibles, precio del riesgo, recesiones financieras
+# Base de JORDÀ, SCHULARICK y TAYLOR (macrohistory.net, R6: 18 economías avanzadas, 1870-2020), prima de los bonos en exceso de
+# GILCHRIST y ZAKRAJŠEK (Reserva Federal, FEDS Notes) e índice nacional de condiciones financieras de la Reserva Federal de Chicago.
+JST_URL = "https://www.macrohistory.net/app/download/9834512569/JSTdatasetR6.xlsx"
+EBP_URL = "https://www.federalreserve.gov/econres/notes/feds-notes/ebp_csv.csv"
+NFCI_URL = "https://www.chicagofed.org/-/media/publications/nfci/nfci-data-series-csv.csv"
+GUERRAS = set(range(1914, 1920)) | set(range(1939, 1948))
+
+
+def descargar_a10(carpeta):
+    for nombre, url in (("JSTdatasetR6.xlsx", JST_URL), ("ebp_csv.csv", EBP_URL), ("NFCI_chicago.csv", NFCI_URL)):
+        destino = os.path.join(carpeta, nombre)
+        if not os.path.exists(destino):
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with open(destino, "wb") as f:
+                f.write(urllib.request.urlopen(req, timeout=180).read())
+
+
+def leer_xlsx_simple(ruta):  # primera hoja de un .xlsx sin openpyxl (zip + XML): cabecera y filas como diccionarios
+    import zipfile, re
+    import xml.etree.ElementTree as ET
+    ns = {"m": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
+
+    def col(ref):
+        n = 0
+        for c in re.match(r"[A-Z]+", ref).group(0):
+            n = n * 26 + ord(c) - 64
+        return n - 1
+    z = zipfile.ZipFile(ruta)
+    comp = ["".join(t.text or "" for t in si.findall(".//m:t", ns)) for si in ET.fromstring(z.read("xl/sharedStrings.xml")).findall("m:si", ns)]
+    filas = []
+    for row in ET.fromstring(z.read("xl/worksheets/sheet1.xml")).find("m:sheetData", ns).findall("m:row", ns):
+        fila = {}
+        for c in row.findall("m:c", ns):
+            v = c.find("m:v", ns)
+            if v is None:
+                continue
+            if c.get("t") == "s":
+                fila[col(c.get("r"))] = comp[int(v.text)]
+            else:
+                try:
+                    fila[col(c.get("r"))] = float(v.text)
+                except ValueError:
+                    fila[col(c.get("r"))] = v.text
+        filas.append(fila)
+    cab = [filas[0].get(i) for i in range(max(filas[0]) + 1)]
+    return cab, [{cab[i]: f.get(i) for i in range(len(cab))} for f in filas[1:]]
+
+
+def cuantil_lineal(y, M, tau):  # regresión por cuantiles como programa lineal
+    from scipy.optimize import linprog
+    n, k = M.shape
+    c = np.r_[np.zeros(k), tau * np.ones(n), (1 - tau) * np.ones(n)]
+    A = np.hstack([M, np.eye(n), -np.eye(n)])
+    return linprog(c, A_eq=A, b_eq=y, bounds=[(None, None)] * k + [(0, None)] * (2 * n), method="highs").x[:k]
+
+
+def con_datos_a10(carpeta, filas_series, cifras, sim):
+    _, jst = leer_xlsx_simple(os.path.join(carpeta, "JSTdatasetR6.xlsx"))
+    por = {}
+    for d in jst:
+        por.setdefault(d["country"], {})[int(d["year"])] = d
+
+    def val(p, a, v):
+        x = por[p].get(a, {}).get(v)
+        return x if isinstance(x, float) else None
+
+    # ---- anx_crisis_prediccion: probabilidad de una crisis bancaria en los tres años siguientes según el auge previo (1950-2016)
+    resultados = {}
+    for ini in (1870, 1950):
+        obs = []
+        for p in por:
+            for a in range(ini, 2017):
+                if any(x in GUERRAS for x in range(a - 3, a + 4)):
+                    continue
+                v = [val(p, a, "tloans"), val(p, a - 3, "tloans"), val(p, a, "gdp"), val(p, a - 3, "gdp"),
+                     val(p, a, "hpnom"), val(p, a - 3, "hpnom"), val(p, a, "cpi"), val(p, a - 3, "cpi")]
+                futuro = [val(p, a + k, "crisisJST") for k in (1, 2, 3)]
+                if None in v or None in futuro or any(val(p, a - k, "crisisJST") == 1.0 for k in (0, 1, 2)):
+                    continue
+                dc = 100 * (v[0] / v[2] - v[1] / v[3])
+                dh = 100 * (math.log(v[4] / v[6]) - math.log(v[5] / v[7]))
+                obs.append((dc, dh, 1.0 if 1.0 in futuro else 0.0))
+        F = np.array(obs)
+        uc, uh = np.percentile(F[:, 0], 80), np.percentile(F[:, 1], 80)
+        ac, ah = F[:, 0] >= uc, F[:, 1] >= uh
+        grupos = [("sin auge", ~ac & ~ah), ("solo crédito", ac & ~ah), ("solo vivienda", ~ac & ah), ("crédito y vivienda", ac & ah)]
+        resultados[ini] = {"todas": 100 * F[:, 2].mean(), "n": len(F), "uc": uc, "uh": uh}
+        for nombre, m in grupos:
+            resultados[ini][nombre] = (100 * F[m, 2].mean(), int(m.sum()), int(F[m, 2].sum()))
+        cifras.append(("JST %d-2016: probabilidad de crisis en 3 años (todas; sin auge; solo crédito; solo vivienda; los dos) y n; umbrales del quinto superior" % ini,
+                       "%.1f; " % resultados[ini]["todas"] + "; ".join("%.1f (n %d, %d)" % resultados[ini][g] for g, _ in grupos)
+                       + "; n total %d; umbrales %.1f pp y %.1f %%" % (len(F), uc, uh), "%", "III.5"))
+        for g, _ in grupos:
+            filas_series.append(("Probabilidad de crisis bancaria en los tres años siguientes (%s)" % g, "18 economías avanzadas", "%d-2016" % ini,
+                                 round(resultados[ini][g][0], 2), "%", "JORDÀ, SCHULARICK y TAYLOR, base R6",
+                                 "auge = quinto superior del aumento en 3 años del crédito/PIB o del precio real de la vivienda", "anx_crisis_prediccion"))
+    r = resultados[1950]
+    barras = [("sin auge", 1), ("solo crédito", 2), ("solo vivienda", 3), ("crédito y vivienda", 4)]
+    fig = ("\\begin{tikzpicture}\n\\begin{axis}[width=11cm, height=4.6cm, scale only axis, %s,\n"
+           "    ybar, bar width=1.5cm, xmin=0.4, xmax=4.6, xtick={1,2,3,4}, ymin=0, ymax=45, ytick={0,10,...,40},\n"
+           "    xticklabels={{Sin auge}, {Auge del crédito}, {Auge del precio\\\\ de la vivienda}, {Auge de los dos}},\n"
+           "    xticklabel style={align=center, text width=2.6cm}, ylabel={Probabilidad de crisis (\\%%)},\n"
+           "    nodes near coords, nodes near coords style={font=\\footnotesize, /pgf/number format/fixed, /pgf/number format/precision=1, /pgf/number format/use comma}]\n"
+           "\\addplot[fill=black!30, draw=black] coordinates {%s};\n"
+           "\\draw[dashed, black!70] (axis cs:0.4,%.2f) -- (axis cs:4.6,%.2f);\n"
+           "\\node[font=\\footnotesize, anchor=south west] at (axis cs:0.45,%.2f) {todas las observaciones};\n\\end{axis}\n\\end{tikzpicture}"
+           % (ESTILO, " ".join("(%d,%.1f)" % (x, r[g][0]) for g, x in barras), r["todas"], r["todas"], r["todas"]))
+    escribir("anx_crisis_prediccion", fig, "Probabilidad de una crisis bancaria en los tres años siguientes según el auge previo del crédito y del precio de la vivienda, JST 1950-2016.")
+
+    # ---- anx_recesiones_financieras: PIB real por habitante tras los picos de las recesiones normales y financieras
+    picos = []
+    for p in por:
+        for a in sorted(por[p]):
+            y0, ym, yp = val(p, a, "rgdpbarro"), val(p, a - 1, "rgdpbarro"), val(p, a + 1, "rgdpbarro")
+            if None in (y0, ym, yp) or not (y0 > ym and yp < y0) or any((a + h) in GUERRAS for h in range(6)) or a > 2015:
+                continue
+            camino = [val(p, a + h, "rgdpbarro") for h in range(6)]
+            if None in camino:
+                continue
+            picos.append((p, a, any(val(p, a + k, "crisisJST") == 1.0 for k in (-2, -1, 0, 1, 2)), [100 * math.log(c / y0) for c in camino]))
+    medias = {}
+    for desde in (1870, 1950):
+        for tipo in (False, True):
+            sel = np.array([c for (_, a, f, c) in picos if f == tipo and a >= desde])
+            medias[(desde, tipo)] = (sel.mean(0), len(sel))
+            et = "financieras" if tipo else "normales"
+            cifras.append(("JST: PIB real por habitante tras el pico de las recesiones %s desde %d (años 0-5, %% respecto al pico) y número" % (et, desde),
+                           "; ".join("%.2f" % x for x in sel.mean(0)) + "; n %d" % len(sel), "%", "III.7"))
+            for h in range(6):
+                filas_series.append(("PIB real por habitante tras el pico de las recesiones %s (desde %d)" % (et, desde), "18 economías avanzadas",
+                                     "año %d" % h, round(float(sel.mean(0)[h]), 3), "% respecto al pico", "JORDÀ, SCHULARICK y TAYLOR, base R6 (rgdpbarro, crisisJST)",
+                                     "pico = máximo local anual; financiera si empieza una crisis bancaria entre dos años antes y dos después; sin guerras mundiales",
+                                     "anx_recesiones_financieras"))
+
+    def tray(nombre, lugar, titulo, desde, ymin, ymax, ytick, ylab, leyenda):
+        cuerpo = ["\\addplot[black, thick, mark=*, mark size=1.2pt] coordinates {%s};" % " ".join("(%d,%.3f)" % (h, v) for h, v in enumerate(medias[(desde, False)][0])),
+                  "\\addplot[black!60, dashed, thick, mark=square*, mark size=1.2pt] coordinates {%s};" % " ".join("(%d,%.3f)" % (h, v) for h, v in enumerate(medias[(desde, True)][0]))]
+        if leyenda:
+            cuerpo[0] += "\n\\addlegendentry{recesiones normales}"
+            cuerpo[1] += "\n\\addlegendentry{recesiones con crisis financiera}"
+        cuerpo.append("\\addplot[black!40, thin, forget plot] coordinates {(0,0) (5,0)};")
+        return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=6.2cm, height=3.6cm, scale only axis, %s,\n"
+                "    yticklabel style={/pgf/number format/fixed}, xmin=0, xmax=5, xtick={0,1,...,5}, ymin=%s, ymax=%s, ytick={%s},\n"
+                "    xlabel={Años desde el pico}, ylabel={%s}, title={%s}, title style={font=\\footnotesize},\n"
+                "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.02,0.98)}, anchor=north west}, legend cell align=left]\n%s\n\\end{axis}\n"
+                % (nombre, lugar, ESTILO, ymin, ymax, ytick, ylab, titulo, "\n".join(cuerpo)))
+    fig = "\\begin{tikzpicture}\n"
+    fig += tray("a", "{(0,0)}", "(a) 1870-2015, sin las guerras mundiales", 1870, -4, 6, "-4,-2,...,6", "\\% respecto al pico", True)
+    fig += tray("b", "{($(a.north east)+(1.6cm,0)$)}", "(b) 1950-2015", 1950, -4, 9, "-4,-2,...,8", "", False)
+    fig += "\\end{tikzpicture}"
+    escribir("anx_recesiones_financieras", fig, "PIB real por habitante tras los picos de las recesiones normales y de las que acompañan a una crisis bancaria, JST.")
+
+    # ---- anx_ebp: diferencial de GILCHRIST-ZAKRAJŠEK y prima de los bonos en exceso, mensual, con las recesiones del NBER
+    ebp = []
+    with open(os.path.join(carpeta, "ebp_csv.csv"), encoding="utf-8") as f:
+        for fila in list(csv.reader(f))[1:]:
+            ebp.append((fila[0], float(fila[1]), float(fila[2])))
+    xe = np.array([decimal(f) for f, _, _ in ebp])
+    gz, pe = np.array([g for _, g, _ in ebp]), np.array([e for _, _, e in ebp])
+    recm = {decimal(f): v for f, v in leer(carpeta, "USREC")}
+    xm = [x for x in sorted(recm) if x >= xe[0] - 1]
+    rec_m = tramos(xm, [recm[x] for x in xm], 1 / 12.0)
+    i_gz, i_pe = int(np.argmax(gz)), int(np.argmax(pe))
+    en_rec = np.array([recm.get(x, 0.0) >= 0.5 for x in xe])
+    cifras.append(("GZ y prima en exceso (mensual, %s a %s): máximos y fechas; medias en recesión y en expansión" % (ebp[0][0][:7], ebp[-1][0][:7]),
+                   "GZ %.2f (%s); prima %.2f (%s); GZ %.2f / %.2f; prima %.2f / %.2f" % (gz[i_gz], ebp[i_gz][0][:7], pe[i_pe], ebp[i_pe][0][:7],
+                                                                              gz[en_rec].mean(), gz[~en_rec].mean(), pe[en_rec].mean(), pe[~en_rec].mean()), "puntos", "III.6"))
+    for (f, g, e) in ebp:
+        filas_series.append(("Diferencial de crédito de GILCHRIST y ZAKRAJŠEK", "Estados Unidos", f, round(g, 3), "puntos porcentuales",
+                             "Reserva Federal, FEDS Notes (ebp_csv.csv)", "nivel", "anx_ebp"))
+        filas_series.append(("Prima de los bonos en exceso", "Estados Unidos", f, round(e, 3), "puntos porcentuales",
+                             "Reserva Federal, FEDS Notes (ebp_csv.csv)", "nivel", "anx_ebp"))
+    ymax = math.ceil(gz.max() + 0.5)
+    cuerpo = (sombras([r_ for r_ in rec_m if r_[1] >= xe[0]], 0) + "\n\\addplot[black, thick] coordinates {%s};\n\\addlegendentry{diferencial de crédito}\n"
+              "\\addplot[black!60, thin] coordinates {%s};\n\\addlegendentry{prima en exceso}\n\\addplot[black!40, thin, forget plot] coordinates {(1972,0) (2027,0)};"
+              % (coords(xe, gz, 2), coords(xe, pe, 2)))
+    fig = ("\\begin{tikzpicture}\n\\begin{axis}[width=14.5cm, height=4.8cm, scale only axis, %s,\n"
+           "    ymin=-2, ymax=%d, ytick={-2,0,...,%d}, xmin=1972, xmax=2027, xtick={1975,1980,...,2025}, ylabel={Puntos porcentuales},\n"
+           "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.99,0.98)}, anchor=north east}, legend cell align=left]\n%s\n\\end{axis}\n\\end{tikzpicture}"
+           % (ESTILO, ymax, ymax, cuerpo))
+    escribir("anx_ebp", fig, "Diferencial de crédito de GILCHRIST y ZAKRAJŠEK y prima de los bonos en exceso (Reserva Federal), mensual, con las recesiones del NBER sombreadas.")
+
+    # ---- anx_crecimiento_riesgo: cuantiles del crecimiento del PIB en los cuatro trimestres siguientes frente al NFCI
+    nf = {}
+    with open(os.path.join(carpeta, "NFCI_chicago.csv"), encoding="utf-8") as f:
+        for fila in list(csv.reader(f))[1:]:
+            m_, d_, a_ = fila[0].split("/")
+            nf.setdefault((int(a_), (int(m_) - 1) // 3), []).append(float(fila[1]))
+    nf = {k: sum(v) / len(v) for k, v in nf.items()}
+    pib = {}
+    for f, v in leer(carpeta, "GDPC1"):
+        pib[(int(f[:4]), (int(f[5:7]) - 1) // 3)] = v
+
+    def mas(k, h):
+        t = k[0] * 4 + k[1] + h
+        return (t // 4, t % 4)
+    ks = [k for k in sorted(nf) if k in pib and mas(k, 4) in pib]
+    X = np.array([nf[k] for k in ks])
+    Y = np.array([100 * math.log(pib[mas(k, 4)] / pib[k]) for k in ks])
+    M = np.c_[np.ones(len(X)), X]
+    coef = {tau: cuantil_lineal(Y, M, tau) for tau in (0.05, 0.5, 0.95)}
+    cifras.append(("Crecimiento en riesgo (NFCI medio del trimestre t frente al crecimiento del PIB real de t a t+4, %dT%d-%dT%d, n %d): constante y pendiente de los cuantiles 5, 50 y 95"
+                   % (ks[0][0], ks[0][1] + 1, ks[-1][0], ks[-1][1] + 1, len(ks)),
+                   "; ".join("%.2f, %.2f" % tuple(coef[t]) for t in (0.05, 0.5, 0.95)), "puntos", "III.7"))
+    for k, x, y in zip(ks, X, Y):
+        filas_series.append(("Índice de condiciones financieras (NFCI, media trimestral) y crecimiento del PIB real en los cuatro trimestres siguientes", "Estados Unidos",
+                             "%dT%d" % (k[0], k[1] + 1), round(float(x), 3), "índice", "Reserva Federal de Chicago (NFCI) y FRED (GDPC1)",
+                             "crecimiento siguiente = %.3f %%" % y, "anx_crecimiento_riesgo"))
+    lineas = ""
+    for tau, estilo, et in ((0.05, "black, very thick", "cuantil del $5$\\,\\%%"), (0.5, "black!60, thick, dashed", "mediana"), (0.95, "black!60, thick, dotted", "cuantil del $95$\\,\\%%")):
+        lineas += "\\addplot[%s, domain=-1.2:5] {%.4f+%.4f*x};\n\\addlegendentry{%s}\n" % (estilo, coef[tau][0], coef[tau][1], et.replace("%%", "%"))
+    fig = ("\\begin{tikzpicture}\n\\begin{axis}[width=11cm, height=6cm, scale only axis, %s,\n"
+           "    xmin=-1.2, xmax=5, xtick={-1,0,...,5}, ymin=-10, ymax=14, ytick={-10,-5,...,10},\n"
+           "    xlabel={Índice de condiciones financieras de la Reserva Federal de Chicago (trimestre $t$)},\n"
+           "    ylabel={Crecimiento del PIB de $t$ a $t+4$ (\\%%)},\n"
+           "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.98,0.98)}, anchor=north east}, legend cell align=left]\n"
+           "\\addplot[only marks, mark=*, mark size=0.8pt, black!45, forget plot] coordinates {%s};\n%s"
+           "\\addplot[black!40, thin, forget plot] coordinates {(-1.2,0) (5,0)};\n\\end{axis}\n\\end{tikzpicture}"
+           % (ESTILO, " ".join("(%.3f,%.2f)" % (x, y) for x, y in zip(X, Y)), lineas))
+    escribir("anx_crecimiento_riesgo", fig, "Crecimiento en riesgo: regresiones por cuantiles del crecimiento del PIB de EE. UU. en los cuatro trimestres siguientes sobre el NFCI.")
+    sim.append(("Cálculo", "JST R6: probabilidad de crisis según el auge previo y recesiones normales y financieras; GILCHRIST-ZAKRAJŠEK; regresiones por cuantiles con el NFCI",
+                "anx_crisis_prediccion, anx_recesiones_financieras, anx_ebp y anx_crecimiento_riesgo"))
+
+
 def main():
     carpeta = sys.argv[1] if len(sys.argv) > 1 else tempfile.mkdtemp()
     descargar(carpeta)
