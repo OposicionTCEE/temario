@@ -601,6 +601,51 @@ def desequilibrios(carpeta, series, cifras):
     return reales, (anios, rel), cc, tgb, difi
 
 
+def historia(carpeta, series, cifras):
+    # EE. UU.: gasto e ingresos del Gobierno federal en porcentaje del PIB, años fiscales desde 1929
+    fed = {}
+    for s in FRED_A10:
+        with open(os.path.join(carpeta, s + ".csv"), encoding="utf-8") as f:
+            lector = csv.reader(f)
+            next(lector)
+            fed[s] = {int(fecha[:4]): float(v) for fecha, v in lector if v not in (".", "")}
+        for a, v in sorted(fed[s].items()):
+            series.append((FRED_A10[s], "Estados Unidos", a, v, "porcentaje del PIB", "FRED " + s + " (Oficina de Gestión y Presupuesto)", "nivel", "anx3_federal"))
+    g, t = fed["FYONGDA188S"], fed["FYFRGDA188S"]
+    for a in (1929, 1932, 1934, 1939, 1944, 1950, 1960, 2007, 2009, 2019, 2020, max(g)):
+        cifras.append(("Gasto e ingresos federales de EE. UU., %d" % a, "%.1f; %.1f" % (g[a], t[a]), "porcentaje del PIB", "III.2.1"))
+    cifras.append(("Gasto e ingresos federales de EE. UU., media 1950-2019", "%.1f; %.1f" % (np.mean([g[a] for a in range(1950, 2020)]), np.mean([t[a] for a in range(1950, 2020)])), "porcentaje del PIB", "III.2.1"))
+    # Alemania: Länder del este sin Berlín (columna V) frente a los del oeste sin Berlín (columna T); cada hoja trae primero
+    # los niveles y después las tasas de variación, así que se toma la primera vez que aparece cada año
+    ruta = os.path.join(carpeta, os.path.basename(VGRDL))
+    datos = {}
+    for hoja in VGRDL_HOJAS:
+        datos[hoja] = {}
+        for fila in leer_xlsx(ruta, hoja):
+            a = fila.get("A", "")
+            if a.isdigit() and "T" in fila and "V" in fila and int(a) not in datos[hoja]:
+                datos[hoja][int(a)] = (float(fila["T"]), float(fila["V"]))
+    anios = sorted(datos["3.3"])
+    hab = {a: 100 * datos["3.3"][a][1] / datos["3.3"][a][0] for a in anios}
+    ocu = {a: 100 * datos["3.1"][a][1] / datos["3.1"][a][0] for a in anios}
+    fuente = "Arbeitskreis VGR der Länder (serie 1, tomo 1, 2026), tabla "
+    for a in anios:
+        series.append(("PIB por habitante del este en porcentaje del oeste (sin Berlín)", "Alemania", a, hab[a], "porcentaje", fuente + "3.3", "cociente de los agregados Ostdeutschland y Westdeutschland, ambos sin Berlín", "anx3_alemania"))
+        series.append(("PIB por persona ocupada del este en porcentaje del oeste (sin Berlín)", "Alemania", a, ocu[a], "porcentaje", fuente + "3.1", "cociente de los agregados Ostdeutschland y Westdeutschland, ambos sin Berlín", "anx3_alemania"))
+        for hoja in ("13.", "11.1"):
+            for lado, i in (("oeste", 0), ("este", 1)):
+                series.append(("%s, Länder del %s sin Berlín" % (VGRDL_HOJAS[hoja], lado), "Alemania", a, datos[hoja][a][i], "miles de personas", fuente + hoja, "nivel", ""))
+    for a in (1991, 1992, 1993, 1995, 1996, 2000, 2008, 2019, anios[-1]):
+        cifras.append(("PIB por habitante y por persona ocupada del este, en porcentaje del oeste (sin Berlín), %d" % a, "%.1f; %.1f" % (hab[a], ocu[a]), "porcentaje", "III.2.4"))
+    pob, ocup = datos["13."], datos["11.1"]
+    cifras.append(("Población del este y del oeste (sin Berlín), variación %d-%d" % (anios[0], anios[-1]), "%.1f; %.1f" % (100 * (pob[anios[-1]][1] / pob[anios[0]][1] - 1), 100 * (pob[anios[-1]][0] / pob[anios[0]][0] - 1)), "porcentaje", "III.2.4"))
+    cifras.append(("Población del este sin Berlín, %d y %d" % (anios[0], anios[-1]), "%.0f; %.0f" % (pob[anios[0]][1], pob[anios[-1]][1]), "miles de personas", "III.2.4"))
+    minimo = min(anios, key=lambda a: ocup[a][1])
+    cifras.append(("Personas ocupadas en el este sin Berlín: 1991, 1992, mínimo (%d) y %d" % (minimo, anios[-1]), "%.0f; %.0f; %.0f; %.0f" % (ocup[1991][1], ocup[1992][1], ocup[minimo][1], ocup[anios[-1]][1]), "miles de personas", "III.2.4"))
+    cifras.append(("Personas ocupadas en el oeste sin Berlín, 1991 y %d" % anios[-1], "%.0f; %.0f" % (ocup[1991][0], ocup[anios[-1]][0]), "miles de personas", "III.2.4"))
+    return fed, (anios, hab, ocu)
+
+
 # ---------------------------------------------------------------- figuras (TikZ simple, escala de grises, \footnotesize)
 def num(x, dec=1):  # cifra con coma decimal en modo matemático
     s = ("%." + str(dec) + "f") % x
