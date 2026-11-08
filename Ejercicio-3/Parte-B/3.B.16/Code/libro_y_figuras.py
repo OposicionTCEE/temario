@@ -1178,6 +1178,7 @@ def main():
              ["II.6.1: tipo real = media anual del euríbor a tres meses menos la inflación anual de cada país, 1999-2007. II.6.2: CLU nominal relativo a la media"],
              ["geométrica de los once, 1999 = 100; cuenta corriente del Banco Mundial. II.6.3: saldos TARGET a fin de mes del BCE. II.6.4: tasas interanuales del HICP."],
              ["III.2.1: gasto neto e ingresos del Gobierno federal de EE. UU. en porcentaje del PIB, años fiscales (Oficina de Gestión y Presupuesto, en FRED)."],
+             ["III.2.2: PIB por habitante del Sur de Italia en porcentaje del Centro-Norte, cifras publicadas por IUZZOLINO, PELLEGRINI y VIESTI (2011), sin recalcular."],
              ["III.2.4: Länder del este (Brandeburgo, Mecklemburgo-Pomerania Occidental, Sajonia, Sajonia-Anhalt y Turingia) frente a los del oeste, ambos sin Berlín,"],
              ["con los agregados del Arbeitskreis VGR der Länder (PIB a precios corrientes por habitante y por persona ocupada, población y personas ocupadas)."]]
     fuentes = [["Código", "Serie", "Ámbito", "Unidad", "Frecuencia", "Institución", "Enlace", "Descarga"]]
