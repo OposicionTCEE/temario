@@ -833,6 +833,150 @@ def fig_crecimiento(cr):
     escribir("anx2_crecimiento", c, "PIB real por habitante de la zona del euro (once países), EE. UU. y Reino Unido, Suecia y Dinamarca, 1995-2024, 1999 = 100 (anexo II.4.3)")
 
 
+def mensual_x(k, x0):  # (año, mes) -> años decimales desde x0
+    return k[0] + (k[1] - 1) / 12.0 - x0
+
+
+def marca_vertical(x, alto, texto, ex, x0, lado="right"):
+    X = (x - x0) * ex
+    return ("  \\draw[black!35, densely dotted] (%.3f,0) -- (%.3f,%.3f);\n" % (X, X, alto)
+            + "  \\node[anchor=north %s, font=\\scriptsize, black!60, align=%s] at (%.3f,%.3f) {%s};\n"
+            % ("west" if lado == "right" else "east", "left" if lado == "right" else "right", X + (0.05 if lado == "right" else -0.05), alto, texto))
+
+
+def ejes_tiempo(x0, x1, ex, ticks_x, y0, y1, ey, ticks_y, titulo_y, fmt_y="$%d$"):
+    c = "  \\draw[->] (0,%.3f) -- (%.3f,%.3f);\n" % ((0 - y0) * ey if y0 < 0 else 0, (x1 - x0) * ex + 0.3, (0 - y0) * ey if y0 < 0 else 0)
+    c += "  \\draw[->] (0,0) -- (0,%.3f) node[above] {%s};\n" % ((y1 - y0) * ey + 0.25, titulo_y)
+    base = 0.0
+    for t in ticks_x:
+        c += "  \\draw (%.3f,%.3f) -- (%.3f,%.3f);\n  \\node[below] at (%.3f,0) {$%d$};\n" % ((t - x0) * ex, base + 0.06, (t - x0) * ex, base - 0.06, (t - x0) * ex, t)
+    for t in ticks_y:
+        c += "  \\draw (0.06,%.3f) -- (-0.06,%.3f) node[left] {%s};\n" % ((t - y0) * ey, (t - y0) * ey, fmt_y % t if "%" in fmt_y else num(t))
+    return c
+
+
+def fig_diferenciales(dif):
+    x0, x1, ex, y0, y1, ey, tope = 1993, 2026.75, 0.42, 0, 13, 0.5, 13.0
+    estilos = {"GRC": "black!90, thick", "PRT": "black!55, thick, dashed", "ITA": "black!80", "ESP": "black!45, thick, densely dotted", "FRA": "black!35"}
+    c = ""
+    for p in ("FRA", "ESP", "ITA", "PRT", "GRC"):
+        tramo, trozos = [], []
+        for k in sorted(dif[p]):
+            if k[0] < 1993:
+                continue
+            v = min(dif[p][k], tope)
+            tramo.append("(%.3f,%.3f)" % (mensual_x(k, x0) * ex, (v - y0) * ey))
+        c += "  \\draw[%s] %s;\n" % (estilos[p], " -- ".join(tramo))
+    c += marca_vertical(1999, tope * ey + 0.1, "euro", ex, x0)
+    c += marca_vertical(2012 + 6 / 12, tope * ey + 0.1, "OMT", ex, x0)
+    c += marca_vertical(2022 + 6 / 12, tope * ey + 0.1, "TPI", ex, x0)
+    c += "  \\node[anchor=east, font=\\scriptsize] at (%.3f,%.3f) {Grecia};\n" % ((2012.0 - x0) * ex - 0.25, (tope - 0.4) * ey)
+    c += "  \\node[anchor=west, font=\\scriptsize, black!70] at (%.3f,%.3f) {Portugal};\n" % ((2012.1 - x0) * ex + 0.15, 11.6 * ey)
+    c += "  \\node[anchor=south, font=\\scriptsize] at (%.3f,%.3f) {Italia};\n" % ((1995.3 - x0) * ex, 6.35 * ey)
+    c += "  \\node[anchor=north west, font=\\scriptsize, black!60] at (%.3f,%.3f) {España};\n" % ((1996.4 - x0) * ex, 3.6 * ey)
+    c += "  \\node[anchor=south, font=\\scriptsize, black!55] at (%.3f,%.3f) {Francia};\n" % ((2025.0 - x0) * ex, 1.3 * ey)
+    c += ejes_tiempo(x0, x1, ex, [1995, 2000, 2005, 2010, 2015, 2020, 2025], y0, y1, ey, [0, 2, 4, 6, 8, 10, 12],
+                     "diferencial frente a Alemania, en puntos porcentuales")
+    escribir("anx2_diferenciales", c, "diferencial del tipo de la deuda pública a diez años frente a Alemania, 1993-2026, mensual; Grecia cortada en 13 puntos (máximo de 27,4 en febrero de 2012) (anexo II.5.1)")
+
+
+def fig_tipos_reales(reales):
+    orden = sorted(EURO, key=lambda p: reales[p])
+    esc, dy, x0 = 4.0, 0.42, -0.75
+    c = ""
+    ys = {p: -i * dy for i, p in enumerate(orden)}
+    fondo = min(ys.values()) - 0.45
+    for t in (-0.5, 0, 0.5, 1.0, 1.5, 2.0):
+        c += "  \\draw[%s] (%.3f,0.3) -- (%.3f,%.3f);\n" % ("black!45" if t == 0 else "black!12", (t - x0) * esc, (t - x0) * esc, fondo)
+    for p in orden:
+        y = ys[p]
+        c += "  \\node[anchor=east] at (-0.15,%.3f) {%s};\n" % (y, NOMBRE[p])
+        c += "  \\fill[black!%d] (%.3f,%.3f) rectangle (%.3f,%.3f);\n" % (70 if reales[p] < 0.5 else 35, (0 - x0) * esc, y - 0.13, (reales[p] - x0) * esc, y + 0.13)
+    c += eje_x(0, (2.0 - x0) * esc + 0.3, [-0.5, 0, 0.5, 1.0, 1.5, 2.0], esc, "tipo de interés real a corto plazo, media de $1999$-$2007$, en porcentaje", y=fondo, desde=x0)
+    escribir("anx2_tipos_reales", c, "tipo de interés real a corto plazo (euríbor a tres meses menos la inflación de cada país), media de 1999-2007 (anexo II.6.1)")
+
+
+def etiquetas_finales(valores, x, ey, y0, separacion=0.32):
+    """Etiquetas al final de las líneas, separadas si se solapan: lista de (valor, texto, color)."""
+    c, ultimo = "", None
+    for v, texto, color in sorted(valores, key=lambda t: -t[0]):
+        y = (v - y0) * ey
+        if ultimo is not None and ultimo - y < separacion:
+            y = ultimo - separacion
+        c += "  \\node[anchor=west, font=\\scriptsize, %s] at (%.3f,%.3f) {%s};\n" % (color, x, y, texto)
+        ultimo = y
+    return c
+
+
+def fig_clu_real(datos):
+    anios, rel = datos
+    x0, x1, ex, y0, y1, ey = 1995, 2024, 0.36, 80, 120, 0.13
+    estilos = {"DEU": "black!90, thick", "ESP": "black!55, thick, dashed", "GRC": "black!80", "ITA": "black!45, thick, densely dotted", "PRT": "black!30, thick"}
+    c = "  \\draw[black!30] (0,%.3f) -- (%.3f,%.3f);\n" % ((100 - y0) * ey, (x1 - x0) * ex, (100 - y0) * ey)
+    for p in ("PRT", "ITA", "GRC", "ESP", "DEU"):
+        c += linea(anios, rel[p], ex, ey, x0, y0, estilos[p])
+    c += marca_vertical(1999, (y1 - y0) * ey + 0.1, "euro", ex, x0)
+    c += marca_vertical(2008, (y1 - y0) * ey + 0.1, "crisis", ex, x0)
+    c += etiquetas_finales([(rel[p][-1], NOMBRE[p], "black") for p in ("DEU", "ESP", "GRC", "ITA", "PRT")], (x1 - x0) * ex + 0.1, ey, y0)
+    c += ejes_tiempo(x0, x1, ex, [1995, 2000, 2005, 2010, 2015, 2020, 2024], y0, y1, ey, [80, 90, 100, 110, 120],
+                     "coste laboral unitario relativo a la media de la zona, $1999=100$")
+    escribir("anx2_clu_real", c, "coste laboral unitario nominal de cada país relativo a la media geométrica de los once miembros, 1995-2024, 1999 = 100 (anexo II.6.2)")
+
+
+def fig_cuenta_corriente(cc):
+    x0, x1, ex, y0, y1, ey = 1995, 2024, 0.36, -16, 10, 0.2
+    estilos = {"DEU": "black!90, thick", "NLD": "black!40", "ESP": "black!55, thick, dashed", "PRT": "black!30, thick", "GRC": "black!80", "ITA": "black!45, thick, densely dotted"}
+    c = "  \\draw[black!45] (0,%.3f) -- (%.3f,%.3f);\n" % ((0 - y0) * ey, (x1 - x0) * ex, (0 - y0) * ey)
+    for p in ("NLD", "ITA", "PRT", "ESP", "GRC", "DEU"):
+        a = [x for x in range(1995, 2025) if x in cc[p]]
+        c += linea(a, [cc[p][x] for x in a], ex, ey, x0, y0, estilos[p])
+    rotulos = {"GRC": (2008, -0.35, "Grecia"), "PRT": (2008.2, 0.35, "Portugal"), "ESP": (2006.4, -0.35, "España")}
+    for p, (a, dy, texto) in rotulos.items():
+        c += "  \\node[anchor=%s, font=\\scriptsize] at (%.3f,%.3f) {%s};\n" % ("north" if dy < 0 else "south", (a - x0) * ex, (cc[p][int(a)] - y0) * ey + dy, texto)
+    c += etiquetas_finales([(cc["NLD"][2024], "Países Bajos", "black!60"), (cc["DEU"][2024], "Alemania", "black"), (cc["ITA"][2024], "Italia", "black!60")], (x1 - x0) * ex + 0.1, ey, y0)
+    c += marca_vertical(1999, (y1 - y0) * ey + 0.1, "euro", ex, x0)
+    c += ejes_tiempo(x0, x1, ex, [1995, 2000, 2005, 2010, 2015, 2020, 2024], y0, y1, ey, [-15, -10, -5, 0, 5, 10],
+                     "saldo por cuenta corriente, en porcentaje del PIB")
+    escribir("anx2_cuenta_corriente", c, "saldo de la balanza por cuenta corriente en porcentaje del PIB, 1995-2024 (anexo II.6.2)")
+
+
+def fig_target(tgb):
+    x0, x1, ex, y0, y1, ey = 2008, 2026.75, 0.62, -800, 1400, 0.0026
+    estilos = {"DE": "black!90, thick", "IT": "black!45, thick, densely dotted", "ES": "black!55, thick, dashed", "GR": "black!70"}
+    nombres = {"DE": "Alemania", "IT": "Italia", "ES": "España", "GR": "Grecia"}
+    c = "  \\draw[black!45] (0,%.3f) -- (%.3f,%.3f);\n" % ((0 - y0) * ey, (x1 - x0) * ex, (0 - y0) * ey)
+    for p in ("GR", "IT", "ES", "DE"):
+        ks = sorted(tgb[p])
+        c += "  \\draw[%s] %s;\n" % (estilos[p], " -- ".join("(%.3f,%.3f)" % (mensual_x(k, x0) * ex, (tgb[p][k] - y0) * ey) for k in ks))
+    ultimo = max(tgb["DE"])
+    c += etiquetas_finales([(tgb[p][max(tgb[p])], nombres[p], "black") for p in ("DE", "IT", "ES", "GR")], mensual_x(ultimo, x0) * ex + 0.1, ey, y0)
+    c += marca_vertical(2012 + 6 / 12, (y1 - y0) * ey + 0.1, "OMT", ex, x0)
+    c += marca_vertical(2015 + 2 / 12, (y1 - y0) * ey + 0.1, "compras de deuda", ex, x0)
+    c += "  \\draw[->] (0,%.3f) -- (%.3f,%.3f);\n" % ((0 - y0) * ey, (x1 - x0) * ex + 0.3, (0 - y0) * ey)
+    c += "  \\draw[->] (0,0) -- (0,%.3f) node[above] {saldo TARGET, en miles de millones de euros};\n" % ((y1 - y0) * ey + 0.25)
+    for t in (2008, 2010, 2012, 2014, 2016, 2018, 2020, 2022, 2024, 2026):
+        c += "  \\draw (%.3f,0.06) -- (%.3f,-0.06) node[below] {$%d$};\n" % ((t - x0) * ex, (t - x0) * ex, t)
+    for t in (-800, -400, 0, 400, 800, 1200):
+        c += "  \\draw (0.06,%.3f) -- (-0.06,%.3f) node[left] {$%d$};\n" % ((t - y0) * ey, (t - y0) * ey, t)
+    escribir("anx2_target", c, "saldos TARGET de los bancos centrales de Alemania, Italia, España y Grecia frente al Eurosistema, fin de mes, 2008-2026 (anexo II.6.3)")
+
+
+def fig_inflacion_espana(difi):
+    x0, x1, ex, y0, y1, ey = 1997, 2026.75, 0.42, -2.5, 3, 0.9
+    ks = sorted(difi)
+    c = "  \\draw[black!45] (0,%.3f) -- (%.3f,%.3f);\n" % ((0 - y0) * ey, (x1 - x0) * ex, (0 - y0) * ey)
+    c += "  \\draw[black!85, thick] %s;\n" % " -- ".join("(%.3f,%.3f)" % (mensual_x(k, x0) * ex, (difi[k][2] - y0) * ey) for k in ks)
+    c += marca_vertical(1999, (y1 - y0) * ey + 0.1, "euro", ex, x0)
+    c += marca_vertical(2008 + 8 / 12, (y1 - y0) * ey + 0.1, "crisis", ex, x0)
+    c += "  \\draw[->] (0,0) -- (%.3f,0);\n" % ((x1 - x0) * ex + 0.3)
+    c += "  \\draw[->] (0,0) -- (0,%.3f) node[above] {inflación de España menos la de la zona del euro, en puntos};\n" % ((y1 - y0) * ey + 0.25)
+    for t in (2000, 2005, 2010, 2015, 2020, 2025):
+        c += "  \\draw (%.3f,0.06) -- (%.3f,-0.06) node[below] {$%d$};\n" % ((t - x0) * ex, (t - x0) * ex, t)
+    for t in (-2, -1, 0, 1, 2, 3):
+        c += "  \\draw (0.06,%.3f) -- (-0.06,%.3f) node[left] {$%d$};\n" % ((t - y0) * ey, (t - y0) * ey, t)
+    escribir("anx2_inflacion_espana", c, "diferencia entre la inflación armonizada interanual de España y la de la zona del euro, mensual, 1997-2026 (anexo II.6.4)")
+
+
 def main():
     carpeta = sys.argv[1] if len(sys.argv) > 1 else tempfile.mkdtemp()
     descargar(carpeta)
