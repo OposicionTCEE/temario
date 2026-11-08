@@ -1505,11 +1505,29 @@ def main():
              "Tipo de cambio 2006-01 (moneda por dólar)", "Tipo de cambio 2025-06 (moneda por dólar)", "En la figura (diferencia menor de 10 puntos)"]]
     for f in parf:
         parh.append([f[0], f[1], f[2], f[3] if f[3] is not None else "", f[4], xm[f[0]]["2006-01"], xm[f[0]]["2025-06"], "sí" if abs(f[2]) < 10 else "no"])
+    for a, nombre in MONEDAS_ENGEL:
+        meses, X = engs[a]
+        for m, (q, di, dp) in zip(meses, X):
+            filas.append(["Tipo real frente al dólar", nombre, m, q, "100 × logaritmo", "BPI WS_XRU y WS_LONG_CPI", "s + p_EEUU - p", "anx_engel_nivel, anx_engel_horizontes"])
+            filas.append(["Tipo oficial menos el de EE. UU.", nombre, m, di, "% al mes", "BPI WS_CBPOL", "100 [ln(1 + i/100) - ln(1 + i*/100)]/12; euro desde 1999; Japón: último publicado en los meses sin dato", "anx_engel_nivel, anx_engel_horizontes"])
+            filas.append(["Inflación menos la de EE. UU.", nombre, m, dp, "% al mes", "BPI WS_LONG_CPI", "variación mensual del IPC; sin la media de cada mes del calendario", "anx_engel_nivel, anx_engel_horizontes"])
+    engh = [["Muestra", "Moneda", "Medida", "Horizonte (meses)", "Valor"]]
+    for clave, t0, t1 in MUESTRAS_ENGEL:
+        for a, nombre in [("G6", "Media de las seis")] + MONEDAS_ENGEL:
+            r = engr[(clave, a)]
+            mu = "%s a %s" % (t0, t1)
+            for j, v in enumerate(r["perfil"]):
+                engh.append([mu, nombre, "Respuesta de la prima esperada a j meses (puntos por punto de r - r*)", j, v])
+            engh.append([mu, nombre, "Apreciación real observada (% por punto de r - r*)", "", -r["b_q"]])
+            engh.append([mu, nombre, "Apreciación que justifican las diferencias de tipos esperadas (%)", "", r["b_sr"]])
+            engh.append([mu, nombre, "Suma de las primas esperadas (%)", "", r["b_sl"]])
+            engh.append([mu, nombre, "Pendiente de la regresión de FAMA en términos reales", "", r["fama"]])
+            engh.append([mu, nombre, "Mes en que la prima esperada cambia de signo", "", r["cambio"] if r["cambio"] is not None else ""])
     cifras = [["Cifra", "Valor", "Fuente", "Dónde"]] + cif
     escribir_xlsx(os.path.join(TEMA, "Code", "datos_3B14.xlsx"),
                   [("Léeme", leeme), ("Fuentes", fuentes), ("Series", filas), ("ICP_2021", icp), ("Big_Mac", big),
                    ("PPA_1970_2025", ppah), ("Semividas", semh), ("Bienes_servicios_2024", bsh), ("Paridades_2006_2025", parh),
-                   ("Monetario_2000_2024", monh), ("Prediccion_1990_2026", predh), ("Cifras_citadas", cifras)])
+                   ("Monetario_2000_2024", monh), ("Prediccion_1990_2026", predh), ("Engel_VAR", engh), ("Cifras_citadas", cifras)])
     print("Libro escrito:", os.path.join(TEMA, "Code", "datos_3B14.xlsx"))
 
 
