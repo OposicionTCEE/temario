@@ -940,7 +940,7 @@ def fig_clu_real(datos):
 
 
 def fig_cuenta_corriente(cc):
-    x0, x1, ex, y0, y1, ey = 1995, 2024, 0.36, -16, 10, 0.2
+    x0, x1, ex, y0, y1, ey = 1995, 2024, 0.36, -16, 10, 0.165
     estilos = {"DEU": "black!90, thick", "NLD": "black!40", "ESP": "black!55, thick, dashed", "PRT": "black!30, thick", "GRC": "black!80", "ITA": "black!45, thick, densely dotted"}
     c = "  \\draw[black!45] (0,%.3f) -- (%.3f,%.3f);\n" % ((0 - y0) * ey, (x1 - x0) * ex, (0 - y0) * ey)
     for p in ("NLD", "ITA", "PRT", "ESP", "GRC", "DEU"):
