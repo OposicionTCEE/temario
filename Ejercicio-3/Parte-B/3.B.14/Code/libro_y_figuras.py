@@ -1401,6 +1401,20 @@ def main():
     for h in HORIZONTES:
         poner("Predicción a %d meses: mediana del cociente con el paseo aleatorio, paridad no cubierta y PPA" % h, "%.3f y %.3f" % predm[h], "BPI", "II.6.3")
         poner("  por moneda (no cubierta / PPA)", "; ".join("%s %.3f/%.3f" % (a, predc[a][h][0], predc[a][h][1]) for a, _ in MONEDAS_PRED), "BPI", "II.6.3")
+    # ---- A8
+    for clave, t0, t1 in MUESTRAS_ENGEL:
+        for a, nombre in [("G6", "Media de las seis")] + MONEDAS_ENGEL:
+            r = engr[(clave, a)]
+            pf = r["perfil"]
+            poner("ENGEL %s a %s, %s: meses; pendiente de FAMA real; prima esperada a 0, 6, 12, 24 y 48 meses; cambio de signo (mes)" % (t0, t1, nombre),
+                  "%d; %.2f; %.2f, %.2f, %.2f, %.2f, %.2f; %s" % (r["T"], r["fama"], pf[0], pf[6], pf[12], pf[24], pf[48], r["cambio"]), "BPI WS_XRU, WS_CBPOL, WS_LONG_CPI", "III.1.2-III.1.3")
+            poner("  nivel: apreciación observada, la que justifican los tipos, suma de primas (%% por punto); desv. típica de r - r* (puntos)",
+                  "%.2f; %.2f; %.2f; %.2f" % (-r["b_q"], r["b_sr"], r["b_sl"], r["sd"]), "BPI", "III.1.2")
+    for pp in (1, 2, 3, 4):
+        r = engr[("retardos", pp)]
+        poner("ENGEL 1979-06 a 2009-10, media de las seis, VAR(%d): cambio de signo (mes); apreciación observada, justificada, suma de primas" % pp,
+              "%s; %.2f; %.2f; %.2f" % (r["cambio"], -r["b_q"], r["b_sr"], r["b_sl"]), "BPI", "III.1.2-III.1.3")
+    poner("ENGEL: meses de Japón sin tipo oficial en el BPI (se mantiene el último)", "%d: %s a %s" % (len(engrel["JP"]), engrel["JP"][0], engrel["JP"][-1]) if engrel["JP"] else "0", "BPI WS_CBPOL", "III.1.2")
 
     # ---- libro de datos
     leeme = [["Libro de datos del Tema 3.B.14 (Teorías de la determinación del tipo de cambio)"],
