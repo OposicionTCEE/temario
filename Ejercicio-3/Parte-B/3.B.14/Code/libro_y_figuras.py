@@ -1314,6 +1314,15 @@ def main():
                 filas.append(["Dinero en sentido amplio", NOMBRES_MON.get(c, nombres_m2.get(c, c)), a, m2w[c][a], "moneda nacional corriente", "Banco Mundial FM.LBL.BMNY.CN", "logaritmo en la tasa media", "anx_monetario_largo"])
             if a in pibw.get(c, {}):
                 filas.append(["PIB real", NOMBRES_MON.get(c, nombres_m2.get(c, c)), a, pibw[c][a], "moneda nacional constante", "Banco Mundial NY.GDP.MKTP.KN", "logaritmo en la tasa media", "anx_monetario_largo"])
+    for f in e2f:
+        filas.append(["Tipo a dos años de la deuda AAA de la zona del euro (media mensual)", "Zona del euro", f[0], f[2], "%", "BCE YC SR_2Y", "media de los datos diarios", "anx_euro_dos_anos"])
+        filas.append(["Rendimiento del bono a dos años", "Estados Unidos", f[0], f[3], "%", "FRED GS2", "ninguno", "anx_euro_dos_anos"])
+    predh = [["Moneda", "Horizonte (meses)", "Error cuadrático medio relativo al paseo aleatorio: paridad no cubierta", "Ídem: paridad del poder adquisitivo", "Previsiones evaluadas"]]
+    for a, nombre in MONEDAS_PRED:
+        for h in HORIZONTES:
+            predh.append([nombre, h, predc[a][h][0], predc[a][h][1], predc[a][h][2]])
+    for h in HORIZONTES:
+        predh.append(["Mediana de las ocho", h, predm[h][0], predm[h][1], ""])
     for f in dtr:
         filas.append(["Tipo oficial real de EE. UU. menos la media de Alemania, Japón y Reino Unido", "Estados Unidos", f[0], f[4], "puntos porcentuales",
                       "BPI WS_CBPOL y WS_LONG_CPI", "tipo oficial menos inflación interanual; media simple de los tres", "anx_dolar_tipos_reales"])
