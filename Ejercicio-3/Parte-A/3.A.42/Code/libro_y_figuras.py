@@ -2257,6 +2257,12 @@ def main():
     for s, nombre in SERIES_A9.items():
         fuentes.append([s, nombre, "Estados Unidos", "millones de dólares", "trimestral (saldo a fin de trimestre)",
                         "Reserva Federal, Cuentas Financieras (Z.1), en FRED", FRED + s, "08/11/2026"])
+    fuentes.append(["JST R6", "Base macrohistórica de JORDÀ, SCHULARICK y TAYLOR (crédito, PIB, precios, vivienda, crisis bancarias)", "18 economías avanzadas",
+                    "varias", "anual, 1870-2020", "macrohistory.net", JST_URL, "08/11/2026"])
+    fuentes.append(["ebp_csv", "Diferencial de crédito de GILCHRIST y ZAKRAJŠEK y prima de los bonos en exceso", "Estados Unidos", "puntos porcentuales",
+                    "mensual", "Reserva Federal, FEDS Notes", EBP_URL, "08/11/2026"])
+    fuentes.append(["NFCI", "Índice nacional de condiciones financieras", "Estados Unidos", "índice (0 = media, valores positivos = más tensión)",
+                    "semanal (media trimestral)", "Reserva Federal de Chicago", NFCI_URL, "08/11/2026"])
     for nombre, consulta in EUROSTAT.items():
         fuentes.append(["Eurostat " + consulta.split("?")[0], nombre, "España y zona del euro", "CLV10_MEUR, PD10_EUR, THS_PER o THS_HW", "trimestral",
                         "Eurostat", "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/" + consulta, FECHA_DESCARGA])
