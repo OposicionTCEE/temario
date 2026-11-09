@@ -2863,18 +2863,73 @@ def cuerpo_b3(sim):
     escribir("b3_riesgo", f, "Cuerpo B3: crecimiento en riesgo; con condiciones tensas el cuantil del 5 %% baja mucho (de %.2f a %.2f), la mediana poco (de %.2f a %.2f) y el del 95 %% no baja (de %.2f a %.2f)."
              % (q1, q2, cuantil(d1, 0.5), cuantil(d2, 0.5), cuantil(d1, 0.95), cuantil(d2, 0.95)))
 
-    # ---- b3_global: transmisión del ciclo financiero global
-    f = ("\\begin{tikzpicture}[font=\\footnotesize, caja/.style={draw, rounded corners=2pt, align=center, inner sep=4pt, text width=3.1cm, minimum height=1.4cm}]\n"
-         "\\node[caja, fill=black!8] (a) at (0,0) {Política monetaria\\\\de Estados Unidos};\n"
-         "\\node[caja] (b) at (4.1,0) {Apetito global por el\\\\riesgo y valor del dólar};\n"
-         "\\node[caja] (c) at (8.2,0) {Flujos de capital, crédito\\\\y precios de los activos\\\\en el resto del mundo};\n"
-         "\\node[caja] (d) at (12.3,0) {Ciclos financieros\\\\nacionales sincronizados};\n"
-         "\\draw[%s] (a) -- (b);\\draw[%s] (b) -- (c);\\draw[%s] (c) -- (d);\n"
-         "\\end{tikzpicture}" % ((flecha,) * 3))
-    escribir("b3_global", f, "Cuerpo B3: transmisión del ciclo financiero global desde la política monetaria de Estados Unidos.")
+    # ---- N6 (09/11): política y ciclo financiero global sobre bases canónicas (el usuario pidió ilustrar qué implica cada reacción
+    # y sustituir el diagrama de flujo simple del ciclo global): aspas de limpiar e inclinarse, aspa a dos paneles (EE. UU. y resto
+    # del mundo) y diagrama de asignación de MUNDELL con el tipo de interés y las exigencias macroprudenciales
+    A6, B6 = 0.6, 1.2
+
+    def aspa6(dem, flechas, ancho="7cm", alto="5.4cm", nombre=None, lugar=None, titulo=None, ylab=True):
+        cab = "\\begin{axis}[%swidth=%s, height=%s, scale only axis, %s, xmin=-2, xmax=2, ymin=-2, ymax=2, xtick={0}, xticklabels={$0$}, ytick={0}, yticklabels={$0$},\n" % (
+            ("name=%s, at={%s}, anchor=north west, " % (nombre, lugar)) if nombre else "", ancho, alto, ESTILO)
+        cab += "    xlabel={Brecha de producción, $\\tilde y_t$}, %s%s clip=false]\n" % ("ylabel={Inflación, $\\pi_t$}," if ylab else "", (" title={%s}, title style={font=\\footnotesize}," % titulo) if titulo else "")
+        g = cab + "\\addplot[black!30, thin] coordinates {(-2,0) (2,0)};\\addplot[black!30, thin] coordinates {(0,-2) (0,2)};\n"
+        g += "\\addplot[black!60, thick, domain=-1.9:1.9, samples=2] {%.3f*x};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:1.9,%.3f) {$CP$};\n" % (A6, A6 * 1.9)
+        g += "\\addplot[black, thick, domain=%.3f:%.3f, samples=2] {-%.3f*x};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:%.3f,%.3f) {$DA_0$};\n" % (-1.95 / B6, 1.8 / B6, B6, 1.8 / B6, -1.8)
+        pts = ["(0,0)"]
+        for item in dem:
+            d, estilo, et, ep = item[:4]
+            fondo = item[4] if len(item) > 4 else 1.8
+            lo, hi = max(-1.95, (d - 1.95) / B6), min(1.95, (d + fondo) / B6)
+            g += "\\addplot[%s, domain=%.3f:%.3f, samples=2] {-%.3f*x%+.3f};\n" % (estilo, lo, hi, B6, d)
+            g += "\\node[font=\\footnotesize, anchor=west] at (axis cs:%.3f,%.3f) {$%s$};\n" % (hi, -B6 * hi + d, et)
+            if ep:
+                x, y = d / (A6 + B6), A6 * d / (A6 + B6)
+                pts.append("(%.3f,%.3f)" % (x, y))
+                g += "\\node[font=\\footnotesize, anchor=south] at (axis cs:%.3f,%.3f) {$%s$};\n" % (x + 0.02, y + 0.16, ep)
+        g += "\\addplot[only marks, mark=*, mark size=1.6pt] coordinates {%s};\n" % " ".join(pts)
+        g += "\\node[font=\\footnotesize, anchor=south] at (axis cs:0.06,0.14) {$E_0$};\n"
+        for pi, d1, d2 in flechas:
+            x1, x2 = (d1 - pi) / B6, (d2 - pi) / B6
+            s = 0.07 if x2 > x1 else -0.07
+            g += "\\draw[-{Stealth[length=2.2mm]}, black!55, thick] (axis cs:%.3f,%.2f) -- (axis cs:%.3f,%.2f);\n" % (x1 + s, pi, x2 - s, pi)
+        return g + "\\end{axis}\n"
+    escribir("b3_limpiar", "\\begin{tikzpicture}\n" + aspa6([(-2.0, "black, thick, dashed", "DA_C", "E_C"), (-0.9, "black, thick, densely dotted", "DA_L", "E_L")], [(0.2, -2.0, -0.9)]) + "\\end{tikzpicture}",
+             "Cuerpo B3: limpiar después; la contracción financiera lleva la demanda a DA_C (E_C) y el banco central, al bajar su tipo, solo la devuelve hasta DA_L (E_L).")
+    escribir("b3_inclinarse", "\\begin{tikzpicture}\n" + aspa6([(1.2, "black, thick, dashed", "DA_A", "E_A"), (-0.9, "black, thick, densely dotted", "DA_I", "E_I")], [(1.2, 1.2, -0.9)]) + "\\end{tikzpicture}",
+             "Cuerpo B3: inclinarse contra el viento; el auge lleva la demanda a DA_A (E_A) y el banco central, al subir su tipo más de lo que pide la inflación, la lleva a DA_I (E_I).")
+    pa6 = aspa6([(-1.2, "black, thick, dashed", "DA_1", "E_1")], [(0.6, 0.0, -1.2)], ancho="6cm", alto="5cm", nombre="a", lugar="{(0,0)}", titulo="(a) Estados Unidos")
+    pb6 = aspa6([(0.6, "black!60, thick, densely dotted", "DA_c", None, 1.3), (-0.9, "black, thick, dashed", "DA_1", "E_1")], [(1.0, 0.0, 0.6), (-0.6, 0.0, -0.9)],
+                ancho="6cm", alto="5cm", nombre="b", lugar="{($(a.north east)+(1.8cm,0)$)}", titulo="(b) Resto del mundo", ylab=False)
+    escribir("b3_global", "\\begin{tikzpicture}\n" + pa6 + pb6 + "\\end{tikzpicture}",
+             "Cuerpo B3: una restricción monetaria en EE. UU. desplaza su demanda (a); en el resto del mundo, el comercio la desplaza a DA_c y las finanzas a DA_1, que domina (b).")
+
+    def ep6(i):
+        return 5 - 3.0 * (i - 5)
+
+    def ef6(i):
+        return 5 - 0.3 * (i - 5)
+    camino = [(6.5, 2.0)]
+    ii, mm6 = 6.5, 2.0
+    for _ in range(3):
+        mm6 = ef6(ii)
+        camino.append((ii, mm6))
+        ii = 5 - (mm6 - 5) / 3.0
+        camino.append((ii, mm6))
+    g = ("\\begin{tikzpicture}\n\\begin{axis}[width=8cm, height=5.6cm, scale only axis, %s, xmin=0, xmax=10, ymin=0, ymax=10, xtick=\\empty, ytick=\\empty,\n"
+         "    xlabel={Tipo de interés}, ylabel={Exigencias macroprudenciales}, clip=false]\n"
+         "\\addplot[black, thick, domain=3.4:6.6, samples=2] {5-3*(x-5)};\n\\addplot[black!60, thick, domain=0.4:9.6, samples=2] {5-0.3*(x-5)};\n"
+         "\\node[font=\\footnotesize, anchor=south, align=center] at (axis cs:3.4,%.2f) {estabilidad\\\\de precios};\n"
+         "\\node[font=\\footnotesize, anchor=west, align=left] at (axis cs:9.6,%.2f) {estabilidad\\\\financiera};\n" % (ESTILO, ep6(3.4), ef6(9.6)))
+    for (x1, y1), (x2, y2) in zip(camino[:-1], camino[1:]):
+        if abs(x1 - x2) + abs(y1 - y2) > 0.25:
+            g += "\\draw[-{Stealth[length=2mm]}, black!55, thick, densely dashed] (axis cs:%.3f,%.3f) -- (axis cs:%.3f,%.3f);\n" % (x1, y1, x2, y2)
+    g += ("\\addplot[only marks, mark=*, mark size=1.6pt] coordinates {(5,5) (6.5,2.0)};\n"
+          "\\node[font=\\footnotesize, anchor=south west] at (axis cs:5.05,5.05) {$E$};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:6.6,2.0) {$A$};\n"
+          "\\end{axis}\n\\end{tikzpicture}")
+    escribir("b3_asignacion", g, "Cuerpo B3: principio de asignación de MUNDELL; el tipo de interés busca la estabilidad de precios y las exigencias macroprudenciales, la financiera, y la economía converge de A a E.")
     sim.append(("Sintética", "Cuerpo B3 (ciclo financiero): oferta de fondos con prima (tipo sin riesgo 3; patrimonio 4, 5,6 y 2,4; pendientes 0,8, 0,5 y 1,5) y demanda 9,6 - 0,75x (8,1 tras la perturbación real); "
-                "aspa con la misma perturbación de demanda (1,2) y una demanda de pendiente -1,2 sin fricciones financieras y -0,35 con ellas; normales asimétricas (2,6; 1,6; 0) y (4,4; 4,0; -2,5) para las condiciones holgadas y tensas; esquemas",
-                "b3_fases, b3_regularidades, b3_espiral, b3_bancos, b3_aspa_financiera, b3_creencias, b3_apalancamiento, b3_riesgo, b3_global"))
+                "aspa con la misma perturbación de demanda (1,2) y una demanda de pendiente -1,2 sin fricciones financieras y -0,35 con ellas; aspas de política (contracción -2,0 y respuesta hasta -0,9; auge +1,2 y respuesta hasta -0,9), de transmisión global (EE. UU. -1,2; resto del mundo +0,6 por el comercio y -0,9 neto) y asignación de MUNDELL (pendientes -3 y -0,3, desde A = (6,5; 2)); normales asimétricas (2,6; 1,6; 0) y (4,4; 4,0; -2,5) para las condiciones holgadas y tensas; esquemas",
+                "b3_fases, b3_regularidades, b3_espiral, b3_bancos, b3_aspa_financiera, b3_creencias, b3_apalancamiento, b3_riesgo, b3_limpiar, b3_inclinarse, b3_asignacion, b3_global"))
 
 
 def con_datos_a13(carpeta, filas_series, cifras):
@@ -2968,7 +3023,7 @@ def main():
              ["T14 (cuerpo, bloque 1): figuras abstractas b1_fases, b1_crecimiento y b1_tendencias sobre una misma serie base sintética (hoja Simulaciones); N1 (09/11): b1_volatilidad y b1_desfases, sustituidas por b1_correlograma (correlación cruzada abstracta)."],
              ["T15 (cuerpo, bloque 2, nueva macroeconomía clásica): figuras abstractas b2_lucas y b2_trabajo; N2 (09/11): b2_impulsos, retirada, y b2_rbc, sustituida por b2_clasico (oferta vertical y demanda de la teoría cuantitativa)."],
              ["T16 (cuerpo, bloque 2, nueva economía keynesiana): figuras abstractas b2_aspa, b2_nek (con el modelo de tres ecuaciones de la A8) y b2_costes; N3 (09/11): b2_coincidencia (divina coincidencia en el aspa)."],
-             ["T17 (cuerpo, bloque 3, ciclo financiero): figuras abstractas b3_espiral, b3_riesgo y b3_global; N4 (09/11): b3_ciclos, sustituida por b3_fases y b3_regularidades (prima de financiación externa); N5 (09/11): b3_recesiones, sustituida por b3_aspa_financiera, y diagramas de flujo b3_bancos, b3_creencias y b3_apalancamiento."]]
+             ["T17 (cuerpo, bloque 3, ciclo financiero): figuras abstractas b3_espiral, b3_riesgo y b3_global; N4 (09/11): b3_ciclos, sustituida por b3_fases y b3_regularidades (prima de financiación externa); N5 (09/11): b3_recesiones, sustituida por b3_aspa_financiera, y diagramas de flujo b3_bancos, b3_creencias y b3_apalancamiento; N6 (09/11): b3_limpiar, b3_inclinarse, b3_asignacion y b3_global, ahora un aspa a dos paneles (EE. UU. y resto del mundo)."]]
     fuentes = [["Código", "Serie", "País", "Unidad", "Frecuencia", "Institución", "Enlace", "Descarga"]]
     for s, (nombre, pais, unidad, frec) in SERIES.items():
         fuentes.append([s, nombre, pais, unidad, frec, "FRED, Banco de la Reserva Federal de San Luis", FRED + s, FECHA_DESCARGA])
