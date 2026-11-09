@@ -2685,8 +2685,25 @@ def cuerpo_b2_nek(sim):
          "\\node[font=\\footnotesize, anchor=west] at (axis cs:1.9,%.3f) {$CP_0$};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:1.0,%.3f) {$CP_1$};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:1.5,%.3f) {$DA$};\n"
          "\\end{axis}\n\\end{tikzpicture}" % (ESTILO, a, a, c, b, x3, y3, x3 - 0.05, y3 + 0.05, a * 1.9, a * 1.0 + c, -b * 1.5))
     escribir("b2_costes", f, "Cuerpo B2: una perturbación de costes desplaza la curva de PHILLIPS hacia arriba: más inflación y menos producción.")
+    # ---- b2_coincidencia (N3, 09/11): divina coincidencia en el aspa: la mejora baja el tipo natural (DA0 a DA1, E2)
+    # y el banco central, al bajar su tipo con el natural, devuelve la demanda a DA0 (E0)
+    dd, pf = -1.4, 0.6
+    x2, y2 = dd / (a + b), a * dd / (a + b)
+    fl = "-{Stealth[length=2.2mm]}, black!55, thick"
+    f = ("\\begin{tikzpicture}\n\\begin{axis}[width=7cm, height=5.4cm, scale only axis, %s, xmin=-2, xmax=2, ymin=-2, ymax=2, xtick={0}, xticklabels={$0$}, ytick={0}, yticklabels={$0$},\n"
+         "    xlabel={Brecha de producción, $\\tilde y_t$}, ylabel={Inflación, $\\pi_t$}, clip=false]\n"
+         "\\addplot[black!30, thin] coordinates {(-2,0) (2,0)};\\addplot[black!30, thin] coordinates {(0,-2) (0,2)};\n"
+         "\\addplot[black!60, thick, domain=-1.9:1.9, samples=2] {%.3f*x};\n"
+         "\\addplot[black, thick, domain=-1.5:1.5, samples=2] {-%.3f*x};\n\\addplot[black, thick, dashed, domain=-1.9:0.25, samples=2] {-%.3f*x%+.3f};\n"
+         "\\addplot[only marks, mark=*, mark size=1.6pt] coordinates {(0,0) (%.3f,%.3f)};\n"
+         "\\draw[%s] (axis cs:%.3f,%.2f) -- (axis cs:%.3f,%.2f);\n"
+         "\\node[font=\\footnotesize, anchor=south] at (axis cs:0.06,0.14) {$E_0$};\n\\node[font=\\footnotesize, anchor=north east] at (axis cs:%.3f,%.3f) {$E_2$};\n"
+         "\\node[font=\\footnotesize, anchor=west] at (axis cs:1.9,%.3f) {$CP$};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:1.5,%.3f) {$DA_0$};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:0.25,%.3f) {$DA_1$};\n"
+         "\\end{axis}\n\\end{tikzpicture}"
+         % (ESTILO, a, b, b, dd, x2, y2, fl, (dd - pf) / b + 0.07, pf, -pf / b - 0.07, pf, x2 - 0.04, y2 - 0.04, a * 1.9, -b * 1.5, -b * 0.25 + dd))
+    escribir("b2_coincidencia", f, "Cuerpo B2: divina coincidencia; la mejora de la productividad baja el tipo natural y desplaza la demanda (E2) y el banco central, al bajar su tipo con el natural, la devuelve a DA0 (E0).")
     sim.append(("Sintética", "Cuerpo B2 (NEK): aspa con pendientes 0,6 (CP) y -1,2 (DA) y desplazamientos de 1,4; respuestas del modelo de tres ecuaciones con la calibración de la A8 (relajación de un punto anual con persistencia 0,5; mejora del 1 % con persistencia 0,9); perturbación de costes de 1,2",
-                "b2_aspa, b2_nek, b2_costes"))
+                "b2_aspa, b2_nek, b2_costes, b2_coincidencia"))
 
 
 def cuerpo_b3(sim):
@@ -2867,7 +2884,7 @@ def main():
              ["A13 (IV.3-IV.5): ecuación logística (caos y bifurcación), modelo de KEEN con parámetros ilustrativos, curtosis del crecimiento del PIB y espectro de las horas y del paro."],
              ["T14 (cuerpo, bloque 1): figuras abstractas b1_fases, b1_crecimiento y b1_tendencias sobre una misma serie base sintética (hoja Simulaciones); N1 (09/11): b1_volatilidad y b1_desfases, sustituidas por b1_correlograma (correlación cruzada abstracta)."],
              ["T15 (cuerpo, bloque 2, nueva macroeconomía clásica): figuras abstractas b2_lucas y b2_trabajo; N2 (09/11): b2_impulsos, retirada, y b2_rbc, sustituida por b2_clasico (oferta vertical y demanda de la teoría cuantitativa)."],
-             ["T16 (cuerpo, bloque 2, nueva economía keynesiana): figuras abstractas b2_aspa, b2_nek (con el modelo de tres ecuaciones de la A8) y b2_costes."],
+             ["T16 (cuerpo, bloque 2, nueva economía keynesiana): figuras abstractas b2_aspa, b2_nek (con el modelo de tres ecuaciones de la A8) y b2_costes; N3 (09/11): b2_coincidencia (divina coincidencia en el aspa)."],
              ["T17 (cuerpo, bloque 3, ciclo financiero): figuras abstractas b3_ciclos, b3_espiral, b3_recesiones (estilizada a partir de las medias de la A10), b3_riesgo y b3_global."]]
     fuentes = [["Código", "Serie", "País", "Unidad", "Frecuencia", "Institución", "Enlace", "Descarga"]]
     for s, (nombre, pais, unidad, frec) in SERIES.items():
