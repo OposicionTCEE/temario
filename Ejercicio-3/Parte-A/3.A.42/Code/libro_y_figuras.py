@@ -2746,7 +2746,7 @@ def cuerpo_b3(sim):
             f += "\\node[font=\\footnotesize, anchor=south] at (axis cs:%.2f,%.2f) {%s};\n" % (x2, y, etiqueta)
             f += "\\draw[black!35, densely dotted] (axis cs:%.2f,1.5) -- (axis cs:%.2f,%.2f);\n" % (n, n, rr)
         for estilo, d0, dp, etiqueta in demandas:
-            xf = min(9.4, (d0 - 1.6) / dp)
+            xf = min(9.4, (d0 - 2.1) / dp)
             f += "\\addplot[%s, domain=0.6:%.2f, samples=2] {%.2f-%.2f*x};\n" % (estilo, xf, d0, dp)
             f += "\\node[font=\\footnotesize, anchor=west] at (axis cs:%.2f,%.2f) {%s};\n" % (xf, d0 - dp * xf, etiqueta)
         for (x, y), etiqueta, ancla in puntos:
