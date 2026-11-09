@@ -2530,29 +2530,29 @@ def cuerpo_b1(sim):
           % (ESTILO, xy(T[::2], (y - lin)[::2]), xy(T[::2], c[::2])))
     escribir("b1_tendencias", "\\begin{tikzpicture}\n" + ta + tb + "\\end{tikzpicture}",
              "Cuerpo B1: la serie base con una tendencia lineal y otra flexible, y los dos ciclos que resultan.")
-    # ---- b1_volatilidad y b1_desfases: hechos estilizados en versión abstracta, una figura tras cada párrafo
-    ha = ("\\begin{axis}[width=11cm, height=4.2cm, scale only axis, %s, xmin=0, xmax=120, xtick=\\empty, ytick=\\empty,\n"
-          "    xlabel={Tiempo}, ylabel={Desviación respecto a la tendencia},\n"
-          "    ymin=-20, ymax=30, legend style={draw=none, fill=none, font=\\footnotesize, at={(0.5,0.99)}, anchor=north}, legend columns=3, legend cell align=left]\n"
-          "\\addplot[black!40, thin, forget plot] coordinates {(0,0) (120,0)};\n"
-          "\\addplot[black, thick] coordinates {%s};\\addlegendentry{producción}\n"
-          "\\addplot[black!60, thick, dashed] coordinates {%s};\\addlegendentry{inversión}\n"
-          "\\addplot[black!40, very thick] coordinates {%s};\\addlegendentry{consumo}\n\\end{axis}\n"
-          % (ESTILO, xy(T[::2], c[::2]), xy(T[::2], 3 * c[::2]), xy(T[::2], 0.5 * c[::2])))
-    hb = ("\\begin{axis}[width=11cm, height=4.2cm, scale only axis, %s, xmin=0, xmax=50, xtick=\\empty, ytick=\\empty, ymin=-7, ymax=10,\n"
-          "    xlabel={Tiempo}, ylabel={Desviación respecto a la tendencia},\n"
-          "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.5,0.99)}, anchor=north}, legend columns=3, legend cell align=left]\n"
-          "\\addplot[black!40, thin, forget plot] coordinates {(0,0) (50,0)};\n"
-          "\\addplot[black, thick] coordinates {%s};\\addlegendentry{producción}\n"
-          "\\addplot[black!60, thick, dashed] coordinates {%s};\\addlegendentry{inversión residencial}\n"
-          "\\addplot[black!40, very thick] coordinates {%s};\\addlegendentry{tasa de paro}\n\\end{axis}\n"
-          % (ESTILO, xy(T[::2], c[::2]), xy(T[::2], ciclo(T + 4)[::2]), xy(T[::2], -0.6 * ciclo(T - 2)[::2])))
-    escribir("b1_volatilidad", "\\begin{tikzpicture}\n" + ha + "\\end{tikzpicture}",
-             "Cuerpo B1: volatilidad relativa y comovimiento en versión abstracta (producción, inversión y consumo) sobre el ciclo de la serie base.")
-    escribir("b1_desfases", "\\begin{tikzpicture}\n" + hb + "\\end{tikzpicture}",
-             "Cuerpo B1: adelantos y retrasos en versión abstracta (producción, inversión residencial y tasa de paro) sobre el primer ciclo de la serie base.")
+    # ---- b1_correlograma (N1, 09/11): función de correlación cruzada con la producción de tres variables tipo, sin datos
+    # (sustituye a b1_volatilidad y b1_desfases, series sintéticas que el usuario rechazó por ad hoc)
+    kk = np.linspace(-8, 8, 161)
+
+    def campana(centro, altura):
+        return altura * np.exp(-(kk - centro) ** 2 / (2 * 2.6 ** 2))
+    coin, adel, retr = campana(0, 0.85), campana(-2.5, 0.70), campana(1.5, -0.80)
+    fc = ("\\begin{tikzpicture}\n\\begin{axis}[width=11.5cm, height=5.2cm, scale only axis, %s, xmin=-8, xmax=8, ymin=-1.05, ymax=1.05,\n"
+          "    xtick={0}, xticklabels={$0$}, ytick={0}, yticklabels={$0$}, clip=false,\n"
+          "    xlabel={Adelanto ($k<0$) o retraso ($k>0$) de la variable, en trimestres}, ylabel={Correlación con la producción, $\\rho_k$}]\n"
+          "\\addplot[black!40, thin] coordinates {(-8,0) (8,0)};\\addplot[black!40, thin] coordinates {(0,-1.05) (0,1.05)};\n"
+          "\\addplot[black, thick] coordinates {%s};\n\\addplot[black!60, thick, dashed] coordinates {%s};\n\\addplot[black!45, very thick] coordinates {%s};\n"
+          "\\addplot[only marks, mark=*, mark size=1.5pt] coordinates {(0,0.85) (-2.5,0.70) (1.5,-0.80)};\n"
+          "\\draw[black!50, densely dotted] (axis cs:-2.5,0) -- (axis cs:-2.5,0.70);\\draw[black!50, densely dotted] (axis cs:1.5,0) -- (axis cs:1.5,-0.80);\n"
+          "\\node[font=\\footnotesize, anchor=south west, align=left] at (axis cs:0.35,0.80) {procíclica y coincidente\\\\(consumo)};\n"
+          "\\node[font=\\footnotesize, anchor=south east, align=right] at (axis cs:-2.9,0.66) {procíclica y adelantada\\\\(inversión residencial)};\n"
+          "\\node[font=\\footnotesize, anchor=north west, align=left] at (axis cs:1.9,-0.74) {contracíclica y retrasada\\\\(tasa de paro)};\n"
+          "\\end{axis}\n\\end{tikzpicture}" % (ESTILO, xy(kk[::2], coin[::2]), xy(kk[::2], adel[::2]), xy(kk[::2], retr[::2])))
+    escribir("b1_correlograma", fc, "Cuerpo B1: función de correlación cruzada con la producción de tres variables tipo (procíclica y coincidente, procíclica y adelantada, contracíclica y retrasada), en versión abstracta.")
     sim.append(("Sintética", "Serie base del cuerpo (B1): tendencia con crecimiento 0,3 que baja a 0,05 hacia t = 86 y ciclo asimétrico de 40 periodos con amplitudes 6, 1 y 5,5; recesiones clásicas en %s y fases descendentes del ciclo de crecimiento en %s"
-                % (", ".join("%.1f-%.1f" % r for r in rec), ", ".join("%.1f-%.1f" % r for r in desc)), "b1_fases, b1_crecimiento, b1_tendencias, b1_volatilidad, b1_desfases"))
+                % (", ".join("%.1f-%.1f" % r for r in rec), ", ".join("%.1f-%.1f" % r for r in desc)), "b1_fases, b1_crecimiento, b1_tendencias"))
+    sim.append(("Sintética", "Correlograma abstracto del cuerpo (B1): campanas de anchura 2,6 trimestres; coincidente con 0,85 en k = 0, adelantada con 0,70 en k = -2,5 y contracíclica con -0,80 en k = 1,5",
+                "b1_correlograma"))
 
 
 # ---------------------------------------------------------------- T15 (cuerpo, B2, nueva macroeconomía clásica): figuras abstractas
