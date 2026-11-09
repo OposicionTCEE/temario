@@ -2780,20 +2780,65 @@ def cuerpo_b3(sim):
           "\\end{tikzpicture}" % ((flecha,) * 7))
     escribir("b3_espiral", f, "Cuerpo B3: espiral de amplificación financiera (precios de los activos, patrimonio y garantías, crédito, gasto) y capital de los intermediarios.")
 
-    # ---- b3_recesiones: sendas estilizadas tras el pico, con y sin crisis financiera (medias de la A10, 1870-2015, anexo III.7)
-    x = np.array([0, 1, 2, 3, 4, 5.0])
-    normal = np.array([0, -2.04, -0.33, 1.52, 3.12, 4.61])
-    finan = np.array([0, -2.73, -2.45, -1.31, 0.18, 1.52])
-    xs = np.linspace(0, 5, 101)
-    f = ("\\begin{tikzpicture}\n\\begin{axis}[width=10cm, height=5cm, scale only axis, %s, xmin=0, xmax=5, ymin=-3.4, ymax=5.4, xtick={0}, xticklabels={pico}, ytick={0}, yticklabels={$0$},\n"
-         "    xlabel={Años desde el pico}, ylabel={Producción respecto al pico},\n"
-         "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.02,0.98)}, anchor=north west}, legend cell align=left]\n"
-         "\\addplot[black!40, thin, forget plot] coordinates {(0,0) (5,0)};\n"
-         "\\addplot[black, thick] coordinates {%s};\\addlegendentry{recesión sin crisis financiera}\n"
-         "\\addplot[black, very thick, dashed] coordinates {%s};\\addlegendentry{recesión con crisis financiera}\n"
-         "\\end{axis}\n\\end{tikzpicture}" % (ESTILO, xy(xs, np.polyval(np.polyfit(x, normal, 4), xs)), xy(xs, np.polyval(np.polyfit(x, finan, 4), xs))))
-    escribir("b3_recesiones", f, "Cuerpo B3: sendas estilizadas (polinomio de grado 4) de la producción por habitante tras el pico de las recesiones normales y financieras (medias de la A10).")
+    # ---- N5 (09/11): figuras de los canales de interacción; sustituyen a b3_recesiones (sendas empíricas que el usuario rechazó
+    # por «demasiado empírica»): diagramas de flujo del capital bancario, de las creencias y del apalancamiento (el usuario pidió
+    # diagramas de flujo para los ciclos de interacción) y el aspa del B2 sin y con fricciones financieras
+    cj = "caja/.style={draw, rounded corners=2pt, align=center, inner sep=4pt, minimum width=3.2cm, minimum height=1.1cm}"
+    f = ("\\begin{tikzpicture}[font=\\footnotesize, %s]\n"
+         "\\node[caja, fill=black!8] (per) at (0,3.75) {Una perturbación: pérdidas en una\\\\parte de los activos de los bancos};\n"
+         "\\node[caja] (pre) at (0,1.9) {Caen los precios\\\\de los activos};\n"
+         "\\node[caja] (cap) at (4.3,0) {Los bancos pierden capital\\\\y su apalancamiento sube};\n"
+         "\\node[caja] (bal) at (0,-1.9) {Venden activos y prestan\\\\menos y más caro,\\\\también a los demás};\n"
+         "\\node[caja] (gas) at (-4.3,0) {Caen la inversión\\\\y el gasto};\n"
+         "\\draw[%s] (per) -- (pre);\n\\draw[%s] (pre.east) to[out=0, in=90] (cap.north);\n\\draw[%s] (cap.south) to[out=270, in=0] (bal.east);\n"
+         "\\draw[%s] (bal.west) to[out=180, in=270] (gas.south);\n\\draw[%s] (gas.north) to[out=90, in=180] (pre.west);\n"
+         "\\end{tikzpicture}" % ((cj,) + (flecha,) * 5))
+    escribir("b3_bancos", f, "Cuerpo B3: canal del capital bancario (pérdidas, capital, apalancamiento, venta de activos y menos crédito para todos).")
+    textos = ["Buenas noticias", "Los inversores sobrevaloran los escenarios favorables", "Los diferenciales caen y el crédito crece en exceso",
+              "Suben la inversión y los precios de los activos", "Las noticias decepcionan y el optimismo se corrige",
+              "Los diferenciales suben, el crédito se contrae y la actividad se frena"]
+    f = "\\begin{tikzpicture}[font=\\footnotesize, caja/.style={draw, rounded corners=2pt, align=center, inner sep=4pt, text width=3.1cm, minimum height=1.0cm}]\n"
+    for k, txt in enumerate(textos):
+        ang = math.radians(90 - 60 * k)
+        f += "\\node[caja%s] (c%d) at (%.2f,%.2f) {%s};\n" % (", fill=black!8" if k == 0 else "", k, 1.35 * 3.3 * math.cos(ang), 3.3 * math.sin(ang), txt)
+    for k in range(6):
+        f += "\\draw[%s%s] (c%d) -- (c%d);\n" % (flecha, ", dashed" if k == 5 else "", k, (k + 1) % 6)
+    f += "\\end{tikzpicture}"
+    escribir("b3_creencias", f, "Cuerpo B3: ciclo de las creencias en el mercado de crédito (optimismo, crédito, auge, decepción y corrección).")
+    f = ("\\begin{tikzpicture}[font=\\footnotesize, %s]\n"
+         "\\node[caja] (cal) at (0,1.8) {Calma: la volatilidad\\\\es baja};\n"
+         "\\node[caja] (mar) at (3.9,0) {Los prestamistas piden\\\\márgenes pequeños};\n"
+         "\\node[caja] (apa) at (0,-1.8) {Más apalancamiento y\\\\posiciones más frágiles};\n"
+         "\\node[caja] (pre) at (-3.9,0) {Suben los precios\\\\de los activos};\n"
+         "\\node[caja, fill=black!8] (mal) at (4.6,-3.6) {Una mala noticia};\n"
+         "\\node[caja] (ven) at (0,-5.4) {Suben los márgenes y\\\\hay ventas forzosas};\n"
+         "\\node[caja] (cri) at (-4.6,-3.6) {Caen de golpe los precios\\\\y el crédito: crisis};\n"
+         "\\draw[%s] (cal.east) to[out=0, in=90] (mar.north);\n\\draw[%s] (mar.south) to[out=270, in=0] (apa.east);\n"
+         "\\draw[%s] (apa.west) to[out=180, in=270] (pre.south);\n\\draw[%s] (pre.north) to[out=90, in=180] (cal.west);\n"
+         "\\draw[%s, dashed] (apa.south) -- (ven.north);\n\\draw[%s, dashed] (mal.south) to[out=270, in=0] (ven.east);\n\\draw[%s] (ven.west) to[out=180, in=270] (cri.south);\n"
+         "\\end{tikzpicture}" % ((cj,) + (flecha,) * 7))
+    escribir("b3_apalancamiento", f, "Cuerpo B3: ciclo del apalancamiento (la calma reduce los márgenes y eleva el apalancamiento; una mala noticia sube los márgenes y fuerza ventas: crisis).")
+    am, dsp = 0.6, -1.2
 
+    def panel_f(nombre, lugar, titulo, bb, ylab, punto):
+        x1 = dsp / (am + bb)
+        y1 = am * x1
+        lo, hi = max(-1.95, (dsp - 1.95) / bb), min(1.95, (dsp + 1.8) / bb)
+        lo0, hi0 = max(-1.95, -1.95 / bb), min(1.95, 1.8 / bb)
+        return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=6cm, height=5cm, scale only axis, %s, xmin=-2, xmax=2, ymin=-2, ymax=2, xtick={0}, xticklabels={$0$}, ytick={0}, yticklabels={$0$},\n"
+                "    xlabel={Brecha de producción, $\\tilde y_t$}, %s title={%s}, title style={font=\\footnotesize}, clip=false]\n"
+                "\\addplot[black!30, thin] coordinates {(-2,0) (2,0)};\\addplot[black!30, thin] coordinates {(0,-2) (0,2)};\n"
+                "\\addplot[black!60, thick, domain=-1.9:1.9, samples=2] {%.3f*x};\n"
+                "\\addplot[black, thick, domain=%.3f:%.3f, samples=2] {-%.3f*x};\n\\addplot[black, thick, dashed, domain=%.3f:%.3f, samples=2] {-%.3f*x%+.3f};\n"
+                "\\addplot[only marks, mark=*, mark size=1.6pt] coordinates {(0,0) (%.3f,%.3f)};\n"
+                "\\node[font=\\footnotesize, anchor=south] at (axis cs:0.06,0.14) {$E_0$};\n\\node[font=\\footnotesize, anchor=north] at (axis cs:%.3f,%.3f) {$%s$};\n"
+                "\\node[font=\\footnotesize, anchor=west] at (axis cs:1.9,%.3f) {$CP$};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:%.3f,%.3f) {$DA_0$};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:%.3f,%.3f) {$DA_1$};\n"
+                "\\end{axis}\n"
+                % (nombre, lugar, ESTILO, ylab, titulo, am, lo0, hi0, bb, lo, hi, bb, dsp, x1, y1, x1, y1 - 0.08, punto,
+                   am * 1.9, hi0, -bb * hi0, hi, -bb * hi + dsp))
+    escribir("b3_aspa_financiera", "\\begin{tikzpicture}\n" + panel_f("a", "{(0,0)}", "(a) Sin fricciones financieras", 1.2, "ylabel={Inflación, $\\pi_t$},", "E_1")
+             + panel_f("b", "{($(a.north east)+(1.8cm,0)$)}", "(b) Con fricciones financieras", 0.35, "", "E_2") + "\\end{tikzpicture}",
+             "Cuerpo B3: la misma perturbación de demanda (desplazamiento vertical de 1,2) sin fricciones financieras (demanda de pendiente -1,2: E1) y con ellas (pendiente -0,35, porque la prima sube cuando cae la producción: E2, recesión más honda).")
     # ---- b3_riesgo: distribución del crecimiento futuro con condiciones financieras holgadas y tensas (normales asimétricas ilustrativas)
     erf = np.vectorize(math.erf)
     g = np.linspace(-11, 9, 801)
@@ -2828,8 +2873,8 @@ def cuerpo_b3(sim):
          "\\end{tikzpicture}" % ((flecha,) * 3))
     escribir("b3_global", f, "Cuerpo B3: transmisión del ciclo financiero global desde la política monetaria de Estados Unidos.")
     sim.append(("Sintética", "Cuerpo B3 (ciclo financiero): oferta de fondos con prima (tipo sin riesgo 3; patrimonio 4, 5,6 y 2,4; pendientes 0,8, 0,5 y 1,5) y demanda 9,6 - 0,75x (8,1 tras la perturbación real); "
-                "sendas tras el pico ajustadas con un polinomio de grado 4 a las medias de la A10 (1870-2015); normales asimétricas (2,6; 1,6; 0) y (4,4; 4,0; -2,5) para las condiciones holgadas y tensas; esquemas",
-                "b3_fases, b3_regularidades, b3_espiral, b3_recesiones, b3_riesgo, b3_global"))
+                "aspa con la misma perturbación de demanda (1,2) y una demanda de pendiente -1,2 sin fricciones financieras y -0,35 con ellas; normales asimétricas (2,6; 1,6; 0) y (4,4; 4,0; -2,5) para las condiciones holgadas y tensas; esquemas",
+                "b3_fases, b3_regularidades, b3_espiral, b3_bancos, b3_aspa_financiera, b3_creencias, b3_apalancamiento, b3_riesgo, b3_global"))
 
 
 def con_datos_a13(carpeta, filas_series, cifras):
@@ -2923,7 +2968,7 @@ def main():
              ["T14 (cuerpo, bloque 1): figuras abstractas b1_fases, b1_crecimiento y b1_tendencias sobre una misma serie base sintética (hoja Simulaciones); N1 (09/11): b1_volatilidad y b1_desfases, sustituidas por b1_correlograma (correlación cruzada abstracta)."],
              ["T15 (cuerpo, bloque 2, nueva macroeconomía clásica): figuras abstractas b2_lucas y b2_trabajo; N2 (09/11): b2_impulsos, retirada, y b2_rbc, sustituida por b2_clasico (oferta vertical y demanda de la teoría cuantitativa)."],
              ["T16 (cuerpo, bloque 2, nueva economía keynesiana): figuras abstractas b2_aspa, b2_nek (con el modelo de tres ecuaciones de la A8) y b2_costes; N3 (09/11): b2_coincidencia (divina coincidencia en el aspa)."],
-             ["T17 (cuerpo, bloque 3, ciclo financiero): figuras abstractas b3_espiral, b3_recesiones (estilizada a partir de las medias de la A10), b3_riesgo y b3_global; N4 (09/11): b3_ciclos, sustituida por b3_fases y b3_regularidades (prima de financiación externa)."]]
+             ["T17 (cuerpo, bloque 3, ciclo financiero): figuras abstractas b3_espiral, b3_riesgo y b3_global; N4 (09/11): b3_ciclos, sustituida por b3_fases y b3_regularidades (prima de financiación externa); N5 (09/11): b3_recesiones, sustituida por b3_aspa_financiera, y diagramas de flujo b3_bancos, b3_creencias y b3_apalancamiento."]]
     fuentes = [["Código", "Serie", "País", "Unidad", "Frecuencia", "Institución", "Enlace", "Descarga"]]
     for s, (nombre, pais, unidad, frec) in SERIES.items():
         fuentes.append([s, nombre, pais, unidad, frec, "FRED, Banco de la Reserva Federal de San Luis", FRED + s, FECHA_DESCARGA])
