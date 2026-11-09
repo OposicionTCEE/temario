@@ -2887,7 +2887,7 @@ def main():
              ["A11 (III.10): oleadas de crisis bancarias sistémicas en las 18 economías de la base JST, 1870-2020."],
              ["A12 (IV.1 y IV.2): figuras sintéticas (tres ciclos de SCHUMPETER, multiplicador-acelerador de SAMUELSON, ciclo de GOODWIN y equilibrios de KALDOR con parámetros ilustrativos)."],
              ["A13 (IV.3-IV.5): ecuación logística (caos y bifurcación), modelo de KEEN con parámetros ilustrativos, curtosis del crecimiento del PIB y espectro de las horas y del paro."],
-             ["T14 (cuerpo, bloque 1): figuras abstractas b1_fases, b1_crecimiento, b1_tendencias, b1_volatilidad y b1_desfases sobre una misma serie base sintética (hoja Simulaciones)."],
+             ["T14 (cuerpo, bloque 1): figuras abstractas b1_fases, b1_crecimiento y b1_tendencias sobre una misma serie base sintética (hoja Simulaciones); N1 (09/11): b1_volatilidad y b1_desfases, sustituidas por b1_correlograma (correlación cruzada abstracta)."],
              ["T15 (cuerpo, bloque 2, nueva macroeconomía clásica): figuras abstractas b2_impulsos, b2_lucas, b2_rbc (con el modelo del ciclo real de la A5) y b2_trabajo."],
              ["T16 (cuerpo, bloque 2, nueva economía keynesiana): figuras abstractas b2_aspa, b2_nek (con el modelo de tres ecuaciones de la A8) y b2_costes."],
              ["T17 (cuerpo, bloque 3, ciclo financiero): figuras abstractas b3_ciclos, b3_espiral, b3_recesiones (estilizada a partir de las medias de la A10), b3_riesgo y b3_global."]]
