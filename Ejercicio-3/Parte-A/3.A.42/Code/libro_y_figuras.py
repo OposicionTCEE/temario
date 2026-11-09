@@ -2723,22 +2723,48 @@ def cuerpo_b3(sim):
         return " ".join("(%.2f,%.4f)" % (a, b) for a, b in zip(xs, ys))
     flecha = "-{Stealth[length=2.4mm]}, thick"
 
-    # ---- b3_ciclos: ciclo financiero (largo y amplio) y ciclo económico (corto), con las crisis en los picos financieros
-    T = np.linspace(0, 60, 601)
-    fin = 3.0 * np.sin(2 * math.pi * (T - 8.5) / 18.0)
-    dfin = np.gradient(fin, T)
-    eco = np.sin(2 * math.pi * T / 7.0) - 0.9 * np.clip(-dfin, 0, None) / np.abs(dfin).max() * 1.6   # recesiones más hondas en la contracción financiera
-    picos = [T[i] for i in range(1, 600) if fin[i] > fin[i - 1] and fin[i] >= fin[i + 1]]
-    f = ("\\begin{tikzpicture}\n\\begin{axis}[width=13cm, height=4.8cm, scale only axis, %s, xmin=0, xmax=60, ymin=-4.6, ymax=4.6, xtick=\\empty, ytick=\\empty,\n"
-         "    xlabel={Tiempo}, ylabel={Desviación respecto a la tendencia},\n"
-         "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.5,1.02)}, anchor=south}, legend columns=3]\n"
-         "\\addplot[black!40, thin, forget plot] coordinates {(0,0) (60,0)};\n"
-         "\\addplot[black, very thick] coordinates {%s};\\addlegendentry{ciclo financiero}\n"
-         "\\addplot[black!50, thick] coordinates {%s};\\addlegendentry{ciclo económico}\n"
-         "\\addplot[only marks, mark=triangle*, mark size=3pt, black] coordinates {%s};\\addlegendentry{crisis bancaria}\n"
-         "\\end{axis}\n\\end{tikzpicture}" % (ESTILO, xy(T[::3], fin[::3]), xy(T[::3], eco[::3]), " ".join("(%.2f,3.550)" % p for p in picos)))
-    escribir("b3_ciclos", f, "Cuerpo B3: ciclo financiero (periodo 18, amplitud 3) y ciclo económico (periodo 7, amplitud 1, con recesiones más hondas en la contracción financiera); crisis en los picos financieros.")
+    # ---- b3_fases y b3_regularidades (N4, 09/11): la prima de financiación externa (BERNANKE y GERTLER, 1989; HUBBARD, 1998):
+    # oferta de fondos plana al tipo sin riesgo hasta el patrimonio n y creciente después; demanda = rendimiento de la inversión.
+    # Sustituyen a b3_ciclos (series sinusoidales que el usuario rechazó por ad hoc); la misma base se reutiliza en los dos apartados.
+    rr = 3.0
 
+    def corte(n, m, d0, dp):
+        x = (d0 - rr + m * n) / (m + dp)
+        if x <= n:
+            x = (d0 - rr) / dp
+            return x, rr
+        return x, rr + m * (x - n)
+
+    def base(nombre, curvas, demandas, puntos, marcas, comentario):
+        f = ("\\begin{tikzpicture}\n\\begin{axis}[width=8.5cm, height=5.6cm, scale only axis, %s, xmin=0, xmax=10, ymin=1.5, ymax=9.6, xtick={%s}, xticklabels={%s}, ytick={%.1f}, yticklabels={$r$},\n"
+             "    xlabel={Financiación de la inversión}, ylabel={Rendimiento y coste de la financiación}, clip=false]\n"
+             % (ESTILO, ",".join("%.2f" % x for x, _ in marcas), ",".join(l for _, l in marcas), rr))
+        for estilo, n, m, etiqueta in curvas:
+            y = min(9.4, rr + m * (9.6 - n))
+            x2 = n + (y - rr) / m
+            f += "\\addplot[%s] coordinates {(0.2,%.2f) (%.2f,%.2f) (%.2f,%.2f)};\n" % (estilo, rr, n, rr, x2, y)
+            f += "\\node[font=\\footnotesize, anchor=south] at (axis cs:%.2f,%.2f) {%s};\n" % (x2, y, etiqueta)
+            f += "\\draw[black!35, densely dotted] (axis cs:%.2f,1.5) -- (axis cs:%.2f,%.2f);\n" % (n, n, rr)
+        for estilo, d0, dp, etiqueta in demandas:
+            xf = min(9.4, (d0 - 1.6) / dp)
+            f += "\\addplot[%s, domain=0.6:%.2f, samples=2] {%.2f-%.2f*x};\n" % (estilo, xf, d0, dp)
+            f += "\\node[font=\\footnotesize, anchor=west] at (axis cs:%.2f,%.2f) {%s};\n" % (xf, d0 - dp * xf, etiqueta)
+        for (x, y), etiqueta, ancla in puntos:
+            f += "\\addplot[only marks, mark=*, mark size=1.6pt] coordinates {(%.3f,%.3f)};\n\\node[font=\\footnotesize, anchor=%s] at (axis cs:%.3f,%.3f) {%s};\n" % (x, y, ancla, x, y, etiqueta)
+        f += "\\end{axis}\n\\end{tikzpicture}"
+        escribir(nombre, f, comentario)
+    d0, dp, d1 = 9.6, 0.75, 8.1
+    n0, m0, nA, mA, nC, mC = 4.0, 0.8, 5.6, 0.5, 2.4, 1.5
+    E0, EA, EC = corte(n0, m0, d0, dp), corte(nA, mA, d0, dp), corte(nC, mC, d0, dp)
+    E1, E2 = corte(n0, m0, d1, dp), corte(nC, mC, d1, dp)
+    base("b3_fases", [("black!60, thick", n0, m0, "$O_0$"), ("black!60, thick, dashed", nA, mA, "$O_A$"), ("black!60, thick, densely dotted", nC, mC, "$O_C$")],
+         [("black, thick", d0, dp, "$D$")], [(E0, "$E_0$", "south west"), (EA, "$E_A$", "south west"), (EC, "$E_C$", "south west")],
+         [(nC, "$n_C$"), (n0, "$n_0$"), (nA, "$n_A$")],
+         "Cuerpo B3: fases del ciclo financiero en la oferta de fondos con prima de financiación externa: auge (más patrimonio y menos prima, E_A) y contracción (menos patrimonio y más prima, E_C).")
+    base("b3_regularidades", [("black!60, thick", n0, m0, "$O_0$"), ("black!60, thick, densely dotted", nC, mC, "$O_C$")],
+         [("black, thick", d0, dp, "$D_0$"), ("black, thick, dashed", d1, dp, "$D_1$")], [(E0, "$E_0$", "south west"), (E1, "$E_1$", "north east"), (E2, "$E_2$", "south west")],
+         [(nC, "$n_C$"), (n0, "$n_0$")],
+         "Cuerpo B3: una perturbación real (D0 a D1) causa una recesión normal con balances sanos (E1) y una mucho más honda en la fase bajista del ciclo financiero (E2).")
     # ---- b3_espiral: bucle de amplificación financiera
     cajas = [("pre", "Caen los precios\\\\de los activos", "(0,1.9)"),
              ("pat", "Caen el patrimonio de los\\\\prestatarios y el valor\\\\de sus garantías", "(4.2,0)"),
@@ -2801,9 +2827,9 @@ def cuerpo_b3(sim):
          "\\draw[%s] (a) -- (b);\\draw[%s] (b) -- (c);\\draw[%s] (c) -- (d);\n"
          "\\end{tikzpicture}" % ((flecha,) * 3))
     escribir("b3_global", f, "Cuerpo B3: transmisión del ciclo financiero global desde la política monetaria de Estados Unidos.")
-    sim.append(("Sintética", "Cuerpo B3 (ciclo financiero): ciclos sinusoidales de periodo 18 (financiero, amplitud 3) y 7 (económico, amplitud 1, más hondo en la contracción financiera); "
+    sim.append(("Sintética", "Cuerpo B3 (ciclo financiero): oferta de fondos con prima (tipo sin riesgo 3; patrimonio 4, 5,6 y 2,4; pendientes 0,8, 0,5 y 1,5) y demanda 9,6 - 0,75x (8,1 tras la perturbación real); "
                 "sendas tras el pico ajustadas con un polinomio de grado 4 a las medias de la A10 (1870-2015); normales asimétricas (2,6; 1,6; 0) y (4,4; 4,0; -2,5) para las condiciones holgadas y tensas; esquemas",
-                "b3_ciclos, b3_espiral, b3_recesiones, b3_riesgo, b3_global"))
+                "b3_fases, b3_regularidades, b3_espiral, b3_recesiones, b3_riesgo, b3_global"))
 
 
 def con_datos_a13(carpeta, filas_series, cifras):
@@ -2897,7 +2923,7 @@ def main():
              ["T14 (cuerpo, bloque 1): figuras abstractas b1_fases, b1_crecimiento y b1_tendencias sobre una misma serie base sintética (hoja Simulaciones); N1 (09/11): b1_volatilidad y b1_desfases, sustituidas por b1_correlograma (correlación cruzada abstracta)."],
              ["T15 (cuerpo, bloque 2, nueva macroeconomía clásica): figuras abstractas b2_lucas y b2_trabajo; N2 (09/11): b2_impulsos, retirada, y b2_rbc, sustituida por b2_clasico (oferta vertical y demanda de la teoría cuantitativa)."],
              ["T16 (cuerpo, bloque 2, nueva economía keynesiana): figuras abstractas b2_aspa, b2_nek (con el modelo de tres ecuaciones de la A8) y b2_costes; N3 (09/11): b2_coincidencia (divina coincidencia en el aspa)."],
-             ["T17 (cuerpo, bloque 3, ciclo financiero): figuras abstractas b3_ciclos, b3_espiral, b3_recesiones (estilizada a partir de las medias de la A10), b3_riesgo y b3_global."]]
+             ["T17 (cuerpo, bloque 3, ciclo financiero): figuras abstractas b3_espiral, b3_recesiones (estilizada a partir de las medias de la A10), b3_riesgo y b3_global; N4 (09/11): b3_ciclos, sustituida por b3_fases y b3_regularidades (prima de financiación externa)."]]
     fuentes = [["Código", "Serie", "País", "Unidad", "Frecuencia", "Institución", "Enlace", "Descarga"]]
     for s, (nombre, pais, unidad, frec) in SERIES.items():
         fuentes.append([s, nombre, pais, unidad, frec, "FRED, Banco de la Reserva Federal de San Luis", FRED + s, FECHA_DESCARGA])
