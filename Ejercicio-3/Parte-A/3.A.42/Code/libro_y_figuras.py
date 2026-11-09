@@ -2559,32 +2559,6 @@ def cuerpo_b1(sim):
 def cuerpo_b2_nmc(sim):
     def xy(xs, ys):
         return " ".join("(%.2f,%.4f)" % (a, b) for a, b in zip(xs, ys))
-    # ---- b2_impulsos: un impulso y muchos impulsos propagados por el mismo mecanismo (proceso autorregresivo de orden dos)
-    a1, a2 = 1.824, -0.865
-
-    def propaga(nu):
-        y = np.zeros(len(nu))
-        for t in range(len(nu)):
-            y[t] = nu[t] + (a1 * y[t - 1] if t >= 1 else 0) + (a2 * y[t - 2] if t >= 2 else 0)
-        return y
-    T = np.arange(0, 80)
-    uno = np.zeros(80)
-    uno[2] = 1.0
-    r1 = propaga(uno)
-    nu = np.random.default_rng(7).normal(0, 1, 80)
-    r2 = propaga(nu)
-    pa = ("\\begin{axis}[name=a, at={(0,0)}, anchor=north west, width=6.2cm, height=4.2cm, scale only axis, %s, xmin=0, xmax=79, ymin=%.2f, ymax=%.2f, xtick=\\empty, ytick=\\empty,\n"
-          "    xlabel={Tiempo}, ylabel={Ciclo}, title={(a) Un solo impulso}, title style={font=\\footnotesize}]\n"
-          "\\addplot[black!40, thin] coordinates {(0,0) (79,0)};\n\\addplot[ycomb, black!50, very thick] coordinates {(2,1.000)};\n"
-          "\\addplot[black, thick] coordinates {%s};\n\\end{axis}\n" % (ESTILO, 1.25 * r1.min(), 1.15 * r1.max(), xy(T, r1)))
-    pb = ("\\begin{axis}[name=b, at={($(a.north east)+(1.6cm,0)$)}, anchor=north west, width=6.2cm, height=4.2cm, scale only axis, %s, xmin=0, xmax=79, xtick=\\empty, ytick=\\empty,\n"
-          "    xlabel={Tiempo}, title={(b) Impulsos continuos}, title style={font=\\footnotesize},\n"
-          "    legend style={draw=none, fill=none, font=\\footnotesize, at={(0.02,0.98)}, anchor=north west}, legend cell align=left]\n"
-          "\\addplot[black!40, thin, forget plot] coordinates {(0,0) (79,0)};\n\\addplot[ycomb, black!45, forget plot] coordinates {%s};\n"
-          "\\addlegendimage{legend image code/.code={\\draw[black!45, thick] (0.3cm,-0.12cm) -- (0.3cm,0.12cm);}}\\addlegendentry{impulsos}\n"
-          "\\addplot[black, thick] coordinates {%s};\\addlegendentry{ciclo}\n\\end{axis}\n" % (ESTILO, xy(T, 2.5 * nu), xy(T, r2)))
-    escribir("b2_impulsos", "\\begin{tikzpicture}\n" + pa + pb + "\\end{tikzpicture}",
-             "Cuerpo B2: esquema de impulso y propagación con un proceso autorregresivo de orden dos (1,824 y -0,865): un solo impulso y una sucesión de impulsos aleatorios.")
     # ---- b2_lucas: oferta de LUCAS y demanda agregada en el plano de la producción y los precios
     psi, yg, Ep0, m0, dm = 1.0, 5.0, 5.0, 10.0, 2.0
 
@@ -2609,22 +2583,26 @@ def cuerpo_b2_nmc(sim):
             E0[0], E0[1], E1[0], E1[1], E2[0], E2[1], E0[0] - 0.05, E0[1] - 0.05, E1[0] + 0.12, E1[1], E2[0] - 0.12, E2[1],
             da(m0, 7.4), da(m0 + dm, 7.4), oa(Ep0, 7.4), oa(Ep0 + dm, 5.6), yg))
     escribir("b2_lucas", f, "Cuerpo B2: oferta agregada de LUCAS y demanda agregada; relajación monetaria imprevista (E1) y prevista (E2).")
-    # ---- b2_rbc: respuestas del ciclo real a una mejora persistente y a una de un solo trimestre
-    t = np.arange(40)
-    p = rbc_trayectoria(rbc_resolver(RBC["rho"], False), RBC["rho"] ** t)
-    q = rbc_trayectoria(rbc_resolver(0.0, False), (t == 0).astype(float))
-
-    def panel(nombre, lugar, titulo, d, leyenda, ylab):
-        ley = (", legend style={draw=none, fill=none, font=\\footnotesize, at={(0.98,0.98)}, anchor=north east}, legend cell align=left" if leyenda else "")
-        return ("\\begin{axis}[name=%s, at={%s}, anchor=north west, width=6.2cm, height=4.2cm, scale only axis, %s, xmin=0, xmax=39, ymin=-0.3, ymax=2.1, xtick=\\empty, ytick=\\empty,\n"
-                "    xlabel={Trimestres}, %s title={%s}, title style={font=\\footnotesize}%s]\n"
-                "\\addplot[black!40, thin, forget plot] coordinates {(0,0) (39,0)};\n"
-                "\\addplot[black!50, thick, dotted] coordinates {%s};%s\n\\addplot[black, thick] coordinates {%s};%s\n\\addplot[black!45, very thick] coordinates {%s};%s\n\\end{axis}\n"
-                % (nombre, lugar, ESTILO, ylab, titulo, ley, xy(t, d["z"]), "\\addlegendentry{productividad}" if leyenda else "",
-                   xy(t, d["y"]), "\\addlegendentry{producción}" if leyenda else "", xy(t, d["h"]), "\\addlegendentry{horas}" if leyenda else ""))
-    escribir("b2_rbc", "\\begin{tikzpicture}\n" + panel("a", "{(0,0)}", "(a) Mejora persistente", p, True, "ylabel={Desviación respecto al estado estacionario},")
-             + panel("b", "{($(a.north east)+(1.6cm,0)$)}", "(b) Mejora de un solo trimestre", q, False, "") + "\\end{tikzpicture}",
-             "Cuerpo B2: respuestas del modelo del ciclo real (trabajo divisible) a una mejora de la productividad persistente (0,95) y de un solo trimestre.")
+    # ---- b2_clasico (N2, 09/11): el ciclo real en la oferta y la demanda agregadas, misma base que b2_lucas
+    # (sustituye a b2_rbc; el usuario pidió una representación más canónica, «una versión adaptada de la forma anterior»)
+    y0, y1, mm, dmm = 5.0, 6.4, 10.0, 2.0
+    C0, C1, C2 = (y0, mm - y0), (y1, mm - y1), (y0, mm + dmm - y0)
+    fl = "-{Stealth[length=2mm]}, black!55, thick"
+    f = ("\\begin{tikzpicture}\n\\begin{axis}[width=10cm, height=6cm, scale only axis, %s, xmin=2.4, xmax=8.6, ymin=2.2, ymax=9.6, xtick=\\empty, ytick=\\empty,\n"
+         "    xlabel={Producción, $y_t$}, ylabel={Nivel de precios, $p_t$}, clip=false]\n"
+         "\\addplot[black!60, thick] coordinates {(%.2f,2.2) (%.2f,9.6)};\n\\addplot[black!60, thick, dotted] coordinates {(%.2f,2.2) (%.2f,9.6)};\n"
+         "\\addplot[black, thick, domain=2.4:7.4, samples=2] {%.3f-x};\n\\addplot[black, thick, dashed, domain=2.4:7.4, samples=2] {%.3f-x};\n"
+         "\\addplot[only marks, mark=*, mark size=1.6pt] coordinates {(%.3f,%.3f) (%.3f,%.3f) (%.3f,%.3f)};\n"
+         "\\draw[%s] (axis cs:%.2f,8.9) -- (axis cs:%.2f,8.9);\n\\draw[%s] (axis cs:7.0,%.2f) -- (axis cs:7.0,%.2f);\n"
+         "\\node[font=\\footnotesize, anchor=north east] at (axis cs:%.3f,%.3f) {$E_0$};\n\\node[font=\\footnotesize, anchor=south west] at (axis cs:%.3f,%.3f) {$E_1$};\n\\node[font=\\footnotesize, anchor=east] at (axis cs:%.3f,%.3f) {$E_2$};\n"
+         "\\node[font=\\footnotesize, anchor=west] at (axis cs:7.4,%.3f) {$DA_0$};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:7.4,%.3f) {$DA_1$};\n"
+         "\\node[font=\\footnotesize, anchor=south] at (axis cs:%.2f,9.6) {$OA_0$};\n\\node[font=\\footnotesize, anchor=south] at (axis cs:%.2f,9.6) {$OA_1$};\n"
+         "\\end{axis}\n\\end{tikzpicture}"
+         % (ESTILO, y0, y0, y1, y1, mm, mm + dmm, C0[0], C0[1], C1[0], C1[1], C2[0], C2[1],
+            fl, y0 + 0.08, y1 - 0.08, fl, mm - 7.0 + 0.12, mm + dmm - 7.0 - 0.12,
+            C0[0] - 0.05, C0[1] - 0.05, C1[0] + 0.05, C1[1] + 0.05, C2[0] - 0.12, C2[1],
+            mm - 7.4, mm + dmm - 7.4, y0, y1))
+    escribir("b2_clasico", f, "Cuerpo B2: el ciclo real en la oferta y la demanda agregadas: la mejora de la productividad desplaza la oferta vertical (E0 a E1: más producción y precios más bajos) y la relajación monetaria solo sube los precios (E0 a E2).")
     # ---- b2_trabajo: la mejora tecnológica desplaza la demanda de trabajo; dos ofertas de distinta elasticidad
     w0, h0, s = 5.0, 5.0, 1.6
     h_el = h0 + s / (0.9 + 0.25)
@@ -2644,8 +2622,8 @@ def cuerpo_b2_nmc(sim):
             h0 - 0.05, w0 - 0.05, h_el + 0.05, w_el - 0.05, h_ri - 0.08, w_ri + 0.05,
             w0 - 0.9 * (8.4 - h0), w0 + s - 0.9 * (8.4 - h0), w0 + 0.25 * (8.6 - h0), w0 + 3 * (6.4 - h0)))
     escribir("b2_trabajo", f, "Cuerpo B2: una mejora tecnológica desplaza la demanda de trabajo; con una oferta muy elástica suben sobre todo las horas (E1) y con una poco elástica, el salario (E2).")
-    sim.append(("Sintética", "Cuerpo B2 (NMC): impulsos con un AR(2) de 1,824 y -0,865 (semilla 7); oferta de LUCAS con pendiente 1 y demanda y = m - p; respuestas del ciclo real con trabajo divisible (rho 0,95 y 0); mercado de trabajo con demanda de pendiente -0,9 y ofertas de pendiente 0,25 y 3",
-                "b2_impulsos, b2_lucas, b2_rbc, b2_trabajo"))
+    sim.append(("Sintética", "Cuerpo B2 (NMC): oferta de LUCAS con pendiente 1 y demanda y = m - p; oferta clásica vertical que la mejora de la productividad lleva de 5 a 6,4 y demanda con m de 10 a 12; mercado de trabajo con demanda de pendiente -0,9 y ofertas de pendiente 0,25 y 3",
+                "b2_lucas, b2_clasico, b2_trabajo"))
 
 
 # ---------------------------------------------------------------- T16 (cuerpo, B2, nueva economía keynesiana): figuras abstractas
@@ -2888,7 +2866,7 @@ def main():
              ["A12 (IV.1 y IV.2): figuras sintéticas (tres ciclos de SCHUMPETER, multiplicador-acelerador de SAMUELSON, ciclo de GOODWIN y equilibrios de KALDOR con parámetros ilustrativos)."],
              ["A13 (IV.3-IV.5): ecuación logística (caos y bifurcación), modelo de KEEN con parámetros ilustrativos, curtosis del crecimiento del PIB y espectro de las horas y del paro."],
              ["T14 (cuerpo, bloque 1): figuras abstractas b1_fases, b1_crecimiento y b1_tendencias sobre una misma serie base sintética (hoja Simulaciones); N1 (09/11): b1_volatilidad y b1_desfases, sustituidas por b1_correlograma (correlación cruzada abstracta)."],
-             ["T15 (cuerpo, bloque 2, nueva macroeconomía clásica): figuras abstractas b2_impulsos, b2_lucas, b2_rbc (con el modelo del ciclo real de la A5) y b2_trabajo."],
+             ["T15 (cuerpo, bloque 2, nueva macroeconomía clásica): figuras abstractas b2_lucas y b2_trabajo; N2 (09/11): b2_impulsos, retirada, y b2_rbc, sustituida por b2_clasico (oferta vertical y demanda de la teoría cuantitativa)."],
              ["T16 (cuerpo, bloque 2, nueva economía keynesiana): figuras abstractas b2_aspa, b2_nek (con el modelo de tres ecuaciones de la A8) y b2_costes."],
              ["T17 (cuerpo, bloque 3, ciclo financiero): figuras abstractas b3_ciclos, b3_espiral, b3_recesiones (estilizada a partir de las medias de la A10), b3_riesgo y b3_global."]]
     fuentes = [["Código", "Serie", "País", "Unidad", "Frecuencia", "Institución", "Enlace", "Descarga"]]
