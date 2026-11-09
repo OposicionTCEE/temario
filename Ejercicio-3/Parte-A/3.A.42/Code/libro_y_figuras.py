@@ -2672,19 +2672,31 @@ def cuerpo_b2_nek(sim):
           % (ESTILO, xy(t, z["yn"]), xy(t, z["y"]), xy(t, z["h"])))
     escribir("b2_nek", "\\begin{tikzpicture}\n" + pa + pb + "\\end{tikzpicture}",
              "Cuerpo B2: respuestas del modelo neokeynesiano de tres ecuaciones (calibración de la A8) a una relajación monetaria y a una mejora de la productividad.")
-    # ---- b2_costes: perturbación de costes en el aspa
+    # ---- b2_costes: perturbación de costes en el aspa, con las dos reacciones posibles del banco central (N3, 09/11):
+    # endurecer (DA1, E4: menos inflación y más brecha negativa) o acomodar (DA2, E5: sin brecha y con más inflación)
     c = 1.2
     x3, y3 = -c / (a + b), a * (-c / (a + b)) + c
+    s1, s2 = -1.5, c
+    x4 = (s1 - c) / (a + b)
+    y4 = a * x4 + c
+    x5 = (s2 - c) / (a + b)
+    y5 = a * x5 + c
     f = ("\\begin{tikzpicture}\n\\begin{axis}[width=7cm, height=5.4cm, scale only axis, %s, xmin=-2, xmax=2, ymin=-2, ymax=2.6, xtick={0}, xticklabels={$0$}, ytick={0}, yticklabels={$0$},\n"
          "    xlabel={Brecha de producción, $\\tilde y_t$}, ylabel={Inflación, $\\pi_t$}, clip=false]\n"
          "\\addplot[black!30, thin] coordinates {(-2,0) (2,0)};\\addplot[black!30, thin] coordinates {(0,-2) (0,2.6)};\n"
          "\\addplot[black!60, thick, domain=-1.9:1.9, samples=2] {%.3f*x};\n\\addplot[black!60, thick, dashed, domain=-1.9:1.0, samples=2] {%.3f*x%+.3f};\n"
          "\\addplot[black, thick, domain=-1.5:1.5, samples=2] {-%.3f*x};\n"
-         "\\addplot[only marks, mark=*, mark size=1.6pt] coordinates {(0,0) (%.3f,%.3f)};\n"
-         "\\node[font=\\footnotesize, anchor=north east] at (axis cs:-0.03,-0.05) {$E_0$};\n\\node[font=\\footnotesize, anchor=south east] at (axis cs:%.3f,%.3f) {$E_3$};\n"
+         "\\addplot[black, thick, densely dotted, domain=-1.9:0.15, samples=2] {-%.3f*x%+.3f};\n"
+         "\\addplot[black, thick, densely dotted, domain=-1.0:1.6, samples=2] {-%.3f*x%+.3f};\n"
+         "\\addplot[only marks, mark=*, mark size=1.6pt] coordinates {(0,0) (%.3f,%.3f) (%.3f,%.3f) (%.3f,%.3f)};\n"
+         "\\node[font=\\footnotesize, anchor=north east] at (axis cs:-0.03,-0.05) {$E_0$};\n\\node[font=\\footnotesize, anchor=south west] at (axis cs:%.3f,%.3f) {$E_3$};\n"
+         "\\node[font=\\footnotesize, anchor=north east] at (axis cs:%.3f,%.3f) {$E_4$};\n\\node[font=\\footnotesize, anchor=south west] at (axis cs:%.3f,%.3f) {$E_5$};\n"
          "\\node[font=\\footnotesize, anchor=west] at (axis cs:1.9,%.3f) {$CP_0$};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:1.0,%.3f) {$CP_1$};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:1.5,%.3f) {$DA$};\n"
-         "\\end{axis}\n\\end{tikzpicture}" % (ESTILO, a, a, c, b, x3, y3, x3 - 0.05, y3 + 0.05, a * 1.9, a * 1.0 + c, -b * 1.5))
-    escribir("b2_costes", f, "Cuerpo B2: una perturbación de costes desplaza la curva de PHILLIPS hacia arriba: más inflación y menos producción.")
+         "\\node[font=\\footnotesize, anchor=west] at (axis cs:0.15,%.3f) {$DA_1$};\n\\node[font=\\footnotesize, anchor=west] at (axis cs:1.6,%.3f) {$DA_2$};\n"
+         "\\end{axis}\n\\end{tikzpicture}" % (ESTILO, a, a, c, b, b, s1, b, s2, x3, y3, x4, y4, x5, y5,
+                                              x3 + 0.04, y3 + 0.04, x4 - 0.05, y4 - 0.06, x5 + 0.06, y5 + 0.1,
+                                              a * 1.9, a * 1.0 + c, -b * 1.5, -b * 0.15 + s1, -b * 1.6 + s2))
+    escribir("b2_costes", f, "Cuerpo B2: una perturbación de costes desplaza la curva de PHILLIPS hacia arriba (E3); el banco central solo puede elegir un punto de la nueva curva: endurecer (DA1, E4) o acomodar (DA2, E5).")
     # ---- b2_coincidencia (N3, 09/11): divina coincidencia en el aspa: la mejora baja el tipo natural (DA0 a DA1, E2)
     # y el banco central, al bajar su tipo con el natural, devuelve la demanda a DA0 (E0)
     dd, pf = -1.4, 0.6
@@ -2702,7 +2714,7 @@ def cuerpo_b2_nek(sim):
          "\\end{axis}\n\\end{tikzpicture}"
          % (ESTILO, a, b, b, dd, x2, y2, fl, (dd - pf) / b + 0.07, pf, -pf / b - 0.07, pf, x2 - 0.04, y2 - 0.04, a * 1.9, -b * 1.5, -b * 0.25 + dd))
     escribir("b2_coincidencia", f, "Cuerpo B2: divina coincidencia; la mejora de la productividad baja el tipo natural y desplaza la demanda (E2) y el banco central, al bajar su tipo con el natural, la devuelve a DA0 (E0).")
-    sim.append(("Sintética", "Cuerpo B2 (NEK): aspa con pendientes 0,6 (CP) y -1,2 (DA) y desplazamientos de 1,4; respuestas del modelo de tres ecuaciones con la calibración de la A8 (relajación de un punto anual con persistencia 0,5; mejora del 1 % con persistencia 0,9); perturbación de costes de 1,2",
+    sim.append(("Sintética", "Cuerpo B2 (NEK): aspa con pendientes 0,6 (CP) y -1,2 (DA) y desplazamientos de 1,4; respuestas del modelo de tres ecuaciones con la calibración de la A8 (relajación de un punto anual con persistencia 0,5; mejora del 1 % con persistencia 0,9); perturbación de costes de 1,2, con una reacción restrictiva (demanda desplazada -1,5) y otra acomodaticia (+1,2)",
                 "b2_aspa, b2_nek, b2_costes, b2_coincidencia"))
 
 
