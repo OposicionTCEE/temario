@@ -194,6 +194,8 @@ def main():
         ["Suma de los saldos en valor absoluto, 2008 / 2013 / 2019 / 2024 / 2025 (% del PIB mundial)", " / ".join("%.2f" % td[a] for a in (2008, 2013, 2019, 2024, 2025)), "FMI WEO oct. 2026", "Anexo III.4.4"],
         ["Cuenta corriente de EE. UU., mínimo (% del PIB mundial)", "%.2f en %d" % (us[a_us], a_us), "FMI WEO oct. 2026", "Anexo III.4.4"],
         ["Cuenta corriente de China, máximo (% del PIB mundial)", "%.2f en %d" % (cn[a_cn], a_cn), "FMI WEO oct. 2026", "Anexo III.4.4"],
+        ["Exportadores de combustibles, máximo y 2025 (% del PIB mundial)", "%.2f en %d / %.2f" % (max(series["OEXP"], key=lambda p: p[1])[1], max(series["OEXP"], key=lambda p: p[1])[0], dict(series["OEXP"])[2025]), "FMI WEO oct. 2026", "Anexo III.4.4"],
+        ["EE. UU. y China, 2025 (% del PIB mundial)", "%.2f / %.2f" % (us[2025], cn[2025]), "FMI WEO oct. 2026", "Anexo III.4.4"],
         ["España: cuenta corriente, 2007 (mínimo) y 2012-2025 (% del PIB)", "%.1f en 2007; %s" % (ccd[2007], ", ".join("%d: %.1f" % (a, ccd[a]) for a in sup)), "FMI WEO oct. 2026", "Anexo IV.5"],
         ["España: PIIN, 1999 / mínimo / 2014 / 2019 / 2020 / 2024 / 2025 (% del PIB)", "%.1f / %.1f en %d / %.1f / %.1f / %.1f / %.1f / %.1f" % (pd_[1999], pd_[a_min], a_min, pd_[2014], pd_[2019], pd_[2020], pd_[2024], pd_[2025]), "Eurostat tipsii10", "Anexo IV.5"],
         ["España: PIIN 2024 y 2025 (millones de euros)", "%.0f / %.0f" % (piin_mio[2024], piin_mio[2025]), "Eurostat tipsii10", "Anexo IV.5"],
