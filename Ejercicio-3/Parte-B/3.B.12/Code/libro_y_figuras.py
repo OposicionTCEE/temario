@@ -214,7 +214,7 @@ def main():
     filas = [["Indicador", "Área", "Periodo", "Valor", "Unidad", "Fuente", "Tratamiento", "Figura"]]
     for a, v in total:
         filas.append(["Suma de los saldos por cuenta corriente en valor absoluto", "Mundo (%d economías del WEO)" % len(paises), a, v, "% del PIB mundial", "FMI WEO oct. 2026 (BCA, NGDPD)", "suma de |BCA| de todas las economías / NGDPD de WEOWORLD", "a3_desequilibrios"])
-    nombres = {"USA": "Estados Unidos", "CHN": "China", "DEU": "Alemania", "JPN": "Japón", "OEXP": "Exportadores de combustibles (agregado OEXP del FMI)"}
+    nombres = {"USA": "Estados Unidos", "CHN": "China", "DEU": "Alemania", "JPN": "Japón", "OEXP": "Exportadores de combustibles (%s)" % ", ".join(EXPORTADORES)}
     for k, ser in series.items():
         for a, v in ser:
             filas.append(["Saldo por cuenta corriente", nombres[k], a, v, "% del PIB mundial", "FMI WEO oct. 2026 (BCA, NGDPD)", "BCA / NGDPD de WEOWORLD", "a3_desequilibrios"])
