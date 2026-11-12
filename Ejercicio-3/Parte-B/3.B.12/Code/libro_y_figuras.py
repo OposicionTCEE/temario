@@ -43,6 +43,7 @@ EJES = r"""\footnotesize
   /pgfplots/.cd,
   every axis label/.style={font=\footnotesize}, tick label style={font=\footnotesize},
   legend style={draw=none, fill=none, font=\footnotesize, legend columns=3, /tikz/every even column/.append style={column sep=0.5cm}},
+  legend cell align=left,
 """
 
 
@@ -138,7 +139,6 @@ def fig_espana(cc, piin, nendi):
 """
     t += "\\begin{axis}[name=flujo,\n" + comun
     t += r"""  height=4.4cm, ymin=-10.5, ymax=4.5, ytick={-10,-5,0,5}, xtick={1995,2000,2005,2010,2015,2020,2025}, xticklabels={},
-  ylabel={Flujo: cuenta corriente},
   title={\footnotesize\textbf{Flujo}: saldo por cuenta corriente (\% del PIB)}, title style={yshift=-4pt},
 ]
 """
@@ -147,14 +147,13 @@ def fig_espana(cc, piin, nendi):
     t += "\\end{axis}\n"
     t += "\\begin{axis}[at={(flujo.below south west)}, anchor=north west, yshift=-0.55cm,\n" + comun
     t += r"""  height=6.2cm, ymin=-105, ymax=5, ytick={-100,-80,-60,-40,-20,0}, xtick={1995,2000,2005,2010,2015,2020,2025},
-  ylabel={Stocks: posici\'on exterior},
   title={\footnotesize\textbf{Stocks}: posici\'on de inversi\'on internacional neta y NENDI (\% del PIB)}, title style={yshift=-4pt},
   legend style={draw=none, fill=none, font=\footnotesize, legend columns=-1, /tikz/every even column/.append style={column sep=0.5cm}, at={(0.5,-0.2)}, anchor=north},
 ]
 """
     t += "\\draw[black!50] (axis cs:1994.5,0) -- (axis cs:2025.5,0);\n"
     t += "\\draw[black!45, dashed] (axis cs:1994.5,-35) -- (axis cs:2025.5,-35);\n"
-    t += "\\node[font=\\scriptsize, black!60, anchor=south east, inner sep=1.5pt] at (axis cs:2025.4,-35) {umbral del PDM: $-35$};\n"
+    t += "\\node[font=\\scriptsize, black!60, anchor=south, inner sep=1.5pt] at (axis cs:2010.5,-35) {umbral del PDM: $-35$};\n"
     t += "\\addplot[black, line width=1.2pt, mark=*, mark size=0.8pt] coordinates {%s};\n" % coordenadas(piin, 1)
     t += "\\addlegendentry{Posici\\'on de inversi\\'on internacional neta}\n"
     t += "\\addplot[black, dashed, line width=1pt] coordinates {%s};\n" % coordenadas(nendi, 1)
