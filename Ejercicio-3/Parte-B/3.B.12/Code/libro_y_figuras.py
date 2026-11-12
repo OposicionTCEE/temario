@@ -187,6 +187,12 @@ def main():
     ccd = dict(cc); pd_ = dict(piin); nd = dict(nendi)
     a_min = min(pd_, key=pd_.get)
     sup = [a for a in sorted(ccd) if a >= 2012]
+    # descomposición de la mejora de la posición española, 2014-2025: PIB nominal implícito = PIIN en euros / PIIN en % del PIB
+    pib = {a: piin_mio[a] / pd_[a] * 100.0 for a in piin_mio if a in pd_ and pd_[a] != 0}
+    denom = 100.0 * piin_mio[2014] / pib[2025]                       # posición de 2014 medida con el PIB de 2025
+    cc_eur = {a: ccd[a] / 100.0 * pib[a] for a in range(2015, 2026)}  # cuenta corriente en euros
+    otros = {a: (piin_mio[a] - piin_mio[a - 1]) - cc_eur[a] for a in range(2015, 2026)}
+    deficits = {anio: sorted((bca[c][anio], c) for c in paises if c in bca and anio in bca[c])[:3] for anio in ("2007", "2008")}
     tmin = min(target, key=lambda p: p[1]); tdict = dict(target)
     cif = [
         ["Suma de los saldos por cuenta corriente en valor absoluto, máximo (% del PIB mundial)", "%.2f en %d" % (pico[1], pico[0]), "FMI WEO oct. 2026", "Anexo III.4.4"],
