@@ -93,7 +93,9 @@ def desequilibrios(bca, ngdpd, paises):
         suma = sum(abs(bca[c][y]) for c in paises if c in bca and y in bca[c])
         total.append((a, 100.0 * suma / mundo[y]))
         for k in series:
-            if k in bca and y in bca[k]:
+            if k == "OEXP":
+                series[k].append((a, 100.0 * sum(bca[c].get(y, 0.0) for c in EXPORTADORES if c in bca) / mundo[y]))
+            elif k in bca and y in bca[k]:
                 series[k].append((a, 100.0 * bca[k][y] / mundo[y]))
     return total, series
 
