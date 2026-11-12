@@ -31,6 +31,9 @@ DESCARGAS = {
     "ecb/target_es.csv": "https://data-api.ecb.europa.eu/service/data/TGB/M.ES.N.A094T.U2.EUR.E?format=csvdata",
 }
 A0, A1 = 1990, 2025
+# Exportadores de combustibles: el agregado OEXP del FMI no trae saldos en la API, así que se suman estas economías
+# (las grandes exportadoras netas de petróleo y gas, con Noruega); un año sin dato de una economía cuenta como cero.
+EXPORTADORES = ["SAU", "ARE", "KWT", "QAT", "OMN", "BHR", "IRN", "IRQ", "RUS", "KAZ", "AZE", "DZA", "NGA", "AGO", "LBY", "VEN", "NOR"]
 
 EJES = r"""\footnotesize
 \begin{axis}[
