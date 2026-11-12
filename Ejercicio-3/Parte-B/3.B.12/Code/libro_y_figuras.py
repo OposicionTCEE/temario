@@ -207,6 +207,14 @@ def main():
         ["España: NENDI, 2009 / 2012 / 2019 / 2024 / 2025 (% del PIB)", " / ".join("%.1f" % nd[a] for a in (2009, 2012, 2019, 2024, 2025)), "Eurostat tipsii50", "Anexo IV.3 y IV.5"],
         ["España: deuda externa neta, 2014 / 2025 (% del PIB)", "%.1f / %.1f" % (dict(ned)[2014], dict(ned)[2025]), "Eurostat tipsii20", "Anexo IV.5"],
         ["Banco de España: saldo TARGET, agosto 2012 / mínimo / diciembre 2025 (millones de euros)", "%.0f / %.0f en %s / %.0f" % (tdict["2012-08"], tmin[1], tmin[0], tdict["2025-12"]), "BCE, TGB", "Anexo IV.5"],
+        ["Mayores déficits corrientes del mundo en 2007 y 2008 (miles de millones de dólares)", "; ".join("%s: %s" % (anio, ", ".join("%s %.1f" % (c, v) for v, c in lst)) for anio, lst in deficits.items()), "FMI WEO oct. 2026 (BCA)", "Anexo IV.5"],
+        ["España: mejora de la PIIN 2014-2025 (puntos del PIB): total / efecto del PIB nominal / reducción en euros",
+         "%.1f / %.1f / %.1f" % (pd_[2025] - pd_[2014], denom - pd_[2014], pd_[2025] - denom), "Eurostat tipsii10", "Anexo IV.5 (posición de 2014 medida con el PIB de 2025)"],
+        ["España: 2015-2025, variación de la PIIN / cuenta corriente acumulada / otros ajustes (miles de millones de euros)",
+         "%.1f / %.1f / %.1f" % ((piin_mio[2025] - piin_mio[2014]) / 1000, sum(cc_eur.values()) / 1000, sum(otros.values()) / 1000), "Eurostat tipsii10; FMI WEO oct. 2026", "Anexo IV.5 (otros = valoración, cuenta de capital y errores)"],
+        ["España: otros ajustes de la PIIN en 2021 / 2022 / 2025 (miles de millones de euros y % del PIB)",
+         " / ".join("%.1f (%.1f)" % (otros[a] / 1000, 100 * otros[a] / pib[a]) for a in (2021, 2022, 2025)), "Eurostat tipsii10; FMI WEO oct. 2026", "Anexo IV.5"],
+        ["España: PIB nominal implícito 2014 / 2025 (miles de millones de euros)", "%.0f / %.0f" % (pib[2014] / 1000, pib[2025] / 1000), "Eurostat tipsii10", "Anexo IV.5"],
     ]
     for c in cif:
         print(" - ", c[0], ":", c[1])
