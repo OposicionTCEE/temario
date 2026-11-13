@@ -175,11 +175,9 @@ def fig_reservas(cuotas, total, asignadas):
     t += "\\begin{axis}[at={(cuotas.east)}, anchor=west, xshift=1.3cm, width=6.4cm, height=6.4cm,\n" + comun
     ymax = 2 * (int(max(total.values()) / 1e12 // 2) + 1)
     t += "  ymin=0, ymax=%d, ytick distance=2, title={\\footnotesize\\textbf{(b) Reservas de divisas (billones de d\\'olares)}},\n]\n" % ymax
+    # En la versión actual de COFER las reservas asignadas por monedas coinciden con el total (el FMI imputa la
+    # composición de las no declaradas), así que se dibuja solo el total.
     t += "\\addplot[black, line width=1.3pt] coordinates {%s};\n" % coordenadas([(a, v / 1e12) for a, v in sorted(total.items())], 2)
-    t += "\\addplot[black!55, dashed, line width=1.1pt] coordinates {%s};\n" % coordenadas([(a, v / 1e12) for a, v in sorted(asignadas.items())], 2)
-    ultimo = max(total)
-    t += "\\node[font=\\scriptsize, anchor=east] at (axis cs:2025,%.2f) {total};\n" % (total[ultimo] / 1e12 + 1.2)
-    t += "\\node[font=\\scriptsize, black!60, anchor=west] at (axis cs:2006.5,%.2f) {asignadas};\n" % (asignadas[2007.0] / 1e12 - 0.9 if 2007.0 in asignadas else 2)
     t += "\\end{axis}\n\\node[anchor=north] at (current bounding box.south) {\\pgfplotslegendfromname{leyendares}};\n\\end{tikzpicture}\n"
     open(os.path.join(IMG, "anx_reservas_monedas.tikz"), "w", encoding="utf-8").write(t)
 
