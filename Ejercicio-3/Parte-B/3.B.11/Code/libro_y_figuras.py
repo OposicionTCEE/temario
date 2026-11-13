@@ -97,7 +97,7 @@ def fig_flujos(pas_priv, pas_bde, act, neto):
     t += "\\fill[black!7] (axis cs:2010.5,%d) rectangle (axis cs:2012.5,%d);\n" % (ymin, ymax)
     t += "\\node[font=\\scriptsize, black!60, anchor=north, align=center, inner sep=1.5pt] at (axis cs:2011.5,%d) {crisis de\\\\ la deuda};\n" % ymax
     t += "\\draw[black!50] (axis cs:1998.5,0) -- (axis cs:2025.5,0);\n"
-    t += "\\addplot[ybar, bar width=5pt, fill=black!25, draw=none] coordinates {%s};\n" % coordenadas(neto, 1)
+    t += "\\addplot[ybar, bar width=5pt, fill=black!25, draw=none, area legend] coordinates {%s};\n" % coordenadas(neto, 1)
     t += "\\addlegendentry{Saldo de la cuenta financiera ($FA$)}\n"
     t += "\\addplot[black, line width=1.2pt] coordinates {%s};\n" % coordenadas(pas_priv, 1)
     t += "\\addlegendentry{Entradas: pasivos frente a no residentes, sin el Banco de Espa\\~na}\n"
@@ -110,8 +110,8 @@ def fig_flujos(pas_priv, pas_bde, act, neto):
 
 
 # ---------------------------------------------------------------- figura 2: PII de España por instrumentos
-CATEG = [("id", "Inversi\\'on directa"), ("acc", "Cartera: acciones y fondos"), ("deu", "Cartera: deuda"),
-         ("bde", "Otra inversi\\'on: Banco de Espa\\~na"), ("res", "Otra inversi\\'on: resto"), ("rd", "Reservas y derivados")]
+CATEG = [("id", "Inversi\\'on\\\\ directa"), ("acc", "Cartera: acciones\\\\ y fondos"), ("deu", "Cartera:\\\\ deuda"),
+         ("bde", "Otra inversi\\'on:\\\\ Banco de Espa\\~na"), ("res", "Otra inversi\\'on:\\\\ resto"), ("rd", "Reservas y\\\\ derivados")]
 
 
 def fig_pii(comp, total):
@@ -162,7 +162,7 @@ def fig_reservas(cuotas, total, asignadas):
 """
     t += "\\begin{tikzpicture}\n\\footnotesize\n"
     t += "\\begin{axis}[name=cuotas, width=8.6cm, height=6.4cm,\n" + comun
-    t += r"""  ymin=0, ymax=80, ytick distance=10, title={\footnotesize\textbf{(a) Composici\'on por monedas (\% de las asignadas)}},
+    t += r"""  ymin=0, ymax=80, ytick distance=10, title={\footnotesize\textbf{(a) Composici\'on por monedas (\%)}},
   legend style={draw=none, fill=none, font=\footnotesize, legend columns=3, /tikz/every even column/.append style={column sep=0.4cm}},
   legend cell align=left, legend to name=leyendares,
 ]
@@ -291,7 +291,7 @@ def main():
             filas.append([nom, "España", a, v, "% del PIB", "Eurostat bop_c6_a, bop_iip6_q y nama_10_gdp", trat, "anx_flujos_brutos"])
     for a in AÑOS_PII:
         for k, n in CATEG:
-            filas.append(["PII neta: " + n.replace("\\'o", "ó").replace("\\~n", "ñ"), "España", a, comp[a][k], "% del PIB", "Eurostat bop_iip6_q y nama_10_gdp", "otra inversión del resto = total menos Banco de España; reservas y derivados sumados", "anx_pii_instrumentos"])
+            filas.append(["PII neta: " + n.replace("\\'o", "ó").replace("\\~n", "ñ").replace("\\\\ ", " "), "España", a, comp[a][k], "% del PIB", "Eurostat bop_iip6_q y nama_10_gdp", "otra inversión del resto = total menos Banco de España; reservas y derivados sumados", "anx_pii_instrumentos"])
         filas.append(["PII neta total", "España", a, total[a], "% del PIB", "Eurostat bop_iip6_q y nama_10_gdp", "ninguno", "anx_pii_instrumentos"])
     for k, n, _ in MONEDAS:
         for tt, v in sorted(cuotas[k].items()):
