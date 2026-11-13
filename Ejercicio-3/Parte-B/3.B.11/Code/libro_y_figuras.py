@@ -130,7 +130,8 @@ def fig_pii(comp, total):
     t += "  xticklabels={%s},\n" % ",".join("{%s}" % n for _, n in CATEG)
     t += "  x tick label style={align=center, text width=2.2cm, font=\\scriptsize},\n"
     t += "  ymin=%d, ymax=%d, ytick distance=10, ylabel={Porcentaje del PIB},\n" % (ymin, ymax)
-    t += r"""  legend style={draw=none, fill=none, font=\footnotesize, legend columns=-1, /tikz/every even column/.append style={column sep=0.5cm}},
+    t += r"""  extra y ticks={0}, extra y tick labels={}, extra y tick style={grid=major, major grid style={black!60}},
+  legend style={draw=none, fill=none, font=\footnotesize, legend columns=-1, /tikz/every even column/.append style={column sep=0.5cm}},
   legend cell align=left, legend to name=leyendapii, legend image code/.code={\draw[#1] (0cm,-0.1cm) rectangle (0.3cm,0.12cm);},
 ]
 """
