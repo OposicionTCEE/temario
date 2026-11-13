@@ -114,7 +114,7 @@ def main():
     # anclas del nodo (el texto queda al lado contrario del punto)
     etiquetas = {1961: "south east", 1965: "north east", 1969: "east",
                  1971: "south east", 1975: "south west", 1979: "east",
-                 1980: "south west", 1983: "north west", 1985: "north"}
+                 1980: "south west", 1983: "south west", 1985: "north"}
     nodos = []
     for a, pi, u in datos:
         if a in etiquetas:
