@@ -140,7 +140,6 @@ def fig_pii(comp, total):
         pts = " ".join("(%s,%.1f)" % (k, comp[a][k]) for k, _ in CATEG)
         t += "\\addplot[fill=%s, draw=black!70, line width=0.3pt] coordinates {%s};\n" % (rellenos[a], pts)
         t += "\\addlegendentry{%d (PII total: $%s\\%%$)}\n" % (a, coma(total[a]))
-    t += "\\draw[black!60] (rel axis cs:0,0) -- (rel axis cs:1,0);\n" if False else ""
     t += "\\end{axis}\n\\node[anchor=north] at (current bounding box.south) {\\pgfplotslegendfromname{leyendapii}};\n\\end{tikzpicture}\n"
     open(os.path.join(IMG, "anx_pii_instrumentos.tikz"), "w", encoding="utf-8").write(t)
 
