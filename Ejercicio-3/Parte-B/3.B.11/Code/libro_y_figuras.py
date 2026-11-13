@@ -207,7 +207,7 @@ def main():
 
     # --- Figura 2
     pii = leer_estat(carpeta, "pii.json")
-    reservas = {int(a): v for a, v in filtra(leer_estat(carpeta, "reservas.json"), sector10="S121").items()}
+    reservas = {int(a): v for a, v in filtra(leer_estat(carpeta, "reservas.json"), sector10="S121", sectpart="S1").items()}
     item = lambda it: {int(a): v for a, v in filtra(pii, bop_item=it).items()}
     tot, idir, acc, deu, der, oin = item("FA"), item("FA__D__F"), item("FA__P__F5"), item("FA__P__F3"), item("FA__F__F7"), item("FA__O__F")
     comp, total = {}, {}
