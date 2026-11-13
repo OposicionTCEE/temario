@@ -145,7 +145,7 @@ def main():
 \addplot[black, line width=0.7pt, mark=*, mark size=1.1pt] coordinates { %%S60%% };
 \addlegendentry{1960-1969}
 \addplot[blue!55!black, line width=0.7pt, mark=*, mark size=1.1pt] coordinates { %%S70%% };
-\addlegendentry{1970-1985}
+\addlegendentry{1969-1985}
 %%NODOS%%
 \node[anchor=west, align=left, font=\scriptsize, gray!25!black] at (axis cs:3.15,12.4)
   {en los sesenta, menos paro se pagaba\\con algo más de inflación};
