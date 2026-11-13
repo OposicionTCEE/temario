@@ -98,7 +98,7 @@ def fig_flujos(pas_priv, pas_bde, act, neto):
     t += "\\node[font=\\scriptsize, black!60, anchor=north, align=center, inner sep=1.5pt] at (axis cs:2011.5,%d) {crisis de\\\\ la deuda};\n" % ymax
     t += "\\draw[black!50] (axis cs:1998.5,0) -- (axis cs:2025.5,0);\n"
     t += "\\addplot[ybar, bar width=5pt, fill=black!25, draw=none, area legend] coordinates {%s};\n" % coordenadas(neto, 1)
-    t += "\\addlegendentry{Saldo de la cuenta financiera ($FA$)}\n"
+    t += "\\addlegendentry{Saldo de la cuenta financiera ($CF$)}\n"
     t += "\\addplot[black, line width=1.2pt] coordinates {%s};\n" % coordenadas(pas_priv, 1)
     t += "\\addlegendentry{Entradas: pasivos frente a no residentes, sin el Banco de Espa\\~na}\n"
     t += "\\addplot[black, dashed, line width=1.1pt] coordinates {%s};\n" % coordenadas(pas_bde, 1)
