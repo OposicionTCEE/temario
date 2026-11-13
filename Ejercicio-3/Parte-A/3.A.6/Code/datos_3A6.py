@@ -111,9 +111,10 @@ def main():
     def coords(desde, hasta):
         return " ".join(f"({u:.2f},{pi:.2f})" for a, pi, u in datos if desde <= a <= hasta)
 
-    etiquetas = {1961: "above left", 1965: "below left", 1969: "left",
-                 1971: "above left", 1975: "above right", 1979: "left",
-                 1980: "above right", 1983: "below right", 1985: "below"}
+    # anclas del nodo (el texto queda al lado contrario del punto)
+    etiquetas = {1961: "south east", 1965: "north east", 1969: "east",
+                 1971: "south east", 1975: "south west", 1979: "east",
+                 1980: "south west", 1983: "north west", 1985: "north"}
     nodos = []
     for a, pi, u in datos:
         if a in etiquetas:
