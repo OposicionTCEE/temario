@@ -116,7 +116,7 @@ def main():
     for cod, (desc, uni, frec) in SERIES.items():
         fuentes.append((cod, desc, uni, frec, FRED + cod, FECHA_DESCARGA))
     escribir_xlsx(os.path.join(CODE, "datos_3A7.xlsx"),
-                  {"series": filas_series, "volatilidad": filas_vol, "fuentes": fuentes})
+                  [("series", filas_series), ("volatilidad", filas_vol), ("fuentes", fuentes)])
 
     # ---- figura ----
     def coords(serie):
