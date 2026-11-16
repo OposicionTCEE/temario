@@ -15,9 +15,9 @@ Fuente de las rúbricas: FMI (2009), cap. 10 a 12; SEC 2010 (sucesión de cuenta
 import os
 import sys
 
-ANCHO = 14.0          # ancho total de la T (cm)
+ANCHO = 15.6          # ancho total de la T (cm), el del texto
 COL = ANCHO / 2       # ancho de cada lado
-FILA = 0.47           # alto de una fila (cm)
+FILA = 0.53           # alto de una fila (cm)
 SANGRIA = r'\hspace*{1em}'
 
 # Cada cuenta: título, saldo que arrastra de la anterior (o None), anotaciones de cada lado y saldo con que se cierra.
@@ -100,7 +100,7 @@ def figura(nombre, tramos, comentario):
         f'% {comentario}',
         '% Generada por Code/cuentas_T.py (no editar a mano). Rúbricas agregadas, en letras; fuente: FMI (2009); SEC 2010.',
         r'\begin{tikzpicture}[',
-        r'  font=\scriptsize,',
+        r'  font=\footnotesize,',
         r'  >={Stealth[length=1.8mm]},',
         r'  every node/.append style={execute at begin node={\hyphenpenalty=10000\exhyphenpenalty=10000}},',
         rf'  ent/.style={{anchor=west, align=left, text width={COL - 0.35:.2f}cm, inner sep=1.5pt}},',
@@ -111,10 +111,10 @@ def figura(nombre, tramos, comentario):
     ]
     # Cabecera de la T
     lineas += [
-        rf'\node[font=\footnotesize\bfseries] at ({COL / 2:.2f},0.62) {{Débitos}};',
-        rf'\node[font=\footnotesize\bfseries] at ({COL + COL / 2:.2f},0.62) {{Créditos}};',
-        rf'\node[text=black!60, align=center] at ({COL / 2:.2f},0.25) {{importaciones, pagos y adquisición neta de activos}};',
-        rf'\node[text=black!60, align=center] at ({COL + COL / 2:.2f},0.25) {{exportaciones, ingresos y contracción neta de pasivos}};',
+        rf'\node[font=\small\bfseries] at ({COL / 2:.2f},0.66) {{Débitos}};',
+        rf'\node[font=\small\bfseries] at ({COL + COL / 2:.2f},0.66) {{Créditos}};',
+        rf'\node[text=black!60, align=center, font=\scriptsize] at ({COL / 2:.2f},0.25) {{importaciones, pagos y adquisición neta de activos}};',
+        rf'\node[text=black!60, align=center, font=\scriptsize] at ({COL + COL / 2:.2f},0.25) {{exportaciones, ingresos y contracción neta de pasivos}};',
         rf'\draw[thick] (0,0) -- ({ANCHO:.2f},0);',
     ]
     y = 0.0
@@ -152,7 +152,7 @@ def figura(nombre, tramos, comentario):
             pie = c['pie']
     lineas.append(rf'\draw[thick] ({COL:.2f},0) -- ({COL:.2f},{y:.3f});')
     if any(CUENTAS[cl].get('pie') and not g for cl, g in tramos):
-        lineas.append(rf'\node[font=\footnotesize] at ({COL:.2f},{y - 0.45:.3f}) {{{pie}}};')
+        lineas.append(rf'\node[font=\small] at ({COL:.2f},{y - 0.5:.3f}) {{{pie}}};')
     lineas.append(r'\end{tikzpicture}%')
     return '\n'.join(lineas) + '\n'
 
