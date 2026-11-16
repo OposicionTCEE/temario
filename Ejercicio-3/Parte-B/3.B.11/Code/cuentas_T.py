@@ -143,7 +143,7 @@ def figura(nombre, tramos, comentario):
                                    negrita=tipo in ('titulo', 'saldo'), cursiva=(tipo == 'arrastre')))
         # Flecha del saldo anterior a su anotación en esta cuenta
         if saldo_previo and c['arrastre']:
-            lineas.append(rf'\draw[arr] ({saldo_previo}.east) -- ++(0.12,0) |- (C{k}.west);')
+            lineas.append(rf'\draw[arr] ({saldo_previo}.east) to[out=0, in=180] (C{k}.west);')
         saldo_previo = f'S{k}' if c.get('saldo') else None
         y -= FILA * filas + 0.16
         if c.get('pie') and not gris:
