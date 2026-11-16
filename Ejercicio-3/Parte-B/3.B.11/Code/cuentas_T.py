@@ -83,7 +83,8 @@ FIGURAS = [
 
 
 def nodo(nombre, x, y, texto, gris, negrita=False, cursiva=False):
-    estilo = ['ent']
+    # Los saldos y sus arrastres llevan ancho natural, para que la flecha una el final de uno con el principio del otro
+    estilo = ['ent' if not nombre else 'sal']
     if gris:
         estilo.append('vis')
     if negrita:
@@ -103,6 +104,7 @@ def figura(nombre, tramos, comentario):
         r'  >={Stealth[length=1.8mm]},',
         r'  every node/.append style={execute at begin node={\hyphenpenalty=10000\exhyphenpenalty=10000}},',
         rf'  ent/.style={{anchor=west, align=left, text width={COL - 0.35:.2f}cm, inner sep=1.5pt}},',
+        r'  sal/.style={anchor=west, align=left, inner sep=1.5pt},',
         r'  vis/.style={text=black!45},',
         r'  arr/.style={->, thick, black!55, rounded corners=2pt},',
         ']',
