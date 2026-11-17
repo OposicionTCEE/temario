@@ -100,7 +100,7 @@ def nodo(nombre, x, y, texto, gris, negrita=False, cursiva=False):
     return f'\\node[{", ".join(estilo)}]{nom} at ({x:.2f},{y:.3f}) {{{texto}}};'
 
 
-def figura(nombre, tramos, comentario):
+def figura(nombre, tramos, comentario, solo_saldos=False):
     lineas = [
         f'% {comentario}',
         '% Generada por Code/cuentas_T.py (no editar a mano). Rúbricas agregadas, en letras; fuente: FMI (2009); SEC 2010.',
