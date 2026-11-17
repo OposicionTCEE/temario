@@ -4,8 +4,8 @@ cuentas en T del bloque II (Code/cuentas_T.py): una T continua con bloques apila
 
 En un balance, los activos exteriores van a la izquierda y los pasivos exteriores a la derecha, y la posición neta,
 PII = AF - P, cierra cada bloque en el lado derecho (como el patrimonio neto de un balance).
-  (b3_pii_construccion, el balance de la PII en T, se retiró el 17/11/2026: el 4.1.1 usa la cascada b3_pii_cascada.tikz,
-  hecha a mano.)
+  (b3_pii_construccion, el balance de la PII en T, se retiró el 17/11/2026: el 4.1.1 usa el esquema
+  b3_pii_conciliacion.tikz, hecho a mano con el estilo de b1_cuentas.)
   - b3_pii_composicion: la misma PII deudora (a < p) con dos composiciones, antes y después de una depreciación de la
     moneda nacional en una proporción delta: (a) pasivos en capital y en moneda nacional, la PII mejora;
     (b) pasivos en deuda a corto plazo y en divisas, la PII empeora.
