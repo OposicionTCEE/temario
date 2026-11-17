@@ -66,16 +66,19 @@ CUENTAS = {
     ),
 }
 
-# Figuras: (nombre, [(cuenta, gris)], comentario)
+# Figuras: (nombre, [(cuenta, gris)], comentario). Desde el 17/11/2026 (nota del usuario), cada figura del cuerpo
+# muestra solo su cuenta, que se abre con el saldo que recibe de la anterior (en cursiva), sin la cuenta anterior en gris.
 FIGURAS = [
     ('b2_cuenta_bienes', [('bienes', False)],
      'Cuerpo, 3.1.1: la cuenta de bienes y servicios en T; su saldo, XN, abre la cuenta siguiente.'),
-    ('b2_cuenta_rentas', [('bienes', True), ('primaria', False), ('secundaria', False)],
-     'Cuerpo, 3.2.1: bienes y servicios (en gris) -> renta primaria -> renta secundaria; el último saldo es el corriente.'),
-    ('b2_cuenta_capital', [('secundaria', True), ('capital', False)],
-     'Cuerpo, 3.3.1: la renta secundaria (en gris) cierra el saldo corriente, que abre la cuenta de capital hasta la CNF.'),
-    ('b2_cuenta_financiera', [('capital', True), ('financiera', False)],
-     'Cuerpo, 3.4.1: la CNF (cuenta de capital, en gris) abre la cuenta financiera, que cierra con los errores y omisiones.'),
+    ('b2_cuenta_primaria', [('primaria', False)],
+     'Cuerpo, 3.2.1: la cuenta de renta primaria; la abre el saldo de bienes y servicios y la cierra XN + RPN.'),
+    ('b2_cuenta_secundaria', [('secundaria', False)],
+     'Cuerpo, 3.2.1: la cuenta de renta secundaria; la abre XN + RPN y la cierra el saldo de la cuenta corriente.'),
+    ('b2_cuenta_capital', [('capital', False)],
+     'Cuerpo, 3.3.1: la cuenta de capital; la abre el saldo corriente y la cierra la capacidad o necesidad de financiación.'),
+    ('b2_cuenta_financiera', [('financiera', False)],
+     'Cuerpo, 3.4.2: la cuenta financiera; la abre la CNF y la cierran los errores y omisiones.'),
     ('b2_sucesion', [('bienes', False), ('primaria', False), ('secundaria', False), ('capital', False),
                      ('financiera', False)],
      'Cuerpo, 3.4.3: la sucesión completa (puesta en común); cada saldo cierra una cuenta y abre la siguiente.'),
