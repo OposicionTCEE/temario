@@ -4,13 +4,13 @@ cuentas en T del bloque II (Code/cuentas_T.py): una T continua con bloques apila
 
 En un balance, los activos exteriores van a la izquierda y los pasivos exteriores a la derecha, y la posición neta,
 PII = AF - P, cierra cada bloque en el lado derecho (como el patrimonio neto de un balance).
-  - b3_pii_construccion: balance al final de t-1 + variaciones del periodo (transacciones, revalorizaciones y otros
-    cambios del volumen) = balance al final de t; las dos posiciones netas de arriba se suman en la de abajo.
+  (b3_pii_construccion, el balance de la PII en T, se retiró el 17/11/2026: el 4.1.1 usa la cascada b3_pii_cascada.tikz,
+  hecha a mano.)
   - b3_pii_composicion: la misma PII deudora (a < p) con dos composiciones, antes y después de una depreciación de la
     moneda nacional en una proporción delta: (a) pasivos en capital y en moneda nacional, la PII mejora;
     (b) pasivos en deuda a corto plazo y en divisas, la PII empeora.
 Uso, desde la carpeta del tema (y registrar en la MISMA orden):
-    python3 -I -B Code/balances_T.py && for f in b3_pii_construccion b3_pii_composicion; do bash Code/generar_figura.sh $f; done
+    python3 -I -B Code/balances_T.py && bash Code/generar_figura.sh b3_pii_composicion
 Fuente: FMI (2009), cap. 7 (conciliación de la PII); SEC 2010 (balances).
 """
 import os
@@ -70,38 +70,6 @@ def inicio(comentario, ancho_col):
     ]
 
 
-def construccion():
-    ancho = 15.6
-    lineas = inicio('Cuerpo, 4.1.1: del balance inicial al final; la posición neta final es la inicial más las '
-                    'transacciones (CF), las revalorizaciones (RV) y los otros cambios del volumen (OV).', ancho / 2)
-    cabecera(lineas, 0, ancho, 'Activos exteriores', 'Pasivos exteriores y posición neta')
-    lista = [
-        dict(titulo=r'Balance al final de $t-1$',
-             izq=[r'Activos exteriores, $AF_{t-1}$'],
-             der=[r'Pasivos exteriores, $P_{t-1}$'],
-             saldo=r'Posición neta, $PII_{t-1}=AF_{t-1}-P_{t-1}$'),
-        dict(titulo=r'Variaciones del periodo $t$',
-             izq=[r'Transacciones: adquisición neta, $\Delta AF_t$', 'Revalorizaciones de los activos',
-                  'Otros cambios del volumen de los activos'],
-             der=[r'Transacciones: contracción neta, $\Delta P_t$', 'Revalorizaciones de los pasivos',
-                  'Otros cambios del volumen de los pasivos'],
-             saldo=r'Variación de la posición, $CF_t+RV_t+OV_t$'),
-        dict(titulo=r'Balance al final de $t$',
-             izq=[r'Activos exteriores, $AF_t$'],
-             der=[r'Pasivos exteriores, $P_t$'],
-             saldo=r'Posición neta, $PII_t=PII_{t-1}+CF_t+RV_t+OV_t$'),
-    ]
-    y, s = bloques(lineas, 0, ancho, lista, 'S')
-    xr = ancho + 0.35
-    lineas += [
-        rf'\coordinate (X) at ({xr:.2f},0);',
-        rf'\draw[arr] ({s[0]}.east) -- ({s[0]}.east -| X) |- ({s[2]}.east);',
-        rf'\draw[thick, black!55] ({s[1]}.east) -- ({s[1]}.east -| X);',
-        rf'\node[font=\small, fill=white, inner sep=1pt] at ({s[1]}.east -| X) {{$+$}};',
-        r'\end{tikzpicture}%',
-    ]
-    return '\n'.join(lineas) + '\n'
-
 
 def composicion():
     ancho = 7.3
@@ -133,7 +101,7 @@ def composicion():
 
 def main():
     tema = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    for nombre, f in (('b3_pii_construccion', construccion), ('b3_pii_composicion', composicion)):
+    for nombre, f in (('b3_pii_composicion', composicion),):
         with open(os.path.join(tema, 'Img', nombre + '.tikz'), 'w', encoding='utf-8') as fh:
             fh.write(f())
         print('Escrito Img/' + nombre + '.tikz')
