@@ -6,10 +6,11 @@ se cierra con su saldo en el lado de los débitos y ese saldo abre la cuenta sig
 (una flecha une las dos anotaciones). La cuenta financiera se cierra con los errores y omisiones:
 dAF = dP + CNF + EO, es decir, CF = dAF - dP = CNF + EO.
 
-Cada figura del cuerpo es un tramo de esa T (la cuenta anterior en gris y la nueva en negro) y la última es la T completa.
+Cada figura del cuerpo es una cuenta de esa T, que se abre con el saldo que recibe de la anterior (en cursiva), y la
+última es la T completa.
 Uso, desde la carpeta del tema:
     python3 -I -B Code/cuentas_T.py
-    for f in b2_cuenta_bienes b2_cuenta_rentas b2_cuenta_capital b2_cuenta_financiera b2_sucesion; do bash Code/generar_figura.sh $f; done
+    for f in b2_cuenta_bienes b2_cuenta_primaria b2_cuenta_secundaria b2_cuenta_capital b2_cuenta_financiera b2_sucesion; do bash Code/generar_figura.sh $f; done
 Fuente de las rúbricas: FMI (2009), cap. 10 a 12; SEC 2010 (sucesión de cuentas).
 """
 import os
