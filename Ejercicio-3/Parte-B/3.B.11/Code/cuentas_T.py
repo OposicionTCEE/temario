@@ -171,10 +171,10 @@ def figura(nombre, tramos, comentario, solo_saldos=False):
 
 def main():
     tema = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    for nombre, tramos, comentario in FIGURAS:
+    for nombre, tramos, comentario, *opciones in FIGURAS:
         ruta = os.path.join(tema, 'Img', nombre + '.tikz')
         with open(ruta, 'w', encoding='utf-8') as f:
-            f.write(figura(nombre, tramos, comentario))
+            f.write(figura(nombre, tramos, comentario, solo_saldos=bool(opciones and opciones[0])))
         print('Escrito Img/' + nombre + '.tikz')
 
 
