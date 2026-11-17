@@ -125,7 +125,14 @@ def figura(nombre, tramos, comentario, solo_saldos=False):
     y = 0.0
     saldo_previo = None
     for k, (clave, gris) in enumerate(tramos):
-        c = CUENTAS[clave]
+        c = dict(CUENTAS[clave])
+        if solo_saldos:
+            # Sucesión del cierre (3.4.4): sin las anotaciones intermedias; cada cuenta conserva el saldo que recibe y el
+            # saldo con que se cierra, y la financiera, su saldo CF frente a la CNF y los errores y omisiones.
+            c['izq'], c['der'] = [], []
+            if clave == 'financiera':
+                c['saldo'] = r'Saldo de la cuenta financiera, $CF=\Delta AF-\Delta P$'
+                c['pie'] = r'$CF=CNF+EO$'
         if k > 0:
             col = 'black!30' if gris else 'black!55'
             lineas.append(rf'\draw[{col}] (0,{y:.3f}) -- ({ANCHO:.2f},{y:.3f});')
