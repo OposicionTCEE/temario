@@ -82,7 +82,8 @@ FIGURAS = [
      'Cuerpo, 3.4.2: la cuenta financiera; la abre la CNF y la cierran los errores y omisiones.'),
     ('b2_sucesion', [('bienes', False), ('primaria', False), ('secundaria', False), ('capital', False),
                      ('financiera', False)],
-     'Cuerpo, 3.4.3: la sucesión completa (puesta en común); cada saldo cierra una cuenta y abre la siguiente.'),
+     'Cuerpo, 3.4.4: la sucesión solo con los saldos (17/11/2026, nota del usuario): cada saldo cierra su cuenta en los '
+     'débitos y abre la siguiente en los créditos; la cuenta financiera, CF frente a CNF + EO.', True),
 ]
 
 
