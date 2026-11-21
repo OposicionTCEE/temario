@@ -365,17 +365,926 @@
 % Contador para las referencias
 \newcounter{myref}
 % Cabecera de la bibliografía, entra en el índice 'stc'
-\newcommand{\MyBibliography
+\newcommand{\MyBibliography}{%
+  \clearpage
+  \phantomsection
+  {\centering\bfseries\Large Bibliografía y referencias\par}%
+  \medskip
+  \addcontentsline{stc}{section}{Bibliografía y referencias}%
+  \setcounter{myref}{0}%
+}
+\newcommand{\MyBibItem}[4]{%
+  \refstepcounter{myref}%
+  \noindent[\themyref]\ #1.\ \emph{#2}. #3. #4\par
+}
+\makeatother
+
+%--------- Establecer cuatro niveles de índice --------%
+    \setcounter{tocdepth}{4}   
+    \setcounter{secnumdepth}{4}% numera hasta \paragraph
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\makeatletter
+
+    %--------- Interlineado Global --------%
+    \edef\GlobalBaseLineStretch{\baselinestretch}
+    
+    %--------- Espaciado de seccinones --------%
+    \renewcommand\section{\@startsection{section}
+      {1}{\z@}
+      {2.5ex \@plus 1ex \@minus .2ex} % espacio antes
+      {1.5ex \@plus .2ex}             % espacio después
+      {\normalfont\Large\bfseries}    % formato del título
+    }
+    \renewcommand\subsection{\@startsection{subsection}{2}{\z@}
+      {3ex \@plus 0.8ex \@minus .2ex}
+      {1.5ex \@plus .2ex}
+      {\normalfont\large\bfseries}
+    }
+    \renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}
+      {3ex \@plus 0.5ex \@minus .2ex}
+      {1ex \@plus .2ex}
+      {\normalfont\normalsize\bfseries}
+    }
+    \renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+    {-2ex \@plus -0.5ex \@minus -.2ex}% espacio antes
+    {0.8ex \@plus .2ex}% espacio después
+    {\normalfont\normalsize\itshape}}% ← cursiva en lugar de negrita
+
+    %--------- Ecuaciones --------%   
+    % Variables globales para almacenar títulos y notas
+    \gdef\leq@current@section{}%
+    \gdef\leq@current@subsection{}%
+    \gdef\leq@last@printed@section{}%
+    \gdef\leq@last@printed@subsection{}%
+    
+    % Comando para añadir nota (invisible en el cuerpo)
+    \newcommand{\eqnote}[1]{%
+      \addcontentsline{leq}{leqnote}{#1}%
+    }
+    
+    % Comando para ecuaciones
+    \newcommand{\eqblock}[2]{%
+      % Verificar si necesitamos imprimir el título de sección
+      \ifx\leq@current@section\leq@last@printed@section\else
+        \addcontentsline{leq}{leqsection}{\leq@current@section}%
+        \global\let\leq@last@printed@section\leq@current@section
+        \gdef\leq@last@printed@subsection{}% Reset subsección al cambiar sección
+      \fi
+      % Verificar si necesitamos imprimir el título de subsección
+      \ifx\leq@current@subsection\leq@last@printed@subsection\else
+        \ifx\leq@current@subsection\@empty\else
+          \addcontentsline{leq}{leqsubsection}{\leq@current@subsection}%
+          \global\let\leq@last@printed@subsection\leq@current@subsection
+        \fi
+      \fi
+      % Ecuación
+      \refstepcounter{eqnum}%
+      \begin{equation*}
+        #1\tag{E.\theeqnum}
+      \end{equation*}%
+      \addcontentsline{leq}{leqt}{[E.\theeqnum] -- #2}%
+      \addcontentsline{leq}{leqm}{#1}%
+    }
+    
+    %%% ----- Índice de ecuaciones ----------%%%
+    % Tamaño para []
+    \newcommand{\leqIndexFont}{\normalsize}
+    \newcommand{\leqTitleFont}{\tiny}
+    \newcommand{\leqNoteFont}{\tiny}
+    % Cabecera de sección 
+    \newcommand*\l@leqsection[2]{%
+      \addvspace{25pt}% Mayor separación antes de nueva sección
+      \noindent\leqIndexFont
+      \makebox[\linewidth]{\rule{.38\linewidth}{0.4pt}\ \ \textbf{  \MakeUppercase{#1}}\ \ \rule{.38\linewidth}{0.4pt}}%
+      \par\vspace{-10pt}
+    }
+    % Cabecera de subsección 
+    \newcommand*\l@leqsubsection[2]{%
+      \par\addvspace{15pt}%
+      \noindent\leqIndexFont #1
+      \par\vspace{-7pt}
+    }
+    % Título de ecuación 
+    \newcommand*\l@leqt[2]{%
+    \par\addvspace{10pt}%
+      \par\noindent\leqTitleFont #1\par
+    }
+    % Miniatura de ecuación
+    \newcommand*\l@leqm[2]{%
+      \vspace{0.3\baselineskip}%
+      \par\scriptsize\noindent\hspace*{1.5em}\(#1\)\par%
+    }
+    % Nota de ecuación 
+    \newcommand*\l@leqnote[2]{%
+      \vspace{0.2\baselineskip}%
+      \par\noindent\leqNoteFont\hspace*{1.5em}\textbf{Nota.--} #1\par\vspace{0.5\baselineskip}%
+    }
+    % Generación del índice
+    \newcommand{\mylistofequations}{%
+      \clearpage
+      \phantomsection
+      % Título visual de la lista (ajústalo a tu gusto):
+      {\centering\bfseries\Large Índice de ecuaciones\par}
+      % Entrada en nuestro índice 'stc':
+      \addcontentsline{stc}{section}{Índice de ecuaciones}%
+      % Llamada a tu lista real (usa el nombre exacto de tu macro):
+      \@starttoc{leq}%
+    }
+    
+    %--------- Captura de títulos de sección --------%
+    \let\leq@original@section\section
+    \let\leq@original@subsection\subsection
+    % Flag para saber si estamos en una sección asterisco
+    \newif\ifLeqStarSection
+    \LeqStarSectionfalse
+    
+    % Redefinir \section CON CONTROL DE ASTERISCO
+    \renewcommand{\section}{%
+      \@ifstar{\leq@section@star}{\@dblarg\leq@section@nostar}%
+    }
+    \def\leq@section@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@section{#1}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@section@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@section{#2}%
+      \gdef\leq@current@subsection{}%
+      \leq@original@section[#1]{#2}%
+    }
+    % Redefinir \subsection
+    \renewcommand{\subsection}{%
+      \@ifstar{\leq@subsection@star}{\@dblarg\leq@subsection@nostar}%
+    }
+    \def\leq@subsection@star#1{%
+      \global\LeqStarSectiontrue
+      \gdef\leq@current@subsection{#1}%
+      \leq@original@subsection*{#1}%
+      \global\LeqStarSectionfalse
+    }
+    \def\leq@subsection@nostar[#1]#2{%
+      \global\LeqStarSectionfalse
+      \gdef\leq@current@subsection{#2}%
+      \leq@original@subsection[#1]{#2}%
+    }
+
+    % ----- Restauración de valores Globales de estilo ----------%
+    % Flags
+    \newif\ifInFootnote
+    \InFootnotefalse
+    \pretocmd{\@footnotetext}{\InFootnotetrue}{}{}
+    \apptocmd{\@footnotetext}{\InFootnotefalse}{}{}
+    % Profundidad de listas (soporta anidadas)
+    \newcount\MyListDepth \MyListDepth=0
+    \AtBeginEnvironment{la}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{la}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{lnum}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{lnum}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{itemize}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{itemize}{\advance\MyListDepth by -1}
+    \AtBeginEnvironment{enumerate}{\advance\MyListDepth by 1}
+    \AfterEndEnvironment{enumerate}{\advance\MyListDepth by -1}
+    % Restauración diferida: hazlo al INICIO del próximo párrafo real
+    \newif\if@pendingRestore
+    \@pendingRestorefalse
+    \newcommand{\RequestRestore}{\global\@pendingRestoretrue}
+    \everypar{%
+      \if@pendingRestore
+        \global\@pendingRestorefalse
+        \ifInFootnote\else
+          \ifnum\MyListDepth=0
+            \setlength{\parskip}{\GlobalParskip}%
+            \setstretch{\GlobalBaseLineStretch}%
+          \fi
+        \fi
+      \fi
+    }
+    % Al final de bloques:
+    \AfterEndEnvironment{equation}{\RequestRestore}
+    \AfterEndEnvironment{equation*}{\RequestRestore}
+    \AfterEndEnvironment{la}{\RequestRestore}
+    \AfterEndEnvironment{lnum}{\RequestRestore}
+    % Al final de macros:
+    \apptocmd{\eqblock}{\RequestRestore}{}{}
+    
+\makeatother
+
+% ===================== ToC propio con 4 niveles (único bloque) =====================
+\makeatletter
+
+% --- Escritores: añadimos una línea al .stc en cada cabecera numerada ---
+% Guardamos las versiones actuales para llamar al comportamiento normal
+\let\MyTOC@orig@section\section
+\let\MyTOC@orig@subsection\subsection
+\let\MyTOC@orig@subsubsection\subsubsection
+\let\MyTOC@orig@paragraph\paragraph
+
+% SECTION
+\renewcommand{\section}{%
+  \@ifstar{\MyTOC@section@star}{\@dblarg\MyTOC@section@nostar}%
+}
+\def\MyTOC@section@star#1{%
+  \MyTOC@orig@section*{#1}% sin entrada al .stc
+}
+\def\MyTOC@section@nostar[#1]#2{%
+  \MyTOC@orig@section[{#1}]{#2}% comportamiento normal (escribe al .toc)
+  % Escribimos también nuestra línea al .stc (texto con \numberline)
+  \addcontentsline{stc}{section}{\protect\numberline{\thesection}#2}%
+}
+
+% SUBSECTION
+\renewcommand{\subsection}{%
+  \@ifstar{\MyTOC@subsection@star}{\@dblarg\MyTOC@subsection@nostar}%
+}
+\def\MyTOC@subsection@star#1{%
+  \MyTOC@orig@subsection*{#1}%
+}
+\def\MyTOC@subsection@nostar[#1]#2{%
+  \MyTOC@orig@subsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsection}{\protect\numberline{\thesubsection}#2}%
+}
+
+% SUBSUBSECTION
+\renewcommand{\subsubsection}{%
+  \@ifstar{\MyTOC@subsubsection@star}{\@dblarg\MyTOC@subsubsection@nostar}%
+}
+\def\MyTOC@subsubsection@star#1{%
+  \MyTOC@orig@subsubsection*{#1}%
+}
+\def\MyTOC@subsubsection@nostar[#1]#2{%
+  \MyTOC@orig@subsubsection[{#1}]{#2}%
+  \addcontentsline{stc}{subsubsection}{\protect\numberline{\thesubsubsection}#2}%
+}
+
+% PARAGRAPH
+\renewcommand{\paragraph}{%
+  \@ifstar{\MyTOC@paragraph@star}{\@dblarg\MyTOC@paragraph@nostar}%
+}
+\def\MyTOC@paragraph@star#1{%
+  \MyTOC@orig@paragraph*{#1}%
+}
+\def\MyTOC@paragraph@nostar[#1]#2{%
+  \MyTOC@orig@paragraph[{#1}]{#2}%
+  % Si no numeras los \paragraph, cambia \theparagraph por texto plano sin \numberline
+  \addcontentsline{stc}{paragraph}{\protect\numberline{\theparagraph}#2}%
+}
+
+% --- Impresor del índice propio (lee el .stc) ---
+\newcommand{\MyTOC}{%
+  \par\bigskip
+  {\centering\bfseries\Large Índice de contenido\par}%
+  \medskip
+  \begingroup
+    \parindent=0pt\parskip=2pt
+    \@starttoc{stc}%
+  \endgroup
+}
+
+\makeatother
+% ===================== fin ToC propio =====================
+
+
+%%%%%%%%%%%%%%
+
+
+% --- Datos del tema ---
+\title{Coordinación internacional de Políticas Económicas\\
+\large Aspectos teóricos y prácticos. El G-20, la OCDE y otros foros internacionales}
+\author{Marcelo Ortega}
+\date{Marzo 2026}
+\newcommand{\TemaCode}{3B19}
+
+\oldtitle{
+    B.20. La coordinación internacional de las políticas macroeconómicas
+}
+\changerationale{
+    Se desplaza aquí parte del contenido del antiguo 36B, por estar más relacionado con este tema. Se busca por tanto un cierto equilibrio entre un enfoque económico por un lado, e institucional por otro.
+}
+
+\begin{document}
+
+
+\maketitle
+\changebox
+
+\newpage
+
+% --- Página de resumen y modificaciones ---
+\puntosclave{ %% Escribir puntos clave Apuntes CECO
+     De cara a la exposición, el opositor puede aligerar la parte de Teoría de Juegos, y ahondar en la de los organismos internacionales, que en esta versión del tema se explican sólo superficialmente. Esta estructura resulta del último cambio en los títulos del temario de la oposición; por tanto, se señala al opositor que se espera cumplir con dos objetivos diferenciados:
+     \begin{lnum}
+         \item Demostrar conocer con soltura la teoría de la economía abierta (de la cual éste es el último tema), y de macroeconomía (en especial el modelo de tres ecuaciones de la NEK); y,
+         \item Aplicar este conocimiento (así como la Teoría de Juegos) de manera aplicada al estudio de una cuestión de relevancia económica como es el diseño de instituciones internacionales.
+     \end{lnum}
+
+    De cara a profundizar más en el estudio de este tema, se recomienda, por un lado, profundizar en el análisis completo realizado por los profesores Corsetti y Pesenti, en el que se consideran distintas fonnas de modelizar la economía. Por otro lado, también es importante estar al día en cuanto a los avances en materia de coordinación de políticas económicas que se dan a nivel global, y tratar de aplicar la teoría de juegos a estas situaciones. Por último, es recomendable actualizar la evidencia empírica respecto a los beneficios de este proceso.
+    }
+\vspace{1cm}
+
+\modificaciones{
+    {\color{magenta}Esta nota es general y se aplica a todo el replanteamiento necesario que debemos darle a este tema. Buscamos: profundidad conceptual en el Tema y claridad expositiva en el cuerpo.
+
+    El Título del Tema es el siguiente: "Coordinación internacional de Políticas Económicas. Aspectos teóricos y prácticos. El G-20, la OCDE y otros foros internacionales"
+
+    Lo que te pido al trabajar este tema está claro: replantear, reorganizar, redeserrollar y reescribir TODO el contenido del cuerpo y anexos. Esta nota guía el enfoque del tema en su conjunto, así como el del Anexo. Debes partir de la premisa que la redacción actual del tema la considero un \textbf{auténtico caos}: se trata de un tema muy interesante y con una \textbf{capacidad evidente de permitir un constructo lógico}, que se ha reducido a una enumeración, lista de conceptos, sin hacerlos conexos ni entrar en su contenido intuitivo, conceptual-teórico, adoptando la redacción un enfoque eminentemente descriptivo: horrible. **Prefiero infinitas veces más reducir la "enumeración" de conceptos a una número reducido de ellos a través de los cuales presentar el tema de una forma constructiva, de principio a fin, que se atenga al contenido que debe ser objeto de este tema y que se puede ilustrar (acompañar la exposición gráficamente ilustraciones, gráficos, esquemas, etc.) y exponer de forma pedagógica, didáctica y amena; dejando la extensión profundísima del contenido, la profundidad analítica, las vertientes y diferentes dimensiones, etc. a los Anexos.**
+    
+    A continuación mis indicaciones básicas:
+    
+    * 1. En primer lugar, creo que la forma más conveniente de estructurar este tema es la siguiente. (Lo que sigue es una propuesta de estructura, sientete libre para criticarla si no la ves conveniente.)
+    1.1. \textbf{Primer bloque: (¿interrelación?)}. Este apartado tendría por objeto presentar las razones teórico-conceptuales por los que los países quedan interrelacionados, aunque no buscan activamente estarlo. Es decir, consiste en presentar el paso previo a la coordinación/cooperación: sin interrelación "natural" no hay razón para considerar que deba haber cooperación. De esta forma, identifico (aunque está sujeto a críticas), dos grandes campos en los que las acciones de un país/grupo/individuos desbordan sus límites de optimización y afectan a terceros ajenos a la elección: los efectos desbordamiento (en Política Monetaria, Fiscal pero también en fundamentos económicos) y las externalidades de riesgo (riesgo agregado > riesgo individual). Evidentemente, son dos ideas mentales que requieren una profunda labor de estructuración y desarrollo, pero creo que puede quedar perfectamente clara la justificación teórica-conceptual de la cooperación. 
+    Por tanto, la idea aquí es proporcionar una definición clara, lógica y coherente de cada concepto y fácil de ilustrar en la exposición. Si revisas otros temas, en particular los temas de economía internacional (comercio) de competencia imperfecta y los temas de tipo de cambio, podrás encontrar un montón de modelos o representaciones canónicas que permiten desarrollar fácilmente lo que se requiere. NOTA: los canales a través de los se integran/interaccionan las diferentes unidades políticas /centros de decisión son muchos, lo importante de este apartado es filtrar aquellas que se consideran más importantes y explicar bien por qué; dejando las demás a Anexos. 
+    1.2. \textbf{Segundo bloque: (¿por qué?)}. Este apartado es el siguiente paso natural y busca delimitar el objeto del tema proveyendo al lector/oyente de los elementos teórico-conceptuales que justifican sus límites. Tengo una idea, aunque es una idea al aire, pero que puede ser importante y permite ilustra muy bien el problema: coordinar no es cooperar; cooperar exige la voluntad y compromiso de todos los participantes para perseguir un objetivo óptimo para todos, de forma conjunta; coordinar, por el contrario, rebaja ese grado de colaboración y solo implica comprometerse a utilizar los medios menos dañinos para el resto al perseguir los propios objetivos. No sé si esto es cierto, creo que sí. 
+    En esencia, a lo que me refiero es que, tal y como se ha incidido en muchos de los temas de mercado/tipos de cambio y BP: en economía internacional, las ganancias de uno son las pérdidas de otro, y la única razón por la que asumirlas merece la pena es porque la apertura agranda más el tamaño del pastel económico mundial, pero no necesariamente el de uno mismo. Con esto en mente, lo que me parece muy importante es empezar estableciendo esta distinción, por ejemplo mostrando los dos resultados en términos de Teoría de Juegos: eco internacional como un dilema del prisionero el óptimo individual lleva a la no cooperación, el óptimo colectivo lleva a la cooperación (resultado mejor en conjunto), y, en tercer lugar, la coordinación lleva a un resultado intermedio, ni genera grandes resultados en términos conjuntos, ni genera grandes asimetrías en términos comparativos. Eso sí, la genera un sesgo contractivo perenne (tal y como KEYNES advirtió). Una vez delimitado el objeto del Tema, lo que debemos presentar es los problemas que genera la coordinación (los compromisos débiles), tal y como ahora mismo, sin distinción, se intena hacer en el Segundo Bloque: problemas de inconsistencia, free-rider, obstáculos políticos, económicos y de implementación, etc. Lo que debemos pensar es si también convendría distinguir entre la coordinación necesaria por razones de "efectos desbordamiento" y la coordinación necesaria por razones de "externalidades de riesgo" -> Yo creo que no, creo que es más sencillo explicarlo en abstracto y no se pierde ningún insight/intuición económica importante; además, recuperamos esa distinción en el tercer Bloque (por los diferentes organismos); de todas formas, valorar su conveniencia o no. 
+    1.3. \textbf{Tercer Bloque: Organismos: ...}. Este es el bloque más descriptivo: consiste en hacer una breve introducción/desarrollo/forma/resultados etc. de tres organismos de coordinación internacional de política económica que existen en la actualidad: G-20, OCDE, FSB y otros organismos. La forma en la que se debe exponer este último bloque queda a tu libre recomendación: puedes optar por segmentarlo por organismo, por temática, o por cualquier otro tipo de categorización. De hecho, investiga diferentes formas y utiliza aquella que consideres más acertada o la que esté más reconocido, útil. 
+    
+    Creo que por este camino puede ser una vía positiva, pero como dije al principio, está SUJETO A CRíTICA TOTAL. 
+
+    Con todo lo expuesto espero que:
+    1. Analices en profundidad el contenido actual de este tema. Una vez lo hayas hecho, profundices en fuentes para saber si se omiten conceptos importantes, enfoques diferentes, si existen deficiencias teórico-conceptuales, etc. con el fin de tener un contenido extremadamente profundo que de una visión completa del objeto del tema, bien a través del cuerpo, bien con la lectura de los anexos: el contenido actual es \textbf{manifiestamente insuficiente} en su desarrollo y extensión. 
+    2. Una vez identifiques todo el contenido que está y que debería estar, lleva a cabo una labor de priorización o filtraje para determinar que debería presentarse en el cuerpo y que debería formar únicamente parte de los Anexos. No sé yo con cuantos Anexos debería contar este Tema, dímelo tu infieriendolo de otros temas.
+    En cualquier caso, ten en cuenta que \textbf{la distribución anexo-cuerpo no es sustitutiva}, ni mucho menos, se espera que los anexos desarrollen lo que en el cuerpo debe reducirse a ""presenta"" con el fin de obtener un conocimiento real y profundo de estos que no se podría obtener con la lectura del cuerpo: en el cuerpo se reducen las vertientes, conceptos, etc. a aquellos que son "razonables" e "importantes", en el \textbf{anexo se presenta todo de principio a fin, desde el concepto más básico hasta el concepto más complejo,} ¿comprendes? La elaboración de los anexos no es una "nota de complemento", sino una herramienta que nos sirve para desarrollar de principio a fin un contenido y exponerlo en pronfudidad; deben ser (y son) un \textbf{Manual del objeto que trata}, con TODO su desarrollo formal-analítica, insights económicos, etc. 
+    3. Evidentemente, sientete libre para crear todas las ilustraciones y herramientas gráficas que consideres necesarias para exponer cualquier materia, cuando sea necesario. Asimismo, es imperativo que, las que haya, las regeneres tu debidamente contextualizadas y adaptadas, siempre que sean necesarias. Por otro lado, traer ilustraciones creadas para el Anexo al cuerpo es conveniente siempre y cuando puedan ser contextualizadas y presentadas de forma coherente, "recuperar directamente" no vale: es necesario que las ilustraciones se adecúen al contexto en el que se encuentran. Además, dentro de la forma en la que ilustrar el contenido del cuerpo, aunque en todo caso debe prevalecer la adecuidad y necesidad de que haya conexión entre la ilustración/gráfico y el entorno de desarrollo, sería agradable utilizar algunas bases comunes (donde se pueda) que permitan, en base a modificaciones parciales de alguna figura precedente, obtener el insight que se quiere dar en el apartado corriente; ¿comprendes? se trata, únicamente cuando resulte apropiado, de "economizas" nuestro tiempo utilizando bases gráficas comunes.
+    4. Respecto al contenido analítico del cuerpo del tema, porfavor, centrate únicamente en la presentación de las definiciones analíticas más importantes y, si es estríctamente necesario o muy didáctico, en su derivación. Te recomiendo que mires el tema 3.A.12, 3.A.11, 3.A.9, 3.A.10, 3.A.15, 3.B.4, 3.A.8, 3.B.23, 3.B.24, 3.B.13, 3.A.6, 3.A.7, 3.B.11, 3.B.12, 3.A.5 para ver qué es crucial. El resto, absolutamente completo en en toda su extensión y derivación, en anexos
+    4. Como siempre, sientete libre para consultar cualquier otro tema para inferir mis preferencias respecto a la forma de organizar y enfocar el contenido del cuerpo y anexos. En concreto, te recomiendo el 3.A.12, 3.A.11, 3.A.9, 3.A.10, 3.A.15, 3.B.4, 3.A.8, 3.B.23, 3.B.24, 3.B.13, 3.A.6, 3.A.7, 3.B.11, 3.B.12, 3.A.5 que son los que recientemente he modificado. 
+    5. En quinto lugar, aunque creo que está en las reglas, debes tener en cuenta que lo que no me gusta encontrar en el cuerpo son cosas "sueltas", desarrollos, estudios, etc. que se presentan como si fuera una "cosa de pasada". Me parecen estúpidas y son una fuente de confusión constante: cada cuestión debe ser presentada como respuesta al hilo que se presenta y vertebra toda la exposición, si algo solo tiene cabida "de pasada" y no genera valor para el hilo, porfavor, relegarlo a footnote con finalidad aclarativa o, si es una cuestión importante que no tiene cabida en el cuerpo, a Anexos, con el debido desarrollo en profundidad que permita comprenderlo.
+
+    Como te he dicho, para este tema en particular, hay muchos temas relacionados: HPE, todos los temas de exterior (en particular, los de cualquier aspecto de mercado cambiario/balance exterior, y tipos cambiarios son lo que he actualizado recientemente y tienen mucho contenido compartido). Revisa su contenido y mira a ver qué cuestiones importantes deberían ser presentadas aquí para obtener un conocimiento que atiende a economías de alcance en contenido, o a la inversa, precisamente más parecido a lo que buscamos: que permita entender mejor las cuestiones que se tratan en otras partes del temario. Lo importante para este Tema, sobretodo para el primer bloque, es hacer una buena recopilación de otros contenidos muy útiles para comprender su razón de ser. Es decir, el contenido nuevo de este tema se circunsribe al segundo y tercer bloque: los problemas de la cooperación/coordinación, y las intituciones de coordinación (aunque otras, como el FMI, el Banco Mundial o OMC estás ya en otros temas y deben ser mencionadas también, aunque sea de pasada en el último bloque); el primer bloque es el que fundamenta la necesidad y, por tanto, recopila los problemas, los ordena, organiza y muestra de forma didáctica. ¿Comprendes?
+
+    No te sientas limitado de criticar algo, critica todo aquello que veas conveniente, solo justifica por qué. Así eres un buen agente. 
+
+    Gracias. (No toques esta nota hasta el final.)
+    }
+
+    
+    }
+
+\newpage
+\MyTOC
+\newpage
+
+\mylistofequations
+\clearpage
+
+\MyListOfFigures
+\clearpage
+
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+
+\section{Introducción}
+
+
+
+\subsection{Contextualización}
+
+
+\subsubsection{Relevancia}
+
+
+
+
+\subsubsection{Problemática}
+
+
+
+\subsection{Estructura de la exposición}
+
+
+
+
+
+\clearpage
+\section{Interdependencia: ¿por qué las decisiones de un país limitan las de los demás?}
+\puntosclave{
+
+}
+
+Antes de preguntarse si los países deben coordinar sus políticas conviene preguntarse por qué habrían de hacerlo, y la respuesta no está en ninguna voluntad de cooperar, sino en una restricción que ninguno ha elegido. Una economía abierta no decide a solas el valor de sus variables: decide dentro de un marco que las decisiones ajenas delimitan, y ese marco se estrecha a medida que crecen el comercio y la movilidad del capital.
+
+Ese entrelazamiento llega por dos vías que conviene separar desde el principio porque son de naturaleza distinta. La primera son los \textbf{desbordamientos}, es decir, los canales por los que la política de un país altera el equilibrio de otro: unos reales, que viajan por la demanda y por el precio relativo al que compiten los bienes, y otros financieros, que viajan por el tipo de interés y por las condiciones de crédito. La segunda son las \textbf{externalidades de riesgo}, que no dependen de que nadie haya decidido nada y que consisten en que la fragilidad del conjunto es mayor que la suma de las fragilidades individuales.
+
+La tesis de este bloque es que las dos vías son un hecho y no una opción: \textbf{no existe la política económica puramente interna en una economía abierta}. Lo que no se sigue de ahí, y es el objeto del bloque siguiente, es que de ese hecho nazca sin más la obligación de coordinarse.
+
+\subsection{Apertura: ¿qué grados de libertad pierde una economía al abrirse?}
+
+Conviene empezar por lo más elemental, que es también lo más fácil de dar por sabido: qué cambia exactamente cuando una economía se abre. No cambia que los gobiernos tengan objetivos ni que dispongan de instrumentos; cambia que los instrumentos de unos entran en las restricciones de otros.
+
+\subsubsection{Las dos restricciones: ¿qué significa estar entrelazado?}
+
+El entrelazamiento no es un supuesto que un modelo pueda adoptar o descartar. Es la consecuencia de dos restricciones que se cumplen siempre que haya comercio y movilidad del capital.
+
+La primera es \textbf{contable}. Lo que un país produce se consume, se invierte, se gasta por el sector público o se vende fuera, de modo que su saldo exterior no es más que la distancia entre lo que produce y lo que gasta. Y como lo que uno vende al exterior otro lo compra, los saldos del mundo suman cero. De ahí se sigue el primer resultado del tema, y conviene enunciarlo sin rodeos: \textbf{cualquier medida que separe el gasto de un país de su producción tiene como contrapartida obligada una separación de signo contrario en otro}.
+
+La segunda es de \textbf{arbitraje}. Si el capital puede moverse, dos activos equivalentes no pueden rendir cosas distintas una vez medidas en la misma moneda, salvo por la compensación que los inversores exijan por el riesgo. Esa condición ata el tipo de interés propio al ajeno y al movimiento esperado del tipo de cambio.\footnote{%
+    Es la paridad descubierta de intereses, $i=i^{*}+\mathbb{E}_t[\Delta s_{t+1}]+\lambda$, donde $s$ es el logaritmo del tipo de cambio en cotización directa y $\lambda$ la prima de riesgo. Su deducción y su contraste están en [\authorfont{Ver Tema 3.B.13, Tema 3.B.14}]; su papel en el entrelazamiento, en [\authorfont{Ver Anexo \ref{anx:entrelazamiento}}].
+}
+
+La diferencia entre las dos importa y se mantendrá en todo el tema. La restricción contable hace que \textbf{la demanda de un país sea la renta de otro}; la de arbitraje hace que \textbf{el tipo de interés de uno sea el de los demás}. La primera es el origen del canal real y la segunda, del canal financiero.
+
+\subsubsection{El trilema: ¿hay alguna forma de no estar entrelazado?}
+
+La respuesta instintiva a lo anterior es buscar una escapatoria, y existe un marco bien conocido que parece ofrecerla: con libre movilidad del capital no se puede tener a la vez un tipo de cambio fijo y una política monetaria propia, de modo que hay que renunciar a uno de los tres vértices.
+
+\imagenfit{b1_trilema.pdf}{El trilema leído como tres formas de estar entrelazado}{Elaboración propia.}
+
+Conviene leer ese triángulo de una manera distinta de la habitual, porque de ella depende buena parte del tema. Cada lado no describe una forma de escapar, sino \textbf{una forma de estar entrelazado}. Quien fija su tipo de cambio renuncia a su política monetaria e \textbf{importa} la del país al que se ancla. Quien deja flotar conserva su política monetaria y \textbf{exporta} el ajuste por el tipo de cambio, porque cada decisión suya altera el precio relativo al que compiten los bienes de todos. Y quien cierra la cuenta financiera conserva los dos instrumentos, pero paga con la asignación del ahorro, que deja de buscar su mejor uso.
+
+De manera que \textbf{ningún vértice escapa de la interdependencia; lo único que se elige es su forma}. El desarrollo del trilema, sus contrastes y la discusión sobre su vigencia están en [\authorfont{Ver Tema 3.B.15}].
+
+\subsection{Canal real: ¿cómo traslada el tipo de cambio la demanda de un país a otro?}
+
+El primero de los canales es el más antiguo y el que ha generado los conflictos más ruidosos. Nace directamente de la restricción contable y se completa con el precio relativo que decide cómo se reparte el ajuste.
+
+\subsubsection{El espejo: ¿por qué el saldo de uno es el del otro cambiado de signo?}
+
+Si un país gasta por encima de lo que produce, alguien está gastando por debajo de lo que produce exactamente en la misma cuantía. No es una tendencia ni un resultado probable: es una identidad.
+
+\imagenfit{b1_espejo.pdf}{El saldo exterior como espejo y los dos desenlaces posibles}{Elaboración propia.}
+
+Lo que la identidad no determina es cómo absorbe el socio esa contrapartida, y ahí se juega todo. Caben dos ajustes. Si el que se mueve es su \textbf{producción}, el socio produce más para atender la demanda que le llega, y el desbordamiento es expansivo. Si el que se mueve es su \textbf{gasto}, que ha de contraerse para dejar sitio, el desbordamiento es contractivo. Qué margen se mueve lo decide el precio relativo entre los bienes de uno y otro, es decir, la relación real de intercambio.
+
+\subsubsection{Los dos desenlaces: ¿locomotora o empobrecer al vecino?}
+
+Los dos ajustes tienen nombre propio en la literatura y conviene fijarlos, porque el tema entero se mueve entre ellos.
+
+El primero es el \textbf{efecto locomotora}. Un país expande su gasto, importa más y arrastra consigo la producción de sus socios, que crecen sin haber gastado nada. El desbordamiento es positivo y la contrapartida la paga quien expandió, en forma de deterioro de su saldo exterior y de deuda futura.
+
+El segundo es el \textbf{empobrecimiento del vecino}. Un país deprecia su moneda, abarata sus bienes frente a los ajenos y capta demanda que antes se dirigía a otros. Aquí no se crea gasto: se \textbf{desvía}, y lo que uno gana el otro lo pierde.
+
+La distinción entre crear y desviar gasto es la más útil de todo el tema y conviene retenerla con esta fórmula: \textbf{las políticas que crean gasto desbordan en positivo y las que lo desvían desbordan en negativo}. De ahí que el conflicto internacional se concentre, siempre, en las segundas.\footnote{%
+    El desarrollo analítico de los dos desenlaces, con el modelo de MUNDELL y FLEMING escrito para dos países y la estática comparativa de cada política bajo cada régimen cambiario, está en [\authorfont{Ver Anexo \ref{anx:mundell_fleming}}].
+}
+
+\subsubsection{El signo: ¿de qué depende que la política ajena ayude o perjudique?}
+
+Queda una advertencia que distingue una exposición informada de una que repite el lugar común. El signo del desbordamiento \textbf{no es una propiedad de la política}, sino de la estructura de los mercados, y en concreto de la moneda en que las empresas fijan sus precios.
+
+Si los precios se fijan en la moneda del productor, la depreciación se traslada a los precios de importación del socio, que ve abaratarse lo que compra: el desbordamiento de una expansión monetaria resulta entonces favorable para él, y es quien deprecia el que puede salir perdiendo, porque vende más barato lo que produce y paga más caro lo que importa. Si los precios se fijan en la moneda del cliente, la depreciación no abarata nada en destino y lo único que cambia es el margen del exportador: entonces sí se desvía demanda y el desbordamiento es negativo.
+
+La consecuencia es incómoda para la retórica habitual sobre las guerras de divisas: \textbf{un gobierno que quiera saber si la política de su vecino le perjudica no puede deducirlo de la política, sino de en qué moneda se factura su comercio}.\footnote{%
+    Es el resultado del modelo de CORSETTI y PESENTI, que se desarrolla con sus tres regímenes de fijación de precios en [\authorfont{Ver Anexo \ref{anx:corsetti_pesenti}}]. El grado de traslado del tipo de cambio a los precios se estudia en [\authorfont{Ver Tema 3.B.14}].
+}
+
+\subsection{Canal financiero: ¿por qué el tipo de interés de uno fija la política de los demás?}
+
+El segundo canal es más reciente en la literatura y hoy es el más importante de los dos. Nace de la restricción de arbitraje, pero en su forma moderna no viaja por el diferencial de tipos, sino por algo bastante menos visible: las condiciones de crédito.
+
+\subsubsection{El centro: ¿por qué su política es una condición financiera para todos?}
+
+Lo que se observa desde hace tres décadas es que el crédito, los precios de los activos y los flujos de capital de casi todos los países se mueven a la vez, con independencia de su régimen cambiario y de su posición en el ciclo.
+
+\imagenfit{b1_ciclo.pdf}{La política del centro como condición financiera de todos}{Elaboración propia a partir de REY (2013).}
+
+La cadena empieza en la política monetaria de la economía que está en el centro del sistema financiero. Cuando esa política se relaja, el precio del riesgo cae; los intermediarios financieros globales, cuya capacidad de endeudarse depende de la volatilidad esperada de los activos que poseen, ven relajarse esa restricción y expanden su balance; y ese balance mayor busca activos fuera, con lo que el crédito y los precios de los activos suben en el resto del mundo. El tipo de cambio flexible no interrumpe la cadena, que era lo que la lectura clásica del trilema prometía, y puede incluso reforzarla.
+
+De ahí que \textbf{un país abierto al capital reciba unas condiciones financieras que no ha elegido}, y que la autonomía monetaria que el trilema le atribuía resulte, en la práctica, mucho más estrecha de lo que el esquema sugiere.\footnote{%
+    Es el ciclo financiero global de REY (2013), que convierte el trilema en un dilema: la autonomía exige gestionar la cuenta financiera y no basta con dejar flotar la moneda. El resultado, su contraste y el debate sobre su alcance están en [\authorfont{Ver Tema 3.B.15}] y en [\authorfont{Ver Tema 3.B.12}]; su lectura como desbordamiento, en [\authorfont{Ver Anexo \ref{anx:ciclo_global}}].
+}
+
+\subsubsection{La asimetría: ¿por qué nadie corrige ese desbordamiento?}
+
+Lo interesante no es que la cadena exista, sino que nadie tenga motivo para interrumpirla, y la razón no es ninguna mala intención.
+
+El banco central del centro fija su política mirando su propia inflación y su propio empleo, que es lo que su mandato le ordena y lo que haría cualquier otro en su lugar. Y, sobre todo, la asimetría es de orden de magnitud: el efecto que su política tiene sobre el resto es de primer orden, mientras que el retorno que el resto le devuelve es de segundo y, en la práctica, despreciable para quien decide.
+
+En consecuencia, \textbf{el desbordamiento persiste sin que haya nadie a quien reprochar una conducta}, que es exactamente la situación en la que un acuerdo tendría algo que aportar y, a la vez, la que hace más difícil alcanzarlo.
+
+\subsection{Canal del riesgo: ¿por qué el riesgo del conjunto no es la suma de los riesgos de cada uno?}
+
+Los dos canales anteriores describen cómo se transmite una decisión. La segunda gran razón del entrelazamiento es de otra clase, porque no depende de que nadie haya decidido nada: consiste en que la exposición conjunta de un sistema financiero integrado es mayor que la suma de las exposiciones individuales.
+
+\subsubsection{El bucle: ¿por qué vender es racional para cada uno y ruinoso para todos?}
+
+El mecanismo es siempre el mismo y conviene recorrerlo despacio, porque se repite en todas las crisis.
+
+\imagenfit{b1_bucle.pdf}{La venta de cada uno es el precio de todos}{Elaboración propia.}
+
+Un intermediario sufre una caída del precio de los activos que posee; esa caída reduce el valor de la garantía con que financia su posición; para cubrir el margen que le reclaman tiene que vender; y su venta deprime todavía más el precio, con lo que empeora la garantía de todos los que tienen ese activo, que se ven obligados a vender a su vez.
+
+Lo decisivo es que \textbf{cada uno vende por una razón privada impecable y el resultado conjunto es ruinoso}. Ninguno tiene en cuenta que su venta es el precio del vecino, porque individualmente no puede evitarlo; y quien se endeudó en la fase buena tampoco tuvo en cuenta que su apalancamiento haría más violenta la fase mala. Hay, por tanto, un exceso de deuda y de exposición común respecto de lo que sería eficiente, y ese exceso no lo corrige ningún precio.
+
+\subsubsection{La fragilidad como mal público: ¿quién produce la estabilidad?}
+
+En un sistema integrado ese bucle no se detiene en la frontera. Los balances de los grandes intermediarios están repartidos entre jurisdicciones, de modo que la pérdida de un país es la pérdida de capital de un banco de otro; buena parte de la financiación internacional está denominada en una sola moneda, de manera que una carrera por esa moneda deja sin crédito a bancos cuyo banco central no la emite; y la demanda de activos seguros se concentra en unos pocos emisores, con lo que el problema de uno es la escasez de todos.\footnote{%
+    El desarrollo del canal, con la amplificación por restricciones de garantía, las capas de la red de seguridad financiera global y por qué acumular reservas es individualmente racional y colectivamente costoso, está en [\authorfont{Ver Anexo \ref{anx:riesgo}}].
+}
+
+De ahí se sigue la segunda tesis del bloque: \textbf{la fragilidad es un mal público y la estabilidad financiera, un bien público mundial}. Nadie puede producirla solo y todos la consumen, lo que la coloca en una categoría distinta de la de los canales anteriores y, como se verá, explica por qué las instituciones que han prosperado se ocupan de ella y no de la demanda.
+
+Con esto queda establecido el hecho del que parte el tema. La interdependencia existe, llega por canales identificables y por una externalidad de riesgo que ningún mercado corrige, y no admite renuncia. Queda abierta la pregunta que de verdad importa y que nada de lo anterior ha contestado: si de ese hecho se sigue que haya algo que corregir.
+
+
+
+
+
+
+
+\clearpage
+\section{Justificación: ¿cuándo hay que coordinar y cuánto se gana?}
+\puntosclave{
+
+}
+
+El bloque anterior deja establecido un hecho: los países están entrelazados y no pueden dejar de estarlo. De ahí suele saltarse directamente a la conclusión de que deben coordinarse, y ese salto es el error que este bloque corrige. Que la política del vecino nos afecte es la consecuencia normal de comerciar con él; pedir que no nos afecte equivale a pedir que los precios no se muevan.
+
+La pregunta correcta, por tanto, no es si hay desbordamientos, sino si hay algo que corregir, y responderla exige tres cosas que el bloque desarrolla por orden. Primero, saber qué se está pidiendo exactamente, porque entre no hacer nada y actuar conjuntamente hay grados. Segundo, un criterio que distinga un precio que se mueve de una externalidad que nadie internaliza. Y tercero, una medida de lo que se gana, porque un problema real puede valer muy poco.
+
+La tesis es incómoda y conviene anticiparla: \textbf{la interdependencia no basta}. Solo justifica coordinarse cuando falla alguna de tres condiciones precisas, y cuando falla, lo que se gana es pequeño en las políticas de demanda y grande en los bienes públicos mundiales. Esa asimetría explica, como se verá, qué instituciones han prosperado y cuáles llevan décadas emitiendo comunicados.
+
+\subsection{Grados: ¿qué separa cooperar de coordinar?}
+
+Antes de evaluar nada hay que delimitar el objeto, porque bajo la misma palabra conviven compromisos muy distintos. Intercambiar información no es lo mismo que consultarse antes de decidir, ni eso es lo mismo que comprometerse a usar los medios menos dañinos para los demás, ni nada de ello equivale a fijar conjuntamente los objetivos.
+
+\subsubsection{Tres resultados, no dos}
+
+La forma más clara de verlo es situar los compromisos en el espacio de las políticas de dos países.
+
+\imagenfit{b2_grados.pdf}{Tres resultados posibles: equilibrio no cooperativo, coordinación y cooperación plena}{Elaboración propia.}
+
+Cada eje mide la orientación de la política de un país y cada recta es su mejor respuesta a lo que haga el otro. Donde se cruzan está el \textbf{equilibrio no cooperativo} $N$: cada uno ha elegido lo mejor que podía dado lo que hace el otro, y ninguno tiene motivo para moverse por su cuenta. La zona sombreada recoge todos los acuerdos que mejorarían a los dos, y en su interior está $C$, la \textbf{cooperación plena}, donde los objetivos se fijan conjuntamente y ya no cabe mejorar a uno sin empeorar al otro.
+
+Entre ambos está $K$, que es lo que propiamente cabe llamar \textbf{coordinación}: cada gobierno sigue persiguiendo sus propios objetivos, pero se compromete a hacerlo con los medios menos dañinos para los demás. El resultado es intermedio por los dos lados, porque ni alcanza las ganancias conjuntas de la cooperación ni genera las asimetrías del equilibrio no cooperativo.\footnote{%
+    \textbf{OJO.-} La literatura no emplea estos términos de forma uniforme: en buena parte de la macroeconomía de la coordinación, \textit{coordinación} designa la forma fuerte y vinculante y \textit{cooperación} funciona como término genérico, mientras otros autores los usan al revés. Lo que importa no son las palabras, sino que los resultados son tres y no dos. La escalera completa de compromisos, con sus tres dimensiones de obligación, precisión y delegación, está en [\authorfont{Ver Anexo \ref{anx:cumplimiento}}].
+}
+
+\subsubsection{Por qué el equilibrio no cooperativo se equivoca}
+
+Lo interesante de $N$ no es que sea mejorable, sino en qué sentido lo es, y la respuesta cabe en una línea. En $N$ cada gobierno ha igualado a cero el efecto de su propio instrumento sobre su propio bienestar, de modo que lo único que queda sin contabilizar es el efecto sobre el bienestar del otro.
+
+De ahí que \textbf{el sentido en que el equilibrio se equivoca lo dé el signo del desbordamiento}. Si la política de un país beneficia al otro, en $N$ \textbf{se hace demasiado poco}, porque nadie quiere pagar un estímulo del que la mitad se va fuera. Si lo perjudica, en $N$ \textbf{se hace demasiado}, porque cada uno usa el instrumento más de lo que convendría al no pagar el daño que causa. Un acuerdo, por tanto, no consiste siempre en contener: ante una recesión mundial consiste en comprometerse a hacer más.\footnote{%
+    El aparato formal, con las funciones de reacción deducidas, las soluciones cerradas del equilibrio y del acuerdo y las extensiones al liderazgo y al número de jugadores, está en [\authorfont{Ver Anexo \ref{anx:juego}}]. El tratamiento de los conceptos de solución, en [\authorfont{Ver Tema 3.A.14}].
+}
+
+\subsection{Criterio: ¿cuándo es un desbordamiento una externalidad?}
+
+Lo anterior parece zanjar la cuestión y no la zanja, porque arrastra un supuesto que no se ha examinado: que las funciones de bienestar con las que se construyó el gráfico recogen de verdad lo que les conviene a los ciudadanos de cada país. Puede ocurrir, y ocurre en los casos más citados, que el desbordamiento sea el funcionamiento normal de un precio y que corregirlo empeore el resultado.
+
+\subsubsection{Por qué los desbordamientos se cancelan}
+
+Conviene seguir el argumento despacio porque es el que permite discutir sin el modelo delante. Si el único vínculo entre dos países es un precio de mercado, el efecto de la política de uno sobre el bienestar del otro es lo que ese precio le hace a lo que compra y vende. Sumando entre todos los países, y como lo que unos compran otros lo venden, \textbf{los efectos se cancelan en el agregado}: el desbordamiento redistribuye, pero no destruye.
+
+El resultado es más fuerte de lo que parece y conviene enunciarlo entero, porque es el que sostiene todo el tema: con precios de mercado, instrumentos suficientes y mercados internacionales completos, el equilibrio descentralizado es eficiente \textbf{aunque cada economía sufra toda clase de distorsiones internas}. Un país con un mercado de trabajo rígido o un sistema fiscal distorsionante no genera por ello ningún derecho a reclamar nada a los demás.
+
+\subsubsection{Lo que tiene que fallar}
+
+Las tres condiciones de esa cancelación son, dadas la vuelta, los tres únicos motivos legítimos para pedir un acuerdo.
+
+\imagenfit{b2_criterio.pdf}{Las tres condiciones cuyo incumplimiento justifica coordinar}{Elaboración propia a partir de KORINEK (2016).}
+
+El primero es el \textbf{poder de mercado}. Un país grande sabe que su política mueve un precio mundial, la relación real de intercambio o el tipo de interés, y lo usa para desplazar renta hacia sí. Es la lógica del arancel óptimo trasladada a la macroeconomía, y lo que gana es menos de lo que el otro pierde. El remedio es un acuerdo de desarme: comprometerse a no usar estratégicamente los instrumentos.
+
+El segundo son los \textbf{instrumentos insuficientes}. Si a un gobierno le falta una herramienta dirigida al exterior, distorsionará las que tiene: subirá su tipo de interés más de lo que su situación interna aconseja, intervendrá en el mercado de divisas o acumulará reservas, y cualquiera de esas tres cosas mueve precios mundiales. Aquí el remedio no es moderar la política, sino \textbf{crear o repartir instrumentos}, que es de lo que trata la discusión sobre la gestión de los flujos de capital y la política macroprudencial.
+
+El tercero son las \textbf{imperfecciones de los mercados internacionales}: mercados incompletos, restricciones de garantía que amplifican las caídas, escasez de activos seguros. Su rasgo distintivo es que están fuera del alcance de cualquier gobierno actuando solo, de modo que aquí la coordinación no es una mejora disponible sino la única vía, y su contenido no es limitar una política, sino \textbf{producir algo que no existe}.\footnote{%
+    Es el teorema de bienestar para economías abiertas de KORINEK (2016), con su demostración y sus aplicaciones en [\authorfont{Ver Anexo \ref{anx:criterio}}]. Conviene retener también sus dos límites: eficiencia no es equidad, de modo que un reparto injusto no deja de serlo porque el equilibrio sea eficiente; y el teorema supone gobiernos que maximizan el bienestar de sus ciudadanos.
+}
+
+De aquí sale la regla con la que conviene manejar cualquier petición de coordinación: \textbf{la carga de la prueba recae sobre quien la pide}, que tiene que decir cuál de las tres condiciones falla. Decir que la política ajena le afecta no es decir nada.
+
+\subsection{Magnitud: ¿por qué se gana poco en demanda y mucho en bienes públicos?}
+
+Supongamos acreditado que alguna de las tres condiciones falla. Queda la pregunta cuantitativa, y su respuesta es la que explica el desconcierto habitual ante esta materia: cuarenta años de literatura midiendo las ganancias de coordinar la política macroeconómica han producido cifras decepcionantes.
+
+\subsubsection{La razón de que las cifras salgan pequeñas}
+
+La explicación no es empírica sino analítica, y es mucho más interesante que las cifras.
+
+\imagenfit{b2_ganancias.pdf}{Por qué moverse mucho vale poco: el bienestar conjunto es plano alrededor del equilibrio}{Elaboración propia.}
+
+En el equilibrio no cooperativo $z^{N}$ cada gobierno está ya en su propio óptimo, de modo que el bienestar conjunto es casi plano alrededor de ese punto. La distancia que hay que recorrer hasta el acuerdo $z^{C}$ es apreciable y crece con el tamaño del desbordamiento; pero la altura que se gana al recorrerla es de otro orden, porque depende del cuadrado de esa misma magnitud. \textbf{Hay que moverse mucho para ganar poco}, y eso no es un accidente de calibración.
+
+A ello se añade un techo que ningún cálculo de este tipo puede superar: si la coordinación actúa estabilizando el ciclo, lo más que puede valer es lo que valdría eliminar el ciclo entero.\footnote{%
+    Las mediciones, desde OUDIZ y SACHS (1984), que encontraron ganancias de entre el $0{,}5$ y el $1\%$ del PIB anual, hasta las calibraciones posteriores de OBSTFELD y ROGOFF (2002) y BENIGNO y BENIGNO (2006), que las reducen casi a cero, están en [\authorfont{Ver Anexo \ref{anx:ganancias}}]. Conviene saber que la fama de insignificancia procede de las segundas y no de la primera.
+}
+
+\subsubsection{Lo que el cálculo deja fuera}
+
+De ahí no se sigue que coordinarse no sirva, y conviene saber exactamente qué queda fuera de esas cifras, porque es donde está todo lo demás.
+
+Queda fuera, primero, la \textbf{crisis}: los modelos que producen esos números son aproximaciones alrededor de una situación normal y por construcción no contienen el episodio en que la coordinación ha demostrado valer. En $2009$, con los tipos de interés en su límite inferior y una perturbación común, el estímulo de cada país dejó de desviar demanda del vecino y pasó a añadírsela, de modo que el juego dejó de ser de suma casi nula.
+
+Queda fuera, segundo, la diferencia entre \textbf{afinar y existir}: lo que se mide es la ganancia de ajustar las políticas dentro de un sistema que ya funciona, no la de tener el sistema. Nadie ha calculado nunca el coste de no tener reglas cambiarias, ni normas financieras comunes, ni prestamista de última instancia.
+
+Y queda fuera, tercero, el terreno donde las ganancias son de otro orden. Cuando el problema no es moderar una política sino \textbf{producir un bien que nadie produce solo} —estabilidad financiera, una base imponible que no se pueda trasladar, un clima estable—, la pérdida de no coordinarse no es un ajuste fino sino un nivel, y no está sujeta al argumento anterior.\footnote{%
+    La diferencia depende de cómo se agreguen las aportaciones de cada país. Si el bien es tan sólido como la jurisdicción más laxa, lo que hace falta es un estándar común y ayudar al rezagado; si es la suma de lo aportado, el problema es íntegramente de polizones. El desarrollo está en [\authorfont{Ver Anexo \ref{anx:bienes_publicos}}].
+}
+
+Con eso se resuelve el desconcierto: \textbf{las cifras pequeñas son correctas y se refieren a la coordinación de la demanda}, que es justamente la que ocupa los titulares, y no dicen nada sobre la estabilidad financiera, la fiscalidad internacional o el clima, que es donde las instituciones han prosperado.
+
+\subsection{Sesgo: ¿por qué un régimen asimétrico produce contracción permanente?}
+
+Queda un último resultado, que no se refiere a cuánto se gana coordinándose sino a cuánto se pierde con un régimen mal diseñado, y que conviene tratar aquí porque se confunde constantemente con el anterior.
+
+\subsubsection{La asimetría del ajuste}
+
+De la identidad del bloque anterior se sigue algo que parece una obviedad y tiene consecuencias mayores: si los saldos exteriores suman cero, \textbf{no todos los países pueden tener superávit a la vez}.
+
+\imagenfit{b2_sesgo.pdf}{La asimetría del ajuste y el sesgo contractivo}{Elaboración propia.}
+
+Cuando un país incurre en déficit, las reservas se le acaban y el ajuste deja de ser voluntario: tiene que contraer su gasto. El país con superávit no se enfrenta a ningún límite equivalente, porque acumular reservas no agota nada. La obligación de ajustar recae, por tanto, sobre uno solo de los dos, y como la contracción de cada deficitario reduce la demanda que sostiene a los demás, el conjunto produce menos y ninguno consigue el superávit que buscaba.
+
+Ese es el \textbf{sesgo contractivo}, y conviene enunciar con precisión de qué depende, porque aquí se cometen dos errores simétricos. No lo produce coordinarse, como a veces se dice; tampoco lo produce la apertura. \textbf{Lo produce el reparto de las obligaciones de ajuste}, es decir, el diseño del régimen.\footnote{%
+    Fue el argumento de KEYNES en las negociaciones de Bretton Woods, donde su propuesta de unión de compensación incluía cargos sobre los saldos acreedores precisamente para repartir la obligación; prevaleció el plan estadounidense y la idea quedó reducida a una cláusula que nunca se aplicó. La discusión está en [\authorfont{Ver Tema 3.B.20, Tema 3.B.21}], y su versión formal como equilibrio no cooperativo, en [\authorfont{Ver Anexo \ref{anx:juego}}].
+}
+
+\subsubsection{Dónde reaparece}
+
+La utilidad de este resultado es que no envejece. Reaparece siempre que un régimen carga el ajuste sobre una sola de las partes, y reconocerlo permite leer episodios muy distintos con el mismo esquema: el patrón oro, donde el país que perdía oro contraía y el que lo recibía no expandía; el sistema de Bretton Woods; y la zona del euro, donde la corrección de los desequilibrios internos recayó sobre los países deudores sin obligación simétrica para los acreedores.
+
+Hay además una versión contemporánea menos evidente y que el bloque siguiente retoma: \textbf{acumular reservas es individualmente racional y colectivamente costoso}. Cada país que se asegura por su cuenta necesita un superávit que alguien ha de financiar con un déficit, de modo que la suma de decisiones prudentes produce un resultado imprudente para el conjunto.
+
+Con esto queda contestada la pregunta del bloque. La coordinación está justificada cuando falla el poder de mercado, cuando faltan instrumentos o cuando los mercados internacionales son imperfectos; vale poco en las políticas de demanda y mucho en los bienes públicos mundiales; y el mayor daño no viene de no coordinarse, sino de coordinarse sobre un reparto asimétrico de las obligaciones. Queda una última pregunta, que es la que de verdad explica lo que se observa: si todo esto se sabe, por qué la coordinación sigue sin producirse.
+\clearpage
+\section{Obstáculos: ¿por qué no se coordina lo que conviene?}
+\puntosclave{
+
+}
+
+El bloque anterior deja acotado el terreno: hay casos en que coordinarse mejora el bienestar y casos en que no, y los primeros están bien identificados. Lo que ese análisis no explica es lo que de verdad se observa, que es la distancia entre lo que convendría y lo que ocurre. Hay acuerdos que convendrían a todos y no se firman; hay otros que se firman y no se cumplen; y hay algunos que, cumpliéndose, dejan a sus firmantes peor de lo que estaban.
+
+Las razones no son de mala voluntad ni de torpeza, y conviene decirlo porque la explicación fácil es siempre esa. Son cuatro obstáculos de naturaleza distinta, y cada uno de ellos se sostiene aunque los gobiernos sean competentes y honrados: que el acuerdo no es un equilibrio y por tanto hay que sostenerlo; que para acordar hay que compartir el diagnóstico y a menudo no se comparte; que quien negocia no decide solo, porque tiene que volver a casa; y que la cesión de soberanía que la coordinación exige tiene un límite político que no depende de la economía.
+
+La tesis del bloque es que esos obstáculos no son fallos de aplicación, sino \textbf{rasgos estructurales del problema}, y que reconocerlos es lo que permite explicar la forma que han tomado las instituciones que de verdad funcionan.
+
+\subsection{Cumplimiento: ¿qué sostiene un acuerdo que nadie puede imponer?}
+
+El primer obstáculo aparece antes que ningún otro y es puramente lógico: el acuerdo que mejora a los dos \textbf{no es un equilibrio}. Si lo fuera, se alcanzaría sin necesidad de acordar nada.
+
+\subsubsection{La tentación}
+
+Basta volver al espacio de políticas para medirla.
+
+\imagenfit{b3_tentacion.pdf}{La tentación de incumplir y el regreso al equilibrio no cooperativo}{Elaboración propia.}
+
+Firmado el acuerdo en $C$, cada gobierno da por hecha la conducta del otro y se pregunta qué le conviene hacer. La respuesta de uno de ellos es el punto $F$, que está sobre su propia función de reacción y por debajo de lo prometido: expandir menos y dejar que la demanda la ponga el socio. Eso es exactamente hacer de polizón. Y si uno incumple, el otro no tiene motivo para seguir cumpliendo, de modo que el desenlace natural es el regreso a $N$, peor para los dos.
+
+La salida no está en la buena fe, sino en la repetición. Si la relación no tiene final conocido, cada gobierno compara el valor de cumplir siempre con el de incumplir hoy y ser castigado después, y \textbf{cumplir compensa cuando el futuro pesa lo bastante, la tentación es pequeña y el castigo es duro}.\footnote{%
+    Formalmente, con $L$ el pago de cumplir, $F$ el de incumplir, $R$ el del castigo y $\delta$ el factor de descuento, la condición es $\delta\geq(F-L)/(F-R)$: el numerador es la tentación y el denominador, cuánto hay que perder. Su deducción y el umbral calculado sobre el modelo están en [\authorfont{Ver Anexo \ref{anx:sostenibilidad_acuerdo}}]; el aparato de juegos repetidos, en [\authorfont{Ver Tema 3.A.14}].
+}
+
+\subsubsection{Lo que de verdad falla: ver quién cumple}
+
+Esa condición parece técnica y tiene tres consecuencias muy concretas. La primera es que \textbf{el horizonte del gobierno es el horizonte del acuerdo}: quien tiene elecciones próximas descuenta mucho el futuro, y por eso los compromisos se incumplen más en año electoral. La segunda es que la frecuencia del trato importa, lo que da una razón económica a algo que parece puro ritual, las cumbres periódicas. Y la tercera es que un tratado con fecha de caducidad conocida se deshace desde el final.
+
+Pero el problema decisivo es otro y suele pasarse por alto: \textbf{muchas veces no se observa si el otro ha cumplido}. Las políticas económicas no son actos nítidos, sino orientaciones que se mezclan con las perturbaciones, de modo que un país puede incumplir y parecer que le ha ido mal, o cumplir y parecer lo contrario. Cuando el seguimiento es imperfecto, sostener el acuerdo exige castigar también cuando el mal resultado pudo deberse al azar, y el valor del acuerdo se desploma.
+
+De ahí la conclusión que el bloque de instituciones recoge: \textbf{la herramienta central de un foro de coordinación no es la sanción, sino la vigilancia}. Producir información comparable, verificar lo que cada uno ha hecho y publicarlo es lo que convierte una promesa en algo exigible.
+
+\subsection{Creencias: ¿se puede coordinar sin compartir el diagnóstico?}
+
+El segundo obstáculo es más incómodo porque no depende de ninguna imperfección ni de ningún interés oculto: basta con que los gobiernos no estén de acuerdo sobre cómo funciona la economía.
+
+\subsubsection{El mismo hecho, dos lecturas}
+
+El caso que ha ocupado tres décadas de discusión atlántica y europea lo ilustra sin necesidad de ejemplos más complicados.
+
+\imagenfit{b3_creencias.pdf}{El mismo hecho, dos lecturas y dos acuerdos incompatibles}{Elaboración propia.}
+
+Un país amplía su déficit público. Para una lectura, ese déficit es demanda que llega a todos, de modo que constituye una externalidad positiva y el acuerdo correcto consiste en pedirle que haga más y en que los países con superávit le acompañen. Para la otra, ese mismo déficit compite por un ahorro mundial escaso, presiona al alza los tipos de interés de todos y genera riesgo moral, porque quien se endeuda confiando en ser rescatado se endeuda de más; se trata entonces de una externalidad negativa y el acuerdo correcto consiste en ponerle límites.
+
+Las dos lecturas conducen a acuerdos que se excluyen, y \textbf{ninguna de las dos es irracional}. Proceden de tradiciones completas, con su teoría, su evidencia preferida y su memoria histórica: una lee la economía desde la insuficiencia de demanda y tiene presente la Gran Depresión; la otra, desde la disciplina y las reglas, y tiene presente la hiperinflación.\footnote{%
+    A la discrepancia doctrinal se suma una incertidumbre genuina, porque el signo del desbordamiento depende de parámetros que nadie conoce con precisión, y la sospecha razonable de que cada país adopta con menos resistencia la teoría que le conviene. Las tres capas se separan en [\authorfont{Ver Anexo \ref{anx:creencias}}], junto con la respuesta institucional, que son las comunidades epistémicas.
+}
+
+\subsubsection{Por qué el desacuerdo es peligroso y no solo molesto}
+
+Podría pensarse que, a falta de acuerdo sobre el modelo, lo peor que ocurre es que no se firme nada. Ocurre algo peor.
+
+Cuando cada gobierno actúa por su cuenta, el error de su modelo afecta sobre todo a su propia economía y la realidad lo corrige deprisa. Cuando dos gobiernos firman un acuerdo basado en una creencia equivocada, \textbf{el error se amplifica y se congela}: se amplifica porque se aplica a las dos economías a la vez, y se congela porque el acuerdo compromete a mantenerlo. La coordinación no es neutral respecto del conocimiento, sino que multiplica tanto los aciertos como los errores.
+
+Y hay un segundo mecanismo, distinto, por el que un acuerdo entre gobiernos benevolentes puede empeorar las cosas: que \textbf{suprima una restricción que estaba disciplinando a alguien}. Si dos bancos centrales expanden a la vez, el tipo de cambio entre ellos no se mueve, desaparece el encarecimiento de las importaciones que frenaba a cada uno por separado, y el resultado es más inflación en los dos países sin más producción en ninguno.\footnote{%
+    Es el argumento de ROGOFF (1985), que se desarrolla en [\authorfont{Ver Anexo \ref{anx:contraproducente}}] junto con el de FRANKEL y ROCKETT (1988) sobre el desacuerdo de modelos. Los dos son casos de un mismo principio: cooperar entre algunos de los jugadores de un juego más amplio no garantiza mejorar el resultado del juego.
+}
+
+De ahí la regla que conviene aplicar antes de firmar nada: preguntarse \textbf{qué restricción desaparece al firmar} y quién estaba disciplinado por ella.
+
+\subsection{Política interna: ¿quién negocia de verdad en una cumbre?}
+
+El tercer obstáculo consiste en que todo lo anterior trata a cada país como si fuera un jugador, y no lo es. Quien se sienta a la mesa es un gobierno que tiene que volver a casa y conseguir que lo firmado se acepte.
+
+\subsubsection{Los conjuntos ganadores}
+
+Esa doble condición se representa con el conjunto de acuerdos que, presentados en el propio país, serían ratificados.
+
+\imagenfit{b3_dosniveles.pdf}{Conjuntos ganadores, margen de acuerdo y la paradoja de la debilidad}{Elaboración propia a partir de PUTNAM (1988).}
+
+En el panel (a) los dos conjuntos se solapan y la zona sombreada recoge los acuerdos que las dos sociedades ratificarían: hay margen, y la negociación versa sobre el reparto dentro de él. En el panel (b) el conjunto de uno de los dos se ha estrechado, porque su parlamento ha fijado un mandato exigente o porque un sector con capacidad de veto ha levantado la voz; la zona de acuerdo se reduce y, sobre todo, se desplaza hacia el extremo que ese país prefiere.
+
+De ahí la \textbf{paradoja de la debilidad}: un negociador con las manos atadas en casa negocia mejor fuera, porque puede sostener con verosimilitud que no le dejan ceder. Tiene un límite inmediato, y es que si las manos se atan demasiado desaparece el solapamiento y no hay acuerdo que firmar.
+
+\subsubsection{Lo que eso explica}
+
+Con ese esquema se entienden sin más tres hechos que de otro modo parecen caprichos. El \textbf{calendario electoral} es parte del problema, porque un gobierno próximo a unas elecciones tiene a la vez un conjunto ganador estrecho y un horizonte corto. Los \textbf{compromisos previos con sectores internos} estrechan el conjunto ganador igual que lo haría un mandato parlamentario, con la diferencia de que no se anuncian. Y la negociación internacional se juega también hacia dentro, porque un gobierno puede usar el acuerdo exterior para vencer una resistencia interna que no lograría vencer de otro modo, lo que convierte la coordinación en un instrumento de política interna.\footnote{%
+    El desarrollo del juego de dos niveles, con la condición de solapamiento y la paradoja de la debilidad, está en [\authorfont{Ver Anexo \ref{anx:dos_niveles}}].
+}
+
+\subsection{Soberanía: ¿cuánta coordinación admite una democracia?}
+
+El último obstáculo no es económico y es el que marca el techo de todo lo demás. La coordinación internacional consiste, por definición, en obtener parte de los beneficios de la integración sin construir un gobierno mundial y sin renunciar a la democracia nacional, es decir, en ocupar una posición intermedia. La pregunta es hasta dónde llega esa posición.
+
+\subsubsection{Eficacia contra control}
+
+La primera tensión es visible y no admite componenda.
+
+\imagenfit{b3_limite.pdf}{El canje entre la eficacia del acuerdo y el control democrático}{Elaboración propia.}
+
+Cuanto más vinculante y más técnico es lo acordado, más eficaz resulta y menos control democrático admite, porque las decisiones las preparan funcionarios en comités y los parlamentos se enfrentan a un paquete que solo pueden aceptar o rechazar entero. Y a la inversa, cuanto más control se conserva, menos obliga lo acordado y menos sirve. \textbf{No hay forma de tener las dos cosas a la vez}, y toda la arquitectura institucional que se verá a continuación puede leerse como una elección de punto sobre ese eje.
+
+Eso explica también de qué viven las instituciones internacionales: de una legitimidad de \textbf{resultados} y no de origen, porque se justifican porque funcionan y no porque nadie las haya elegido. Y explica su fragilidad, porque esa legitimidad se evapora justo cuando los resultados son malos, que es cuando más falta hacen.\footnote{%
+    El marco general es el trilema político de la economía mundial, según el cual la integración profunda, el Estado nación y la democracia de masas no caben plenamente las tres a la vez; se desarrolla en [\authorfont{Ver Tema 3.B.20}]. Su aplicación a los límites de la coordinación está en [\authorfont{Ver Anexo \ref{anx:limites_democracia}}].
+}
+
+\subsubsection{El reparto y el tamaño del club}
+
+Quedan dos obstáculos menores en apariencia y decisivos en la práctica.
+
+El primero es el \textbf{reparto}. El conjunto de acuerdos que mejoran a todos no es un punto, sino un tramo, y cuál de sus puntos se firma no lo decide la eficiencia sino la negociación. Lo que la decide es el punto de desacuerdo: \textbf{se lleva más del excedente quien menos pierde si no hay trato}, lo que da contenido preciso a la noción vaga de poder de negociación. Y como las ganancias se distribuyen de forma asimétrica, el acuerdo solo se cierra si existe algo con lo que compensar al que pierde; en macroeconomía no hay tal moneda, y de ahí que se negocien varias materias a la vez.
+
+El segundo es el \textbf{tamaño del grupo}. Los costes de negociación crecen con el número de participantes, la verificación se complica y el castigo se diluye, de modo que un club pequeño acuerda más y más deprisa. A cambio, lo que acuerda no obliga a quien no está y puede perjudicarle. \textbf{La tensión entre eficacia y representatividad no tiene solución técnica}, y es la que explica que coexistan los clubes reducidos, los foros ampliados y las instituciones universales.
+
+Con esto queda contestada la pregunta del bloque. No se coordina lo que conviene porque el acuerdo hay que sostenerlo y no se ve quién cumple, porque no se comparte el diagnóstico, porque quien negocia no decide solo y porque la cesión de soberanía tiene un techo político. Lo que queda por ver es qué han construido los Estados para sortear, uno a uno, esos cuatro obstáculos.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Foros: ¿cómo se coordina sin un poder que obligue?}
+\puntosclave{
+
+}
+
+Los tres bloques anteriores dejan planteado un problema concreto y no una aspiración. Hay casos identificables en que coordinarse mejora el bienestar; hay cuatro obstáculos que impiden que eso ocurra; y no existe autoridad mundial capaz de imponer nada. Lo que queda por ver es qué han construido los Estados con esas restricciones encima, y la respuesta no es un catálogo de organizaciones, sino un conjunto de soluciones a problemas precisos.
+
+La tesis de este bloque es que \textbf{la forma de cada foro se explica por el obstáculo que ataca}, y que de ahí se sigue cuáles funcionan. Los que producen información verificada y diagnóstico común tienen resultados comprobables, porque atacan el obstáculo decisivo; los que se limitan a declarar intenciones sobre variables macroeconómicas llevan décadas emitiendo comunicados. Esa regularidad se verá en los tres organismos que el tema nombra y en el mapa con que se cierra.
+
+\subsection{Tecnologías: ¿con qué sustituye un foro a la coerción?}
+
+Conviene empezar por el inventario de herramientas, porque todas las instituciones que siguen combinan las mismas cuatro y se distinguen por cuál predomina.
+
+\subsubsection{Cuatro herramientas y el obstáculo que ataca cada una}
+
+Cada una responde a uno de los obstáculos del bloque anterior, y esa correspondencia es la que las hace inteligibles.
+
+\imagenfit{b4_tecnologias.pdf}{Cada obstáculo y la herramienta institucional que lo ataca}{Elaboración propia.}
+
+La primera es la \textbf{producción de estadística comparable y la revisión por pares}, que ataca el obstáculo decisivo: que no se ve quién cumple. Consiste en que el país informe, el organismo lo analice con metodología común, un comité de funcionarios de los demás países lo examine y el resultado se publique. No hay sanción en ninguna etapa, y no hace falta: lo que disciplina es la reputación ante quienes entienden lo que se mide.
+
+La segunda es la \textbf{elaboración de un diagnóstico común}, que ataca el desacuerdo sobre el modelo. Los informes, las previsiones y las metodologías compartidas no son el preámbulo de la coordinación: son la parte de ella que de verdad funciona, porque hacen converger el análisis antes de que haya nada que negociar.
+
+La tercera son los \textbf{estándares}, que atacan el hecho de que el acuerdo no obligue. Son normas que ningún Estado está obligado a seguir y que casi todos siguen, porque su cumplimiento se verifica y porque no cumplirlas cierra el acceso a los mercados de quienes sí lo hacen. Es decir, convierten el bien común en parcialmente excluible, que es lo que desarma al polizón.
+
+Y la cuarta es la \textbf{reunión periódica de quienes deciden}, que ataca la ausencia de alguien encargado del conjunto. Su valor no está en los textos que produce, sino en que mantiene viva una relación que de otro modo sería una sucesión de encuentros aislados, lo que amplía el conjunto de acuerdos sostenibles.\footnote{%
+    Las tres dimensiones con que se mide la fuerza de un compromiso —obligación, precisión y delegación— y la escalera completa que va del intercambio de información a las reglas con sanción están en [\authorfont{Ver Anexo \ref{anx:cumplimiento}}].
+}
+
+\subsection{La OCDE: ¿cómo se coordina produciendo conocimiento y presión entre pares?}
+
+La Organización para la Cooperación y el Desarrollo Económicos es el caso puro de las dos primeras herramientas, y su historia explica por qué.
+
+\subsubsection{Qué es y por qué su condición de entrada importa}
+
+Nació en $1961$ de la organización que había administrado el Plan Marshall, convirtiendo un instrumento de reconstrucción en un foro permanente entre economías de mercado. Es una organización intergubernamental con personalidad jurídica propia y sede en París, con treinta y ocho miembros cuya condición de entrada no es geográfica ni económica, sino institucional: democracia pluralista, economía de mercado y compromiso con el trato nacional, la no discriminación y la liberalización.
+
+Esa condición convierte la adhesión en algo más valioso que las ventajas materiales de pertenecer, porque funciona como un \textbf{certificado de homologación} que el candidato obtiene sometiendo su legislación al examen de más de veinte comités. Por eso hay cola de espera, con ocho candidatos en proceso.\footnote{%
+    La ficha completa, con el origen en la Organización Europea de Cooperación Económica, los miembros y candidatos, los órganos, el presupuesto y la escala de instrumentos que va de las decisiones vinculantes a las recomendaciones, está en [\authorfont{Ver Anexo \ref{anx:ocde}}].
+}
+
+\subsubsection{La revisión por pares y lo que ha conseguido con ella}
+
+Su instrumento característico no es jurídico. Más de trescientos comités reúnen a los funcionarios nacionales de cada materia, que comparan lo que hace cada país y examinan sus resultados, apoyados por un secretariado cuya función es producir los datos con los que compararlos. Es, en los términos del bloque anterior, una \textbf{comunidad epistémica institucionalizada}: el lugar donde el diagnóstico converge.
+
+El balance de ese modelo es muy desigual y conviene conocerlo entero. En \textbf{fiscalidad internacional} ha sido decisivo: el estándar de intercambio automático de información ha terminado con el secreto bancario como estrategia viable, y sobre esa base se acordó en $2021$ un tipo mínimo efectivo del $15\%$ para las grandes multinacionales al que se adhirieron más de ciento treinta jurisdicciones. En \textbf{coordinación macroeconómica} su influencia es la de un argumento más en el debate interno de cada país, y no la de un compromiso.
+
+Esa diferencia no es un defecto de la institución: es exactamente lo que cabe esperar según el criterio del bloque segundo, porque la fiscalidad internacional es un bien público mundial y la orientación de la demanda no lo es.
+
+\subsection{El G-20: ¿cómo se coordina con compromiso político y sin estructura?}
+
+El Grupo de los Veinte es el caso contrario: aporta lo único que los organismos técnicos no pueden aportar, que es decisión política, y carece de todo lo demás.
+
+\subsubsection{Un foro que no es nada jurídicamente}
+
+Nació en $1999$ como reunión de ministros de finanzas y gobernadores, para dar voz a las economías emergentes que las crisis de los noventa habían golpeado y que quedaban fuera del Grupo de los Siete; y la crisis de $2008$ lo elevó al nivel de jefes de Estado y de Gobierno, convirtiéndolo en el vértice político de la gobernanza económica mundial.
+
+Jurídicamente \textbf{no es nada}, y conviene decirlo así porque es la clave para entenderlo: no hay tratado, ni personalidad jurídica, ni sede, ni secretariado, ni presupuesto, ni capacidad de adoptar actos vinculantes. Toda su fuerza procede de que reúne a quienes pueden decidir, con una presidencia rotatoria que fija la agenda y una troika que da continuidad a lo que cambia de manos cada año.\footnote{%
+    Lo forman diecinueve países más la Unión Europea y, desde $2023$, la Unión Africana; España participa como invitada permanente. El conjunto cubre alrededor del $85\%$ del producto mundial. La ficha completa está en [\authorfont{Ver Anexo \ref{anx:g20}}].
+}
+
+\subsubsection{Encarga y no ejecuta}
+
+De esa carencia de medios sale su rasgo definitorio, que casi nunca se explica y que ordena toda la arquitectura.
+
+\imagenfit{b4_encargo.pdf}{El Grupo de los Veinte y los organismos que ejecutan lo que encarga}{Elaboración propia.}
+
+El grupo convierte sus acuerdos en mandatos dirigidos a organismos que sí tienen medios, y estos le devuelven informes y seguimiento: al Consejo de Estabilidad Financiera, la reforma de la regulación; al Fondo Monetario Internacional, la vigilancia y los recursos; al Comité de Basilea, los estándares de capital; a la OCDE, la fiscalidad internacional. Esa división del trabajo explica a la vez su eficacia, porque concentra en una sola mesa la decisión política que falta a los técnicos, y su fragilidad, porque \textbf{sin acuerdo político en la cumbre los organismos técnicos se quedan sin mandato}.
+
+El balance repite el patrón de la OCDE. Donde ha sido decisivo es en bienes públicos mundiales: creó el Consejo de Estabilidad Financiera, impulsó la reforma regulatoria posterior a la crisis, lanzó el proyecto contra la erosión de bases imponibles y amplió los recursos del Fondo cuando hizo falta. Donde ha sido irrelevante es en la coordinación macroeconómica, con la única excepción de $2009$, que fue precisamente cuando el desbordamiento cambió de signo.
+
+\subsection{El FSB: ¿cómo se coordina la estabilidad financiera mediante estándares?}
+
+El Consejo de Estabilidad Financiera es el ejemplo más puro de lo que el tema defiende, porque su materia es un bien público mundial y su diseño se corresponde punto por punto con la tecnología que esa materia exige.
+
+\subsubsection{Un foro de autoridades, no de Estados}
+
+Su antecesor se creó en $1999$ y la crisis de $2008$ demostró que era demasiado estrecho, de modo que la cumbre de Londres de abril de $2009$ lo refundó con los miembros del propio Grupo de los Veinte y un mandato ampliado.
+
+Lo que explica su eficacia es su composición: no reúne Estados, sino \textbf{autoridades} —bancos centrales, supervisores y ministerios de hacienda—, es decir, a quienes tienen en la mano la competencia regulatoria y no a quienes tendrían que trasladarles una instrucción. Ninguna de sus decisiones es jurídicamente vinculante; sus instrumentos son estándares y revisiones por pares, temáticas y por país.
+
+\subsubsection{Por qué funciona: el eslabón más débil}
+
+La razón de que ese modelo funcione aquí y no en otras materias está en cómo se produce el bien del que se trata. Un sistema financiero integrado es \textbf{tan seguro como la jurisdicción más laxa}, de modo que no sirve de nada que los rigurosos hagan más y sí sirve que nadie se quede atrás.
+
+De ahí que la herramienta correcta sea exactamente la que emplea: un estándar común, la verificación pública de que todos lo aplican y la asistencia al rezagado. Y de ahí que obligue de hecho pese a no obligar de derecho, porque el banco cuyo supervisor no aplica el estándar encuentra cerrados los mercados de los países que sí lo exigen.\footnote{%
+    Su mandato, sus órganos y su programa de trabajo vigente, centrado en la intermediación financiera no bancaria, los criptoactivos y las monedas estables, los pagos transfronterizos y la inteligencia artificial, están en [\authorfont{Ver Anexo \ref{anx:fsb}}]. La clasificación de los bienes públicos mundiales según cómo se agregan las aportaciones, en [\authorfont{Ver Anexo \ref{anx:bienes_publicos}}].
+}
+
+\subsection{El mapa: ¿quién hace qué y qué queda de la coordinación?}
+
+Con los tres organismos vistos puede situarse el conjunto, que incluye instituciones que otros temas desarrollan y que aquí interesan por su posición relativa.
+
+\subsubsection{Una diagonal, no un catálogo}
+
+Dos rasgos bastan para ordenarlos: a cuántos reúnen y cuánto obligan.
+
+\imagenfit{b4_mapa.pdf}{Los foros económicos internacionales según su composición y la fuerza de su compromiso}{Elaboración propia.}
+
+Lo que se observa es que los foros se concentran en una \textbf{diagonal}, con los clubes que no obligan a nada en un extremo y el único caso de derecho internacional económico verdaderamente duro y universal, la Organización Mundial del Comercio, en el otro. Entre ambos quedan los clubes técnicos que producen estándares y las instituciones universales con obligaciones reales pero aplicación condicionada, como el Fondo Monetario Internacional.
+
+La diagonal tiene una explicación económica directa: \textbf{obligación y amplitud se compran la una con la otra}, porque un país cede soberanía con más facilidad ante un grupo pequeño de iguales con los que comparte diagnóstico que ante una asamblea universal. De ahí que los acuerdos duros sean de ámbito limitado o de materia muy acotada, y que la universalidad se pague con blandura.\footnote{%
+    El Fondo Monetario Internacional se estudia en [\authorfont{Ver Tema 3.B.22}]; la Organización Mundial del Comercio, en [\authorfont{Ver Tema 3.B.33, Tema 3.B.34}]; el Banco Mundial, en [\authorfont{Ver Tema 3.B.29}]; y el Comité de Basilea, en [\authorfont{Ver Tema 3.B.27}]. Su posición comparada y los acuerdos regionales, en [\authorfont{Ver Anexo \ref{anx:otros_foros}}].
+}
+
+\subsubsection{Lo que está en juego ahora}
+
+Conviene terminar con el estado de la cuestión, porque es el que da sentido a todo lo anterior.
+
+La presidencia del Grupo de los Veinte corresponde a Estados Unidos desde diciembre de $2025$, con una agenda deliberadamente estrecha y después de un ejercicio en el que la cumbre anterior fue boicoteada. Un foro cuya única fuerza es reunir a quienes deciden, y cuyo funcionamiento depende de que el mayor de todos quiera que funcione, se encuentra con que el mayor de todos ha dejado de quererlo; y no hay regla que invocar ni sanción que aplicar, porque nunca las hubo.
+
+Es exactamente lo que predice la teoría: cuando la cuota del país que sostiene el sistema cae por debajo del umbral en que le compensa sostenerlo, o cuando simplemente deja de querer hacerlo, el bien deja de producirse salvo que un grupo de grandes lo releve. \textbf{Y hay una sola consolación disponible, que no es pequeña}: el régimen construido alrededor del grupo —los estándares, las metodologías, los organismos que ejecutan— es caro de levantar y barato de mantener, de modo que sigue en pie aunque el vértice político que lo ordenaba se haya vaciado.\footnote{%
+    La teoría de la estabilidad hegemónica, sus objeciones y la razón de que los regímenes sobrevivan a quien los creó están en [\authorfont{Ver Anexo \ref{anx:hegemonia}}] y [\authorfont{Ver Anexo \ref{anx:regimenes}}]. Los episodios de coordinación, desde Bretton Woods hasta la fragmentación actual, en [\authorfont{Ver Anexo \ref{anx:experiencia}}].
+}
+
+Con esto se cierra el recorrido. La interdependencia es un hecho que no admite renuncia; solo justifica coordinarse cuando falla alguna de tres condiciones precisas; lo que se gana es poco en las políticas de demanda y mucho en los bienes públicos mundiales; cuatro obstáculos estructurales impiden que ocurra aun cuando conviene; y las instituciones que han prosperado son las que atacan el decisivo de esos obstáculos, que es hacer visible quién cumple.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\clearpage
+\section{Conclusión} 
+
+
+\subsection{Recapitulación}
+
+
+\subsection{Extensiones y relación con otras partes del Temario}
+
+
+
+\subsection{Opinión}
+
+\subsubsection{Idea final (Salida o cierra)}
+
+\clearpage
+\pagenumbering{gobble}
+\MyBibliography
 
 \textbf{Investigación}
 
-\noindent\hangindent=1.5em\hangafter=1 Abbott, K. W. y Snidal, D. (2000). Hard and soft law in international governance. \textit{International Organization}, \textit{54}(3), 421-456. \href{https://doi.org/10.1162/002081800551280}{\nolinkurl{https://doi.org/10.1162/002081800551280}}
-
-\noindent\hangindent=1.5em\hangafter=1 Artis, M. y Ostry, S. (1986). \textit{International economic policy coordination} (Chatham House Papers n.º 30). Royal Institute of International Affairs.\textcolor{orange}{\textsuperscript{[Probable]}}
-
 \noindent\hangindent=1.5em\hangafter=1 Backus, D. K. y Smith, G. W. (1993). Consumption and real exchange rates in dynamic economies with non-traded goods. \textit{Journal of International Economics}, \textit{35}(3-4), 297-316. \href{https://doi.org/10.1016/0022-1996(93)90021-O}{\nolinkurl{https://doi.org/10.1016/0022-1996(93)90021-O}}
-
-\noindent\hangindent=1.5em\hangafter=1 Backus, D. K., Kehoe, P. J. y Kydland, F. E. (1992). International real business cycles. \textit{Journal of Political Economy}, \textit{100}(4), 745-775. \href{https://doi.org/10.1086/261838}{\nolinkurl{https://doi.org/10.1086/261838}}
 
 \noindent\hangindent=1.5em\hangafter=1 Benes, J., Kumhof, M., Laxton, D., Muir, D. y Mursula, S. (2013). \textit{The benefits of international policy coordination revisited} (IMF Working Paper n.º 13/262). Fondo Monetario Internacional. \href{https://www.imf.org/external/pubs/ft/wp/2013/wp13262.pdf}{\nolinkurl{https://www.imf.org/external/pubs/ft/wp/2013/wp13262.pdf}}
 
@@ -383,15 +1292,17 @@
 
 \noindent\hangindent=1.5em\hangafter=1 Boughton, J. M. (2003). On the origins of the Fleming-Mundell model. \textit{IMF Staff Papers}, \textit{50}(1), 1-9. \href{https://doi.org/10.2307/4149945}{\nolinkurl{https://doi.org/10.2307/4149945}}
 
+\noindent\hangindent=1.5em\hangafter=1 Dornbusch, R. (1976). Expectations and exchange rate dynamics. \textit{Journal of Political Economy}, \textit{84}(6), 1161-1176. \href{https://doi.org/10.1086/260506}{\nolinkurl{https://doi.org/10.1086/260506}}
+
+\noindent\hangindent=1.5em\hangafter=1 Abbott, K. W. y Snidal, D. (2000). Hard and soft law in international governance. \textit{International Organization}, \textit{54}(3), 421-456. \href{https://doi.org/10.1162/002081800551280}{\nolinkurl{https://doi.org/10.1162/002081800551280}}
+
+\noindent\hangindent=1.5em\hangafter=1 Artis, M. y Ostry, S. (1986). \textit{International economic policy coordination} (Chatham House Papers n.º 30). Royal Institute of International Affairs.\textcolor{orange}{\textsuperscript{[Probable]}}
+
+\noindent\hangindent=1.5em\hangafter=1 Backus, D. K., Kehoe, P. J. y Kydland, F. E. (1992). International real business cycles. \textit{Journal of Political Economy}, \textit{100}(4), 745-775. \href{https://doi.org/10.1086/261838}{\nolinkurl{https://doi.org/10.1086/261838}}
+
 \noindent\hangindent=1.5em\hangafter=1 Bruno, V. y Shin, H. S. (2015). Cross-border banking and global liquidity. \textit{The Review of Economic Studies}, \textit{82}(2), 535-564. \href{https://doi.org/10.1093/restud/rdu042}{\nolinkurl{https://doi.org/10.1093/restud/rdu042}}
 
 \noindent\hangindent=1.5em\hangafter=1 Canzoneri, M. B. y Gray, J. A. (1985). Monetary policy games and the consequences of non-cooperative behavior. \textit{International Economic Review}, \textit{26}(3), 547-564. \href{https://doi.org/10.2307/2526702}{\nolinkurl{https://doi.org/10.2307/2526702}}
-
-\noindent\hangindent=1.5em\hangafter=1 Chang, R. (1990). \textit{International coordination of fiscal deficits}.\textcolor{orange}{\textsuperscript{[Probable]}}
-
-\noindent\hangindent=1.5em\hangafter=1 Chayes, A. y Chayes, A. H. (1993). On compliance. \textit{International Organization}, \textit{47}(2), 175-205. \href{https://doi.org/10.1017/S0020818300027910}{\nolinkurl{https://doi.org/10.1017/S0020818300027910}}
-
-\noindent\hangindent=1.5em\hangafter=1 Clarida, R., Galí, J. y Gertler, M. (2002). A simple framework for international monetary policy analysis. \textit{Journal of Monetary Economics}, \textit{49}(5), 879-904.\textcolor{orange}{\textsuperscript{[Probable]}}
 
 \noindent\hangindent=1.5em\hangafter=1 Cooper, R. N. (1969). \textit{The economics of interdependence: Economic policy in the Atlantic community}. McGraw-Hill.
 
@@ -403,9 +1314,13 @@
 
 \noindent\hangindent=1.5em\hangafter=1 Corsetti, G. y Pesenti, P. (2005b). \textit{The simple geometry of transmission and stabilization in closed and open economies} (NBER Working Paper n.º 11341). National Bureau of Economic Research. \href{https://doi.org/10.3386/w11341}{\nolinkurl{https://doi.org/10.3386/w11341}}
 
-\noindent\hangindent=1.5em\hangafter=1 Devereux, M. B. y Engel, C. (2003). Monetary policy in the open economy revisited: Price setting and exchange-rate flexibility. \textit{The Review of Economic Studies}, \textit{70}(4), 765-783. \href{https://doi.org/10.1111/1467-937X.00266}{\nolinkurl{https://doi.org/10.1111/1467-937X.00266}}
+\noindent\hangindent=1.5em\hangafter=1 Chang, R. (1990). \textit{International coordination of fiscal deficits}.\textcolor{orange}{\textsuperscript{[Probable]}}
 
-\noindent\hangindent=1.5em\hangafter=1 Dornbusch, R. (1976). Expectations and exchange rate dynamics. \textit{Journal of Political Economy}, \textit{84}(6), 1161-1176. \href{https://doi.org/10.1086/260506}{\nolinkurl{https://doi.org/10.1086/260506}}
+\noindent\hangindent=1.5em\hangafter=1 Chayes, A. y Chayes, A. H. (1993). On compliance. \textit{International Organization}, \textit{47}(2), 175-205. \href{https://doi.org/10.1017/S0020818300027910}{\nolinkurl{https://doi.org/10.1017/S0020818300027910}}
+
+\noindent\hangindent=1.5em\hangafter=1 Clarida, R., Galí, J. y Gertler, M. (2002). A simple framework for international monetary policy analysis. \textit{Journal of Monetary Economics}, \textit{49}(5), 879-904.\textcolor{orange}{\textsuperscript{[Probable]}}
+
+\noindent\hangindent=1.5em\hangafter=1 Devereux, M. B. y Engel, C. (2003). Monetary policy in the open economy revisited: Price setting and exchange-rate flexibility. \textit{The Review of Economic Studies}, \textit{70}(4), 765-783. \href{https://doi.org/10.1111/1467-937X.00266}{\nolinkurl{https://doi.org/10.1111/1467-937X.00266}}
 
 \noindent\hangindent=1.5em\hangafter=1 Eichengreen, B. (1987). \textit{Hegemonic stability theories of the international monetary system} (NBER Working Paper n.º 2193). National Bureau of Economic Research. \href{https://doi.org/10.3386/w2193}{\nolinkurl{https://doi.org/10.3386/w2193}}
 
@@ -417,17 +1332,15 @@
 
 \noindent\hangindent=1.5em\hangafter=1 Gopinath, G., Boz, E., Casas, C., Díez, F. J., Gourinchas, P.-O. y Plagborg-M\o ller, M. (2020). Dominant currency paradigm. \textit{American Economic Review}, \textit{110}(3), 677-719. \href{https://doi.org/10.1257/aer.20171201}{\nolinkurl{https://doi.org/10.1257/aer.20171201}}
 
-\noindent\hangindent=1.5em\hangafter=1 Green, E. J. y Porter, R. H. (1984). Noncooperative collusion under imperfect price information. \textit{Econometrica}, \textit{52}(1), 87-100. \href{https://doi.org/10.2307/1911462}{\nolinkurl{https://doi.org/10.2307/1911462}}
-
 \noindent\hangindent=1.5em\hangafter=1 Guzman, A. T. (2008). \textit{How international law works: A rational choice theory}. Oxford University Press. \href{https://doi.org/10.1093/acprof:oso/9780195305562.001.0001}{\nolinkurl{https://doi.org/10.1093/acprof:oso/9780195305562.001.0001}}
 
 \noindent\hangindent=1.5em\hangafter=1 Haas, P. M. (1992). Introduction: Epistemic communities and international policy coordination. \textit{International Organization}, \textit{46}(1), 1-35. \href{https://doi.org/10.1017/S0020818300001442}{\nolinkurl{https://doi.org/10.1017/S0020818300001442}}
 
+\noindent\hangindent=1.5em\hangafter=1 Green, E. J. y Porter, R. H. (1984). Noncooperative collusion under imperfect price information. \textit{Econometrica}, \textit{52}(1), 87-100. \href{https://doi.org/10.2307/1911462}{\nolinkurl{https://doi.org/10.2307/1911462}}
+
 \noindent\hangindent=1.5em\hangafter=1 Hamada, K. (1976). A strategic analysis of monetary interdependence. \textit{Journal of Political Economy}, \textit{84}(4, parte 1), 677-700. \href{https://doi.org/10.1086/260471}{\nolinkurl{https://doi.org/10.1086/260471}}
 
 \noindent\hangindent=1.5em\hangafter=1 Hirshleifer, J. (1983). From weakest-link to best-shot: The voluntary provision of public goods. \textit{Public Choice}, \textit{41}(3), 371-386. \href{https://doi.org/10.1007/BF00141070}{\nolinkurl{https://doi.org/10.1007/BF00141070}}
-
-\noindent\hangindent=1.5em\hangafter=1 Kehoe, P. J. (1989). Policy cooperation among benevolent governments may be undesirable. \textit{The Review of Economic Studies}, \textit{56}(2), 289-296. \href{https://doi.org/10.2307/2297462}{\nolinkurl{https://doi.org/10.2307/2297462}}
 
 \noindent\hangindent=1.5em\hangafter=1 Keohane, R. O. (1984). \textit{After hegemony: Cooperation and discord in the world political economy}. Princeton University Press.
 
@@ -435,23 +1348,13 @@
 
 \noindent\hangindent=1.5em\hangafter=1 Kindleberger, C. P. (1981). Dominance and leadership in the international economy: Exploitation, public goods, and free rides. \textit{International Studies Quarterly}, \textit{25}(2), 242-254. \href{https://doi.org/10.2307/2600355}{\nolinkurl{https://doi.org/10.2307/2600355}}
 
+\noindent\hangindent=1.5em\hangafter=1 Krasner, S. D. (1982). Structural causes and regime consequences: Regimes as intervening variables. \textit{International Organization}, \textit{36}(2), 185-205. \href{https://doi.org/10.1017/S0020818300018920}{\nolinkurl{https://doi.org/10.1017/S0020818300018920}}
+
 \noindent\hangindent=1.5em\hangafter=1 Korinek, A. (2016). \textit{Currency wars or efficient spillovers? A general theory of international policy cooperation} (NBER Working Paper n.º 23004). National Bureau of Economic Research. \href{https://doi.org/10.3386/w23004}{\nolinkurl{https://doi.org/10.3386/w23004}}
 
 \noindent\hangindent=1.5em\hangafter=1 Korinek, A. y Sandri, D. (2016). Capital controls or macroprudential regulation? \textit{Journal of International Economics}, \textit{99}(S1), S27-S42. \href{https://doi.org/10.1016/j.jinteco.2016.02.001}{\nolinkurl{https://doi.org/10.1016/j.jinteco.2016.02.001}}
 
-\noindent\hangindent=1.5em\hangafter=1 Krasner, S. D. (1982). Structural causes and regime consequences: Regimes as intervening variables. \textit{International Organization}, \textit{36}(2), 185-205. \href{https://doi.org/10.1017/S0020818300018920}{\nolinkurl{https://doi.org/10.1017/S0020818300018920}}
-
-\noindent\hangindent=1.5em\hangafter=1 Miranda-Agrippino, S. y Rey, H. (2020). U.S. monetary policy and the global financial cycle. \textit{The Review of Economic Studies}, \textit{87}(6), 2754-2776. \href{https://doi.org/10.1093/restud/rdaa019}{\nolinkurl{https://doi.org/10.1093/restud/rdaa019}}
-
-\noindent\hangindent=1.5em\hangafter=1 Mundell, R. A. (1963). Capital mobility and stabilization policy under fixed and flexible exchange rates. \textit{The Canadian Journal of Economics and Political Science}, \textit{29}(4), 475-485. \href{https://doi.org/10.2307/139336}{\nolinkurl{https://doi.org/10.2307/139336}}
-
-\noindent\hangindent=1.5em\hangafter=1 Mundell, R. A. (1968). \textit{International economics}. Macmillan.
-
-\noindent\hangindent=1.5em\hangafter=1 Nordhaus, W. (2015). Climate clubs: Overcoming free-riding in international climate policy. \textit{American Economic Review}, \textit{105}(4), 1339-1370. \href{https://doi.org/10.1257/aer.15000001}{\nolinkurl{https://doi.org/10.1257/aer.15000001}}
-
 \noindent\hangindent=1.5em\hangafter=1 Obstfeld, M. y Rogoff, K. (2002). Global implications of self-oriented national monetary rules. \textit{The Quarterly Journal of Economics}, \textit{117}(2), 503-535. \href{https://doi.org/10.1162/003355302753650319}{\nolinkurl{https://doi.org/10.1162/003355302753650319}}
-
-\noindent\hangindent=1.5em\hangafter=1 Obstfeld, M. y Rogoff, K. (1995). Exchange rate dynamics redux. \textit{Journal of Political Economy}, \textit{103}(3), 624-660. \href{https://doi.org/10.1086/261997}{\nolinkurl{https://doi.org/10.1086/261997}}
 
 \noindent\hangindent=1.5em\hangafter=1 Olson, M. (1965). \textit{The logic of collective action: Public goods and the theory of groups}. Harvard University Press.
 
@@ -461,37 +1364,39 @@
 
 \noindent\hangindent=1.5em\hangafter=1 Oudiz, G. y Sachs, J. (1984). Macroeconomic policy coordination among the industrial economies. \textit{Brookings Papers on Economic Activity}, \textit{1984}(1), 1-75. \href{https://doi.org/10.2307/2534275}{\nolinkurl{https://doi.org/10.2307/2534275}}
 
-\noindent\hangindent=1.5em\hangafter=1 Putnam, R. D. (1988). Diplomacy and domestic politics: The logic of two-level games. \textit{International Organization}, \textit{42}(3), 427-460. \href{https://doi.org/10.1017/S0020818300027697}{\nolinkurl{https://doi.org/10.1017/S0020818300027697}}
+\noindent\hangindent=1.5em\hangafter=1 Kehoe, P. J. (1989). Policy cooperation among benevolent governments may be undesirable. \textit{The Review of Economic Studies}, \textit{56}(2), 289-296. \href{https://doi.org/10.2307/2297462}{\nolinkurl{https://doi.org/10.2307/2297462}}
 
-\noindent\hangindent=1.5em\hangafter=1 Putnam, R. D. y Bayne, N. (1987). \textit{Hanging together: Cooperation and conflict in the seven-power summits} (2.ª ed.). Harvard University Press.\textcolor{orange}{\textsuperscript{[Probable]}}
+\noindent\hangindent=1.5em\hangafter=1 Miranda-Agrippino, S. y Rey, H. (2020). U.S. monetary policy and the global financial cycle. \textit{The Review of Economic Studies}, \textit{87}(6), 2754-2776. \href{https://doi.org/10.1093/restud/rdaa019}{\nolinkurl{https://doi.org/10.1093/restud/rdaa019}}
+
+\noindent\hangindent=1.5em\hangafter=1 Mundell, R. A. (1963). Capital mobility and stabilization policy under fixed and flexible exchange rates. \textit{The Canadian Journal of Economics and Political Science}, \textit{29}(4), 475-485. \href{https://doi.org/10.2307/139336}{\nolinkurl{https://doi.org/10.2307/139336}}
+
+\noindent\hangindent=1.5em\hangafter=1 Mundell, R. A. (1968). \textit{International economics}. Macmillan.
+
+\noindent\hangindent=1.5em\hangafter=1 Nordhaus, W. (2015). Climate clubs: Overcoming free-riding in international climate policy. \textit{American Economic Review}, \textit{105}(4), 1339-1370. \href{https://doi.org/10.1257/aer.15000001}{\nolinkurl{https://doi.org/10.1257/aer.15000001}}
+
+\noindent\hangindent=1.5em\hangafter=1 Obstfeld, M. y Rogoff, K. (1995). Exchange rate dynamics redux. \textit{Journal of Political Economy}, \textit{103}(3), 624-660. \href{https://doi.org/10.1086/261997}{\nolinkurl{https://doi.org/10.1086/261997}}
 
 \noindent\hangindent=1.5em\hangafter=1 \href{https://api.parliament.uk/historic-hansard/lords/1943/may/18/international-clearing-union}{Reino Unido (1943). \textit{Proposals for an International Clearing Union} (Cmd. 6437). HMSO.}
 
 \noindent\hangindent=1.5em\hangafter=1 \href{https://www.kansascityfed.org/Jackson\%20Hole/documents/4575/2013Rey.pdf}{Rey, H. (2013). Dilemma not trilemma: The global financial cycle and monetary policy independence. En \textit{Global Dimensions of Unconventional Monetary Policy} (Simposio de Jackson Hole, pp. 285-333). Banco de la Reserva Federal de Kansas City.}
 
-\noindent\hangindent=1.5em\hangafter=1 Rogoff, K. (1985). Can international monetary policy cooperation be counterproductive? \textit{Journal of International Economics}, \textit{18}(3-4), 199-217. \href{https://doi.org/10.1016/0022-1996(85)90052-2}{\nolinkurl{https://doi.org/10.1016/0022-1996(85)90052-2}}
-
 \noindent\hangindent=1.5em\hangafter=1 Snidal, D. (1985). The limits of hegemonic stability theory. \textit{International Organization}, \textit{39}(4), 579-614. \href{https://doi.org/10.1017/S002081830002703X}{\nolinkurl{https://doi.org/10.1017/S002081830002703X}}
 
 \noindent\hangindent=1.5em\hangafter=1 Tchakarov, I. (2004). \textit{The gains from international monetary cooperation revisited} (IMF Working Paper n.º 04/1). Fondo Monetario Internacional.\textcolor{orange}{\textsuperscript{[Probable]}}
 
-\noindent\hangindent=1.5em\hangafter=1 Tille, C. (2001). The role of consumption substitutability in the international transmission of monetary shocks. \textit{Journal of International Economics}, \textit{53}(2), 421-444. \href{https://doi.org/10.1016/S0022-1996(00)00071-4}{\nolinkurl{https://doi.org/10.1016/S0022-1996(00)00071-4}}
+\noindent\hangindent=1.5em\hangafter=1 Vaubel, R. (1985). International collusion or competition for macroeconomic policy coordination? A restatement. \textit{Recherches Économiques de Louvain}, \textit{51}(3-4), 223-240. \href{https://doi.org/10.1017/S0770451800082609}{\nolinkurl{https://doi.org/10.1017/S0770451800082609}}
 
 \noindent\hangindent=1.5em\hangafter=1 Triffin, R. (1960). \textit{Gold and the dollar crisis: The future of convertibility}. Yale University Press.
 
-\noindent\hangindent=1.5em\hangafter=1 Vaubel, R. (1985). International collusion or competition for macroeconomic policy coordination? A restatement. \textit{Recherches Économiques de Louvain}, \textit{51}(3-4), 223-240. \href{https://doi.org/10.1017/S0770451800082609}{\nolinkurl{https://doi.org/10.1017/S0770451800082609}}
+\noindent\hangindent=1.5em\hangafter=1 Putnam, R. D. (1988). Diplomacy and domestic politics: The logic of two-level games. \textit{International Organization}, \textit{42}(3), 427-460. \href{https://doi.org/10.1017/S0020818300027697}{\nolinkurl{https://doi.org/10.1017/S0020818300027697}}
 
-\textbf{Complementario}
+\noindent\hangindent=1.5em\hangafter=1 Putnam, R. D. y Bayne, N. (1987). \textit{Hanging together: Cooperation and conflict in the seven-power summits} (2.ª ed.). Harvard University Press.\textcolor{orange}{\textsuperscript{[Probable]}}
 
-\noindent\hangindent=1.5em\hangafter=1 \href{https://www.fsb.org/2025/11/fsb-plenary-sets-out-2026-work-plan/}{Consejo de Estabilidad Financiera (2025). \textit{FSB Plenary sets out 2026 work plan}. Financial Stability Board.}
+\noindent\hangindent=1.5em\hangafter=1 Rogoff, K. (1985). Can international monetary policy cooperation be counterproductive? \textit{Journal of International Economics}, \textit{18}(3-4), 199-217. \href{https://doi.org/10.1016/0022-1996(85)90052-2}{\nolinkurl{https://doi.org/10.1016/0022-1996(85)90052-2}}
 
-\noindent\hangindent=1.5em\hangafter=1 \href{https://www.fsb.org/2026/02/fsb-work-programme-for-2026/}{Consejo de Estabilidad Financiera (2026). \textit{FSB work programme for 2026}. Financial Stability Board.}
+\noindent\hangindent=1.5em\hangafter=1 Tille, C. (2001). The role of consumption substitutability in the international transmission of monetary shocks. \textit{Journal of International Economics}, \textit{53}(2), 421-444. \href{https://doi.org/10.1016/S0022-1996(00)00071-4}{\nolinkurl{https://doi.org/10.1016/S0022-1996(00)00071-4}}
 
-\noindent\hangindent=1.5em\hangafter=1 \href{https://www.state.gov/releases/office-of-the-spokesperson/2025/12/united-states-hosts-first-g20-sherpa-meeting}{Departamento de Estado de los Estados Unidos (2025). \textit{United States hosts first G20 sherpa meeting}.}
 
-\noindent\hangindent=1.5em\hangafter=1 \href{https://www.oecd.org/en/about/members-partners.html}{OCDE (2026a). \textit{Members and partners}. Organización para la Cooperación y el Desarrollo Económicos.}
-
-\noindent\hangindent=1.5em\hangafter=1 OCDE (2026b). \textit{Paquete de coexistencia del segundo pilar}. Organización para la Cooperación y el Desarrollo Económicos.\textcolor{orange}{\textsuperscript{[Probable]}}
 
 
 \clearpage
